@@ -1,42 +1,39 @@
 definition {
 
-	@summary = "Add a basic tag"
-	macro addTag {
-		if (!(isSet(staging))) {
-			Variables.assertDefined(parameterList = "${groupName},${tagName}");
+	@summary = "Default summary"
+	macro addTag(groupName = null, tagName = null) {
+		Variables.assertDefined(parameterList = ${tagName});
 
-			var groupId = JSONAssettagSetter.setGroupId(
-				groupName = "${groupName}",
-				site = "${site}");
+		if (!(isSet(site))) {
+			var site = "true";
 		}
-		else {
-			Variables.assertDefined(parameterList = "${groupKey},${tagName}");
 
-			var groupId = JSONStagingSetter.setGroupId(
-				groupKey = "${groupKey}",
-				site = "${site}");
+		if (!(isSet(groupId))) {
+			var groupId = JSONAssettagSetter.setGroupId(
+				groupName = ${groupName},
+				site = ${site});
 		}
 
 		JSONAssettagAPI._addTag(
-			groupId = "${groupId}",
-			tagName = "${tagName}");
+			groupId = ${groupId},
+			tagName = ${tagName});
 	}
 
-	@summary = "Get a basic tag ID"
-	macro getTagId {
+	@summary = "Default summary"
+	macro getTagId(groupName = null, site = null, tagName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${tagName}");
 
 		var groupId = JSONAssettagSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 
 		var tagId = JSONAssettagAPI._getTagId(
-			groupId = "${groupId}",
-			tagName = "${tagName}");
+			groupId = ${groupId},
+			tagName = ${tagName});
 
 		echo("## tagId: ${tagId}");
 
-		return "${tagId}";
+		return ${tagId};
 	}
 
 }

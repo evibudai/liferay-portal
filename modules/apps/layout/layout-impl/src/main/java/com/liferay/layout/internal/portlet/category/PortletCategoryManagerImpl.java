@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.portlet.category;
@@ -18,6 +9,7 @@ import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortlet
 import com.liferay.layout.portlet.category.PortletCategoryManager;
 import com.liferay.layout.util.PortalPreferencesUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -340,11 +332,7 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 			Portlet portlet = _portletLocalService.getPortletById(
 				themeDisplay.getCompanyId(), portletId);
 
-			if ((portlet == null) ||
-				((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
-				 ArrayUtil.contains(
-					 _UNSUPPORTED_PORTLETS_NAMES, portlet.getPortletName()))) {
-
+			if (!_isVisible(layout, portlet)) {
 				continue;
 			}
 
@@ -443,6 +431,30 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 			ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
 			"sortedPortletCategoryKeys");
 	}
+
+	private boolean _isVisible(Layout layout, Portlet portlet) {
+		if (portlet == null) {
+			return false;
+		}
+
+		if ((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
+			ArrayUtil.contains(
+				_UNSUPPORTED_PORTLETS_NAMES, portlet.getPortletName())) {
+
+			return false;
+		}
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-153839") &&
+			Objects.equals(portlet.getPortletId(), _PORTLET_ID)) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	private static final String _PORTLET_ID =
+		"com_liferay_portal_search_web_date_facet_portlet_DateFacetPortlet";
 
 	private static final String[] _UNSUPPORTED_PORTLETS_NAMES = {
 		PortletKeys.NESTED_PORTLETS

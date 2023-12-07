@@ -1,68 +1,340 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Item Selector";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Content Page Name",
 				type = "content");
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+	@description = "This is a test for LPS-195827. Validation error on object action does not redirect to the Display Page Template."
+	@priority = 4
+	test CannotGoToEntryDisplayPageWhenStandaloneActionValidationFailure {
+		task ("Given a page creator has a content page with a Button fragment mapped to a standalone action") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Student",
+				objectName = "Student",
+				pluralLabelName = "Students");
 
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "Student");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "Student");
+
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Teacher",
+				objectName = "Teacher",
+				pluralLabelName = "Teachers");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Integer",
+				fieldLabelName = "Age",
+				fieldName = "age",
+				fieldType = "Integer",
+				isRequired = "false",
+				objectName = "Teacher");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "Teacher");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Student");
+
+			ObjectAdmin.goToActionsTab();
+
+			ObjectAdmin.addObjectActionViaUI(
+				actionLabel = "Vote",
+				active = "true",
+				errorMessage = "The Age should be an integer.",
+				fieldName = "Age",
+				inputExpressionValue = "name",
+				inputMethod = "false",
+				objectLabel = "Teacher",
+				thenAction = "Add an Object Entry",
+				whenAction = "Standalone");
+
+			var objectEntryId = ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "name",
+				objectName = "Student",
+				value = "Jack");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
+
+			DisplayPageTemplatesAdmin.addDisplayPage(
+				contentType = "Student",
+				displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Student (Default)");
+
+			PageEditor.publish();
 		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+
+		task ("When the page creator selects the Go to Entry Display Page as success interaction") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditorAction.gotoEditableFieldAction(
+				className = "btn",
+				fragmentName = "Button",
+				id = "action");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = ${objectEntryId},
+				navItem = "Students",
+				rowItem = "//*[@data-qa-id='row'][contains(.,'${objectEntryId}')]");
+
+			PageEditor.configureFragment(
+				action = "Vote",
+				displayPage = "Display Page Name",
+				successInteraction = "Go to Entry Display Page");
+		}
+
+		task ("Then the page creator could select the Show Notification as error interaction") {
+			PageEditor.configureFragment(errorInteraction = "Show Notification");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page creator triggers the standalone action") {
+			Button.click(button = "Go Somewhere");
+		}
+
+		task ("Then the page creator should not be redirected but see a validation error message") {
+			Alert.viewErrorMessage(errorMessage = "The Age should be an integer.");
+
+			Page.viewCurrentPage(pageName = "Content Page Name");
+		}
+	}
+
+	@description = "This is a test for LPS-191986. View draft display page template is not shown in fragment display page mapping."
+	@priority = 3
+	test CannotMapDraftDisplayPageTemplateToFragment {
+		task ("Given a user has a draft display page template") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Web Content Article",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = ${randomSiteName},
+				subType = "Basic Web Content");
+
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = ${randomSiteName},
+				title = "Web Content Title");
+		}
+
+		task ("When the user adds a Button fragment to content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("Then the user cannot map the draft display page template to Button fragment") {
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			Select(
+				key_fieldLabel = "Link",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Mapped URL");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Web Content Title",
+				navItem = "Web Content");
+
+			AssertElementNotPresent(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_VALUE",
+				value1 = "Display Page Name");
+		}
+	}
+
+	@description = "This is a test for LPS-195827. Success object action redirects to the Display Page Template."
+	@priority = 4
+	test GoToEntryDisplayPageViaStandaloneAction {
+		task ("Given a page creator has a standalone action") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Student",
+				objectName = "Student",
+				pluralLabelName = "Students");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "Student");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "Student");
+
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Teacher",
+				objectName = "Teacher",
+				pluralLabelName = "Teachers");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Subject",
+				fieldName = "subject",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "Teacher");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "Teacher");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Student");
+
+			ObjectAdmin.goToActionsTab();
+
+			ObjectAdmin.addObjectActionViaUI(
+				actionLabel = "Vote",
+				active = "true",
+				errorMessage = "You don't have permissions.",
+				fieldName = "Subject",
+				inputExpressionValue = "name",
+				inputMethod = "false",
+				objectLabel = "Teacher",
+				thenAction = "Add an Object Entry",
+				whenAction = "Standalone");
+
+			var objectEntryId = ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "name",
+				objectName = "Student",
+				value = "Jack");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
+
+			DisplayPageTemplatesAdmin.addDisplayPage(
+				contentType = "Student",
+				displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Student (Default)");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page creator maps the standalone action to Button fragment") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditorAction.gotoEditableFieldAction(
+				className = "btn",
+				fragmentName = "Button",
+				id = "action");
+		}
+
+		task ("Then the page creator could select the Go to Entry Display Page as success interaction") {
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = ${objectEntryId},
+				navItem = "Students",
+				rowItem = "//*[@data-qa-id='row'][contains(.,'${objectEntryId}')]");
+
+			PageEditor.configureFragment(
+				action = "Vote",
+				displayPage = "Display Page Name",
+				successInteraction = "Go to Entry Display Page");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page creator triggers the standalone action") {
+			Button.click(button = "Go Somewhere");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then the page creator should be redirected to entry display page") {
+			ControlMenu.viewHeaderTitle(headerTitle = ${objectEntryId});
+
+			InputField.viewText(
+				fieldLabel = "Name",
+				text = "Jack");
 		}
 	}
 
 	@description = "This is a use case for LPS-116975. Map all categories from asset entry to editable field."
-	@priority = "4"
+	@priority = 4
 	test MapAllCategoriesFromAssetToEditableField {
 		task ("Add three vocabularies") {
 			for (var n : list "1,2,3") {
 				JSONCategory.addVocabulary(
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					title = "Vocabulary Name ${n}");
 			}
 		}
 
 		task ("Add a category in the first vocabulary") {
 			var categoryId1 = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Category Name 1",
 				vocabularyName = "Vocabulary Name 1");
 		}
 
 		task ("Add a category in the second vocabulary") {
 			JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Category Name 2",
 				vocabularyName = "Vocabulary Name 2");
 		}
 
 		task ("Add a subcategory in category") {
 			var categoryId2 = JSONCategory.addSubcategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				parentCategoryName = "Category Name 2",
 				title = "Subcategory Name 2",
 				vocabularyName = "Vocabulary Name 2");
@@ -70,15 +342,15 @@ definition {
 
 		task ("Add three categories in the third vocabulary") {
 			var categoryId3 = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Category Name 3-1",
 				vocabularyName = "Vocabulary Name 3");
 			var categoryId4 = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Category Name 3-2",
 				vocabularyName = "Vocabulary Name 3");
 			var categoryId5 = JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Category Name 3-3",
 				vocabularyName = "Vocabulary Name 3");
 		}
@@ -87,14 +359,14 @@ definition {
 			JSONWebcontent.addWebContent(
 				assetCategoryIds = "${categoryId1},${categoryId2},${categoryId3},${categoryId4},${categoryId5}",
 				content = "WC WebContent Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "WC WebContent Title");
 		}
 
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -125,42 +397,42 @@ definition {
 			AssertTextEquals.assertPartialText(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				value1 = "Category Name 3-1, Category Name 3-2, Category Name 3-3");
 
 			AssertTextEquals.assertPartialText(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				value1 = "Subcategory Name 2");
 
 			AssertTextEquals.assertPartialText(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				value1 = "Category Name 1");
 		}
 	}
 
 	@description = "This is a test for LPS-99686. The user can map the content of link editable to a field of a Blog and the editable link display text will update to the published Blog field content."
-	@priority = "5"
+	@priority = 5
 	test MapBlogsContentToLinkFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a blogs entry") {
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 		}
 
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -196,7 +468,7 @@ definition {
 		task ("Assert the mapped content of blogs entry is shown in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "[contains(@data-lfr-editable-id,'link')]/p[normalize-space(text())='Blogs Entry Content']",
@@ -206,10 +478,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-116034. The custom ddmfields of content are available for mapping in editable field."
-	@priority = "4"
+	@priority = 4
 	test MapCustomDDMFieldToFragment {
 		task ("Add a custom Web Content structure") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoStructures();
 
@@ -225,7 +497,7 @@ definition {
 		}
 
 		task ("Add a template for new structure") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoTemplates();
 
@@ -237,7 +509,7 @@ definition {
 		}
 
 		task ("Add a web content based on new structure") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
@@ -250,7 +522,7 @@ definition {
 		}
 
 		task ("Add a custom Document type") {
-			DMNavigator.openDocumentTypesAdmin(siteURLKey = "test-site-name");
+			DMNavigator.openDocumentTypesAdmin(siteURLKey = ${siteURLKey});
 
 			DMDocumentType.add(
 				dmDocumentTypeDescription = "DM Document Type Description",
@@ -259,7 +531,7 @@ definition {
 		}
 
 		task ("Add a document based on new document type") {
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = ${siteURLKey});
 
 			DMDocument.addCP(
 				dmDocumentDescription = "DM Document Description",
@@ -271,7 +543,7 @@ definition {
 		task ("Map custom ddmfield of web content structure to Heading fragment") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -334,7 +606,7 @@ definition {
 
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.viewFragmentText(
 				fragmentName = "heading",
@@ -348,13 +620,13 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-99686. The user can map the content of link editable to a field of a document and the editable link display text will update to the published document field content".
-	@priority = "3"
+	@description = "This is a test for LPS-99686. The user can map the content of link editable to a field of a document and the editable link display text will update to the published document field content"
+	@priority = 3
 	test MapDocumentTitleToLinkFragment {
 		task ("Add a document based on Basic Document") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
@@ -362,7 +634,7 @@ definition {
 		task ("Add a Banner Center to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -398,7 +670,7 @@ definition {
 		task ("Assert the mapped title of document is shown in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "[contains(@data-lfr-editable-id,'link')][normalize-space(text())='Document Title']",
@@ -407,15 +679,93 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-184799. The page creator can map the Link to Page field in a fragment from a content page."
+	@priority = 5
+	test MapLinkToPageFieldToFragment {
+		property portal.acceptance = "true";
+
+		task ("Given a page designer has content pages and a web content with the Link to Page field") {
+			JSONLayout.addPublicLayout(
+				groupName = ${randomSiteName},
+				layoutName = "Test Page Name 1",
+				type = "content");
+
+			JSONLayout.publishLayout(
+				groupName = ${randomSiteName},
+				layoutName = "Test Page Name 1");
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${randomSiteName});
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Title");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Link to Page",
+				fieldName = "Link to Page");
+
+			WebContentStructures.saveCP();
+
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Title");
+
+			WebContent.addWithStructureCP(
+				webContentLinkToPage = "Test Page Name 1",
+				webContentTitle = "support Link to Page field");
+
+			PortletEntry.publish();
+		}
+
+		task ("When the user maps the Link to Page field to fragment") {
+			JSONLayout.addPublicLayout(
+				groupName = ${randomSiteName},
+				layoutName = "Test Page Name 2",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 2",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			PageEditorEditableLink.mapURLToAsset(
+				entryTitle = "support Link to Page field",
+				field = "Link to Page",
+				navItem = "Web Content");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the user could accesses to the linked page via fragment") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name 2",
+				siteName = ${randomSiteName});
+
+			Click(
+				key_append = "[normalize-space(text())='Go Somewhere']",
+				key_url = "/web/${siteURLKey}/test-page-name-1",
+				locator1 = "Fragment#FRAGMENT_LINK");
+
+			Page.viewCurrentPage(pageName = "Test Page Name 1");
+		}
+	}
+
 	@description = "This is a test for LPS-120094. Map manual URL to Image fragment."
-	@priority = "5"
+	@priority = 5
 	test MapManualURLToImageFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a Image fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -445,7 +795,7 @@ definition {
 		task ("Assert mapped URL work in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "//img[contains(@src,'document_1-jpg')]",
@@ -462,14 +812,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031 and LPS-120348. Map Manual URL to Link fragment and select blank as target."
-	@priority = "5"
+	@priority = 5
 	test MapManualURLToLinkFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a Banner Center fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -497,7 +847,7 @@ definition {
 		task ("Assert editable has the specified URL mapped correctly") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "[contains(@target,'blank')][normalize-space(text())='Go Somewhere']",
@@ -511,25 +861,21 @@ definition {
 				key_url = "https://liferay.com",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
-			var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.liferay.com");
-
-			SelectWindow(locator1 = "title=Content Page Name - Test Site Name - ${siteName}");
 		}
 	}
 
 	@description = "This is a test for LPS-117818. Map manual URL to text fragment."
-	@priority = "5"
+	@priority = 5
 	test MapManualURLToTextFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -554,7 +900,7 @@ definition {
 		task ("Assert mapped URL work in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "[normalize-space(text())='Heading Example']",
@@ -571,26 +917,26 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-120198. Link public and private pages to fragments."
-	@priority = "4"
+	@priority = 4
 	test MapPageToImageFragment {
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 
 		task ("Add a public widget page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Public Page Name");
 		}
 
 		task ("Add a private widget page") {
 			JSONLayout.addPrivateLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Private Page Name");
 		}
 
 		task ("Add an Image fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -615,7 +961,7 @@ definition {
 		task ("View selected page is linked to Button fragment") {
 			AssertVisible(
 				key_append = "//img[contains(@src,'data:image/png')]",
-				key_url = "/web/test-site-name/test-public-page-name",
+				key_url = "/web/${siteURLKey}/test-public-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
 			PageEditor.publish();
@@ -624,26 +970,26 @@ definition {
 		task ("Navigate to content page in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Assert redirect to public widget page") {
 			Click(
 				key_append = "//img[contains(@src,'data:image/png')]",
-				key_url = "/web/test-site-name/test-public-page-name",
+				key_url = "/web/${siteURLKey}/test-public-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
 			AssertTextEquals(
 				locator1 = "ControlMenu#HEADING",
 				value1 = "Test Public Page Name");
 
-			AssertLocation.assertPartialLocation(value1 = "web/test-site-name/test-public-page-name");
+			AssertLocation.assertPartialLocation(value1 = "web/${siteURLKey}/test-public-page-name");
 		}
 
 		task ("Navigate to content page in edit mode") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Map the private widget page to editable field of Image") {
@@ -664,7 +1010,7 @@ definition {
 		task ("View selected page is linked to Image fragment") {
 			AssertVisible(
 				key_append = "//img[contains(@src,'data:image/png')]",
-				key_url = "/group/test-site-name/test-private-page-name",
+				key_url = "/group/${siteURLKey}/test-private-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
 			PageEditor.publish();
@@ -673,35 +1019,186 @@ definition {
 		task ("Navigate to content page in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Assert redirect to private widget page") {
 			Click(
 				key_append = "//img[contains(@src,'data:image/png')]",
-				key_url = "/group/test-site-name/test-private-page-name",
+				key_url = "/group/${siteURLKey}/test-private-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
 			AssertTextEquals(
 				locator1 = "ControlMenu#HEADING",
 				value1 = "Test Private Page Name");
 
-			AssertLocation.assertPartialLocation(value1 = "group/test-site-name/test-private-page-name");
+			AssertLocation.assertPartialLocation(value1 = "group/${siteURLKey}/test-private-page-name");
+		}
+	}
+
+	@description = "This is a use case for LPS-182999. The page designer could see mapped image from attachment field on content page."
+	@priority = 4
+	test MapPreviewURLOfImageAttachmentToFragment {
+		var labelName = StringUtil.randomString(8);
+
+		var objectName = "A${labelName}";
+
+		task ("Given a page designer has an object entry with an image attachment") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = ${labelName},
+				objectName = ${objectName},
+				pluralLabelName = "${labelName}s");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Attachment",
+				fieldLabelName = "Upload",
+				fieldName = "upload",
+				fieldType = "Long",
+				fileSource = "userComputer",
+				isRequired = "false",
+				objectName = ${objectName});
+
+			ObjectAdmin.publishObjectViaAPI(objectName = ${objectName});
+
+			ObjectAdmin.goToCustomObject(objectName = ${objectName});
+
+			ObjectAutoGenerated.addAttachment(fileName = "Document_1.jpg");
+
+			ObjectAutoGenerated.viewFilePresentOnAttachment(fileOnAttachment = "Document_1.jpg");
+
+			PortletEntry.save();
+
+			Navigator.gotoBack();
+
+			WaitForElementPresent(
+				key_name = "Document_1.jpg",
+				locator1 = "ObjectAdmin#TABLE_LIST_TITLE");
+
+			var objectEntryId = selenium.getText("ObjectPortlet#ENTRY_ID");
+		}
+
+		task ("When the page designer maps the Preview URL of image to the Image fragment") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Image");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Image",
+				id = "image-square");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = ${objectEntryId},
+				navItem = "${labelName}s",
+				rowItem = "//*[@data-qa-id='row'][contains(.,'${objectEntryId}')]");
+
+			Select(
+				locator1 = "PageEditorEditableLink#FIELD",
+				value1 = "Preview URL");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Then the page designer should see the mapped image shown on Image fragment") {
+			PageEditor.viewFragmentEditableImage(
+				id = "image-square",
+				imageDescription = "",
+				imageFileName = "Document_1.jpg");
+		}
+	}
+
+	@description = "This is a use case for LPS-182999. The page designer should see blank space when mapped attachment isn’t an image."
+	@priority = 4
+	test MapPreviewURLOfNonImageAttachmentToFragment {
+		var labelName = StringUtil.randomString(8);
+
+		var objectName = "A${labelName}";
+
+		task ("Given a page designer has an object entry with a pdf attachment") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = ${labelName},
+				objectName = ${objectName},
+				pluralLabelName = "${labelName}s");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Attachment",
+				fieldLabelName = "Upload",
+				fieldName = "upload",
+				fieldType = "Long",
+				fileSource = "userComputer",
+				isRequired = "false",
+				objectName = ${objectName});
+
+			ObjectAdmin.publishObjectViaAPI(objectName = ${objectName});
+
+			ObjectAdmin.goToCustomObject(objectName = ${objectName});
+
+			ObjectAutoGenerated.addAttachment(fileName = "Document_1.pdf");
+
+			ObjectAutoGenerated.viewFilePresentOnAttachment(fileOnAttachment = "Document_1.pdf");
+
+			PortletEntry.save();
+
+			Navigator.gotoBack();
+
+			WaitForElementPresent(
+				key_name = "Document_1.pdf",
+				locator1 = "ObjectAdmin#TABLE_LIST_TITLE");
+
+			var objectEntryId = selenium.getText("ObjectPortlet#ENTRY_ID");
+		}
+
+		task ("When the page designer maps the Preview URL of pdf to the Image fragment") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Image");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Image",
+				id = "image-square");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = ${objectEntryId},
+				navItem = "${labelName}s",
+				rowItem = "//*[@data-qa-id='row'][contains(.,'${objectEntryId}')]");
+
+			Select(
+				locator1 = "PageEditorEditableLink#FIELD",
+				value1 = "Preview URL");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Then the page designer should see the blank space shown on Image fragment") {
+			AssertCssValue(
+				id = "image-square",
+				key_image = "Document_1.pdf",
+				key_imageDescription = "",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD_IMAGE_PROPERTIES",
+				locator2 = "height",
+				value1 = "16px");
 		}
 	}
 
 	@description = "This is a use case for LPS-118276. Map single vocabulary with single category from asset entry to editable field."
-	@priority = "5"
+	@priority = 5
 	test MapSingleCategoryFromAssetToEditableField {
 		property portal.acceptance = "true";
 
 		task ("Add a new vocabulary") {
 			JSONCategory.addVocabulary(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Vocabulary Name");
 
 			JSONCategory.addCategory(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Category Name",
 				vocabularyName = "Vocabulary Name");
 		}
@@ -709,30 +1206,30 @@ definition {
 		task ("Add a web content article based on Basic Web Content with the new category") {
 			var categoryId = JSONCategory.getCategoryId(
 				categoryName = "Category Name",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				vocabularyName = "Vocabulary Name");
 
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${categoryId}",
+				assetCategoryIds = ${categoryId},
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a blogs entry with the new category") {
 			HeadlessBlog.addBlogEntry(
-				assetCategoryIds = "${categoryId}",
+				assetCategoryIds = ${categoryId},
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 		}
 
 		task ("Add a document based on Basic Document with the new category") {
 			JSONDocument.addFileWithUploadedFile(
-				assetCategoryIds = "${categoryId}",
+				assetCategoryIds = ${categoryId},
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_2.jpg");
 		}
@@ -740,7 +1237,7 @@ definition {
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -820,8 +1317,479 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-184193. Allow selecting specific display page in the page editor for blog entry."
+	@priority = 4
+	test MapSpecificDisplayPageForBlogsEntry {
+		task ("Given a page designer has a display page template for Blogs Entry") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Blogs Entry",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = ${randomSiteName});
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditorMapping.mapEditableTextToField(
+				field = "Title",
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditor.publish();
+
+			HeadlessBlog.addBlogEntry(
+				content = "Blogs Entry Content",
+				groupName = ${randomSiteName},
+				title = "Blogs Entry Title");
+		}
+
+		task ("When the page designer adds a Button fragment to a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("Then the page designer could map the specific display page for blogs entry to the Button fragment") {
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			PageEditorEditableLink.mapURLToAsset(
+				entryTitle = "Blogs Entry Title",
+				field = "Display Page Name",
+				navItem = "Blogs");
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			Button.click(button = "Go Somewhere");
+
+			ControlMenu.viewHeaderTitle(headerTitle = "Blogs Entry Title");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Blogs Entry Title");
+		}
+	}
+
+	@description = "This is a test for LPS-184193. Allow selecting specific display page in the page editor for category."
+	@priority = 3
+	test MapSpecificDisplayPageForCategory {
+		task ("Given a page designer has a display page template for Category") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Category",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = ${randomSiteName});
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditorMapping.mapEditableTextToField(
+				field = "Name",
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditor.publish();
+
+			JSONCategory.addVocabulary(
+				groupName = ${randomSiteName},
+				title = "Vocabulary Name");
+
+			JSONCategory.addCategory(
+				groupName = ${randomSiteName},
+				title = "Category Name",
+				vocabularyName = "Vocabulary Name");
+		}
+
+		task ("When the page designer adds a Button fragment to a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("Then the page designer could map the specific display page for category to the Button fragment") {
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			PageEditorEditableLink.mapURLToAsset(
+				entryTitle = "Category Name",
+				field = "Display Page Name",
+				navItem = "Categories");
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			Button.click(button = "Go Somewhere");
+
+			ControlMenu.viewHeaderTitle(headerTitle = "Category Name");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Category Name");
+		}
+	}
+
+	@description = "This is a test for LPS-184193. Allow selecting specific display page in the page editor for commerce product."
+	@priority = 3
+	test MapSpecificDisplayPageForCommerceProduct {
+		var channelName = StringUtil.randomString(8);
+		var productName = StringUtil.randomString(8);
+
+		task ("Given a page designer has a display page template for Category") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Product",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = ${randomSiteName});
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditorMapping.mapEditableTextToField(
+				field = "Name",
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditor.publish();
+
+			var groupId = JSONGroupSetter.setGroupId(groupName = ${randomSiteName});
+
+			CommerceJSONChannelsAPI._addChannel(
+				channelName = ${channelName},
+				channelType = "site",
+				currencyCode = "USD",
+				siteGroupId = ${groupId});
+
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Master",
+				productName = ${productName},
+				productType = "simple",
+				sku = "default");
+		}
+
+		task ("When the page designer adds a Button fragment to a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("Then the page designer could map the specific display page for product to the Button fragment") {
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			PageEditorEditableLink.mapURLToAsset(
+				entryTitle = ${productName},
+				field = "Display Page Name",
+				navItem = "Products");
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			Button.click(button = "Go Somewhere");
+
+			ControlMenu.viewHeaderTitle(headerTitle = ${productName});
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = ${productName});
+		}
+	}
+
+	@description = "This is a test for LPS-184193. Allow selecting specific display page in the page editor for document."
+	@priority = 3
+	test MapSpecificDisplayPageForDocument {
+		task ("Given a page designer has a display page template for Document") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Document",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = ${randomSiteName},
+				subType = "Basic Document");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditorMapping.mapEditableTextToField(
+				field = "Title",
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditor.publish();
+
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentTitle = "Document Title",
+				groupName = ${randomSiteName},
+				mimeType = "image/jpeg",
+				sourceFileName = "Document_1.jpg");
+		}
+
+		task ("When the page designer adds a Button fragment to a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("Then the page designer could map the specific display page for document to the Button fragment") {
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			PageEditorEditableLink.mapURLToAsset(
+				entryTitle = "Document Title",
+				field = "Display Page Name",
+				navItem = "Documents and Media");
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			Button.click(button = "Go Somewhere");
+
+			ControlMenu.viewHeaderTitle(headerTitle = "Document Title");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Document Title");
+		}
+	}
+
+	@description = "This is a test for LPS-184193. Allow selecting specific display page in the page editor for web content."
+	@priority = 5
+	test MapSpecificDisplayPageForWebContentArticle {
+		property portal.acceptance = "true";
+
+		task ("Given a page designer has a display page template for Web Content Article") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Web Content Article",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = ${randomSiteName},
+				subType = "Basic Web Content");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditorMapping.mapEditableTextToField(
+				field = "Title",
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditor.publish();
+
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = ${randomSiteName},
+				title = "Web Content Title");
+		}
+
+		task ("When the page designer adds a Button fragment to a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("Then the page designer could map the specific display page for web content to the Button fragment") {
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			PageEditorEditableLink.mapURLToAsset(
+				entryTitle = "Web Content Title",
+				field = "Display Page Name",
+				navItem = "Web Content");
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			Button.click(button = "Go Somewhere");
+
+			ControlMenu.viewHeaderTitle(headerTitle = "Web Content Title");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Web Content Title");
+		}
+	}
+
+	@description = "This is a test for LPS-191986. View rel added to mapped fragment."
+	@priority = 4
+	test MapSpecificDisplayPageTemplateToFragment {
+		var portalURL = PropsUtil.get("portal.url");
+		var assetTypeId = JSONClassname._getClassNameId(value = "com.liferay.journal.model.JournalArticle");
+
+		task ("Given a user has a default display page template and a normal display page template") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Web Content Article",
+				displayPageTemplateEntryName = "Display Page Name 1",
+				groupName = ${randomSiteName},
+				statusKey = "APPROVED",
+				subType = "Basic Web Content");
+
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = ${randomSiteName},
+				layoutPageTemplateEntryName = "Display Page Name 1",
+				type = "Display Page Template");
+
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Web Content Article",
+				displayPageTemplateEntryName = "Display Page Name 2",
+				groupName = ${randomSiteName},
+				statusKey = "APPROVED",
+				subType = "Basic Web Content");
+
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = ${randomSiteName},
+				title = "Web Content Title");
+
+			var assetId = JSONWebcontent.getResourcePrimKeyByURLTitle(
+				groupName = ${randomSiteName},
+				title = "Web Content Title");
+		}
+
+		task ("When the user maps the default display page template as specific to a Button fragment") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			PageEditorEditableLink.mapURLToAsset(
+				entryTitle = "Web Content Title",
+				field = "Display Page Name 1",
+				navItem = "Web Content");
+		}
+
+		task ("Then the nofollow is added to Button") {
+			InputField.viewText(
+				fieldLabel = "URL",
+				text = "${portalURL}/web/${siteURLKey}/e/display-page-name-1/${assetTypeId}/${assetId}");
+
+			AssertAttributeValue(
+				fragmentName = "button",
+				id = "link",
+				index = 1,
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
+				value1 = "rel",
+				value2 = "nofollow");
+
+			PageEditor.publish();
+		}
+
+		task ("When the user accesses to the associated display page") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			Button.click(button = "Go Somewhere");
+		}
+
+		task ("Then the canonical is added to an link element") {
+			AssertAttributeValue(
+				locator1 = "//link[contains(@href,'${siteURLKey}/w/web-content-title')]",
+				value1 = "rel",
+				value2 = "canonical");
+		}
+
+		task ("When the user maps the normal display page template as specific to a Button fragment") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditorEditableLink.gotoEditableFieldLink(
+				fragmentName = "Button",
+				id = "link");
+
+			Select(
+				locator1 = "PageEditorEditableLink#FIELD",
+				value1 = "Display Page Name 2");
+		}
+
+		task ("Then the nofollow is added to Button") {
+			InputField.viewText(
+				fieldLabel = "URL",
+				text = "${portalURL}/web/${siteURLKey}/e/display-page-name-2/${assetTypeId}/${assetId}");
+
+			AssertAttributeValue(
+				fragmentName = "button",
+				id = "link",
+				index = 1,
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
+				value1 = "rel",
+				value2 = "nofollow");
+		}
+	}
+
 	@description = "This is a use case for LPS-116975. Map single tag from asset entry to editable field."
-	@priority = "5"
+	@priority = 5
 	test MapTagFromAssetToEditableField {
 		property portal.acceptance = "true";
 
@@ -829,14 +1797,14 @@ definition {
 			HeadlessBlog.addBlogEntry(
 				assetTagNames = "tagname1",
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 		}
 
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -870,7 +1838,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-116975. Map multiple tags from asset entry to editable field."
-	@priority = "5"
+	@priority = 5
 	test MapTagsFromAssetToEditableField {
 		property portal.acceptance = "true";
 
@@ -878,14 +1846,14 @@ definition {
 			JSONWebcontent.addWebContent(
 				assetTagNames = "tagname1,tagname2,tagname3",
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a Paragraph fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -919,13 +1887,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-123118. The page creator can map a fragment to web content template with portlet request model."
-	@priority = "4"
+	@priority = 4
 	test MapTemplateWithPortletRequestModelToFragment {
-		property custom.properties = "configuration.override.com.liferay.portal.template.freemarker.configuration.FreeMarkerEngineConfiguration_restrictedVariables=[\"httpUtilUnsafe\",\"staticFieldGetter\",\"staticUtil\",\"serviceLocator\",]${line.separator}configuration.override.com.liferay.portal.template.freemarker.configuration.FreeMarkerEngineConfiguration_restrictedClasses=[\"org.glassfish.*\",\"org.jboss.*\",\"org.springframework.*\",\"org.wildfly.*\",\"weblogic.*\",]";
+		property custom.properties = "configuration.override.com.liferay.portal.template.freemarker.configuration.FreeMarkerEngineConfiguration_restrictedClasses=[\"org.glassfish.*\",\"org.jboss.*\",\"org.springframework.*\",\"org.wildfly.*\",\"weblogic.*\",]${line.separator}configuration.override.com.liferay.portal.template.freemarker.configuration.FreeMarkerEngineConfiguration_restrictedVariables=[\"httpUtilUnsafe\",\"staticFieldGetter\",\"staticUtil\",\"serviceLocator\",]";
 
 		task ("Given a page creator has a web content template with portlet request model") {
 			task ("Add a web content template for Basic Web Content structure") {
-				WebContentNavigator.openWebContentTemplatesAdmin(siteURLKey = "test-site-name");
+				WebContentNavigator.openWebContentTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 				WebContentTemplates.addCP(
 					structureName = "Basic Web Content",
@@ -937,14 +1905,14 @@ definition {
 			task ("Add a web content") {
 				JSONWebcontent.addWebContent(
 					content = "Web Content Content",
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					title = "Web Content Title");
 			}
 
 			task ("Add a Paragraph fragment to content page") {
 				ContentPagesNavigator.openEditContentPage(
 					pageName = "Content Page Name",
-					siteName = "Test Site Name");
+					siteName = ${randomSiteName});
 
 				PageEditor.addFragment(
 					collectionName = "Basic Components",
@@ -978,7 +1946,7 @@ definition {
 
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Then the page creator should not see an error at view mode") {
@@ -986,39 +1954,17 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-99686. Map web content fields to link editable field".
-	@priority = "2"
+	@description = "This is a test for LPS-99686. Map web content fields to link editable field"
+	@priority = 2
 	test MapWebContentFieldsToLinkFragment {
 		task ("Add a web content structure with multiple fields") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoStructures();
 
-			WebContentStructures.addCP(
-				structureDescription = "WC Structure Description",
-				structureName = "WC Structure Name");
-
-			for (var fieldName : list "Text,Rich Text,Date") {
-				DataEngine.addField(
-					fieldFieldLabel = "${fieldName}",
-					fieldName = "${fieldName}");
-			}
-
-			DataEngine.addField(
-				fieldFieldLabel = "Text Box",
-				fieldName = "Text",
-				fieldType = "Multiple Lines");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Integer",
-				fieldName = "Numeric");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Decimal",
-				fieldName = "Numeric",
-				numericType = "Decimal");
-
-			WebContentStructures.saveCP(structureName = "WC Structure Name");
+			WebContentStructures.importStructure(
+				structureName = "WC Structure Name",
+				uploadFileName = "Structure_All_Fields.json");
 		}
 
 		task ("Add a web content based on new structure") {
@@ -1028,8 +1974,8 @@ definition {
 
 			WebContent.addWithStructureCP(
 				webContentDate = "10/10/2020",
-				webContentNumeric = "9",
-				webContentNumericFieldLabel = "Integer",
+				webContentNumeric = 9,
+				webContentNumericFieldLabel = "Numeric",
 				webContentRichText = "This is a Rich Text field",
 				webContentText = "This is a Text field",
 				webContentTitle = "Web Content Title");
@@ -1042,17 +1988,13 @@ definition {
 				webContentText = "This is a Text Box field",
 				webContentTextFieldLabel = "Text Box");
 
-			WebContent.addWithStructureCP(
-				webContentText = "This is a Text field",
-				webContentTitle = "Web Content Title");
-
 			PortletEntry.publish();
 		}
 
 		task ("Add a Banner Center to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -1117,12 +2059,12 @@ definition {
 
 			Select(
 				locator1 = "PageEditorEditableLink#FIELD",
-				value1 = "Integer");
+				value1 = "Numeric");
 
 			PageEditor.waitForAutoSave();
 
 			PageEditor.viewFragmentEditableText(
-				editableText = "9",
+				editableText = 9,
 				fragmentName = "Button",
 				id = "link");
 
@@ -1140,10 +2082,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map web content field with URL to image editable field."
-	@priority = "4"
+	@priority = 4
 	test MapWebContentFieldWithURLToImageFragment {
 		task ("Add a web content structure with a Text field") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoStructures();
 
@@ -1171,7 +2113,7 @@ definition {
 		task ("Add a Image fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1199,7 +2141,7 @@ definition {
 		task ("Assert mapped URL work in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "//img[contains(@src,'data:image/png')]",
@@ -1215,11 +2157,11 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-98031. Map web content field with URL to link editable field."
-	@priority = "4"
+	@description = "This is a test for LPS-98031. Map web content field with URL to link editable field for Content Pages."
+	@priority = 4
 	test MapWebContentFieldWithURLToLinkFragment {
 		task ("Add a web content structure with a Text field") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoStructures();
 
@@ -1247,7 +2189,7 @@ definition {
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1275,7 +2217,7 @@ definition {
 		task ("Assert mapped URL work in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "[normalize-space(text())='Go Somewhere']",
@@ -1292,10 +2234,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98031. Map web content field with URL to text editable field."
-	@priority = "4"
+	@priority = 4
 	test MapWebContentFieldWithURLToTextFragment {
 		task ("Add a web content structure with a Text field") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoStructures();
 
@@ -1323,7 +2265,7 @@ definition {
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1351,7 +2293,7 @@ definition {
 		task ("Assert mapped URL work in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "[normalize-space(text())='Heading Example']",
@@ -1368,12 +2310,12 @@ definition {
 	}
 
 	@description = "This case ensures a user can map an image to the editable background image of a fragment."
-	@priority = "5"
+	@priority = 5
 	test MapWebContentImageToBackgroundImageOfBannerCenter {
 		property portal.acceptance = "true";
 
 		task ("Add a web content structure with an Image field") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoStructures();
 
@@ -1387,7 +2329,7 @@ definition {
 		}
 
 		task ("Add a template for new structure") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			NavItem.gotoTemplates();
 
@@ -1399,7 +2341,7 @@ definition {
 		}
 
 		task ("Add a web content based on new structure") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
@@ -1414,7 +2356,7 @@ definition {
 		task ("Add a Banner Center fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -1436,28 +2378,28 @@ definition {
 		task ("View the mapped image") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.viewFragmentBackgroundImage(image = "Document_2.jpeg");
 		}
 	}
 
 	@description = "This is a test for LPS-99686. Map web content title to link type fragment."
-	@priority = "5"
+	@priority = 5
 	test MapWebContentTitleToLinkFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
 				content = "Test Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "liferay.com");
 		}
 
 		task ("Add a Banner Center to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -1488,7 +2430,7 @@ definition {
 		task ("View mapped content is shown in link editable field") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertVisible(
 				key_append = "[contains(@data-lfr-editable-id,'link')][normalize-space(text())='liferay.com']",
@@ -1498,13 +2440,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-125933. Preview a Content Page with a Fragment Mapped to WC, a WCD, and an Assert Publisher."
-	@priority = "3"
+	@priority = 3
 	test PreviewContentPageWithMappedAndInlineContent {
 		task ("Add two web contents based on Basic Web Content") {
 			for (var n : list "1,2") {
 				JSONWebcontent.addWebContent(
 					content = "Web Content Content ${n}",
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					title = "Web Content Title ${n}");
 			}
 		}
@@ -1512,7 +2454,7 @@ definition {
 		task ("Add an Asset Publisher and an Web Content Display to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addWidget(portletName = "Asset Publisher");
 
@@ -1577,20 +2519,92 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-171383. View documentation link in date field."
+	@priority = 4
+	test ViewDocumentationLinkInDateField {
+		task ("Given a page has a fragment with mapped date") {
+			JSONFragment.addFragmentCollection(
+				groupName = ${randomSiteName},
+				name = "Collection Name");
+
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+
+			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
+
+			FragmentsAdmin.addFragment(fragmentName = "Fragment Name");
+
+			var htmlSnippet = '''
+<div class="fragment-name">
+	<div data-lfr-editable-type="date-time" data-lfr-editable-id="date-time">
+	</div>
+</div>''';
+
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
+
+			FragmentsEditor.waitForAutoSave();
+
+			FragmentsEditor.publish();
+
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = ${randomSiteName},
+				title = "Web Content Title");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Collection Name",
+				fragmentName = "Fragment Name");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Fragment Name",
+				id = "date-time");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Web Content Title",
+				navItem = "Web Content");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Display Date");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("When selecting Custom Date Format") {
+			Select(
+				key_fieldLabel = "Date Format",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Custom");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Then assert there's a documentation link in date field") {
+			AssertVisible(
+				key_href = "https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html",
+				key_text = "Learn more about date formats.",
+				locator1 = "Link#ANY_HREF");
+		}
+	}
+
 	@description = "This is a test for LPS-110462. The value of editable field should be reset when the mapped content is missing"
-	@priority = "3"
+	@priority = 3
 	test ViewEditableFieldValueWhenMappedContentMissing {
 		task ("Add a web content based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a Container to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -1630,7 +2644,7 @@ definition {
 		}
 
 		task ("Move the web content to the Recycle Bin") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = ${siteURLKey});
 
 			WebContent.moveToRecycleBinCP(webContentTitle = "Web Content Title");
 		}
@@ -1638,7 +2652,7 @@ definition {
 		task ("Assert the default value is shown in Heading") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.viewFragmentEditableText(
 				editableText = "Heading Example",
@@ -1648,18 +2662,18 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-120198. The link information is still kept when the linked page is deleted."
-	@priority = "4"
+	@priority = 4
 	test ViewMapInformationAfterDeleteMappedPage {
 		task ("Add a widget page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Widget Page Name");
 		}
 
 		task ("Add a Button fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1683,7 +2697,7 @@ definition {
 		task ("View selected page is linked to Button fragment") {
 			AssertVisible(
 				key_append = "[normalize-space(text())='Go Somewhere']",
-				key_url = "/web/test-site-name/test-widget-page-name",
+				key_url = "/web/${siteURLKey}/test-widget-page-name",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
 			PageEditor.publish();
@@ -1691,38 +2705,38 @@ definition {
 
 		task ("Delete the widget page") {
 			JSONLayout.deletePublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Widget Page Name");
 		}
 
 		task ("Navigate to content page in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
-		task ("View selected page is still linked to Button fragment") {
+		task ("View selected page is changed to #") {
 			AssertVisible(
 				key_append = "[normalize-space(text())='Go Somewhere']",
-				key_url = "/web/test-site-name/test-widget-page-name",
+				key_url = "#",
 				locator1 = "Fragment#FRAGMENT_LINK");
 		}
 
-		task ("Assert Not Found is shown") {
+		task ("Assert no redirection") {
 			Click(
 				key_append = "[normalize-space(text())='Go Somewhere']",
-				key_url = "/web/test-site-name/test-widget-page-name",
+				key_url = "#",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
 			AssertTextEquals(
-				locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-				value1 = "Not Found");
+				locator1 = "ControlMenu#HEADING",
+				value1 = "Content Page Name");
 		}
 
 		task ("Navigate to the content page in edit mode") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("View # is linked to Button fragment") {
@@ -1760,26 +2774,26 @@ definition {
 	}
 
 	@description = "This is a test for LPS-118979 and LPS-106776. The mappable fields are grouped by fieldset in content page."
-	@priority = "5"
+	@priority = 5
 	test ViewMappableFieldsAreGroupedByFieldset {
 		property portal.acceptance = "true";
 
 		task ("Add a web content article based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 		}
 
 		task ("Add a blogs entry") {
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 		}
 
 		task ("Add a custom Document type") {
-			DMNavigator.openDocumentTypesAdmin(siteURLKey = "test-site-name");
+			DMNavigator.openDocumentTypesAdmin(siteURLKey = ${siteURLKey});
 
 			DMDocumentType.add(
 				dmDocumentTypeDescription = "DM Document Type Description",
@@ -1788,7 +2802,7 @@ definition {
 		}
 
 		task ("Add a document based on new document type") {
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = ${siteURLKey});
 
 			DMDocument.addCP(
 				dmDocumentDescription = "DM Document Description",
@@ -1800,7 +2814,7 @@ definition {
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1823,7 +2837,7 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Basic Information",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 
@@ -1842,14 +2856,14 @@ definition {
 			AssertElementPresent(
 				key_fieldLabel = "Field",
 				key_groupLabel = "Display Page",
-				key_value = "Display Page URL",
+				key_value = "Default",
 				locator1 = "Select#GROUPED_SELECT_VALUE");
 
 			for (var field : list "All Categories,Topic,Tags") {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Categorization",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 
@@ -1857,7 +2871,7 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Schedule",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 		}
@@ -1873,7 +2887,7 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Basic Information",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 
@@ -1881,15 +2895,15 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Content",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 
-			for (var field : list "Display Page URL,Description,Display Date") {
+			for (var field : list "Description,Display Date") {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Configuration",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 
@@ -1897,9 +2911,15 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Categorization",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
+
+			AssertElementPresent(
+				key_fieldLabel = "Field",
+				key_groupLabel = "Display Page",
+				key_value = "Default",
+				locator1 = "Select#GROUPED_SELECT_VALUE");
 		}
 
 		task ("Map the document to editable field of Heading") {
@@ -1913,7 +2933,7 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Basic Information",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 
@@ -1921,7 +2941,7 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "File Information",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 
@@ -1935,32 +2955,32 @@ definition {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
 					key_groupLabel = "Categorization",
-					key_value = "${field}",
+					key_value = ${field},
 					locator1 = "Select#GROUPED_SELECT_VALUE");
 			}
 		}
 	}
 
 	@description = "This is a test for LPS-164269. The page creator could view a tooltip with the page URL when mapping a fragment on sites and libraries."
-	@priority = "4"
+	@priority = 4
 	test ViewPageURLOnTooltipWhenSelectPageItem {
 		task ("Given a page creator opens the link to page modal") {
 			task ("Get the guest site name") {
 				Navigator.openURL();
 
-				var siteName = selenium.getText("Home#SITE_NAME");
+				var defaultSiteName = selenium.getText("Home#SITE_NAME");
 			}
 
 			task ("Publish content page") {
 				JSONLayout.publishLayout(
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					layoutName = "Content Page Name");
 			}
 
 			task ("Add a Button fragment to page") {
 				ContentPagesNavigator.openEditContentPage(
 					pageName = "Content Page Name",
-					siteName = "Test Site Name");
+					siteName = ${randomSiteName});
 
 				PageEditor.addFragment(
 					collectionName = "Basic Components",
@@ -1991,14 +3011,18 @@ definition {
 		}
 
 		task ("When the page creator hovers on the content page item") {
-			MouseOver(
+			MouseOver.javaScriptFocus(
+				key_nodeName = "Content Page Name",
+				locator1 = "Treeview#NODE_ITEM");
+
+			MouseOver.javaScriptFocus(
 				key_nodeName = "Content Page Name",
 				locator1 = "Treeview#NODE_ITEM");
 		}
 
 		task ("Then the page creator could view a tooltip with the page url") {
 			AssertVisible(
-				key_content = "/web/test-site-name/content-page-name",
+				key_content = "/web/${siteURLKey}/content-page-name",
 				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 		}
 
@@ -2007,11 +3031,15 @@ definition {
 				key_breadcrumbName = "Sites and Libraries",
 				locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
 
-			LexiconCard.clickCardTitle(card = "${siteName}");
+			LexiconCard.clickCardTitle(card = ${defaultSiteName});
 
 			Portlet.expandTree();
 
-			MouseOver(
+			MouseOver.javaScriptFocus(
+				key_nodeName = "Home",
+				locator1 = "Treeview#NODE_ITEM");
+
+			MouseOver.javaScriptFocus(
 				key_nodeName = "Home",
 				locator1 = "Treeview#NODE_ITEM");
 		}
@@ -2020,6 +3048,515 @@ definition {
 			AssertVisible(
 				key_content = "/home",
 				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+		}
+	}
+
+	@description = "This is a test for LPS-146373. New prefixes for email,phone and none options can be used on Content Pages."
+	@priority = 4
+	test ViewPrefixesForEmailAndPhoneAndNoneOptionsOnContentPage {
+		var siteName = StringUtil.randomString(8);
+
+		var siteURLKey = StringUtil.toLowerCase(${siteName});
+
+		task ("Given a site created from Welcome site template") {
+			HeadlessSite.addSite(
+				siteName = ${siteName},
+				templateName = "Welcome",
+				templateType = "Site Initializer");
+		}
+
+		task ("When adding a web content with email and telephone") {
+			task ("Create a web content structure") {
+				WebContentStructures.openWebContentStructuresAdmin(siteURLKey = ${siteURLKey});
+
+				WebContentStructures.importStructure(
+					structureName = "Contact Information",
+					uploadFileName = "Structure_Contact_Information_Fields.json");
+			}
+
+			task ("Create a Web Content from Contact Information") {
+				NavItem.gotoWebContent();
+
+				WebContentNavigator.gotoAddWithStructureCP(structureName = "Contact Information");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "John Smith",
+					webContentTextFieldLabel = "Name",
+					webContentTitle = "Web Content Title");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "john.smith@liferay.com",
+					webContentTextFieldLabel = "Email");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = 1112223333,
+					webContentTextFieldLabel = "Phone");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "https://www.liferay.com",
+					webContentTextFieldLabel = "Personal Web");
+
+				PortletEntry.publish();
+			}
+
+			task ("Create a content page") {
+				JSONLayout.addPublicLayout(
+					groupName = ${siteName},
+					layoutName = "Contact",
+					type = "content");
+			}
+
+			task ("Add a Container to page") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Contact",
+					siteName = ${siteName});
+
+				PageEditor.addFragment(
+					collectionName = "Layout Elements",
+					fragmentName = "Container");
+			}
+
+			task ("Add a Heading fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Heading",
+					navTab = "Fragments");
+			}
+
+			task ("Map Email field of web content to Heading") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Heading",
+					id = "element-text");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Email");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Email");
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Email");
+			}
+
+			task ("Add an Image fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Image",
+					navTab = "Fragments",
+					targetElementName = "Heading");
+			}
+
+			task ("Map Phone field of web content to Image") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Image",
+					id = "image-square");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Phone");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Phone");
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Phone");
+			}
+
+			task ("Add a Button fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Button",
+					height = "Tall",
+					navTab = "Fragments",
+					ratio = "9 / 8",
+					targetElementName = "Image");
+			}
+
+			task ("Map Personal Web field of web content to Button") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Button",
+					id = "link");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Personal Web");
+
+				PageEditor.waitForAutoSave();
+			}
+		}
+
+		task ("Then user is able to view email and telephone on content page") {
+			task ("Open Preview Draft") {
+				PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+
+				PagesAdmin.gotoPageEllipsisMenuItem(
+					menuItem = "Preview Draft",
+					pageName = "Contact");
+			}
+
+			task ("View editable fields' link") {
+				SelectWindow.selectPopUp(value1 = "null");
+
+				AssertVisible(
+					key_append = "[normalize-space(text())='Heading Example']",
+					key_url = "mailto:john.smith@liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "/*[contains(@data-lfr-editable-id,'image')]",
+					key_url = "tel:1112223333",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "[contains(@class,'btn')]",
+					key_url = "https://www.liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				Navigator.closeWindow();
+			}
+
+			task ("Publish the page and view it") {
+				JSONLayout.publishLayout(
+					groupName = ${siteName},
+					layoutName = "Contact");
+
+				ContentPagesNavigator.openViewContentPage(
+					pageName = "Contact",
+					siteName = ${siteName});
+			}
+
+			task ("View editable fields' link") {
+				AssertVisible(
+					key_append = "[normalize-space(text())='Heading Example']",
+					key_url = "mailto:john.smith@liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "/*[contains(@data-lfr-editable-id,'image')]",
+					key_url = "tel:1112223333",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "[contains(@class,'btn')]",
+					key_url = "https://www.liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+			}
+		}
+	}
+
+	@description = "This is a test for LPS-146373. New prefixes for email,phone and none options can be used can be used on a copied Content Page."
+	@priority = 4
+	test ViewPrefixesForEmailAndPhoneAndNoneOptionsOnCopiedContentPage {
+		var siteName = StringUtil.randomString(8);
+
+		var siteURLKey = StringUtil.toLowerCase(${siteName});
+
+		task ("Given a site created from Welcome site template") {
+			HeadlessSite.addSite(
+				siteName = ${siteName},
+				templateName = "Welcome",
+				templateType = "Site Initializer");
+		}
+
+		task ("When adding a web content with email and telephone") {
+			task ("Create a web content structure") {
+				WebContentStructures.openWebContentStructuresAdmin(siteURLKey = ${siteURLKey});
+
+				WebContentStructures.importStructure(
+					structureName = "Contact Information",
+					uploadFileName = "Structure_Contact_Information_Fields.json");
+			}
+
+			task ("Create a Web Content from Contact Information") {
+				NavItem.gotoWebContent();
+
+				WebContentNavigator.gotoAddWithStructureCP(structureName = "Contact Information");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "John Smith",
+					webContentTextFieldLabel = "Name",
+					webContentTitle = "Web Content Title");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "john.smith@liferay.com",
+					webContentTextFieldLabel = "Email");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = 1112223333,
+					webContentTextFieldLabel = "Phone");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "https://www.liferay.com",
+					webContentTextFieldLabel = "Personal Web");
+
+				PortletEntry.publish();
+			}
+
+			task ("Create a content page") {
+				JSONLayout.addPublicLayout(
+					groupName = ${siteName},
+					layoutName = "Contact",
+					type = "content");
+			}
+
+			task ("Add a Container to page") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Contact",
+					siteName = ${siteName});
+
+				PageEditor.addFragment(
+					collectionName = "Layout Elements",
+					fragmentName = "Container");
+			}
+
+			task ("Add a Heading fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Heading",
+					navTab = "Fragments");
+			}
+
+			task ("Map Email field of web content to Heading") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Heading",
+					id = "element-text");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Email");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Email");
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Email");
+			}
+
+			task ("Add an Image fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Image",
+					navTab = "Fragments",
+					targetElementName = "Heading");
+			}
+
+			task ("Map Phone field of web content to Image") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Image",
+					id = "image-square");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Phone");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Phone");
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Phone");
+			}
+
+			task ("Add a Button fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Button",
+					height = "Tall",
+					navTab = "Fragments",
+					ratio = "9 / 8",
+					targetElementName = "Image");
+			}
+
+			task ("Map Personal Web field of web content to Button") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Button",
+					id = "link");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Personal Web");
+
+				PageEditor.waitForAutoSave();
+			}
+		}
+
+		task ("Then user is able to view email and telephone on copied content page") {
+			task ("Publish the page") {
+				JSONLayout.publishLayout(
+					groupName = ${siteName},
+					layoutName = "Contact");
+			}
+
+			task ("Copy the page and view it") {
+				PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+
+				PagesAdmin.gotoPageEllipsisMenuItem(
+					menuItem = "Make a Copy",
+					pageName = "Contact");
+
+				MenuItem.click(menuItem = "Page");
+
+				SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+				PortletEntry.inputName(name = "Copied Contact");
+
+				Button.clickAdd();
+
+				JSONLayout.publishLayout(
+					groupName = ${siteName},
+					layoutName = "Copied Contact");
+
+				ContentPagesNavigator.openViewContentPage(
+					pageName = "Copied Contact",
+					siteName = ${siteName});
+			}
+
+			task ("View editable fields' link") {
+				AssertVisible(
+					key_append = "[normalize-space(text())='Heading Example']",
+					key_url = "mailto:john.smith@liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "/*[contains(@data-lfr-editable-id,'image')]",
+					key_url = "tel:1112223333",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "[contains(@class,'btn')]",
+					key_url = "https://www.liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+			}
 		}
 	}
 

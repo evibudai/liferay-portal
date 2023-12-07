@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.configuration.test;
@@ -25,7 +16,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -66,11 +56,9 @@ public class AMImageConfigurationTest extends BaseAMImageConfigurationTestCase {
 				"max-width", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		Assert.assertNotNull(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				TestPropsValues.getCompanyId(), "1");
-
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
+				TestPropsValues.getCompanyId(), "1"));
 	}
 
 	@Test
@@ -171,11 +159,9 @@ public class AMImageConfigurationTest extends BaseAMImageConfigurationTestCase {
 		_amImageConfigurationHelper.disableAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "1");
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		Assert.assertNotNull(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				TestPropsValues.getCompanyId(), "1");
-
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
+				TestPropsValues.getCompanyId(), "1"));
 	}
 
 	@Test
@@ -198,7 +184,7 @@ public class AMImageConfigurationTest extends BaseAMImageConfigurationTestCase {
 	}
 
 	@Test
-	public void testNonexistantConfigurationEntry() throws Exception {
+	public void testNonexistentConfigurationEntry() throws Exception {
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "one", "desc", "1",
 			HashMapBuilder.put(
@@ -207,11 +193,9 @@ public class AMImageConfigurationTest extends BaseAMImageConfigurationTestCase {
 				"max-width", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		Assert.assertNull(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				TestPropsValues.getCompanyId(), "0");
-
-		Assert.assertFalse(amImageConfigurationEntryOptional.isPresent());
+				TestPropsValues.getCompanyId(), "0"));
 	}
 
 	@Override

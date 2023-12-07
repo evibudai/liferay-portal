@@ -4,7 +4,7 @@ definition {
 	// Stop running on release until ISIT-32385 fixed
 
 	property cmis.repository.type = "sharepoint2013";
-	property custom.properties = "session.store.password=true${line.separator}company.security.auth.type=screenName";
+	property custom.properties = "company.security.auth.type=screenName${line.separator}session.store.password=true";
 	property osgi.modules.includes = "sharepoint-soap";
 	property portal.release = "false";
 	property portal.upstream = "true";
@@ -16,9 +16,7 @@ definition {
 
 		var sharepointVmHostName = PropsUtil.get("cmis.repository.vm.host.name");
 
-		AntCommand(
-			locator1 = "build-test-sharepoint.xml",
-			value1 = "clean-sharepoint-repository -Dssh.host=${sharepointVmHostName}");
+		AntCommands.runCommand("build-test-sharepoint.xml", "clean-sharepoint-repository -Dssh.host=${sharepointVmHostName}");
 
 		User.firstLoginByScreenNamePG(
 			authenticationMethod = "By Screen Name",
@@ -57,18 +55,17 @@ definition {
 
 		DMRepository.addSharepoint(
 			dmRepositoryLibraryName = "Documents",
-			dmRepositoryLibraryPath = "Shared Documents",
 			dmRepositoryName = "Sharepoint",
 			dmRepositorySiteURL = "http://${sharepointVmHostName}",
-			dmServerVersion = "2013");
+			dmServerVersion = 2013);
 
 		PortletEntry.save();
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -99,10 +96,11 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test CheckinDocument {
-		property test.name.skip.portal.instance = "CPSharepoint2013#CheckinDocument";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -149,10 +147,11 @@ definition {
 			dmRepositoryName = "true");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test DeleteDocumentInSubfolder {
-		property test.name.skip.portal.instance = "CPSharepoint2013#DeleteDocumentInSubfolder";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -207,10 +206,11 @@ definition {
 		DMDocument.viewDefault();
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test DeleteSubfolder {
-		property test.name.skip.portal.instance = "CPSharepoint2013#DeleteSubfolder";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -233,10 +233,11 @@ definition {
 		DMFolder.viewDefaultCP();
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test EditDocumentFile {
-		property test.name.skip.portal.instance = "CPSharepoint2013#EditDocumentFile";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -285,10 +286,11 @@ definition {
 			metadataLabel = "Content Encoding");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test EditRepository {
-		property test.name.skip.portal.instance = "CPSharepoint2013#EditRepository";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -352,10 +354,11 @@ definition {
 			value1 = "Sharepoint Repository Name Edit");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test MoveCheckedoutDocumentToFolder {
-		property test.name.skip.portal.instance = "CPSharepoint2013#MoveCheckedoutDocumentToFolder";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -423,10 +426,11 @@ definition {
 		DMDocument.viewCheckedoutCP(dmRepositoryName = "true");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test MoveDocumentToHome {
-		property test.name.skip.portal.instance = "CPSharepoint2013#MoveDocumentToHome";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -459,10 +463,11 @@ definition {
 		DMDocument.cannotViewCP(dmDocumentTitle = "Document_1.odt");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test SearchDocumentViaHome {
-		property test.name.skip.portal.instance = "CPSharepoint2013#SearchDocumentViaHome";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -483,10 +488,11 @@ definition {
 			dmRepositoryName = "Sharepoint Repository Name");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test ViewEditedCheckedoutDocument {
-		property test.name.skip.portal.instance = "CPSharepoint2013#ViewEditedCheckedoutDocument";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -533,10 +539,11 @@ definition {
 		DMDocument.viewCheckedoutCP(dmRepositoryName = "true");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test ViewOriginalFileExtensionAfterUnsuccessfulExtensionChange {
-		property test.name.skip.portal.instance = "CPSharepoint2013#ViewOriginalFileExtensionAfterUnsuccessfulExtensionChange";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 
@@ -571,10 +578,11 @@ definition {
 		DMDocument.viewCP(dmDocumentTitle = "Document_1.docx");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test ViewOriginalFileExtensionAfterUnsuccessfulExtensionRemoval {
-		property test.name.skip.portal.instance = "CPSharepoint2013#ViewOriginalFileExtensionAfterUnsuccessfulExtensionRemoval";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMRepository.gotoCP(dmRepositoryName = "Sharepoint Repository Name");
 

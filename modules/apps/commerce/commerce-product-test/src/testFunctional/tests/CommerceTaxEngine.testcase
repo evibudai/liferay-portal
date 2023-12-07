@@ -15,15 +15,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6258. UI lifecycle for activating a tax engine (ByAddress)"
-	@priority = "3"
+	@priority = 3
 	test ActivateByAddressTaxEngine {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -105,15 +103,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6258. UI lifecycle for activating a tax engine (Fixed)"
-	@priority = "3"
+	@priority = 3
 	test ActivateFixedTaxEngine {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -195,7 +191,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6259. Add tax rates to the newly activated engine (ByAddress)"
-	@priority = "3"
+	@priority = 3
 	test AddTaxRateToByAddressTaxEngine {
 		property portal.acceptance = "false";
 
@@ -225,9 +221,7 @@ definition {
 			keyName = "Test 2",
 			keyReferenceCode = "Test Reference 2");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -271,7 +265,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "7");
+			value1 = 7);
 
 		Select(
 			key_fieldLabel = "Country",
@@ -286,7 +280,7 @@ definition {
 		Type(
 			key_fieldLabel = "Zip",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "0100");
+			value1 = 0100);
 
 		Button.click(button = "Submit");
 
@@ -318,7 +312,7 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Tax Rate Settings");
 
 		AssertElementPresent(
-			key_errorMessage = "7",
+			key_errorMessage = 7,
 			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
 
 		AssertElementPresent(
@@ -330,7 +324,7 @@ definition {
 			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
 
 		AssertElementPresent(
-			key_errorMessage = "0100",
+			key_errorMessage = 0100,
 			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
 
 		Click(
@@ -344,7 +338,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
+			value1 = 10);
 
 		Select(
 			key_fieldLabel = "Country",
@@ -359,7 +353,7 @@ definition {
 		Type(
 			key_fieldLabel = "Zip",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "0111");
+			value1 = 0111);
 
 		Button.clickSave();
 
@@ -381,7 +375,7 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Tax Rate Settings");
 
 		AssertElementPresent(
-			key_errorMessage = "10",
+			key_errorMessage = 10,
 			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
 
 		AssertElementPresent(
@@ -393,12 +387,12 @@ definition {
 			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
 
 		AssertElementPresent(
-			key_errorMessage = "0111",
+			key_errorMessage = 0111,
 			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
 	}
 
 	@description = "This is a test for COMMERCE-6259. Add tax rates to the newly activated engine (Fixed)"
-	@priority = "3"
+	@priority = 3
 	test AddTaxRateToFixedTaxEngine {
 		property portal.acceptance = "false";
 
@@ -423,7 +417,9 @@ definition {
 			keyName = "Test 2",
 			keyReferenceCode = "Test Reference");
 
-		Alert.viewErrorMessage(errorMessage = "Please enter a unique external reference code.");
+		AssertTextEquals.assertText(
+			locator1 = "Message#ERROR",
+			value1 = "Close Error:Please enter a unique external reference code.");
 
 		Click(locator1 = "Icon#BACK");
 
@@ -437,9 +433,7 @@ definition {
 			keyName = "Test 2",
 			keyReferenceCode = "Test Reference 2");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -483,7 +477,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "7");
+			value1 = 7);
 
 		Button.click(button = "Submit");
 
@@ -517,7 +511,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
+			value1 = 10);
 
 		Button.clickSave();
 
@@ -544,7 +538,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6262. Test address restriction on tax calculation"
-	@priority = "3"
+	@priority = 3
 	test AssertAddressRestrictiedTaxIsCorrectlyCalculated {
 		property portal.acceptance = "false";
 
@@ -559,9 +553,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -600,7 +592,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "7");
+			value1 = 7);
 
 		Select(
 			key_fieldLabel = "Country",
@@ -615,7 +607,7 @@ definition {
 		Type(
 			key_fieldLabel = "Zip",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "0100");
+			value1 = 0100);
 
 		Button.click(button = "Submit");
 
@@ -645,10 +637,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -665,7 +654,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		Refresh();
 
@@ -689,7 +678,7 @@ definition {
 		Type(
 			key_fieldName = "Zip",
 			locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT",
-			value1 = "0100");
+			value1 = 0100);
 
 		Type(
 			key_fieldName = "City",
@@ -728,16 +717,49 @@ definition {
 
 	@description = "This is a test for COMMERCE-6260. Test tax calculation"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AssertProductTaxCategoryIsCorrectlyCalculated {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6260 AssertProductTaxCategoryIsCorrectlyCalculated Pending Implementation
 
 	}
 
+	@description = "This is a test for COMMERCE-7000. When the user updates a tax categories entry's details URL redirect part to '%22%3E%3Cscript%3Ealert(111)%3C/script%3E' and visits the link, then no XSS is present"
+	@priority = 5
+	test CannotExecuteXSSInTaxCategoriesEntryURL {
+		property portal.acceptance = "true";
+
+		task ("Given a Tax Categories entry is created") {
+			CommerceNavigator.goToTaxCategoriesAdmin();
+
+			CommerceEntry.addTaxCategory(
+				keyDescription = "Test Description",
+				keyName = "Test",
+				keyReferenceCode = "Test Reference");
+		}
+
+		task ("And click into the tax categories entry") {
+			Click(
+				key_entry = "Test",
+				locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+		}
+
+		task ("When replacing and visiting the URL of the entry details with the value of 'redirect=%22%3E%3Cscript%3Ealert(111)%3C/script%3E'") {
+			SelectFrameTop();
+
+			var baseURL = PropsUtil.get("portal.url");
+			var taxCategoryId = selenium.getText("CommerceEntry#HEADER_ID");
+
+			Open.openInTheNewTab(value1 = "${baseURL}/group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_product_tax_category_web_internal_portlet_CPTaxCategoryPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_commerce_product_tax_category_web_internal_portlet_CPTaxCategoryPortlet_mvcRenderCommandName=%2Fcp_tax_category%2Fedit_cp_tax_category&_com_liferay_commerce_product_tax_category_web_internal_portlet_CPTaxCategoryPortlet_redirect=%22%3E%3Cscript%3Ealert(111)%3C/script%3E&_com_liferay_commerce_product_tax_category_web_internal_portlet_CPTaxCategoryPortlet_cpTaxCategoryId=${taxCategoryId}");
+		}
+
+		task ("Then no XSS alert is present") {
+			AssertAlertNotPresent();
+		}
+	}
+
 	@description = "This is a test for COMMERCE-6263. Configure tax properties at channel level"
-	@priority = "3"
+	@priority = 3
 	test ConfigureChannelShippingTaxCategory {
 		property portal.acceptance = "false";
 
@@ -757,9 +779,7 @@ definition {
 			keyName = "Test",
 			keyReferenceCode = "Test Reference");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -786,7 +806,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6264 Add/update/delete tax category from UI/COMMERCE-9363 UI to show External Reference code of Tax Categories"
-	@priority = "3"
+	@priority = 3
 	test TaxCategoryLifecycle {
 		property portal.acceptance = "false";
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upload;
@@ -18,15 +9,15 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.io.ByteArrayFileInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.upload.FileItem;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadServletRequest;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProgressTracker;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -60,12 +51,12 @@ public class UploadServletRequestImpl
 	extends HttpServletRequestWrapper implements UploadServletRequest {
 
 	public UploadServletRequestImpl(HttpServletRequest httpServletRequest) {
-		this(httpServletRequest, 0, null, 0, 0);
+		this(httpServletRequest, 0, null);
 	}
 
 	public UploadServletRequestImpl(
 		HttpServletRequest httpServletRequest, int fileSizeThreshold,
-		String location, long maxRequestSize, long maxFileSize) {
+		String location) {
 
 		super(httpServletRequest);
 
@@ -79,33 +70,25 @@ public class UploadServletRequestImpl
 
 			httpSession.removeAttribute(ProgressTracker.PERCENT);
 
+			ServletFileUpload servletFileUpload =
+				_servletFileUploadSnapshot.get();
+
 			liferayServletRequest = new LiferayServletRequest(
 				httpServletRequest);
 
-			long uploadServletRequestImplMaxSize =
-				UploadServletRequestConfigurationHelperUtil.getMaxSize();
-
-			if (maxRequestSize <= 0) {
-				maxRequestSize = uploadServletRequestImplMaxSize;
-			}
-
-			if (maxFileSize <= 0) {
-				maxFileSize = uploadServletRequestImplMaxSize;
-			}
-
 			location = GetterUtil.getString(
 				location,
-				UploadServletRequestConfigurationHelperUtil.getTempDir());
+				UploadServletRequestConfigurationProviderUtil.getTempDir());
 
-			List<FileItem> fileItemsList = _servletFileUpload.parseRequest(
-				liferayServletRequest, maxRequestSize, maxFileSize, location,
-				fileSizeThreshold);
+			List<FileItem> fileItemsList = servletFileUpload.parseRequest(
+				liferayServletRequest, location, fileSizeThreshold);
 
 			liferayServletRequest.setFinishedReadingOriginalStream(true);
 
-			long uploadServletRequestImplSize = 0;
-
 			int contentLength = httpServletRequest.getContentLength();
+			long uploadServletRequestImplMaxSize =
+				UploadServletRequestConfigurationProviderUtil.getMaxSize();
+			long uploadServletRequestImplSize = 0;
 
 			if ((uploadServletRequestImplMaxSize > 0) &&
 				((contentLength == -1) ||
@@ -275,15 +258,19 @@ public class UploadServletRequestImpl
 
 		FileItem liferayFileItem = liferayFileItems[0];
 
+		if (!liferayFileItem.isInMemory()) {
+			return liferayFileItem.getStoreLocation();
+		}
+
 		long size = liferayFileItem.getSize();
 
 		if ((size > 0) && (size <= liferayFileItem.getSizeThreshold())) {
 			forceCreate = true;
 		}
 
-		File file = liferayFileItem.getStoreLocation();
+		File file = liferayFileItem.getTempFile();
 
-		if (liferayFileItem.isInMemory() && forceCreate) {
+		if (forceCreate) {
 			try {
 				FileUtil.write(file, liferayFileItem.getInputStream());
 			}
@@ -375,7 +362,12 @@ public class UploadServletRequestImpl
 				FileItem liferayFileItem = liferayFileItems[i];
 
 				if (Validator.isNotNull(liferayFileItem.getFileName())) {
-					files[i] = liferayFileItem.getStoreLocation();
+					if (liferayFileItem.isInMemory()) {
+						files[i] = liferayFileItem.getTempFile();
+					}
+					else {
+						files[i] = liferayFileItem.getStoreLocation();
+					}
 				}
 			}
 
@@ -597,10 +589,9 @@ public class UploadServletRequestImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		UploadServletRequestImpl.class);
 
-	private static volatile ServletFileUpload _servletFileUpload =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			ServletFileUpload.class, UploadServletRequestImpl.class,
-			"_servletFileUpload", true);
+	private static final Snapshot<ServletFileUpload>
+		_servletFileUploadSnapshot = new Snapshot<>(
+			UploadServletRequestImpl.class, ServletFileUpload.class);
 
 	private final Map<String, FileItem[]> _fileParameters;
 	private final LiferayServletRequest _liferayServletRequest;

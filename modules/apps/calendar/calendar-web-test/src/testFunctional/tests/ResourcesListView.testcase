@@ -1,7 +1,7 @@
 @component-name = "portal-calendar"
 definition {
 
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Calendar";
@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -56,7 +51,7 @@ definition {
 	}
 
 	@description = "LRQA-71925 - Verify that the user can change Permissions for the Resource"
-	@priority = "3"
+	@priority = 3
 	test CanChangeResourcePermissions {
 		CalendarNavigator.gotoAddResource();
 
@@ -70,7 +65,7 @@ definition {
 	}
 
 	@description = "LRQA-71926 - Verify that the user can Clear the search results"
-	@priority = "3"
+	@priority = 3
 	test CanClearSearchResults {
 		CalendarNavigator.gotoAddResource();
 
@@ -100,7 +95,7 @@ definition {
 	}
 
 	@description = "LRQA-71924 - Verify that the user can create a New Calendar for the Resource"
-	@priority = "3"
+	@priority = 3
 	test CanCreateCalendarForResource {
 		CalendarNavigator.gotoAddResource();
 
@@ -118,7 +113,7 @@ definition {
 	}
 
 	@description = "LRQA-71922 - Verify that the user can filter by Active Resources"
-	@priority = "3"
+	@priority = 3
 	test CanFilterByActiveResources {
 		CalendarNavigator.gotoAddResource();
 
@@ -142,7 +137,7 @@ definition {
 	}
 
 	@description = "LRQA-71921 - Verify that the user can filter by Current Scope"
-	@priority = "3"
+	@priority = 3
 	test CanFilterByCurrentScope {
 		CalendarNavigator.gotoAddResource();
 
@@ -156,7 +151,7 @@ definition {
 	}
 
 	@description = "LRQA-71920 - Verify that the user can filter by Global Scope"
-	@priority = "3"
+	@priority = 3
 	test CanFilterByGlobalScope {
 		CalendarNavigator.gotoAddResource();
 
@@ -170,7 +165,7 @@ definition {
 	}
 
 	@description = "LRQA-71923 - Verify that the user can filter by Nonactive Resources"
-	@priority = "3"
+	@priority = 3
 	test CanFilterByNonactiveResources {
 		CalendarNavigator.gotoAddResource();
 
@@ -194,7 +189,7 @@ definition {
 	}
 
 	@description = "LRQA-71885 - Verify that the user can search by Resource Description"
-	@priority = "4"
+	@priority = 4
 	test CanSearchByResourceDescription {
 		CalendarNavigator.gotoAddResource();
 
@@ -219,23 +214,23 @@ definition {
 		CalendarResource.viewTableEmpty();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test Delete {
 		var calendarResourceName = "Calendar Resource Name";
 
-		CalendarResource.add(calendarResourceName = "${calendarResourceName}");
+		CalendarResource.add(calendarResourceName = ${calendarResourceName});
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
-		CalendarResource.delete(calendarResourceName = "${calendarResourceName}");
+		CalendarResource.delete(calendarResourceName = ${calendarResourceName});
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
-		CalendarResource.viewDefault(calendarResourceName = "${calendarResourceName}");
+		CalendarResource.viewDefault(calendarResourceName = ${calendarResourceName});
 	}
 
 	@description = "This is a use case for LPS-59743."
-	@priority = "3"
+	@priority = 3
 	test Search {
 		CalendarResource.add(calendarResourceName = "Room 1");
 
@@ -265,7 +260,8 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-62410."
-	@priority = "4"
+	@ignore = "true"
+	@priority = 4
 	test ViewEventDateAndTimeInResourcesAvailability {
 		CalendarNavigator.gotoAddEvent();
 
@@ -279,15 +275,15 @@ definition {
 
 		CalendarEvent.setTimes(
 			endDateTime = "11:00 AM",
-			startDateTime = "08:00 AM");
+			startDateTime = " 8:00 AM");
 
 		CalendarEvent.compareEventDateAndTimeToResourcesAvailabilityDateAndTime();
 
 		CalendarEvent.setEndDateTomorrow();
 
 		CalendarEvent.setTimes(
-			endDateTime = "07:00 AM",
-			startDateTime = "08:00 AM");
+			endDateTime = " 7:00 AM",
+			startDateTime = " 8:00 AM");
 
 		CalendarEvent.compareEventDateAndTimeToResourcesAvailabilityDateAndTime();
 
@@ -295,12 +291,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-55171."
-	@priority = "3"
+	@priority = 3
 	test ViewInactive {
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		Site.openSitesAdmin();
 
 		Site.addBlankCP(siteName = "Site Name");
 
@@ -350,36 +343,24 @@ definition {
 		CalendarEvent.viewInvitationResourceNotPresent(resourceNameList = "Calendar Resource");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test ViewInvitedResourceAvailability {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Memberships");
-
-		Site.assignUserAsMemberCP(
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn");
+		JSONUser.addUserToSite(
+			groupName = "Guest",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
@@ -418,7 +399,7 @@ definition {
 		Navigator.gotoPage(pageName = "Calendar Page");
 
 		CalendarEvent.view(
-			eventNumber = "2",
+			eventNumber = 2,
 			eventTitle = "Calendar Event All Day Title");
 	}
 

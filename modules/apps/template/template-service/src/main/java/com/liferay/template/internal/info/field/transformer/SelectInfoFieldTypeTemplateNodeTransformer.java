@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.template.internal.info.field.transformer;
@@ -17,6 +8,7 @@ package com.liferay.template.internal.info.field.transformer;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.OptionInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.type.KeyLocalizedLabelPair;
 import com.liferay.petra.string.StringPool;
@@ -32,7 +24,6 @@ import com.liferay.template.info.field.transformer.TemplateNodeTransformer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,19 +46,11 @@ public class SelectInfoFieldTypeTemplateNodeTransformer
 
 		String stringValue = StringPool.BLANK;
 
-		Optional<Boolean> multipleOptional = infoField.getAttributeOptional(
-			SelectInfoFieldType.MULTIPLE);
-
-		Boolean multiple = multipleOptional.orElse(false);
-
 		JSONArray selectedOptionValuesJSONArray =
 			_getSelectedOptionValuesJSONArray(
 				infoFieldValue, themeDisplay.getLocale());
 
-		if (multiple) {
-			stringValue = JSONUtil.toString(selectedOptionValuesJSONArray);
-		}
-		else if (!JSONUtil.isEmpty(selectedOptionValuesJSONArray)) {
+		if (!JSONUtil.isEmpty(selectedOptionValuesJSONArray)) {
 			stringValue = selectedOptionValuesJSONArray.getString(0);
 		}
 
@@ -77,17 +60,21 @@ public class SelectInfoFieldTypeTemplateNodeTransformer
 			themeDisplay, infoField.getName(), stringValue,
 			infoFieldType.getName(),
 			HashMapBuilder.put(
-				"multiple", String.valueOf(multiple)
+				"multiple", Boolean.FALSE.toString()
 			).build());
 
-		Optional<List<SelectInfoFieldType.Option>> optionsOptional =
-			infoField.getAttributeOptional(SelectInfoFieldType.OPTIONS);
+		List<OptionInfoFieldType> optionInfoFieldTypes =
+			(List<OptionInfoFieldType>)infoField.getAttribute(
+				SelectInfoFieldType.OPTIONS);
 
-		for (SelectInfoFieldType.Option option :
-				optionsOptional.orElse(Collections.emptyList())) {
+		if (optionInfoFieldTypes == null) {
+			optionInfoFieldTypes = Collections.emptyList();
+		}
 
+		for (OptionInfoFieldType optionInfoFieldType : optionInfoFieldTypes) {
 			templateNode.appendOptionMap(
-				option.getValue(), option.getLabel(themeDisplay.getLocale()));
+				optionInfoFieldType.getValue(),
+				optionInfoFieldType.getLabel(themeDisplay.getLocale()));
 		}
 
 		return templateNode;

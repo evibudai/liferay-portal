@@ -1,27 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.exportimport.data.handler;
 
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -112,8 +107,29 @@ public class LayoutUtilityPageEntryStagedModelDataHandler
 					portletDataContext.getScopeGroupId());
 
 			if (existingLayoutUtilityPageEntry == null) {
-				importedLayoutUtilityPageEntry = _addStagedModel(
-					portletDataContext, importedLayoutUtilityPageEntry);
+				existingLayoutUtilityPageEntry =
+					_layoutUtilityPageEntryLocalService.
+						fetchLayoutUtilityPageEntryByExternalReferenceCode(
+							importedLayoutUtilityPageEntry.
+								getExternalReferenceCode(),
+							portletDataContext.getScopeGroupId());
+
+				if (existingLayoutUtilityPageEntry == null) {
+					importedLayoutUtilityPageEntry = _addStagedModel(
+						portletDataContext, importedLayoutUtilityPageEntry);
+				}
+				else {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							StringBundler.concat(
+								"Unable to import layout utility page entry ",
+								"with external reference code ",
+								importedLayoutUtilityPageEntry.
+									getExternalReferenceCode()));
+					}
+
+					return;
+				}
 			}
 			else {
 				importedLayoutUtilityPageEntry.setMvccVersion(
@@ -165,7 +181,9 @@ public class LayoutUtilityPageEntryStagedModelDataHandler
 			LayoutUtilityPageEntry layoutUtilityPageEntry)
 		throws Exception {
 
-		if (layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
+		if (!ExportImportThreadLocal.isStagingInProcess() &&
+			layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
+
 			LayoutUtilityPageEntry defaultLayoutUtilityPageEntry =
 				_layoutUtilityPageEntryLocalService.
 					fetchDefaultLayoutUtilityPageEntry(
@@ -215,6 +233,9 @@ public class LayoutUtilityPageEntryStagedModelDataHandler
 			portletDataContext, layoutUtilityPageEntry, layout,
 			PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutUtilityPageEntryStagedModelDataHandler.class);
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

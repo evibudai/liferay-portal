@@ -1,28 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 /// <reference types="react" />
 
 import './BuilderScreen.scss';
 export declare function BuilderScreen({
+	builderScreenItems,
+	creationLanguageId,
 	defaultSort,
 	disableEdit,
 	emptyState,
 	filter,
 	firstColumnHeader,
 	hasDragAndDrop,
-	objectColumns,
 	onChangeColumnOrder,
 	onDeleteColumn,
 	onEditing,
@@ -31,15 +23,15 @@ export declare function BuilderScreen({
 	openModal,
 	secondColumnHeader,
 	thirdColumnHeader,
-	title,
 }: IProps): JSX.Element;
 declare type TLabelValueObject = {
 	label: string;
 	value: string;
 };
-declare type TBuilderScreenColumn = {
+export declare type TBuilderScreenItem = {
 	defaultSort?: boolean;
 	disableEdit?: boolean;
+	externalReferenceCode?: string;
 	fieldLabel?: string;
 	filterBy?: string;
 	label: LocalizedValue<string>;
@@ -52,6 +44,8 @@ declare type TBuilderScreenColumn = {
 	valueList?: TLabelValueObject[];
 };
 interface IProps {
+	builderScreenItems: TBuilderScreenItem[];
+	creationLanguageId?: Liferay.Language.Locale;
 	defaultSort?: boolean;
 	disableEdit?: boolean;
 	emptyState: {
@@ -62,15 +56,13 @@ interface IProps {
 	filter?: boolean;
 	firstColumnHeader: string;
 	hasDragAndDrop?: boolean;
-	objectColumns: TBuilderScreenColumn[];
 	onChangeColumnOrder?: (draggedIndex: number, targetIndex: number) => void;
 	onDeleteColumn: (objectFieldName: string) => void;
 	onEditing?: (boolean: boolean) => void;
 	onEditingObjectFieldName?: (objectFieldName: string) => void;
-	onVisibleEditModal: (boolean: boolean) => void;
+	onVisibleEditModal?: (boolean: boolean) => void;
 	openModal: () => void;
 	secondColumnHeader: string;
 	thirdColumnHeader?: string;
-	title: string;
 }
 export {};

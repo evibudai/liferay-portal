@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.display.context;
@@ -21,8 +12,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.info.collection.provider.InfoCollectionProvider;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.info.search.InfoSearchClassMapperRegistryUtil;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.admin.web.internal.info.search.InfoSearchClassMapperRegistryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -42,6 +33,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.display.context.GroupDisplayContextHelper;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -65,8 +57,8 @@ public class SelectLayoutCollectionDisplayContext {
 		_liferayPortletResponse = liferayPortletResponse;
 
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
-			_liferayPortletRequest);
-		_themeDisplay = (ThemeDisplay)_liferayPortletRequest.getAttribute(
+			liferayPortletRequest);
+		_themeDisplay = (ThemeDisplay)liferayPortletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_groupDisplayContextHelper = new GroupDisplayContextHelper(
@@ -203,30 +195,35 @@ public class SelectLayoutCollectionDisplayContext {
 				(List<?>)_infoItemServiceRegistry.getAllInfoItemServices(
 					InfoCollectionProvider.class);
 
-		return ListUtil.filter(
-			infoCollectionProviders,
-			infoCollectionProvider -> {
-				try {
-					if (Validator.isNotNull(
-							infoCollectionProvider.getLabel(
-								_themeDisplay.getLocale())) &&
-						infoCollectionProvider.isAvailable()) {
+		return ListUtil.sort(
+			ListUtil.filter(
+				infoCollectionProviders,
+				infoCollectionProvider -> {
+					try {
+						if (Validator.isNotNull(
+								infoCollectionProvider.getLabel(
+									_themeDisplay.getLocale())) &&
+							infoCollectionProvider.isAvailable()) {
 
-						return true;
+							return true;
+						}
+
+						return false;
 					}
+					catch (Exception exception) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(
+								"Unable to get info list provider label",
+								exception);
+						}
 
-					return false;
-				}
-				catch (Exception exception) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to get info list provider label",
-							exception);
+						return false;
 					}
-
-					return false;
-				}
-			});
+				}),
+			Comparator.comparing(
+				infoCollectionProvider -> infoCollectionProvider.getLabel(
+					_themeDisplay.getLocale()),
+				String.CASE_INSENSITIVE_ORDER));
 	}
 
 	private List<String> _getInfoItemFormProviderSearchClassNames() {
@@ -271,7 +268,6 @@ public class SelectLayoutCollectionDisplayContext {
 			).setParameter(
 				"selectedTab", tabName
 			).buildString());
-
 		navigationItem.setLabel(LanguageUtil.get(_httpServletRequest, label));
 
 		return navigationItem;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.publisher.web.internal.portlet;
@@ -27,6 +18,7 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.exception.NoSuchArticleException;
@@ -68,13 +60,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.workflow.permission.WorkflowPermission;
+import com.liferay.portal.kernel.workflow.permission.WorkflowPermissionUtil;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.portlet.WindowState;
 
@@ -128,8 +119,10 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 			String assetFriendlyURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					layoutDisplayPageObjectProvider.getClassName(),
-					layoutDisplayPageObjectProvider.getClassPK(),
+					new InfoItemReference(
+						layoutDisplayPageObjectProvider.getClassName(),
+						new ClassPKInfoItemIdentifier(
+							layoutDisplayPageObjectProvider.getClassPK())),
 					_portal.getLocale(httpServletRequest), themeDisplay);
 
 			if (Validator.isNotNull(assetFriendlyURL)) {
@@ -200,25 +193,25 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 	}
 
 	private AssetEntry _getAssetEntry(JournalArticle journalArticle) {
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			JournalArticle.class.getName(), journalArticle.getPrimaryKey());
+
+		if (assetEntry != null) {
+			return assetEntry;
+		}
+
 		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				JournalArticle.class.getName());
 
-		return Optional.ofNullable(
-			_assetEntryLocalService.fetchEntry(
-				JournalArticle.class.getName(), journalArticle.getPrimaryKey())
-		).orElseGet(
-			() -> {
-				try {
-					return assetRendererFactory.getAssetEntry(
-						JournalArticle.class.getName(),
-						journalArticle.getResourcePrimKey());
-				}
-				catch (PortalException portalException) {
-					throw new RuntimeException(portalException);
-				}
-			}
-		);
+		try {
+			return assetRendererFactory.getAssetEntry(
+				JournalArticle.class.getName(),
+				journalArticle.getResourcePrimKey());
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
 	}
 
 	private String _getBasicLayoutURL(
@@ -424,7 +417,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 		String[] versions = params.get("version");
 
-		if (ArrayUtil.isNotEmpty(versions) && !_isDefaultUser()) {
+		if (ArrayUtil.isNotEmpty(versions) && !_isGuestUser()) {
 			double version = GetterUtil.getDouble(versions[0]);
 
 			journalArticle = _journalArticleLocalService.fetchArticleByUrlTitle(
@@ -449,7 +442,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 			if ((journalArticle != null) &&
 				!GetterUtil.getBoolean(
-					_workflowPermission.hasPermission(
+					WorkflowPermissionUtil.hasPermission(
 						permissionChecker, groupId,
 						"com.liferay.journal.model.JournalArticle",
 						journalArticle.getId(), ActionKeys.VIEW))) {
@@ -498,7 +491,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 					WorkflowConstants.STATUS_PENDING);
 
 			if (!GetterUtil.getBoolean(
-					_workflowPermission.hasPermission(
+					WorkflowPermissionUtil.hasPermission(
 						permissionChecker, groupId,
 						"com.liferay.journal.model.JournalArticle",
 						journalArticle.getId(), ActionKeys.VIEW))) {
@@ -582,7 +575,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 		return 0;
 	}
 
-	private boolean _isDefaultUser() {
+	private boolean _isGuestUser() {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -592,7 +585,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 		User user = _userLocalService.fetchUser(serviceContext.getUserId());
 
-		if ((user == null) || user.isDefaultUser()) {
+		if ((user == null) || user.isGuestUser()) {
 			return true;
 		}
 
@@ -632,8 +625,5 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 	@Reference
 	private UserLocalService _userLocalService;
-
-	@Reference
-	private WorkflowPermission _workflowPermission;
 
 }

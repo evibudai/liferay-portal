@@ -12,7 +12,7 @@
 <tbody>
 <tr>
 	<td>ADD_FAVORITE</td>
-	<td>//*[@data-qa-id='row'][contains(.,'${key_rowEntry}')]//a[span/*[name()='svg'][contains(@class,'lexicon-icon-star-o')]]</td>
+	<td>//*[@data-qa-id='row'][contains(.,'${key_rowEntry}')]//a[..//*[name()='svg'][contains(@class,'lexicon-icon-star-o')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -28,6 +28,11 @@
 <tr>
 	<td>ANY</td>
 	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_N</td>
+	<td>xpath=(//*[*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]])[${key_indexNumber}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -72,7 +77,7 @@
 </tr>
 <tr>
 	<td>BACK</td>
-	<td>//a[span//*[name()='svg'][contains(@class,'icon-angle-left')]] | //a[contains(@class,'icon-circle-arrow-left') and contains(@class,'previous-level')] | //span[contains(@class,'icon-angle-left')]</td>
+	<td>//a[..//*[name()='svg'][contains(@class,'icon-angle-left')]] | //a[contains(@class,'icon-circle-arrow-left') and contains(@class,'previous-level')] | //span[contains(@class,'icon-angle-left')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -87,7 +92,7 @@
 </tr>
 <tr>
 	<td>CLOSE_ALERT</td>
-	<td>//*[@role='alert'] //button[contains(@class,'close')] | //a[contains(@id,'closePanelAdd') and contains(@class,'close')]</td>
+	<td>//div[contains(@class,'alert')]//button[contains(@class,'close')] | //a[contains(@id,'closePanelAdd') and contains(@class,'close')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -178,6 +183,11 @@
 <tr>
 	<td>EDIT_TAGS_DISABLED</td>
 	<td>//button[*[name()='svg'][contains(@class,'icon-tag')] and @disabled]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EXCLAMATION_MARK</td>
+	<td>//*[contains(.,'${key_pageName}')]/*[name()='svg'][contains(@class,'icon-warning')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -306,6 +316,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ORDER_ARROW_UP</td>
+	<td>//*[contains(@class, 'lexicon-icon lexicon-icon-order-arrow-up')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>OPENID_CONNECT</td>
 	<td>//a[@role='menuitem']/span[contains(.,'OpenId Connect')]</td>
 	<td></td>
@@ -357,7 +372,7 @@
 </tr>
 <tr>
 	<td>SUBSCRIBE_BELL</td>
-	<td>//a[span/*[name()='svg'][contains(@class,'icon-bell-on')]]</td>
+	<td>xpath=(//a | //span)[*[name()='svg'][contains(@class,'icon-bell-on')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -406,6 +421,11 @@
 <tr>
 	<td>SPECIFIC_ELLIPSIS</td>
 	<td>//p[contains(text(), '${key_text}')]/ancestor::td/following-sibling::td//button</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NAVBAR_ELLIPSIS</td>
+	<td>//ul[contains(@class,'navbar')]//*[*[name()='svg'][contains(@class,'icon-ellipsis-v')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -465,12 +485,12 @@
 </tr>
 <tr>
 	<td>REMOVE_FAVORITE</td>
-	<td>//*[@data-qa-id='row'][contains(.,'${key_rowEntry}')]//a[span/*[name()='svg'][contains(@class,'lexicon-icon-star')][not(contains(@class,'-o'))]]</td>
+	<td>//*[@data-qa-id='row'][contains(.,'${key_rowEntry}')]//a[..//*[name()='svg'][contains(@class,'lexicon-icon-star')][not(contains(@class,'-o'))]]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ROW_VERTICAL_ELLIPSIS</td>
-	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]] | //*[@class="dnd-tr" and contains (., '${key_rowEntry}')]//*[*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -480,7 +500,7 @@
 </tr>
 <tr>
 	<td>ROW_VERTICAL_ELLIPSIS_SAFARI</td>
-	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'dropdown-toggle')]</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'dropdown-toggle')] | //*[@class="dnd-tr" and contains (., '${key_rowEntry}')]//*[contains(@class, 'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>

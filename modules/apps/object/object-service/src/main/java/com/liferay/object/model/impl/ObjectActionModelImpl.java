@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -81,6 +72,7 @@ public class ObjectActionModelImpl
 
 	public static final Object[][] TABLE_COLUMNS = {
 		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"externalReferenceCode", Types.VARCHAR},
 		{"objectActionId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
@@ -89,7 +81,7 @@ public class ObjectActionModelImpl
 		{"errorMessage", Types.VARCHAR}, {"label", Types.VARCHAR},
 		{"name", Types.VARCHAR}, {"objectActionExecutorKey", Types.VARCHAR},
 		{"objectActionTriggerKey", Types.VARCHAR}, {"parameters", Types.CLOB},
-		{"status", Types.INTEGER}
+		{"system_", Types.BOOLEAN}, {"status", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -98,6 +90,7 @@ public class ObjectActionModelImpl
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("objectActionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
@@ -114,11 +107,12 @@ public class ObjectActionModelImpl
 		TABLE_COLUMNS_MAP.put("objectActionExecutorKey", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("objectActionTriggerKey", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("parameters", Types.CLOB);
+		TABLE_COLUMNS_MAP.put("system_", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("status", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ObjectAction (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,objectActionId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,objectDefinitionId LONG,active_ BOOLEAN,conditionExpression TEXT null,description VARCHAR(75) null,errorMessage STRING null,label STRING null,name VARCHAR(75) null,objectActionExecutorKey VARCHAR(75) null,objectActionTriggerKey VARCHAR(75) null,parameters TEXT null,status INTEGER)";
+		"create table ObjectAction (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,objectActionId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,objectDefinitionId LONG,active_ BOOLEAN,conditionExpression TEXT null,description VARCHAR(75) null,errorMessage STRING null,label STRING null,name VARCHAR(75) null,objectActionExecutorKey VARCHAR(255) null,objectActionTriggerKey VARCHAR(75) null,parameters TEXT null,system_ BOOLEAN,status INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table ObjectAction";
 
@@ -150,32 +144,38 @@ public class ObjectActionModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long NAME_COLUMN_BITMASK = 4L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long OBJECTACTIONTRIGGERKEY_COLUMN_BITMASK = 8L;
+	public static final long NAME_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long OBJECTDEFINITIONID_COLUMN_BITMASK = 16L;
+	public static final long OBJECTACTIONTRIGGERKEY_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 32L;
+	public static final long OBJECTDEFINITIONID_COLUMN_BITMASK = 32L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long OBJECTACTIONID_COLUMN_BITMASK = 64L;
+	public static final long OBJECTACTIONID_COLUMN_BITMASK = 128L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -267,117 +267,154 @@ public class ObjectActionModelImpl
 	public Map<String, Function<ObjectAction, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ObjectAction, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ObjectAction, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ObjectAction, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ObjectAction, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<ObjectAction, Object>>();
-		Map<String, BiConsumer<ObjectAction, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<ObjectAction, ?>>();
+		private static final Map<String, Function<ObjectAction, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", ObjectAction::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<ObjectAction, Long>)ObjectAction::setMvccVersion);
-		attributeGetterFunctions.put("uuid", ObjectAction::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<ObjectAction, String>)ObjectAction::setUuid);
-		attributeGetterFunctions.put(
-			"objectActionId", ObjectAction::getObjectActionId);
-		attributeSetterBiConsumers.put(
-			"objectActionId",
-			(BiConsumer<ObjectAction, Long>)ObjectAction::setObjectActionId);
-		attributeGetterFunctions.put("companyId", ObjectAction::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ObjectAction, Long>)ObjectAction::setCompanyId);
-		attributeGetterFunctions.put("userId", ObjectAction::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<ObjectAction, Long>)ObjectAction::setUserId);
-		attributeGetterFunctions.put("userName", ObjectAction::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<ObjectAction, String>)ObjectAction::setUserName);
-		attributeGetterFunctions.put("createDate", ObjectAction::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<ObjectAction, Date>)ObjectAction::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", ObjectAction::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<ObjectAction, Date>)ObjectAction::setModifiedDate);
-		attributeGetterFunctions.put(
-			"objectDefinitionId", ObjectAction::getObjectDefinitionId);
-		attributeSetterBiConsumers.put(
-			"objectDefinitionId",
-			(BiConsumer<ObjectAction, Long>)
-				ObjectAction::setObjectDefinitionId);
-		attributeGetterFunctions.put("active", ObjectAction::getActive);
-		attributeSetterBiConsumers.put(
-			"active",
-			(BiConsumer<ObjectAction, Boolean>)ObjectAction::setActive);
-		attributeGetterFunctions.put(
-			"conditionExpression", ObjectAction::getConditionExpression);
-		attributeSetterBiConsumers.put(
-			"conditionExpression",
-			(BiConsumer<ObjectAction, String>)
-				ObjectAction::setConditionExpression);
-		attributeGetterFunctions.put(
-			"description", ObjectAction::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<ObjectAction, String>)ObjectAction::setDescription);
-		attributeGetterFunctions.put(
-			"errorMessage", ObjectAction::getErrorMessage);
-		attributeSetterBiConsumers.put(
-			"errorMessage",
-			(BiConsumer<ObjectAction, String>)ObjectAction::setErrorMessage);
-		attributeGetterFunctions.put("label", ObjectAction::getLabel);
-		attributeSetterBiConsumers.put(
-			"label", (BiConsumer<ObjectAction, String>)ObjectAction::setLabel);
-		attributeGetterFunctions.put("name", ObjectAction::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<ObjectAction, String>)ObjectAction::setName);
-		attributeGetterFunctions.put(
-			"objectActionExecutorKey",
-			ObjectAction::getObjectActionExecutorKey);
-		attributeSetterBiConsumers.put(
-			"objectActionExecutorKey",
-			(BiConsumer<ObjectAction, String>)
-				ObjectAction::setObjectActionExecutorKey);
-		attributeGetterFunctions.put(
-			"objectActionTriggerKey", ObjectAction::getObjectActionTriggerKey);
-		attributeSetterBiConsumers.put(
-			"objectActionTriggerKey",
-			(BiConsumer<ObjectAction, String>)
-				ObjectAction::setObjectActionTriggerKey);
-		attributeGetterFunctions.put("parameters", ObjectAction::getParameters);
-		attributeSetterBiConsumers.put(
-			"parameters",
-			(BiConsumer<ObjectAction, String>)ObjectAction::setParameters);
-		attributeGetterFunctions.put("status", ObjectAction::getStatus);
-		attributeSetterBiConsumers.put(
-			"status",
-			(BiConsumer<ObjectAction, Integer>)ObjectAction::setStatus);
+		static {
+			Map<String, Function<ObjectAction, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap<String, Function<ObjectAction, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", ObjectAction::getMvccVersion);
+			attributeGetterFunctions.put("uuid", ObjectAction::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				ObjectAction::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"objectActionId", ObjectAction::getObjectActionId);
+			attributeGetterFunctions.put(
+				"companyId", ObjectAction::getCompanyId);
+			attributeGetterFunctions.put("userId", ObjectAction::getUserId);
+			attributeGetterFunctions.put("userName", ObjectAction::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", ObjectAction::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", ObjectAction::getModifiedDate);
+			attributeGetterFunctions.put(
+				"objectDefinitionId", ObjectAction::getObjectDefinitionId);
+			attributeGetterFunctions.put("active", ObjectAction::getActive);
+			attributeGetterFunctions.put(
+				"conditionExpression", ObjectAction::getConditionExpression);
+			attributeGetterFunctions.put(
+				"description", ObjectAction::getDescription);
+			attributeGetterFunctions.put(
+				"errorMessage", ObjectAction::getErrorMessage);
+			attributeGetterFunctions.put("label", ObjectAction::getLabel);
+			attributeGetterFunctions.put("name", ObjectAction::getName);
+			attributeGetterFunctions.put(
+				"objectActionExecutorKey",
+				ObjectAction::getObjectActionExecutorKey);
+			attributeGetterFunctions.put(
+				"objectActionTriggerKey",
+				ObjectAction::getObjectActionTriggerKey);
+			attributeGetterFunctions.put(
+				"parameters", ObjectAction::getParameters);
+			attributeGetterFunctions.put("system", ObjectAction::getSystem);
+			attributeGetterFunctions.put("status", ObjectAction::getStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ObjectAction, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ObjectAction, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<ObjectAction, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<ObjectAction, Long>)ObjectAction::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<ObjectAction, String>)ObjectAction::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<ObjectAction, String>)
+					ObjectAction::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"objectActionId",
+				(BiConsumer<ObjectAction, Long>)
+					ObjectAction::setObjectActionId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ObjectAction, Long>)ObjectAction::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<ObjectAction, Long>)ObjectAction::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<ObjectAction, String>)ObjectAction::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<ObjectAction, Date>)ObjectAction::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<ObjectAction, Date>)ObjectAction::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"objectDefinitionId",
+				(BiConsumer<ObjectAction, Long>)
+					ObjectAction::setObjectDefinitionId);
+			attributeSetterBiConsumers.put(
+				"active",
+				(BiConsumer<ObjectAction, Boolean>)ObjectAction::setActive);
+			attributeSetterBiConsumers.put(
+				"conditionExpression",
+				(BiConsumer<ObjectAction, String>)
+					ObjectAction::setConditionExpression);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<ObjectAction, String>)ObjectAction::setDescription);
+			attributeSetterBiConsumers.put(
+				"errorMessage",
+				(BiConsumer<ObjectAction, String>)
+					ObjectAction::setErrorMessage);
+			attributeSetterBiConsumers.put(
+				"label",
+				(BiConsumer<ObjectAction, String>)ObjectAction::setLabel);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<ObjectAction, String>)ObjectAction::setName);
+			attributeSetterBiConsumers.put(
+				"objectActionExecutorKey",
+				(BiConsumer<ObjectAction, String>)
+					ObjectAction::setObjectActionExecutorKey);
+			attributeSetterBiConsumers.put(
+				"objectActionTriggerKey",
+				(BiConsumer<ObjectAction, String>)
+					ObjectAction::setObjectActionTriggerKey);
+			attributeSetterBiConsumers.put(
+				"parameters",
+				(BiConsumer<ObjectAction, String>)ObjectAction::setParameters);
+			attributeSetterBiConsumers.put(
+				"system",
+				(BiConsumer<ObjectAction, Boolean>)ObjectAction::setSystem);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<ObjectAction, Integer>)ObjectAction::setStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -422,6 +459,35 @@ public class ObjectActionModelImpl
 	@Deprecated
 	public String getOriginalUuid() {
 		return getColumnOriginalValue("uuid_");
+	}
+
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
 	}
 
 	@JSON
@@ -968,6 +1034,27 @@ public class ObjectActionModelImpl
 
 	@JSON
 	@Override
+	public boolean getSystem() {
+		return _system;
+	}
+
+	@JSON
+	@Override
+	public boolean isSystem() {
+		return _system;
+	}
+
+	@Override
+	public void setSystem(boolean system) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_system = system;
+	}
+
+	@JSON
+	@Override
 	public int getStatus() {
 		return _status;
 	}
@@ -1133,6 +1220,7 @@ public class ObjectActionModelImpl
 
 		objectActionImpl.setMvccVersion(getMvccVersion());
 		objectActionImpl.setUuid(getUuid());
+		objectActionImpl.setExternalReferenceCode(getExternalReferenceCode());
 		objectActionImpl.setObjectActionId(getObjectActionId());
 		objectActionImpl.setCompanyId(getCompanyId());
 		objectActionImpl.setUserId(getUserId());
@@ -1150,6 +1238,7 @@ public class ObjectActionModelImpl
 			getObjectActionExecutorKey());
 		objectActionImpl.setObjectActionTriggerKey(getObjectActionTriggerKey());
 		objectActionImpl.setParameters(getParameters());
+		objectActionImpl.setSystem(isSystem());
 		objectActionImpl.setStatus(getStatus());
 
 		objectActionImpl.resetOriginalValues();
@@ -1164,6 +1253,8 @@ public class ObjectActionModelImpl
 		objectActionImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
 		objectActionImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		objectActionImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
 		objectActionImpl.setObjectActionId(
 			this.<Long>getColumnOriginalValue("objectActionId"));
 		objectActionImpl.setCompanyId(
@@ -1193,6 +1284,8 @@ public class ObjectActionModelImpl
 			this.<String>getColumnOriginalValue("objectActionTriggerKey"));
 		objectActionImpl.setParameters(
 			this.<String>getColumnOriginalValue("parameters"));
+		objectActionImpl.setSystem(
+			this.<Boolean>getColumnOriginalValue("system_"));
 		objectActionImpl.setStatus(
 			this.<Integer>getColumnOriginalValue("status"));
 
@@ -1281,6 +1374,18 @@ public class ObjectActionModelImpl
 
 		if ((uuid != null) && (uuid.length() == 0)) {
 			objectActionCacheModel.uuid = null;
+		}
+
+		objectActionCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			objectActionCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			objectActionCacheModel.externalReferenceCode = null;
 		}
 
 		objectActionCacheModel.objectActionId = getObjectActionId();
@@ -1393,6 +1498,8 @@ public class ObjectActionModelImpl
 			objectActionCacheModel.parameters = null;
 		}
 
+		objectActionCacheModel.system = isSystem();
+
 		objectActionCacheModel.status = getStatus();
 
 		return objectActionCacheModel;
@@ -1458,6 +1565,7 @@ public class ObjectActionModelImpl
 
 	private long _mvccVersion;
 	private String _uuid;
+	private String _externalReferenceCode;
 	private long _objectActionId;
 	private long _companyId;
 	private long _userId;
@@ -1477,13 +1585,15 @@ public class ObjectActionModelImpl
 	private String _objectActionExecutorKey;
 	private String _objectActionTriggerKey;
 	private String _parameters;
+	private boolean _system;
 	private int _status;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<ObjectAction, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<ObjectAction, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1510,6 +1620,8 @@ public class ObjectActionModelImpl
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
 		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("objectActionId", _objectActionId);
 		_columnOriginalValues.put("companyId", _companyId);
 		_columnOriginalValues.put("userId", _userId);
@@ -1528,6 +1640,7 @@ public class ObjectActionModelImpl
 		_columnOriginalValues.put(
 			"objectActionTriggerKey", _objectActionTriggerKey);
 		_columnOriginalValues.put("parameters", _parameters);
+		_columnOriginalValues.put("system_", _system);
 		_columnOriginalValues.put("status", _status);
 	}
 
@@ -1538,6 +1651,7 @@ public class ObjectActionModelImpl
 
 		attributeNames.put("uuid_", "uuid");
 		attributeNames.put("active_", "active");
+		attributeNames.put("system_", "system");
 
 		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
@@ -1557,39 +1671,43 @@ public class ObjectActionModelImpl
 
 		columnBitmasks.put("uuid_", 2L);
 
-		columnBitmasks.put("objectActionId", 4L);
+		columnBitmasks.put("externalReferenceCode", 4L);
 
-		columnBitmasks.put("companyId", 8L);
+		columnBitmasks.put("objectActionId", 8L);
 
-		columnBitmasks.put("userId", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("userName", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("createDate", 64L);
+		columnBitmasks.put("userName", 64L);
 
-		columnBitmasks.put("modifiedDate", 128L);
+		columnBitmasks.put("createDate", 128L);
 
-		columnBitmasks.put("objectDefinitionId", 256L);
+		columnBitmasks.put("modifiedDate", 256L);
 
-		columnBitmasks.put("active_", 512L);
+		columnBitmasks.put("objectDefinitionId", 512L);
 
-		columnBitmasks.put("conditionExpression", 1024L);
+		columnBitmasks.put("active_", 1024L);
 
-		columnBitmasks.put("description", 2048L);
+		columnBitmasks.put("conditionExpression", 2048L);
 
-		columnBitmasks.put("errorMessage", 4096L);
+		columnBitmasks.put("description", 4096L);
 
-		columnBitmasks.put("label", 8192L);
+		columnBitmasks.put("errorMessage", 8192L);
 
-		columnBitmasks.put("name", 16384L);
+		columnBitmasks.put("label", 16384L);
 
-		columnBitmasks.put("objectActionExecutorKey", 32768L);
+		columnBitmasks.put("name", 32768L);
 
-		columnBitmasks.put("objectActionTriggerKey", 65536L);
+		columnBitmasks.put("objectActionExecutorKey", 65536L);
 
-		columnBitmasks.put("parameters", 131072L);
+		columnBitmasks.put("objectActionTriggerKey", 131072L);
 
-		columnBitmasks.put("status", 262144L);
+		columnBitmasks.put("parameters", 262144L);
+
+		columnBitmasks.put("system_", 524288L);
+
+		columnBitmasks.put("status", 1048576L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

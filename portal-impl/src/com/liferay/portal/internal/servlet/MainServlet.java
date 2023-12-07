@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.internal.servlet;
@@ -18,10 +9,12 @@ import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.EventsProcessorUtil;
+import com.liferay.portal.events.ShutdownHelperUtil;
 import com.liferay.portal.events.StartupAction;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
+import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.deploy.hot.HotDeployUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
@@ -40,6 +33,7 @@ import com.liferay.portal.kernel.model.PortletFilter;
 import com.liferay.portal.kernel.model.PortletURLListener;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.module.util.ServiceLatch;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.plugin.PluginPackage;
@@ -81,7 +75,6 @@ import com.liferay.portal.service.impl.LayoutTemplateLocalServiceImpl;
 import com.liferay.portal.servlet.EncryptedServletRequest;
 import com.liferay.portal.servlet.I18nServlet;
 import com.liferay.portal.servlet.filters.absoluteredirects.AbsoluteRedirectsResponse;
-import com.liferay.portal.servlet.filters.i18n.I18nFilter;
 import com.liferay.portal.setup.SetupWizardSampleDataUtil;
 import com.liferay.portal.struts.Action;
 import com.liferay.portal.struts.PortalRequestProcessor;
@@ -91,6 +84,7 @@ import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
 import com.liferay.portal.struts.model.ModuleConfig;
 import com.liferay.portal.tools.DBUpgrader;
+import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.util.MaintenanceUtil;
 import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.util.PropsUtil;
@@ -104,7 +98,10 @@ import com.liferay.social.kernel.util.SocialConfigurationUtil;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.sql.Connection;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -135,9 +132,7 @@ public class MainServlet extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		if (_log.isDebugEnabled()) {
-			_log.debug("Destroy plugins");
-		}
+		ShutdownHelperUtil.setShutdown(true);
 
 		ListIterator<ServiceRegistration<?>> listIterator =
 			_serviceRegistrations.listIterator(_serviceRegistrations.size());
@@ -242,8 +237,8 @@ public class MainServlet extends HttpServlet {
 
 			String timeZoneID = timeZone.getID();
 
-			if (!Objects.equals("UTC", timeZoneID) &&
-				!Objects.equals("GMT", timeZoneID)) {
+			if (!Objects.equals(timeZoneID, "UTC") &&
+				!Objects.equals(timeZoneID, "GMT")) {
 
 				_log.warn(
 					StringBundler.concat(
@@ -391,32 +386,17 @@ public class MainServlet extends HttpServlet {
 			_log.error(exception);
 		}
 
-		if (PropsValues.UPGRADE_DATABASE_AUTO_RUN) {
-			DBUpgrader.upgradeModules();
+		if (DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
+			DBUpgrader.upgradeModules(true);
 
 			StartupHelperUtil.setUpgrading(false);
 		}
 
 		servletContext.setAttribute(WebKeys.STARTUP_FINISHED, Boolean.TRUE);
 
-		StartupHelperUtil.setStartupFinished(true);
-
 		_registerPortalInitialized();
 
-		if ((_releaseManager != null) && _log.isWarnEnabled()) {
-			String message = _releaseManager.getStatusMessage(true);
-
-			if (Validator.isNotNull(message)) {
-				_log.warn(message);
-			}
-			else if (_log.isInfoEnabled()) {
-				message = _releaseManager.getStatusMessage(false);
-
-				if (Validator.isNotNull(message)) {
-					_log.info(message);
-				}
-			}
-		}
+		_checkBuildDate();
 
 		if (StartupHelperUtil.isDBNew() &&
 			PropsValues.SETUP_WIZARD_ADD_SAMPLE_DATA) {
@@ -464,7 +444,7 @@ public class MainServlet extends HttpServlet {
 		}
 
 		if (_log.isDebugEnabled()) {
-			_log.debug("Get company id");
+			_log.debug("Get company ID");
 		}
 
 		long companyId = PortalInstances.getCompanyId(httpServletRequest);
@@ -616,14 +596,54 @@ public class MainServlet extends HttpServlet {
 		}
 	}
 
+	private void _checkBuildDate() {
+		if (_releaseManager == null) {
+			return;
+		}
+
+		try (Connection connection = DataAccess.getConnection()) {
+			Date currentBuildDate = PortalUpgradeProcess.getCurrentBuildDate(
+				connection);
+
+			if (!currentBuildDate.before(ReleaseInfo.getBuildDate())) {
+				return;
+			}
+
+			if (_log.isWarnEnabled()) {
+				String message = _releaseManager.getShortStatusMessage(true);
+
+				if (Validator.isNotNull(message)) {
+					_log.warn(message);
+
+					return;
+				}
+			}
+
+			String message = _releaseManager.getShortStatusMessage(false);
+
+			if (Validator.isNotNull(message)) {
+				if (_log.isInfoEnabled()) {
+					_log.info(message);
+				}
+
+				return;
+			}
+
+			PortalUpgradeProcess.updateBuildInfo(connection);
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Unable to check build date", exception);
+			}
+		}
+	}
+
 	private void _checkShieldedContainerWebXml(String xml)
 		throws DocumentException {
 
 		Document document = UnsecureSAXReaderUtil.read(xml);
 
 		I18nServlet.setLanguageIds(document.getRootElement());
-
-		I18nFilter.setLanguageIds(I18nServlet.getLanguageIds());
 	}
 
 	private void _checkWebXml(String xml) throws DocumentException {
@@ -753,22 +773,26 @@ public class MainServlet extends HttpServlet {
 				GetterUtil.getString(
 					PropsValues.COMPANY_DEFAULT_VIRTUAL_HOST_MAIL_DOMAIN,
 					PropsValues.COMPANY_DEFAULT_WEB_ID),
-				0, true);
+				0, true, null, null, null, null, null, null);
 		}
 
-		String[] webIds = PortalInstances.getWebIds();
-
-		for (String webId : webIds) {
-			boolean skipCheck = false;
-
-			if (StartupHelperUtil.isDBNew() &&
-				webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
-
-				skipCheck = true;
-			}
-
-			PortalInstances.initCompany(webId, skipCheck);
+		if (Validator.isNull(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
+			throw new RuntimeException("Company default web ID is null");
 		}
+
+		CompanyLocalServiceUtil.forEachCompany(
+			company -> {
+				if (StartupHelperUtil.isDBNew() &&
+					Objects.equals(
+						PropsValues.COMPANY_DEFAULT_WEB_ID,
+						company.getWebId())) {
+
+					PortalInstances.initCompany(company, true);
+				}
+				else {
+					PortalInstances.initCompany(company, false);
+				}
+			});
 	}
 
 	private void _initLayoutTemplates(PluginPackage pluginPackage) {
@@ -978,7 +1002,7 @@ public class MainServlet extends HttpServlet {
 
 		User user = UserLocalServiceUtil.getUserById(userId);
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_PRE, PropsValues.LOGIN_EVENTS_PRE,
 				httpServletRequest, httpServletResponse);
@@ -1005,7 +1029,7 @@ public class MainServlet extends HttpServlet {
 
 		httpSession.removeAttribute("j_remoteuser");
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_POST, PropsValues.LOGIN_EVENTS_POST,
 				httpServletRequest, httpServletResponse);
@@ -1023,7 +1047,10 @@ public class MainServlet extends HttpServlet {
 			return false;
 		}
 
-		_inactiveRequestHandler.processInactiveRequest(
+		InactiveRequestHandler inactiveRequestHandler =
+			_inactiveRequestHandlerSnapshot.get();
+
+		inactiveRequestHandler.processInactiveRequest(
 			httpServletRequest, httpServletResponse,
 			"this-instance-is-inactive-please-contact-the-administrator");
 
@@ -1047,7 +1074,10 @@ public class MainServlet extends HttpServlet {
 			return false;
 		}
 
-		_inactiveRequestHandler.processInactiveRequest(
+		InactiveRequestHandler inactiveRequestHandler =
+			_inactiveRequestHandlerSnapshot.get();
+
+		inactiveRequestHandler.processInactiveRequest(
 			httpServletRequest, httpServletResponse,
 			"this-site-is-inactive-please-contact-the-administrator");
 
@@ -1149,7 +1179,10 @@ public class MainServlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		if ((userId > 0) ||
+		boolean blockLoginPrompt = GetterUtil.getBoolean(
+			httpServletRequest.getAttribute(WebKeys.BLOCK_LOGIN_PROMPT));
+
+		if (blockLoginPrompt || (userId > 0) ||
 			(ParamUtil.getInteger(httpServletRequest, "p_p_lifecycle") == 2)) {
 
 			PortalUtil.sendError(
@@ -1216,7 +1249,10 @@ public class MainServlet extends HttpServlet {
 			messageKey = "the-system-is-shutdown-please-try-again-later";
 		}
 
-		_inactiveRequestHandler.processInactiveRequest(
+		InactiveRequestHandler inactiveRequestHandler =
+			_inactiveRequestHandlerSnapshot.get();
+
+		inactiveRequestHandler.processInactiveRequest(
 			httpServletRequest, httpServletResponse, messageKey);
 
 		return true;
@@ -1268,19 +1304,6 @@ public class MainServlet extends HttpServlet {
 				new ModuleServiceLifecycle() {
 				},
 				HashMapDictionaryBuilder.<String, Object>put(
-					"module.service.lifecycle", "system.check"
-				).put(
-					"service.vendor", ReleaseInfo.getVendor()
-				).put(
-					"service.version", ReleaseInfo.getVersion()
-				).build()));
-
-		_serviceRegistrations.add(
-			bundleContext.registerService(
-				ModuleServiceLifecycle.class,
-				new ModuleServiceLifecycle() {
-				},
-				HashMapDictionaryBuilder.<String, Object>put(
 					"module.service.lifecycle", "license.install"
 				).put(
 					"service.vendor", ReleaseInfo.getVendor()
@@ -1302,10 +1325,9 @@ public class MainServlet extends HttpServlet {
 
 	private static final Log _log = LogFactoryUtil.getLog(MainServlet.class);
 
-	private static volatile InactiveRequestHandler _inactiveRequestHandler =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			InactiveRequestHandler.class, MainServlet.class,
-			"_inactiveRequestHandler", false);
+	private static final Snapshot<InactiveRequestHandler>
+		_inactiveRequestHandlerSnapshot = new Snapshot<>(
+			MainServlet.class, InactiveRequestHandler.class);
 	private static volatile ReleaseManager _releaseManager =
 		ServiceProxyFactory.newServiceTrackedInstance(
 			ReleaseManager.class, MainServlet.class, "_releaseManager", false);

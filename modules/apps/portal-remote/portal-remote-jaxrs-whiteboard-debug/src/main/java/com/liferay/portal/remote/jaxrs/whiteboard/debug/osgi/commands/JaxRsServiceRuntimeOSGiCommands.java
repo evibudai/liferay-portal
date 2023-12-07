@@ -1,27 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.remote.jaxrs.whiteboard.debug.osgi.commands;
 
 import com.liferay.osgi.util.StringPlus;
+import com.liferay.osgi.util.osgi.commands.OSGiCommands;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -47,9 +40,9 @@ import org.osgi.service.jaxrs.whiteboard.JaxrsWhiteboardConstants;
  */
 @Component(
 	property = {"osgi.command.function=check", "osgi.command.scope=jaxrs"},
-	service = JaxRsServiceRuntimeOSGiCommands.class
+	service = OSGiCommands.class
 )
-public class JaxRsServiceRuntimeOSGiCommands {
+public class JaxRsServiceRuntimeOSGiCommands implements OSGiCommands {
 
 	public void check() {
 		RuntimeDTO runtimeDTO = _jaxrsServiceRuntime.getRuntimeDTO();
@@ -85,15 +78,16 @@ public class JaxRsServiceRuntimeOSGiCommands {
 			System.out.println("Extensions report:");
 		}
 
-		Stream<ApplicationDTO> applicationDTOStream = Arrays.stream(
-			runtimeDTO.applicationDTOs);
+		Set<ExtensionDTO> extensionDTOsSet = new HashSet<>();
 
-		ExtensionDTO[] extensionDTOS = applicationDTOStream.flatMap(
-			adto -> Arrays.stream(adto.extensionDTOs)
-		).distinct(
-		).toArray(
-			ExtensionDTO[]::new
-		);
+		for (ApplicationDTO applicationDTO : runtimeDTO.applicationDTOs) {
+			for (ExtensionDTO extensionDTO : applicationDTO.extensionDTOs) {
+				extensionDTOsSet.add(extensionDTO);
+			}
+		}
+
+		ExtensionDTO[] extensionDTOS = extensionDTOsSet.toArray(
+			new ExtensionDTO[0]);
 
 		for (FailedExtensionDTO failedExtensionDTO :
 				runtimeDTO.failedExtensionDTOs) {
@@ -106,14 +100,16 @@ public class JaxRsServiceRuntimeOSGiCommands {
 
 			System.out.println("Resources report:");
 
-			applicationDTOStream = Arrays.stream(runtimeDTO.applicationDTOs);
+			Set<ResourceDTO> resourceDTOsSet = new HashSet<>();
 
-			ResourceDTO[] resourcesDTOs = applicationDTOStream.flatMap(
-				adto -> Arrays.stream(adto.resourceDTOs)
-			).distinct(
-			).toArray(
-				ResourceDTO[]::new
-			);
+			for (ApplicationDTO applicationDTO : runtimeDTO.applicationDTOs) {
+				for (ResourceDTO resourceDTO : applicationDTO.resourceDTOs) {
+					resourceDTOsSet.add(resourceDTO);
+				}
+			}
+
+			ResourceDTO[] resourcesDTOs = resourceDTOsSet.toArray(
+				new ResourceDTO[0]);
 
 			for (FailedResourceDTO failedResourceDTO :
 					runtimeDTO.failedResourceDTOs) {

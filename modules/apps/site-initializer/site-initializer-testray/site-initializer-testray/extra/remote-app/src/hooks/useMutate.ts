@@ -1,43 +1,35 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useCallback} from 'react';
 import {KeyedMutator, MutatorOptions} from 'swr';
+import TestrayError from '~/TestrayError';
 
 import {APIResponse} from '../services/rest';
 
-const useMutate = () => {
-	return {
-		addItemToList: (
-			mutate: KeyedMutator<any>,
-			data: any,
-			options?: MutatorOptions
-		) => {
+const useMutate = <T = any>(mutate?: KeyedMutator<T>) => {
+	const mutatePartial = useCallback(
+		(data: Partial<T>, options?: MutatorOptions) => {
+			if (!mutate) {
+				throw new TestrayError('Mutate is missing');
+			}
+
 			mutate(
-				(response: APIResponse) => ({
-					...response,
-					items: [data, ...response?.items],
-					totalCount: response?.totalCount + 1,
-				}),
-				options
+				(currentData) =>
+					currentData ? {...currentData, ...data} : undefined,
+				{
+					revalidate: false,
+					...options,
+				}
 			);
 		},
+		[mutate]
+	);
 
-		removeItemFromList: (
-			mutate: KeyedMutator<any>,
-			id: number,
-			options?: MutatorOptions
-		) =>
+	const removeItemFromList = useCallback(
+		(mutate: KeyedMutator<any>, id: number, options?: MutatorOptions) =>
 			mutate(
 				(response: APIResponse) => ({
 					...response,
@@ -46,8 +38,11 @@ const useMutate = () => {
 				}),
 				{revalidate: false, ...options}
 			),
+		[]
+	);
 
-		updateItemFromList: (
+	const updateItemFromList = useCallback(
+		(
 			mutate: KeyedMutator<any>,
 			id: number,
 			data: any,
@@ -71,6 +66,13 @@ const useMutate = () => {
 				}),
 				{revalidate: false, ...options}
 			),
+		[]
+	);
+
+	return {
+		mutatePartial,
+		removeItemFromList,
+		updateItemFromList,
 	};
 };
 

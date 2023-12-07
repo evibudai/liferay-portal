@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Roles";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,15 +25,56 @@ definition {
 		}
 	}
 
-	@priority = "4"
-	test PublishAnEditToDefinedPermissionsForARole {
+	@priority = 4
+	test CanPublishDeletedRoleWithDefinedPermissions {
 		JSONRole.addRegularRole(
 			roleKey = "Regrole Name",
 			roleTitle = "Regrole Name");
 
 		for (var resourceActionIndex : list "ADD_PUBLICATION,PERMISSIONS") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
+				resourceAction = ${resourceActionIndex},
+				resourceName = "com.liferay.change.tracking",
+				roleTitle = "Regrole Name");
+		}
+
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		JSONRole.deleteRole(roleTitle = "Regrole Name");
+
+		PublicationsNavigator.gotoReviewChanges(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Role",
+			changeSite = "",
+			changeTitle = "Regrole Name",
+			changeType = "Deleted",
+			changeUser = "Test Test");
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Permissions",
+			changeSite = "",
+			changeTitle = "Regrole Name Permissions for Publications All Sites and Asset Libraries",
+			changeType = "Deleted",
+			changeUser = "Test Test",
+			showSystemChanges = "true");
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@priority = 4
+	test CanPublishEditedRoleWithDefinedPermissions {
+		JSONRole.addRegularRole(
+			roleKey = "Regrole Name",
+			roleTitle = "Regrole Name");
+
+		for (var resourceActionIndex : list "ADD_PUBLICATION,PERMISSIONS") {
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = ${resourceActionIndex},
 				resourceName = "com.liferay.change.tracking",
 				roleTitle = "Regrole Name");
 		}
@@ -53,19 +94,17 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Permissions",
-			changeSite = "Global",
+			changeSite = "",
 			changeTitle = "Regrole Name Permissions for Publications All Sites and Asset Libraries",
 			changeType = "Modified",
 			changeUser = "Test Test",
-			showAllItems = "true");
+			showSystemChanges = "true");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
-	@priority = "4"
-	test PublishANewRoleWithDefinedPermissions {
+	@priority = 4
+	test CanPublishNewRoleWithDefinedPermissions {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
@@ -76,8 +115,8 @@ definition {
 
 		for (var resourceActionIndex : list "VIEW,VIEW_CONTROL_PANEL") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "90",
+				resourceAction = ${resourceActionIndex},
+				resourceName = 90,
 				roleTitle = "Regrole Name");
 		}
 
@@ -87,23 +126,20 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Role",
-			changeSite = "Global",
+			changeSite = "",
 			changeTitle = "Regrole Name",
 			changeType = "Added",
 			changeUser = "Test Test");
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Permissions",
-			changeOrder = "2",
-			changeSite = "Global",
+			changeSite = "",
 			changeTitle = "Regrole Name Permissions for Portal",
 			changeType = "Added",
 			changeUser = "Test Test",
-			showAllItems = "true");
+			showSystemChanges = "true");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
 }

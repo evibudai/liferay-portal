@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.web.internal.frontend.data.set.provider;
@@ -31,10 +22,14 @@ import com.liferay.frontend.data.set.provider.search.FDSPagination;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +74,9 @@ public class ReplacementCPInstanceFDSDataProvider
 		Locale locale = _portal.getLocale(httpServletRequest);
 
 		return TransformUtil.transform(
-			_getReplacementCPSkus(cpInstanceUuid, cProductId),
+			_getReplacementCPSkus(
+				_portal.getCompanyId(httpServletRequest), cpInstanceUuid,
+				cProductId, fdsKeywords, fdsPagination, sort),
 			replacementCPSku -> {
 				CPInstance cpInstance = _cpInstanceLocalService.getCPInstance(
 					replacementCPSku.getCPInstanceId());
@@ -90,7 +87,7 @@ public class ReplacementCPInstanceFDSDataProvider
 					cpDefinition.getName(LocaleUtil.toLanguageId(locale)),
 					_getPriceModel(
 						commerceContext, cpDefinition.getCPDefinitionId(),
-						cpInstance.getCPInstanceId(), locale),
+						cpInstance.getCPInstanceId(), StringPool.BLANK, locale),
 					cpInstance.getCPInstanceId(), cpInstance.getSku());
 			});
 	}
@@ -104,45 +101,45 @@ public class ReplacementCPInstanceFDSDataProvider
 			httpServletRequest, "cpInstanceUuid");
 		long cProductId = ParamUtil.getLong(httpServletRequest, "cProductId");
 
-		List<CPSku> cpSkus = _getReplacementCPSkus(cpInstanceUuid, cProductId);
-
-		return cpSkus.size();
+		return _cpInstanceLocalService.searchCPInstancesCount(
+			_portal.getCompanyId(httpServletRequest), cpInstanceUuid,
+			cProductId, fdsKeywords.getKeywords(),
+			WorkflowConstants.STATUS_APPROVED);
 	}
 
 	private PriceModel _getPriceModel(
 			CommerceContext commerceContext, long cpDefinitionId,
-			long cpInstanceId, Locale locale)
+			long cpInstanceId, String unitOfMeasureKey, Locale locale)
 		throws PortalException {
 
 		if (cpInstanceId > 0) {
 			return _productHelper.getPriceModel(
-				cpInstanceId, 1, commerceContext, StringPool.BLANK, locale);
+				cpInstanceId, StringPool.BLANK, BigDecimal.ONE,
+				unitOfMeasureKey, commerceContext, locale);
 		}
 
-		return _productHelper.getMinPrice(
+		return _productHelper.getMinPriceModel(
 			cpDefinitionId, commerceContext, locale);
 	}
 
 	private List<CPSku> _getReplacementCPSkus(
-		String cpInstanceUuid, long cProductId) {
+			long companyId, String cpInstanceUuid, long cProductId,
+			FDSKeywords fdsKeywords, FDSPagination fdsPagination, Sort sort)
+		throws PortalException {
 
 		List<CPSku> cpSkus = new ArrayList<>();
 
-		CPInstance cpInstance = _cpInstanceLocalService.fetchCProductInstance(
-			cProductId, cpInstanceUuid);
+		BaseModelSearchResult<CPInstance> cpInstanceBaseModelSearchResult =
+			_cpInstanceLocalService.searchCPInstances(
+				companyId, cpInstanceUuid, cProductId,
+				fdsKeywords.getKeywords(), WorkflowConstants.STATUS_APPROVED,
+				fdsPagination.getStartPosition(),
+				fdsPagination.getEndPosition(), sort);
 
-		CPInstance replacementCPInstance =
-			_cpInstanceLocalService.fetchCProductInstance(
-				cpInstance.getReplacementCProductId(),
-				cpInstance.getReplacementCPInstanceUuid());
+		for (CPInstance replacementCPInstance :
+				cpInstanceBaseModelSearchResult.getBaseModels()) {
 
-		while (replacementCPInstance != null) {
 			cpSkus.add(_cpInstanceHelper.toCPSku(replacementCPInstance));
-
-			replacementCPInstance =
-				_cpInstanceLocalService.fetchCProductInstance(
-					replacementCPInstance.getReplacementCProductId(),
-					replacementCPInstance.getReplacementCPInstanceUuid());
 		}
 
 		return cpSkus;

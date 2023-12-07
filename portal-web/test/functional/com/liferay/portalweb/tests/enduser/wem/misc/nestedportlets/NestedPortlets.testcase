@@ -1,6 +1,7 @@
 @component-name = "portal-util-misc"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Nested Portlets";
@@ -14,14 +15,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,7 +31,7 @@ definition {
 	}
 
 	@description = "User can nest a widget inside Nested Applications widget."
-	@priority = "5"
+	@priority = 5
 	test NestWidgetInsideNestedApplications {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
@@ -53,7 +54,7 @@ definition {
 				JSONLayout.addWidgetToPublicLayout(
 					groupName = "Test Site Name",
 					layoutName = "Test Page Name",
-					widgetName = "${widgetName}");
+					widgetName = ${widgetName});
 			}
 		}
 
@@ -69,14 +70,14 @@ definition {
 
 		task ("Drag and drop Web Content Display to first column in Nested Applications") {
 			NestedPortlets.dragAndDropPortletToPortletColumnPG(
-				columnNumberFrom = "1",
-				nestedColumnNumberTo = "1",
+				columnNumberFrom = 1,
+				nestedColumnNumberTo = 1,
 				portletName = "Web Content Display");
 		}
 
 		task ("View Web Content Display is nested to Nested Applications") {
 			NestedPortlets.viewPG(
-				nestedColumnNumber = "1",
+				nestedColumnNumber = 1,
 				portletName = "Web Content Display");
 		}
 	}

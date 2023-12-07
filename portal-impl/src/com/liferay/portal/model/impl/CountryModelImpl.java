@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -77,13 +68,13 @@ public class CountryModelImpl
 	public static final String TABLE_NAME = "Country";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"defaultLanguageId", Types.VARCHAR}, {"countryId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"a2", Types.VARCHAR},
-		{"a3", Types.VARCHAR}, {"active_", Types.BOOLEAN},
-		{"billingAllowed", Types.BOOLEAN},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"defaultLanguageId", Types.VARCHAR},
+		{"countryId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"a2", Types.VARCHAR}, {"a3", Types.VARCHAR},
+		{"active_", Types.BOOLEAN}, {"billingAllowed", Types.BOOLEAN},
 		{"groupFilterEnabled", Types.BOOLEAN}, {"idd_", Types.VARCHAR},
 		{"name", Types.VARCHAR}, {"number_", Types.VARCHAR},
 		{"position", Types.DOUBLE}, {"shippingAllowed", Types.BOOLEAN},
@@ -96,6 +87,7 @@ public class CountryModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("defaultLanguageId", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("countryId", Types.BIGINT);
@@ -120,7 +112,7 @@ public class CountryModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table Country (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,defaultLanguageId VARCHAR(75) null,countryId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,a2 VARCHAR(75) null,a3 VARCHAR(75) null,active_ BOOLEAN,billingAllowed BOOLEAN,groupFilterEnabled BOOLEAN,idd_ VARCHAR(75) null,name VARCHAR(75) null,number_ VARCHAR(75) null,position DOUBLE,shippingAllowed BOOLEAN,subjectToVAT BOOLEAN,zipRequired BOOLEAN,lastPublishDate DATE null)";
+		"create table Country (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,defaultLanguageId VARCHAR(75) null,countryId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,a2 VARCHAR(75) null,a3 VARCHAR(75) null,active_ BOOLEAN,billingAllowed BOOLEAN,groupFilterEnabled BOOLEAN,idd_ VARCHAR(75) null,name VARCHAR(75) null,number_ VARCHAR(75) null,position DOUBLE,shippingAllowed BOOLEAN,subjectToVAT BOOLEAN,zipRequired BOOLEAN,lastPublishDate DATE null,primary key (countryId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table Country";
 
@@ -285,110 +277,135 @@ public class CountryModelImpl
 	public Map<String, Function<Country, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<Country, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<Country, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<Country, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<Country, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<Country, Object>>();
-		Map<String, BiConsumer<Country, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<Country, ?>>();
+		private static final Map<String, Function<Country, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", Country::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion", (BiConsumer<Country, Long>)Country::setMvccVersion);
-		attributeGetterFunctions.put("uuid", Country::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<Country, String>)Country::setUuid);
-		attributeGetterFunctions.put(
-			"defaultLanguageId", Country::getDefaultLanguageId);
-		attributeSetterBiConsumers.put(
-			"defaultLanguageId",
-			(BiConsumer<Country, String>)Country::setDefaultLanguageId);
-		attributeGetterFunctions.put("countryId", Country::getCountryId);
-		attributeSetterBiConsumers.put(
-			"countryId", (BiConsumer<Country, Long>)Country::setCountryId);
-		attributeGetterFunctions.put("companyId", Country::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<Country, Long>)Country::setCompanyId);
-		attributeGetterFunctions.put("userId", Country::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<Country, Long>)Country::setUserId);
-		attributeGetterFunctions.put("userName", Country::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName", (BiConsumer<Country, String>)Country::setUserName);
-		attributeGetterFunctions.put("createDate", Country::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate", (BiConsumer<Country, Date>)Country::setCreateDate);
-		attributeGetterFunctions.put("modifiedDate", Country::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<Country, Date>)Country::setModifiedDate);
-		attributeGetterFunctions.put("a2", Country::getA2);
-		attributeSetterBiConsumers.put(
-			"a2", (BiConsumer<Country, String>)Country::setA2);
-		attributeGetterFunctions.put("a3", Country::getA3);
-		attributeSetterBiConsumers.put(
-			"a3", (BiConsumer<Country, String>)Country::setA3);
-		attributeGetterFunctions.put("active", Country::getActive);
-		attributeSetterBiConsumers.put(
-			"active", (BiConsumer<Country, Boolean>)Country::setActive);
-		attributeGetterFunctions.put(
-			"billingAllowed", Country::getBillingAllowed);
-		attributeSetterBiConsumers.put(
-			"billingAllowed",
-			(BiConsumer<Country, Boolean>)Country::setBillingAllowed);
-		attributeGetterFunctions.put(
-			"groupFilterEnabled", Country::getGroupFilterEnabled);
-		attributeSetterBiConsumers.put(
-			"groupFilterEnabled",
-			(BiConsumer<Country, Boolean>)Country::setGroupFilterEnabled);
-		attributeGetterFunctions.put("idd", Country::getIdd);
-		attributeSetterBiConsumers.put(
-			"idd", (BiConsumer<Country, String>)Country::setIdd);
-		attributeGetterFunctions.put("name", Country::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<Country, String>)Country::setName);
-		attributeGetterFunctions.put("number", Country::getNumber);
-		attributeSetterBiConsumers.put(
-			"number", (BiConsumer<Country, String>)Country::setNumber);
-		attributeGetterFunctions.put("position", Country::getPosition);
-		attributeSetterBiConsumers.put(
-			"position", (BiConsumer<Country, Double>)Country::setPosition);
-		attributeGetterFunctions.put(
-			"shippingAllowed", Country::getShippingAllowed);
-		attributeSetterBiConsumers.put(
-			"shippingAllowed",
-			(BiConsumer<Country, Boolean>)Country::setShippingAllowed);
-		attributeGetterFunctions.put("subjectToVAT", Country::getSubjectToVAT);
-		attributeSetterBiConsumers.put(
-			"subjectToVAT",
-			(BiConsumer<Country, Boolean>)Country::setSubjectToVAT);
-		attributeGetterFunctions.put("zipRequired", Country::getZipRequired);
-		attributeSetterBiConsumers.put(
-			"zipRequired",
-			(BiConsumer<Country, Boolean>)Country::setZipRequired);
-		attributeGetterFunctions.put(
-			"lastPublishDate", Country::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<Country, Date>)Country::setLastPublishDate);
+		static {
+			Map<String, Function<Country, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<Country, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", Country::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", Country::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", Country::getUuid);
+			attributeGetterFunctions.put(
+				"defaultLanguageId", Country::getDefaultLanguageId);
+			attributeGetterFunctions.put("countryId", Country::getCountryId);
+			attributeGetterFunctions.put("companyId", Country::getCompanyId);
+			attributeGetterFunctions.put("userId", Country::getUserId);
+			attributeGetterFunctions.put("userName", Country::getUserName);
+			attributeGetterFunctions.put("createDate", Country::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", Country::getModifiedDate);
+			attributeGetterFunctions.put("a2", Country::getA2);
+			attributeGetterFunctions.put("a3", Country::getA3);
+			attributeGetterFunctions.put("active", Country::getActive);
+			attributeGetterFunctions.put(
+				"billingAllowed", Country::getBillingAllowed);
+			attributeGetterFunctions.put(
+				"groupFilterEnabled", Country::getGroupFilterEnabled);
+			attributeGetterFunctions.put("idd", Country::getIdd);
+			attributeGetterFunctions.put("name", Country::getName);
+			attributeGetterFunctions.put("number", Country::getNumber);
+			attributeGetterFunctions.put("position", Country::getPosition);
+			attributeGetterFunctions.put(
+				"shippingAllowed", Country::getShippingAllowed);
+			attributeGetterFunctions.put(
+				"subjectToVAT", Country::getSubjectToVAT);
+			attributeGetterFunctions.put(
+				"zipRequired", Country::getZipRequired);
+			attributeGetterFunctions.put(
+				"lastPublishDate", Country::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<Country, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<Country, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<Country, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<Country, Long>)Country::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<Country, Long>)Country::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<Country, String>)Country::setUuid);
+			attributeSetterBiConsumers.put(
+				"defaultLanguageId",
+				(BiConsumer<Country, String>)Country::setDefaultLanguageId);
+			attributeSetterBiConsumers.put(
+				"countryId", (BiConsumer<Country, Long>)Country::setCountryId);
+			attributeSetterBiConsumers.put(
+				"companyId", (BiConsumer<Country, Long>)Country::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<Country, Long>)Country::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName", (BiConsumer<Country, String>)Country::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<Country, Date>)Country::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<Country, Date>)Country::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"a2", (BiConsumer<Country, String>)Country::setA2);
+			attributeSetterBiConsumers.put(
+				"a3", (BiConsumer<Country, String>)Country::setA3);
+			attributeSetterBiConsumers.put(
+				"active", (BiConsumer<Country, Boolean>)Country::setActive);
+			attributeSetterBiConsumers.put(
+				"billingAllowed",
+				(BiConsumer<Country, Boolean>)Country::setBillingAllowed);
+			attributeSetterBiConsumers.put(
+				"groupFilterEnabled",
+				(BiConsumer<Country, Boolean>)Country::setGroupFilterEnabled);
+			attributeSetterBiConsumers.put(
+				"idd", (BiConsumer<Country, String>)Country::setIdd);
+			attributeSetterBiConsumers.put(
+				"name", (BiConsumer<Country, String>)Country::setName);
+			attributeSetterBiConsumers.put(
+				"number", (BiConsumer<Country, String>)Country::setNumber);
+			attributeSetterBiConsumers.put(
+				"position", (BiConsumer<Country, Double>)Country::setPosition);
+			attributeSetterBiConsumers.put(
+				"shippingAllowed",
+				(BiConsumer<Country, Boolean>)Country::setShippingAllowed);
+			attributeSetterBiConsumers.put(
+				"subjectToVAT",
+				(BiConsumer<Country, Boolean>)Country::setSubjectToVAT);
+			attributeSetterBiConsumers.put(
+				"zipRequired",
+				(BiConsumer<Country, Boolean>)Country::setZipRequired);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<Country, Date>)Country::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -484,6 +501,21 @@ public class CountryModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -1047,6 +1079,7 @@ public class CountryModelImpl
 		CountryImpl countryImpl = new CountryImpl();
 
 		countryImpl.setMvccVersion(getMvccVersion());
+		countryImpl.setCtCollectionId(getCtCollectionId());
 		countryImpl.setUuid(getUuid());
 		countryImpl.setDefaultLanguageId(getDefaultLanguageId());
 		countryImpl.setCountryId(getCountryId());
@@ -1080,6 +1113,8 @@ public class CountryModelImpl
 
 		countryImpl.setMvccVersion(
 			this.<Long>getColumnOriginalValue("mvccVersion"));
+		countryImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		countryImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
 		countryImpl.setDefaultLanguageId(
 			this.<String>getColumnOriginalValue("defaultLanguageId"));
@@ -1190,6 +1225,8 @@ public class CountryModelImpl
 		CountryCacheModel countryCacheModel = new CountryCacheModel();
 
 		countryCacheModel.mvccVersion = getMvccVersion();
+
+		countryCacheModel.ctCollectionId = getCtCollectionId();
 
 		countryCacheModel.uuid = getUuid();
 
@@ -1364,6 +1401,7 @@ public class CountryModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private String _defaultLanguageId;
 	private long _countryId;
@@ -1390,8 +1428,9 @@ public class CountryModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<Country, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<Country, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1417,6 +1456,7 @@ public class CountryModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put("defaultLanguageId", _defaultLanguageId);
 		_columnOriginalValues.put("countryId", _countryId);
@@ -1466,47 +1506,49 @@ public class CountryModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("uuid_", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("defaultLanguageId", 4L);
+		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("countryId", 8L);
+		columnBitmasks.put("defaultLanguageId", 8L);
 
-		columnBitmasks.put("companyId", 16L);
+		columnBitmasks.put("countryId", 16L);
 
-		columnBitmasks.put("userId", 32L);
+		columnBitmasks.put("companyId", 32L);
 
-		columnBitmasks.put("userName", 64L);
+		columnBitmasks.put("userId", 64L);
 
-		columnBitmasks.put("createDate", 128L);
+		columnBitmasks.put("userName", 128L);
 
-		columnBitmasks.put("modifiedDate", 256L);
+		columnBitmasks.put("createDate", 256L);
 
-		columnBitmasks.put("a2", 512L);
+		columnBitmasks.put("modifiedDate", 512L);
 
-		columnBitmasks.put("a3", 1024L);
+		columnBitmasks.put("a2", 1024L);
 
-		columnBitmasks.put("active_", 2048L);
+		columnBitmasks.put("a3", 2048L);
 
-		columnBitmasks.put("billingAllowed", 4096L);
+		columnBitmasks.put("active_", 4096L);
 
-		columnBitmasks.put("groupFilterEnabled", 8192L);
+		columnBitmasks.put("billingAllowed", 8192L);
 
-		columnBitmasks.put("idd_", 16384L);
+		columnBitmasks.put("groupFilterEnabled", 16384L);
 
-		columnBitmasks.put("name", 32768L);
+		columnBitmasks.put("idd_", 32768L);
 
-		columnBitmasks.put("number_", 65536L);
+		columnBitmasks.put("name", 65536L);
 
-		columnBitmasks.put("position", 131072L);
+		columnBitmasks.put("number_", 131072L);
 
-		columnBitmasks.put("shippingAllowed", 262144L);
+		columnBitmasks.put("position", 262144L);
 
-		columnBitmasks.put("subjectToVAT", 524288L);
+		columnBitmasks.put("shippingAllowed", 524288L);
 
-		columnBitmasks.put("zipRequired", 1048576L);
+		columnBitmasks.put("subjectToVAT", 1048576L);
 
-		columnBitmasks.put("lastPublishDate", 2097152L);
+		columnBitmasks.put("zipRequired", 2097152L);
+
+		columnBitmasks.put("lastPublishDate", 4194304L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

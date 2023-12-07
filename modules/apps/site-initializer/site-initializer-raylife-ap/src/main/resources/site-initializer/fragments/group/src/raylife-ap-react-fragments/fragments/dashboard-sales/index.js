@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClaySelect} from '@clayui/form';
@@ -72,7 +63,7 @@ export default function () {
 	];
 
 	function getDaysUntilGoal(currentDay, currentMonth, filterOption) {
-		if (filterOption === '4') {
+		if (filterOption === PERIOD.YTD) {
 			return 365 - getDayOfYear;
 		}
 		else {
@@ -363,9 +354,15 @@ export default function () {
 		type: 'donut',
 	};
 
+	const chartDataValue = chartData.columns.map((period) => period.slice(1));
+
+	const hasData = chartDataValue
+		.map((arrayValue) => arrayValue[0])
+		.reduce((sum, value) => Number(sum) + Number(value));
+
 	const LegendElement = () => (
 		<div className="d-flex dashboard-sales-space-legend flex-column h-100 justify-content-end mt-5">
-			<div className="font-weight-bolder h5">
+			<div className="dashboard-sales-screen font-weight-bolder h5">
 				{new Intl.NumberFormat('en-US', {
 					currency: 'USD',
 					style: 'currency',
@@ -421,7 +418,7 @@ export default function () {
 				</ClaySelect>
 			</div>
 
-			{!!chartData.columns.length && (
+			{hasData > 0 ? (
 				<DonutChart
 					LegendElement={LegendElement}
 					chartData={chartData}
@@ -429,11 +426,9 @@ export default function () {
 					maxValue={getGoalValue}
 					title={getSalesPercentual}
 				/>
-			)}
-
-			{!chartData.columns.length && (
+			) : (
 				<div className="align-items-center d-flex flex-grow-1 justify-content-center">
-					<span>No Data Applications</span>
+					<span>No Data</span>
 				</div>
 			)}
 		</div>

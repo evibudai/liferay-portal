@@ -1,71 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayInput} from '@clayui/form';
-import React from 'react';
+import {FieldBase} from 'frontend-js-components-web';
+import React, {InputHTMLAttributes, Ref} from 'react';
 
-import {FieldBase} from './FieldBase';
-
-export const Input = React.forwardRef<HTMLInputElement, IProps>(
-	(
-		{
-			className,
-			component,
-			disabled,
-			error,
-			feedbackMessage,
-			id,
-			label,
-			name,
-			onChange,
-			onInput,
-			required,
-			type,
-			value,
-			...otherProps
-		},
-		ref
-	) => {
-		return (
-			<FieldBase
-				className={className}
-				disabled={disabled}
-				errorMessage={error}
-				helpMessage={feedbackMessage}
-				id={id}
-				label={label}
-				required={required}
-			>
-				<ClayInput
-					{...otherProps}
-					component={component}
-					disabled={disabled}
-					id={id}
-					name={name}
-					onChange={onChange}
-					onInput={onInput}
-					ref={ref}
-					type={type}
-					value={value}
-				/>
-			</FieldBase>
-		);
-	}
-);
-
-interface IProps
-	extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
+interface InputProps
+	extends InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
 	component?: 'input' | 'textarea' | React.ForwardRefExoticComponent<any>;
 	disabled?: boolean;
 	error?: string;
@@ -74,7 +17,60 @@ interface IProps
 	label?: string;
 	name?: string;
 	placeholder?: string;
+	ref?: Ref<HTMLInputElement>;
 	required?: boolean;
+	tooltip?: string;
 	type?: 'number' | 'textarea' | 'text' | 'date';
 	value?: string | number | string[];
+}
+
+export function Input({
+	className,
+	component,
+	disabled,
+	error,
+	feedbackMessage,
+	id,
+	label,
+	min,
+	name,
+	onBlur,
+	onChange,
+	onInput,
+	readOnly,
+	ref,
+	required,
+	tooltip,
+	type,
+	value,
+	...otherProps
+}: InputProps) {
+	return (
+		<FieldBase
+			className={className}
+			disabled={disabled}
+			errorMessage={error}
+			helpMessage={feedbackMessage}
+			id={id}
+			label={label}
+			required={required}
+			tooltip={tooltip}
+		>
+			<ClayInput
+				{...otherProps}
+				component={component}
+				disabled={disabled}
+				id={id}
+				min={min}
+				name={name}
+				onBlur={onBlur}
+				onChange={onChange}
+				onInput={onInput}
+				readOnly={readOnly}
+				ref={ref}
+				type={type}
+				value={value}
+			/>
+		</FieldBase>
+	);
 }

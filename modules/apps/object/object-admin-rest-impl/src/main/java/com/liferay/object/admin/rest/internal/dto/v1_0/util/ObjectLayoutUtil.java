@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.dto.v1_0.util;
@@ -21,11 +12,13 @@ import com.liferay.object.admin.rest.dto.v1_0.ObjectLayoutRow;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectLayoutTab;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Map;
 
@@ -38,6 +31,7 @@ public class ObjectLayoutUtil {
 			Map<String, Map<String, String>> actions,
 			ObjectDefinitionLocalService objectDefinitionLocalService,
 			ObjectFieldLocalService objectFieldLocalService,
+			ObjectRelationshipLocalService objectRelationshipLocalService,
 			com.liferay.object.model.ObjectLayout serviceBuilderObjectLayout)
 		throws PortalException {
 
@@ -65,7 +59,8 @@ public class ObjectLayoutUtil {
 				objectLayoutTabs = TransformUtil.transformToArray(
 					serviceBuilderObjectLayout.getObjectLayoutTabs(),
 					objectLayoutTab -> toObjectLayoutTab(
-						objectFieldLocalService, objectLayoutTab),
+						objectFieldLocalService, objectLayoutTab,
+						objectRelationshipLocalService),
 					ObjectLayoutTab.class);
 			}
 		};
@@ -77,7 +72,8 @@ public class ObjectLayoutUtil {
 
 	public static ObjectLayoutTab toObjectLayoutTab(
 		ObjectFieldLocalService objectFieldLocalService,
-		com.liferay.object.model.ObjectLayoutTab objectLayoutTab) {
+		com.liferay.object.model.ObjectLayoutTab objectLayoutTab,
+		ObjectRelationshipLocalService objectRelationshipLocalService) {
 
 		if (objectLayoutTab == null) {
 			return null;
@@ -96,6 +92,20 @@ public class ObjectLayoutUtil {
 				objectRelationshipId =
 					objectLayoutTab.getObjectRelationshipId();
 				priority = objectLayoutTab.getPriority();
+
+				setObjectRelationshipExternalReferenceCode(
+					() -> {
+						ObjectRelationship objectRelationship =
+							objectRelationshipLocalService.
+								fetchObjectRelationship(
+									objectLayoutTab.getObjectRelationshipId());
+
+						if (objectRelationship == null) {
+							return null;
+						}
+
+						return objectRelationship.getExternalReferenceCode();
+					});
 			}
 		};
 	}

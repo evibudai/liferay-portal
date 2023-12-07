@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.checkout.web.internal.util;
@@ -17,8 +8,8 @@ package com.liferay.commerce.checkout.web.internal.util;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
 import com.liferay.commerce.checkout.helper.CommerceCheckoutStepHttpHelper;
+import com.liferay.commerce.checkout.web.internal.display.context.AddressCommerceCheckoutStepDisplayContext;
 import com.liferay.commerce.checkout.web.internal.display.context.ShippingAddressCheckoutStepDisplayContext;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
@@ -37,10 +28,10 @@ import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.util.BaseCommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStep;
-import com.liferay.commerce.util.CommerceShippingHelper;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.CountryLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 
 import javax.portlet.ActionRequest;
@@ -86,7 +77,7 @@ public class ShippingAddressCommerceCheckoutStep
 			(CommerceOrder)httpServletRequest.getAttribute(
 				CommerceCheckoutWebKeys.COMMERCE_ORDER);
 
-		return _commerceShippingHelper.isShippable(commerceOrder);
+		return commerceOrder.isShippable();
 	}
 
 	@Override
@@ -95,17 +86,20 @@ public class ShippingAddressCommerceCheckoutStep
 		throws Exception {
 
 		try {
-			AddressCommerceCheckoutStepUtil addressCommerceCheckoutStepUtil =
-				new AddressCommerceCheckoutStepUtil(
-					_commerceAccountLocalService,
-					CommerceAddressConstants.ADDRESS_TYPE_SHIPPING,
-					_commerceOrderService, _commerceAddressService,
-					_commerceOrderModelResourcePermission);
+			AddressCommerceCheckoutStepDisplayContext
+				addressCommerceCheckoutStepDisplayContext =
+					new AddressCommerceCheckoutStepDisplayContext(
+						_accountEntryLocalService,
+						CommerceAddressConstants.ADDRESS_TYPE_SHIPPING,
+						_commerceOrderService, _commerceAddressService,
+						_countryLocalService,
+						_commerceOrderModelResourcePermission);
 
 			CommerceOrder commerceOrder =
-				addressCommerceCheckoutStepUtil.updateCommerceOrderAddress(
-					actionRequest,
-					CommerceCheckoutWebKeys.SHIPPING_ADDRESS_PARAM_NAME);
+				addressCommerceCheckoutStepDisplayContext.
+					updateCommerceOrderAddress(
+						actionRequest,
+						CommerceCheckoutWebKeys.SHIPPING_ADDRESS_PARAM_NAME);
 
 			actionRequest.setAttribute(
 				CommerceCheckoutWebKeys.COMMERCE_ORDER, commerceOrder);
@@ -198,9 +192,6 @@ public class ShippingAddressCommerceCheckoutStep
 	private AccountRoleLocalService _accountRoleLocalService;
 
 	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
-
-	@Reference
 	private CommerceAddressService _commerceAddressService;
 
 	@Reference
@@ -223,7 +214,7 @@ public class ShippingAddressCommerceCheckoutStep
 	private CommerceOrderService _commerceOrderService;
 
 	@Reference
-	private CommerceShippingHelper _commerceShippingHelper;
+	private CountryLocalService _countryLocalService;
 
 	@Reference
 	private JSPRenderer _jspRenderer;

@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.js.web.internal.servlet.taglib.aui;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.frontend.esm.FrontendESMUtil;
 import com.liferay.portal.kernel.servlet.taglib.aui.AMDRequire;
 import com.liferay.portal.kernel.servlet.taglib.aui.ESImport;
@@ -50,7 +42,10 @@ public class PortletDataRendererImpl implements PortletDataRenderer {
 		String rawCode = _computeRawCode(portletDatas);
 
 		if (!Validator.isBlank(rawCode)) {
-			writer.write("<script type=\"text/javascript\">\n");
+			writer.write("<script");
+			writer.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(null));
+			writer.write(" type=\"text/javascript\">\n");
 			writer.write(rawCode);
 			writer.write("\n</script>");
 		}
@@ -61,10 +56,16 @@ public class PortletDataRendererImpl implements PortletDataRenderer {
 			portletDatas, usedAliases);
 
 		if (esImportsMap.isEmpty()) {
-			writer.write("<script>\n");
+			writer.write("<script");
+			writer.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(null));
+			writer.write(">\n");
 		}
 		else {
-			writer.write("<script type=\"");
+			writer.write("<script");
+			writer.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(null));
+			writer.write(" type=\"");
 			writer.write(FrontendESMUtil.getScriptType());
 			writer.write("\">\n");
 		}
@@ -73,17 +74,30 @@ public class PortletDataRendererImpl implements PortletDataRenderer {
 
 		if (!esImportsMap.isEmpty()) {
 			for (ESImport esImport : esImportsMap.values()) {
-				writer.write("import {");
-				writer.write(esImport.getSymbol());
+				writer.write("import ");
 
+				String symbol = esImport.getSymbol();
 				String alias = esImport.getAlias();
 
-				if (!alias.equals(esImport.getSymbol())) {
-					writer.write(" as ");
+				if (!Validator.isBlank(symbol)) {
+					writer.write(StringPool.OPEN_CURLY_BRACE);
+					writer.write(symbol);
+
+					if (!Validator.isBlank(alias) &&
+						!Objects.equals(alias, symbol)) {
+
+						writer.write(" as ");
+						writer.write(alias);
+					}
+
+					writer.write("} from ");
+				}
+				else if (!Validator.isBlank(alias)) {
 					writer.write(alias);
+					writer.write(" from ");
 				}
 
-				writer.write("} from '");
+				writer.write(StringPool.APOSTROPHE);
 				writer.write(esImport.getModule());
 				writer.write("';\n");
 			}
@@ -236,15 +250,18 @@ public class PortletDataRendererImpl implements PortletDataRenderer {
 
 					String alias = esImport.getAlias();
 
-					if (usedAliases.containsKey(alias)) {
-						IntegerWrapper integerWrapper = usedAliases.get(alias);
+					if (!Validator.isBlank(alias)) {
+						if (usedAliases.containsKey(alias)) {
+							IntegerWrapper integerWrapper = usedAliases.get(
+								alias);
 
-						alias += integerWrapper.getValue();
+							alias += integerWrapper.getValue();
 
-						integerWrapper.increment();
-					}
-					else {
-						usedAliases.put(alias, new IntegerWrapper(0));
+							integerWrapper.increment();
+						}
+						else {
+							usedAliases.put(alias, new IntegerWrapper(0));
+						}
 					}
 
 					esImportsMap.put(

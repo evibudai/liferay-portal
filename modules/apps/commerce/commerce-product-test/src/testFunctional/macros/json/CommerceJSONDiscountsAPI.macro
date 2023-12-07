@@ -1,12 +1,13 @@
 definition {
 
-	macro _addDiscount {
+	@summary = "Default summary"
+	macro _addDiscount(usePercentage = null, vocabularyName = null, title = null, categoryNames = null, productSKUs = null, productGroupNames = null, unitOfMeasureKey = null, productNames = null, level = null, active = null, target = null, groupName = null, productsJSON = null) {
 		Variables.assertDefined(parameterList = "${active},${level},${target},${title},${usePercentage}");
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (!(isSet(limitationType))) {
@@ -14,30 +15,30 @@ definition {
 		}
 
 		if (!(isSet(maximumDiscountAmount))) {
-			var maximumDiscountAmount = "0";
+			var maximumDiscountAmount = 0;
 		}
 
 		if (!(isSet(percentageLevel1))) {
-			var percentageLevel1 = "0";
+			var percentageLevel1 = 0;
 		}
 
 		if (!(isSet(percentageLevel2))) {
-			var percentageLevel2 = "0";
+			var percentageLevel2 = 0;
 		}
 
 		if (!(isSet(percentageLevel3))) {
-			var percentageLevel3 = "0";
+			var percentageLevel3 = 0;
 		}
 
 		if (!(isSet(percentageLevel4))) {
-			var percentageLevel4 = "0";
+			var percentageLevel4 = 0;
 		}
 
 		if (!(isSet(useCouponCode))) {
 			var useCouponCode = "false";
 		}
 
-		if ("${useCouponCode}" == "false") {
+		if (${useCouponCode} == "false") {
 			var couponCode = "";
 		}
 		else {
@@ -46,104 +47,265 @@ definition {
 			}
 		}
 
-		var curl = '''
-			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-  			-d '{
-				"active": ${active},
-				"couponCode": "${couponCode}",
-				"level": "${level}",
-				"limitationType": "${limitationType}",
-				"maximumDiscountAmount": ${maximumDiscountAmount},
-				"neverExpire": true,
-				"percentageLevel1": ${percentageLevel1},
-				"percentageLevel2": ${percentageLevel2},
-				"percentageLevel3": ${percentageLevel3},
-				"percentageLevel4": ${percentageLevel4},
-				"target": "${target}",
-				"title": "${title}",
-				"useCouponCode": ${useCouponCode},
-				"usePercentage": ${usePercentage}
-			}'
-		''';
+		if (isSet(productNames)) {
+			Variables.assertDefined(parameterList = ${productNames});
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
-	}
+			var productIds = CommerceJSONProductsAPI.getProductIdsByName(
+				productNames = ${productNames},
+				responseBody = ${productsJSON});
+			var fieldsList = ListUtil.newList();
 
-	macro _addDiscountAccountGroup {
-		Variables.assertDefined(parameterList = "${accountGroupName},${discountTitle}");
+			for (var productId : list ${productIds}) {
+				var product = '''{"productId": ${productId}}''';
 
-		var baseURL = "${baseURL}";
+				ListUtil.add(${fieldsList}, ${product});
+			}
 
-		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var productList = ListUtil.toString(${fieldsList});
+		}
+		else {
+			var productList = "";
 		}
 
-		var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = "${discountTitle}");
-		var accountGroupId = CommerceJSONAccountGroupsAPI._getAccountGroupId(accountGroupName = "${accountGroupName}");
+		if (isSet(categoryNames)) {
+			Variables.assertDefined(parameterList = "${groupName},${vocabularyName}");
+
+			var categoryIds = CommmerceJSONCategoriesAPI._getCategoryIdByName(
+				categoryNames = ${categoryNames},
+				groupName = ${groupName},
+				vocabularyName = ${vocabularyName});
+			var fieldsList = ListUtil.newList();
+
+			for (var categoryId : list ${categoryIds}) {
+				var category = '''{"categoryId": ${categoryIds}}''';
+
+				ListUtil.add(${fieldsList}, ${category});
+			}
+
+			var categoryList = ListUtil.toString(${fieldsList});
+		}
+		else {
+			var categoryList = "";
+		}
+
+		if (isSet(productGroupNames)) {
+			Variables.assertDefined(parameterList = ${productGroupNames});
+
+			var productGroupIds = CommmerceJSONProductGroupsAPI.getProductGroupIdsByName(
+				productGroupNames = ${productGroupNames},
+				responseBody = ${productsJSON});
+
+			echo("productGroup id: ${productGroupIds}");
+
+			var fieldsList = ListUtil.newList();
+
+			for (var productGroupId : list ${productGroupIds}) {
+				var productGroup = '''{"productGroupId": ${productGroupIds}}''';
+
+				ListUtil.add(${fieldsList}, ${productGroup});
+			}
+
+			var productGroupList = ListUtil.toString(${fieldsList});
+		}
+		else {
+			var productGroupList = "";
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"active": ${active},
+					"couponCode": "${couponCode}",
+					"discountCategories": [${categoryList}],
+					"discountProductGroups": [${productGroupList}],
+					"discountProducts": [${productList}],
+					"level": "${level}",
+					"limitationType": "${limitationType}",
+					"maximumDiscountAmount": ${maximumDiscountAmount},
+					"neverExpire": true,
+					"percentageLevel1": ${percentageLevel1},
+					"percentageLevel2": ${percentageLevel2},
+					"percentageLevel3": ${percentageLevel3},
+					"percentageLevel4": ${percentageLevel4},
+					"target": "${target}",
+					"title": "${title}",
+					"useCouponCode": ${useCouponCode},
+					"usePercentage": ${usePercentage}
+				}'
+		''';
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
+
+		if (isSet(productSKUs)) {
+			Variables.assertDefined(parameterList = ${productSKUs});
+
+			for (var productSKU : list ${productSKUs}) {
+				var discountId = CommerceJSONDiscountsAPI._addDiscountSku(
+					discountTitle = ${title},
+					productSKU = ${productSKU},
+					unitOfMeasureKey = ${unitOfMeasureKey});
+			}
+		}
+	}
+
+	@summary = "Default summary"
+	macro _addDiscountAccount(discountTitle = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${discountTitle},${accountEntryName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId}/discount-accounts \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"accountId": ${accountEntryId}
+				}'
+		''';
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addDiscountAccountGroup(discountTitle = null, accountGroupName = null) {
+		Variables.assertDefined(parameterList = "${accountGroupName},${discountTitle}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+		var accountGroupId = CommerceJSONAccountGroupsAPI._getAccountGroupId(accountGroupName = ${accountGroupName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId}/discount-account-groups \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-  			-d '{
-				"accountGroupId": ${accountGroupId}
-			}'
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"accountGroupId": ${accountGroupId}
+				}'
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _addDiscountProduct {
+	@summary = "Default summary"
+	macro _addDiscountProduct(discountTitle = null, productName = null) {
 		Variables.assertDefined(parameterList = "${discountTitle},${productName}");
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = "${discountTitle}");
-		var productId = CommerceJSONProductsAPI._getProductId(productName = "${productName}");
+		var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+		var productId = CommerceJSONProductsAPI._getProductId(productName = ${productName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId}/discount-products \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
-			-H 'Content-Type: application/json' \
-  			-d '{
-				"productId": ${productId}
-			}'
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"productId": ${productId}
+				}'
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _deleteAllCommerceDiscounts {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _addDiscountSku(productSKU = null, discountTitle = null, unitOfMeasureKey = null) {
+		Variables.assertDefined(parameterList = "${discountTitle},${productSKU}");
+
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(discountId))) {
+			var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+		}
+
+		if (isSet(unitOfMeasureKey)) {
+			var body = '''
+				-d {
+					"skuId": ${skuId},
+					"unitOfMeasureKey": "${unitOfMeasureKey}"
+				}
+			''';
+		}
+		else {
+			var body = '''
+				-d '{
+					"skuId": ${skuId}
+				}'
+			''';
+		}
+
+		var skuId = CommerceJSONProductsAPI._getSKUId(productSKU = ${productSKU});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId}/discount-skus \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+		''';
+
+		var curl = StringUtil.add(${curl}, ${body}, " ");
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
+
+		return ${discountId};
+	}
+
+	@summary = "Default summary"
+	macro _deleteAllCommerceDiscounts() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var discountsCount = CommerceJSONDiscountsAPI._getCommerceDiscountsCount();
 
-		if ("${discountsCount}" != "0") {
-			var discountIds = CommerceJSONDiscountsAPI._getCommerceDiscountIds(discountCount = "${discountsCount}");
+		if (${discountsCount} != 0) {
+			var discountIds = CommerceJSONDiscountsAPI._getCommerceDiscountIds(discountCount = ${discountsCount});
 
-			for (var discountId : list "${discountIds}") {
+			for (var discountId : list ${discountIds}) {
 				echo("Deleting Commerce discount with id: ${discountId}");
+
+				var userLoginInfo = JSONUtil2.formatJSONUser();
 
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId} \
-					-u test@liferay.com:test \
-					-H 'accept: application/json' \
+						-u ${userLoginInfo} \
+						-H 'accept: application/json' \
 				''';
 
-				JSONCurlUtil.delete("${curl}");
+				JSONCurlUtil.delete(${curl});
 			}
 		}
 		else {
@@ -151,76 +313,335 @@ definition {
 		}
 	}
 
-	macro _getCommerceDiscountIds {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _deleteDiscountSkuUom(productSKU = null, discountTitle = null, uomKey = null) {
+		Variables.assertDefined(parameterList = ${uomKey});
+
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var responseBody = CommerceJSONDiscountsAPI._getCommerceDiscountSkuById(discountTitle = ${discountTitle});
+		var skuId = CommerceJSONProductsAPI._getSKUId(productSKU = ${productSKU});
+
+		var discountSkuId = JSONUtil.getWithJSONPath(${responseBody}, "$..items[?(@['unitOfMeasureKey'] == '${uomKey}' && @['skuId'] == ${skuId})].['discountSkuId']");
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discount-skus/${discountSkuId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		JSONCurlUtil.delete(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceDiscountById(discountTitle = null) {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(discountId)) && isSet(discountTitle)) {
+			var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceDiscountIds(discountCount = null) {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(discountCount)) {
-			var discountsCount = "${discountCount}";
+			var discountsCount = ${discountCount};
 		}
 		else {
-			var discountsCount = "100";
+			var discountsCount = 100;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts?pageSize=${discountsCount} \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var discountIds = JSONCurlUtil.get("${curl}", "$..['id']");
+		var discountIds = JSONCurlUtil.get(${curl}, "$..['id']");
 
-		return "${discountIds}";
+		return ${discountIds};
 	}
 
-	macro _getCommerceDiscountsCount {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceDiscounts(discountCount = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
-		}
-
-		var curl = '''
-			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
-		''';
-
-		var discountsCount = JSONCurlUtil.get("${curl}", "$['totalCount']");
-
-		echo("The Commerce discounts count is: ${discountsCount}");
-
-		return "${discountsCount}";
-	}
-
-	macro _getDiscountId {
-		Variables.assertDefined(parameterList = "${discountTitle}");
-
-		var baseURL = "${baseURL}";
-
-		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(discountCount)) {
-			var discountCount = "${discountCount}";
+			var discountsCount = ${discountCount};
 		}
 		else {
-			var discountCount = "100";
+			var discountsCount = 100;
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
-				${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts?pageSize=${discountCount} \
-				-u test@liferay.com:test \
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts?pageSize=${discountsCount} \
+				-u ${userLoginInfo} \
 				-H 'accept: application/json' \
-			''';
+		''';
 
-		var discountId = JSONCurlUtil.get("${curl}", "$.items[?(@['title'] == '${discountTitle}')].['id']");
+		var responseBody = JSONCurlUtil.get(${curl});
 
-		return "${discountId}";
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceDiscountsCount() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var discountsCount = JSONCurlUtil.get(${curl}, "$['totalCount']");
+
+		echo("The Commerce discounts count is: ${discountsCount}");
+
+		return ${discountsCount};
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceDiscountSkuById(discountTitle = null) {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(discountId)) && isSet(discountTitle)) {
+			var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId}/discount-skus \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro _getDiscountId(discountTitle = null) {
+		Variables.assertDefined(parameterList = ${discountTitle});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (isSet(discountCount)) {
+			var discountCount = ${discountCount};
+		}
+		else {
+			var discountCount = 100;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts?pageSize=${discountCount} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var discountId = JSONCurlUtil.get(${curl}, "$.items[?(@['title'] == '${discountTitle}')].['id']");
+
+		return ${discountId};
+	}
+
+	@summary = "Default summary"
+	macro _patchCommerceDiscount(newTitle = null, discountTitle = null, percentageLevel4 = null, percentageLevel2 = null, percentageLevel3 = null) {
+		Variables.assertDefined(parameterList = ${discountTitle});
+
+		var discountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+		var fieldsList = ListUtil.newList();
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (isSet(active)) {
+			var active = '''"active": ${active}''';
+
+			ListUtil.add(${fieldsList}, ${active});
+		}
+
+		if (isSet(couponCode)) {
+			var couponCode = '''"couponCode": "${couponCode}"''';
+
+			ListUtil.add(${fieldsList}, ${couponCode});
+		}
+
+		if (!(isSet(limitationType))) {
+			var limitationType = '''"limitationType": "unlimited"''';
+		}
+		else {
+			var limitationType = '''"limitationType": "${limitationType}"''';
+		}
+
+		ListUtil.add(${fieldsList}, ${limitationType});
+
+		if (isSet(maximumDiscountAmount)) {
+			var maximumDiscountAmount = '''"maximumDiscountAmount": ${maximumDiscountAmount}''';
+
+			ListUtil.add(${fieldsList}, ${maximumDiscountAmount});
+		}
+
+		if (isSet(percentageLevel1)) {
+			var percentageLevel1 = '''"percentageLevel1": ${percentageLevel1}''';
+
+			ListUtil.add(${fieldsList}, ${percentageLevel1});
+		}
+
+		if (isSet(percentageLevel2)) {
+			var percentageLevel1 = '''"percentageLevel2": ${percentageLevel2}''';
+
+			ListUtil.add(${fieldsList}, ${percentageLevel2});
+		}
+
+		if (isSet(percentageLevel3)) {
+			var percentageLevel1 = '''"percentageLevel3": ${percentageLevel3}''';
+
+			ListUtil.add(${fieldsList}, ${percentageLevel3});
+		}
+
+		if (isSet(percentageLevel4)) {
+			var percentageLevel1 = '''"percentageLevel4": ${percentageLevel4}''';
+
+			ListUtil.add(${fieldsList}, ${percentageLevel4});
+		}
+
+		if (!(isSet(target))) {
+			var target = '''"target": "products"''';
+		}
+		else {
+			var target = '''"target": "${target}"''';
+		}
+
+		ListUtil.add(${fieldsList}, ${target});
+
+		if (isSet(newTitle)) {
+			var title = '''"title": "${newTitle}"''';
+		}
+		else {
+			var title = '''"title": "${discountTitle}"''';
+		}
+
+		ListUtil.add(${fieldsList}, ${title});
+
+		if (isSet(useCouponCode)) {
+			var useCouponCode = '''"useCouponCode": "${useCouponCode}"''';
+
+			ListUtil.add(${fieldsList}, ${useCouponCode});
+		}
+
+		if (isSet(usePercentage)) {
+			var usePercentage = '''"usePercentage": "${usePercentage}"''';
+
+			ListUtil.add(${fieldsList}, ${usePercentage});
+		}
+
+		var fieldsList = ListUtil.toString(${fieldsList});
+
+		echo("Fieldlist: ${fieldsList}");
+
+		var payload = CommerceUtilities.getPayloadFromFieldsList(fieldsList = ${fieldsList});
+
+		echo("payload: ${payload}");
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-pricing/v2.0/discounts/${discountId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{${payload}}'
+		''';
+
+		var responseBody = JSONCurlUtil.patch(${curl});
+
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro getCommerceDiscountFieldById(discountTitle = null, jsonPath = null, discountId = null) {
+		Variables.assertDefined(parameterList = ${jsonPath});
+
+		if (!(isSet(responseBody))) {
+			var responseBody = CommerceJSONDiscountsAPI._getCommerceDiscountById(
+				discountId = ${discountId},
+				discountTitle = ${discountTitle});
+		}
+
+		var fieldValue = JSONUtil.getWithJSONPath(${responseBody}, ${jsonPath});
+
+		echo("Value: ${fieldValue}");
+
+		return ${fieldValue};
+	}
+
+	@summary = "Default summary"
+	macro getCommerceDiscountsFieldValuesList(discountCount = null, jsonPath = null) {
+		Variables.assertDefined(parameterList = ${jsonPath});
+
+		if (!(isSet(responseBody))) {
+			var responseBody = CommerceJSONDiscountsAPI._getCommerceDiscounts(discountCount = ${discountCount});
+		}
+
+		var fieldValuesList = JSONUtil.getWithJSONPath(${responseBody}, ${jsonPath});
+
+		echo("Values: ${fieldValuesList}");
+
+		return ${fieldValuesList};
 	}
 
 }

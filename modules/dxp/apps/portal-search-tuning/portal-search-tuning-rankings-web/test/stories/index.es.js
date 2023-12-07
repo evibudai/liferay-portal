@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -70,29 +64,29 @@ const withSheet = (storyFn) => (
 
 storiesOf('Pages|ResultRankingsForm', module).add('default', () => (
 	<ResultRankingsForm
-		cancelUrl=""
-		fetchDocumentsHiddenUrl="http://www.mocky.io/v2/5e8366a4300000580fcf3df1"
-		fetchDocumentsSearchUrl="http://www.mocky.io/v2/5e83720e3000007612cf3e32"
-		fetchDocumentsVisibleUrl="http://www.mocky.io/v2/5ea0e59d320000204394b198"
+		cancelURL=""
+		fetchDocumentsHiddenURL="http://www.mocky.io/v2/5e8366a4300000580fcf3df1"
+		fetchDocumentsSearchURL="http://www.mocky.io/v2/5e83720e3000007612cf3e32"
+		fetchDocumentsVisibleURL="http://www.mocky.io/v2/5ea0e59d320000204394b198"
 		formName="testFm"
 		initialAliases={['one', 'two', 'three']}
 		saveActionUrl="#"
 		searchQuery={text('Search Term', 'example')}
 		status={1}
-		validateFormUrl="http://www.mocky.io/v2/5d9dfbea3200008407329b6f"
+		validateFormURL="http://www.mocky.io/v2/5d9dfbea3200008407329b6f"
 	/>
 ));
 
 storiesOf('Components|AddResult', module)
 	.add('AddResult', () => (
 		<AddResult
-			fetchDocumentsSearchUrl="http://www.mocky.io/v2/5db37f913000005f0057b68e"
+			fetchDocumentsSearchURL="http://www.mocky.io/v2/5db37f913000005f0057b68e"
 			onAddResultSubmit={action('onAddResultSubmit')}
 		/>
 	))
 	.add('AddResultModal', () => (
 		<AddResultModal
-			fetchDocumentsSearchUrl="http://www.mocky.io/v2/5db37f913000005f0057b68e"
+			fetchDocumentsSearchURL="http://www.mocky.io/v2/5db37f913000005f0057b68e"
 			onAddResultSubmit={action('onAddResultSubmit')}
 			onCloseModal={action('onCloseModal')}
 		/>
@@ -149,7 +143,7 @@ storiesOf('Components|List', module)
 		<List
 			dataLoading={false}
 			dataMap={mockDataMap}
-			fetchDocumentsSearchUrl=""
+			fetchDocumentsSearchURL=""
 			onAddResultSubmit={action('onAddResultSubmit')}
 			onClickHide={action('onClickHide')}
 			onClickPin={action('onClickPin')}
@@ -161,7 +155,7 @@ storiesOf('Components|List', module)
 		<List
 			dataLoading={false}
 			dataMap={{}}
-			fetchDocumentsSearchUrl=""
+			fetchDocumentsSearchURL=""
 			onAddResultSubmit={action('onAddResultSubmit')}
 		/>
 	))
@@ -170,7 +164,7 @@ storiesOf('Components|List', module)
 			dataLoading={false}
 			dataMap={{}}
 			displayError
-			fetchDocumentsSearchUrl=""
+			fetchDocumentsSearchURL=""
 			onAddResultSubmit={action('onAddResultSubmit')}
 			onLoadResults={action('load-results')}
 		/>

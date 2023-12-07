@@ -6,14 +6,35 @@ This repository contains the minimal configuration to begin writing and running 
 
  1. Java JDK 8
 
- 1. [Gradle](https://gradle.org/install/) or [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:adding_wrapper) 6.6.1 or higher.
-
 ## Setup
 
-To create the necessary files to use Poshi Standalone, run the following command from the desired directory in a terminal/command line window:
+Poshi Standalone runs using a custom Gradle Wrapper made by Liferay. To create the necessary configuration files to use Poshi Standalone, run the following command in a command line window (Linux, macOS, Git/Bash for Windows) from a new directory (or your project directory):
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/liferay/liferay-portal/master/modules/test/poshi/poshi-standalone/setup.sh)"
 ```
+
+For Windows Command shell and PowerShell:
+```
+curl -fsSL -o setup.bat https://raw.githubusercontent.com/liferay/liferay-portal/master/modules/test/poshi/poshi-standalone/setup.bat && setup.bat && del setup.bat
+```
+
+The directory will now contain the following files:
+```
+├── gradle
+|   └── wrapper
+|       ├──  gradle-wrapper.jar
+|       └──  gradle-wrapper.properties
+├── build.gradle
+├── gradlew
+├── gradlew.bat
+├── poshi.properties
+├── poshi-ext.properties
+└── settings.gradle
+```
+
+Each `gradle` file is necessary in order to use the `gradlew` executable and typically will not need further modification. The `gradlew` (`gradlew.bat`) executable is a script that invokes a predefined version of Gradle. The first time you run the `gradlew` command, the custom Gradle binary files will be downloaded to `~/.gradle/wrapper/dists` (`%HOMEPATH%\.gradle\wrapper\dists` for Windows). Note the custom binary files will only be downloaded once per machine, and additional projects can also reference these binary files. More information about the Gradle Wrapper is available [here](https://docs.gradle.org/current/userguide/gradle_wrapper.html).
+
+The `*.properties` files are explained further in the next section.
 
 ## Poshi Configuration
 
@@ -35,20 +56,43 @@ Property Name | Default Value | Description
 [`test.base.dir.name`](https://github.com/liferay/liferay-portal/blob/master/modules/test/poshi/poshi-properties.markdown#testbasedirname) | `src/test` (from Poshi source) | Sets the path of the main directory containing Poshi files used for the test project.
 [`test.name`](https://github.com/liferay/liferay-portal/blob/master/modules/test/poshi/poshi-properties.markdown#testname) | `PortalSmoke#Smoke` (from Poshi source) | Sets the test case(s) to run. The tests can be specified by the test case command name, the test case file's name, or a comma-delimited list of both that runs sequentially. To run sequentially, the tests must be configured with proper teardowns.
 
-#### Google Chrome
-Currently, only Google Chrome is supported and is set to use Chrome by default.
+#### Browsers
+Currently, Firefox, Google Chrome and Microsoft Edge are the only supported browsers and Chrome is set by default. To change the browser, set the following property in [`poshi.properties`](poshi.properties) or `poshi-ext.properties`:
+```
+browser.type=chrome
+#browser.type=edge
+#browser.type=firefox
+```
 
-Optionally, an alternate Google Chrome binary can also be set in [`poshi.properties`](poshi.properties) or `poshi-ext.properties`. If not set, the default installation directory Google Chrome binary will be used.
+Poshi will use the the default installation path of the specified browser. If another browser binary path is required, an additional property can be set.
+
+##### Google Chrome
 ```
 browser.chrome.bin.file=path/to/chrome/binary
 ```
+##### Firefox
+```
+browser.firefox.bin.file=path/to/firefox/binary
+```
+##### Microsoft Edge (pending)
+```
+browser.edge.bin.file=path/to/edge/binary
+```
 
-ChromeDriver will automatically be downloaded based on the Chrome binary version.
+Each respective [browser driver](https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/) is automatically downloaded based on the browser type and version.
 
-The current CI environment uses Chrome 86, and that can be matched by installing Chromium 86.
-* For Linux (64 bit), download `chrome-linux.zip` [here](https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html?prefix=Linux_x64/800217/).
-* For MacOS, download `chrome-mac.zip` [here](https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html?prefix=Mac/800208/).
-* For Windows (64 bit), download `chrome-win.zip` [here](https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html?prefix=Win_x64/800185/)
+##### Selenium Grid
+
+If you have a local (or remote) Selenium Grid available, then use the following property:
+```
+selenium.remote.driver.url=http://<HOSTNAME_AND_PORT_OF_SELENIUM_GRID_SERVER>
+```
+##### Liferay CI
+
+The current CI environment primarily uses Chrome 100, and that can be matched by installing Chromium 100.
+* For Linux (64 bit), download `chrome-linux.zip` [here](https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html?prefix=Linux_x64/972765/).
+* For MacOS, download `chrome-mac.zip` [here](https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html?prefix=Mac/972767/).
+* For Windows (64 bit), download `chrome-win.zip` [here](https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html?prefix=Win_x64/972766/)
 
 ### Gradle Configuration
 
@@ -80,6 +124,11 @@ gradlew validatePoshi
 To run source formatting through the [Source Formatter Gradle Plugin](https://github.com/liferay/liferay-portal/blob/master/modules/sdk/gradle-plugins-source-formatter/README.markdown):
 ```
 gradlew formatSource
+```
+
+To run source formatting only on Poshi files through the [Source Formatter Gradle Plugin](https://github.com/liferay/liferay-portal/blob/master/modules/sdk/gradle-plugins-source-formatter/README.markdown):
+```
+gradlew formatPoshi
 ```
 
 ### Running a test

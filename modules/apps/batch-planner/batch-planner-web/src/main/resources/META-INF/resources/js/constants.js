@@ -1,18 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-export const CSV_ENCLOSING_CHARACTERS = ['"', "'"];
+export const CSV_ENCLOSING_CHARACTERS = ['', '"', "'"];
 export const CSV_FORMAT = 'csv';
 export const EXPORT_FILE_NAME = 'Export.zip';
 export const FILE_EXTENSION_INPUT_PARTIAL_NAME = 'externalType';
@@ -23,6 +14,35 @@ export const HEADERS = new Headers({
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
 });
 
+export const CREATE_STRATEGIES = [
+	{
+		default: false,
+		label: Liferay.Language.get('only-add-new-records'),
+		name: 'INSERT',
+	},
+	{
+		default: false,
+		label: Liferay.Language.get('only-update-records'),
+		name: 'UPDATE',
+	},
+	{
+		default: true,
+		label: Liferay.Language.get('add-or-update-records'),
+		name: 'UPSERT',
+	},
+];
+export const UPDATE_STRATEGIES = [
+	{
+		default: false,
+		label: Liferay.Language.get('update-changed-record-fields'),
+		name: 'PARTIAL_UPDATE',
+	},
+	{
+		default: true,
+		label: Liferay.Language.get('overwrite-records'),
+		name: 'UPDATE',
+	},
+];
 export const HEADLESS_BATCH_PLANNER_URL = '/o/batch-planner/v1.0';
 export const HEADLESS_BATCH_ENGINE_URL = '/o/headless-batch-engine/v1.0';
 export const JSON_FORMAT = 'json';
@@ -34,7 +54,12 @@ export const PROCESS_COMPLETED = 'COMPLETED';
 export const PROCESS_FAILED = 'FAILED';
 export const PROCESS_STARTED = 'STARTED';
 
+export const EXPORT_FILE_FORMAT_SELECTED_EVENT =
+	'ie-export-file-format-selected';
+export const OBJECT_DEFINITION =
+	'com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition';
 export const SCHEMA_SELECTED_EVENT = 'ie-schema-selected';
+export const IMPORT_STRATEGY_SELECTED_EVENT = 'ie-import-strategy-selected';
 export const TEMPLATE_CREATED_EVENT = 'ie-template-created';
 export const TEMPLATE_SELECTED_EVENT = 'ie-template-selected';
 export const TEMPLATE_SOILED_EVENT = 'ie-template-soiled';

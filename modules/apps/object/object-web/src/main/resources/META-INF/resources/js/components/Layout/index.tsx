@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayTabs from '@clayui/tabs';
@@ -22,6 +13,7 @@ import {
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {TabsVisitor} from '../../utils/visitor';
 import InfoScreen from './InfoScreen/InfoScreen';
 import LayoutScreen from './LayoutScreen/LayoutScreen';
@@ -36,8 +28,6 @@ import {
 	TObjectLayoutTab,
 	TObjectRelationship,
 } from './types';
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 const TABS = [
 	{
@@ -132,11 +122,11 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 				objectDefinitionExternalReferenceCode
 			);
 
-			const objectFields = await API.getObjectFieldsByExternalReferenceCode(
+			const objectFields = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
 				objectDefinitionExternalReferenceCode
 			);
 
-			const objectRelationships = await API.getObjectRelationshipsByExternalReferenceCode(
+			const objectRelationships = await API.getObjectDefinitionByExternalReferenceCodeObjectRelationships(
 				objectDefinitionExternalReferenceCode
 			);
 
@@ -149,6 +139,7 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 
 			dispatch({
 				payload: {
+					creationLanguageId: objectDefinition.defaultLanguageId,
 					enableCategorization: objectDefinition.enableCategorization,
 					objectLayout,
 					objectRelationships: normalizeObjectRelationships({
@@ -159,14 +150,10 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 				type: TYPES.ADD_OBJECT_LAYOUT,
 			});
 
-			const filteredObjectFields = objectFields.filter(
-				({system}) => !system
-			);
-
 			dispatch({
 				payload: {
 					objectFields: normalizeObjectFields({
-						objectFields: filteredObjectFields,
+						objectFields,
 						objectLayout,
 					}),
 				},
@@ -214,10 +201,10 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 		}
 
 		try {
-			await API.save(
-				`/o/object-admin/v1.0/object-layouts/${objectLayoutId}`,
-				objectLayout
-			);
+			await API.save({
+				item: objectLayout,
+				url: `/o/object-admin/v1.0/object-layouts/${objectLayoutId}`,
+			});
 			saveAndReload();
 			openToast({
 				message: Liferay.Language.get(
@@ -225,8 +212,10 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 				),
 			});
 		}
-		catch ({message}) {
-			openToast({message: message as string, type: 'danger'});
+		catch (error: unknown) {
+			const {message} = error as Error;
+
+			openToast({message, type: 'danger'});
 		}
 	};
 

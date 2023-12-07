@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.portlet.action;
@@ -27,8 +18,6 @@ import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSet;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReader;
 import com.liferay.portal.search.tuning.synonyms.web.internal.storage.SynonymSetStorageAdapter;
 import com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer.IndexToFilterSynchronizer;
-
-import java.util.Optional;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -58,14 +47,17 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 		sendRedirect(actionRequest, actionResponse);
 	}
 
-	protected Optional<SynonymSet> getSynonymSetOptional(
+	protected SynonymSet getSynonymSet(
 		SynonymSetIndexName synonymSetIndexName, ActionRequest actionRequest) {
 
-		return Optional.ofNullable(
-			ParamUtil.getString(actionRequest, "synonymSetId", null)
-		).flatMap(
-			id -> _synonymSetIndexReader.fetchOptional(synonymSetIndexName, id)
-		);
+		String synonymSetId = ParamUtil.getString(
+			actionRequest, "synonymSetId", null);
+
+		if (synonymSetId == null) {
+			return null;
+		}
+
+		return _synonymSetIndexReader.fetch(synonymSetIndexName, synonymSetId);
 	}
 
 	protected void updateSynonymSet(ActionRequest actionRequest)
@@ -79,7 +71,7 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 		updateSynonymSetIndex(
 			synonymSetIndexName,
 			ParamUtil.getString(actionRequest, "synonymSet"),
-			getSynonymSetOptional(synonymSetIndexName, actionRequest));
+			getSynonymSet(synonymSetIndexName, actionRequest));
 
 		_indexToFilterSynchronizer.copyToFilter(
 			synonymSetIndexName, _indexNameBuilder.getIndexName(companyId),
@@ -88,7 +80,7 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 
 	protected void updateSynonymSetIndex(
 			SynonymSetIndexName synonymSetIndexName, String synonyms,
-			Optional<SynonymSet> synonymSetOptional)
+			SynonymSet synonymSet)
 		throws PortalException {
 
 		SynonymSet.SynonymSetBuilder synonymSetBuilder =
@@ -96,16 +88,15 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 
 		synonymSetBuilder.synonyms(synonyms);
 
-		synonymSetOptional.ifPresent(
-			synonymSet -> synonymSetBuilder.synonymSetDocumentId(
-				synonymSet.getSynonymSetDocumentId()));
-
-		if (synonymSetOptional.isPresent()) {
-			_synonymSetStorageAdapter.update(
+		if (synonymSet == null) {
+			_synonymSetStorageAdapter.create(
 				synonymSetIndexName, synonymSetBuilder.build());
 		}
 		else {
-			_synonymSetStorageAdapter.create(
+			synonymSetBuilder.synonymSetDocumentId(
+				synonymSet.getSynonymSetDocumentId());
+
+			_synonymSetStorageAdapter.update(
 				synonymSetIndexName, synonymSetBuilder.build());
 		}
 	}

@@ -125,11 +125,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>MY_WORKFLOW_TASKS_SEARCH_ICON</td>
-	<td>//button[contains(@class, 'btn btn-monospaced btn-unstyled')][2]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>MY_WORKFLOW_TASKS_SEARCH_RESULT_BAR</td>
 	<td>//span[contains(@class, 'text-truncate') and contains(., '${key_resultBarMessage}')]</td>
 	<td></td>
@@ -189,7 +184,7 @@
 </tr>
 <tr>
 	<td>DIALOG_BOX_COMMENT_FIELD</td>
-	<td>//textarea[contains(@id,'_comment')]</td>
+	<td>//div[contains(@class,'modal-body')]//textarea[contains(@id,'_comment')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -258,7 +253,7 @@
 </tr>
 <tr>
 	<td>NAME_AUTHOR</td>
-	<td>//span[contains(@class, 'user-info') and contains(., '${key_nameAuthor}')]</td>
+	<td>//h4[(@class= 'component-title mt-0') and contains(., '${key_nameAuthor}')]</td>
 	<td></td>
 </tr>
 </tbody>

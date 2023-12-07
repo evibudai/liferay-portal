@@ -1,44 +1,95 @@
 definition {
 
-	macro _getUserByIdCurl {
-		Variables.assertDefined(parameterList = "${userId}");
+	@summary = "Default summary"
+	macro _getUserByIdCurl(authenticationMethod = null, userId = null) {
+		Variables.assertDefined(parameterList = ${userId});
 
-		var companyId = JSONCompany.getCompanyId(authenticationMethod = "${authenticationMethod}");
+		var companyId = JSONCompany.getCompanyId(authenticationMethod = ${authenticationMethod});
 		var portalURL = JSONCompany.getPortalURL();
 
-		if ("${authenticationMethod}" == "By Screen Name") {
-			var userName = "test";
+		if (${authenticationMethod} == "By Screen Name") {
+			var userLoginInfo = "test:test";
 		}
 		else {
-			var userName = "test@liferay.com";
+			var userLoginInfo = JSONUtil2.formatJSONSuperAdminUser();
 		}
 
 		var curl = '''
 			${portalURL}/api/jsonws/user/get-user-by-id/user-id/${userId} \
-				-u ${userName}:test \
+				-u ${userLoginInfo} \
 		''';
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro getEmailAddress {
-		Variables.assertDefined(parameterList = "${userId}");
+	@summary = "Default summary"
+	macro _getUserByIdCurlNoSelenium(userId = null) {
+		Variables.assertDefined(parameterList = ${userId});
+
+		var companyId = JSONCompany.getCompanyIdNoSelenium();
+		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONSuperAdminUser();
+
+		var curl = '''
+			${portalURL}/api/jsonws/user/get-user-by-id/user-id/${userId} \
+				-u ${userLoginInfo} \
+		''';
+
+		return ${curl};
+	}
+
+	@summary = "Default summary"
+	macro getEmailAddress(authenticationMethod = null, userId = null) {
+		Variables.assertDefined(parameterList = ${userId});
 
 		var curl = JSONUserGetter._getUserByIdCurl(
-			authenticationMethod = "${authenticationMethod}",
-			userId = "${userId}");
+			authenticationMethod = ${authenticationMethod},
+			userId = ${userId});
 
-		var userEmailAddress = JSONCurlUtil.get("${curl}", "$['emailAddress']");
+		var userEmailAddress = JSONCurlUtil.get(${curl}, "$['emailAddress']");
 
-		return "${userEmailAddress}";
+		return ${userEmailAddress};
 	}
 
-	macro getFirstName {
-		Variables.assertDefined(parameterList = "${userId}");
+	@summary = "Default summary"
+	macro getEmailAddressNoSelenium(userId = null) {
+		Variables.assertDefined(parameterList = ${userId});
 
-		var curl = JSONUserGetter._getUserByIdCurl(userId = "${userId}");
+		var curl = JSONUserGetter._getUserByIdCurlNoSelenium(userId = ${userId});
 
-		var userFirstName = JSONCurlUtil.get("${curl}", "$['firstName']");
+		var userEmailAddress = JSONCurlUtil.get(${curl}, "$..emailAddress");
+
+		return ${userEmailAddress};
+	}
+
+	@summary = "Default summary"
+	macro getFirstName(userId = null) {
+		Variables.assertDefined(parameterList = ${userId});
+
+		var curl = JSONUserGetter._getUserByIdCurl(userId = ${userId});
+
+		var userFirstName = JSONCurlUtil.get(${curl}, "$['firstName']");
+	}
+
+	@summary = "Default summary"
+	macro getUserIdByFirstName(firstName = null) {
+		Variables.assertDefined(parameterList = ${firstName});
+
+		var companyId = JSONCompany.getCompanyId();
+		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONSuperAdminUser();
+
+		var curl = '''
+			${portalURL}/api/jsonws/user/get-company-users \
+				-u ${userLoginInfo} \
+				-d companyId=${companyId} \
+				-d <CURL_DATA[start=-1]CURL_DATA> \
+				-d <CURL_DATA[end=-1]CURL_DATA>
+		''';
+
+		var userId = JSONCurlUtil.post(${curl}, "$[?(@['firstName'] == '${firstName}')]['userId']");
+
+		return ${userId};
 	}
 
 }

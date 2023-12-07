@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -37,13 +28,15 @@ interface CodeEditorLocalizedProps {
 	onSelectedLocaleChange: (val: IItem) => void;
 	onTranslationsChange: (val: LocalizedValue<string>) => void;
 	placeholder?: string;
-	selectedLocale: Locale;
+	readOnly?: boolean;
+	selectedLocale: Liferay.Language.Locale;
 	sidebarElements: SidebarCategory[];
+	sidebarElementsDisabled?: boolean;
 	translations: LocalizedValue<string>;
 }
 
 interface IItem {
-	label: Locale;
+	label: Liferay.Language.Locale;
 	symbol: string;
 }
 
@@ -52,8 +45,8 @@ const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 const availableLocales = Object.keys(Liferay.Language.available)
 	.sort((languageId) => (languageId === defaultLanguageId ? -1 : 1))
 	.map((language) => ({
-		label: language as Locale,
-		symbol: language.replace('_', '-').toLowerCase(),
+		label: language as Liferay.Language.Locale,
+		symbol: language.replace(/_/g, '-').toLowerCase(),
 	}));
 
 export function CodeEditorLocalized({
@@ -68,8 +61,10 @@ export function CodeEditorLocalized({
 	onSelectedLocaleChange,
 	onTranslationsChange,
 	placeholder,
+	readOnly = false,
 	selectedLocale,
 	sidebarElements,
+	sidebarElementsDisabled,
 	translations,
 }: CodeEditorLocalizedProps) {
 	const [active, setActive] = useState(false);
@@ -96,7 +91,9 @@ export function CodeEditorLocalized({
 						});
 					}}
 					placeholder={placeholder}
+					readOnly={readOnly}
 					sidebarElements={sidebarElements}
+					sidebarElementsDisabled={sidebarElementsDisabled}
 					value={translations[selectedLocale] ?? ''}
 				/>
 			) : (
@@ -117,7 +114,7 @@ export function CodeEditorLocalized({
 						<span className="inline-item">
 							<ClayIcon
 								symbol={selectedLocale
-									.replace('_', '-')
+									.replace(/_/g, '-')
 									.toLowerCase()}
 							/>
 						</span>
@@ -128,7 +125,10 @@ export function CodeEditorLocalized({
 			>
 				<ClayDropDown.ItemList>
 					{availableLocales.map((locale) => {
-						const value = translations[locale.label as Locale];
+						const value =
+							translations[
+								locale.label as Liferay.Language.Locale
+							];
 
 						return (
 							<ClayDropDown.Item

@@ -1,14 +1,15 @@
 definition {
 
-	macro addItem {
+	@summary = "Default summary"
+	macro addItem(frameTitle = null, pluralLabelName = null) {
 		Click.javaScriptClick(locator1 = "VisualizeObjectDisplayPage#SELECT_ITEM");
 
 		SelectFrame(
-			key_title = "${frameTitle}",
+			key_title = ${frameTitle},
 			locator1 = "IFrame#MODAL_ANY");
 
 		Click.javaScriptClick(
-			key_pluralLabelName = "${pluralLabelName}",
+			key_pluralLabelName = ${pluralLabelName},
 			locator1 = "VisualizeObjectDisplayPage#SELECT_OBJECT");
 
 		Click(locator1 = "VisualizeObjectDisplayPage#SELECT_ENTRY");
@@ -16,43 +17,34 @@ definition {
 		SelectFrameTop();
 	}
 
-	macro assertDisplayEntry {
-		AssertElementPresent(
-			key_entry = "${entry}",
-			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
-	}
-
-	macro assertDisplayEntryNotPresent {
-		AssertElementNotPresent(
-			key_entry = "${entry}",
-			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
-	}
-
-	macro createObjectPageTemplate {
+	@summary = "Default summary"
+	macro createObjectPageTemplate(pageTemplateName = null, contentType = null) {
 		VisualizeObjectDisplayPage.openPageTemplate();
 
 		Click(locator1 = "VisualizeObjectDisplayPage#SELECT_BLANK_OBJECT_DISPLAY_PAGE_TEMPLATE");
 
 		Type(
 			locator1 = "VisualizeObjectDisplayPage#NAME_OBJECT_DISPLAY_PAGE_TEMPLATE",
-			value1 = "${pageTemplateName}");
+			value1 = ${pageTemplateName});
 
 		Select(
 			locator1 = "VisualizeObjectDisplayPage#OBJECT_CONTENT_TYPE",
-			value1 = "${contentType}");
+			value1 = ${contentType});
 
 		Click(locator1 = "VisualizeObjectCollectionDisplay#SAVE_BUTTON");
 	}
 
-	macro openDisplayPage {
+	@summary = "Default summary"
+	macro openDisplayPage(displayPageName = null) {
 		NavItem.gotoDisplayPages();
 
 		Click(
-			key_pageName = "${displayPageName}",
+			key_pageName = ${displayPageName},
 			locator1 = "VisualizeObjectDisplayPage#DISPLAY_PAGE");
 	}
 
-	macro openPageTemplate {
+	@summary = "Default summary"
+	macro openPageTemplate() {
 		Navigator.openSpecificURL(url = "/group/guest/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet");
 
 		NavItem.gotoDisplayPages();
@@ -60,25 +52,11 @@ definition {
 		Click.javaScriptClick(locator1 = "VisualizeObjectDisplayPage#ADD_PLUS_BUTTON");
 	}
 
-	macro selectFilterCollection {
-		Click(locator1 = "Portlet#MODAL_TITLE");
-
-		Click(
-			key_fieldLabel = "${fieldLabel}",
-			locator1 = "VisualizeObjectDisplayPage#SELECT_CHOOSE_AN_OPTION_FIELD");
-
-		Select(
-			key_fieldLabel = "${fieldLabel}",
-			locator1 = "VisualizeObjectDisplayPage#SELECT_ITEM_IN_FILTER_COLLECTION",
-			value1 = "${itemName}");
-
-		Button.click(button = "Apply");
-	}
-
-	macro validateObjectContentType {
+	@summary = "Default summary"
+	macro validateObjectContentType(contentType = null) {
 		AssertSelectedLabel(
 			locator1 = "VisualizeObjectDisplayPage#OBJECT_CONTENT_TYPE",
-			value1 = "${contentType}");
+			value1 = ${contentType});
 	}
 
 }

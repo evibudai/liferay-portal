@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -79,9 +70,15 @@ public class StringMethodsCheck extends BaseFileCheck {
 
 			String s = matcher.group(1);
 
+			String variableTypeName = getVariableTypeName(
+				content, null, content, fileName, s);
+
+			if (variableTypeName == null) {
+				continue;
+			}
+
 			if (s.equals("String") ||
-				Objects.equals(
-					getVariableTypeName(content, content, s), "String")) {
+				Objects.equals(variableTypeName, "String")) {
 
 				addMessage(
 					fileName, "Use StringUtil." + methodName,
@@ -98,9 +95,11 @@ public class StringMethodsCheck extends BaseFileCheck {
 		while (matcher.find()) {
 			String variableName = matcher.group(1);
 
-			if (!Objects.equals(
-					getVariableTypeName(content, content, variableName),
-					"String")) {
+			String variableTypeName = getVariableTypeName(
+				content, null, content, fileName, variableName);
+
+			if ((variableTypeName == null) ||
+				!Objects.equals(variableTypeName, "String")) {
 
 				continue;
 			}

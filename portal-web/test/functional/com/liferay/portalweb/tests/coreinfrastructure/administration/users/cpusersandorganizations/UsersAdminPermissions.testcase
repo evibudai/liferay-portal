@@ -1,4 +1,4 @@
-@component-name = "portal-user-management-and-portal-configuration"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,7 +30,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddUserRegRole {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
@@ -44,7 +44,7 @@ definition {
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_CONTROL_PANEL",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "Regrole Name");
 
 		Permissions.definePermissionViaJSONAPI(
@@ -56,10 +56,7 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
@@ -71,7 +68,7 @@ definition {
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ADD_USER",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "Regrole Name");
 
 		User.logoutAndLoginPG(
@@ -86,10 +83,7 @@ definition {
 			userLastName = "userln1",
 			userScreenName = "usersn1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.viewCP(
 			userEmailAddress = "userea1@liferay.com",
@@ -99,17 +93,14 @@ definition {
 
 		Permissions.removePermissionViaAPI(
 			resourceAction = "ADD_USER",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "Regrole Name");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		AssertElementNotPresent(locator1 = "UsersAndOrganizations#ADD");
 
@@ -123,7 +114,7 @@ definition {
 	}
 
 	@description = "This test automates LPS-134264 and asserts that a user with Update User permissions cannot view the sites another user is a member of."
-	@priority = "4"
+	@priority = 4
 	test SitesDoNotDisplayForUsersWithOnlyUpdateUserPermissions {
 		task ("Given two users are created") {
 			JSONUser.addUser(
@@ -148,14 +139,14 @@ definition {
 
 			for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceAction}",
+					resourceAction = ${resourceAction},
 					resourceName = "com_liferay_users_admin_web_portlet_UsersAdminPortlet",
 					roleTitle = "New Regular Role");
 			}
 
 			for (var resourceAction : list "UPDATE,VIEW") {
 				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceAction}",
+					resourceAction = ${resourceAction},
 					resourceName = "com.liferay.portal.kernel.model.User",
 					roleTitle = "New Regular Role");
 			}
@@ -183,14 +174,14 @@ definition {
 				key_title = "Select Site",
 				locator1 = "IFrame#MODAL_ANY");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "No sites were found.");
 		}
 	}
 
 	@description = "This test automates LPS-141243 and asserts a user cannot edit their permissions"
-	@priority = "4"
+	@priority = 4
 	test UserCannotEditOwnPermissions {
 		task ("Given a new user is created with a role and permissions to view users and the Users Admin Portlet") {
 			JSONUser.addUser(

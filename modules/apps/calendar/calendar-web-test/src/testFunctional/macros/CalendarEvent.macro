@@ -2,65 +2,40 @@ definition {
 
 	var siteName = "Liferay";
 
-	macro _expandPanel {
-		var panelNamePath = StringUtil.replace("${panelName}", " ", "_");
-
-		var panelNamePath = StringUtil.upperCase("${panelNamePath}");
-
-		if (IsElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED")) {
-			ScrollWebElementIntoView(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
-
-			Click(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
-
-			WaitForElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
-		}
-		else if (IsElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED")) {
-			ScrollWebElementIntoView(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
-
-			Click(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
-
-			if (IsElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED")) {
-				ScrollWebElementIntoView(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
-
-				Click(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
-
-				WaitForElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
-			}
-		}
-	}
-
-	macro _options {
-		if ("${optionSetValue}" == "viewPermission") {
+	@summary = "Default summary"
+	macro _options(permissionDefinitionKey = null, roleTitle = null, specificOptionSetValue = null, viewPermissionValue = null, optionSetValue = null) {
+		if (${optionSetValue} == "viewPermission") {
 			Select(
 				locator1 = "Select#PERMISSIONS",
-				value1 = "${viewPermissionValue}");
+				value1 = ${viewPermissionValue});
 		}
 
-		if ("${optionSetValue}" == "permissions") {
-			var key_permissionDefinitionKey = "${permissionDefinitionKey}";
-			var key_roleTitle = "${roleTitle}";
+		if (${optionSetValue} == "permissions") {
+			var key_permissionDefinitionKey = ${permissionDefinitionKey};
+			var key_roleTitle = ${roleTitle};
 
 			Check(locator1 = "AssetPermissions#PERMISSIONS_CHECKBOX");
 		}
 
-		if ("${optionSetValue}" == "inviteResource") {
-			CalendarEvent.inviteResource(resourceNameList = "${specificOptionSetValue}");
+		if (${optionSetValue} == "inviteResource") {
+			CalendarEvent.inviteResource(resourceNameList = ${specificOptionSetValue});
 		}
 
-		if ("${optionSetValue}" == "reminders") {
+		if (${optionSetValue} == "reminders") {
 			CalendarEvent.configureReminders();
 		}
 
-		if ("${optionSetValue}" == "resourcesAvailability") {
+		if (${optionSetValue} == "resourcesAvailability") {
 			CalendarEvent.viewResourcesAvailability();
 		}
 
-		if ("${optionSetValue}" == "tag") {
-			CalendarEvent.tag(tagText = "${specificOptionSetValue}");
+		if (${optionSetValue} == "tag") {
+			CalendarEvent.tag(tagText = ${specificOptionSetValue});
 		}
 	}
 
-	macro _viewNewEventIframe {
+	@summary = "Default summary"
+	macro _viewNewEventIframe() {
 		AssertElementPresent.assertVisible(locator1 = "CalendarEditEvent#START_DATE");
 
 		AssertElementPresent.assertVisible(locator1 = "CalendarEditEvent#START_DATE_TIME");
@@ -70,104 +45,111 @@ definition {
 		AssertElementPresent.assertVisible(locator1 = "CalendarEditEvent#END_DATE_TIME");
 	}
 
-	macro _viewResourcesAvailabilityEvent {
-		var key_endDate = "${endDate}";
-		var key_endDateTime = "${endDateTime}";
-		var key_startDate = "${startDate}";
-		var key_startDateTime = "${startDateTime}";
+	@summary = "Default summary"
+	macro _viewResourcesAvailabilityEvent(startDateTime = null, endDate = null, endDateTime = null, startDate = null) {
+		var key_endDate = ${endDate};
+		var key_endDateTime = ${endDateTime};
+		var key_startDate = ${startDate};
+		var key_startDateTime = ${startDateTime};
 
 		AssertElementPresent(locator1 = "CalendarEditEvent#RESOURCES_AVAILABILITY_SCHEDULER_EVENT_REGULAR");
 	}
 
-	macro add {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+	@summary = "Default summary"
+	macro add(reminders = null, siteURL = null, endDate = null, number1 = null, number2 = null, resourcesAvailability = null, pageStaging = null, nodePort = null, pageName = null, frequency = null, calendarName = null, eventTitle = null, optionSet = null, duration1 = null, duration2 = null, defaultURL = null, eventCommentList = null, workflow = null, specificOptionSetValue = null, numberOfOccurrences = null, eventType = null, endDateTime = null, eventComment = null, startDateTime = null, eventCommentEnabled = null, user = null, startDate = null, optionSetValue = null) {
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		if ("${eventType}" == "Regular") {
+		if (${eventType} == "Regular") {
 			CalendarEvent.addRegular(
-				calendarName = "${calendarName}",
-				defaultURL = "${defaultURL}",
-				duration1 = "${duration1}",
-				duration2 = "${duration2}",
-				eventTitle = "${eventTitle}",
-				nodePort = "${nodePort}",
-				number1 = "${number1}",
-				number2 = "${number2}",
-				optionSet = "${optionSet}",
-				optionSetValue = "${optionSetValue}",
-				pageName = "${pageName}",
-				pageStaging = "${pageStaging}",
-				reminders = "${reminders}",
-				resourcesAvailability = "${resourcesAvailability}",
-				siteName = "${siteName}",
-				siteURL = "${siteURL}",
-				specificOptionSetValue = "${specificOptionSetValue}",
-				workflow = "${workflow}");
+				calendarName = ${calendarName},
+				defaultURL = ${defaultURL},
+				duration1 = ${duration1},
+				duration2 = ${duration2},
+				eventTitle = ${eventTitle},
+				nodePort = ${nodePort},
+				number1 = ${number1},
+				number2 = ${number2},
+				optionSet = ${optionSet},
+				optionSetValue = ${optionSetValue},
+				pageName = ${pageName},
+				pageStaging = ${pageStaging},
+				reminders = ${reminders},
+				resourcesAvailability = ${resourcesAvailability},
+				siteName = ${siteName},
+				siteURL = ${siteURL},
+				specificOptionSetValue = ${specificOptionSetValue},
+				workflow = ${workflow});
 		}
-		else if ("${eventType}" == "All Day") {
+		else if (${eventType} == "All Day") {
 			CalendarEvent.addAllDay(
-				calendarName = "${calendarName}",
-				defaultURL = "${defaultURL}",
-				duration1 = "${duration1}",
-				duration2 = "${duration2}",
-				eventTitle = "${eventTitle}",
-				nodePort = "${nodePort}",
-				number1 = "${number1}",
-				number2 = "${number2}",
-				optionSet = "${optionSet}",
-				optionSetValue = "${optionSetValue}",
-				pageName = "${pageName}",
-				pageStaging = "${pageStaging}",
-				reminders = "${reminders}",
-				resourcesAvailability = "${resourcesAvailability}",
-				siteName = "${siteName}",
-				siteURL = "${siteURL}",
-				specificOptionSetValue = "${specificOptionSetValue}",
-				workflow = "${workflow}");
+				calendarName = ${calendarName},
+				defaultURL = ${defaultURL},
+				duration1 = ${duration1},
+				duration2 = ${duration2},
+				eventTitle = ${eventTitle},
+				nodePort = ${nodePort},
+				number1 = ${number1},
+				number2 = ${number2},
+				optionSet = ${optionSet},
+				optionSetValue = ${optionSetValue},
+				pageName = ${pageName},
+				pageStaging = ${pageStaging},
+				reminders = ${reminders},
+				resourcesAvailability = ${resourcesAvailability},
+				siteName = ${siteName},
+				siteURL = ${siteURL},
+				specificOptionSetValue = ${specificOptionSetValue},
+				workflow = ${workflow});
 		}
-		else if ("${eventType}" == "Repeating") {
+		else if (${eventType} == "Repeating") {
 			CalendarEvent.addRepeating(
-				calendarName = "${calendarName}",
-				defaultURL = "${defaultURL}",
-				duration1 = "${duration1}",
-				duration2 = "${duration2}",
-				eventTitle = "${eventTitle}",
-				frequency = "${frequency}",
-				nodePort = "${nodePort}",
-				number1 = "${number1}",
-				number2 = "${number2}",
-				numberOfOccurrences = "${numberOfOccurrences}",
-				optionSet = "${optionSet}",
-				optionSetValue = "${optionSetValue}",
-				pageName = "${pageName}",
-				pageStaging = "${pageStaging}",
-				reminders = "${reminders}",
-				resourcesAvailability = "${resourcesAvailability}",
-				siteName = "${siteName}",
-				siteURL = "${siteURL}",
-				specificOptionSetValue = "${specificOptionSetValue}",
-				workflow = "${workflow}");
+				calendarName = ${calendarName},
+				defaultURL = ${defaultURL},
+				duration1 = ${duration1},
+				duration2 = ${duration2},
+				eventTitle = ${eventTitle},
+				frequency = ${frequency},
+				nodePort = ${nodePort},
+				number1 = ${number1},
+				number2 = ${number2},
+				numberOfOccurrences = ${numberOfOccurrences},
+				optionSet = ${optionSet},
+				optionSetValue = ${optionSetValue},
+				pageName = ${pageName},
+				pageStaging = ${pageStaging},
+				reminders = ${reminders},
+				resourcesAvailability = ${resourcesAvailability},
+				siteName = ${siteName},
+				siteURL = ${siteURL},
+				specificOptionSetValue = ${specificOptionSetValue},
+				workflow = ${workflow});
 		}
 
-		if ("${eventCommentEnabled}" == "true") {
+		if (${eventCommentEnabled} == "true") {
 			CalendarEvent.addComment(
-				calendarName = "${calendarName}",
-				endDate = "${endDate}",
-				endDateTime = "${endDateTime}",
-				eventComment = "${eventComment}",
-				eventCommentList = "${eventCommentList}",
-				eventTitle = "${eventTitle}",
-				eventType = "${eventType}",
-				startDate = "${startDate}",
-				startDateTime = "${startDateTime}",
-				user = "${user}");
+				calendarName = ${calendarName},
+				endDate = ${endDate},
+				endDateTime = ${endDateTime},
+				eventComment = ${eventComment},
+				eventCommentList = ${eventCommentList},
+				eventTitle = ${eventTitle},
+				eventType = ${eventType},
+				startDate = ${startDate},
+				startDateTime = ${startDateTime},
+				user = ${user});
 		}
 	}
 
-	macro addAllDay {
-		CalendarEvent.editTitle(eventTitle = "${eventTitle}");
+	@summary = "Default summary"
+	macro addAllDay(reminders = null, siteURL = null, workflow = null, specificOptionSetValue = null, number1 = null, number2 = null, pageStaging = null, pageName = null, calendarName = null, eventTitle = null, optionSet = null, duration1 = null, duration2 = null, optionSetValue = null) {
+		CalendarEvent.editTitle(eventTitle = ${eventTitle});
 
-		var endDateTime = "11:59 PM";
-		var startDateTime = "12:00 AM";
+		var endDateTimeHour = CalendarEvent.getTimeHour(status = "End");
+		var endDateTimeMinute = CalendarEvent.getTimeMinutes(status = "End");
+		var endDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "End");
+		var startDateTimeHour = CalendarEvent.getTimeHour(status = "Start");
+		var startDateTimeMinute = CalendarEvent.getTimeMinutes(status = "Start");
+		var startDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "Start");
 
 		Check(locator1 = "CalendarEditEvent#ALL_DAY_CHECKBOX");
 
@@ -178,26 +160,26 @@ definition {
 		var endDate = selenium.getElementValue("CalendarEditEvent#END_DATE");
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
 
-		CalendarEvent.selectCalendar(calendarName = "${calendarName}");
+		CalendarEvent.selectCalendar(calendarName = ${calendarName});
 
-		if ("${optionSet}" == "true") {
+		if (${optionSet} == "true") {
 			CalendarEvent._options(
-				optionSetValue = "${optionSetValue}",
-				specificOptionSetValue = "${specificOptionSetValue}");
+				optionSetValue = ${optionSetValue},
+				specificOptionSetValue = ${specificOptionSetValue});
 		}
 
-		if ("${reminders}" == "true") {
+		if (${reminders} == "true") {
 			CalendarEvent.configureReminders(
-				duration1 = "${duration1}",
-				duration2 = "${duration2}",
-				number1 = "${number1}",
-				number2 = "${number2}");
+				duration1 = ${duration1},
+				duration2 = ${duration2},
+				number1 = ${number1},
+				number2 = ${number2});
 		}
 
-		if ("${workflow}" == "true") {
+		if (${workflow} == "true") {
 			AssertClick(
-				locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-				value1 = "Submit for Publication");
+				locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+				value1 = "Submit for Workflow");
 
 			Alert.viewSuccessMessage();
 		}
@@ -205,28 +187,28 @@ definition {
 			CalendarEvent.publish();
 		}
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		if ("${pageStaging}" == "true") {
+		if (${pageStaging} == "true") {
 			Navigator.gotoStagedSitePage(
-				pageName = "${pageName}",
-				siteName = "${siteName}");
+				pageName = ${pageName},
+				siteName = ${siteName});
 		}
-		else if ("${siteURL}" == "true") {
+		else if (${siteURL} == "true") {
 			Navigator.gotoSitePage(
-				pageName = "${pageName}",
-				siteName = "${siteName}");
+				pageName = ${pageName},
+				siteName = ${siteName});
 		}
 		else {
-			Navigator.gotoPage(pageName = "${pageName}");
+			Navigator.gotoPage(pageName = ${pageName});
 		}
 
-		var key_endDate = "${endDate}";
-		var key_endDateTime = "${endDateTime}";
-		var key_startDate = "${startDate}";
-		var key_startDateTime = "${startDateTime}";
+		var key_endDate = ${endDate};
+		var key_endDateTime = "${endDateTimeHour}:${endDateTimeMinute} ${endDateTimeAMPM}";
+		var key_startDate = ${startDate};
+		var key_startDateTime = "${startDateTimeHour}:${startDateTimeMinute} ${startDateTimeAMPM}";
 
-		if ("${reminders}" == "true") {
+		if (${reminders} == "true") {
 			if (!(IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_ALL_DAY_WITH_REMINDER"))) {
 				Click(locator1 = "Calendar#VIEW_NEXT_BUTTON");
 			}
@@ -238,25 +220,26 @@ definition {
 		}
 	}
 
-	macro addComment {
+	@summary = "Default summary"
+	macro addComment(eventCommentList = null, calendarName = null, eventTitle = null, eventType = null, user = null) {
 		CalendarEvent.viewDetails(
-			calendarName = "${calendarName}",
-			eventTitle = "${eventTitle}",
-			eventType = "${eventType}");
+			calendarName = ${calendarName},
+			eventTitle = ${eventTitle},
+			eventType = ${eventType});
 
 		if (isSet(eventCommentList)) {
-			for (var eventComment : list "${eventCommentList}") {
-				Comments.addPG(entryComment = "${eventComment}");
+			for (var eventComment : list ${eventCommentList}) {
+				Comments.addPG(entryComment = ${eventComment});
 			}
 		}
 		else {
-			Comments.addPG(entryComment = "${eventComment}");
+			Comments.addPG(entryComment = ${eventComment});
 		}
 
 		if (isSet(eventCommentList)) {
-			for (var eventComment : list "${eventCommentList}") {
-				var key_entryComment = "${eventComment}";
-				var key_userFullName = "${user}";
+			for (var eventComment : list ${eventCommentList}) {
+				var key_entryComment = ${eventComment};
+				var key_userFullName = ${user};
 
 				AssertTextEquals(
 					locator1 = "Comments#USER_NAME",
@@ -264,12 +247,12 @@ definition {
 
 				AssertTextEquals(
 					locator1 = "Comments#COMMENT_BODY_SPECIFIC",
-					value1 = "${eventComment}");
+					value1 = ${eventComment});
 			}
 		}
 		else {
-			var key_entryComment = "${eventComment}";
-			var key_userFullName = "${user}";
+			var key_entryComment = ${eventComment};
+			var key_userFullName = ${user};
 
 			AssertTextEquals(
 				locator1 = "Comments#USER_NAME",
@@ -277,67 +260,74 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "Comments#COMMENT_BODY_SPECIFIC",
-				value1 = "${eventComment}");
+				value1 = ${eventComment});
 		}
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro addDescription {
-		CalendarNavigator.gotoEditEvent(eventTitle = "${eventTitle}");
+	@summary = "Default summary"
+	macro addDescription(eventTitle = null, fieldName = null, fieldValue = null) {
+		CalendarNavigator.gotoEditEvent(eventTitle = ${eventTitle});
 
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "CKEditor#BODY_FIELD_IFRAME",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro addPGViaAP {
+	@summary = "Default summary"
+	macro addPGViaAP(eventTitle = null) {
 		AssetPublisherPortlet.addAsset(assetType = "Calendar Event");
 
 		CalendarEvent._viewNewEventIframe();
 
-		CalendarEvent.editTitle(eventTitle = "${eventTitle}");
+		CalendarEvent.editTitle(eventTitle = ${eventTitle});
 
 		Button.clickPublish();
 	}
 
-	macro addRegular {
-		CalendarEvent.editTitle(eventTitle = "${eventTitle}");
+	@summary = "Default summary"
+	macro addRegular(reminders = null, siteURL = null, workflow = null, specificOptionSetValue = null, number1 = null, resourcesAvailability = null, number2 = null, pageStaging = null, pageName = null, calendarName = null, eventTitle = null, optionSet = null, duration1 = null, duration2 = null, optionSetValue = null) {
+		CalendarEvent.editTitle(eventTitle = ${eventTitle});
 
 		AssertNotChecked(locator1 = "CalendarEditEvent#ALL_DAY_CHECKBOX");
 
 		AssertNotChecked(locator1 = "CalendarEditEvent#REPEAT_CHECKBOX");
 
 		var endDate = selenium.getElementValue("CalendarEditEvent#END_DATE");
-		var endDateTime = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
+		var endDateTimeHour = CalendarEvent.getTimeHour(status = "End");
+		var endDateTimeMinute = CalendarEvent.getTimeMinutes(status = "End");
+		var endDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "End");
+		var startDateTimeHour = CalendarEvent.getTimeHour(status = "Start");
+		var startDateTimeMinute = CalendarEvent.getTimeMinutes(status = "Start");
+		var startDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "Start");
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
-		var startDateTime = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
 
-		CalendarEvent.selectCalendar(calendarName = "${calendarName}");
+		CalendarEvent.selectCalendar(calendarName = ${calendarName});
 
-		if ("${optionSet}" == "true") {
+		if (${optionSet} == "true") {
 			CalendarEvent._options(
-				optionSetValue = "${optionSetValue}",
-				specificOptionSetValue = "${specificOptionSetValue}");
+				optionSetValue = ${optionSetValue},
+				specificOptionSetValue = ${specificOptionSetValue});
 		}
 
-		if ("${resourcesAvailability}" == "true") {
+		if (${resourcesAvailability} == "true") {
 			CalendarEvent.viewResourcesAvailability();
 		}
 
-		if ("${reminders}" == "true") {
+		if (${reminders} == "true") {
 			CalendarEvent.configureReminders(
-				duration1 = "${duration1}",
-				duration2 = "${duration2}",
-				number1 = "${number1}",
-				number2 = "${number2}");
+				duration1 = ${duration1},
+				duration2 = ${duration2},
+				number1 = ${number1},
+				number2 = ${number2});
 		}
 
-		if ("${workflow}" == "true") {
+		if (${workflow} == "true") {
 			AssertClick(
-				locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-				value1 = "Submit for Publication");
+				locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+				value1 = "Submit for Workflow");
 
 			Alert.viewSuccessMessage();
 		}
@@ -345,96 +335,106 @@ definition {
 			CalendarEvent.publish();
 		}
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		if ("${pageStaging}" == "true") {
+		if (${pageStaging} == "true") {
 			Navigator.gotoStagedSitePage(
-				pageName = "${pageName}",
-				siteName = "${siteName}");
+				pageName = ${pageName},
+				siteName = ${siteName});
 		}
-		else if ("${siteURL}" == "true") {
+		else if (${siteURL} == "true") {
 			Navigator.gotoSitePage(
-				pageName = "${pageName}",
-				siteName = "${siteName}");
+				pageName = ${pageName},
+				siteName = ${siteName});
 		}
 		else {
-			Navigator.gotoPage(pageName = "${pageName}");
+			Navigator.gotoPage(pageName = ${pageName});
 		}
 
 		CalendarScheduler._viewRegularEventTitleViaMonthView(
-			endDate = "${endDate}",
-			endDateTime = "${endDateTime}",
-			eventTitle = "${eventTitle}",
-			startDate = "${startDate}",
-			startDateTime = "${startDateTime}");
+			endDate = ${endDate},
+			endDateTime = "${endDateTimeHour}:${endDateTimeMinute} ${endDateTimeAMPM}",
+			eventTitle = ${eventTitle},
+			startDate = ${startDate},
+			startDateTime = "${startDateTimeHour}:${startDateTimeMinute} ${startDateTimeAMPM}");
 	}
 
-	macro addRegularInCustomSite {
-		CalendarEvent.editTitle(eventTitle = "${eventTitle}");
+	@summary = "Default summary"
+	macro addRegularInCustomSite(specificOptionSetValue = null, siteName = null, pageName = null, calendarName = null, eventTitle = null, optionSet = null, optionSetValue = null) {
+		CalendarEvent.editTitle(eventTitle = ${eventTitle});
 
 		AssertNotChecked(locator1 = "CalendarEditEvent#ALL_DAY_CHECKBOX");
 
 		AssertNotChecked(locator1 = "CalendarEditEvent#REPEAT_CHECKBOX");
 
 		var endDate = selenium.getElementValue("CalendarEditEvent#END_DATE");
-		var endDateTime = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
-		var startDateTime = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+		var endDateTimeHour = CalendarEvent.getTimeHour(status = "End");
+		var endDateTimeMinute = CalendarEvent.getTimeMinutes(status = "End");
+		var endDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "End");
+		var startDateTimeHour = CalendarEvent.getTimeHour(status = "Start");
+		var startDateTimeMinute = CalendarEvent.getTimeMinutes(status = "Start");
+		var startDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "Start");
 
-		CalendarEvent.selectCalendar(calendarName = "${calendarName}");
+		CalendarEvent.selectCalendar(calendarName = ${calendarName});
 
-		if ("${optionSet}" == "true") {
+		if (${optionSet} == "true") {
 			CalendarEvent._options(
-				optionSetValue = "${optionSetValue}",
-				specificOptionSetValue = "${specificOptionSetValue}");
+				optionSetValue = ${optionSetValue},
+				specificOptionSetValue = ${specificOptionSetValue});
 		}
 
 		CalendarEvent.publish();
 
 		Navigator.gotoSitePage(
-			pageName = "${pageName}",
-			siteName = "${siteName}");
+			pageName = ${pageName},
+			siteName = ${siteName});
 
 		CalendarScheduler._viewRegularEventTitleViaMonthView(
-			endDate = "${endDate}",
-			endDateTime = "${endDateTime}",
-			eventTitle = "${eventTitle}",
-			startDate = "${startDate}",
-			startDateTime = "${startDateTime}");
+			endDate = ${endDate},
+			endDateTime = "${endDateTimeHour}:${endDateTimeMinute} ${endDateTimeAMPM}",
+			eventTitle = ${eventTitle},
+			startDate = ${startDate},
+			startDateTime = "${startDateTimeHour}:${startDateTimeMinute} ${startDateTimeAMPM}");
 	}
 
-	macro addRepeating {
-		CalendarEvent.editTitle(eventTitle = "${eventTitle}");
+	@summary = "Default summary"
+	macro addRepeating(reminders = null, siteURL = null, number1 = null, number2 = null, pageStaging = null, pageName = null, frequency = null, calendarName = null, eventTitle = null, optionSet = null, duration1 = null, duration2 = null, workflow = null, numberOfOccurrences = null, specificOptionSetValue = null, optionSetValue = null) {
+		CalendarEvent.editTitle(eventTitle = ${eventTitle});
 
 		var endDate = selenium.getElementValue("CalendarEditEvent#END_DATE");
-		var endDateTime = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
-		var startDateTime = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+		var endDateTimeHour = CalendarEvent.getTimeHour(status = "End");
+		var endDateTimeMinute = CalendarEvent.getTimeMinutes(status = "End");
+		var endDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "End");
+		var startDateTimeHour = CalendarEvent.getTimeHour(status = "Start");
+		var startDateTimeMinute = CalendarEvent.getTimeMinutes(status = "Start");
+		var startDateTimeAMPM = CalendarEvent.getTimeAMPM(status = "Start");
 
 		CalendarEvent.setRepeating(
-			frequency = "${frequency}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			frequency = ${frequency},
+			numberOfOccurrences = ${numberOfOccurrences});
 
-		CalendarEvent.selectCalendar(calendarName = "${calendarName}");
+		CalendarEvent.selectCalendar(calendarName = ${calendarName});
 
-		if ("${optionSet}" == "true") {
+		if (${optionSet} == "true") {
 			CalendarEvent._options(
-				optionSetValue = "${optionSetValue}",
-				specificOptionSetValue = "${specificOptionSetValue}");
+				optionSetValue = ${optionSetValue},
+				specificOptionSetValue = ${specificOptionSetValue});
 		}
 
-		if ("${reminders}" == "true") {
+		if (${reminders} == "true") {
 			CalendarEvent.configureReminders(
-				duration1 = "${duration1}",
-				duration2 = "${duration2}",
-				number1 = "${number1}",
-				number2 = "${number2}");
+				duration1 = ${duration1},
+				duration2 = ${duration2},
+				number1 = ${number1},
+				number2 = ${number2});
 		}
 
-		if ("${workflow}" == "true") {
+		if (${workflow} == "true") {
 			AssertClick(
-				locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-				value1 = "Submit for Publication");
+				locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+				value1 = "Submit for Workflow");
 
 			Alert.viewSuccessMessage();
 		}
@@ -442,26 +442,26 @@ definition {
 			CalendarEvent.publish();
 		}
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		if ("${pageStaging}" == "true") {
+		if (${pageStaging} == "true") {
 			Navigator.gotoStagedSitePage(
-				pageName = "${pageName}",
-				siteName = "${siteName}");
+				pageName = ${pageName},
+				siteName = ${siteName});
 		}
-		else if ("${siteURL}" == "true") {
+		else if (${siteURL} == "true") {
 			Navigator.gotoSitePage(
-				pageName = "${pageName}",
-				siteName = "${siteName}");
+				pageName = ${pageName},
+				siteName = ${siteName});
 		}
 		else {
-			Navigator.gotoPage(pageName = "${pageName}");
+			Navigator.gotoPage(pageName = ${pageName});
 		}
 
-		var key_endDate = "${endDate}";
-		var key_endDateTime = "${endDateTime}";
-		var key_startDate = "${startDate}";
-		var key_startDateTime = "${startDateTime}";
+		var key_endDate = ${endDate};
+		var key_endDateTime = "${endDateTimeHour}:${endDateTimeMinute} ${endDateTimeAMPM}";
+		var key_startDate = ${startDate};
+		var key_startDateTime = "${startDateTimeHour}:${startDateTimeMinute} ${startDateTimeAMPM}";
 
 		if (!(IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_REPEAT"))) {
 			Click(locator1 = "Calendar#VIEW_NEXT_BUTTON");
@@ -471,23 +471,24 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Calendar#SCHEDULER_EVENT_REPEAT_TITLE",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 	}
 
-	macro addRSVP {
+	@summary = "Default summary"
+	macro addRSVP(eventTitle = null, rsvp = null) {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = "${eventTitle}");
+		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = ${eventTitle});
 
 		AssertTextEquals(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EVENT_TITLE",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 
-		var key_rsvp = "${rsvp}";
+		var key_rsvp = ${rsvp};
 
 		AssertClick(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_ATTEND_ACTIVE",
-			value1 = "${rsvp}");
+			value1 = ${rsvp});
 
 		if (IsElementPresent(locator1 = "CalendarEditEvent#ENTIRE_SERIES_BUTTON")) {
 			AssertClick(
@@ -496,16 +497,17 @@ definition {
 		}
 
 		CalendarScheduler.viewRSVP(
-			eventTitle = "${eventTitle}",
-			rsvp = "${rsvp}");
+			eventTitle = ${eventTitle},
+			rsvp = ${rsvp});
 	}
 
-	macro addTag {
-		var key_tagText = "${tagText}";
+	@summary = "Default summary"
+	macro addTag(tagText = null) {
+		var key_tagText = ${tagText};
 
 		Type.typePause(
 			locator1 = "CalendarEditEvent#CATEGORIZATION_TAG_FIELD",
-			value1 = "${key_tagText}");
+			value1 = ${key_tagText});
 
 		KeyPress.keyPress(
 			locator1 = "CalendarEditEvent#CATEGORIZATION_TAG_FIELD",
@@ -519,54 +521,63 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#CATEGORIZATION_TAG_SPECIFIC",
-			value1 = "${key_tagText}");
+			value1 = ${key_tagText});
 	}
 
-	macro addViaDayView {
+	@summary = "Default summary"
+	macro addViaDayView(eventTitle = null) {
 		CalendarScheduler.gotoAddViaDayView();
 
-		CalendarScheduler.editTitle(eventTitle = "${eventTitle}");
+		CalendarScheduler.editTitle(eventTitle = ${eventTitle});
 
 		CalendarScheduler.saveEvent();
 	}
 
-	macro assertEventNotEditable {
+	@summary = "Default summary"
+	macro assertEventNotEditable() {
 		AssertElementNotPresent(locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EDIT_BUTTON");
 	}
 
-	macro clickDeclineButton {
+	@summary = "Default summary"
+	macro clickDeclineButton() {
 		AssertClick(
 			locator1 = "CalendarViewEventDetails#DECLINE_BUTTON",
 			value1 = "Decline");
 	}
 
-	macro clickMaybeButton {
+	@summary = "Default summary"
+	macro clickMaybeButton() {
 		AssertClick(
 			locator1 = "CalendarViewEventDetails#MAYBE_BUTTON",
 			value1 = "Maybe");
 	}
 
-	macro clickPublish {
+	@summary = "Default summary"
+	macro clickPublish() {
 		AssertClick(
 			locator1 = "Button#SUBMIT",
 			value1 = "Publish");
 	}
 
-	macro compareEventDateAndTimeToResourcesAvailabilityDateAndTime {
+	@summary = "Default summary"
+	macro compareEventDateAndTimeToResourcesAvailabilityDateAndTime() {
 		var endDate = selenium.getElementValue("CalendarEditEvent#END_DATE");
-		var endDateTime = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
-		var startDateTime = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+		var endDateTime = CalendarEvent.getCalendarTimeHour(status = "End");
+		var startDateTime = CalendarEvent.getCalendarTimeHour(status = "Start");
+		var endDateTime = StringUtil.trim(${endDateTime});
+		var startDateTime = StringUtil.trim(${startDateTime});
 
 		CalendarEvent._viewResourcesAvailabilityEvent(
-			endDate = "${endDate}",
-			endDateTime = "${endDateTime}",
-			startDate = "${startDate}",
-			startDateTime = "${startDateTime}");
+			endDate = ${endDate},
+			endDateTime = ${endDateTime},
+			startDate = ${startDate},
+			startDateTime = ${startDateTime});
 	}
 
-	macro configureReminders {
-		CalendarEvent._expandPanel(panelName = "Reminders");
+	@summary = "Default summary"
+	macro configureReminders(duration1 = null, number1 = null, number2 = null, duration2 = null) {
+		Panel.expandPanel(panel = "Reminders");
 
 		Check(locator1 = "CalendarEditEvent#REMINDERS_EMAIL_CHECKBOX_1");
 
@@ -574,19 +585,19 @@ definition {
 
 		Type(
 			locator1 = "CalendarEditEvent#REMINDERS_VALUE_INPUT_ACTIVE_1",
-			value1 = "${number1}");
+			value1 = ${number1});
 
 		Type(
 			locator1 = "CalendarEditEvent#REMINDERS_VALUE_INPUT_ACTIVE_2",
-			value1 = "${number2}");
+			value1 = ${number2});
 
 		Select(
 			locator1 = "CalendarEditEvent#REMINDERS_DURATION_SELECT_ACTIVE_1",
-			value1 = "${duration1}");
+			value1 = ${duration1});
 
 		Select(
 			locator1 = "CalendarEditEvent#REMINDERS_DURATION_SELECT_ACTIVE_2",
-			value1 = "${duration2}");
+			value1 = ${duration2});
 
 		AssertElementNotPresent(locator1 = "CalendarEditEvent#REMINDERS_VALUE_INPUT_INACTIVE_1");
 
@@ -597,10 +608,11 @@ definition {
 		AssertElementNotPresent(locator1 = "CalendarEditEvent#REMINDERS_DURATION_SELECT_INACTIVE_2");
 	}
 
-	macro delete {
+	@summary = "Default summary"
+	macro delete() {
 		CalendarNavigator.gotoView(viewType = "Agenda");
 
-		var i = "1";
+		var i = 1;
 
 		while (IsElementPresent(locator1 = "xpath=(//div[contains(@class,'scheduler-view-agenda-event') and contains(@data-clientid,'scheduler-event')])[${i}]")) {
 			Click(locator1 = "xpath=(//div[contains(@class,'scheduler-view-agenda-event') and contains(@data-clientid,'scheduler-event')])[${i}]");
@@ -648,20 +660,21 @@ definition {
 		CalendarNavigator.gotoView(viewType = "Week");
 	}
 
-	macro deleteRepeatingEventViaAgendaView {
+	@summary = "Default summary"
+	macro deleteRepeatingEventViaAgendaView(eventTitle = null, deleteOptionSet = null) {
 		CalendarNavigator.gotoView(viewType = "Agenda");
 
-		var key_eventTitle = "${eventTitle}";
+		var key_eventTitle = ${eventTitle};
 
-		if (("${deleteOptionSet}" == "Entire Series") || ("${deleteOptionSet}" == "Single Event")) {
+		if ((${deleteOptionSet} == "Entire Series") || (${deleteOptionSet} == "Single Event")) {
 			AssertClick(
 				locator1 = "CalendarAgendaView#SCHEDULER_EVENT_SPECIFIC_1",
-				value1 = "${eventTitle}");
+				value1 = ${eventTitle});
 		}
-		else if ("${deleteOptionSet}" == "Following Events") {
+		else if (${deleteOptionSet} == "Following Events") {
 			AssertClick(
 				locator1 = "CalendarAgendaView#SCHEDULER_EVENT_SPECIFIC_2",
-				value1 = "${eventTitle}");
+				value1 = ${eventTitle});
 		}
 
 		AssertElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_DELETE_BUTTON");
@@ -670,7 +683,7 @@ definition {
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_DELETE_BUTTON",
 			value1 = "Delete");
 
-		if ("${deleteOptionSet}" == "Entire Series") {
+		if (${deleteOptionSet} == "Entire Series") {
 			AssertClick(
 				locator1 = "CalendarEditEvent#ENTIRE_SERIES_BUTTON",
 				value1 = "Entire Series");
@@ -679,7 +692,7 @@ definition {
 
 			AssertElementNotPresent(locator1 = "CalendarAgendaView#SCHEDULER_EVENT_SPECIFIC_2");
 		}
-		else if ("${deleteOptionSet}" == "Following Events") {
+		else if (${deleteOptionSet} == "Following Events") {
 			AssertClick(
 				locator1 = "CalendarEditEvent#FOLLOWING_EVENTS_BUTTON",
 				value1 = "Following Events");
@@ -688,7 +701,7 @@ definition {
 
 			AssertElementNotPresent(locator1 = "CalendarAgendaView#SCHEDULER_EVENT_SPECIFIC_2");
 		}
-		else if ("${deleteOptionSet}" == "Single Event") {
+		else if (${deleteOptionSet} == "Single Event") {
 			AssertClick(
 				locator1 = "CalendarEditEvent#SINGLE_EVENT_BUTTON",
 				value1 = "Single Event");
@@ -701,12 +714,13 @@ definition {
 		Refresh();
 	}
 
-	macro deleteSpecific {
+	@summary = "Default summary"
+	macro deleteSpecific(eventTitle = null) {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		CalendarScheduler.selectSpecificEvent(eventTitle = "${eventTitle}");
+		CalendarScheduler.selectSpecificEvent(eventTitle = ${eventTitle});
 
-		CalendarScheduler.viewEventTitleViaDialogBox(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewEventTitleViaDialogBox(eventTitle = ${eventTitle});
 
 		if (IsTextEqual(locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_USERS_FIELD", value1 = "—")) {
 			AssertClickNoError(
@@ -730,39 +744,41 @@ definition {
 
 		echo(" The current hour is: ${currentHour} ");
 
-		if (("${currentDay}" == "Saturday") && ("${currentHour}" == "6")) {
+		if ((${currentDay} == "Saturday") && (${currentHour} == 6)) {
 			Refresh();
 		}
 
-		CalendarScheduler.viewSpecificEventNotPresent(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewSpecificEventNotPresent(eventTitle = ${eventTitle});
 	}
 
-	macro disableEventBySiteCalendarName {
+	@summary = "Default summary"
+	macro disableEventBySiteCalendarName(calendarName = null) {
 		Click(
-			key_calendarName = "${calendarName}",
+			key_calendarName = ${calendarName},
 			locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR_PRIMARY");
 	}
 
-	macro edit {
+	@summary = "Default summary"
+	macro edit(specificOptionSetValue = null, startDateTimeEdit = null, eventType = null, endDateTimeEdit = null, pageName = null, eventTitleEdit = null, calendarName = null, eventTitle = null, optionSet = null, optionSetValue = null) {
 		CalendarNavigator.gotoEditEvent(
-			eventTitle = "${eventTitle}",
-			eventType = "${eventType}");
+			eventTitle = ${eventTitle},
+			eventType = ${eventType});
 
 		if (isSet(endDateTimeEdit)) {
-			var endDateTime = "${endDateTimeEdit}";
+			var endDateTime = ${endDateTimeEdit};
 		}
 		else {
 			var endDateTime = "09:30 AM";
 		}
 
 		if (isSet(startDateTimeEdit)) {
-			var startDateTime = "${startDateTimeEdit}";
+			var startDateTime = ${startDateTimeEdit};
 		}
 		else {
 			var startDateTime = "08:30 AM";
 		}
 
-		if ("${eventType}" == "All Day") {
+		if (${eventType} == "All Day") {
 			var endDateTime = "11:59 PM";
 			var startDateTime = "12:00 AM";
 
@@ -777,26 +793,26 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "TextInput#TITLE",
-				value1 = "${eventTitle}");
+				value1 = ${eventTitle});
 
-			PortletEntry.inputTitle(title = "${eventTitleEdit}");
+			PortletEntry.inputTitle(title = ${eventTitleEdit});
 
 			AssertElementPresent(locator1 = "CalendarEditEvent#START_DATE");
 
 			AssertElementPresent(locator1 = "CalendarEditEvent#END_DATE");
 
-			if ("${optionSet}" == "true") {
+			if (${optionSet} == "true") {
 				CalendarEvent._options(
-					optionSetValue = "${optionSetValue}",
-					specificOptionSetValue = "${specificOptionSetValue}");
+					optionSetValue = ${optionSetValue},
+					specificOptionSetValue = ${specificOptionSetValue});
 			}
 		}
-		else if ("${eventType}" == "Regular") {
+		else if (${eventType} == "Regular") {
 			AssertTextEquals(
 				locator1 = "TextInput#TITLE",
-				value1 = "${eventTitle}");
+				value1 = ${eventTitle});
 
-			PortletEntry.inputTitle(title = "${eventTitleEdit}");
+			PortletEntry.inputTitle(title = ${eventTitleEdit});
 
 			AssertElementPresent(locator1 = "CalendarEditEvent#START_DATE");
 
@@ -808,31 +824,34 @@ definition {
 
 			var endDate = selenium.getElementValue("CalendarEditEvent#END_DATE");
 			var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
+			var startDateTime = StringUtil.removeSpaces(${startDateTime});
 
-			Type(
+			Type.sendKeys(
 				locator1 = "CalendarEditEvent#START_DATE_TIME",
-				value1 = "${startDateTime}");
+				value1 = ${startDateTime});
 
 			Click(locator1 = "TextInput#TITLE");
 
-			Type(
+			var startDateTime = StringUtil.removeSpaces(${endDateTime});
+
+			Type.sendKeys(
 				locator1 = "CalendarEditEvent#END_DATE_TIME",
-				value1 = "${endDateTime}");
+				value1 = ${endDateTime});
 
 			Click(locator1 = "TextInput#TITLE");
 
-			if ("${optionSet}" == "true") {
+			if (${optionSet} == "true") {
 				CalendarEvent._options(
-					optionSetValue = "${optionSetValue}",
-					specificOptionSetValue = "${specificOptionSetValue}");
+					optionSetValue = ${optionSetValue},
+					specificOptionSetValue = ${specificOptionSetValue});
 			}
 		}
-		else if ("${eventType}" == "Repeating") {
+		else if (${eventType} == "Repeating") {
 			AssertTextEquals(
 				locator1 = "TextInput#TITLE",
-				value1 = "${eventTitle}");
+				value1 = ${eventTitle});
 
-			PortletEntry.inputTitle(title = "${eventTitleEdit}");
+			PortletEntry.inputTitle(title = ${eventTitleEdit});
 
 			AssertElementPresent(locator1 = "CalendarEditEvent#START_DATE");
 
@@ -844,16 +863,19 @@ definition {
 
 			var endDate = selenium.getElementValue("CalendarEditEvent#END_DATE");
 			var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
+			var startDateTime = StringUtil.removeSpaces(${startDateTime});
 
-			Type(
+			Type.sendKeys(
 				locator1 = "CalendarEditEvent#START_DATE_TIME",
-				value1 = "${startDateTime}");
+				value1 = ${startDateTime});
 
 			Click(locator1 = "TextInput#TITLE");
 
-			Type(
+			var startDateTime = StringUtil.removeSpaces(${endDateTime});
+
+			Type.sendKeys(
 				locator1 = "CalendarEditEvent#END_DATE_TIME",
-				value1 = "${endDateTime}");
+				value1 = ${endDateTime});
 
 			Click(locator1 = "TextInput#TITLE");
 
@@ -863,10 +885,10 @@ definition {
 				locator1 = "CalendarEditEvent#REPEAT_SUMMARY",
 				value1 = "Daily, 1 Times");
 
-			if ("${optionSet}" == "true") {
+			if (${optionSet} == "true") {
 				CalendarEvent._options(
-					optionSetValue = "${optionSetValue}",
-					specificOptionSetValue = "${specificOptionSetValue}");
+					optionSetValue = ${optionSetValue},
+					specificOptionSetValue = ${specificOptionSetValue});
 			}
 		}
 
@@ -878,7 +900,7 @@ definition {
 				value1 = "Entire Series");
 		}
 
-		if ("${optionSetValue}" == "inviteResource") {
+		if (${optionSetValue} == "inviteResource") {
 			AssertElementPresent(locator1 = "CalendarEditEvent#ARE_YOU_SURE_DIALOG_BOX_HEADER");
 
 			AssertTextEquals(
@@ -894,44 +916,162 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		Navigator.gotoPage(pageName = "${pageName}");
+		Navigator.gotoPage(pageName = ${pageName});
 
-		var key_eventTitle = "${eventTitleEdit}";
+		var key_eventTitle = ${eventTitleEdit};
 
 		AssertTextEquals(
 			locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC",
-			value1 = "${eventTitleEdit}");
+			value1 = ${eventTitleEdit});
 	}
 
-	macro editTitle {
+	@summary = "Default summary"
+	macro editTitle(eventTitle = null) {
 		while (IsNotEditable(locator1 = "TextInput#TITLE")) {
 			WaitForElementPresent(locator1 = "TextInput#TITLE");
 		}
 
-		PortletEntry.inputTitle(title = "${eventTitle}");
+		PortletEntry.inputTitle(title = ${eventTitle});
 	}
 
-	macro expandResourcesAvailabilityPanel {
+	@summary = "Default summary"
+	macro enableEventBySiteCalendarName(calendarName = null) {
+		if (IsElementNotPresent(locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR_PRIMARY_COLOR_DEFAULT")) {
+			Click(
+				key_calendarName = ${calendarName},
+				locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR_PRIMARY");
+		}
+	}
+
+	@summary = "Default summary"
+	macro expandResourcesAvailabilityPanel() {
 		ScrollWebElementIntoView(locator1 = "CalendarEditEvent#RESOURCES_AVAILABILITY_PANEL_COLLAPSED");
 
 		Click(locator1 = "CalendarEditEvent#RESOURCES_AVAILABILITY_PANEL_COLLAPSED");
 	}
 
-	macro gotoConfigureInvitations {
-		CalendarEvent._expandPanel(panelName = "Invitations");
+	@summary = "Default summary"
+	macro format12To24Hours(time12Hours = null) {
+		var ampm = RegexUtil.replace(${time12Hours}, "([0-9]*):([0-9]*) ([A-Z]*)", 3);
+		var hours = RegexUtil.replace(${time12Hours}, "([0-9]*):([0-9]*) ([A-Z]*)", 1);
+		var minutes = RegexUtil.replace(${time12Hours}, "([0-9]*):([0-9]*) ([A-Z]*)", 2);
+		var ampm = StringUtil.trim(${ampm});
+		var hours = StringUtil.trim(${hours});
+		var minutes = StringUtil.trim(${minutes});
+
+		if (${ampm} == "PM") {
+			if (${hours} == 12) {
+				var hours = 12;
+			}
+			else {
+				var hours = ${hours} + 12;
+			}
+		}
+		else if (${ampm} == "AM") {
+			if (${hours} == 00) {
+				var hours = 12;
+			}
+		}
+
+		var time24Hours = "${hours}:${minutes}";
+
+		return ${time24Hours};
 	}
 
-	macro gotoConfigureRelatedAssets {
-		CalendarEvent._expandPanel(panelName = "Related Assets");
+	@summary = "Default summary"
+	macro getCalendarTimeHour(status = null) {
+		var dateTimeHour = CalendarEvent.getTimeHour(status = ${status});
+		var dateTimeMinute = CalendarEvent.getTimeMinutes(status = ${status});
+		var dateTimeAMPM = CalendarEvent.getTimeAMPM(status = ${status});
+
+		var key_dateTime = "${dateTimeHour}:${dateTimeMinute} ${dateTimeAMPM}";
+
+		return ${key_dateTime};
 	}
 
-	macro gotoRepeatConfiguration {
+	@summary = "Default summary"
+	macro getTimeAMPM(status = null) {
+		if (${status} == "End") {
+			var timeString = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
+		}
+
+		if (${status} == "Start") {
+			var timeString = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+		}
+
+		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 1);
+
+		var changeHour = MathUtil.isGreaterThan(${hours}, 12);
+
+		if (${changeHour} == "true") {
+			var ampm = "PM";
+		}
+		else {
+			var ampm = "AM";
+		}
+
+		return ${ampm};
+	}
+
+	@summary = "Default summary"
+	macro getTimeHour(status = null) {
+		if (${status} == "End") {
+			var timeString = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
+		}
+
+		if (${status} == "Start") {
+			var timeString = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+		}
+
+		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 1);
+
+		var changeHour = MathUtil.isGreaterThan(${hours}, 12);
+
+		if (${changeHour} == "true") {
+			var hours = ${hours} - 12;
+		}
+
+		if (${hours} == 00) {
+			var hours = 12;
+		}
+
+		return ${hours};
+	}
+
+	@summary = "Default summary"
+	macro getTimeMinutes(status = null) {
+		if (${status} == "End") {
+			var timeString = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
+		}
+
+		if (${status} == "Start") {
+			var timeString = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+		}
+
+		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 2);
+
+		return ${minutes};
+	}
+
+	@summary = "Default summary"
+	macro gotoConfigureInvitations() {
+		Panel.expandPanel(panel = "Invitations");
+	}
+
+	@summary = "Default summary"
+	macro gotoConfigureRelatedAssets() {
+		Panel.expandPanel(panel = "Related Assets");
+	}
+
+	@summary = "Default summary"
+	macro gotoRepeatConfiguration() {
 		Click(locator1 = "CalendarEditEvent#REPEAT_CHECKBOX");
 	}
 
-	macro inputRateStar {
+	@summary = "Default summary"
+	macro inputRateStar(ratingStarCount = null) {
 		Click(locator1 = "CalendarEditEvent#RATING_STAR");
 
 		if (isSet(checkDeleteButton)) {
@@ -939,59 +1079,63 @@ definition {
 		}
 
 		Click.javaScriptClick(
-			key_ratingStarCount = "${ratingStarCount}",
+			key_ratingStarCount = ${ratingStarCount},
 			locator1 = "Ratings#YOUR_RATING_STAR_COUNT");
 	}
 
-	macro inviteResource {
-		CalendarEvent._expandPanel(panelName = "Invitations");
+	@summary = "Default summary"
+	macro inviteResource(resourceNameList = null) {
+		Panel.expandPanel(panel = "Invitations");
 
-		for (var resourceName : list "${resourceNameList}") {
+		for (var resourceName : list ${resourceNameList}) {
 			Type(
 				locator1 = "CalendarEditEvent#INVITATIONS_INVITE_RESOURCE_FIELD",
-				value1 = "${resourceName}");
+				value1 = ${resourceName});
 
-			var key_resource = "${resourceName}";
+			var key_resource = ${resourceName};
 
 			if (IsElementNotPresent(locator1 = "CalendarEditEvent#INVITATIONS_INVITE_RESOURCE_FIELD_LIST")) {
 				Type(
 					locator1 = "CalendarEditEvent#INVITATIONS_INVITE_RESOURCE_FIELD",
-					value1 = "${resourceName}");
+					value1 = ${resourceName});
 			}
 
 			Click(
 				locator1 = "CalendarEditEvent#INVITATIONS_INVITE_RESOURCE_FIELD_LIST",
-				value1 = "${resourceName}");
+				value1 = ${resourceName});
 
-			CalendarEvent.viewRSVPPending(resourceName = "${resourceName}");
+			CalendarEvent.viewRSVPPending(resourceName = ${resourceName});
 		}
 	}
 
-	macro publish {
+	@summary = "Default summary"
+	macro publish() {
 		CalendarEvent.clickPublish();
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro publishRepeating {
+	@summary = "Default summary"
+	macro publishRepeating(saveOption = null) {
 		AssertClick(
 			locator1 = "Button#SUBMIT",
 			value1 = "Publish");
 
 		AssertElementPresent(locator1 = "CalendarEditEvent#RECURRING_EVENT_DIALOG_BOX_HEADER");
 
-		var saveOptionPath = StringUtil.replace("${saveOption}", " ", "_");
+		var saveOptionPath = StringUtil.replace(${saveOption}, " ", "_");
 
-		var saveOptionPath = StringUtil.upperCase("${saveOptionPath}");
+		var saveOptionPath = StringUtil.upperCase(${saveOptionPath});
 
 		AssertClick(
 			locator1 = "CalendarEditEvent#${saveOptionPath}_BUTTON",
-			value1 = "${saveOption}");
+			value1 = ${saveOption});
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro publishWithUserNotification {
+	@summary = "Default summary"
+	macro publishWithUserNotification() {
 		AssertClick(
 			locator1 = "Button#SUBMIT",
 			value1 = "Publish");
@@ -1009,7 +1153,8 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro resizeViaEventBlock {
+	@summary = "Default summary"
+	macro resizeViaEventBlock() {
 		if (!(IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC"))) {
 			Click(locator1 = "Calendar#VIEW_PREVIOUS_BUTTON");
 		}
@@ -1017,7 +1162,8 @@ definition {
 		MouseOver.mouseOverNotVisible(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC");
 	}
 
-	macro saveEventUserInvite {
+	@summary = "Default summary"
+	macro saveEventUserInvite() {
 		AssertElementPresent(locator1 = "CalendarEditEvent#ARE_YOU_SURE_DIALOG_BOX_HEADER");
 
 		AssertTextEquals(
@@ -1029,7 +1175,8 @@ definition {
 			value1 = "Save changes.");
 	}
 
-	macro saveEventUserInviteCancel {
+	@summary = "Default summary"
+	macro saveEventUserInviteCancel() {
 		AssertElementPresent(locator1 = "CalendarEditEvent#ARE_YOU_SURE_DIALOG_BOX_HEADER");
 
 		AssertTextEquals(
@@ -1041,49 +1188,54 @@ definition {
 			value1 = "Do not change the event.");
 	}
 
-	macro selectCalendar {
+	@summary = "Default summary"
+	macro selectCalendar(calendarName = null) {
 		if (isSet(calendarName)) {
-			CalendarEvent._expandPanel(panelName = "Details");
+			Panel.expandPanel(panel = "Details");
 
 			Select(
 				locator1 = "CalendarEditEvent#DETAILS_CALENDAR_SELECT",
-				value1 = "${calendarName}");
+				value1 = ${calendarName});
 		}
 	}
 
-	macro selectEventIframe {
-		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
+	@summary = "Default summary"
+	macro selectEventIframe() {
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 	}
 
-	macro selectRepeatFrequency {
+	@summary = "Default summary"
+	macro selectRepeatFrequency(frequency = null) {
 		Select(
 			locator1 = "CalendarEditEvent#REPEAT_REPEATS_DROPDOWN",
-			value1 = "${frequency}");
+			value1 = ${frequency});
 
 		AssertSelectedLabel(
 			locator1 = "CalendarEditEvent#REPEAT_REPEATS_DROPDOWN",
-			value1 = "${frequency}");
+			value1 = ${frequency});
 	}
 
-	macro selectTimes {
+	@summary = "Default summary"
+	macro selectTimes(startDateTime = null, endDateTime = null) {
 		Click(locator1 = "TextInput#TITLE");
 
-		var key_startDateTime = "${startDateTime}";
+		var key_startDateTime = ${startDateTime};
 
 		Click(locator1 = "CalendarEditEvent#START_DATE_TIME_OPTION");
 
 		Click(locator1 = "TextInput#TITLE");
 
-		var key_endDateTime = "${endDateTime}";
+		var key_endDateTime = ${endDateTime};
 
 		Click(locator1 = "CalendarEditEvent#END_DATE_TIME_OPTION");
 
 		CalendarEvent.viewTimes(
-			endDateTime = "${endDateTime}",
-			startDateTime = "${startDateTime}");
+			endDateTime = ${endDateTime},
+			startDateTime = ${startDateTime});
 	}
 
-	macro setAllDay {
+	@summary = "Default summary"
+	macro setAllDay() {
 		Check(locator1 = "CalendarEditEvent#ALL_DAY_CHECKBOX");
 
 		AssertNotVisible(locator1 = "CalendarEditEvent#START_DATE_TIME");
@@ -1091,42 +1243,46 @@ definition {
 		AssertNotVisible(locator1 = "CalendarEditEvent#END_DATE_TIME");
 	}
 
-	macro setDates {
+	@summary = "Default summary"
+	macro setDates(endDate = null, startDate = null) {
 		Type(
 			locator1 = "CalendarEditEvent#START_DATE",
-			value1 = "${startDate}");
+			value1 = ${startDate});
 
 		Click(locator1 = "TextInput#TITLE");
 
 		Type(
 			locator1 = "CalendarEditEvent#END_DATE",
-			value1 = "${endDate}");
+			value1 = ${endDate});
 
 		Click(locator1 = "TextInput#TITLE");
 	}
 
-	macro setDatesToday {
+	@summary = "Default summary"
+	macro setDatesToday() {
 		var endDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
 
 		Type(
 			locator1 = "CalendarEditEvent#END_DATE",
-			value1 = "${endDate}");
+			value1 = ${endDate});
 	}
 
-	macro setEndDate {
+	@summary = "Default summary"
+	macro setEndDate(endDate = null) {
 		Type(
 			locator1 = "CalendarEditEvent#END_DATE",
-			value1 = "${endDate}");
+			value1 = ${endDate});
 	}
 
-	macro setEndDateTomorrow {
+	@summary = "Default summary"
+	macro setEndDateTomorrow() {
 		Click(locator1 = "CalendarEditEvent#END_DATE");
 
 		var daySelected = selenium.getText("CalendarEditEvent#MINI_CALENDAR_DAY_SELECTED");
 
 		var tomorrow = ${daySelected} + 1;
 
-		var key_daySpecific = "${tomorrow}";
+		var key_daySpecific = ${tomorrow};
 
 		if (IsElementPresent(locator1 = "CalendarEditEvent#MINI_CALENDAR_DAY_SPECIFIC")) {
 			Click(locator1 = "CalendarEditEvent#MINI_CALENDAR_DAY_SPECIFIC");
@@ -1134,22 +1290,23 @@ definition {
 		else {
 			Click(locator1 = "CalendarEditEvent#MINI_CALENDAR_NEXT_MONTH_BUTTON");
 
-			var key_daySpecific = "1";
+			var key_daySpecific = 1;
 
 			Click(locator1 = "CalendarEditEvent#MINI_CALENDAR_DAY_SPECIFIC");
 		}
 	}
 
-	macro setRepeating {
+	@summary = "Default summary"
+	macro setRepeating(endOnDate = null, numberOfOccurrences = null, endOnDateSummary = null, frequency = null) {
 		CalendarEvent.gotoRepeatConfiguration();
 
-		CalendarEvent.selectRepeatFrequency(frequency = "${frequency}");
+		CalendarEvent.selectRepeatFrequency(frequency = ${frequency});
 
 		AssertSelectedLabel(
 			locator1 = "CalendarEditEvent#REPEAT_REPEAT_EVERY_DROPDOWN",
-			value1 = "1");
+			value1 = 1);
 
-		if ("${frequency}" == "Monthly") {
+		if (${frequency} == "Monthly") {
 			Click(locator1 = "CalendarEditEvent#REPEAT_REPEAT_ON_DAY_OF_THE_WEEK_RADIO");
 		}
 
@@ -1158,7 +1315,7 @@ definition {
 
 			Type(
 				locator1 = "CalendarEditEvent#REPEAT_ENDS_AFTER_FIELD",
-				value1 = "${numberOfOccurrences}");
+				value1 = ${numberOfOccurrences});
 		}
 
 		if (isSet(endOnDate)) {
@@ -1166,25 +1323,25 @@ definition {
 
 			Type.clickAtType(
 				locator1 = "CalendarEditEvent#REPEAT_ENDS_ON_DATE_FIELD",
-				value1 = "${endOnDate}");
+				value1 = ${endOnDate});
 		}
 
 		Click(locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY");
 
-		if ("${frequency}" == "Monthly") {
+		if (${frequency} == "Monthly") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
-				value1 = "${frequency}");
+				value1 = ${frequency});
 
 			var currentDay = selenium.getElementValue("CalendarEditEvent#REPEAT_MONTHLY_CURRENT_DAY");
 
-			var currentDay = StringUtil.lowerCase("${currentDay}");
+			var currentDay = StringUtil.lowerCase(${currentDay});
 
-			var currentDay = StringUtil.upperCaseFirstLetter("${currentDay}");
+			var currentDay = StringUtil.upperCaseFirstLetter(${currentDay});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
-				value1 = "${currentDay}");
+				value1 = ${currentDay});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
@@ -1196,20 +1353,20 @@ definition {
 				locator1 = "CalendarEditEvent#REPEAT_DONE_BUTTON",
 				value1 = "Done");
 		}
-		else if ("${frequency}" == "Weekly") {
+		else if (${frequency} == "Weekly") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
-				value1 = "${frequency}");
+				value1 = ${frequency});
 
 			var currentDay = selenium.getElementValue("CalendarEditEvent#REPEAT_WEEKLY_CURRENT_DAY");
 
-			var currentDay = StringUtil.lowerCase("${currentDay}");
+			var currentDay = StringUtil.lowerCase(${currentDay});
 
-			var currentDay = StringUtil.upperCaseFirstLetter("${currentDay}");
+			var currentDay = StringUtil.upperCaseFirstLetter(${currentDay});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
-				value1 = "${currentDay}");
+				value1 = ${currentDay});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
@@ -1254,33 +1411,34 @@ definition {
 		Check(locator1 = "CalendarEditEvent#REPEAT_CHECKBOX");
 	}
 
-	macro setRepeatingYearly {
+	@summary = "Default summary"
+	macro setRepeatingYearly(yearlyRecurrenceSummaryPreviousDay = null, yearlyRecurrenceSummary = null) {
 		CalendarEvent.gotoRepeatConfiguration();
 
 		CalendarEvent.selectRepeatFrequency(frequency = "Yearly");
 
 		AssertSelectedLabel(
 			locator1 = "CalendarEditEvent#REPEAT_REPEAT_EVERY_DROPDOWN",
-			value1 = "1");
+			value1 = 1);
 
 		Click(locator1 = "CalendarEditEvent#REPEAT_REPEAT_ON_DAY_OF_THE_WEEK_RADIO");
 
 		Click(locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY");
 
-		if (IsTextEqual(locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY", value1 = "${yearlyRecurrenceSummary}")) {
+		if (IsTextEqual(locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY", value1 = ${yearlyRecurrenceSummary})) {
 			AssertTextEquals(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
-				value1 = "${yearlyRecurrenceSummary}");
+				value1 = ${yearlyRecurrenceSummary});
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
-				value1 = "${yearlyRecurrenceSummaryPreviousDay}");
+				value1 = ${yearlyRecurrenceSummaryPreviousDay});
 		}
 
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
-			value1 = "${yearlyRecurrenceSummary}");
+			value1 = ${yearlyRecurrenceSummary});
 
 		AssertClick(
 			locator1 = "CalendarEditEvent#REPEAT_DONE_BUTTON",
@@ -1289,57 +1447,69 @@ definition {
 		Check(locator1 = "CalendarEditEvent#REPEAT_CHECKBOX");
 	}
 
-	macro setSpecificDate {
+	@summary = "Default summary"
+	macro setSpecificDate(key_daySpecific = null, startDay = null, endDay = null) {
 		Click(locator1 = "CalendarEditEvent#START_DATE");
 
 		AssertClick(
-			key_daySpecific = "${startDay}",
+			key_daySpecific = ${startDay},
 			locator1 = "CalendarEditEvent#MINI_CALENDAR_DAY_SPECIFIC",
-			value1 = "${key_daySpecific}");
+			value1 = ${key_daySpecific});
 
 		Click(locator1 = "CalendarEditEvent#END_DATE");
 
 		AssertClick(
-			key_daySpecific = "${endDay}",
+			key_daySpecific = ${endDay},
 			locator1 = "CalendarEditEvent#MINI_CALENDAR_DAY_SPECIFIC",
-			value1 = "${key_daySpecific}");
+			value1 = ${key_daySpecific});
 	}
 
-	macro setTimes {
-		Type(
+	@summary = "Default summary"
+	macro setTimes() {
+		var startDateTime = StringUtil.removeSpaces(${startDateTime});
+		var endDateTime = StringUtil.removeSpaces(${endDateTime});
+
+		echo("${startDateTime} and ${endDateTime}");
+
+		Type.sendKeys(
 			locator1 = "CalendarEditEvent#START_DATE_TIME",
-			value1 = "${startDateTime}");
+			value1 = ${startDateTime});
 
 		Click(locator1 = "TextInput#TITLE");
 
-		Type(
+		Type.sendKeys(
 			locator1 = "CalendarEditEvent#END_DATE_TIME",
-			value1 = "${endDateTime}");
+			value1 = ${endDateTime});
 
 		Click(locator1 = "TextInput#TITLE");
+
+		var startDateTime24Hours = CalendarEvent.format12To24Hours(time12Hours = ${startDateTime});
+		var endDateTime24Hours = CalendarEvent.format12To24Hours(time12Hours = ${endDateTime});
 
 		CalendarEvent.viewTimes(
-			endDateTime = "${endDateTime}",
-			startDateTime = "${startDateTime}");
+			endDateTime = ${endDateTime24Hours},
+			startDateTime = ${startDateTime24Hours});
 	}
 
-	macro tag {
-		CalendarEvent._expandPanel(panelName = "Categorization");
+	@summary = "Default summary"
+	macro tag(tagTextList = null) {
+		Panel.expandPanel(panel = "Categorization");
 
 		AssertElementPresent(locator1 = "CalendarEditEvent#CATEGORIZATION_TAG_FIELD");
 
 		if (isSet(tagTextList)) {
-			for (var tagText : list "${tagTextList}") {
-				CalendarEvent.addTag(key_tagText = "${tagText}");
+			for (var tagText : list ${tagTextList}) {
+				CalendarEvent.addTag(key_tagText = ${tagText});
 			}
 		}
 		else {
-			CalendarEvent.addTag(key_tagText = "${tagText}");
+			CalendarEvent.addTag(key_tagText = ${tagText});
 		}
 	}
 
-	macro tearDown {
-		if ("${marketplace}" == "true") {
+	@summary = "Default summary"
+	macro tearDown(marketplace = null, i = null) {
+		if (${marketplace} == "true") {
 			ProductMenu.gotoPortlet(
 				category = "Site Builder",
 				portlet = "Pages");
@@ -1349,7 +1519,7 @@ definition {
 			Navigator.gotoPage(pageName = "Marketplace Calendar Testing");
 
 			Portlet.addPG(
-				i = "${i}",
+				i = ${i},
 				pageName = "Marketplace Calendar Testing",
 				portletName = "Calendar");
 
@@ -1365,8 +1535,9 @@ definition {
 		}
 	}
 
-	macro tearDownNoCloseMessage {
-		if ("${marketplace}" == "true") {
+	@summary = "Default summary"
+	macro tearDownNoCloseMessage(marketplace = null, i = null) {
+		if (${marketplace} == "true") {
 			ProductMenu.gotoPortlet(
 				category = "Site Builder",
 				portlet = "Pages");
@@ -1376,7 +1547,7 @@ definition {
 			Navigator.gotoPage(pageName = "Marketplace Calendar Testing");
 
 			Portlet.addPG(
-				i = "${i}",
+				i = ${i},
 				pageName = "Marketplace Calendar Testing",
 				portletName = "Calendar");
 
@@ -1388,41 +1559,44 @@ definition {
 		VerifyElementPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
 	}
 
-	macro view {
-		var eventTitle = "${eventTitle}";
+	@summary = "Default summary"
+	macro view(numberOfOccurrences = null, frequency = null) {
+		var eventTitle = ${eventTitle};
 
-		CalendarScheduler.viewDay(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewDay(eventTitle = ${eventTitle});
 
 		CalendarScheduler.viewWeek(
-			eventTitle = "${eventTitle}",
-			frequency = "${frequency}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			eventTitle = ${eventTitle},
+			frequency = ${frequency},
+			numberOfOccurrences = ${numberOfOccurrences});
 
 		CalendarScheduler.viewMonth(
-			eventTitle = "${eventTitle}",
-			frequency = "${frequency}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			eventTitle = ${eventTitle},
+			frequency = ${frequency},
+			numberOfOccurrences = ${numberOfOccurrences});
 
 		CalendarScheduler.viewAgenda(
-			eventTitle = "${eventTitle}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			eventTitle = ${eventTitle},
+			numberOfOccurrences = ${numberOfOccurrences});
 
 		CalendarNavigator.gotoView(viewType = "Week");
 	}
 
-	macro viewAllDay {
+	@summary = "Default summary"
+	macro viewAllDay(eventTitle = null) {
 		for (var viewType : list "Day,Week,Month") {
-			CalendarNavigator.gotoView(viewType = "${viewType}");
+			CalendarNavigator.gotoView(viewType = ${viewType});
 
 			AssertElementPresent(
-				key_eventTitle = "${eventTitle}",
+				key_eventTitle = ${eventTitle},
 				locator1 = "Calendar#SCHEDULER_VIEW_ALL_DAY_EVENT_DAY_WEEK_AND_MONTH_VIEW");
 		}
 
-		CalendarScheduler.viewAgenda(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewAgenda(eventTitle = ${eventTitle});
 	}
 
-	macro viewApprovedEventRSVPButtons {
+	@summary = "Default summary"
+	macro viewApprovedEventRSVPButtons() {
 		AssertTextEquals(
 			locator1 = "CalendarViewEventDetails#MAYBE_BUTTON",
 			value1 = "Maybe");
@@ -1432,80 +1606,88 @@ definition {
 			value1 = "Decline");
 	}
 
-	macro viewApprovedRSVP {
+	@summary = "Default summary"
+	macro viewApprovedRSVP(eventTitle = null, rsvp = null) {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = "${eventTitle}");
+		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = ${eventTitle});
 
 		AssertTextEquals(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EVENT_TITLE",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 
 		AssertElementPresent(
-			key_rsvp = "${rsvp}",
+			key_rsvp = ${rsvp},
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_ATTEND_INACTIVE");
 	}
 
-	macro viewAvailableCalendars {
-		CalendarEvent._expandPanel(panelName = "Details");
+	@summary = "Default summary"
+	macro viewAvailableCalendars(availableCalendarList = null) {
+		Panel.expandPanel(panel = "Details");
 
-		for (var availableCalendarName : list "${availableCalendarList}") {
-			var key_calendarName = "${availableCalendarName}";
+		for (var availableCalendarName : list ${availableCalendarList}) {
+			var key_calendarName = ${availableCalendarName};
 
 			AssertElementPresent(locator1 = "CalendarEditEvent#DETAILS_CALENDAR_SELECT_OPTION");
 		}
 	}
 
-	macro viewCalendarCommentsMessagePresent {
+	@summary = "Default summary"
+	macro viewCalendarCommentsMessagePresent() {
 		AssertElementPresent(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		AssertElementPresent(locator1 = "CalendarViewEventDetails#CALENDAR_COMMENT_DEFAULT_MESSAGE");
 	}
 
-	macro viewCalendarCommentsNotPresent {
+	@summary = "Default summary"
+	macro viewCalendarCommentsNotPresent() {
 		AssertElementNotPresent(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		AssertElementNotPresent(locator1 = "CalendarViewEventDetails#CALENDAR_COMMENT_DEFAULT_MESSAGE");
 	}
 
-	macro viewCalendarRateStar {
+	@summary = "Default summary"
+	macro viewCalendarRateStar(averageRatingStarCount = null, message = null, ratingStarCount = null) {
 		AssertElementPresent(
-			key_ratingStarCount = "${ratingStarCount}",
+			key_ratingStarCount = ${ratingStarCount},
 			locator1 = "CalendarEditEvent#RATING_STAR_RESULT_COUNT");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Ratings#AVERAGE_STAR_RESULT",
-			value1 = "${averageRatingStarCount}");
+			value1 = ${averageRatingStarCount});
 
 		MouseOver(locator1 = "CalendarEditEvent#RATING_STAR");
 
 		AssertElementPresent(
-			key_message = "${message}",
+			key_message = ${message},
 			locator1 = "Ratings#RATED_TOOLTIP_MESSAGE");
 	}
 
-	macro viewCalendarRatingNotPresent {
+	@summary = "Default summary"
+	macro viewCalendarRatingNotPresent() {
 		AssertElementNotPresent(locator1 = "Ratings#YOUR_RATING_STAR");
 
 		AssertElementNotPresent(locator1 = "Ratings#AVERAGE_STAR");
 	}
 
-	macro viewCalendarRatingPresent {
+	@summary = "Default summary"
+	macro viewCalendarRatingPresent() {
 		AssertElementPresent(locator1 = "Ratings#YOUR_RATING_STAR");
 
 		AssertElementPresent(locator1 = "Ratings#AVERAGE_STAR");
 	}
 
-	macro viewComment {
+	@summary = "Default summary"
+	macro viewComment(eventCommentList = null, calendarName = null, eventTitle = null, eventType = null, user = null) {
 		CalendarEvent.viewDetails(
-			calendarName = "${calendarName}",
-			eventTitle = "${eventTitle}",
-			eventType = "${eventType}");
+			calendarName = ${calendarName},
+			eventTitle = ${eventTitle},
+			eventType = ${eventType});
 
 		if (isSet(eventCommentList)) {
-			for (var eventComment : list "${eventCommentList}") {
-				var key_entryComment = "${eventComment}";
-				var key_userFullName = "${user}";
+			for (var eventComment : list ${eventCommentList}) {
+				var key_entryComment = ${eventComment};
+				var key_userFullName = ${user};
 
 				AssertTextEquals(
 					locator1 = "Comments#USER_NAME",
@@ -1513,12 +1695,12 @@ definition {
 
 				AssertTextEquals(
 					locator1 = "Comments#COMMENT_BODY_SPECIFIC",
-					value1 = "${eventComment}");
+					value1 = ${eventComment});
 			}
 		}
 		else {
-			var key_entryComment = "${eventComment}";
-			var key_userFullName = "${user}";
+			var key_entryComment = ${eventComment};
+			var key_userFullName = ${user};
 
 			AssertTextEquals(
 				locator1 = "Comments#USER_NAME",
@@ -1526,34 +1708,37 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "Comments#COMMENT_BODY_SPECIFIC",
-				value1 = "${eventComment}");
+				value1 = ${eventComment});
 		}
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro viewDescription {
+	@summary = "Default summary"
+	macro viewDescription(key_eventDescription = null, eventDescription = null) {
 		AssertTextEquals(
-			key_eventDescription = "${eventDescription}",
+			key_eventDescription = ${eventDescription},
 			locator1 = "CalendarViewEventDetails#EVENT_DESCRIPTION",
-			value1 = "${key_eventDescription}");
+			value1 = ${key_eventDescription});
 	}
 
-	macro viewDetails {
+	@summary = "Default summary"
+	macro viewDetails(calendarName = null, eventTitle = null, schedulerEventDialogBox = null) {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		CalendarScheduler.selectSpecificEvent(eventTitle = "${eventTitle}");
+		CalendarScheduler.selectSpecificEvent(eventTitle = ${eventTitle});
 
-		CalendarScheduler.viewEventTitleViaDialogBox(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewEventTitleViaDialogBox(eventTitle = ${eventTitle});
 
 		CalendarScheduler._viewCalendarViaDialogBox(
-			calendarName = "${calendarName}",
-			schedulerEventDialogBox = "${schedulerEventDialogBox}");
+			calendarName = ${calendarName},
+			schedulerEventDialogBox = ${schedulerEventDialogBox});
 
-		CalendarEvent.viewTitleViaDetails(eventTitle = "${eventTitle}");
+		CalendarEvent.viewTitleViaDetails(eventTitle = ${eventTitle});
 	}
 
-	macro viewDetailsFields {
+	@summary = "Default summary"
+	macro viewDetailsFields() {
 		AssertElementPresent(
 			key_tab = "Status",
 			locator1 = "CalendarViewEventDetails#STATUS");
@@ -1571,12 +1756,13 @@ definition {
 			locator1 = "CalendarViewEventDetails#RESOURCES_FIELD");
 	}
 
-	macro viewDetailsInPortlet {
+	@summary = "Default summary"
+	macro viewDetailsInPortlet(calendarName = null, eventTitle = null, relatedAssetTitle = null) {
 		AssertTextEquals(
 			locator1 = "Portlet#H3_HEADER",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 
-		CalendarEvent.viewDetailsResources(calendarName = "${calendarName}");
+		CalendarEvent.viewDetailsResources(calendarName = ${calendarName});
 
 		AssertElementPresent(locator1 = "CalendarViewEventDetails#START_DATE_FIELD");
 
@@ -1588,24 +1774,26 @@ definition {
 				value1 = "Related Assets");
 
 			AssertTextEquals(
-				key_relatedAssetTitle = "${relatedAssetTitle}",
+				key_relatedAssetTitle = ${relatedAssetTitle},
 				locator1 = "AssetRelatedAssets#ASSET_TITLE",
-				value1 = "${relatedAssetTitle}");
+				value1 = ${relatedAssetTitle});
 		}
 
 		CalendarEvent.viewApprovedEventRSVPButtons();
 	}
 
-	macro viewDetailsResources {
+	@summary = "Default summary"
+	macro viewDetailsResources(calendarName = null) {
 		AssertTextEquals(
 			locator1 = "CalendarViewEventDetails#RESOURCES_FIELD",
-			value1 = "${calendarName}");
+			value1 = ${calendarName});
 	}
 
-	macro viewDetailsTags {
+	@summary = "Default summary"
+	macro viewDetailsTags(tagTextList = null) {
 		if (isSet(tagTextList)) {
-			for (var tagText : list "${tagTextList}") {
-				var key_tagText = "${tagText}";
+			for (var tagText : list ${tagTextList}) {
+				var key_tagText = ${tagText};
 
 				AssertElementPresent(locator1 = "CalendarViewEventDetails#TAGS_LABEL");
 
@@ -1615,7 +1803,7 @@ definition {
 			}
 		}
 		else {
-			var key_tagText = "${tagText}";
+			var key_tagText = ${tagText};
 
 			AssertElementPresent(locator1 = "CalendarViewEventDetails#TAGS_LABEL");
 
@@ -1627,10 +1815,11 @@ definition {
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro viewDetailsViaMailLink {
+	@summary = "Default summary"
+	macro viewDetailsViaMailLink(eventTitle = null) {
 		AssertTextEquals(
 			locator1 = "Portlet#H3_HEADER",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 
 		AssertElementPresent(locator1 = "CalendarViewEventDetails#START_DATE_FIELD");
 
@@ -1639,59 +1828,64 @@ definition {
 		CalendarEvent.viewApprovedEventRSVPButtons();
 	}
 
-	macro viewEndsDate {
+	@summary = "Default summary"
+	macro viewEndsDate(endDate = null) {
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#END_DATE",
-			value1 = "${endDate}");
+			value1 = ${endDate});
 	}
 
-	macro viewEventNotToday {
+	@summary = "Default summary"
+	macro viewEventNotToday(eventTitle = null, numberOfOccurrences = null) {
 		for (var viewType : list "Day,Week,Month") {
-			CalendarNavigator.gotoView(viewType = "${viewType}");
+			CalendarNavigator.gotoView(viewType = ${viewType});
 
 			AssertElementPresent(
-				key_eventTitle = "${eventTitle}",
+				key_eventTitle = ${eventTitle},
 				locator1 = "Calendar#SCHEDULER_VIEW_EVENT_NOT_TODAY");
 		}
 
 		CalendarScheduler.viewAgenda(
-			eventTitle = "${eventTitle}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			eventTitle = ${eventTitle},
+			numberOfOccurrences = ${numberOfOccurrences});
 	}
 
-	macro viewInvitationResourceNotPresent {
-		CalendarEvent._expandPanel(panelName = "Invitations");
+	@summary = "Default summary"
+	macro viewInvitationResourceNotPresent(resourceNameList = null) {
+		Panel.expandPanel(panel = "Invitations");
 
-		for (var resourceName : list "${resourceNameList}") {
+		for (var resourceName : list ${resourceNameList}) {
 			Type(
 				locator1 = "CalendarEditEvent#INVITATIONS_INVITE_RESOURCE_FIELD",
-				value1 = "${resourceName}");
+				value1 = ${resourceName});
 
-			var key_resource = "${resourceName}";
+			var key_resource = ${resourceName};
 
 			AssertElementNotPresent(locator1 = "CalendarEditEvent#INVITATIONS_INVITE_RESOURCE_FIELD_LIST");
 		}
 	}
 
-	macro viewInvitedEventWithWorkflow {
+	@summary = "Default summary"
+	macro viewInvitedEventWithWorkflow(eventTitle = null) {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = "${eventTitle}");
+		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = ${eventTitle});
 
 		AssertTextEquals(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EVENT_TITLE",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 
 		AssertElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_CALENDAR");
 
-		CalendarScheduler.viewNoRSVP(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewNoRSVP(eventTitle = ${eventTitle});
 	}
 
-	macro viewInvitedUserRSVPWithApprovedWorkflow {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-		var key_userCalendarName = "${userCalendarName}";
-		var key_siteCalendarName = "${siteCalendarName}";
-		var key_siteName = "${siteName}";
+	@summary = "Default summary"
+	macro viewInvitedUserRSVPWithApprovedWorkflow(eventTitle = null, siteCalendarName = null, userCalendarName = null) {
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+		var key_userCalendarName = ${userCalendarName};
+		var key_siteCalendarName = ${siteCalendarName};
+		var key_siteName = ${siteName};
 
 		Click(locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR");
 
@@ -1704,13 +1898,14 @@ definition {
 		}
 
 		CalendarEvent.viewInvitedEventWithWorkflow(
-			eventTitle = "${eventTitle}",
-			userCalendarName = "${userCalendarName}");
+			eventTitle = ${eventTitle},
+			userCalendarName = ${userCalendarName});
 
 		Click(locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR");
 	}
 
-	macro viewMaybeAndDeclineButtons {
+	@summary = "Default summary"
+	macro viewMaybeAndDeclineButtons() {
 		AssertElementPresent(
 			key_tab = "Maybe",
 			locator1 = "CalendarViewEventDetails#MAYBE_BUTTON");
@@ -1720,39 +1915,43 @@ definition {
 			locator1 = "CalendarViewEventDetails#DECLINE_BUTTON");
 	}
 
-	macro viewNoRepeating {
+	@summary = "Default summary"
+	macro viewNoRepeating() {
 		AssertNotVisible(locator1 = "CalendarEditEvent#REPEAT_SUMMARY");
 
 		AssertNotChecked(locator1 = "CalendarEditEvent#REPEAT_CHECKBOX");
 	}
 
-	macro viewNotPresentViaAgendaView {
+	@summary = "Default summary"
+	macro viewNotPresentViaAgendaView(eventNumber = null) {
 		AssertElementNotPresent(locator1 = "xpath=(//div[contains(@class,'scheduler-view-agenda-event') and contains(@data-clientid,'scheduler-event')])[${eventNumber}]");
 	}
 
-	macro viewNoUserInviteWithUnapprovedWorkflow {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-		var key_siteCalendarName = "${siteCalendarName}";
-		var key_siteName = "${siteName}";
-		var key_eventTitle = "${eventTitle}";
+	@summary = "Default summary"
+	macro viewNoUserInviteWithUnapprovedWorkflow(eventTitle = null, siteCalendarName = null) {
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+		var key_siteCalendarName = ${siteCalendarName};
+		var key_siteName = ${siteName};
+		var key_eventTitle = ${eventTitle};
 
 		AssertClick(
 			locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR",
-			value1 = "${siteCalendarName}");
+			value1 = ${siteCalendarName});
 
 		if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC")) {
-			CalendarScheduler.viewSpecificEventNotVisible(eventTitle = "${eventTitle}");
+			CalendarScheduler.viewSpecificEventNotVisible(eventTitle = ${eventTitle});
 		}
 		else {
-			CalendarScheduler.viewSpecificEventNotPresent(eventTitle = "${eventTitle}");
+			CalendarScheduler.viewSpecificEventNotPresent(eventTitle = ${eventTitle});
 		}
 
 		AssertClick(
 			locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR",
-			value1 = "${siteCalendarName}");
+			value1 = ${siteCalendarName});
 	}
 
-	macro viewRepeatingEventErrorMessage {
+	@summary = "Default summary"
+	macro viewRepeatingEventErrorMessage() {
 		Click(locator1 = "Button#PUBLISH");
 
 		Alert.viewRequestFailedToComplete();
@@ -1762,17 +1961,18 @@ definition {
 			value1 = "The last repeating date should come after the event start date.");
 	}
 
-	macro viewRepeatingEventViaViewDetails {
+	@summary = "Default summary"
+	macro viewRepeatingEventViaViewDetails(eventTitle = null, numberOfOccurrences = null, yearlyRecurrenceSummary = null, frequency = null) {
 		AssertTextEquals(
 			locator1 = "Portlet#H3_HEADER",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 
-		if ("${frequency}" == "Daily") {
+		if (${frequency} == "Daily") {
 			AssertTextEquals(
 				locator1 = "CalendarViewEventDetails#REPEAT_OCCURRENCE_SUMMARY",
 				value1 = "Daily, ${numberOfOccurrences} Times");
 		}
-		else if ("${frequency}" == "Weekly") {
+		else if (${frequency} == "Weekly") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarViewEventDetails#REPEAT_OCCURRENCE_SUMMARY",
 				value1 = "Weekly, on ");
@@ -1781,12 +1981,12 @@ definition {
 				locator1 = "CalendarViewEventDetails#REPEAT_OCCURRENCE_SUMMARY",
 				value1 = ", ${numberOfOccurrences} Times");
 		}
-		else if ("${frequency}" == "Yearly") {
+		else if (${frequency} == "Yearly") {
 			AssertTextEquals(
 				locator1 = "CalendarViewEventDetails#REPEAT_OCCURRENCE_SUMMARY",
-				value1 = "${yearlyRecurrenceSummary}");
+				value1 = ${yearlyRecurrenceSummary});
 		}
-		else if ("${frequency}" == "Monthly") {
+		else if (${frequency} == "Monthly") {
 			var today = DateUtil.getCurrentDayOfWeek();
 
 			AssertTextEquals.assertPartialText(
@@ -1799,268 +1999,294 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarViewEventDetails#REPEAT_OCCURRENCE_SUMMARY",
-				value1 = "${today}");
+				value1 = ${today});
 		}
 	}
 
-	macro viewRepeatingMonthPosition {
+	@summary = "Default summary"
+	macro viewRepeatingMonthPosition() {
 		var repeatingMonthPosition = selenium.getElementValue("CalendarEditEvent#REPEAT_MONTHLY_CURRENT_MONTH_POSITION");
 
-		if ("${repeatingMonthPosition}" == "1") {
+		if (${repeatingMonthPosition} == 1) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
 				value1 = "First");
 		}
-		else if ("${repeatingMonthPosition}" == "2") {
+		else if (${repeatingMonthPosition} == 2) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
 				value1 = "Second");
 		}
-		else if ("${repeatingMonthPosition}" == "3") {
+		else if (${repeatingMonthPosition} == 3) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
 				value1 = "Third");
 		}
-		else if ("${repeatingMonthPosition}" == "4") {
+		else if (${repeatingMonthPosition} == 4) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
 				value1 = "Fourth");
 		}
-		else if ("${repeatingMonthPosition}" == "-1") {
+		else if (${repeatingMonthPosition} == "-1") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "CalendarEditEvent#REPEAT_DIALOG_SUMMARY",
 				value1 = "Last");
 		}
 	}
 
-	macro viewRepeatWeekStartDay {
+	@summary = "Default summary"
+	macro viewRepeatWeekStartDay(weekStartDay = null) {
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#REPEAT_REPEAT_ON_DAY_OF_THE_WEEK_WEEKDAY_WEEK_START_DAY",
-			value1 = "${weekStartDay}");
+			value1 = ${weekStartDay});
 	}
 
-	macro viewResourcesAvailability {
+	@summary = "Default summary"
+	macro viewResourcesAvailability() {
 		CalendarEvent.expandResourcesAvailabilityPanel();
 
 		AssertElementPresent(locator1 = "CalendarEditEvent#RESOURCES_AVAILABILITY_SCHEDULER_EVENT_GENERIC");
 	}
 
-	macro viewRSVPAccepted {
-		var key_resource = "${resourceName}";
+	@summary = "Default summary"
+	macro viewRSVPAccepted(resourceName = null) {
+		var key_resource = ${resourceName};
 
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#INVITATIONS_ACCEPTED",
-			value1 = "${resourceName}");
+			value1 = ${resourceName});
 	}
 
-	macro viewRSVPDeclined {
-		var key_resource = "${resourceName}";
+	@summary = "Default summary"
+	macro viewRSVPDeclined(resourceName = null) {
+		var key_resource = ${resourceName};
 
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#INVITATIONS_DECLINED",
-			value1 = "${resourceName}");
+			value1 = ${resourceName});
 	}
 
-	macro viewRSVPMaybe {
-		var key_resource = "${resourceName}";
+	@summary = "Default summary"
+	macro viewRSVPMaybe(resourceName = null) {
+		var key_resource = ${resourceName};
 
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#INVITATIONS_MAYBE",
-			value1 = "${resourceName}");
+			value1 = ${resourceName});
 	}
 
-	macro viewRSVPPending {
-		var key_resource = "${resourceName}";
+	@summary = "Default summary"
+	macro viewRSVPPending(resourceName = null) {
+		var key_resource = ${resourceName};
 
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#INVITATIONS_PENDING",
-			value1 = "${resourceName}");
+			value1 = ${resourceName});
 	}
 
-	macro viewSiteCalendarEventNotPresent {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+	@summary = "Default summary"
+	macro viewSiteCalendarEventNotPresent(startDateTime = null, endDateTime = null) {
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		var key_siteName = "${siteName}";
+		var key_siteName = ${siteName};
 
 		AssertElementNotPresent(locator1 = "Calendar#CURRENT_SITE_CALENDARS_HEADER");
 
-		var key_endDateTime = "${endDateTime}";
-		var key_startDateTime = "${startDateTime}";
+		var key_endDateTime = ${endDateTime};
+		var key_startDateTime = ${startDateTime};
 
 		AssertElementNotPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC_EVENT_TIMES");
 	}
 
-	macro viewSiteCalendarEventWithDefaultPermissions {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+	@summary = "Default summary"
+	macro viewSiteCalendarEventWithDefaultPermissions(calendarName = null, eventTitle = null, startDateTime = null, endDateTime = null) {
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		var key_siteName = "${siteName}";
+		var key_siteName = ${siteName};
 
 		AssertTextEquals(
 			locator1 = "Calendar#CURRENT_SITE_CALENDARS_HEADER",
 			value1 = "${siteName}'s Calendars");
 
-		var key_endDateTime = "${endDateTime}";
-		var key_startDateTime = "${startDateTime}";
+		var key_endDateTime = ${endDateTime};
+		var key_startDateTime = ${startDateTime};
 
 		Click(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC_EVENT_TIMES");
 
-		var key_calendarName = "${calendarName}";
+		var key_calendarName = ${calendarName};
 
 		AssertTextEquals(
 			locator1 = "Calendar#SCHEDULER_EVENT_CALENDAR_NAME",
-			value1 = "${calendarName}");
+			value1 = ${calendarName});
 
 		AssertNotVisible(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EVENT_TITLE",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 	}
 
-	macro viewSiteRSVPWithApprovedWorkflow {
-		var key_userCalendarName = "${userCalendarName}";
+	@summary = "Default summary"
+	macro viewSiteRSVPWithApprovedWorkflow(userCalendarName = null) {
+		var key_userCalendarName = ${userCalendarName};
 
 		AssertClick(
 			locator1 = "Calendar#MY_CALENDARS_CALENDAR",
-			value1 = "${userCalendarName}");
+			value1 = ${userCalendarName});
 
 		AssertElementNotPresent(locator1 = "Calendar#SCHEDULER_EVENT_ATTENDING_ROW_OPTIONS");
 
 		AssertClick(
 			locator1 = "Calendar#MY_CALENDARS_CALENDAR",
-			value1 = "${userCalendarName}");
+			value1 = ${userCalendarName});
 	}
 
-	macro viewSiteRSVPWithUnapprovedWorkflow {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-		var key_siteCalendarName = "${siteCalendarName}";
-		var key_siteName = "${siteName}";
+	@summary = "Default summary"
+	macro viewSiteRSVPWithUnapprovedWorkflow(eventTitle = null, siteCalendarName = null) {
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+		var key_siteCalendarName = ${siteCalendarName};
+		var key_siteName = ${siteName};
 
 		if (IsElementNotPresent(locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR_PRIMARY_COLOR_DEFAULT")) {
 			Click(locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR");
 		}
 
-		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = "${eventTitle}");
+		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = ${eventTitle});
 
 		AssertElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_CALENDAR");
 
 		AssertElementNotPresent(locator1 = "Calendar#SCHEDULER_EVENT_ATTENDING_ROW_OPTIONS");
 	}
 
-	macro viewStartsDate {
+	@summary = "Default summary"
+	macro viewStartsDate(startDate = null) {
 		AssertTextEquals(
 			locator1 = "CalendarEditEvent#START_DATE",
-			value1 = "${startDate}");
+			value1 = ${startDate});
 	}
 
-	macro viewStatusViaDetails {
+	@summary = "Default summary"
+	macro viewStatusViaDetails(status = null) {
 		AssertTextEquals.assertPartialText(
 			locator1 = "CalendarViewEventDetails#STATUS",
-			value1 = "${status}");
+			value1 = ${status});
 	}
 
-	macro viewTimes {
-		AssertTextEquals.assertValue(
-			locator1 = "CalendarEditEvent#START_DATE_TIME",
-			value1 = "${startDateTime}");
+	@summary = "Default summary"
+	macro viewTimes(startDateTime = null, endDateTime = null) {
+		var key_endDateTime = ${endDateTime};
+		var key_startDateTime = ${startDateTime};
 
-		AssertTextEquals.assertValue(
-			locator1 = "CalendarEditEvent#END_DATE_TIME",
-			value1 = "${endDateTime}");
+		AssertElementPresent(
+			key_endDateTime = ${key_endDateTime},
+			locator1 = "CalendarEditEvent#END_DATE_TIME_INSTANT");
+
+		AssertElementPresent(
+			key_startDateTime = ${key_startDateTime},
+			locator1 = "CalendarEditEvent#START_DATE_TIME_INSTANT");
 	}
 
-	macro viewTimes24Hour {
+	@summary = "Default summary"
+	macro viewTimes24Hour(startDateTime = null, endDateTime = null) {
 		AssertTextEquals.assertValue(
 			locator1 = "CalendarEditEvent#START_DATE_TIME_24_HOUR",
-			value1 = "${startDateTime}");
+			value1 = ${startDateTime});
 
 		AssertTextEquals.assertValue(
 			locator1 = "CalendarEditEvent#END_DATE_TIME_24_HOUR",
-			value1 = "${endDateTime}");
+			value1 = ${endDateTime});
 	}
 
-	macro viewTimesViaDetails {
+	@summary = "Default summary"
+	macro viewTimesViaDetails(startDateTime = null, endDateTime = null) {
 		AssertTextEquals.assertPartialText(
 			locator1 = "CalendarViewEventDetails#START_DATE_FIELD",
-			value1 = "${startDateTime}");
+			value1 = ${startDateTime});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "CalendarViewEventDetails#END_DATE_FIELD",
-			value1 = "${endDateTime}");
+			value1 = ${endDateTime});
 	}
 
-	macro viewTitle {
+	@summary = "Default summary"
+	macro viewTitle(eventTitle = null) {
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 	}
 
-	macro viewTitleViaDetails {
+	@summary = "Default summary"
+	macro viewTitleViaDetails(eventTitle = null) {
 		CalendarScheduler.gotoDetailsViaDialogBox();
 
 		AssertTextEquals(
 			locator1 = "Portlet#H3_HEADER",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 	}
 
-	macro viewToday {
-		var eventTitle = "${eventTitle}";
+	@summary = "Default summary"
+	macro viewToday(numberOfOccurrences = null, frequency = null) {
+		var eventTitle = ${eventTitle};
 
-		CalendarScheduler.viewDay(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewDay(eventTitle = ${eventTitle});
 
 		CalendarScheduler.viewWeek(
-			eventTitle = "${eventTitle}",
-			frequency = "${frequency}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			eventTitle = ${eventTitle},
+			frequency = ${frequency},
+			numberOfOccurrences = ${numberOfOccurrences});
 
 		CalendarScheduler.viewMonth(
-			eventTitle = "${eventTitle}",
-			frequency = "${frequency}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			eventTitle = ${eventTitle},
+			frequency = ${frequency},
+			numberOfOccurrences = ${numberOfOccurrences});
 
 		CalendarNavigator.gotoToday();
 
 		CalendarScheduler.viewAgenda(
-			eventTitle = "${eventTitle}",
-			numberOfOccurrences = "${numberOfOccurrences}");
+			eventTitle = ${eventTitle},
+			numberOfOccurrences = ${numberOfOccurrences});
 
 		CalendarNavigator.gotoView(viewType = "Week");
 	}
 
-	macro viewUnavailableCalendarsNotPresent {
-		CalendarEvent._expandPanel(panelName = "Details");
+	@summary = "Default summary"
+	macro viewUnavailableCalendarsNotPresent(unavailableCalendarList = null) {
+		Panel.expandPanel(panel = "Details");
 
-		for (var unavailableCalendarName : list "${unavailableCalendarList}") {
-			var key_calendarName = "${unavailableCalendarName}";
+		for (var unavailableCalendarName : list ${unavailableCalendarList}) {
+			var key_calendarName = ${unavailableCalendarName};
 
 			AssertElementNotPresent(locator1 = "CalendarEditEvent#DETAILS_CALENDAR_SELECT_OPTION");
 		}
 	}
 
-	macro viewUsers {
+	@summary = "Default summary"
+	macro viewUsers(eventTitle = null, usersList = null, user = null) {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		CalendarScheduler._selectSpecificEventCurrentDay(eventTitle = "${eventTitle}");
+		CalendarScheduler._selectSpecificEventCurrentDay(eventTitle = ${eventTitle});
 
-		CalendarScheduler.viewEventTitleViaDialogBox(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewEventTitleViaDialogBox(eventTitle = ${eventTitle});
 
 		CalendarScheduler.viewEventUsersViaDialogBox(
-			user = "${user}",
-			usersList = "${usersList}");
+			user = ${user},
+			usersList = ${usersList});
 	}
 
-	macro viewViaAgendaView {
+	@summary = "Default summary"
+	macro viewViaAgendaView(eventNumber = null) {
 		AssertElementPresent(locator1 = "xpath=(//div[contains(@class,'scheduler-view-agenda-event') and contains(@data-clientid,'scheduler-event')])[${eventNumber}]");
 	}
 
-	macro viewViaAssetPublisher {
-		var key_assetTitle = "${eventTitle}";
+	@summary = "Default summary"
+	macro viewViaAssetPublisher(calendarName = null, eventTitle = null) {
+		var key_assetTitle = ${eventTitle};
 
 		AssertTextEquals(
 			locator1 = "AP#ASSET_ABSTRACT_TITLE",
-			value1 = "${eventTitle}");
+			value1 = ${eventTitle});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
-			value1 = "${calendarName}");
+			value1 = ${calendarName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
@@ -2075,16 +2301,17 @@ definition {
 			value1 = "Ends:");
 	}
 
-	macro viewYearly {
+	@summary = "Default summary"
+	macro viewYearly(eventTitle = null) {
 		for (var viewType : list "Day,Week,Month") {
-			CalendarNavigator.gotoView(viewType = "${viewType}");
+			CalendarNavigator.gotoView(viewType = ${viewType});
 
 			AssertElementPresent(
-				key_eventTitle = "${eventTitle}",
+				key_eventTitle = ${eventTitle},
 				locator1 = "Calendar#SCHEDULER_VIEW_YEARLY_EVENT_DAY_WEEK_AND_MONTH_VIEW");
 		}
 
-		CalendarScheduler.viewAgenda(eventTitle = "${eventTitle}");
+		CalendarScheduler.viewAgenda(eventTitle = ${eventTitle});
 	}
 
 }

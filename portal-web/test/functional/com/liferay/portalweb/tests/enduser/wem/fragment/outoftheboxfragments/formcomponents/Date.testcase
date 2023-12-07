@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a company Object with a Boolean field") {
@@ -34,21 +35,8 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ObjectAdmin.deleteObjectViaAPI(objectName = "PurchaseOrder");
-		}
-	}
-
 	@description = "This is a test for LPS-151158 and LPS-155502. The page creator could configure the Date fragment. View the behaviors of Help Text and Label."
-	@priority = "5"
+	@priority = 5
 	test ConfigureDate {
 		property portal.acceptance = "true";
 
@@ -76,7 +64,7 @@ definition {
 
 			task ("Remove the automatic added fragments") {
 				for (var fragmentName : list "Date,Submit Button") {
-					PageEditor.removeFragment(fragmentName = "${fragmentName}");
+					PageEditor.removeFragment(fragmentName = ${fragmentName});
 				}
 			}
 		}
@@ -149,6 +137,53 @@ definition {
 					showHelpText = "false",
 					type = "date-input");
 			}
+		}
+	}
+
+	@description = "This is a test for LPS-182728. The user should see the field error below the Date fragment."
+	@priority = 3
+	test ViewDateFieldErrorMessageWhenPartialValidationFailure {
+		task ("Given a user has a content page where a mapped Date fragment has a partial validation") {
+			JSONObject.addObjectValidation(
+				errorMessage = "Please enter a valid date.",
+				fieldName = "purchaseDate",
+				labelName = "Date Validation",
+				objectName = "PurchaseOrder",
+				outputValidationType = "partialValidation",
+				script = "futureDates(purchaseDate, '2023-08-01')",
+				validationType = "ddm");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+
+			PageEditor.publish();
+		}
+
+		task ("When the user submits form with invalid value") {
+			Type.sendKeys(
+				key_text = "Purchase Date",
+				locator1 = "TextInput#ANY",
+				value1 = 05102023);
+
+			Button.clickSubmitButton();
+		}
+
+		task ("Then the user should see a field error message below Date") {
+			Alert.viewFieldErrorMessage(
+				errorMessage = "Please enter a valid date.",
+				fieldLabel = "Purchase Date");
 		}
 	}
 

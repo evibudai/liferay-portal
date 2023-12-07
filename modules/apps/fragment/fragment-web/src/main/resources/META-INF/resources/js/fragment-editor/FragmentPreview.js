@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
@@ -21,6 +12,8 @@ import {
 import classNames from 'classnames';
 import {cancelDebounce, debounce, fetch} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
+
+import createFile from './createFile';
 
 /**
  * Defined ratios for preview sizing.
@@ -54,19 +47,19 @@ const PREVIEW_SIZES = [
 	'full-size',
 ];
 
+const PREVIEW_SIZES_LABELS = {
+	'desktop': Liferay.Language.get('desktop'),
+	'full-size': Liferay.Language.get('full-size'),
+	'mobile-portrait': Liferay.Language.get('portrait-phone'),
+	'tablet-portrait': Liferay.Language.get('tablet'),
+};
+
 const stopEventPropagation = (event) => {
 	event.preventDefault();
 	event.stopPropagation();
 };
 
-const FragmentPreview = ({
-	configuration,
-	css,
-	html,
-	js,
-	namespace,
-	urls = {},
-}) => {
+const FragmentPreview = ({configuration, css, html, js, urls = {}}) => {
 	const iframeRef = useRef();
 	const ref = useRef();
 
@@ -84,10 +77,10 @@ const FragmentPreview = ({
 
 				const formData = new FormData();
 
-				formData.append(`${namespace}configuration`, configuration);
-				formData.append(`${namespace}css`, btoa(css));
-				formData.append(`${namespace}html`, btoa(html));
-				formData.append(`${namespace}js`, btoa(js));
+				formData.append(`configuration`, configuration);
+				formData.append(`css`, createFile('css', css));
+				formData.append(`html`, createFile('html', html));
+				formData.append(`js`, createFile('js', js));
 
 				fetch(urls.render, {
 					body: formData,
@@ -165,6 +158,7 @@ const FragmentPreview = ({
 			<div className="btn-group fragment-preview__toolbar">
 				{PREVIEW_SIZES.map((previewSize) => (
 					<ClayButtonWithIcon
+						aria-label={PREVIEW_SIZES_LABELS[previewSize]}
 						borderless={true}
 						className={classNames({
 							active: currentPreviewSize === previewSize,
@@ -174,6 +168,7 @@ const FragmentPreview = ({
 						onClick={() => setCurrentPreviewSize(previewSize)}
 						size="sm"
 						symbol={previewSize}
+						title={PREVIEW_SIZES_LABELS[previewSize]}
 					/>
 				))}
 			</div>

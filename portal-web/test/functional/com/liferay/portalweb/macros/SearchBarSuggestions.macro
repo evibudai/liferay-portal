@@ -1,40 +1,46 @@
 definition {
 
-	macro configureEmbeddedSearchBarSuggestions {
-		SearchPortlets.gotoEmbeddedOptions(portletOption = "Configuration");
+	@summary = "Default summary"
+	macro configureEmbeddedSearchBarSuggestions(characterThresholdForDisplayingSuggestions = null, suggestionContributorMinimumSearches = null, addContributor = null, suggestionContributor = null, suggestionContributorDisplayGroupName = null, suggestionContributorBlueprint = null, deleteBasicContributor = null, suggestionContributorActivity = null, suggestionContributorSize = null, characterThreshold = null) {
+		SearchPage.gotoEmbeddedOptions(portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		if (isSet(characterThresholdForDisplayingSuggestions)) {
 			Type(
 				locator1 = "SearchBarSuggestions#CHARACTER_THRESHOLD_FOR_DISPLAYING_SUGGESTIONS",
-				value1 = "${characterThresholdForDisplayingSuggestions}");
+				value1 = ${characterThresholdForDisplayingSuggestions});
 		}
 
-		if ("${addContributor}" == "true") {
-			Click.javaScriptClick(
-				key_text = "Add Contributor",
-				locator1 = "Button#ANY");
+		if (${addContributor} == "true") {
+			Click.javaScriptClick(locator1 = "SearchBarSuggestions#ADD_SUGGESTIONS_BUTTON");
+		}
+
+		if (${deleteBasicContributor} == "true") {
+			Click(locator1 = "SearchBarSuggestions#DELETE_SUGGESTION_CONTRIBUTOR");
 		}
 
 		if (!(isSet(suggestionContributorOrder))) {
-			var suggestionContributorOrder = "1";
+			var suggestionContributorOrder = 1;
 		}
 
 		if (isSet(suggestionContributor)) {
-			Select(
-				key_suggestionContributorOrder = "${suggestionContributorOrder}",
-				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR",
-				value1 = "${suggestionContributor}");
+			Click(
+				key_suggestionContributor = ${suggestionContributor},
+				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SELECT");
 		}
 
 		if (isSet(suggestionContributorBlueprint)) {
 			Click(
-				key_suggestionContributorOrder = "${suggestionContributorOrder}",
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SELECT_BLUEPRINT");
 
+			WaitForElementPresent(
+				key_blueprintTitle = ${suggestionContributorBlueprint},
+				locator1 = "Blueprints#BLUEPRINTS_OPTION_WIDGET_SELECT_BLUEPRINT");
+
 			Click(
-				blueprintTitle = "${suggestionContributorBlueprint}",
+				key_blueprintTitle = ${suggestionContributorBlueprint},
 				locator1 = "Blueprints#BLUEPRINTS_OPTION_WIDGET_SELECT_BLUEPRINT");
 
 			SelectFrameTop();
@@ -42,136 +48,194 @@ definition {
 			SelectFrame(locator1 = "IFrame#CONFIGURATION");
 		}
 
+		if (isSet(suggestionContributorActivity)) {
+			Click(
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
+				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_ACTIVITY");
+
+			Click(
+				key_menuItem = ${suggestionContributorActivity},
+				locator1 = "MenuItem#ANY_MENU_ITEM");
+		}
+
+		if (isSet(characterThreshold)) {
+			Type(
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
+				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_THRESHOLD",
+				value1 = ${characterThreshold});
+		}
+
 		if (isSet(suggestionContributorDisplayGroupName)) {
 			Type(
-				key_suggestionContributorOrder = "${suggestionContributorOrder}",
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME",
-				value1 = "${suggestionContributorDisplayGroupName}");
+				value1 = ${suggestionContributorDisplayGroupName});
+		}
+
+		if (isSet(suggestionContributorMinimumSearches)) {
+			Type(
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
+				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_MINIMUM_SEARCHES",
+				value1 = ${suggestionContributorMinimumSearches});
 		}
 
 		if (isSet(suggestionContributorSize)) {
 			Type(
-				key_suggestionContributorOrder = "${suggestionContributorOrder}",
+				key_suggestionContributorOrder = ${suggestionContributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE",
-				value1 = "${suggestionContributorSize}");
+				value1 = ${suggestionContributorSize});
 		}
+
+		SelectFrameTop();
+
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		PortletEntry.save();
 
 		IFrame.closeFrame();
 	}
 
-	macro copyConfiguration {
-		if ("${suggestionContributor}" == "Display Group Name") {
+	@summary = "Default summary"
+	macro copyConfiguration(contributorOrder = null, suggestionContributor = null) {
+		if (${suggestionContributor} == "Display Group Name") {
 			Click.clickAt(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME");
 
 			Type.sendKeys(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME",
 				value1 = "keys=CONTROL,a");
 
 			Type.sendKeys(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME",
 				value1 = "keys=CONTROL,c");
 		}
-		else if ("${suggestionContributor}" == "Size") {
+		else if (${suggestionContributor} == "Size") {
 			Click.clickAt(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE");
 
 			Type.sendKeys(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE",
 				value1 = "keys=CONTROL,a");
 
 			Type.sendKeys(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE",
 				value1 = "keys=CONTROL,c");
 		}
 	}
 
-	macro gotoSuggestionResultDetails {
+	@summary = "Default summary"
+	macro gotoSuggestionResultDetails(searchAssetTitle = null) {
 		if (!(isSet(suggestionContributorDisplayGroupName))) {
 			var suggestionContributorDisplayGroupName = "Suggestions";
 		}
 
 		Click.mouseDownMouseUp(
-			key_searchAssetTitle = "${searchAssetTitle}",
-			key_suggestionContributorDisplayGroupName = "${suggestionContributorDisplayGroupName}",
+			key_searchAssetTitle = ${searchAssetTitle},
+			key_suggestionContributorDisplayGroupName = ${suggestionContributorDisplayGroupName},
 			locator1 = "SearchBarSuggestions#RESULTS_LIST_ITEM_TITLE");
 	}
 
-	macro pasteConfiguration {
-		if ("${suggestionContributor}" == "Display Group Name") {
+	@summary = "Default summary"
+	macro pasteConfiguration(contributorOrder = null, suggestionContributor = null) {
+		if (${suggestionContributor} == "Display Group Name") {
 			Click.clickAt(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME");
 
 			Type.sendKeys(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME",
 				value1 = "keys=CONTROL,v");
 		}
-		else if ("${suggestionContributor}" == "Size") {
+		else if (${suggestionContributor} == "Size") {
 			Click.clickAt(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE");
 
 			Type.sendKeys(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE",
 				value1 = "keys=CONTROL,a");
 
 			Type.sendKeys(
-				key_suggestionContributorOrder = "${contributorOrder}",
+				key_suggestionContributorOrder = ${contributorOrder},
 				locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE",
 				value1 = "keys=CONTROL,c");
 		}
 	}
 
-	macro showMoreSuggestions {
+	@summary = "Default summary"
+	macro showMoreSuggestions() {
 		Click.mouseDownMouseUp(locator1 = "Button#SHOW_MORE");
 	}
 
-	macro viewNoResultAssetTitle {
+	@summary = "Default summary"
+	macro viewNoResultAssetTitle(searchAssetTitle = null) {
 		if (!(isSet(suggestionContributorDisplayGroupName))) {
 			var suggestionContributorDisplayGroupName = "Suggestions";
 		}
 
 		AssertElementNotPresent(
-			key_searchAssetTitle = "${searchAssetTitle}",
-			key_suggestionContributorDisplayGroupName = "${suggestionContributorDisplayGroupName}",
+			key_searchAssetTitle = ${searchAssetTitle},
+			key_suggestionContributorDisplayGroupName = ${suggestionContributorDisplayGroupName},
 			locator1 = "SearchBarSuggestions#RESULTS_LIST_ITEM_TITLE");
 	}
 
-	macro viewSuggestionResultDetails {
+	@summary = "Default summary"
+	macro viewSuggestionResultDetails(searchAssetTitle = null) {
 		AssertTextEquals(
-			locator1 = "SearchResults#ASSET_DETAILS_TITLE",
-			value1 = "${searchAssetTitle}");
+			locator1 = "SearchPage#ASSET_DETAILS_TITLE",
+			value1 = ${searchAssetTitle});
 	}
 
-	macro viewSuggestions {
+	@summary = "Default summary"
+	macro viewSuggestionResultDetailsURL(expectedURL = null, searchAssetTitle = null) {
+		Type(
+			locator1 = "Search#EMBEDDED_SEARCH_BAR",
+			value1 = ${searchAssetTitle});
+
+		SearchBarSuggestions.viewSuggestions(
+			searchAssetDescription = "WC WebContent Description",
+			searchAssetTitle = ${searchAssetTitle});
+
+		SearchBarSuggestions.gotoSuggestionResultDetails(searchAssetTitle = ${searchAssetTitle});
+
+		AssertTextEquals(
+			locator1 = "SearchPage#ASSET_DETAILS_TITLE",
+			value1 = ${searchAssetTitle});
+
+		var currentURL = selenium.getCurrentUrl();
+
+		if (!(contains(${currentURL}, ${expectedURL}))) {
+			fail("The suggestion result details page must use the URL of the page the user came from");
+		}
+	}
+
+	@summary = "Default summary"
+	macro viewSuggestions(searchAssetDescription = null, searchAssetTitle = null) {
 		if (!(isSet(suggestionContributorDisplayGroupName))) {
 			var suggestionContributorDisplayGroupName = "Suggestions";
 		}
 
 		AssertTextEquals.assertPartialText(
-			key_searchAssetTitle = "${searchAssetTitle}",
-			key_suggestionContributorDisplayGroupName = "${suggestionContributorDisplayGroupName}",
+			key_searchAssetTitle = ${searchAssetTitle},
+			key_suggestionContributorDisplayGroupName = ${suggestionContributorDisplayGroupName},
 			locator1 = "SearchBarSuggestions#RESULTS_LIST_ITEM_TITLE",
-			value1 = "${searchAssetTitle}");
+			value1 = ${searchAssetTitle});
 
 		if (isSet(searchAssetDescription)) {
 			AssertTextEquals.assertPartialText(
-				key_searchAssetDescription = "${searchAssetDescription}",
-				key_searchAssetTitle = "${searchAssetTitle}",
-				key_suggestionContributorDisplayGroupName = "${suggestionContributorDisplayGroupName}",
+				key_searchAssetDescription = ${searchAssetDescription},
+				key_searchAssetTitle = ${searchAssetTitle},
+				key_suggestionContributorDisplayGroupName = ${suggestionContributorDisplayGroupName},
 				locator1 = "SearchBarSuggestions#RESULTS_LIST_ITEM_DESCRIPTION",
-				value1 = "${searchAssetDescription}");
+				value1 = ${searchAssetDescription});
 		}
 	}
 

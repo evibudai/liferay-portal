@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
@@ -71,8 +62,14 @@ public class PropertyPoshiElement extends VarPoshiElement {
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
 
+	@Override
+	protected Pattern getStatementPattern() {
+		return _statementPattern;
+	}
+
 	private boolean _isElementType(String poshiScript) {
-		return isValidPoshiScriptStatement(_statementPattern, poshiScript);
+		return isValidPoshiScriptStatement(
+			_partialStatementPattern, poshiScript);
 	}
 
 	private static final String _ELEMENT_NAME = "property";
@@ -80,11 +77,15 @@ public class PropertyPoshiElement extends VarPoshiElement {
 	private static final String _POSHI_SCRIPT_KEYWORD = _ELEMENT_NAME;
 
 	private static final String _PROPERTY_VALUE_REGEX = StringUtil.combine(
-		"(", "\".*\"", "|", "'''.*?'''", ")");
+		"(", "\".*?\"", "|", "'''.*?'''", ")");
 
+	private static final Pattern _partialStatementPattern = Pattern.compile(
+		"^" + _POSHI_SCRIPT_KEYWORD + "[\\s]+[\\w\\.-]+" + ASSIGNMENT_REGEX +
+			_PROPERTY_VALUE_REGEX,
+		Pattern.DOTALL);
 	private static final Pattern _statementPattern = Pattern.compile(
 		"^" + _POSHI_SCRIPT_KEYWORD + "[\\s]+[\\w\\.-]+" + ASSIGNMENT_REGEX +
 			_PROPERTY_VALUE_REGEX + "(;|)$",
-		Pattern.DOTALL);
+		Pattern.DOTALL | Pattern.MULTILINE);
 
 }

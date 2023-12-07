@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.info.permission.provider;
 
 import com.liferay.info.permission.provider.InfoPermissionProvider;
+import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.portal.kernel.log.Log;
@@ -22,8 +14,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.PortletLocalService;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 
 /**
  * @author Lourdes Fernández Besada
@@ -34,15 +27,33 @@ public class ObjectEntryInfoPermissionProvider
 	public ObjectEntryInfoPermissionProvider(
 		ObjectDefinition objectDefinition,
 		PortletLocalService portletLocalService,
-		PortletPermission portletPermission) {
+		PortletResourcePermission portletResourcePermission) {
 
 		_objectDefinition = objectDefinition;
 		_portletLocalService = portletLocalService;
-		_portletPermission = portletPermission;
+		_portletResourcePermission = portletResourcePermission;
+	}
+
+	@Override
+	public boolean hasAddPermission(
+		long groupId, PermissionChecker permissionChecker) {
+
+		if (_portletResourcePermission.contains(
+				permissionChecker, groupId,
+				ObjectActionKeys.ADD_OBJECT_ENTRY)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
 	public boolean hasViewPermission(PermissionChecker permissionChecker) {
+		if (_objectDefinition.isModifiable() && _objectDefinition.isSystem()) {
+			return false;
+		}
+
 		Portlet portlet = _portletLocalService.getPortletById(
 			_objectDefinition.getCompanyId(), _objectDefinition.getPortletId());
 
@@ -51,7 +62,7 @@ public class ObjectEntryInfoPermissionProvider
 		}
 
 		try {
-			return _portletPermission.contains(
+			return PortletPermissionUtil.contains(
 				permissionChecker, portlet.getRootPortletId(), ActionKeys.VIEW);
 		}
 		catch (Exception exception) {
@@ -68,6 +79,6 @@ public class ObjectEntryInfoPermissionProvider
 
 	private final ObjectDefinition _objectDefinition;
 	private final PortletLocalService _portletLocalService;
-	private final PortletPermission _portletPermission;
+	private final PortletResourcePermission _portletResourcePermission;
 
 }

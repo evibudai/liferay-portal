@@ -1,6 +1,7 @@
 @component-name = "portal-page-audit"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Page Audit";
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		task ("Create content page") {
 			JSONLayout.addPublicLayout(
@@ -24,55 +25,37 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		TestUtils.hardRefresh();
-
-		PageAudit.tearDownSystemSettingsConfigurations();
-
-		JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-	}
-
-	@description = "LPS-119066: Given the Page Audit Panel
-	When the audit is launched (the API is called)
-	Then a progress bar shows and moves forward while retrieving the data until they can be shown"
-	@priority = "3"
+	@description = "LPS-119066 Given the Page Audit Panel When the audit is launched (the API is called) Then a progress bar shows and moves forward while retrieving the data until they can be shown."
+	@priority = 3
 	@uitest
 	test AssertProgressBar {
-		property test.name.skip.portal.instance = "PageAudit#AssertProgressBar";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
 			PageAudit.setAPIViaSystemSettings();
 		}
 
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
-
 		task ("Open Page Audit panel and assert the progress bar") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
+
 			PageAudit.openPageAuditSidebar();
 
-			Click.javaScriptClick(
-				key_title = "Relaunch",
-				locator1 = "Button#ANY_TITLE");
+			Button.click(button = "Launch Page Audit");
 
 			AssertVisible(locator1 = "PageAudit#PROGRESS_BAR");
 		}
 	}
 
-	@description = "LPS-134760: Given the Page Audit panel
-	When the API key is set but it is not valid
-	Then the Page Speed API will show a "Show details" link, that will display the info details of the error, provided by the API."
-	@priority = "3"
+	@description = "LPS-134760 Given the Page Audit panel When the API key is set but it is not valid Then the Page Speed API will show a ""Show details"" link, that will display the info details of the error, provided by the API."
+	@priority = 3
 	test CheckErrorDetailsDisplayedInvalidApiKey {
-		property test.name.skip.portal.instance = "PageAudit#CheckErrorDetailsDisplayedInvalidApiKey";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set Google PageSpeed API") {
 			PageAudit.setAPIViaSystemSettings(apiKey = "invalidAPI");
@@ -95,16 +78,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the preferred strategy dropdown in the Site Scope section
-	When the value is void ('Choose an option')
-	Then the call is made for Google Page Speed default value - desktop"
-	@priority = "3"
+	@description = "LPS-125851 Given the preferred strategy dropdown in the Site Scope section When the value is void (""Choose an option"") Then the call is made for Google Page Speed default value - desktop"
+	@priority = 3
 	test DefaultStrategyAtSystemSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#DefaultStrategyAtSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -128,16 +110,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the preferred strategy dropdown in the Site Scope section
-	When the value is Desktop
-	Then additional checks: Small Tap Targets, Incorrect Aspect Ratios and Illegible font sizes are NOT retrieved"
-	@priority = "4"
+	@description = "LPS-125851 Given the preferred strategy dropdown in the Site Scope section When the value is Desktop Then additional checks: Small Tap Targets, Incorrect Aspect Ratios and Illegible font sizes are NOT retrieved"
+	@priority = 4
 	test DesktopStrategyAtSystemSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#DesktopStrategyAtSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -161,16 +142,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the preferred strategy dropdown in the Site Scope section
-	When the value is Mobile
-	Then additional checks: Small Tap Targets, Incorrect Aspect Ratios and Illegible font sizes are retrieved"
-	@priority = "4"
+	@description = "LPS-125851 Given the preferred strategy dropdown in the Site Scope section When the value is Mobile Then additional checks: Small Tap Targets, Incorrect Aspect Ratios and Illegible font sizes are retrieved"
+	@priority = 4
 	test MobileStrategyAtSystemSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#MobileStrategyAtSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -195,10 +175,11 @@ definition {
 	}
 
 	@description = "LPS-119068: When the Enable Page Audit check in System Settings is off, the issue icon to display the page audit panel in the content pages doesn't show"
-	@priority = "3"
+	@priority = 3
 	test PageAuditContentPageDisabled {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#PageAuditContentPageDisabled";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings();
@@ -212,10 +193,11 @@ definition {
 	}
 
 	@description = "LPS-119068: When the Enable Page Audit check in System Settings is off, the issue icon to display the page audit panel in the display pages doesn't show"
-	@priority = "3"
+	@priority = 3
 	test PageAuditDisplayPageDisabled {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#PageAuditDisplayPageDisabled";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings();
@@ -254,10 +236,11 @@ definition {
 	}
 
 	@description = "LPS-119068: When the Enable Page Audit check in System Settings is off, the issue icon to display the page audit panel in the widget pages doesn't show"
-	@priority = "3"
+	@priority = 3
 	test PageAuditWidgetPageDisabled {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#PageAuditWidgetPageDisabled";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings();
@@ -276,17 +259,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132232: Given the Page Audit Panel
-	When the user opens it and there are no failing elements retrieved for any of the checks
-	Then a message "Your page has no issues" and the matching image show, the two sections SEO and Accessibility show and they are collapsed by default"
-	@priority = "3"
+	@description = "LPS-132232 Given the Page Audit Panel When the user opens it and there are no failing elements retrieved for any of the checks Then a message ""Your page has no issues"" and the matching image show, the two sections SEO and Accessibility show and they are collapsed by default"
+	@priority = 3
 	@uitest
 	test PageWithNoIssues {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#PageWithNoIssues";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test-no-issues");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test-no-issues");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -306,16 +288,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given any value in the Site Scope section
-	When that value has been overwritten in any of the sites
-	Then the value in the site prevails over any changes in the System Settings Site Scope section"
-	@priority = "5"
+	@description = "LPS-125851 Given any value in the Site Scope section When that value has been overwritten in any of the sites Then the value in the site prevails over any changes in the System Settings Site Scope section"
+	@priority = 5
 	test SiteSettingsHierarchyOverSystemSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#SiteSettingsHierarchyOverSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API by System Settings") {
@@ -345,13 +326,12 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the Google PageSpeed settings tab in the 'SITE SCOPE' section
-	When the Enable Google PageSpeed Insights check is unchecked
-	Then the 'Google PageSpeed Insights' tab is visible from the Site settings of any of the sites in the instance, and it is unchecked for all those sites"
-	@priority = "3"
+	@description = "LPS-125851 Given the Google PageSpeed settings tab in the ""SITE SCOPE"" section When the Enable Google PageSpeed Insights check is unchecked Then the ""Google PageSpeed Insights"" tab is visible from the Site settings of any of the sites in the instance, and it is unchecked for all those sites "
+	@priority = 3
 	test UncheckedSystemSettingsSiteScopeThenUncheckedAtTabSiteSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#UncheckedSystemSettingsSiteScopeThenUncheckedAtTabSiteSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed settings tab in the System Scope section") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings(settingsScope = "Site Scope");
@@ -375,23 +355,19 @@ definition {
 		}
 	}
 
-	@description = "LPS-128383: Given the PageSpeed Insights settings in the System Settings
-	When Google PageSpeed Insights is not enabled (unchecked)
-	Then the tab Google PageSpeed Insights is not visible from Instance settings"
-	@priority = "4"
+	@description = "LPS-128383 Given the PageSpeed Insights settings in the System Settings When Google PageSpeed Insights is not enabled (unchecked) Then the tab Google PageSpeed Insights is not visible from Instance settings"
+	@priority = 4
 	test UncheckedSystemSettingsSystemScopeThenNotVisibleAtInstanceSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#UncheckedSystemSettingsSystemScopeThenNotVisibleAtInstanceSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed settings tab in the System Scope section in System Settings") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings(settingsScope = "System Scope");
 		}
 
 		task ("Go to Instance Settings") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
+			PortalSettings.openInstanceSettingsAdmin();
 
 			Click(
 				key_itemName = "Pages",
@@ -411,13 +387,12 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the Google PageSpeed settings tab in the System Scope section
-	When the Enable Google PageSpeed Insights check is unchecked
-	Then the 'Google PageSpeed Insights' tab isn't visible in the 'SITE SCOPE' section "
-	@priority = "3"
+	@description = "LPS-125851 Given the Google PageSpeed settings tab in the System Scope section When the Enable Google PageSpeed Insights check is unchecked Then the ""Google PageSpeed Insights"" tab isn't visible in the ""SITE SCOPE"" section"
+	@priority = 3
 	test UncheckedSystemSettingsSystemScopeThenNotVisibleAtSiteScope {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#UncheckedSystemSettingsSystemScopeThenNotVisibleAtSiteScope";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed settings tab in the System Scope section") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings(settingsScope = "System Scope");
@@ -431,13 +406,12 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the Google PageSpeed settings tab in the System Scope section
-	When the Enable Google PageSpeed Insights check is unchecked
-	Then the 'Google PageSpeed Insights' tab isn't visible in the 'VIRTUAL INSTANCE SCOPE' section"
-	@priority = "3"
+	@description = "LPS-125851 Given the Google PageSpeed settings tab in the System Scope section When the Enable Google PageSpeed Insights check is unchecked Then the ""Google PageSpeed Insights"" tab isn't visible in the ""VIRTUAL INSTANCE SCOPE"" section"
+	@priority = 3
 	test UncheckedSystemSettingsSystemScopeThenNotVisibleAtVirtualInstance {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#UncheckedSystemSettingsSystemScopeThenNotVisibleAtVirtualInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed settings tab in the System Scope section") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings(settingsScope = "System Scope");
@@ -451,13 +425,12 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the Google PageSpeed settings tab in the Virtual Instance Scope section
-	When the Enable Google PageSpeed Insights check is unchecked
-	Then the 'Google PageSpeed Insights' tab isn't visible in the Site settings of any of the sites of the current Instance."
-	@priority = "3"
+	@description = "LPS-125851 Given the Google PageSpeed settings tab in the Virtual Instance Scope section When the Enable Google PageSpeed Insights check is unchecked Then the ""Google PageSpeed Insights"" tab isn't visible in the Site settings of any of the sites of the current Instance."
+	@priority = 3
 	test UncheckedSystemSettingsVirtualInstanceThenNotVisibleAtTabSiteSettings {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#UncheckedSystemSettingsVirtualInstanceThenNotVisibleAtTabSiteSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed settings tab in the System Scope section") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings();
@@ -481,13 +454,12 @@ definition {
 		}
 	}
 
-	@description = "LPS-125851: Given the Google PageSpeed settings tab in the Virtual Instance Scope section
-	When the Enable Google PageSpeed Insights check is unchecked
-	Then the 'Google PageSpeed Insights' tab is visible in the 'SITE SCOPE' section "
-	@priority = "3"
+	@description = "LPS-125851 Given the Google PageSpeed settings tab in the Virtual Instance Scope section When the Enable Google PageSpeed Insights check is unchecked Then the ""Google PageSpeed Insights"" tab is visible in the ""SITE SCOPE"" section"
+	@priority = 3
 	test UncheckedSystemSettingsVirtualInstanceThenVisibleAtSiteScope {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#UncheckedSystemSettingsVirtualInstanceThenVisibleAtSiteScope";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Disable Google PageSpeed settings tab in the System Scope section") {
 			PageAudit.disableGooglePageSpeedViaSystemSettings(settingsScope = "Virtual Instance Scope");

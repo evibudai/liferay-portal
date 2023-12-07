@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {FRAGMENT_ENTRY_TYPES} from '../config/constants/fragmentEntryTypes';
@@ -19,10 +10,12 @@ import {useSetFormValidations} from '../contexts/FormValidationContext';
 import {useGlobalContext} from '../contexts/GlobalContext';
 import {useSelectorRef} from '../contexts/StoreContext';
 import FormService from '../services/FormService';
+import {formIsRestricted} from '../utils/formIsRestricted';
 import {CACHE_KEYS, getCacheItem, getCacheKey} from './cache';
 import {getDescendantIds} from './getDescendantIds';
 import {FORM_ERROR_TYPES} from './getFormErrorDescription';
 import getLayoutDataItemUniqueClassName from './getLayoutDataItemUniqueClassName';
+import hasDraftSubmitChild from './hasDraftSubmitChild';
 import hasRequiredInputChild from './hasRequiredInputChild';
 import hasVisibleSubmitChild from './hasVisibleSubmitChild';
 import {isLayoutDataItemDeleted} from './isLayoutDataItemDeleted';
@@ -93,12 +86,28 @@ export default function useCheckFormsValidity() {
 						itemId,
 				  }));
 
-			return promise;
+			return promise.then(({fields, itemId}) => {
+				return FormService.getFormConfig({classNameId}).then(
+					(config) => ({
+						config,
+						fields,
+						itemId,
+					})
+				);
+			});
 		});
 
 		return Promise.all(promises).then((forms) => {
-			forms.forEach(({fields, itemId}) => {
+			forms.forEach(({config, fields, itemId}) => {
 				const formItem = layoutData.items[itemId];
+
+				if (!config.supportStatus && hasDraftSubmitChild(itemId)) {
+					addError(
+						validations,
+						formItem,
+						FORM_ERROR_TYPES.draftNotAvailable
+					);
+				}
 
 				if (
 					hasRequiredInputChild({
@@ -145,6 +154,10 @@ export default function useCheckFormsValidity() {
 }
 
 function addError(validations, formItem, type) {
+	if (formIsRestricted(formItem)) {
+		return;
+	}
+
 	const formValidation = validations.get(formItem.itemId);
 	const errors = formValidation ? formValidation.errors : [];
 	const nextFormErrors = [...errors, type];
@@ -204,13 +217,17 @@ async function checkUnmappedInputChild(
 			}
 		);
 
-		const isCaptcha = allowedFieldTypes.includes('captcha');
+		const isSpecialFieldType =
+			allowedFieldTypes.includes('captcha') ||
+			allowedFieldTypes.includes('categorization');
 
-		if (isCaptcha) {
+		if (isSpecialFieldType) {
 			continue;
 		}
 
 		addError(validations, form, FORM_ERROR_TYPES.missingFragments);
+
+		break;
 	}
 }
 

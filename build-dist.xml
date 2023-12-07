@@ -701,6 +701,110 @@ java -jar ${app.server.weblogic.dir}/${app.server.weblogic.jar.name} -ignoreSysP
 		<echo file="prepare-generated-files.tstamp">${prepare-generated-files.tstamp}</echo>
 	</target>
 
+	<target name="unzip-glowroot">
+		<delete dir="${app.server.parent.dir}/glowroot" />
+
+		<if>
+			<not>
+				<available file="${app.server.parent.dir}/${glowroot.zip.name}" />
+			</not>
+			<then>
+				<mkdir dir="${app.server.parent.dir}" />
+
+				<mirrors-get
+					dest="${app.server.parent.dir}/${glowroot.zip.name}"
+					src="${glowroot.zip.url}"
+					verbose="true"
+				/>
+			</then>
+		</if>
+
+		<unzip
+			dest="${app.server.parent.dir}"
+			src="${app.server.parent.dir}/${glowroot.zip.name}"
+		/>
+
+		<var name="glowroot.agent" value="-javaagent:${CATALINA_HOME}/../glowroot/glowroot.jar" />
+
+		<if>
+			<not>
+				<resourcecontains
+					resource="${app.server.tomcat.dir}/bin/setenv.sh"
+					substring="${glowroot.agent}"
+				/>
+			</not>
+			<then>
+				<echo append="true" file="${app.server.tomcat.dir}/bin/setenv.sh">
+					<![CDATA[
+if [ "$1" = "glowroot" ]
+then
+	GLOWROOT_OPTS="${glowroot.agent}"
+
+	CATALINA_OPTS="${CATALINA_OPTS} ${GLOWROOT_OPTS}"
+
+	shift
+fi
+
+if [ "$GLOWROOT_ENABLED" = "true" ]
+then
+	GLOWROOT_OPTS="${glowroot.agent}"
+
+	CATALINA_OPTS="${CATALINA_OPTS} ${GLOWROOT_OPTS}"
+fi
+					]]>
+				</echo>
+			</then>
+		</if>
+
+		<echo file="${liferay.home}/glowroot/admin.json"><![CDATA[{
+	"roles": [
+		{
+			"name": "Administrator",
+			"permissions": [
+				"admin",
+				"agent:config",
+				"agent:error",
+				"agent:incident",
+				"agent:jvm",
+				"agent:transaction"
+			]
+		}
+	],
+	"storage": {
+		"fullQueryTextExpirationHours": 336,
+		"rollupCappedDatabaseSizesMb": [
+			500,
+			500,
+			500,
+			500
+		],
+		"rollupExpirationHours": [
+			72,
+			336,
+			2160,
+			2160
+		],
+		"traceCappedDatabaseSizeMb": 500,
+		"traceExpirationHours": 336
+	},
+	"users": [
+		{
+			"roles": [
+				"Administrator"
+			],
+			"username": "anonymous"
+		}
+	],
+	"web": {
+		"bindAddress": "127.0.0.1",
+		"contextPath": "/o/glowroot",
+		"port": 4000,
+		"sessionCookieName": "GLOWROOT_SESSION_ID",
+		"sessionTimeoutMinutes": 30
+	}
+}]]></echo>
+	</target>
+
 	<target name="unzip-jboss">
 		<delete dir="${app.server.jboss.dir}" />
 
@@ -834,7 +938,7 @@ this task.
 		<replace
 			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[<jsp-config/>]]></replacetoken>
+			<replacetoken><![CDATA[<jsp-config />]]></replacetoken>
 			<replacevalue>
 				<![CDATA[<jsp-config development="true" source-vm="1.8" target-vm="1.8" />]]>
 			</replacevalue>
@@ -1117,6 +1221,8 @@ org.apache.level=WARNING]]>
 				<include name="*.sh" />
 			</fileset>
 		</chmod>
+
+		<antcall target="unzip-glowroot" />
 	</target>
 
 	<target name="unzip-weblogic">
@@ -2528,7 +2634,7 @@ this task.
 		<replace
 			file="${app.server.wildfly.instance.dir}/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[<jsp-config/>]]></replacetoken>
+			<replacetoken><![CDATA[<jsp-config />]]></replacetoken>
 			<replacevalue>
 				<![CDATA[<jsp-config development="true" source-vm="1.8" target-vm="1.8" />]]>
 			</replacevalue>
@@ -2606,7 +2712,7 @@ plugins.includes=</echo>
 		</antelope:stringutil>
 
 		<if>
-			<available file="${zip.executable.dir}/../data" />
+			<available file="${zip.executable.dir}/../osgi" />
 			<then>
 				<copy
 					preservelastmodified="true"
@@ -2649,14 +2755,19 @@ plugins.includes=</echo>
 					/>
 				</copy>
 
-				<copy
-					preservelastmodified="true"
-					todir="dist/${tstamp.value}/liferay-portal-${lp.version}/data"
-				>
-					<fileset
-						dir="${zip.executable.dir}/../data"
-					/>
-				</copy>
+				<if>
+					<available file="${zip.executable.dir}/../data" />
+					<then>
+						<copy
+							preservelastmodified="true"
+							todir="dist/${tstamp.value}/liferay-portal-${lp.version}/data"
+						>
+							<fileset
+								dir="${zip.executable.dir}/../data"
+							/>
+						</copy>
+					</then>
+				</if>
 
 				<if>
 					<available file="${zip.executable.dir}/../deploy" />
@@ -2681,6 +2792,20 @@ plugins.includes=</echo>
 						>
 							<fileset
 								dir="${zip.executable.dir}/../elasticsearch-sidecar"
+							/>
+						</copy>
+					</then>
+				</if>
+
+				<if>
+					<available file="${zip.executable.dir}/../glowroot" />
+					<then>
+						<copy
+							preservelastmodified="true"
+							todir="dist/${tstamp.value}/liferay-portal-${lp.version}/glowroot"
+						>
+							<fileset
+								dir="${zip.executable.dir}/../glowroot"
 							/>
 						</copy>
 					</then>
@@ -2783,6 +2908,7 @@ plugins.includes=</echo>
 								<arg value="catalina.sh" />
 								<arg value="run" />
 								<env key="LIFERAY_CLEAN_OSGI_STATE" value="true" />
+								<redirector alwayslog="true" errorproperty="portal.startup.error" outputproperty="portal.startup.output" />
 							</exec>
 
 							<sequential>
@@ -2790,7 +2916,10 @@ plugins.includes=</echo>
 									<http url="http://localhost:8080" />
 								</waitfor>
 
-								<sleep seconds="5" />
+								<get
+									dest="${zip.executable.dir}/../homepage.html"
+									src="http://localhost:8080"
+								/>
 
 								<exec dir="dist/${tstamp.value}/liferay-portal-${lp.version}/tomcat-${app.server.tomcat.version}/bin" executable="sh">
 									<arg value="shutdown.sh" />
@@ -2805,6 +2934,15 @@ plugins.includes=</echo>
 								</delete>
 							</sequential>
 						</parallel>
+
+						<echo />
+						<echo>Portal Startup Output:</echo>
+						<echo />
+						<echo>${portal.startup.output}</echo>
+						<echo />
+						<echo>Portal Startup Error Output:</echo>
+						<echo />
+						<echo>${portal.startup.error}</echo>
 					</then>
 				</if>
 

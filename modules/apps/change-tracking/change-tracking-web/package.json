@@ -1,6 +1,39 @@
 {
 	"dependencies": {
-		"moment": "2.29.4",
+		"@clayui/alert": "3.106.1",
+		"@clayui/badge": "3.107.0",
+		"@clayui/breadcrumb": "3.107.0",
+		"@clayui/button": "3.107.0",
+		"@clayui/core": "3.107.1",
+		"@clayui/data-provider": "3.107.0",
+		"@clayui/date-picker": "3.107.1",
+		"@clayui/drop-down": "3.107.1",
+		"@clayui/empty-state": "3.106.1",
+		"@clayui/form": "3.107.0",
+		"@clayui/icon": "3.106.1",
+		"@clayui/label": "3.106.1",
+		"@clayui/layout": "3.106.1",
+		"@clayui/link": "3.106.1",
+		"@clayui/list": "3.107.1",
+		"@clayui/loading-indicator": "3.106.1",
+		"@clayui/modal": "3.107.0",
+		"@clayui/multi-select": "3.107.1",
+		"@clayui/navigation-bar": "3.107.0",
+		"@clayui/pagination-bar": "3.107.1",
+		"@clayui/panel": "3.107.0",
+		"@clayui/popover": "3.107.0",
+		"@clayui/progress-bar": "3.106.1",
+		"@clayui/sticker": "3.106.1",
+		"@clayui/table": "3.106.1",
+		"@clayui/tabs": "3.107.0",
+		"@clayui/time-picker": "3.107.0",
+		"@clayui/toolbar": "3.107.0",
+		"@clayui/tooltip": "3.107.0",
+		"classnames": "2.3.1",
+		"frontend-js-components-web": "*",
+		"frontend-js-web": "*",
+		"prop-types": "15.7.2",
+		"react": "16.12.0",
 		"react-transition-group": "4.4.1"
 	},
 	"name": "change-tracking-web",
@@ -9,5 +42,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "2.0.82"
+	"version": "2.0.118"
 }

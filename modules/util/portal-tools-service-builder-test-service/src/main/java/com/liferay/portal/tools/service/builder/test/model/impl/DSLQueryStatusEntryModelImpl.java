@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
@@ -206,58 +197,75 @@ public class DSLQueryStatusEntryModelImpl
 	public Map<String, Function<DSLQueryStatusEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<DSLQueryStatusEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<DSLQueryStatusEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<DSLQueryStatusEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<DSLQueryStatusEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<DSLQueryStatusEntry, Object>>();
-		Map<String, BiConsumer<DSLQueryStatusEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<DSLQueryStatusEntry, ?>>();
+		private static final Map<String, Function<DSLQueryStatusEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"dslQueryStatusEntryId",
-			DSLQueryStatusEntry::getDslQueryStatusEntryId);
-		attributeSetterBiConsumers.put(
-			"dslQueryStatusEntryId",
-			(BiConsumer<DSLQueryStatusEntry, Long>)
-				DSLQueryStatusEntry::setDslQueryStatusEntryId);
-		attributeGetterFunctions.put(
-			"dslQueryEntryId", DSLQueryStatusEntry::getDslQueryEntryId);
-		attributeSetterBiConsumers.put(
-			"dslQueryEntryId",
-			(BiConsumer<DSLQueryStatusEntry, Long>)
-				DSLQueryStatusEntry::setDslQueryEntryId);
-		attributeGetterFunctions.put("status", DSLQueryStatusEntry::getStatus);
-		attributeSetterBiConsumers.put(
-			"status",
-			(BiConsumer<DSLQueryStatusEntry, String>)
-				DSLQueryStatusEntry::setStatus);
-		attributeGetterFunctions.put(
-			"statusDate", DSLQueryStatusEntry::getStatusDate);
-		attributeSetterBiConsumers.put(
-			"statusDate",
-			(BiConsumer<DSLQueryStatusEntry, Date>)
-				DSLQueryStatusEntry::setStatusDate);
+		static {
+			Map<String, Function<DSLQueryStatusEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<DSLQueryStatusEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"dslQueryStatusEntryId",
+				DSLQueryStatusEntry::getDslQueryStatusEntryId);
+			attributeGetterFunctions.put(
+				"dslQueryEntryId", DSLQueryStatusEntry::getDslQueryEntryId);
+			attributeGetterFunctions.put(
+				"status", DSLQueryStatusEntry::getStatus);
+			attributeGetterFunctions.put(
+				"statusDate", DSLQueryStatusEntry::getStatusDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<DSLQueryStatusEntry, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<DSLQueryStatusEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<DSLQueryStatusEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"dslQueryStatusEntryId",
+				(BiConsumer<DSLQueryStatusEntry, Long>)
+					DSLQueryStatusEntry::setDslQueryStatusEntryId);
+			attributeSetterBiConsumers.put(
+				"dslQueryEntryId",
+				(BiConsumer<DSLQueryStatusEntry, Long>)
+					DSLQueryStatusEntry::setDslQueryEntryId);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<DSLQueryStatusEntry, String>)
+					DSLQueryStatusEntry::setStatus);
+			attributeSetterBiConsumers.put(
+				"statusDate",
+				(BiConsumer<DSLQueryStatusEntry, Date>)
+					DSLQueryStatusEntry::setStatusDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -569,7 +577,8 @@ public class DSLQueryStatusEntryModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<DSLQueryStatusEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

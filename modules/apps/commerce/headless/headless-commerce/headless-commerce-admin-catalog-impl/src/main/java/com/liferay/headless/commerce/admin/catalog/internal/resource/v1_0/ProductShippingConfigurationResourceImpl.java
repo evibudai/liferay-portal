@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
@@ -19,15 +10,14 @@ import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductShippingConfiguration;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.ProductShippingConfigurationDTOConverter;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductShippingConfigurationUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductShippingConfigurationResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 
 import javax.ws.rs.core.Response;
 
@@ -40,15 +30,12 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/product-shipping-configuration.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {
-		NestedFieldSupport.class, ProductShippingConfigurationResource.class
-	}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = ProductShippingConfigurationResource.class
 )
 @CTAware
 public class ProductShippingConfigurationResourceImpl
-	extends BaseProductShippingConfigurationResourceImpl
-	implements NestedFieldSupport {
+	extends BaseProductShippingConfigurationResourceImpl {
 
 	@Override
 	public ProductShippingConfiguration
@@ -82,7 +69,7 @@ public class ProductShippingConfigurationResourceImpl
 
 		if (cpDefinition == null) {
 			throw new NoSuchCPDefinitionException(
-				"Unable to find Product with ID: " + id);
+				"Unable to find product with ID " + id);
 		}
 
 		return _toProductShippingConfiguration(
@@ -124,7 +111,7 @@ public class ProductShippingConfigurationResourceImpl
 
 		if (cpDefinition == null) {
 			throw new NoSuchCPDefinitionException(
-				"Unable to find Product with ID: " + id);
+				"Unable to find product with ID " + id);
 		}
 
 		_updateProductShippingConfiguration(
@@ -163,8 +150,10 @@ public class ProductShippingConfigurationResourceImpl
 	@Reference
 	private CPDefinitionService _cpDefinitionService;
 
-	@Reference
-	private ProductShippingConfigurationDTOConverter
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.ProductShippingConfigurationDTOConverter)"
+	)
+	private DTOConverter<CPDefinition, ProductShippingConfiguration>
 		_productShippingConfigurationDTOConverter;
 
 	@Reference

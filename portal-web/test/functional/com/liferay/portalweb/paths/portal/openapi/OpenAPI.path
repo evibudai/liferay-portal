@@ -14,13 +14,33 @@
 <!--SCHEMA-->
 
 <tr>
-	<td>SCHEMA_TITLE</td>
+	<td>SCHEMA_ENTITY</td>
 	<td>//div[@id='model-${schema}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SCHEMA_FIELD</td>
 	<td>//div[@id='model-${schema}']//td[contains(.,'${field}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SCHEMA_COLLAPSED</td>
+	<td>//div[(@id='model-${schema}')]//span[contains(@class,'collapsed')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SCHEMA_FIELD_COLLAPSED</td>
+	<td>//div[@id='model-${schema}']//tr[contains(.,'${field}')]//span[contains(@class,'collapsed')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SCHEMA_PROPERTY_COLLAPSED</td>
+	<td>//div[(@id='model-${schema}')]//tr[contains(.,'${field}')]//tr[contains(.,'${property}')]//span[(@class='model-toggle collapsed')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SCHEMA_PROPERTY</td>
+	<td>//div[(@id='model-${schema}')]//tr[contains(.,'${field}')]//tr[contains(.,'${property}')]</td>
 	<td></td>
 </tr>
 
@@ -32,8 +52,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>API_URL</td>
+	<td>//span[@class='url']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_WRAPPER</td>
+	<td>//*[@class='errors-wrapper']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PARAMETER_UNDER_METHOD</td>
 	<td>//div[contains(@id,'${method}')]//input[contains(@placeholder,'${parameter}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PARAMETER_TYPE</td>
+	<td>//td[@class='parameters-col_name' and contains(.,'${parameter}') and contains(.,'${type}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -43,7 +78,7 @@
 </tr>
 <tr>
 	<td>RESPONSE_BODY</td>
-	<td>//div[contains(@id,'${method}')]//td[contains(.,'Response body')]//div[contains(@class,'highlight-code')]</td>
+	<td>//div[contains(@id,'${method}')]//td[contains(.,'Response body')]//code[contains(@class,'language-json')]</td>
 	<td></td>
 </tr>
 <tr>

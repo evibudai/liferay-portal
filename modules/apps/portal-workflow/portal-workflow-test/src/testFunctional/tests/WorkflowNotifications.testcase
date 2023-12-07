@@ -23,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,10 +38,10 @@ definition {
 	}
 
 	@description = "LPS-135888 - Verify that the user with Account role type receives the notification for review"
-	@priority = "4"
+	@priority = 4
 	test AccountUserReceivesNotification {
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "WorkflowNotifications#AccountUserReceivesNotification";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -58,6 +58,10 @@ definition {
 			userScreenName = "buyeruser",
 			userSiteMembership = "Minium");
 
+		Account.openAccountsAdmin();
+
+		LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 		Account.addAssigneeToRoleViaRolesTab(
 			accountRoleTitle = "Account Administrator",
 			assigneeName = "Buyer");
@@ -69,10 +73,7 @@ definition {
 			requirePasswordReset = "false",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Store Management",
-			panel = "Commerce",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -82,11 +83,11 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Transmission Cooler Line Assembly",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -108,13 +109,14 @@ definition {
 		Notifications.viewSuccessfulPublication(
 			contentBody = "for review in the workflow.",
 			portletName = "Test Test",
-			publicationType = "sent you a Commerce Order");
+			publicationType = "sent you a Order");
 	}
 
 	@description = "Verify that the user can open new user details by notifications"
-	@priority = "3"
+	@priority = 3
 	test CanOpenNewUserDetailsByNotifications {
-		property test.name.skip.portal.instance = "WorkflowNotifications#CanOpenNewUserDetailsByNotifications";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given Workflow is configured to Single Approver for User") {
 			Workflow.openWorkflowListView();
@@ -151,9 +153,10 @@ definition {
 	}
 
 	@description = "LPS-135888 - Verify that when the user delete the order, the notifications are not displayed"
-	@priority = "4"
+	@priority = 4
 	test NotificationIsNotAvailableWhenOrderIsDeleted {
-		property test.name.skip.portal.instance = "WorkflowNotifications#NotificationIsNotAvailableWhenOrderIsDeleted";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -170,14 +173,15 @@ definition {
 			userScreenName = "buyeruser",
 			userSiteMembership = "Minium");
 
+		Account.openAccountsAdmin();
+
+		LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 		Account.addAssigneeToRoleViaRolesTab(
 			accountRoleTitle = "Account Administrator",
 			assigneeName = "Buyer");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Store Management",
-			panel = "Commerce",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -187,11 +191,11 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Transmission Cooler Line Assembly",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 

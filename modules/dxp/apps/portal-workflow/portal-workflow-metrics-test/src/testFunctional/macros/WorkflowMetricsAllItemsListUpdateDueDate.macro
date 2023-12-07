@@ -1,7 +1,8 @@
 definition {
 
-	macro selectUpdateDueDateCardFilterValueProcessStep {
-		var key_workflowStep = "${workflowStep}";
+	@summary = "Default summary"
+	macro selectUpdateDueDateCardFilterValueProcessStep(workflowStep = null) {
+		var key_workflowStep = ${workflowStep};
 
 		Click(locator1 = "WorkflowMetricsAllItemsListUpdateDueDate#METRICS_UPDATE_DUE_DATE_CARD_FILTER_PROCESS_STEP");
 
@@ -10,8 +11,9 @@ definition {
 		Click(locator1 = "WorkflowMetricsAllItemsListUpdateDueDate#METRICS_UPDATE_DUE_DATE_CARD_FILTER_PROCESS_STEP");
 	}
 
-	macro selectUpdateDueDateTasksCardFilterValueAssignee {
-		var key_workflowAssignee = "${workflowAssignee}";
+	@summary = "Default summary"
+	macro selectUpdateDueDateTasksCardFilterValueAssignee(workflowAssignee = null) {
+		var key_workflowAssignee = ${workflowAssignee};
 
 		Click(locator1 = "WorkflowMetricsAllItemsListUpdateDueDate#METRICS_UPDATE_DUE_DATE_CARD_FILTER_ASSIGNEE");
 

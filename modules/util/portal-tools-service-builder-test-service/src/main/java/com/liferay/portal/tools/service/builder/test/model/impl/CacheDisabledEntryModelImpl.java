@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
@@ -207,46 +198,61 @@ public class CacheDisabledEntryModelImpl
 	public Map<String, Function<CacheDisabledEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CacheDisabledEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CacheDisabledEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CacheDisabledEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CacheDisabledEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<CacheDisabledEntry, Object>>();
-		Map<String, BiConsumer<CacheDisabledEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<CacheDisabledEntry, ?>>();
+		private static final Map<String, Function<CacheDisabledEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"cacheDisabledEntryId",
-			CacheDisabledEntry::getCacheDisabledEntryId);
-		attributeSetterBiConsumers.put(
-			"cacheDisabledEntryId",
-			(BiConsumer<CacheDisabledEntry, Long>)
-				CacheDisabledEntry::setCacheDisabledEntryId);
-		attributeGetterFunctions.put("name", CacheDisabledEntry::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<CacheDisabledEntry, String>)
-				CacheDisabledEntry::setName);
+		static {
+			Map<String, Function<CacheDisabledEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CacheDisabledEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"cacheDisabledEntryId",
+				CacheDisabledEntry::getCacheDisabledEntryId);
+			attributeGetterFunctions.put("name", CacheDisabledEntry::getName);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<CacheDisabledEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CacheDisabledEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CacheDisabledEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"cacheDisabledEntryId",
+				(BiConsumer<CacheDisabledEntry, Long>)
+					CacheDisabledEntry::setCacheDisabledEntryId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<CacheDisabledEntry, String>)
+					CacheDisabledEntry::setName);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -520,7 +526,8 @@ public class CacheDisabledEntryModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<CacheDisabledEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

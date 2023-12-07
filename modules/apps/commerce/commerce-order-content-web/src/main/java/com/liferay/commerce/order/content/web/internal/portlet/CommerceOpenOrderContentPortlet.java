@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.portlet;
 
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderWebKeys;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.model.CommerceOrder;
@@ -25,6 +17,7 @@ import com.liferay.commerce.order.content.web.internal.display.context.CommerceO
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.order.importer.type.CommerceOrderImporterTypeRegistry;
 import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegrationRegistry;
 import com.liferay.commerce.payment.method.CommercePaymentMethodRegistry;
 import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalService;
 import com.liferay.commerce.percentage.PercentageFormatter;
@@ -34,10 +27,10 @@ import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderNoteService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
-import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.commerce.term.service.CommerceTermEntryService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -59,6 +52,8 @@ import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -86,7 +81,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.security-role-ref=power-user,user",
 		"javax.portlet.version=3.0"
 	},
-	service = {CommerceOpenOrderContentPortlet.class, Portlet.class}
+	service = Portlet.class
 )
 public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 
@@ -105,9 +100,10 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 						_commerceOrderNoteService,
 						_commerceOrderPriceCalculation, _commerceOrderService,
 						_commerceOrderStatusRegistry, _commerceOrderTypeService,
+						_commercePaymentIntegrationRegistry,
 						_commercePaymentMethodGroupRelLocalService,
 						_commercePaymentMethodRegistry,
-						_commerceShipmentItemService, _commerceTermEntryService,
+						_commerceTermEntryService, _configurationProvider,
 						_dlAppLocalService,
 						_portal.getHttpServletRequest(renderRequest),
 						_itemSelector, _modelResourcePermission,
@@ -146,24 +142,37 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest)
-		throws PortalException {
-
+	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest) {
 		String commerceOrderUuid = ParamUtil.getString(
 			portletRequest, "commerceOrderUuid");
 
-		if (Validator.isNotNull(commerceOrderUuid)) {
-			long groupId =
-				_commerceChannelLocalService.
-					getCommerceChannelGroupIdBySiteGroupId(
-						_portal.getScopeGroupId(portletRequest));
+		try {
+			if (Validator.isNotNull(commerceOrderUuid)) {
+				long groupId =
+					_commerceChannelLocalService.
+						getCommerceChannelGroupIdBySiteGroupId(
+							_portal.getScopeGroupId(portletRequest));
 
-			return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
-				commerceOrderUuid, groupId);
+				return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
+					commerceOrderUuid, groupId);
+			}
+
+			HttpServletRequest httpServletRequest =
+				_portal.getHttpServletRequest(portletRequest);
+
+			httpServletRequest.setAttribute(
+				CommerceOrderWebKeys.MERGE_GUEST_ORDER, Boolean.FALSE);
+
+			return _commerceOrderHttpHelper.getCurrentCommerceOrder(
+				httpServletRequest);
 		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
 
-		return _commerceOrderHttpHelper.getCurrentCommerceOrder(
-			_portal.getHttpServletRequest(portletRequest));
+			return null;
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -204,6 +213,10 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 	private CommerceOrderValidatorRegistry _commerceOrderValidatorRegistry;
 
 	@Reference
+	private CommercePaymentIntegrationRegistry
+		_commercePaymentIntegrationRegistry;
+
+	@Reference
 	private CommercePaymentMethodGroupRelLocalService
 		_commercePaymentMethodGroupRelLocalService;
 
@@ -211,10 +224,10 @@ public class CommerceOpenOrderContentPortlet extends MVCPortlet {
 	private CommercePaymentMethodRegistry _commercePaymentMethodRegistry;
 
 	@Reference
-	private CommerceShipmentItemService _commerceShipmentItemService;
+	private CommerceTermEntryService _commerceTermEntryService;
 
 	@Reference
-	private CommerceTermEntryService _commerceTermEntryService;
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;

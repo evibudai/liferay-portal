@@ -1,23 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Account;
 import com.liferay.portal.kernel.model.User;
@@ -26,6 +16,8 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
+import java.util.Objects;
+
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -33,11 +25,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Andrea Sbarra
  */
 @Component(
-	property = "dto.class.name=com.liferay.commerce.account.model.CommerceAccount",
-	service = {AccountDTOConverter.class, DTOConverter.class}
+	property = "dto.class.name=com.liferay.account.model.AccountEntry",
+	service = DTOConverter.class
 )
 public class AccountDTOConverter
-	implements DTOConverter<CommerceAccount, Account> {
+	implements DTOConverter<AccountEntry, Account> {
 
 	@Override
 	public String getContentType() {
@@ -48,10 +40,10 @@ public class AccountDTOConverter
 	public Account toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		CommerceAccount commerceAccount;
+		AccountEntry accountEntry;
 
 		if ((Long)dtoConverterContext.getId() ==
-				CommerceAccountConstants.ACCOUNT_ID_GUEST) {
+				AccountConstants.ACCOUNT_ENTRY_ID_GUEST) {
 
 			User user = dtoConverterContext.getUser();
 
@@ -60,38 +52,58 @@ public class AccountDTOConverter
 					PrincipalThreadLocal.getUserId());
 			}
 
-			commerceAccount =
-				_commerceAccountLocalService.getGuestCommerceAccount(
-					user.getCompanyId());
+			accountEntry = _accountEntryLocalService.getGuestAccountEntry(
+				user.getCompanyId());
 		}
 		else {
-			commerceAccount = _commerceAccountService.getCommerceAccount(
+			accountEntry = _accountEntryLocalService.getAccountEntry(
 				(Long)dtoConverterContext.getId());
 		}
 
-		ExpandoBridge expandoBridge = commerceAccount.getExpandoBridge();
+		ExpandoBridge expandoBridge = accountEntry.getExpandoBridge();
 
 		return new Account() {
 			{
 				customFields = expandoBridge.getAttributes();
-				emailAddress = commerceAccount.getEmail();
-				externalReferenceCode =
-					commerceAccount.getExternalReferenceCode();
-				id = commerceAccount.getCommerceAccountId();
-				logoId = commerceAccount.getLogoId();
-				name = commerceAccount.getName();
-				root = commerceAccount.isRoot();
-				taxId = commerceAccount.getTaxId();
-				type = commerceAccount.getType();
+				emailAddress = accountEntry.getEmailAddress();
+				externalReferenceCode = accountEntry.getExternalReferenceCode();
+				id = accountEntry.getAccountEntryId();
+				logoId = accountEntry.getLogoId();
+				name = accountEntry.getName();
+				root =
+					accountEntry.getParentAccountEntryId() ==
+						AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT;
+				taxId = accountEntry.getTaxIdNumber();
+				type = _getCommerceAccountType(accountEntry.getType());
 			}
 		};
 	}
 
-	@Reference
-	private CommerceAccountLocalService _commerceAccountLocalService;
+	private Integer _getCommerceAccountType(String accountEntryType) {
+		if (Objects.equals(
+				accountEntryType,
+				AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS)) {
+
+			return 2;
+		}
+		else if (Objects.equals(
+					accountEntryType,
+					AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST)) {
+
+			return 0;
+		}
+		else if (Objects.equals(
+					accountEntryType,
+					AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON)) {
+
+			return 1;
+		}
+
+		return 0;
+	}
 
 	@Reference
-	private CommerceAccountService _commerceAccountService;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

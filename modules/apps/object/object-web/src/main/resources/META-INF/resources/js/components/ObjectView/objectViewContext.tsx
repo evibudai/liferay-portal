@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {getLocalizableLabel} from '@liferay/object-js-components-web';
 import React, {createContext, useContext, useReducer} from 'react';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {
 	TObjectView,
 	TObjectViewColumn,
@@ -22,6 +15,7 @@ import {
 	TState,
 	TWorkflowStatus,
 } from './types';
+
 interface IViewContextProps extends Array<TState | Function> {
 	0: typeof initialState;
 	1: React.Dispatch<React.ReducerAction<React.Reducer<TState, TAction>>>;
@@ -32,7 +26,6 @@ interface TInitialFilterColumn extends TObjectViewFilterColumn {
 	valueSummary: string;
 }
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 const ViewContext = createContext({} as IViewContextProps);
 
 export enum TYPES {
@@ -80,25 +73,25 @@ const handleChangeColumnOrder = (
 	return newColumn;
 };
 
-type TSortOptions = {
-	label: string;
-	value: string;
-};
-
 export type TAction =
 	| {
 			payload: {
+				creationLanguageId: Liferay.Language.Locale;
 				objectFields: ObjectField[];
 				objectView: TObjectView;
 			};
 			type: TYPES.ADD_OBJECT_VIEW;
 	  }
 	| {
-			payload: {selectedObjectFields: ObjectField[]};
+			payload: {
+				creationLanguageId: Liferay.Language.Locale;
+				selectedObjectFields: ObjectField[];
+			};
 			type: TYPES.ADD_OBJECT_VIEW_COLUMN;
 	  }
 	| {
 			payload: {
+				creationLanguageId: Liferay.Language.Locale;
 				filterType?: string;
 				objectFieldName: string;
 				valueList?: IItem[];
@@ -107,10 +100,11 @@ export type TAction =
 	  }
 	| {
 			payload: {
+				creationLanguageId: Liferay.Language.Locale;
 				objectFieldName: string;
 				objectFields: ObjectField[];
 				objectViewSortColumns?: TObjectViewSortColumn[];
-				selectedObjetSort: TSortOptions;
+				selectedObjetSortValue: string;
 			};
 			type: TYPES.ADD_OBJECT_VIEW_SORT_COLUMN;
 	  }
@@ -184,7 +178,11 @@ export type TAction =
 const viewReducer = (state: TState, action: TAction) => {
 	switch (action.type) {
 		case TYPES.ADD_OBJECT_VIEW: {
-			const {objectFields, objectView} = action.payload;
+			const {
+				creationLanguageId,
+				objectFields,
+				objectView,
+			} = action.payload;
 
 			const {
 				objectViewColumns,
@@ -237,9 +235,11 @@ const viewReducer = (state: TState, action: TAction) => {
 						newObjectViewColumns.push({
 							...viewColumn,
 							defaultSort: false,
-							fieldLabel: objectField.label[
-								defaultLanguageId
-							] as string,
+							fieldLabel: getLocalizableLabel(
+								creationLanguageId,
+								objectField.label,
+								objectField.name
+							),
 							label: viewColumn.label,
 							objectFieldBusinessType: objectField.businessType,
 						});
@@ -253,9 +253,11 @@ const viewReducer = (state: TState, action: TAction) => {
 						if (objectField.name === sortColumn.objectFieldName) {
 							newObjectViewSortColumns.push({
 								...sortColumn,
-								fieldLabel: objectField.label[
-									defaultLanguageId
-								] as string,
+								fieldLabel: getLocalizableLabel(
+									creationLanguageId,
+									objectField.label,
+									objectField.name
+								),
 							});
 						}
 					});
@@ -313,7 +315,11 @@ const viewReducer = (state: TState, action: TAction) => {
 						...filterColumn,
 						definition,
 						fieldLabel: objectField
-							? objectField.label[defaultLanguageId]
+							? getLocalizableLabel(
+									creationLanguageId,
+									objectField.label,
+									objectField.name
+							  )
 							: '',
 						filterBy: objectFieldName,
 						filterType,
@@ -323,8 +329,18 @@ const viewReducer = (state: TState, action: TAction) => {
 				}
 			);
 
+			let newObjectViewName = objectView.name;
+
+			if (!objectView.name[defaultLanguageId]) {
+				newObjectViewName = {
+					...newObjectViewName,
+					[defaultLanguageId]: objectView.name[creationLanguageId],
+				};
+			}
+
 			const newObjectView = {
 				...objectView,
+				name: newObjectViewName,
 				objectViewColumns: newObjectViewColumns,
 				objectViewFilterColumns: newObjectViewFilterColumns,
 				objectViewSortColumns: newObjectViewSortColumns,
@@ -332,12 +348,13 @@ const viewReducer = (state: TState, action: TAction) => {
 
 			return {
 				...state,
+				creationLanguageId,
 				objectFields: newObjectFields,
 				objectView: newObjectView,
 			};
 		}
 		case TYPES.ADD_OBJECT_VIEW_COLUMN: {
-			const {selectedObjectFields} = action.payload;
+			const {creationLanguageId, selectedObjectFields} = action.payload;
 
 			const {objectView} = state;
 			const {objectViewSortColumns} = objectView;
@@ -351,7 +368,11 @@ const viewReducer = (state: TState, action: TAction) => {
 					return {
 						...item,
 						defaultSort: defaultSortColumn ? true : false,
-						fieldLabel: item.label[defaultLanguageId],
+						fieldLabel: getLocalizableLabel(
+							creationLanguageId,
+							item.label,
+							item.name
+						),
 						label: item.label,
 						objectFieldBusinessType: item.businessType,
 						objectFieldName: item.name,
@@ -371,7 +392,12 @@ const viewReducer = (state: TState, action: TAction) => {
 			};
 		}
 		case TYPES.ADD_OBJECT_VIEW_FILTER_COLUMN: {
-			const {filterType, objectFieldName, valueList} = action.payload;
+			const {
+				creationLanguageId,
+				filterType,
+				objectFieldName,
+				valueList,
+			} = action.payload;
 
 			const labels: LocalizedValue<string>[] = [];
 			let objectFieldBusinessType;
@@ -406,7 +432,7 @@ const viewReducer = (state: TState, action: TAction) => {
 								: [],
 					  }
 					: null,
-				fieldLabel: label[defaultLanguageId],
+				fieldLabel: getLocalizableLabel(creationLanguageId, label),
 				filterBy: label[defaultLanguageId],
 				filterType: filterTypeValue,
 				label,
@@ -448,10 +474,11 @@ const viewReducer = (state: TState, action: TAction) => {
 		}
 		case TYPES.ADD_OBJECT_VIEW_SORT_COLUMN: {
 			const {
+				creationLanguageId,
 				objectFieldName,
 				objectFields,
 				objectViewSortColumns,
-				selectedObjetSort,
+				selectedObjetSortValue,
 			} = action.payload;
 
 			const objectView = {...state.objectView};
@@ -472,10 +499,10 @@ const viewReducer = (state: TState, action: TAction) => {
 			const [label] = labels;
 
 			const newSortColumnItem: TObjectViewSortColumn = {
-				fieldLabel: label[defaultLanguageId],
+				fieldLabel: getLocalizableLabel(creationLanguageId, label),
 				label,
 				objectFieldName,
-				sortOrder: selectedObjetSort.value,
+				sortOrder: selectedObjetSortValue,
 			};
 
 			if (!objectViewSortColumns) {
@@ -528,6 +555,7 @@ const viewReducer = (state: TState, action: TAction) => {
 			const newObjectView = {
 				...state.objectView,
 				name: {
+					...state.objectView.name,
 					[defaultLanguageId]: newName,
 				},
 			};
@@ -808,7 +836,7 @@ interface IViewContextProviderProps extends React.HTMLAttributes<HTMLElement> {
 		isViewOnly: boolean;
 		objectDefinitionExternalReferenceCode: string;
 		objectViewId: string;
-		workflowStatusJSONArray: TWorkflowStatus[];
+		workflowStatuses: TWorkflowStatus[];
 	};
 }
 

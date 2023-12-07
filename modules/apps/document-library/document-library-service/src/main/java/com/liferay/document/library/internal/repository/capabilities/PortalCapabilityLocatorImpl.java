@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.repository.capabilities;
@@ -18,9 +9,7 @@ import com.liferay.document.library.kernel.service.DLAppHelperLocalService;
 import com.liferay.document.library.kernel.service.DLFolderService;
 import com.liferay.document.library.security.io.InputStreamSanitizer;
 import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
-import com.liferay.document.library.sync.service.DLSyncEventLocalService;
 import com.liferay.portal.kernel.cache.CacheRegistryItem;
-import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.repository.DocumentRepository;
 import com.liferay.portal.kernel.repository.capabilities.BulkOperationCapability;
 import com.liferay.portal.kernel.repository.capabilities.CommentCapability;
@@ -31,7 +20,6 @@ import com.liferay.portal.kernel.repository.capabilities.PortalCapabilityLocator
 import com.liferay.portal.kernel.repository.capabilities.ProcessorCapability;
 import com.liferay.portal.kernel.repository.capabilities.RelatedModelCapability;
 import com.liferay.portal.kernel.repository.capabilities.RepositoryEventTriggerCapability;
-import com.liferay.portal.kernel.repository.capabilities.SyncCapability;
 import com.liferay.portal.kernel.repository.capabilities.TemporaryFileEntriesCapability;
 import com.liferay.portal.kernel.repository.capabilities.ThumbnailCapability;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
@@ -41,7 +29,6 @@ import com.liferay.portal.repository.capabilities.util.DLAppServiceAdapter;
 import com.liferay.portal.repository.capabilities.util.DLFileEntryServiceAdapter;
 import com.liferay.portal.repository.capabilities.util.DLFileVersionServiceAdapter;
 import com.liferay.portal.repository.capabilities.util.DLFolderServiceAdapter;
-import com.liferay.portal.repository.capabilities.util.GroupServiceAdapter;
 import com.liferay.portal.repository.capabilities.util.RepositoryEntryChecker;
 import com.liferay.portal.repository.capabilities.util.RepositoryEntryConverter;
 import com.liferay.portal.repository.capabilities.util.RepositoryServiceAdapter;
@@ -53,6 +40,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -61,9 +49,8 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Adolfo Pérez
  */
-@Component(service = {CacheRegistryItem.class, PortalCapabilityLocator.class})
-public class PortalCapabilityLocatorImpl
-	implements CacheRegistryItem, PortalCapabilityLocator {
+@Component(service = PortalCapabilityLocator.class)
+public class PortalCapabilityLocatorImpl implements PortalCapabilityLocator {
 
 	@Override
 	public BulkOperationCapability getBulkOperationCapability(
@@ -123,13 +110,6 @@ public class PortalCapabilityLocatorImpl
 	}
 
 	@Override
-	public String getRegistryName() {
-		Class<?> clazz = getClass();
-
-		return clazz.getName();
-	}
-
-	@Override
 	public RelatedModelCapability getRelatedModelCapability(
 		DocumentRepository documentRepository) {
 
@@ -147,15 +127,6 @@ public class PortalCapabilityLocatorImpl
 
 		return new LiferayRepositoryEventTriggerCapability(
 			repositoryEventTrigger);
-	}
-
-	@Override
-	public SyncCapability getSyncCapability(
-		DocumentRepository documentRepository) {
-
-		return new LiferaySyncCapability(
-			GroupServiceAdapter.create(documentRepository),
-			_dlSyncEventLocalService, _messageBus);
 	}
 
 	@Override
@@ -204,11 +175,6 @@ public class PortalCapabilityLocatorImpl
 			DLFileVersionServiceAdapter.create(documentRepository));
 	}
 
-	@Override
-	public void invalidate() {
-		_clearLiferayDynamicCapabilities();
-	}
-
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
@@ -219,11 +185,16 @@ public class PortalCapabilityLocatorImpl
 		_reusingProcessorCapability = new LiferayProcessorCapability(
 			ProcessorCapability.ResourceGenerationStrategy.REUSE,
 			_dlFileVersionPreviewLocalService, _inputStreamSanitizer);
+		_serviceRegistration = bundleContext.registerService(
+			CacheRegistryItem.class, new PortalCapabilityCacheRegistryItem(),
+			null);
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		_clearLiferayDynamicCapabilities();
+
+		_serviceRegistration.unregister();
 	}
 
 	private void _clearLiferayDynamicCapabilities() {
@@ -251,20 +222,14 @@ public class PortalCapabilityLocatorImpl
 	private DLFolderService _dlFolderService;
 
 	@Reference
-	private DLSyncEventLocalService _dlSyncEventLocalService;
-
-	@Reference
 	private InputStreamSanitizer _inputStreamSanitizer;
 
 	private final Map<DocumentRepository, LiferayDynamicCapability>
 		_liferayDynamicCapabilities = new ConcurrentHashMap<>();
-
-	@Reference
-	private MessageBus _messageBus;
-
 	private final RepositoryEntryConverter _repositoryEntryConverter =
 		new RepositoryEntryConverter();
 	private ProcessorCapability _reusingProcessorCapability;
+	private ServiceRegistration<CacheRegistryItem> _serviceRegistration;
 
 	@Reference
 	private TrashEntryLocalService _trashEntryLocalService;
@@ -274,5 +239,20 @@ public class PortalCapabilityLocatorImpl
 
 	@Reference
 	private TrashVersionLocalService _trashVersionLocalService;
+
+	private class PortalCapabilityCacheRegistryItem
+		implements CacheRegistryItem {
+
+		@Override
+		public String getRegistryName() {
+			return PortalCapabilityLocatorImpl.class.getName();
+		}
+
+		@Override
+		public void invalidate() {
+			_clearLiferayDynamicCapabilities();
+		}
+
+	}
 
 }

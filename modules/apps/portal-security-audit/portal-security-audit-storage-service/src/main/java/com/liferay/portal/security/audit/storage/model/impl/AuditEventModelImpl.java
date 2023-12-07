@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.audit.storage.model.impl;
@@ -72,14 +63,14 @@ public class AuditEventModelImpl
 	public static final String TABLE_NAME = "Audit_AuditEvent";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"auditEventId", Types.BIGINT}, {"companyId", Types.BIGINT},
-		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
-		{"createDate", Types.TIMESTAMP}, {"eventType", Types.VARCHAR},
-		{"className", Types.VARCHAR}, {"classPK", Types.VARCHAR},
-		{"message", Types.VARCHAR}, {"clientHost", Types.VARCHAR},
-		{"clientIP", Types.VARCHAR}, {"serverName", Types.VARCHAR},
-		{"serverPort", Types.INTEGER}, {"sessionID", Types.VARCHAR},
-		{"additionalInfo", Types.CLOB}
+		{"auditEventId", Types.BIGINT}, {"groupId", Types.BIGINT},
+		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
+		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
+		{"eventType", Types.VARCHAR}, {"className", Types.VARCHAR},
+		{"classPK", Types.VARCHAR}, {"message", Types.VARCHAR},
+		{"clientHost", Types.VARCHAR}, {"clientIP", Types.VARCHAR},
+		{"serverName", Types.VARCHAR}, {"serverPort", Types.INTEGER},
+		{"sessionID", Types.VARCHAR}, {"additionalInfo", Types.CLOB}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -87,6 +78,7 @@ public class AuditEventModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("auditEventId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userName", Types.VARCHAR);
@@ -104,7 +96,7 @@ public class AuditEventModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table Audit_AuditEvent (auditEventId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(200) null,createDate DATE null,eventType VARCHAR(75) null,className VARCHAR(200) null,classPK VARCHAR(75) null,message STRING null,clientHost VARCHAR(255) null,clientIP VARCHAR(255) null,serverName VARCHAR(255) null,serverPort INTEGER,sessionID VARCHAR(255) null,additionalInfo TEXT null)";
+		"create table Audit_AuditEvent (auditEventId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(200) null,createDate DATE null,eventType VARCHAR(75) null,className VARCHAR(200) null,classPK VARCHAR(75) null,message STRING null,clientHost VARCHAR(255) null,clientIP VARCHAR(255) null,serverName VARCHAR(255) null,serverPort INTEGER,sessionID VARCHAR(255) null,additionalInfo TEXT null)";
 
 	public static final String TABLE_SQL_DROP = "drop table Audit_AuditEvent";
 
@@ -222,90 +214,114 @@ public class AuditEventModelImpl
 	public Map<String, Function<AuditEvent, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<AuditEvent, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<AuditEvent, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<AuditEvent, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<AuditEvent, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<AuditEvent, Object>>();
-		Map<String, BiConsumer<AuditEvent, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<AuditEvent, ?>>();
+		private static final Map<String, Function<AuditEvent, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"auditEventId", AuditEvent::getAuditEventId);
-		attributeSetterBiConsumers.put(
-			"auditEventId",
-			(BiConsumer<AuditEvent, Long>)AuditEvent::setAuditEventId);
-		attributeGetterFunctions.put("companyId", AuditEvent::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<AuditEvent, Long>)AuditEvent::setCompanyId);
-		attributeGetterFunctions.put("userId", AuditEvent::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<AuditEvent, Long>)AuditEvent::setUserId);
-		attributeGetterFunctions.put("userName", AuditEvent::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setUserName);
-		attributeGetterFunctions.put("createDate", AuditEvent::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<AuditEvent, Date>)AuditEvent::setCreateDate);
-		attributeGetterFunctions.put("eventType", AuditEvent::getEventType);
-		attributeSetterBiConsumers.put(
-			"eventType",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setEventType);
-		attributeGetterFunctions.put("className", AuditEvent::getClassName);
-		attributeSetterBiConsumers.put(
-			"className",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setClassName);
-		attributeGetterFunctions.put("classPK", AuditEvent::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK", (BiConsumer<AuditEvent, String>)AuditEvent::setClassPK);
-		attributeGetterFunctions.put("message", AuditEvent::getMessage);
-		attributeSetterBiConsumers.put(
-			"message", (BiConsumer<AuditEvent, String>)AuditEvent::setMessage);
-		attributeGetterFunctions.put("clientHost", AuditEvent::getClientHost);
-		attributeSetterBiConsumers.put(
-			"clientHost",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setClientHost);
-		attributeGetterFunctions.put("clientIP", AuditEvent::getClientIP);
-		attributeSetterBiConsumers.put(
-			"clientIP",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setClientIP);
-		attributeGetterFunctions.put("serverName", AuditEvent::getServerName);
-		attributeSetterBiConsumers.put(
-			"serverName",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setServerName);
-		attributeGetterFunctions.put("serverPort", AuditEvent::getServerPort);
-		attributeSetterBiConsumers.put(
-			"serverPort",
-			(BiConsumer<AuditEvent, Integer>)AuditEvent::setServerPort);
-		attributeGetterFunctions.put("sessionID", AuditEvent::getSessionID);
-		attributeSetterBiConsumers.put(
-			"sessionID",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setSessionID);
-		attributeGetterFunctions.put(
-			"additionalInfo", AuditEvent::getAdditionalInfo);
-		attributeSetterBiConsumers.put(
-			"additionalInfo",
-			(BiConsumer<AuditEvent, String>)AuditEvent::setAdditionalInfo);
+		static {
+			Map<String, Function<AuditEvent, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<AuditEvent, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"auditEventId", AuditEvent::getAuditEventId);
+			attributeGetterFunctions.put("groupId", AuditEvent::getGroupId);
+			attributeGetterFunctions.put("companyId", AuditEvent::getCompanyId);
+			attributeGetterFunctions.put("userId", AuditEvent::getUserId);
+			attributeGetterFunctions.put("userName", AuditEvent::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", AuditEvent::getCreateDate);
+			attributeGetterFunctions.put("eventType", AuditEvent::getEventType);
+			attributeGetterFunctions.put("className", AuditEvent::getClassName);
+			attributeGetterFunctions.put("classPK", AuditEvent::getClassPK);
+			attributeGetterFunctions.put("message", AuditEvent::getMessage);
+			attributeGetterFunctions.put(
+				"clientHost", AuditEvent::getClientHost);
+			attributeGetterFunctions.put("clientIP", AuditEvent::getClientIP);
+			attributeGetterFunctions.put(
+				"serverName", AuditEvent::getServerName);
+			attributeGetterFunctions.put(
+				"serverPort", AuditEvent::getServerPort);
+			attributeGetterFunctions.put("sessionID", AuditEvent::getSessionID);
+			attributeGetterFunctions.put(
+				"additionalInfo", AuditEvent::getAdditionalInfo);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<AuditEvent, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<AuditEvent, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<AuditEvent, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"auditEventId",
+				(BiConsumer<AuditEvent, Long>)AuditEvent::setAuditEventId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<AuditEvent, Long>)AuditEvent::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<AuditEvent, Long>)AuditEvent::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<AuditEvent, Long>)AuditEvent::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<AuditEvent, Date>)AuditEvent::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"eventType",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setEventType);
+			attributeSetterBiConsumers.put(
+				"className",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setClassName);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setClassPK);
+			attributeSetterBiConsumers.put(
+				"message",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setMessage);
+			attributeSetterBiConsumers.put(
+				"clientHost",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setClientHost);
+			attributeSetterBiConsumers.put(
+				"clientIP",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setClientIP);
+			attributeSetterBiConsumers.put(
+				"serverName",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setServerName);
+			attributeSetterBiConsumers.put(
+				"serverPort",
+				(BiConsumer<AuditEvent, Integer>)AuditEvent::setServerPort);
+			attributeSetterBiConsumers.put(
+				"sessionID",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setSessionID);
+			attributeSetterBiConsumers.put(
+				"additionalInfo",
+				(BiConsumer<AuditEvent, String>)AuditEvent::setAdditionalInfo);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -321,6 +337,21 @@ public class AuditEventModelImpl
 		}
 
 		_auditEventId = auditEventId;
+	}
+
+	@JSON
+	@Override
+	public long getGroupId() {
+		return _groupId;
+	}
+
+	@Override
+	public void setGroupId(long groupId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_groupId = groupId;
 	}
 
 	@JSON
@@ -666,6 +697,7 @@ public class AuditEventModelImpl
 		AuditEventImpl auditEventImpl = new AuditEventImpl();
 
 		auditEventImpl.setAuditEventId(getAuditEventId());
+		auditEventImpl.setGroupId(getGroupId());
 		auditEventImpl.setCompanyId(getCompanyId());
 		auditEventImpl.setUserId(getUserId());
 		auditEventImpl.setUserName(getUserName());
@@ -692,6 +724,7 @@ public class AuditEventModelImpl
 
 		auditEventImpl.setAuditEventId(
 			this.<Long>getColumnOriginalValue("auditEventId"));
+		auditEventImpl.setGroupId(this.<Long>getColumnOriginalValue("groupId"));
 		auditEventImpl.setCompanyId(
 			this.<Long>getColumnOriginalValue("companyId"));
 		auditEventImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
@@ -795,6 +828,8 @@ public class AuditEventModelImpl
 		AuditEventCacheModel auditEventCacheModel = new AuditEventCacheModel();
 
 		auditEventCacheModel.auditEventId = getAuditEventId();
+
+		auditEventCacheModel.groupId = getGroupId();
 
 		auditEventCacheModel.companyId = getCompanyId();
 
@@ -953,6 +988,7 @@ public class AuditEventModelImpl
 	}
 
 	private long _auditEventId;
+	private long _groupId;
 	private long _companyId;
 	private long _userId;
 	private String _userName;
@@ -969,8 +1005,9 @@ public class AuditEventModelImpl
 	private String _additionalInfo;
 
 	public <T> T getColumnValue(String columnName) {
-		Function<AuditEvent, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<AuditEvent, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -996,6 +1033,7 @@ public class AuditEventModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("auditEventId", _auditEventId);
+		_columnOriginalValues.put("groupId", _groupId);
 		_columnOriginalValues.put("companyId", _companyId);
 		_columnOriginalValues.put("userId", _userId);
 		_columnOriginalValues.put("userName", _userName);
@@ -1025,33 +1063,35 @@ public class AuditEventModelImpl
 
 		columnBitmasks.put("auditEventId", 1L);
 
-		columnBitmasks.put("companyId", 2L);
+		columnBitmasks.put("groupId", 2L);
 
-		columnBitmasks.put("userId", 4L);
+		columnBitmasks.put("companyId", 4L);
 
-		columnBitmasks.put("userName", 8L);
+		columnBitmasks.put("userId", 8L);
 
-		columnBitmasks.put("createDate", 16L);
+		columnBitmasks.put("userName", 16L);
 
-		columnBitmasks.put("eventType", 32L);
+		columnBitmasks.put("createDate", 32L);
 
-		columnBitmasks.put("className", 64L);
+		columnBitmasks.put("eventType", 64L);
 
-		columnBitmasks.put("classPK", 128L);
+		columnBitmasks.put("className", 128L);
 
-		columnBitmasks.put("message", 256L);
+		columnBitmasks.put("classPK", 256L);
 
-		columnBitmasks.put("clientHost", 512L);
+		columnBitmasks.put("message", 512L);
 
-		columnBitmasks.put("clientIP", 1024L);
+		columnBitmasks.put("clientHost", 1024L);
 
-		columnBitmasks.put("serverName", 2048L);
+		columnBitmasks.put("clientIP", 2048L);
 
-		columnBitmasks.put("serverPort", 4096L);
+		columnBitmasks.put("serverName", 4096L);
 
-		columnBitmasks.put("sessionID", 8192L);
+		columnBitmasks.put("serverPort", 8192L);
 
-		columnBitmasks.put("additionalInfo", 16384L);
+		columnBitmasks.put("sessionID", 16384L);
+
+		columnBitmasks.put("additionalInfo", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,10 +31,10 @@ definition {
 	}
 
 	@description = "This ensures that a shortcut can be added to a depot."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanAccessShortcut {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDocument.addFile(
 			dmDocumentDescription = "DM Document Description",
@@ -58,7 +58,7 @@ definition {
 	}
 
 	@description = "This ensures that a document with document type and metadata set can be added in a depot."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAddDocumentTypeAndMetadata {
 		JSONDepot.addDepot(
@@ -92,7 +92,7 @@ definition {
 			dmDocumentFile = "Document_1.doc",
 			dmDocumentTitle = "DM Document Title",
 			dmDocumentTypeName = "DM Document Type Name",
-			numericField = "1234",
+			numericField = 1234,
 			textField = "Text");
 
 		DepotNavigator.openToDMEntryInDepot(
@@ -100,12 +100,97 @@ definition {
 			dmDocumentTitle = "DM Document Title");
 
 		DMDocument.viewDocumentTypePG(
-			numericValue = "1234",
+			numericValue = 1234,
 			textContent = "Text");
 	}
 
+	@description = "This ensures that a depot document can be copied to another folder."
+	@priority = 5
+	test CanCopyDocumentToOtherFolder {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Depot Name");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Test Depot Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMDocument.copy(
+			dmDocumentTitle = "DM Document Title",
+			targetFolderName = "DM Folder Name");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+
+		DepotNavigator.openToDMFolder(
+			depotName = "Test Depot Name",
+			folderName = "DM Folder Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a depot folder can be copied to another folder."
+	@priority = 5
+	test CanCopyFolderToOtherFolder {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Depot Name");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name1",
+			groupName = "Test Depot Name");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name2",
+			groupName = "Test Depot Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			folderName = "DM Folder Name1",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMFolder.copy(
+			dmFolderName = "DM Folder Name1",
+			targetFolderName = "DM Folder Name2");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Folder Name1");
+
+		DepotNavigator.openToDMFolder(
+			depotName = "Test Depot Name",
+			folderName = "DM Folder Name2");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Folder Name1");
+
+		DepotNavigator.openToDMFolder(
+			depotName = "Test Depot Name",
+			folderName = "DM Folder Name1",
+			parentFolderName = "DM Folder Name2");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+	}
+
 	@description = "This ensures that a folder can be deleted in a depot."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanDeleteFolder {
 		JSONDepot.addDepot(
@@ -125,7 +210,7 @@ definition {
 	}
 
 	@description = "This test makes sure that all files are deleted when user selects all in a depot."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDeleteMultipleImages {
 		JSONDepot.addDepot(
@@ -147,7 +232,7 @@ definition {
 
 	@description = "This test edits the title and description of a document in a depot."
 	@e2e
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditDocument {
 		property portal.acceptance = "true";
@@ -183,7 +268,7 @@ definition {
 
 	@description = "This ensures that a folder can be edited in a depot."
 	@e2e
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditFolder {
 		JSONDepot.addDepot(
@@ -207,8 +292,162 @@ definition {
 		DMFolder.viewCP(dmFolderName = "DM Folder Name Edit");
 	}
 
+	@description = "This test makes sure that the documents can be filtered by category."
+	@priority = 4
+	test CanFilterByCategory {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Depot Name");
+
+		JSONCategory.addVocabulary(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Vocabulary Name");
+
+		var categoryId1 = JSONCategory.addCategory(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Category1",
+			vocabularyName = "Vocabulary Name");
+		var categoryId2 = JSONCategory.addCategory(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Category2",
+			vocabularyName = "Vocabulary Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetCategoryIds = "${categoryId1},${categoryId2}",
+			dmDocumentTitle = "DM Document Title 1",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetCategoryIds = ${categoryId2},
+			dmDocumentTitle = "DM Document Title 2",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_2.doc");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+
+		DMDocument.selectFilterItems(categories = "Category1");
+
+		DMDocument.viewFilterSummaryResults(
+			filterScope = "Category: Category1",
+			searchResults = "1 Result");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 1");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Document Title 2");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+
+		DMDocument.selectFilterItems(
+			categories = "Category2",
+			clearAll = "true");
+
+		DMDocument.viewFilterSummaryResults(
+			filterScope = "Category: Category2",
+			searchResults = "2 Results");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 1");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 2");
+	}
+
+	@description = "This test makes sure that the documents can be filtered by extension."
+	@priority = 5
+	test CanFilterByExtension {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Depot Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "DM Document Title 1",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "DM Document Title 2",
+			groupName = "Test Depot Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_2.jpg");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+
+		DMDocument.viewFilterByDetails(
+			category = "Image (1 Item),Text (1 Item)",
+			subcategory = "jpg,doc");
+
+		DMDocument.selectFilterItems(categories = "Text (1 Item)");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 1");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Document Title 2");
+
+		ManagementBar.setFilterAndOrder(
+			active = "true",
+			filterBy = "Extension...");
+
+		DMDocument.selectFilterItems(
+			categories = "Image (1 Item)",
+			clearAll = "true");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Document Title 1");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 2");
+	}
+
+	@description = "This test makes sure that the documents can be filtered by tag."
+	@priority = 5
+	test CanFilterByTag {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Depot Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetTagNames = "tag1,tag2",
+			dmDocumentTitle = "DM Document Title 1",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetTagNames = "tag2",
+			dmDocumentTitle = "DM Document Title 2",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_2.doc");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+
+		DMDocument.selectTags(tagNameList = "tag1");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 1");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Document Title 2");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+
+		DMDocument.selectTags(tagNameList = "tag2");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 1");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title 2");
+	}
+
 	@description = "This ensures that a document can be moved to a folder in a depot."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanMoveDocumentToFolder {
 		JSONDepot.addDepot(
@@ -247,7 +486,7 @@ definition {
 	}
 
 	@description = "This ensures that document can be restored to a depot."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRestoreDocument {
 		JSONDepot.addDepot(
@@ -280,7 +519,7 @@ definition {
 	}
 
 	@description = "This ensures that the friendly URL of a document created on a depot will be updated automatically if it duplicates the existing one on the depot."
-	@priority = "4"
+	@priority = 4
 	test FriendlyURLDuplicatingDepotDocIsAutomaticallyChanged {
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -311,7 +550,7 @@ definition {
 	}
 
 	@description = "This ensures that the friendly URL of a document created on a depot will be updated automatically if it duplicates the one in the recycle bin of the depot."
-	@priority = "3"
+	@priority = 3
 	test FriendlyURLDuplicatingDepotRecycleBinDocIsAutomaticallyChanged {
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",

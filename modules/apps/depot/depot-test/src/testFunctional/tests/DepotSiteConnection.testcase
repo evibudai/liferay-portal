@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -18,9 +18,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,22 +38,22 @@ definition {
 
 	@description = "This ensures that a depot can be connected to different types of sites."
 	@e2e
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanConnectMultipleSites {
 		Site.openSitesAdmin();
 
-		JSONGroup.addChildGroup(
-			groupName = "Child Site Name",
-			parentGroupName = "Site Name");
+		HeadlessSite.addSite(
+			parentSiteName = "Site Name",
+			siteName = "Child Site Name");
 
-		JSONGroup.addGroup(
-			groupName = "Private Site Name",
-			membershipType = "Private");
+		HeadlessSite.addSite(
+			membershipType = "Private",
+			siteName = "Private Site Name");
 
-		JSONGroup.addGroup(
-			groupName = "Restricted Site Name",
-			membershipType = "Restricted");
+		HeadlessSite.addSite(
+			membershipType = "Restricted",
+			siteName = "Restricted Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -62,7 +62,7 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "0",
+			connectedSiteNumber = 0,
 			depotName = "Test Depot Name");
 
 		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
@@ -78,7 +78,7 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "4",
+			connectedSiteNumber = 4,
 			depotName = "Test Depot Name");
 
 		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
@@ -92,7 +92,7 @@ definition {
 
 	@description = "This ensures that a depot can be connected to the site."
 	@e2e
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanConnectSite {
 		property portal.acceptance = "true";
@@ -114,7 +114,7 @@ definition {
 
 	@description = "This ensures that the disconnected site can not access the the depot."
 	@e2e
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanDisconnectSite {
 		JSONDepot.addDepot(
@@ -128,7 +128,7 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "1",
+			connectedSiteNumber = 1,
 			depotName = "Test Depot Name");
 
 		DepotNavigator.openDepotSiteSettings(depotName = "Test Depot Name");
@@ -139,7 +139,7 @@ definition {
 	}
 
 	@description = "This ensures that an asset library can not be connected to a staged site."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotConnectStagedSite {
 		JSONDepot.addDepot(
@@ -166,7 +166,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-104832. It ensures that the repositories can not connect to repositories."
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanViewRestrictionWhenConnectingSites {
 		JSONDepot.addDepot(
@@ -197,7 +197,7 @@ definition {
 	}
 
 	@description = "This asserts that a deactivated site is still shown in connected sites."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test DeactivatedSiteWillRemainInConnectedSitesList {
 		JSONDepot.addDepot(
@@ -214,10 +214,7 @@ definition {
 			depotName = "Test Depot Name",
 			siteList = "Site Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		Site.openSitesAdmin();
 
 		Site.deactivateCP(
 			siteName = "Site Name",
@@ -231,7 +228,7 @@ definition {
 	}
 
 	@description = "This asserts that a deleted site is removed from connected sites."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test DeletedSiteCannotBeDisplayedInConnectedSitesList {
 		JSONDepot.addDepot(
@@ -248,10 +245,7 @@ definition {
 			depotName = "Test Depot Name",
 			siteList = "Site Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		Site.openSitesAdmin();
 
 		Site.deleteCP(siteName = "Site Name");
 

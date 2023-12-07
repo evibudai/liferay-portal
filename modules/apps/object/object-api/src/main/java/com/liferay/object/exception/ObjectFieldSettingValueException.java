@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.exception;
@@ -24,6 +15,18 @@ import java.util.Set;
  * @author Marco Leo
  */
 public class ObjectFieldSettingValueException extends PortalException {
+
+	public static class ExceedsMaxLength
+		extends ObjectFieldSettingValueException {
+
+		public ExceedsMaxLength(int maxLength, String objectFieldSettingName) {
+			super(
+				String.format(
+					"The setting %s exceeds the maximum length of %s",
+					objectFieldSettingName, maxLength));
+		}
+
+	}
 
 	public static class InvalidValue extends ObjectFieldSettingValueException {
 
@@ -68,11 +71,15 @@ public class ObjectFieldSettingValueException extends PortalException {
 
 	}
 
-	public static class MustBeLessThan256Characters
+	public static class UnmodifiableValue
 		extends ObjectFieldSettingValueException {
 
-		public MustBeLessThan256Characters() {
-			super("Storage folder path must be less than 256 characters");
+		public UnmodifiableValue(String objectFieldSettingName) {
+			super(
+				String.format(
+					"The value of setting %s is unmodifiable when object " +
+						"definition is published",
+					objectFieldSettingName));
 		}
 
 	}

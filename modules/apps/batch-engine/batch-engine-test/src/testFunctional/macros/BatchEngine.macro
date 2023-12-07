@@ -1,6 +1,7 @@
 definition {
 
-	macro archiveAndDeleteOriginalFile {
+	@summary = "Default summary"
+	macro archiveAndDeleteOriginalFile(sourceFilePath = null, fileNameWithExtension = null) {
 		Variables.assertDefined(parameterList = "${sourceFilePath},${fileNameWithExtension}");
 
 		if (!(isSet(destinationPath))) {
@@ -9,17 +10,44 @@ definition {
 
 		var archivedFilePath = "${destinationPath}/${fileNameWithExtension}";
 
-		ArchiveUtil.archive("${sourceFilePath}", "${archivedFilePath}");
+		ArchiveUtil.archive(${sourceFilePath}, ${archivedFilePath});
 
-		FileUtil.delete("${sourceFilePath}");
+		FileUtil.delete(${sourceFilePath});
 
-		return "${archivedFilePath}";
+		return ${archivedFilePath};
 	}
 
-	macro copyDependenciesDirToFolder {
-		Variables.assertDefined(parameterList = "${file}");
+	@summary = "Default summary"
+	macro assertExportedFileContainsCorrectElements(fileName = null, expectedValue = null, jsonObject = null) {
+		Variables.assertDefined(parameterList = "${fileName},${jsonObject},${expectedElements}");
 
-		var filePath = TestCase.getDependenciesDirPath(fileName = "${file}");
+		var fileContent = TestCase.getTempFileContent(fileName = ${fileName});
+
+		var actualValue = JSONUtil.getWithJSONPath(${fileContent}, ${jsonObject});
+
+		for (var expectedValue : list ${expectedElements}) {
+			StringUtil.contains(${expectedValue}, ${actualValue}, "");
+		}
+	}
+
+	@summary = "Default summary"
+	macro assertExportedFileContainsCorrectObject(fileName = null, expectedValue = null, jsonObject = null) {
+		Variables.assertDefined(parameterList = "${fileName},${jsonObject},${expectedValue}");
+
+		var fileContent = TestCase.getTempFileContent(fileName = ${fileName});
+
+		var actualValue = JSONUtil.getWithJSONPath(${fileContent}, ${jsonObject});
+
+		TestUtils.assertEquals(
+			actual = ${actualValue},
+			expected = ${expectedValue});
+	}
+
+	@summary = "Default summary"
+	macro copyDependenciesDirToFolder(file = null) {
+		Variables.assertDefined(parameterList = ${file});
+
+		var filePath = TestCase.getDependenciesDirPath(fileName = ${file});
 
 		if (!(isSet(destinationDir))) {
 			var destinationDir = PropsUtil.get("liferay.home.dir.name");
@@ -27,12 +55,29 @@ definition {
 
 		var destinationFilePath = "${destinationDir}/${file}";
 
-		FileUtil.copyDirectory("${filePath}", "${destinationFilePath}");
+		FileUtil.copyDirectory(${filePath}, ${destinationFilePath});
 
-		return "${destinationFilePath}";
+		return ${destinationFilePath};
 	}
 
-	macro moveFileToDeployFolder {
+	@summary = "Default summary"
+	macro deleteFileInModulesFolder(file = null) {
+		Variables.assertDefined(parameterList = ${file});
+
+		var homeDir = PropsUtil.get("liferay.home.dir.name");
+
+		var fileExists = FileUtil.exists("${homeDir}/osgi/modules/${file}");
+
+		if (${fileExists} == "true") {
+			FileUtil.delete("${homeDir}/osgi/modules/${file}");
+		}
+		else {
+			echo("The file ${file} doesn't exist in osgi modules folder.");
+		}
+	}
+
+	@summary = "Default summary"
+	macro moveFileToDeployFolder(fileName = null, sourceFilePath = null) {
 		Variables.assertDefined(parameterList = "${sourceFilePath},${fileName}");
 
 		if (!(isSet(destinationPath))) {
@@ -41,30 +86,88 @@ definition {
 			var deployFolder = "${liferayHome}/deploy";
 		}
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "move-file -Dfile=${sourceFilePath} -Dtofile=${deployFolder}/${fileName}");
+		AntCommands.runCommand("build-test.xml", "move-file -Dfile=${sourceFilePath} -Dtofile=${deployFolder}/${fileName}");
 
 		WaitForConsoleTextPresent(value1 = "Processing ${fileName}");
-
-		// Need to add pause here to finish deploying zip through batch engine LPS-161983
-
-		Pause(locator1 = "5000");
 	}
 
-	macro setUpGlobalIds {
-		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
-		var companyId = JSONCompany.getCompanyIdNoSelenium(portalURL = "${portalURL}");
+	@summary = "Default summary"
+	macro moveFileToOSGIModulesFolder(fileName = null, appName = null, sourceFilePath = null) {
+		Variables.assertDefined(parameterList = "${sourceFilePath},${fileName},${appName}");
+
+		if (!(isSet(destinationPath))) {
+			var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
+			var deployFolder = "${liferayHome}/osgi/modules";
+		}
+
+		AntCommands.runCommand("build-test.xml", "move-file -Dfile=${sourceFilePath} -Dtofile=${deployFolder}/${fileName}");
+
+		WaitForConsoleTextPresent(value1 = "STARTED ${appName}");
+	}
+
+	@summary = "Default summary"
+	macro setUpGlobalIds(portalURL = null) {
+		var companyId = JSONCompany.getCompanyId(portalURL = ${portalURL});
 		var siteId = JSONGroupAPI._getSiteIdByGroupKey(groupName = "Guest");
-		static var staticUserId = "${userId}";
-		static var staticCompanyId = "${companyId}";
-		static var staticSiteId = "${siteId}";
+		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
+		static var staticCompanyId = ${companyId};
+		static var staticSiteId = ${siteId};
+		static var staticUserId = ${userId};
 
-		return "${staticUserId}";
+		return ${staticCompanyId};
 
-		return "${staticCompanyId}";
+		return ${staticSiteId};
 
-		return "${staticSiteId}";
+		return ${staticUserId};
+	}
+
+	@summary = "Default summary"
+	macro waitUntilBlogsVisibleInUI() {
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			panel = "Site Administration",
+			portlet = "Blogs");
+
+		while ((IsVisible(locator1 = "Message#EMPTY_INFO", value1 = "No entries were found.")) && (maxIterations = "5")) {
+			Refresh();
+
+			WaitForSPARefresh();
+		}
+	}
+
+	@summary = "Default summary"
+	macro waitUntilObjectPresentInUI(labelName = null) {
+		ObjectPortlet.assertIsDisplayedOnControlPanel(itemMenu = "Objects");
+
+		ObjectAdmin.openObjectAdmin();
+
+		while ((IsElementNotPresent(key_labelName = ${labelName}, locator1 = "CreateObject#OBJECT_NAME")) && (maxIterations = "5")) {
+			Refresh();
+
+			WaitForSPARefresh();
+		}
+
+		AssertElementPresent(
+			key_labelName = "User",
+			locator1 = "CreateObject#OBJECT_NAME");
+	}
+
+	@summary = "Default summary"
+	macro waitUntilWebContentPresentInUI() {
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Web Content");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		LexiconEntry.viewActiveDisplayStyle(displayStyle = "list");
+
+		while ((IsElementNotPresent(locator1 = "WC#ENTRY_LIST_THUMBNAIL_GENERIC")) && (maxIterations = "5")) {
+			Refresh();
+
+			WaitForSPARefresh();
+		}
 	}
 
 }

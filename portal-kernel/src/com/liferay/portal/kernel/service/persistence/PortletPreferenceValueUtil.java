@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.service.persistence;
@@ -501,6 +492,214 @@ public class PortletPreferenceValueUtil {
 	}
 
 	/**
+	 * Returns all the portlet preference values where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @return the matching portlet preference values
+	 */
+	public static List<PortletPreferenceValue> findByC_N_SV(
+		long companyId, String name, String smallValue) {
+
+		return getPersistence().findByC_N_SV(companyId, name, smallValue);
+	}
+
+	/**
+	 * Returns a range of all the portlet preference values where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PortletPreferenceValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param start the lower bound of the range of portlet preference values
+	 * @param end the upper bound of the range of portlet preference values (not inclusive)
+	 * @return the range of matching portlet preference values
+	 */
+	public static List<PortletPreferenceValue> findByC_N_SV(
+		long companyId, String name, String smallValue, int start, int end) {
+
+		return getPersistence().findByC_N_SV(
+			companyId, name, smallValue, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the portlet preference values where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PortletPreferenceValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param start the lower bound of the range of portlet preference values
+	 * @param end the upper bound of the range of portlet preference values (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching portlet preference values
+	 */
+	public static List<PortletPreferenceValue> findByC_N_SV(
+		long companyId, String name, String smallValue, int start, int end,
+		OrderByComparator<PortletPreferenceValue> orderByComparator) {
+
+		return getPersistence().findByC_N_SV(
+			companyId, name, smallValue, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the portlet preference values where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PortletPreferenceValueModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param start the lower bound of the range of portlet preference values
+	 * @param end the upper bound of the range of portlet preference values (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching portlet preference values
+	 */
+	public static List<PortletPreferenceValue> findByC_N_SV(
+		long companyId, String name, String smallValue, int start, int end,
+		OrderByComparator<PortletPreferenceValue> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByC_N_SV(
+			companyId, name, smallValue, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first portlet preference value in the ordered set where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching portlet preference value
+	 * @throws NoSuchPortletPreferenceValueException if a matching portlet preference value could not be found
+	 */
+	public static PortletPreferenceValue findByC_N_SV_First(
+			long companyId, String name, String smallValue,
+			OrderByComparator<PortletPreferenceValue> orderByComparator)
+		throws com.liferay.portal.kernel.exception.
+			NoSuchPortletPreferenceValueException {
+
+		return getPersistence().findByC_N_SV_First(
+			companyId, name, smallValue, orderByComparator);
+	}
+
+	/**
+	 * Returns the first portlet preference value in the ordered set where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching portlet preference value, or <code>null</code> if a matching portlet preference value could not be found
+	 */
+	public static PortletPreferenceValue fetchByC_N_SV_First(
+		long companyId, String name, String smallValue,
+		OrderByComparator<PortletPreferenceValue> orderByComparator) {
+
+		return getPersistence().fetchByC_N_SV_First(
+			companyId, name, smallValue, orderByComparator);
+	}
+
+	/**
+	 * Returns the last portlet preference value in the ordered set where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching portlet preference value
+	 * @throws NoSuchPortletPreferenceValueException if a matching portlet preference value could not be found
+	 */
+	public static PortletPreferenceValue findByC_N_SV_Last(
+			long companyId, String name, String smallValue,
+			OrderByComparator<PortletPreferenceValue> orderByComparator)
+		throws com.liferay.portal.kernel.exception.
+			NoSuchPortletPreferenceValueException {
+
+		return getPersistence().findByC_N_SV_Last(
+			companyId, name, smallValue, orderByComparator);
+	}
+
+	/**
+	 * Returns the last portlet preference value in the ordered set where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching portlet preference value, or <code>null</code> if a matching portlet preference value could not be found
+	 */
+	public static PortletPreferenceValue fetchByC_N_SV_Last(
+		long companyId, String name, String smallValue,
+		OrderByComparator<PortletPreferenceValue> orderByComparator) {
+
+		return getPersistence().fetchByC_N_SV_Last(
+			companyId, name, smallValue, orderByComparator);
+	}
+
+	/**
+	 * Returns the portlet preference values before and after the current portlet preference value in the ordered set where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * @param portletPreferenceValueId the primary key of the current portlet preference value
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next portlet preference value
+	 * @throws NoSuchPortletPreferenceValueException if a portlet preference value with the primary key could not be found
+	 */
+	public static PortletPreferenceValue[] findByC_N_SV_PrevAndNext(
+			long portletPreferenceValueId, long companyId, String name,
+			String smallValue,
+			OrderByComparator<PortletPreferenceValue> orderByComparator)
+		throws com.liferay.portal.kernel.exception.
+			NoSuchPortletPreferenceValueException {
+
+		return getPersistence().findByC_N_SV_PrevAndNext(
+			portletPreferenceValueId, companyId, name, smallValue,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the portlet preference values where companyId = &#63; and name = &#63; and smallValue = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 */
+	public static void removeByC_N_SV(
+		long companyId, String name, String smallValue) {
+
+		getPersistence().removeByC_N_SV(companyId, name, smallValue);
+	}
+
+	/**
+	 * Returns the number of portlet preference values where companyId = &#63; and name = &#63; and smallValue = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param smallValue the small value
+	 * @return the number of matching portlet preference values
+	 */
+	public static int countByC_N_SV(
+		long companyId, String name, String smallValue) {
+
+		return getPersistence().countByC_N_SV(companyId, name, smallValue);
+	}
+
+	/**
 	 * Returns the portlet preference value where portletPreferencesId = &#63; and index = &#63; and name = &#63; or throws a <code>NoSuchPortletPreferenceValueException</code> if it could not be found.
 	 *
 	 * @param portletPreferencesId the portlet preferences ID
@@ -953,6 +1152,12 @@ public class PortletPreferenceValueUtil {
 
 	public static PortletPreferenceValuePersistence getPersistence() {
 		return _persistence;
+	}
+
+	public static void setPersistence(
+		PortletPreferenceValuePersistence persistence) {
+
+		_persistence = persistence;
 	}
 
 	private static volatile PortletPreferenceValuePersistence _persistence;

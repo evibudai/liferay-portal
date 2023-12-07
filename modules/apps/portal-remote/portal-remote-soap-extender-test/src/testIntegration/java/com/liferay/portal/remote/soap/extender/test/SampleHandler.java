@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.remote.soap.extender.test;
 
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
+
+import java.io.InputStream;
 
 import java.net.URL;
 
@@ -61,14 +54,16 @@ public class SampleHandler implements LogicalHandler<LogicalMessageContext> {
 
 			LogicalMessage logicalMessage = logicalMessageContext.getMessage();
 
-			Transformer transformer = _transformerFactory.newTransformer(
-				new StreamSource(_url.openStream()));
+			try (InputStream inputStream = _url.openStream()) {
+				Transformer transformer = _transformerFactory.newTransformer(
+					new StreamSource(inputStream));
 
-			DOMResult domResult = new DOMResult();
+				DOMResult domResult = new DOMResult();
 
-			transformer.transform(logicalMessage.getPayload(), domResult);
+				transformer.transform(logicalMessage.getPayload(), domResult);
 
-			logicalMessage.setPayload(new DOMSource(domResult.getNode()));
+				logicalMessage.setPayload(new DOMSource(domResult.getNode()));
+			}
 
 			return true;
 		}

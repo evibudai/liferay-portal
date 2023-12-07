@@ -1,65 +1,70 @@
 definition {
 
-	macro getUTCDay {
+	@summary = "Default summary"
+	macro getUTCDay() {
 		var javaScript = '''
 		var utcDate = new Date().getUTCDate().toString();
 
 		return utcDate;
 		''';
 
-		var utcDate = selenium.getEval("${javaScript}");
+		var utcDate = selenium.getEval(${javaScript});
 
-		return "${utcDate}";
+		return ${utcDate};
 	}
 
-	macro getUTCHours {
+	@summary = "Default summary"
+	macro getUTCHours() {
 		var javaScript = '''
 		var utcHours = new Date().getUTCHours().toString();
 
 		return utcHours;
 		''';
 
-		var utcHours = selenium.getEval("${javaScript}");
+		var utcHours = selenium.getEval(${javaScript});
 
-		return "${utcHours}";
+		return ${utcHours};
 	}
 
-	macro getUTCMinutes {
+	@summary = "Default summary"
+	macro getUTCMinutes() {
 		var javaScript = '''
 		var utcMinutes = new Date().getUTCMinutes().toString();
 
 		return utcMinutes;
 		''';
 
-		var utcMinutes = selenium.getEval("${javaScript}");
+		var utcMinutes = selenium.getEval(${javaScript});
 
-		return "${utcMinutes}";
+		return ${utcMinutes};
 	}
 
-	macro getUTCMonth {
+	@summary = "Default summary"
+	macro getUTCMonth() {
 		var javaScript = '''
 		var utcMonth = new Date().getUTCMonth().toString();
 
 		return utcMonth;
 		''';
 
-		var utcMonth = selenium.getEval("${javaScript}");
+		var utcMonth = selenium.getEval(${javaScript});
 
 		var utcMonth = ${utcMonth} + 1;
 
-		return "${utcMonth}";
+		return ${utcMonth};
 	}
 
-	macro getUTCYear {
+	@summary = "Default summary"
+	macro getUTCYear() {
 		var javaScript = '''
 		var utcYear = new Date().getUTCFullYear().toString();
 
 		return utcYear;
 		''';
 
-		var utcYear = selenium.getEval("${javaScript}");
+		var utcYear = selenium.getEval(${javaScript});
 
-		return "${utcYear}";
+		return ${utcYear};
 	}
 
 }

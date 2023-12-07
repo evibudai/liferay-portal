@@ -56,6 +56,10 @@
 			"store": true,
 			"type": "keyword"
 		},
+		"assetCategoryNames": {
+			"store": true,
+			"type": "keyword"
+		},
 		"basePrice": {
 			"store": true,
 			"type": "double"
@@ -96,6 +100,10 @@
 			"store": true,
 			"type": "keyword"
 		},
+		"orderCreatorEmailAddress": {
+			"store": true,
+			"type": "keyword"
+		},
 		"orderOrganizationId": {
 			"store": true,
 			"type": "keyword"
@@ -108,12 +116,24 @@
 			"store": true,
 			"type": "keyword"
 		},
+		"replacementCPInstanceUuid": {
+			"store": true,
+			"type": "keyword"
+		},
+		"replacementCProductId": {
+			"store": true,
+			"type": "keyword"
+		},
 		"sku": {
 			"analyzer": "keyword_lowercase",
 			"fields": {
 				"1_10_ngram": {
 					"analyzer": "1_10_ngram",
 					"type": "text"
+				},
+				"raw": {
+					"store": true,
+					"type": "keyword"
 				},
 				"reverse": {
 					"analyzer": "reverse_keyword_lowercase",

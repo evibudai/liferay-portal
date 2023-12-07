@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +29,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-129430. It ensures that documents can be uploaded via Multiple File Uploads in a content page."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAddMultipleDocuments {
 		property custom.properties = "dl.actions.visible=true";
@@ -69,11 +69,10 @@ definition {
 
 	@description = "This test covers LPS-94508. It ensures that a tag can be created when selecting an item from autocomplete on a content page."
 	@e2etest
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanCreateTagUsingAutocomplete {
 		property custom.properties = "dl.actions.visible=true";
-		property portal.acceptance = "true";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -119,7 +118,7 @@ definition {
 
 	@description = "This test ensures that user can edit document in folder via a content page."
 	@e2etest
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditDocumentInFolder {
 		property custom.properties = "dl.actions.visible=true";
@@ -174,14 +173,14 @@ definition {
 	}
 
 	@description = "This test covers LPS-127683. It ensures that the shortcut cannot be restored before the shortcut target is restored."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanRestoreShortcutAfterDeletingTarget {
 		property custom.properties = "dl.actions.visible=true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",

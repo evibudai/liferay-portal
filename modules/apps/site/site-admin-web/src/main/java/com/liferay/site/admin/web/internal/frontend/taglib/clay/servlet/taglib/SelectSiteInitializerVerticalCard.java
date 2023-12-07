@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.admin.web.internal.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.VerticalCard;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -46,8 +39,16 @@ public class SelectSiteInitializerVerticalCard implements VerticalCard {
 	}
 
 	@Override
+	public String getAriaLabel() {
+		return LanguageUtil.format(
+			_httpServletRequest, "select-x-x",
+			new Object[] {"template", _siteInitializerItem.getName()});
+	}
+
+	@Override
 	public String getCssClass() {
-		return "add-site-action-card mb-0";
+		return "add-site-action-card card-interactive " +
+			"card-interactive-primary c-mb-2";
 	}
 
 	@Override
@@ -75,14 +76,20 @@ public class SelectSiteInitializerVerticalCard implements VerticalCard {
 				LiferayWindowState.POP_UP
 			).buildString()
 		).put(
-			"data-layout-set-prototype-id",
-			String.valueOf(_siteInitializerItem.getLayoutSetPrototypeId())
+			"role", "button"
+		).put(
+			"tabIndex", "0"
 		).build();
 	}
 
 	@Override
 	public String getIcon() {
 		return "site-template";
+	}
+
+	@Override
+	public String getImageAlt() {
+		return StringPool.BLANK;
 	}
 
 	@Override
@@ -93,7 +100,7 @@ public class SelectSiteInitializerVerticalCard implements VerticalCard {
 			return null;
 		}
 
-		return _siteInitializerItem.getIcon();
+		return PortalUtil.getPathProxy() + _siteInitializerItem.getIcon();
 	}
 
 	@Override

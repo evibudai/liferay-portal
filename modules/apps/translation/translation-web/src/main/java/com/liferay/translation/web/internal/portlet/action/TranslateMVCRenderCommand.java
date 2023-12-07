@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.web.internal.portlet.action;
@@ -18,12 +9,15 @@ import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.form.InfoForm;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -52,14 +46,9 @@ import com.liferay.translation.web.internal.display.context.TranslateDisplayCont
 import com.liferay.translation.web.internal.helper.TranslationRequestHelper;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -106,7 +95,11 @@ public class TranslateMVCRenderCommand implements MVCRenderCommand {
 			_translator = _translatorRegistry.getCompanyTranslator(
 				themeDisplay.getCompanyId());
 
-			Object object = _getInfoItem(className, classPK);
+			Object object = _getInfoItem(
+				className, classPK,
+				ParamUtil.getString(
+					renderRequest, "version",
+					InfoItemIdentifier.VERSION_LATEST));
 
 			if (object == null) {
 				return _getErrorJSP(
@@ -201,21 +194,20 @@ public class TranslateMVCRenderCommand implements MVCRenderCommand {
 		boolean hasUpdatePermission = infoItemPermissionProvider.hasPermission(
 			themeDisplay.getPermissionChecker(), object, ActionKeys.UPDATE);
 
-		Set<Locale> availableLocales = _language.getAvailableLocales(
-			themeDisplay.getSiteGroupId());
+		return TransformUtil.transform(
+			_language.getAvailableLocales(themeDisplay.getSiteGroupId()),
+			locale -> {
+				String languageId = LocaleUtil.toLanguageId(locale);
 
-		Stream<Locale> stream = availableLocales.stream();
+				if (!Objects.equals(languageId, sourceLanguageId) &&
+					(hasUpdatePermission ||
+					 _hasTranslatePermission(languageId, themeDisplay))) {
 
-		return stream.map(
-			LocaleUtil::toLanguageId
-		).filter(
-			languageId ->
-				!Objects.equals(languageId, sourceLanguageId) &&
-				(hasUpdatePermission ||
-				 _hasTranslatePermission(languageId, themeDisplay))
-		).collect(
-			Collectors.toList()
-		);
+					return languageId;
+				}
+
+				return null;
+			});
 	}
 
 	private String _getDefaultTargetLanguageId(
@@ -249,17 +241,25 @@ public class TranslateMVCRenderCommand implements MVCRenderCommand {
 		return "/translate.jsp";
 	}
 
-	private Object _getInfoItem(String className, long classPK) {
+	private Object _getInfoItem(
+		String className, long classPK, String version) {
+
 		try {
 			InfoItemObjectProvider<Object> infoItemObjectProvider =
 				_infoItemServiceRegistry.getFirstInfoItemService(
-					InfoItemObjectProvider.class, className);
+					InfoItemObjectProvider.class, className,
+					ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
 
 			if (infoItemObjectProvider == null) {
 				return null;
 			}
 
-			return infoItemObjectProvider.getInfoItem(classPK);
+			InfoItemIdentifier infoItemIdentifier =
+				new ClassPKInfoItemIdentifier(classPK);
+
+			infoItemIdentifier.setVersion(version);
+
+			return infoItemObjectProvider.getInfoItem(infoItemIdentifier);
 		}
 		catch (NoSuchInfoItemException noSuchInfoItemException) {
 			if (_log.isDebugEnabled()) {
@@ -302,26 +302,19 @@ public class TranslateMVCRenderCommand implements MVCRenderCommand {
 				translationEntry.getGroupId(), translationEntry.getClassName(),
 				translationEntry.getClassPK(), translationEntry.getContent());
 
-		Collection<InfoFieldValue<Object>> infoFieldValues =
-			infoItemFieldValues.getInfoFieldValues();
-
-		Stream<InfoFieldValue<Object>> stream = infoFieldValues.stream();
-
 		return InfoItemFieldValues.builder(
 		).infoItemReference(
 			infoItemFieldValues.getInfoItemReference()
 		).infoFieldValues(
-			stream.map(
+			TransformUtil.transform(
+				infoItemFieldValues.getInfoFieldValues(),
 				infoFieldValue -> new InfoFieldValue<>(
 					infoFieldValue.getInfoField(),
 					GetterUtil.getObject(
 						_getValue(
 							translationEntryInfoItemFieldValues,
 							infoFieldValue.getInfoField()),
-						infoFieldValue.getValue()))
-			).collect(
-				Collectors.toList()
-			)
+						infoFieldValue.getValue())))
 		).build();
 	}
 

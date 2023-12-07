@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.internal.controller;
 
-import com.liferay.asset.kernel.model.AssetLink;
-import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
-import com.liferay.asset.kernel.service.AssetLinkLocalService;
+import com.liferay.asset.link.model.AssetLink;
+import com.liferay.asset.link.model.adapter.StagedAssetLink;
+import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.exportimport.changeset.constants.ChangesetPortletKeys;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.constants.ExportImportConstants;
@@ -48,6 +39,7 @@ import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortle
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchPortletPreferencesException;
@@ -64,8 +56,6 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletItem;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.adapter.ModelAdapterUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -92,6 +82,7 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.Node;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.zip.ZipWriter;
+import com.liferay.portal.model.adapter.util.ModelAdapterUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,7 +93,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -658,6 +648,8 @@ public class PortletExportControllerImpl implements PortletExportController {
 				portletDataContext, portletId, jxPortletPreferences);
 		}
 		finally {
+			portletDataContext.clearScopedPrimaryKeys();
+
 			portletDataContext.setGroupId(groupId);
 			portletDataContext.setStartDate(originalStartDate);
 		}
@@ -768,7 +760,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 			serviceContext.setCompanyId(layout.getCompanyId());
 			serviceContext.setSignedIn(false);
 			serviceContext.setUserId(
-				_userLocalService.getDefaultUserId(layout.getCompanyId()));
+				_userLocalService.getGuestUserId(layout.getCompanyId()));
 
 			ServiceContextThreadLocal.pushServiceContext(serviceContext);
 		}
@@ -1224,14 +1216,13 @@ public class PortletExportControllerImpl implements PortletExportController {
 	private PortletDataHandler _getPortletDataHandler(
 		PortletDataContext portletDataContext, Portlet portlet) {
 
-		Optional<Portlet> portletOptional = _replacePortlet(
-			portletDataContext, portlet);
+		portlet = _replacePortlet(portletDataContext, portlet);
 
-		return portletOptional.map(
-			Portlet::getPortletDataHandlerInstance
-		).orElse(
-			null
-		);
+		if (portlet != null) {
+			return portlet.getPortletDataHandlerInstance();
+		}
+
+		return null;
 	}
 
 	private boolean _hasPortletId(
@@ -1287,7 +1278,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 		return false;
 	}
 
-	private Optional<Portlet> _replacePortlet(
+	private Portlet _replacePortlet(
 		PortletDataContext portletDataContext, Portlet portlet) {
 
 		if (ExportImportDateUtil.isRangeFromLastPublishDate(
@@ -1296,20 +1287,17 @@ public class PortletExportControllerImpl implements PortletExportController {
 			String changesetPortletId = ChangesetPortletKeys.CHANGESET;
 
 			if (ExportImportThreadLocal.isPortletStagingInProcess()) {
-				Portlet changesetPortlet = _portletLocalService.getPortletById(
-					changesetPortletId);
-
-				return Optional.of(changesetPortlet);
+				return _portletLocalService.getPortletById(changesetPortletId);
 			}
 
 			if (ExportImportThreadLocal.isLayoutStagingInProcess() &&
 				!changesetPortletId.equals(portlet.getPortletId())) {
 
-				return Optional.empty();
+				return null;
 			}
 		}
 
-		return Optional.of(portlet);
+		return portlet;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -1,27 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.display.context;
 
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.context.SearchContextFactory;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.summary.SummaryBuilderFactory;
-import com.liferay.portal.search.web.internal.facet.SearchFacetRegistry;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletPreferences;
@@ -45,11 +35,11 @@ public class SearchDisplayContextFactoryImpl
 		throws PortletException {
 
 		return new SearchDisplayContext(
-			renderRequest, portletPreferences, portal, HtmlUtil.getHtml(),
-			language, searcher, new IndexSearchPropsValuesImpl(),
+			renderRequest, portletPreferences, portal, language, searcher,
+			new IndexSearchPropsValuesImpl(),
 			new ClassicPortletURLFactoryImpl(renderRequest, renderResponse),
 			summaryBuilderFactory, searchContextFactory,
-			searchRequestBuilderFactory, searchFacetRegistry);
+			searchRequestBuilderFactory, _jsonFactory);
 	}
 
 	@Reference
@@ -65,12 +55,12 @@ public class SearchDisplayContextFactoryImpl
 	protected Searcher searcher;
 
 	@Reference
-	protected SearchFacetRegistry searchFacetRegistry;
-
-	@Reference
 	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
 
 	@Reference
 	protected SummaryBuilderFactory summaryBuilderFactory;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 }

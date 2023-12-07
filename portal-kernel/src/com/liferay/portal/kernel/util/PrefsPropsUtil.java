@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -34,15 +25,16 @@ public class PrefsPropsUtil {
 	}
 
 	public static boolean getBoolean(
-		PortletPreferences preferences, String name) {
+		PortletPreferences portletPreferences, String name) {
 
-		return _prefsProps.getBoolean(preferences, name);
+		return _prefsProps.getBoolean(portletPreferences, name);
 	}
 
 	public static boolean getBoolean(
-		PortletPreferences preferences, String name, boolean defaultValue) {
+		PortletPreferences portletPreferences, String name,
+		boolean defaultValue) {
 
-		return _prefsProps.getBoolean(preferences, name, defaultValue);
+		return _prefsProps.getBoolean(portletPreferences, name, defaultValue);
 	}
 
 	public static boolean getBoolean(String name) {
@@ -58,9 +50,9 @@ public class PrefsPropsUtil {
 	}
 
 	public static String getContent(
-		PortletPreferences preferences, String name) {
+		PortletPreferences portletPreferences, String name) {
 
-		return _prefsProps.getContent(preferences, name);
+		return _prefsProps.getContent(portletPreferences, name);
 	}
 
 	public static String getContent(String name) {
@@ -78,15 +70,16 @@ public class PrefsPropsUtil {
 	}
 
 	public static double getDouble(
-		PortletPreferences preferences, String name) {
+		PortletPreferences portletPreferences, String name) {
 
-		return _prefsProps.getDouble(preferences, name);
+		return _prefsProps.getDouble(portletPreferences, name);
 	}
 
 	public static double getDouble(
-		PortletPreferences preferences, String name, double defaultValue) {
+		PortletPreferences portletPreferences, String name,
+		double defaultValue) {
 
-		return _prefsProps.getDouble(preferences, name, defaultValue);
+		return _prefsProps.getDouble(portletPreferences, name, defaultValue);
 	}
 
 	public static double getDouble(String name) {
@@ -107,14 +100,16 @@ public class PrefsPropsUtil {
 		return _prefsProps.getInteger(companyId, name, defaultValue);
 	}
 
-	public static int getInteger(PortletPreferences preferences, String name) {
-		return _prefsProps.getInteger(preferences, name);
+	public static int getInteger(
+		PortletPreferences portletPreferences, String name) {
+
+		return _prefsProps.getInteger(portletPreferences, name);
 	}
 
 	public static int getInteger(
-		PortletPreferences preferences, String name, int defaultValue) {
+		PortletPreferences portletPreferences, String name, int defaultValue) {
 
-		return _prefsProps.getInteger(preferences, name, defaultValue);
+		return _prefsProps.getInteger(portletPreferences, name, defaultValue);
 	}
 
 	public static int getInteger(String name) {
@@ -133,14 +128,16 @@ public class PrefsPropsUtil {
 		return _prefsProps.getLong(companyId, name, defaultValue);
 	}
 
-	public static long getLong(PortletPreferences preferences, String name) {
-		return _prefsProps.getLong(preferences, name);
+	public static long getLong(
+		PortletPreferences portletPreferences, String name) {
+
+		return _prefsProps.getLong(portletPreferences, name);
 	}
 
 	public static long getLong(
-		PortletPreferences preferences, String name, long defaultValue) {
+		PortletPreferences portletPreferences, String name, long defaultValue) {
 
-		return _prefsProps.getLong(preferences, name, defaultValue);
+		return _prefsProps.getLong(portletPreferences, name, defaultValue);
 	}
 
 	public static long getLong(String name) {
@@ -164,9 +161,11 @@ public class PrefsPropsUtil {
 	}
 
 	public static Properties getProperties(
-		PortletPreferences preferences, String prefix, boolean removePrefix) {
+		PortletPreferences portletPreferences, String prefix,
+		boolean removePrefix) {
 
-		return _prefsProps.getProperties(preferences, prefix, removePrefix);
+		return _prefsProps.getProperties(
+			portletPreferences, prefix, removePrefix);
 	}
 
 	public static Properties getProperties(
@@ -185,14 +184,17 @@ public class PrefsPropsUtil {
 		return _prefsProps.getShort(companyId, name, defaultValue);
 	}
 
-	public static short getShort(PortletPreferences preferences, String name) {
-		return _prefsProps.getShort(preferences, name);
+	public static short getShort(
+		PortletPreferences portletPreferences, String name) {
+
+		return _prefsProps.getShort(portletPreferences, name);
 	}
 
 	public static short getShort(
-		PortletPreferences preferences, String name, short defaultValue) {
+		PortletPreferences portletPreferences, String name,
+		short defaultValue) {
 
-		return _prefsProps.getShort(preferences, name, defaultValue);
+		return _prefsProps.getShort(portletPreferences, name, defaultValue);
 	}
 
 	public static short getShort(String name) {
@@ -214,45 +216,49 @@ public class PrefsPropsUtil {
 	}
 
 	public static String getString(
-		PortletPreferences preferences, String name) {
+		PortletPreferences portletPreferences, String name) {
 
-		return _prefsProps.getString(preferences, name);
+		return _prefsProps.getString(portletPreferences, name);
 	}
 
 	public static String getString(
-		PortletPreferences preferences, String name, boolean defaultValue) {
+		PortletPreferences portletPreferences, String name,
+		boolean defaultValue) {
 
-		return _prefsProps.getString(preferences, name, defaultValue);
+		return _prefsProps.getString(portletPreferences, name, defaultValue);
 	}
 
 	public static String getString(
-		PortletPreferences preferences, String name, double defaultValue) {
+		PortletPreferences portletPreferences, String name,
+		double defaultValue) {
 
-		return _prefsProps.getString(preferences, name, defaultValue);
+		return _prefsProps.getString(portletPreferences, name, defaultValue);
 	}
 
 	public static String getString(
-		PortletPreferences preferences, String name, int defaultValue) {
+		PortletPreferences portletPreferences, String name, int defaultValue) {
 
-		return _prefsProps.getString(preferences, name, defaultValue);
+		return _prefsProps.getString(portletPreferences, name, defaultValue);
 	}
 
 	public static String getString(
-		PortletPreferences preferences, String name, long defaultValue) {
+		PortletPreferences portletPreferences, String name, long defaultValue) {
 
-		return _prefsProps.getString(preferences, name, defaultValue);
+		return _prefsProps.getString(portletPreferences, name, defaultValue);
 	}
 
 	public static String getString(
-		PortletPreferences preferences, String name, short defaultValue) {
+		PortletPreferences portletPreferences, String name,
+		short defaultValue) {
 
-		return _prefsProps.getString(preferences, name, defaultValue);
+		return _prefsProps.getString(portletPreferences, name, defaultValue);
 	}
 
 	public static String getString(
-		PortletPreferences preferences, String name, String defaultValue) {
+		PortletPreferences portletPreferences, String name,
+		String defaultValue) {
 
-		return _prefsProps.getString(preferences, name, defaultValue);
+		return _prefsProps.getString(portletPreferences, name, defaultValue);
 	}
 
 	public static String getString(String name) {
@@ -277,17 +283,17 @@ public class PrefsPropsUtil {
 	}
 
 	public static String[] getStringArray(
-		PortletPreferences preferences, String name, String delimiter) {
+		PortletPreferences portletPreferences, String name, String delimiter) {
 
-		return _prefsProps.getStringArray(preferences, name, delimiter);
+		return _prefsProps.getStringArray(portletPreferences, name, delimiter);
 	}
 
 	public static String[] getStringArray(
-		PortletPreferences preferences, String name, String delimiter,
+		PortletPreferences portletPreferences, String name, String delimiter,
 		String[] defaultValue) {
 
 		return _prefsProps.getStringArray(
-			preferences, name, delimiter, defaultValue);
+			portletPreferences, name, delimiter, defaultValue);
 	}
 
 	public static String[] getStringArray(String name, String delimiter) {

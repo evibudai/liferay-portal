@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.auto.tagger.internal.configuration.admin.definition;
@@ -17,14 +8,12 @@ package com.liferay.asset.auto.tagger.internal.configuration.admin.definition;
 import com.liferay.asset.auto.tagger.text.extractor.TextExtractor;
 import com.liferay.asset.auto.tagger.text.extractor.TextExtractorRegistry;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.configuration.admin.definition.ConfigurationFieldOptionsProvider;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,38 +34,32 @@ public class EnabledClassNamesConfigurationFieldOptionsProvider
 
 	@Override
 	public List<Option> getOptions() {
-		List<AssetRendererFactory<?>> assetRendererFactories =
+		return TransformUtil.transform(
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactories(
-				CompanyThreadLocal.getCompanyId());
-
-		Stream<AssetRendererFactory<?>> stream =
-			assetRendererFactories.stream();
-
-		return stream.filter(
+				CompanyThreadLocal.getCompanyId()),
 			assetRendererFactory -> {
 				TextExtractor<?> textExtractor =
 					_textExtractorRegistry.getTextExtractor(
 						assetRendererFactory.getClassName());
 
-				return textExtractor != null;
-			}
-		).map(
-			assetRendererFactory -> new Option() {
-
-				@Override
-				public String getLabel(Locale locale) {
-					return assetRendererFactory.getTypeName(locale);
+				if (textExtractor == null) {
+					return null;
 				}
 
-				@Override
-				public String getValue() {
-					return assetRendererFactory.getClassName();
-				}
+				return new Option() {
 
-			}
-		).collect(
-			Collectors.toList()
-		);
+					@Override
+					public String getLabel(Locale locale) {
+						return assetRendererFactory.getTypeName(locale);
+					}
+
+					@Override
+					public String getValue() {
+						return assetRendererFactory.getClassName();
+					}
+
+				};
+			});
 	}
 
 	@Reference

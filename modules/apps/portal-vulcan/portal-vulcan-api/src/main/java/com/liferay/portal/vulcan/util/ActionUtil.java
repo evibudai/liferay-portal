@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.util;
@@ -18,6 +9,7 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.oauth2.provider.scope.liferay.OAuth2ProviderScopeLiferayAccessControlContext;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -25,6 +17,7 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.graphql.util.GraphQLNamingUtil;
 
@@ -36,11 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
@@ -81,6 +72,37 @@ public class ActionUtil {
 			uriInfo);
 	}
 
+	public static Map<String, String> addAction(
+		String actionName, Class<?> clazz, Long id, String methodName,
+		ModelResourcePermission<?> modelResourcePermission, Long parameterId,
+		UriInfo uriInfo) {
+
+		try {
+			return _addAction(
+				actionName, clazz, id, methodName, modelResourcePermission,
+				null, null, parameterId, null, null, null, uriInfo,
+				() -> UriInfoUtil.getBaseUriBuilder(uriInfo));
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	public static Map<String, String> addAction(
+		String actionName, Class<?> clazz, Long id, String methodName,
+		Object object, Long ownerId, String permissionName, Long siteId,
+		Supplier<UriBuilder> uriBuilderSupplier, UriInfo uriInfo) {
+
+		try {
+			return _addAction(
+				actionName, clazz, id, methodName, null, object, ownerId, id,
+				permissionName, siteId, null, uriInfo, uriBuilderSupplier);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *             #addAction(String, Class, Long, String, Object,
@@ -93,9 +115,26 @@ public class ActionUtil {
 		UriInfo uriInfo) {
 
 		try {
+			return addAction(
+				actionName, clazz, id, methodName, object, ownerId,
+				permissionName, siteId,
+				() -> UriInfoUtil.getBaseUriBuilder(uriInfo), uriInfo);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	public static Map<String, String> addAction(
+		String actionName, Class<?> clazz, Long id, String methodName,
+		Object object, ModelResourcePermission<?> modelResourcePermission,
+		Map<String, String> templateParameterMap, UriInfo uriInfo) {
+
+		try {
 			return _addAction(
-				actionName, clazz, id, methodName, null, object, ownerId,
-				permissionName, siteId, uriInfo);
+				actionName, clazz, id, methodName, modelResourcePermission,
+				object, null, id, null, null, templateParameterMap, uriInfo,
+				() -> UriInfoUtil.getBaseUriBuilder(uriInfo));
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -110,7 +149,8 @@ public class ActionUtil {
 		try {
 			return _addAction(
 				actionName, clazz, id, methodName, modelResourcePermission,
-				object, null, null, null, uriInfo);
+				object, null, id, null, null, null, uriInfo,
+				() -> UriInfoUtil.getBaseUriBuilder(uriInfo));
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
@@ -150,7 +190,9 @@ public class ActionUtil {
 	private static Map<String, String> _addAction(
 			String actionName, Class<?> clazz, Long id, String methodName,
 			ModelResourcePermission<?> modelResourcePermission, Object object,
-			Long ownerId, String permissionName, Long siteId, UriInfo uriInfo)
+			Long ownerId, Long parameterId, String permissionName, Long siteId,
+			Map<String, String> templateParameterMap, UriInfo uriInfo,
+			Supplier<UriBuilder> uriBuilderSupplier)
 		throws Exception {
 
 		if (uriInfo == null) {
@@ -207,24 +249,19 @@ public class ActionUtil {
 			}
 		}
 
-		String baseURIString = UriInfoUtil.getBasePath(uriInfo);
+		String basePath = UriInfoUtil.getBasePath(uriInfo);
 
-		if (baseURIString.contains("/graphql")) {
+		if (basePath.contains("/graphql")) {
 			String operation = null;
 			String type = null;
 
 			if (httpMethodName.equals("GET")) {
 				Class<?> returnType = method.getReturnType();
 
-				Stream<Method> stream = Arrays.stream(clazz.getMethods());
-
 				operation = GraphQLNamingUtil.getGraphQLPropertyName(
 					methodName, returnType.getName(),
-					stream.map(
-						Method::getName
-					).collect(
-						Collectors.toList()
-					));
+					TransformUtil.transformToList(
+						clazz.getMethods(), Method::getName));
 
 				type = "query";
 			}
@@ -244,15 +281,27 @@ public class ActionUtil {
 		return HashMapBuilder.put(
 			"href",
 			() -> {
-				UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(uriInfo);
+				UriBuilder uriBuilder = uriBuilderSupplier.get();
 
-				return uriBuilder.path(
-					_getVersion(uriInfo)
-				).path(
-					clazz.getSuperclass(), methodName
-				).resolveTemplates(
-					_getParameterMap(clazz, id, methodName, siteId, uriInfo)
-				).toTemplate();
+				if (clazz.getSuperclass(
+					).isAnnotationPresent(
+						Path.class
+					)) {
+
+					uriBuilder = uriBuilder.path(clazz.getSuperclass());
+				}
+
+				uriBuilder = uriBuilder.path(clazz.getSuperclass(), methodName);
+
+				if (parameterId != null) {
+					uriBuilder = uriBuilder.resolveTemplates(
+						_getParameterMap(
+							clazz, parameterId, methodName, siteId,
+							templateParameterMap, uriInfo),
+						false);
+				}
+
+				return uriBuilder.toTemplate();
 			}
 		).put(
 			"method", httpMethodName
@@ -324,25 +373,25 @@ public class ActionUtil {
 
 	private static Map<String, Object> _getParameterMap(
 			Class<?> clazz, Long id, String methodName, Long siteId,
-			UriInfo uriInfo)
+			Map<String, String> templateParameterMap, UriInfo uriInfo)
 		throws PortalException {
+
+		Map<String, Object> parameterMap = new HashMap<>();
 
 		MultivaluedMap<String, String> pathParameters =
 			uriInfo.getPathParameters();
 
-		Set<Map.Entry<String, List<String>>> entrySet =
-			pathParameters.entrySet();
+		for (Map.Entry<String, List<String>> entry :
+				pathParameters.entrySet()) {
 
-		Stream<Map.Entry<String, List<String>>> stream = entrySet.stream();
+			List<String> value = entry.getValue();
 
-		Map<String, Object> parameterMap = stream.collect(
-			Collectors.toMap(
-				Map.Entry::getKey,
-				entry -> {
-					List<String> value = entry.getValue();
+			parameterMap.put(entry.getKey(), value.get(0));
+		}
 
-					return value.get(0);
-				}));
+		if (templateParameterMap != null) {
+			parameterMap.putAll(templateParameterMap);
+		}
 
 		String firstParameterName = _getFirstParameterNameFromPath(
 			clazz.getSuperclass(), methodName);
@@ -359,28 +408,19 @@ public class ActionUtil {
 
 			parameterMap.put(firstParameterName, depotEntry.getDepotEntryId());
 		}
+		else if (Objects.equals(firstParameterName, "id")) {
+			parameterMap.put(firstParameterName, id);
+		}
 		else if ((siteId != null) &&
 				 Objects.equals(firstParameterName, "siteId")) {
 
 			parameterMap.put(firstParameterName, siteId);
 		}
-		else {
+		else if (StringUtil.endsWith(firstParameterName, "Id")) {
 			parameterMap.put(firstParameterName, id);
 		}
 
 		return parameterMap;
-	}
-
-	private static String _getVersion(UriInfo uriInfo) {
-		String version = "";
-
-		List<String> matchedURIs = uriInfo.getMatchedURIs();
-
-		if (!matchedURIs.isEmpty()) {
-			version = matchedURIs.get(matchedURIs.size() - 1);
-		}
-
-		return version;
 	}
 
 	private static boolean _hasPermission(

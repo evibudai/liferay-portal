@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.servlet.taglib.util;
@@ -26,12 +17,16 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.web.internal.asset.model.JournalArticleAssetRenderer;
-import com.liferay.journal.web.internal.configuration.FFJournalAutoSaveDraftConfiguration;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
+import com.liferay.journal.web.internal.item.selector.JournalArticleTranslationsItemSelectorCriterion;
 import com.liferay.journal.web.internal.portlet.JournalPortlet;
 import com.liferay.journal.web.internal.security.permission.resource.JournalArticlePermission;
 import com.liferay.journal.web.internal.security.permission.resource.JournalFolderPermission;
@@ -39,6 +34,7 @@ import com.liferay.journal.web.internal.util.JournalUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -46,6 +42,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -97,12 +94,8 @@ public class JournalArticleActionDropdownItemsProvider {
 			assetDisplayPageFriendlyURLProvider;
 		_trashHelper = trashHelper;
 
-		_ffJournalAutoSaveDraftConfiguration =
-			(FFJournalAutoSaveDraftConfiguration)
-				_liferayPortletRequest.getAttribute(
-					FFJournalAutoSaveDraftConfiguration.class.getName());
 		_journalWebConfiguration =
-			(JournalWebConfiguration)_liferayPortletRequest.getAttribute(
+			(JournalWebConfiguration)liferayPortletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
 			liferayPortletRequest);
@@ -114,6 +107,8 @@ public class JournalArticleActionDropdownItemsProvider {
 		_translationURLProvider =
 			(TranslationURLProvider)liferayPortletRequest.getAttribute(
 				TranslationURLProvider.class.getName());
+		_itemSelector = (ItemSelector)_httpServletRequest.getAttribute(
+			ItemSelector.class.getName());
 	}
 
 	public List<DropdownItem> getActionDropdownItems() throws Exception {
@@ -142,8 +137,7 @@ public class JournalArticleActionDropdownItemsProvider {
 						_getEditArticleActionUnsafeConsumer()
 					).add(
 						() ->
-							_ffJournalAutoSaveDraftConfiguration.
-								journalArticleAutoSaveDraftEnabled() &&
+							FeatureFlagManagerUtil.isEnabled("LPS-141392") &&
 							hasUpdatePermission && _article.isDraft() &&
 							_article.hasApprovedVersion(),
 						_getDiscardDraftActionUnsafeConsumer()
@@ -342,6 +336,49 @@ public class JournalArticleActionDropdownItemsProvider {
 		return dropdownItems;
 	}
 
+	public List<DropdownItem> getArticleVersionTabActionDropdownItems() {
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				UnsafeConsumer<DropdownItem, Exception>
+					previewContentArticleAction =
+						_getPreviewArticleActionUnsafeConsumer();
+
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						() ->
+							JournalArticlePermission.contains(
+								_themeDisplay.getPermissionChecker(), _article,
+								ActionKeys.VIEW) &&
+							(previewContentArticleAction != null),
+						previewContentArticleAction
+					).build());
+
+				dropdownGroupItem.setSeparator(true);
+			}
+		).addGroup(
+			dropdownGroupItem -> {
+				String articleId =
+					_article.getArticleId() + JournalPortlet.VERSION_SEPARATOR +
+						_article.getVersion();
+
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						() ->
+							JournalArticlePermission.contains(
+								_themeDisplay.getPermissionChecker(), _article,
+								ActionKeys.EXPIRE) &&
+							((_article.getStatus() ==
+								WorkflowConstants.STATUS_APPROVED) ||
+							 (_article.getStatus() ==
+								 WorkflowConstants.STATUS_SCHEDULED)),
+						_getExpireArticleActionConsumer(articleId)
+					).build());
+
+				dropdownGroupItem.setSeparator(true);
+			}
+		).build();
+	}
+
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getAutoCopyArticleActionUnsafeConsumer() {
 
@@ -353,7 +390,7 @@ public class JournalArticleActionDropdownItemsProvider {
 				"version", _article.getVersion());
 			dropdownItem.setIcon("copy");
 			dropdownItem.setLabel(
-				LanguageUtil.get(_httpServletRequest, "copy"));
+				LanguageUtil.get(_httpServletRequest, "make-a-copy"));
 		};
 	}
 
@@ -421,7 +458,7 @@ public class JournalArticleActionDropdownItemsProvider {
 					).buildString());
 				dropdownItem.setIcon("copy");
 				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "copy"));
+					LanguageUtil.get(_httpServletRequest, "make-a-copy"));
 			};
 		}
 
@@ -475,21 +512,31 @@ public class JournalArticleActionDropdownItemsProvider {
 				).setParameter(
 					"id", _article.getId()
 				).buildString());
+
+			JournalArticleTranslationsItemSelectorCriterion
+				journalArticleTranslationsItemSelectorCriterion =
+					new JournalArticleTranslationsItemSelectorCriterion();
+
+			journalArticleTranslationsItemSelectorCriterion.setArticleId(
+				_article.getArticleId());
+			journalArticleTranslationsItemSelectorCriterion.setGroupId(
+				_article.getGroupId());
+			journalArticleTranslationsItemSelectorCriterion.
+				setDesiredItemSelectorReturnTypes(
+					new UUIDItemSelectorReturnType());
+
+			RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+				RequestBackedPortletURLFactoryUtil.create(_httpServletRequest);
+
 			dropdownItem.putData(
 				"selectArticleTranslationsURL",
-				PortletURLBuilder.createRenderURL(
-					_liferayPortletResponse
-				).setMVCPath(
-					"/select_article_translations.jsp"
-				).setRedirect(
-					_getRedirect()
-				).setBackURL(
-					_getRedirect()
-				).setParameter(
-					"articleId", _article.getArticleId()
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildString());
+				String.valueOf(
+					_itemSelector.getItemSelectorURL(
+						requestBackedPortletURLFactory,
+						_liferayPortletResponse.getNamespace() +
+							"changePreview",
+						journalArticleTranslationsItemSelectorCriterion)));
+
 			dropdownItem.putData(
 				"title",
 				LanguageUtil.get(_httpServletRequest, "delete-translations"));
@@ -525,9 +572,12 @@ public class JournalArticleActionDropdownItemsProvider {
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getEditArticleActionUnsafeConsumer() {
 
+		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
+
 		return dropdownItem -> {
 			dropdownItem.setHref(
-				_liferayPortletResponse.createRenderURL(), "mvcPath",
+				_liferayPortletResponse.createRenderURL(), "backURLTitle",
+				portletDisplay.getPortletDisplayName(), "mvcPath",
 				"/edit_article.jsp", "redirect", _getRedirect(),
 				"referringPortletResource", _getReferringPortletResource(),
 				"groupId", _article.getGroupId(), "folderId",
@@ -590,6 +640,14 @@ public class JournalArticleActionDropdownItemsProvider {
 
 						return portletDisplay.getId();
 					}
+				).setParameter(
+					"backURLTitle",
+					() -> {
+						PortletDisplay portletDisplay =
+							_themeDisplay.getPortletDisplay();
+
+						return portletDisplay.getPortletDisplayName();
+					}
 				).build());
 			dropdownItem.setIcon("upload");
 			dropdownItem.setLabel(
@@ -618,6 +676,14 @@ public class JournalArticleActionDropdownItemsProvider {
 							_themeDisplay.getPortletDisplay();
 
 						return portletDisplay.getId();
+					}
+				).setParameter(
+					"backURLTitle",
+					() -> {
+						PortletDisplay portletDisplay =
+							_themeDisplay.getPortletDisplay();
+
+						return portletDisplay.getPortletDisplayName();
 					}
 				).buildPortletURL());
 			dropdownItem.setIcon("download");
@@ -698,8 +764,7 @@ public class JournalArticleActionDropdownItemsProvider {
 			dropdownItem.putData("action", "preview");
 			dropdownItem.putData("previewURL", previewURL);
 			dropdownItem.putData(
-				"title",
-				HtmlUtil.escape(_article.getTitle(_themeDisplay.getLocale())));
+				"title", _article.getTitle(_themeDisplay.getLocale()));
 
 			String status = "preview";
 
@@ -726,7 +791,9 @@ public class JournalArticleActionDropdownItemsProvider {
 
 			String previewURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					assetEntry.getClassName(), assetEntry.getClassPK(),
+					new InfoItemReference(
+						assetEntry.getClassName(),
+						new ClassPKInfoItemIdentifier(assetEntry.getClassPK())),
 					_themeDisplay);
 
 			previewURL = HttpComponentsUtil.addParameter(
@@ -769,7 +836,7 @@ public class JournalArticleActionDropdownItemsProvider {
 				PortletURLBuilder.createActionURL(
 					_liferayPortletResponse
 				).setActionName(
-					"/journal/publish_article"
+					"/journal/publish_articles"
 				).setBackURL(
 					_getRedirect()
 				).setParameter(
@@ -863,6 +930,7 @@ public class JournalArticleActionDropdownItemsProvider {
 					_article.getResourcePrimKey(),
 					RequestBackedPortletURLFactoryUtil.create(
 						_httpServletRequest)),
+				"backURLTitle", portletDisplay.getPortletDisplayName(),
 				"redirect", _getRedirect(), "portletResource",
 				portletDisplay.getId());
 
@@ -1066,9 +1134,8 @@ public class JournalArticleActionDropdownItemsProvider {
 	private final JournalArticle _article;
 	private final AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
-	private final FFJournalAutoSaveDraftConfiguration
-		_ffJournalAutoSaveDraftConfiguration;
 	private final HttpServletRequest _httpServletRequest;
+	private final ItemSelector _itemSelector;
 	private final JournalWebConfiguration _journalWebConfiguration;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;

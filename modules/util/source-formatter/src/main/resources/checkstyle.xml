@@ -243,11 +243,6 @@
 			<message key="variable.move.after.branching.statement" value="For better performance, the variable assignment for ''{0}'' should come after the ''{1}'' statement on line ''{2}''" />
 			<message key="variable.move.inside.if.statement" value="For better performance, the variable assignment for ''{0}'' should be moved inside the {1}-statement on line ''{2}''" />
 		</module>
-		<module name="com.liferay.source.formatter.checkstyle.check.AttributeOrderCheck">
-			<property name="category" value="Styling" />
-			<property name="description" value="Checks that attributes in anonymous classes are ordered alphabetically." />
-			<message key="attribute.incorrect.order" value="Attribute ''{0}'' should come after attribute ''{1}''" />
-		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.CamelCaseNameCheck">
 			<property name="category" value="Naming Conventions" />
 			<property name="description" value="Checks variable names for correct use of `CamelCase`." />
@@ -257,34 +252,34 @@
 			<message key="starting.uppercase.required" value="''{0}'' should start with an uppercase character for {1} ''{2}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ChainingCheck">
-			<property name="allowConcatChain" value="true" />
-			<property name="allowedClassNames" value="ActionSemantics,.*[Bb]uilder(s)?,Assertions,Awaitility,.*Consumer,CreationMenuBuilder,DSL.+FactoryUtil,EasyMock,Either,Filter,FormNavigatorEntryConfigurationRetriever,GenericUtil,InfoFieldSet,InfoForm,InfoFormValues,JSONUtil,List,MemberMatcher,Option,Optional,OSGi,Response,RestAssured,(Double|Int|Long)?Stream,.+Table,Try,Validation,WebClient" />
-			<property name="allowedMethodNames" value="bind,builder,create,getKeywordsPredicate,newBuilder,put" />
-			<property name="allowedMockitoMethodNames" value="doAnswer,doCallRealMethod,doNothing,doReturn,doThrow,field,replace,stub,verify,verifyPrivate,when" />
-			<property name="allowedVariableTypeNames" value="^(?!String).+Builder(Impl)?,Column,CompletableFuture,.*Consumer,ContactsEngineClient,Dataset,Description,ExecuteActionRequest,(FormsEventDataset)?Filter,.*Function[0-9]*,HttpSecurity,InOrder,JSONArray,JSONObject,JsonPath,.*Mapper,NestedRepresentor.*,Optional,Predicate,RequestSpecification,Response,SoyContext,.+Step,(Double|Int|Long)?Stream,Try,UpdateFieldPropertyRequest,ValidatableResponse,WebTarget" />
 			<property name="applyToTypeCast" value="true" />
 			<property name="category" value="Styling" />
-			<property name="description" value="Checks that chaining is only applied on certain types and methods." />
-			<message key="chaining.allowed" value="Chaining is allowed on ''{0}''" />
-			<message key="chaining.avoid.method" value="Avoid chaining on method ''{0}''" />
-			<message key="chaining.avoid.new.instance" value="Avoid chaining on new class instantiation" />
+			<property name="description" value="Checks that method chaining can be used when possible." />
 			<message key="chaining.avoid.parentheses" value="Avoid chaining on expressions with parentheses" />
 			<message key="chaining.avoid.type.cast" value="Avoid chaining on Type Cast" />
 			<message key="chaining.required" value="Chaining on ''{0}'' is preferred" />
-			<message key="concat.avoid.too.many" value="Avoid chaining on method 'concat'. Use StringBundler when there are more than 3 parts" />
 			<message key="response.unsorted" value="Method calls between ''Response.status'' and ''Response.build'' should be sorted" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.CompanyIterationCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Checks that `CompanyLocalService.forEachCompany` or `CompanyLocalService.forEachCompanyId` is used when iterating over companies" />
 			<property name="enabled" value="false" />
-			<message key="company.local.service.use" value="Use ''CompanyLocalService.{0}'' when iterating over ''{1}''" />
+			<message key="company.local.service.use.for.loop" value="Use ''CompanyLocalService.{0}'' when iterating over ''{1}''" />
+			<message key="company.local.service.use.sql" value="Use ''CompanyLocalService.forEachCompany'' instead of SQL" />
+			<message key="portal.instances.use" value="Use ''PortalInstances.getCompanyIdsBySQL'' instead to fetch company IDs" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ComponentAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Performs several checks on classes with @Component annotation." />
-			<message key="configuration.policy.incorrect" value="Always specify ''configurationPolicy = ConfigurationPolicy.REQUIRE'' when a classs extends ''BaseAuthVerifierPipelineConfigurator''" />
+			<message key="configuration.policy.incorrect" value="Always specify ''configurationPolicy = ConfigurationPolicy.REQUIRE'' when a class extends ''BaseAuthVerifierPipelineConfigurator''" />
+			<message key="configuration.policy.unnecessary" value="Remove ''configurationPolicy = {0}'' as it is unnecessary" />
 			<message key="osgi.jaxrs.name.incorrect" value="The value of ''osgi.jaxrs.name'' should end with ''{0}''" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ComponentExposureCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Avoid exposing static component." />
+			<property name="enabled" value="false" />
+			<message key="static.component.exposed" value="Do not expose private static field ''{0}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ConcatCheck">
 			<property name="category" value="Performance" />
@@ -418,6 +413,16 @@
 			<property name="populateTypeNames" value="false" />
 			<message key="generic.type.parameterize" value="Parameterize the generic {0} for ''{1}'" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.InstanceInitializerCheck">
+			<property name="category" value="Styling" />
+			<property name="description" value="Performs several checks on class instance initializer." />
+			<message key="assign.move.before.method.call" value="The variable assignment for ''{0}'' should come before the method calling ''{1}''" />
+			<message key="assign.order.incorrect" value="The variable assignment for ''{0}'' should come before the variable assignment for ''{1}''" />
+			<message key="assign.use.instead" value="Directly assign value to ''{0}'' instead of calling ''{1}''" />
+			<message key="if.statement.inline" value="Inline if-statement inside ''{0}''" />
+			<message key="method.call.order.incorrect" value="The method calling ''{0}'' should come before the method calling ''{1}''" />
+			<message key="set.method.use.instead" value="Use ''{0}({1})'' with inlined if-statement instead" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.InstanceofOrderCheck">
 			<property name="category" value="Styling" />
 			<property name="description" value="Check the order of `instanceof` calls." />
@@ -471,7 +476,8 @@
 		<module name="com.liferay.source.formatter.checkstyle.check.LambdaCheck">
 			<property name="category" value="Styling" />
 			<property name="description" value="Checks that `lambda` statements are as simple as possible." />
-			<message key="lambda.simplify" value="Simplify lambda statement with single statement" />
+			<message key="lambda.simplify.1" value="Simplify lambda statement with single statement" />
+			<message key="lambda.simplify.2" value="Simplify lambda statement with method reference" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ListUtilCheck">
 			<property name="category" value="Styling" />
@@ -518,11 +524,16 @@
 			<property name="description" value="Checks that there are no unnecessary map iterations." />
 			<message key="entry.set.use" value="Use Map.entrySet() to retrieve values" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.MethodEqualsCheck">
+			<property name="category" value="Styling" />
+			<property name="description" value="Finds cases where `Objects.equals` should be used." />
+			<message key="objects.equals.use" value="Use ''Objects.equals'' instead of calling ''equals'' on method" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.MethodNamingCheck">
 			<property name="category" value="Naming Conventions" />
 			<property name="checkSearchMethodNames" value="false" />
 			<property name="description" value="Checks that method names follow naming conventions." />
-			<message key="method.incorrect.ending" value="Name of method returning type ''{0}'' should end with ''{0}''" />
+			<message key="method.incorrect.ending" value="Name of method returning type ''{0}'' should end with ''{1}''" />
 			<message key="method.rename" value="Rename method ''{0}'' to ''{1}''" />
 			<message key="search.method.incorrect" value="Incorrect name of method ''{0}''. Name should equal ''search'' or start with ''searchBy''." />
 			<property name="enforceTypeNames" value="" />
@@ -566,6 +577,12 @@
 			<message key="parentheses.missing.1" value="Missing parentheses between the ''{0}'' operator and the ''{1}'' operator" />
 			<message key="parentheses.missing.2" value="Missing parentheses around the {0} hand side argument of the ''{1}'' operator" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ModifiedMethodCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks for incorrect `modified` method with `@Modified` annotation." />
+			<property name="enabled" value="false" />
+			<message key="modified.method.incorrect" value="Remove method ''modified'' as it only calls ''deactivate'' and then ''activate''" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.MVCCommandNameCheck">
 			<property name="category" value="Naming Conventions" />
 			<property name="description" value="Checks for consistent naming for values of `mvc.command.name`." />
@@ -573,10 +590,10 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.NestedFieldAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
-			<property name="description" value="Verifies that `NestedFieldSupport.class` is used in `service` property of `Component` annotation" />
+			<property name="description" value="Checks for `nested.field.support` in the `property` attribute of the `Component` annotation" />
 			<property name="enabled" value="false" />
-			<message key="service.needed" value="''NestedFieldSupport.class'' is needed in ''service'' property of ''Component'' annotation, because at least one of methods has ''NestedField annotation" />
-			<message key="service.unneeded" value="No need to add ''NestedFieldSupport.class'' in ''service'' property of ''Component'' annotation, because no method has ''NestedField'' annotation" />
+			<message key="nested.field.support.missing" value="Set ''nested.field.support=true'' in the ''property'' attribute of ''Component'' annotation as one of methods has a ''NestedField'' annotation" />
+			<message key="nested.field.support.unneeded" value="Remove ''nested.field.support'' in the ''property'' attribute of ''Component'' annotation as no method has a ''NestedField'' annotation" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.NestedIfStatementCheck">
 			<property name="category" value="Styling" />
@@ -607,6 +624,14 @@
 			<property name="category" value="Styling" />
 			<property name="description" value="Verifies that when an operator has a literal string or a number as one of the operands, it is always on the right hand side." />
 			<message key="left.argument.literal.or.num" value="''{0}'' should be on the right hand side of the operator" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.OSGiCommandsCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Perform several checks on `*OSGiCommands` classes" />
+			<property name="enabled" value="false" />
+			<message key="bad.class.name" value="The names of clases that implement OSGi commands must end with ''OSGiCommands''" />
+			<message key="bad.osgi.reference" value="OSGi references to `*OSGiCommands` classes are not allowed" />
+			<message key="missing.command.function" value="OSGi command ''{0}'' is missing a method that implements it" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.OSGiResourceBuilderCheck">
 			<property name="category" value="Styling" />
@@ -669,6 +694,7 @@
 			<message key="default.unbind.redundant" value="No need to specify default ''unbind'' method. See https://osgi.org/javadoc/r4v43/cmpn/org/osgi/service/component/annotations/Reference.html#unbind()" />
 			<message key="dynamic.policy.missing" value="When using ''cardinality = ReferenceCardinality.OPTIONAL'' and ''policyOption = ReferencePolicyOption.GREEDY'', always use ''policy = ReferencePolicy.DYNAMIC'' as well" />
 			<message key="reference.move" value="Move @Reference from method ''{0}'' to field ''{1}''" />
+			<message key="snapshot.use" value="Use Snapshot instead of ''cardinality = ReferenceCardinality.OPTIONAL'', see LPS-184625" />
 			<message key="target.value.incorrect" value="Do not use ''target = {0}''" />
 			<message key="unbind.dynamic.policy.missing" value="Always specify a valid ''unbind'' method when using ''policy = ReferencePolicy.DYNAMIC'' policy. See https://osgi.org/javadoc/r4v43/cmpn/org/osgi/service/component/annotations/Reference.html#unbind()" />
 			<message key="unbind.static.policy.missing" value="Specify ''unbind'' method. Use ''unbind = {0}'' when ''unbind'' method is not needed. See https://osgi.org/javadoc/r4v43/cmpn/org/osgi/service/component/annotations/Reference.html#unbind()" />
@@ -677,7 +703,23 @@
 		<module name="com.liferay.source.formatter.checkstyle.check.ResourceImplCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Performs several checks on `*ResourceImpl` classes (except `Base*ResourceImpl` classes)." />
+			<property name="enabled" value="false" />
 			<message key="invalid.method.parameter.annotation" value="Remove annotation ''{0}'' from method parameter ''{1}''" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ResourcePermissionCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="checkModelClassName" value="true" />
+			<property name="description" value="Performs several checks on `*ResourcePermission` classes." />
+			<property name="enabled" value="false" />
+			<message key="model.class.name.mismatch" value="Expected `model.class.name` property value to be ''{0}'' but is ''{1}''" />
+			<message key="model.class.name.missing" value="The `model.class.name` property is missing from the @Component annotation" />
+			<message key="remove.service.ranking.property" value="Remove property ''{0}'' from the @Component annotation" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ResourcePermissionFactoryCheck">
+			<property name="category" value="Performance" />
+			<property name="description" value="Checks usage of `*ResourcePermissionFactory` classes." />
+			<property name="enabled" value="false" />
+			<message key="deprecated.get.instance.usage" value="Do not use ''{0}''. Use @Reference instead" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.SelfReferenceCheck">
 			<property name="category" value="Bug Prevention" />
@@ -689,10 +731,22 @@
 			<property name="description" value="Finds cases of unnecessary semicolon." />
 			<message key="semi.colon.unnecessary" value="Unnecessary semi colon" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ServiceComponentRuntimeCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks `ServiceComponentRuntime` usage in test classes." />
+			<property name="enabled" value="false" />
+			<message key="promise.get.value" value="Must wait for ''Promise'' from ''{0}'' to complete. Assign the promise to a variable and call its ''getValue()'' method" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ServiceProxyFactoryCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Finds incorrect parameter in method call." />
 			<message key="parameter.incorrect" value="Pass ''{0}'' as the second parameter when calling method ''ServiceProxyFactory.newServiceTrackedInstance''" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ServiceUpdateCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks that there are no stale references in service code from service updates." />
+			<property name="enabled" value="false" />
+			<message key="update.call.reassign" value="Update call should be reassigned to variable ''{0}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.SingleStatementClauseCheck">
 			<property name="category" value="Styling" />

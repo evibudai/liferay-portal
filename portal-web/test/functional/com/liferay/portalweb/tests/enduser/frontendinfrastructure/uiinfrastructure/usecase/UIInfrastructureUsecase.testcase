@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,14 +25,14 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-95157. Verify control menu on an admin page is styled correctly after refreshing page"
-	@priority = "5"
+	@description = "LPS-95157. Verify control menu on an admin page is styled correctly after refreshing page"
+	@priority = 5
 	@refactordone
 	test AdminPageCanDisplayStyleCorrectlyAfterPageRefresh {
 		property app.server.types = "tomcat";
 		property database.types = "mysql";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		ProductMenu.gotoPortlet(
@@ -54,8 +54,8 @@ definition {
 		takeScreenshot();
 	}
 
-	@description = "Smoke test to verify portlet configuration is available, look and feel is available"
-	@priority = "5"
+	@description = "LRQA-55778. Smoke test to verify portlet configuration is available, look and feel is available"
+	@priority = 5
 	@refactordone
 	test CanConfigurePortletUI {
 		property osgi.modules.includes = "frontend-taglib-clay-sample-web";
@@ -117,14 +117,14 @@ definition {
 		}
 	}
 
-	@description = "Smoke test to verify portlet can be dragged and dropped"
-	@priority = "5"
+	@description = "LRQA-55778. Smoke test to verify portlet can be dragged and dropped"
+	@priority = 5
 	@refactordone
 	test CanDragAndDropPortlet {
 		property app.server.types = "tomcat";
 		property database.types = "mysql";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property osgi.modules.includes = "frontend-taglib-clay-sample-web";
 		property portal.acceptance = "true";
 
@@ -148,19 +148,19 @@ definition {
 
 		task ("Then able to drag and drop portlet to another column in page") {
 			Portlet.dragAndDropPortletToColumnPG(
-				columnNumberFrom = "1",
-				columnNumberTo = "2",
+				columnNumberFrom = 1,
+				columnNumberTo = 2,
 				portletName = "Clay Sample");
 
 			Portlet.dragAndDropPortletToColumnPG(
-				columnNumberFrom = "2",
-				columnNumberTo = "1",
+				columnNumberFrom = 2,
+				columnNumberTo = 1,
 				portletName = "Clay Sample");
 		}
 	}
 
-	@description = "Smoke test to verify portlet can be removed"
-	@priority = "5"
+	@description = "LRQA-55778. Smoke test to verify portlet can be removed"
+	@priority = 5
 	@refactordone
 	test CanRemovePortlet {
 		property osgi.modules.includes = "frontend-taglib-clay-sample-web";
@@ -193,16 +193,13 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-70390."
-	@priority = "4"
+	@description = "LPS-70390. Non ascii characters would be displayed correctly, when SPA is turned off"
+	@priority = 4
 	@refactordone
 	test CanViewNonASCIICharactersWithSPADisabled {
 		property custom.properties = "javascript.single.page.application.enabled=false";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.addCP(
 			userEmailAddress = "skandi@liferay.com",
@@ -210,10 +207,7 @@ definition {
 			userLastName = "Ääkkönen",
 			userScreenName = "uskandi");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.viewCP(
 			userEmailAddress = "skandi@liferay.com",
@@ -223,13 +217,13 @@ definition {
 	}
 
 	@description = "Verify portlets have defined boundaries in 3 column page layout."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test PortletBoundariesAreContained {
 		property app.server.types = "tomcat";
 		property database.types = "mysql";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property osgi.modules.includes = "frontend-taglib-clay-sample-web";
 		property portal.acceptance = "true";
 
@@ -243,19 +237,19 @@ definition {
 			layoutTemplate = "3 Columns");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Test Page",
 			widgetName = "Message Boards");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
+			column = 2,
 			groupName = "Guest",
 			layoutName = "Test Page",
 			widgetName = "Clay Sample");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "3",
+			column = 3,
 			groupName = "Guest",
 			layoutName = "Test Page",
 			widgetName = "Documents and Media");
@@ -263,7 +257,7 @@ definition {
 		Navigator.gotoPage(pageName = "Test Page");
 
 		MouseOver(
-			key_pageColumnNumber = "1",
+			key_pageColumnNumber = 1,
 			key_portletName = "Message Boards",
 			locator1 = "Portlet#PORTLET_TITLE_INSIDE_PAGE_COLUMN");
 
@@ -272,7 +266,7 @@ definition {
 		takeScreenshot();
 
 		MouseOver(
-			key_pageColumnNumber = "2",
+			key_pageColumnNumber = 2,
 			key_portletName = "Clay Sample",
 			locator1 = "Portlet#PORTLET_TITLE_INSIDE_PAGE_COLUMN");
 
@@ -281,7 +275,7 @@ definition {
 		takeScreenshot();
 
 		MouseOver(
-			key_pageColumnNumber = "3",
+			key_pageColumnNumber = 3,
 			key_portletName = "Documents and Media",
 			locator1 = "Portlet#PORTLET_TITLE_INSIDE_PAGE_COLUMN");
 
@@ -290,14 +284,14 @@ definition {
 		takeScreenshot();
 	}
 
-	@description = "This is a use case for LPS-95157. Verify control menu on home page is styled correctly after refreshing page."
-	@priority = "5"
+	@description = "LPS-95157. Verify control menu on home page is styled correctly after refreshing page."
+	@priority = 5
 	@refactordone
 	test SitePageCanDisplayStyleCorrectlyAfterPageRefresh {
 		property app.server.types = "tomcat";
 		property database.types = "mysql";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		Navigator.gotoPage(pageName = "Home");

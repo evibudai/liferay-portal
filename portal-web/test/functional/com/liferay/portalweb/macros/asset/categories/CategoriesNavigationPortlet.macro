@@ -1,64 +1,68 @@
 definition {
 
-	macro selectCategoryPG {
+	@summary = "Default summary"
+	macro selectCategoryPG(categoryName = null) {
 		Portlet.expandTree();
 
 		AssertClick(
-			key_nodeName = "${categoryName}",
+			key_nodeName = ${categoryName},
 			locator1 = "Treeview#NODE_UNSELECTED",
-			value1 = "${categoryName}");
+			value1 = ${categoryName});
 	}
 
-	macro viewCustomADTMultiColumnPG {
-		for (var column : list "${columnList}") {
-			var key_column = "${column}";
+	@summary = "Default summary"
+	macro viewCustomADTMultiColumnPG(vocabularyNameList = null, columnList = null, categoryNameList = null) {
+		for (var column : list ${columnList}) {
+			var key_column = ${column};
 
 			AssertElementPresent(locator1 = "CategoriesNavigation#ADT_MULTI_COLUMN");
 		}
 
-		var n = "1";
+		var n = 1;
 
-		for (var vocabularyName : list "${vocabularyNameList}") {
-			var column = "${n}";
+		for (var vocabularyName : list ${vocabularyNameList}) {
+			var column = ${n};
 
-			var key_column = "${column}";
+			var key_column = ${column};
 
 			AssertTextEquals(
 				locator1 = "CategoriesNavigation#ADT_MULTI_COLUMN_VOCABULARY_NAME",
-				value1 = "${vocabularyName}");
+				value1 = ${vocabularyName});
 
 			var n = ${n} + 1;
 		}
 
-		var n = "1";
+		var n = 1;
 
-		for (var categoryName : list "${categoryNameList}") {
-			var column = "${n}";
+		for (var categoryName : list ${categoryNameList}) {
+			var column = ${n};
 
-			var key_column = "${column}";
+			var key_column = ${column};
 
-			if ("${categoryName}" != "Null") {
+			if (${categoryName} != "Null") {
 				AssertTextEquals(
 					locator1 = "CategoriesNavigation#ADT_MULTI_COLUMN_CATEGORY_NAME",
-					value1 = "${categoryName}");
+					value1 = ${categoryName});
 			}
 
 			var n = ${n} + 1;
 		}
 	}
 
-	macro viewDefaultPG {
-		var key_nodeListName = "${vocabularyName}";
+	@summary = "Default summary"
+	macro viewDefaultPG(vocabularyName = null, categoryName = null) {
+		var key_nodeListName = ${vocabularyName};
 
 		Portlet.expandTree();
 
-		var key_nodeName = "${categoryName}";
+		var key_nodeName = ${categoryName};
 
 		AssertElementPresent(locator1 = "Treeview#NODE_UNSELECTED");
 	}
 
-	macro viewNoCategory {
-		AssertTextEquals(
+	@summary = "Default summary"
+	macro viewNoCategory() {
+		AssertTextEquals.assertPartialText(
 			key_infoMessage = "There are no categories.",
 			locator1 = "Message#INFO_SPECIFIC",
 			value1 = "There are no categories.");

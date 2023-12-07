@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.resource.v1_0;
 
 import com.liferay.account.model.AccountEntry;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.order.rule.exception.NoSuchCOREntryException;
 import com.liferay.commerce.order.rule.model.COREntry;
 import com.liferay.commerce.order.rule.model.COREntryRel;
@@ -24,16 +14,15 @@ import com.liferay.commerce.order.rule.service.COREntryRelService;
 import com.liferay.commerce.order.rule.service.COREntryService;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRule;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderRuleAccount;
-import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.OrderRuleAccountDTOConverter;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderRuleAccountResource;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -48,11 +37,11 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/order-rule-account.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, OrderRuleAccountResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = OrderRuleAccountResource.class
 )
 public class OrderRuleAccountResourceImpl
-	extends BaseOrderRuleAccountResourceImpl implements NestedFieldSupport {
+	extends BaseOrderRuleAccountResourceImpl {
 
 	@Override
 	public void deleteOrderRuleAccount(Long id) throws Exception {
@@ -124,12 +113,11 @@ public class OrderRuleAccountResourceImpl
 					externalReferenceCode);
 		}
 
-		CommerceAccount commerceAccount = _getCommerceAccount(orderRuleAccount);
+		AccountEntry accountEntry = _getAccountEntry(orderRuleAccount);
 
 		return _toOrderRuleAccount(
 			_corEntryRelService.addCOREntryRel(
-				AccountEntry.class.getName(),
-				commerceAccount.getCommerceAccountId(),
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
 				corEntry.getCOREntryId()));
 	}
 
@@ -138,12 +126,31 @@ public class OrderRuleAccountResourceImpl
 			Long id, OrderRuleAccount orderRuleAccount)
 		throws Exception {
 
-		CommerceAccount commerceAccount = _getCommerceAccount(orderRuleAccount);
+		AccountEntry accountEntry = _getAccountEntry(orderRuleAccount);
 
 		return _toOrderRuleAccount(
 			_corEntryRelService.addCOREntryRel(
-				AccountEntry.class.getName(),
-				commerceAccount.getCommerceAccountId(), id));
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				id));
+	}
+
+	private AccountEntry _getAccountEntry(OrderRuleAccount orderRuleAccount)
+		throws Exception {
+
+		AccountEntry accountEntry = null;
+
+		if (orderRuleAccount.getAccountId() > 0) {
+			accountEntry = _accountEntryService.getAccountEntry(
+				orderRuleAccount.getAccountId());
+		}
+		else {
+			accountEntry =
+				_accountEntryService.fetchAccountEntryByExternalReferenceCode(
+					contextCompany.getCompanyId(),
+					orderRuleAccount.getAccountExternalReferenceCode());
+		}
+
+		return accountEntry;
 	}
 
 	private Map<String, Map<String, String>> _getActions(
@@ -156,26 +163,6 @@ public class OrderRuleAccountResourceImpl
 				"UPDATE", corEntryRel.getCOREntryRelId(),
 				"deleteOrderRuleAccount", _corEntryRelModelResourcePermission)
 		).build();
-	}
-
-	private CommerceAccount _getCommerceAccount(
-			OrderRuleAccount orderRuleAccount)
-		throws Exception {
-
-		CommerceAccount commerceAccount = null;
-
-		if (orderRuleAccount.getAccountId() > 0) {
-			commerceAccount = _commerceAccountService.getCommerceAccount(
-				orderRuleAccount.getAccountId());
-		}
-		else {
-			commerceAccount =
-				_commerceAccountService.fetchByExternalReferenceCode(
-					contextCompany.getCompanyId(),
-					orderRuleAccount.getAccountExternalReferenceCode());
-		}
-
-		return commerceAccount;
 	}
 
 	private OrderRuleAccount _toOrderRuleAccount(COREntryRel corEntryRel)
@@ -191,7 +178,7 @@ public class OrderRuleAccountResourceImpl
 	}
 
 	@Reference
-	private CommerceAccountService _commerceAccountService;
+	private AccountEntryService _accountEntryService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.order.rule.model.COREntryRel)"
@@ -208,7 +195,10 @@ public class OrderRuleAccountResourceImpl
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private OrderRuleAccountDTOConverter _orderRuleAccountDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.OrderRuleAccountDTOConverter)"
+	)
+	private DTOConverter<COREntryRel, OrderRuleAccount>
+		_orderRuleAccountDTOConverter;
 
 }

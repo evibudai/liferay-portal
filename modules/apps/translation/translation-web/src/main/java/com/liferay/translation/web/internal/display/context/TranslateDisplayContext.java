@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.web.internal.display.context;
@@ -18,12 +9,14 @@ import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.InfoFieldSetEntry;
 import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.petra.function.UnsafeSupplier;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
@@ -43,7 +36,6 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -57,16 +49,12 @@ import com.liferay.translation.service.TranslationEntryLocalServiceUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 
@@ -117,17 +105,14 @@ public class TranslateDisplayContext {
 
 	public String getAutoTranslateURL() {
 		return PortalUtil.getPortalURL(_httpServletRequest) +
-			Portal.PATH_MODULE + "/translation/auto_translate";
+			PortalUtil.getPathModule() + "/translation/auto_translate";
 	}
 
 	public boolean getBooleanValue(
 		InfoField<TextInfoFieldType> infoField,
 		InfoFieldType.Attribute<TextInfoFieldType, Boolean> attribute) {
 
-		Optional<Boolean> attributeOptional = infoField.getAttributeOptional(
-			attribute);
-
-		return attributeOptional.orElse(false);
+		return GetterUtil.getBoolean(infoField.getAttribute(attribute));
 	}
 
 	public String getInfoFieldLabel(InfoField infoField) {
@@ -177,64 +162,53 @@ public class TranslateDisplayContext {
 			infoFieldSetEntries.add(
 				HashMapBuilder.<String, Object>put(
 					"fields",
-					() -> {
-						Stream<InfoField> stream = infoFields.stream();
+					() -> TransformUtil.transform(
+						infoFields,
+						infoField -> {
+							String infoFieldId =
+								"infoField--" + infoField.getUniqueId() + "--";
 
-						return stream.map(
-							infoField -> {
-								String infoFieldId =
-									"infoField--" + infoField.getUniqueId() +
-										"--";
+							Map<String, Object> editorConfiguration = null;
 
-								Map<String, Object> editorConfiguration = null;
+							boolean html = isHTMLInfoFieldType(infoField);
 
-								if (getBooleanValue(
-										infoField, TextInfoFieldType.HTML)) {
-
-									editorConfiguration =
-										_getInfoFieldEditorConfig(infoFieldId);
-								}
-
-								return HashMapBuilder.<String, Object>put(
-									"editorConfiguration", editorConfiguration
-								).put(
-									"html",
-									getBooleanValue(
-										infoField, TextInfoFieldType.HTML)
-								).put(
-									"id", infoFieldId
-								).put(
-									"label",
-									infoField.getLabel(
-										_themeDisplay.getLocale())
-								).put(
-									"multiline",
-									getBooleanValue(
-										infoField, TextInfoFieldType.MULTILINE)
-								).put(
-									"sourceContent",
-									getSourceStringValues(
-										infoField, getSourceLocale())
-								).put(
-									"sourceContentDir",
-									LanguageUtil.get(
-										getSourceLocale(), "lang.dir")
-								).put(
-									"targetContent",
-									getTargetStringValues(
-										infoField, getTargetLocale())
-								).put(
-									"targetContentDir",
-									LanguageUtil.get(
-										getTargetLocale(), "lang.dir")
-								).put(
-									"targetLanguageId", getTargetLanguageId()
-								).build();
+							if (html) {
+								editorConfiguration = _getInfoFieldEditorConfig(
+									infoFieldId);
 							}
-						).collect(
-							Collectors.toList()
-						);
-					}
+
+							return HashMapBuilder.<String, Object>put(
+								"editorConfiguration", editorConfiguration
+							).put(
+								"html", html
+							).put(
+								"id", infoFieldId
+							).put(
+								"label",
+								infoField.getLabel(_themeDisplay.getLocale())
+							).put(
+								"multiline",
+								html ||
+								getBooleanValue(
+									infoField, TextInfoFieldType.MULTILINE)
+							).put(
+								"sourceContent",
+								getSourceStringValues(
+									infoField, getSourceLocale())
+							).put(
+								"sourceContentDir",
+								LanguageUtil.get(getSourceLocale(), "lang.dir")
+							).put(
+								"targetContent",
+								getTargetStringValues(
+									infoField, getTargetLocale())
+							).put(
+								"targetContentDir",
+								LanguageUtil.get(getTargetLocale(), "lang.dir")
+							).put(
+								"targetLanguageId", getTargetLanguageId()
+							).build();
+						})
 				).put(
 					"legend",
 					getInfoFieldSetLabel(
@@ -322,7 +296,7 @@ public class TranslateDisplayContext {
 				_themeDisplay.getCompanyId(), _getGroupId(),
 				TranslationEntry.class.getName())) {
 
-			return "submit-for-publication";
+			return "submit-for-workflow";
 		}
 
 		return "publish";
@@ -352,18 +326,11 @@ public class TranslateDisplayContext {
 	public List<String> getSourceStringValues(
 		InfoField infoField, Locale locale) {
 
-		Collection<InfoFieldValue<Object>> infoFieldValues =
+		return TransformUtil.transform(
 			_sourceInfoItemFieldValues.getInfoFieldValues(
-				infoField.getUniqueId());
-
-		Stream<InfoFieldValue<Object>> stream = infoFieldValues.stream();
-
-		return stream.map(
+				infoField.getUniqueId()),
 			infoFieldValue -> GetterUtil.getString(
-				infoFieldValue.getValue(locale))
-		).collect(
-			Collectors.toList()
-		);
+				infoFieldValue.getValue(locale)));
 	}
 
 	public String getTargetLanguageId() {
@@ -377,18 +344,11 @@ public class TranslateDisplayContext {
 	public List<String> getTargetStringValues(
 		InfoField infoField, Locale locale) {
 
-		Collection<InfoFieldValue<Object>> infoFieldValues =
+		return TransformUtil.transform(
 			_targetInfoItemFieldValues.getInfoFieldValues(
-				infoField.getUniqueId());
-
-		Stream<InfoFieldValue<Object>> stream = infoFieldValues.stream();
-
-		return stream.map(
+				infoField.getUniqueId()),
 			infoFieldValue -> GetterUtil.getString(
-				infoFieldValue.getValue(locale))
-		).collect(
-			Collectors.toList()
-		);
+				infoFieldValue.getValue(locale)));
 	}
 
 	public String getTitle() {
@@ -457,6 +417,14 @@ public class TranslateDisplayContext {
 		return false;
 	}
 
+	public boolean isHTMLInfoFieldType(InfoField infoField) {
+		if (infoField.getInfoFieldType() instanceof HTMLInfoFieldType) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public boolean isPublishButtonDisabled() {
 		if (_isAvailableTargetLanguageIdsEmpty()) {
 			return true;
@@ -496,8 +464,7 @@ public class TranslateDisplayContext {
 
 		List<SegmentsExperience> segmentsExperiences =
 			SegmentsExperienceServiceUtil.getSegmentsExperiences(
-				_groupId, PortalUtil.getClassNameId(_className), _classPK,
-				true);
+				_groupId, _classPK, true);
 
 		List<Map<String, String>> options = new ArrayList<>();
 

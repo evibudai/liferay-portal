@@ -1,30 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.display.context;
 
 import com.liferay.account.model.AccountEntry;
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
-import com.liferay.commerce.constants.CommercePaymentConstants;
+import com.liferay.commerce.constants.CommercePaymentMethodConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
-import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -32,9 +20,10 @@ import com.liferay.commerce.frontend.model.HeaderActionModel;
 import com.liferay.commerce.frontend.model.StepModel;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.model.CommerceOrderItem;
+import com.liferay.commerce.model.CommerceOrderItemModel;
 import com.liferay.commerce.model.CommerceOrderNote;
 import com.liferay.commerce.model.CommerceOrderType;
-import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.content.web.internal.portlet.configuration.CommerceOrderContentPortletInstanceConfiguration;
 import com.liferay.commerce.order.content.web.internal.portlet.configuration.OpenCommerceOrderContentPortletInstanceConfiguration;
@@ -43,6 +32,9 @@ import com.liferay.commerce.order.importer.type.CommerceOrderImporterType;
 import com.liferay.commerce.order.importer.type.CommerceOrderImporterTypeRegistry;
 import com.liferay.commerce.order.status.CommerceOrderStatus;
 import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
+import com.liferay.commerce.payment.constants.CommercePaymentIntegrationConstants;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegration;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegrationRegistry;
 import com.liferay.commerce.payment.method.CommercePaymentMethod;
 import com.liferay.commerce.payment.method.CommercePaymentMethodRegistry;
 import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
@@ -50,6 +42,7 @@ import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalSe
 import com.liferay.commerce.percentage.PercentageFormatter;
 import com.liferay.commerce.price.CommerceOrderPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
@@ -57,7 +50,6 @@ import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderNoteService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
-import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.commerce.term.service.CommerceTermEntryService;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
@@ -69,15 +61,17 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -96,6 +90,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -138,11 +133,13 @@ public class CommerceOrderContentDisplayContext {
 			CommerceOrderService commerceOrderService,
 			CommerceOrderStatusRegistry commerceOrderStatusRegistry,
 			CommerceOrderTypeService commerceOrderTypeService,
+			CommercePaymentIntegrationRegistry
+				commercePaymentIntegrationRegistry,
 			CommercePaymentMethodGroupRelLocalService
 				commercePaymentMethodGroupRelLocalService,
 			CommercePaymentMethodRegistry commercePaymentMethodRegistry,
-			CommerceShipmentItemService commerceShipmentItemService,
 			CommerceTermEntryService commerceTermEntryService,
+			ConfigurationProvider configurationProvider,
 			DLAppLocalService dlAppLocalService,
 			HttpServletRequest httpServletRequest, ItemSelector itemSelector,
 			ModelResourcePermission<CommerceOrder> modelResourcePermission,
@@ -160,11 +157,13 @@ public class CommerceOrderContentDisplayContext {
 		_commerceOrderService = commerceOrderService;
 		_commerceOrderStatusRegistry = commerceOrderStatusRegistry;
 		_commerceOrderTypeService = commerceOrderTypeService;
+		_commercePaymentIntegrationRegistry =
+			commercePaymentIntegrationRegistry;
 		_commercePaymentMethodGroupRelLocalService =
 			commercePaymentMethodGroupRelLocalService;
 		_commercePaymentMethodRegistry = commercePaymentMethodRegistry;
-		_commerceShipmentItemService = commerceShipmentItemService;
 		_commerceTermEntryService = commerceTermEntryService;
+		_configurationProvider = configurationProvider;
 		_dlAppLocalService = dlAppLocalService;
 		_httpServletRequest = httpServletRequest;
 		_itemSelector = itemSelector;
@@ -176,22 +175,22 @@ public class CommerceOrderContentDisplayContext {
 
 		_portletDisplay = _cpRequestHelper.getPortletDisplay();
 
-		ThemeDisplay themeDisplay = _cpRequestHelper.getThemeDisplay();
+		_themeDisplay = _cpRequestHelper.getThemeDisplay();
 
-		_commerceOrderDateFormatDate = FastDateFormatFactoryUtil.getDate(
-			DateFormat.MEDIUM, themeDisplay.getLocale(),
-			themeDisplay.getTimeZone());
-		_commerceOrderDateFormatTime = FastDateFormatFactoryUtil.getTime(
-			DateFormat.MEDIUM, themeDisplay.getLocale(),
-			themeDisplay.getTimeZone());
+		_commerceOrderDateFormat = FastDateFormatFactoryUtil.getDate(
+			DateFormat.MEDIUM, _themeDisplay.getLocale(),
+			_themeDisplay.getTimeZone());
+		_commerceOrderTimeFormat = FastDateFormatFactoryUtil.getTime(
+			DateFormat.MEDIUM, _themeDisplay.getLocale(),
+			_themeDisplay.getTimeZone());
 
-		_commerceContext = (CommerceContext)_httpServletRequest.getAttribute(
+		_commerceContext = (CommerceContext)httpServletRequest.getAttribute(
 			CommerceWebKeys.COMMERCE_CONTEXT);
 
-		_commerceAccount = _commerceContext.getCommerceAccount();
+		_accountEntry = _commerceContext.getAccountEntry();
 
 		_commerceOrderNoteId = ParamUtil.getLong(
-			_httpServletRequest, "commerceOrderNoteId");
+			httpServletRequest, "commerceOrderNoteId");
 	}
 
 	public CommerceChannel fetchCommerceChannel() {
@@ -204,29 +203,31 @@ public class CommerceOrderContentDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		return _commerceOrderDateFormatDate.format(date);
+		return _commerceOrderDateFormat.format(date);
+	}
+
+	public AccountEntry getAccountEntry() {
+		return _accountEntry;
 	}
 
 	public List<CommerceAddress> getBillingCommerceAddresses(
-			long commerceAccountId, long companyId)
+			long commerceAccountId)
 		throws PortalException {
 
 		return _commerceAddressService.getBillingCommerceAddresses(
-			companyId, AccountEntry.class.getName(), commerceAccountId);
-	}
-
-	public CommerceAccount getCommerceAccount() {
-		return _commerceAccount;
+			_commerceContext.getCommerceChannelId(),
+			AccountEntry.class.getName(), commerceAccountId, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
 	}
 
 	public long getCommerceAccountId() {
-		long commerceAccountId = 0;
+		long accountEntryId = 0;
 
-		if (_commerceAccount != null) {
-			commerceAccountId = _commerceAccount.getCommerceAccountId();
+		if (_accountEntry != null) {
+			accountEntryId = _accountEntry.getAccountEntryId();
 		}
 
-		return commerceAccountId;
+		return accountEntryId;
 	}
 
 	public String getCommerceAccountThumbnailURL() throws PortalException {
@@ -236,7 +237,7 @@ public class CommerceOrderContentDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 		ThemeDisplay themeDisplay = _cpRequestHelper.getThemeDisplay();
 
@@ -244,13 +245,12 @@ public class CommerceOrderContentDisplayContext {
 
 		sb.append(themeDisplay.getPathImage());
 		sb.append("/organization_logo?img_id=");
-		sb.append(commerceAccount.getLogoId());
+		sb.append(accountEntry.getLogoId());
 
-		if (commerceAccount.getLogoId() > 0) {
+		if (accountEntry.getLogoId() > 0) {
 			sb.append("&t=");
 			sb.append(
-				WebServerServletTokenUtil.getToken(
-					commerceAccount.getLogoId()));
+				WebServerServletTokenUtil.getToken(accountEntry.getLogoId()));
 		}
 
 		return sb.toString();
@@ -309,7 +309,7 @@ public class CommerceOrderContentDisplayContext {
 			orderDate = commerceOrder.getOrderDate();
 		}
 
-		return _commerceOrderDateFormatDate.format(orderDate);
+		return _commerceOrderDateFormat.format(orderDate);
 	}
 
 	public long getCommerceOrderId() {
@@ -365,11 +365,22 @@ public class CommerceOrderContentDisplayContext {
 			getCommerceOrder(), _commerceContext);
 	}
 
-	public String getCommerceOrderStatus(CommerceOrder commerceOrder) {
-		return LanguageUtil.get(
+	public String getCommerceOrderStatusLabel(CommerceOrder commerceOrder) {
+		String commerceOrderStatusLabel = LanguageUtil.get(
 			_httpServletRequest,
 			CommerceOrderConstants.getOrderStatusLabel(
 				commerceOrder.getOrderStatus()));
+
+		if (commerceOrderStatusLabel == null) {
+			CommerceOrderStatus commerceOrderStatus =
+				_commerceOrderStatusRegistry.getCommerceOrderStatus(
+					commerceOrder.getOrderStatus());
+
+			commerceOrderStatusLabel = commerceOrderStatus.getLabel(
+				_cpRequestHelper.getLocale());
+		}
+
+		return commerceOrderStatusLabel;
 	}
 
 	public String getCommerceOrderTime(CommerceOrder commerceOrder) {
@@ -379,7 +390,7 @@ public class CommerceOrderContentDisplayContext {
 			orderDate = commerceOrder.getOrderDate();
 		}
 
-		return _commerceOrderDateFormatTime.format(orderDate);
+		return _commerceOrderTimeFormat.format(orderDate);
 	}
 
 	public String getCommerceOrderTypeName(String languageId)
@@ -431,18 +442,12 @@ public class CommerceOrderContentDisplayContext {
 		return commerceChannel.getPriceDisplayType();
 	}
 
-	public List<CommerceShipmentItem> getCommerceShipmentItems(
-			long commerceOrderItemId)
-		throws PortalException {
+	public String getCommerceShipmentItemsAPIURL() throws PortalException {
+		long commerceOrderItemId = ParamUtil.getLong(
+			_httpServletRequest, "commerceOrderItemId");
 
-		return _commerceShipmentItemService.
-			getCommerceShipmentItemsByCommerceOrderItemId(commerceOrderItemId);
-	}
-
-	public String getCommerceShipmentStatusLabel(int status) {
-		return LanguageUtil.get(
-			_httpServletRequest,
-			CommerceShipmentConstants.getShipmentStatusLabel(status));
+		return "/o/headless-commerce-delivery-order/v1.0/placed-order-items/" +
+			commerceOrderItemId + "/placed-order-item-shipments";
 	}
 
 	public String getCSVTemplateDownloadURL() throws Exception {
@@ -512,9 +517,10 @@ public class CommerceOrderContentDisplayContext {
 
 			OpenCommerceOrderContentPortletInstanceConfiguration
 				openCommerceOrderContentPortletInstanceConfiguration =
-					_portletDisplay.getPortletInstanceConfiguration(
+					_configurationProvider.getPortletInstanceConfiguration(
 						OpenCommerceOrderContentPortletInstanceConfiguration.
-							class);
+							class,
+						_themeDisplay);
 
 			return openCommerceOrderContentPortletInstanceConfiguration.
 				displayStyle();
@@ -522,8 +528,9 @@ public class CommerceOrderContentDisplayContext {
 		else if (portletId.equals(CommercePortletKeys.COMMERCE_ORDER_CONTENT)) {
 			CommerceOrderContentPortletInstanceConfiguration
 				commerceOrderContentPortletInstanceConfiguration =
-					_portletDisplay.getPortletInstanceConfiguration(
-						CommerceOrderContentPortletInstanceConfiguration.class);
+					_configurationProvider.getPortletInstanceConfiguration(
+						CommerceOrderContentPortletInstanceConfiguration.class,
+						_themeDisplay);
 
 			return commerceOrderContentPortletInstanceConfiguration.
 				displayStyle();
@@ -543,9 +550,10 @@ public class CommerceOrderContentDisplayContext {
 
 			OpenCommerceOrderContentPortletInstanceConfiguration
 				openCommerceOrderContentPortletInstanceConfiguration =
-					_portletDisplay.getPortletInstanceConfiguration(
+					_configurationProvider.getPortletInstanceConfiguration(
 						OpenCommerceOrderContentPortletInstanceConfiguration.
-							class);
+							class,
+						_themeDisplay);
 
 			return openCommerceOrderContentPortletInstanceConfiguration.
 				displayStyleGroupId();
@@ -553,8 +561,9 @@ public class CommerceOrderContentDisplayContext {
 		else if (portletId.equals(CommercePortletKeys.COMMERCE_ORDER_CONTENT)) {
 			CommerceOrderContentPortletInstanceConfiguration
 				commerceOrderContentPortletInstanceConfiguration =
-					_portletDisplay.getPortletInstanceConfiguration(
-						CommerceOrderContentPortletInstanceConfiguration.class);
+					_configurationProvider.getPortletInstanceConfiguration(
+						CommerceOrderContentPortletInstanceConfiguration.class,
+						_themeDisplay);
 
 			return commerceOrderContentPortletInstanceConfiguration.
 				displayStyleGroupId();
@@ -745,6 +754,8 @@ public class CommerceOrderContentDisplayContext {
 				continue;
 			}
 
+			String buttonCssClass = null;
+			String id = null;
 			String label;
 			String transitionName;
 
@@ -766,6 +777,19 @@ public class CommerceOrderContentDisplayContext {
 					transitionName = "submit";
 				}
 			}
+			else if ((commerceOrderStatus.getKey() ==
+						CommerceOrderConstants.ORDER_STATUS_QUOTE_REQUESTED) &&
+					 isRequestQuoteEnabled()) {
+
+				if (!isValidCommerceOrder()) {
+					continue;
+				}
+
+				buttonCssClass = "btn-primary request-quote";
+				id = "requestQuote";
+				label = "request-a-quote";
+				transitionName = String.valueOf(commerceOrderStatus.getKey());
+			}
 			else if (commerceOrderStatus.getKey() ==
 						CommerceOrderConstants.ORDER_STATUS_PROCESSING) {
 
@@ -778,11 +802,19 @@ public class CommerceOrderContentDisplayContext {
 				label = "accept-order";
 				transitionName = String.valueOf(commerceOrderStatus.getKey());
 			}
+			else if (commerceOrderStatus.getKey() ==
+						CommerceOrderConstants.ORDER_STATUS_QUOTE_PROCESSED) {
+
+				label = "process-quote";
+				transitionName = String.valueOf(commerceOrderStatus.getKey());
+			}
 			else {
 				continue;
 			}
 
-			String buttonCssClass = "btn-primary";
+			if (Validator.isNull(buttonCssClass)) {
+				buttonCssClass = "btn-primary";
+			}
 
 			if (commerceOrderStatus.getPriority() ==
 					CommerceOrderConstants.ORDER_STATUS_ANY) {
@@ -796,9 +828,15 @@ public class CommerceOrderContentDisplayContext {
 				"transitionName", transitionName
 			).buildString();
 
+			if (commerceOrderStatus.getKey() ==
+					CommerceOrderConstants.ORDER_STATUS_QUOTE_REQUESTED) {
+
+				transitionOrderPortletURLString = null;
+			}
+
 			headerActionModels.add(
 				new HeaderActionModel(
-					buttonCssClass, null, transitionOrderPortletURLString, null,
+					buttonCssClass, null, transitionOrderPortletURLString, id,
 					label));
 		}
 
@@ -845,7 +883,8 @@ public class CommerceOrderContentDisplayContext {
 		}
 
 		List<CommerceOrderStatus> commerceOrderStatuses =
-			_commerceOrderStatusRegistry.getCommerceOrderStatuses();
+			_commerceOrderStatusRegistry.getCommerceOrderStatuses(
+				commerceOrder);
 
 		for (CommerceOrderStatus commerceOrderStatus : commerceOrderStatuses) {
 			if (((commerceOrderStatus.getKey() ==
@@ -871,7 +910,9 @@ public class CommerceOrderContentDisplayContext {
 
 			if (commerceOrderStatus.equals(currentCommerceOrderStatus) &&
 				(commerceOrderStatus.getKey() !=
-					CommerceOrderConstants.ORDER_STATUS_COMPLETED)) {
+					CommerceOrderConstants.ORDER_STATUS_COMPLETED) &&
+				(commerceOrderStatus.getKey() !=
+					CommerceOrderConstants.ORDER_STATUS_QUOTE_PROCESSED)) {
 
 				step.setState("active");
 			}
@@ -943,36 +984,62 @@ public class CommerceOrderContentDisplayContext {
 
 		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
-		if (isOpenOrderContentPortlet()) {
-			_searchContainer.setResultsAndTotal(
-				() -> _commerceOrderService.getUserPendingCommerceOrders(
-					_cpRequestHelper.getCompanyId(),
-					_cpRequestHelper.getCommerceChannelGroupId(), keywords,
-					_searchContainer.getStart(), _searchContainer.getEnd()),
-				(int)_commerceOrderService.getUserPendingCommerceOrdersCount(
-					_cpRequestHelper.getCompanyId(),
-					_cpRequestHelper.getCommerceChannelGroupId(), keywords));
+		try {
+			if (isOpenOrderContentPortlet()) {
+				CommerceOrder commerceOrder =
+					_commerceOrderHttpHelper.getCurrentCommerceOrder(
+						_httpServletRequest);
+
+				if ((commerceOrder != null) && commerceOrder.isGuestOrder()) {
+					_searchContainer.setResultsAndTotal(
+						Collections.singletonList(commerceOrder));
+				}
+				else {
+					_searchContainer.setResultsAndTotal(
+						() ->
+							_commerceOrderService.getUserPendingCommerceOrders(
+								_cpRequestHelper.getCompanyId(),
+								_cpRequestHelper.getCommerceChannelGroupId(),
+								keywords, _searchContainer.getStart(),
+								_searchContainer.getEnd()),
+						(int)
+							_commerceOrderService.
+								getUserPendingCommerceOrdersCount(
+									_cpRequestHelper.getCompanyId(),
+									_cpRequestHelper.
+										getCommerceChannelGroupId(),
+									keywords));
+				}
+			}
+			else {
+				_searchContainer.setResultsAndTotal(
+					() -> _commerceOrderService.getUserPlacedCommerceOrders(
+						_cpRequestHelper.getCompanyId(),
+						_cpRequestHelper.getCommerceChannelGroupId(), keywords,
+						_searchContainer.getStart(), _searchContainer.getEnd()),
+					(int)_commerceOrderService.getUserPlacedCommerceOrdersCount(
+						_cpRequestHelper.getCompanyId(),
+						_cpRequestHelper.getCommerceChannelGroupId(),
+						keywords));
+			}
 		}
-		else {
-			_searchContainer.setResultsAndTotal(
-				() -> _commerceOrderService.getUserPlacedCommerceOrders(
-					_cpRequestHelper.getCompanyId(),
-					_cpRequestHelper.getCommerceChannelGroupId(), keywords,
-					_searchContainer.getStart(), _searchContainer.getEnd()),
-				(int)_commerceOrderService.getUserPlacedCommerceOrdersCount(
-					_cpRequestHelper.getCompanyId(),
-					_cpRequestHelper.getCommerceChannelGroupId(), keywords));
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
 		}
 
 		return _searchContainer;
 	}
 
 	public List<CommerceAddress> getShippingCommerceAddresses(
-			long commerceAccountId, long companyId)
+			long commerceAccountId)
 		throws PortalException {
 
 		return _commerceAddressService.getShippingCommerceAddresses(
-			companyId, AccountEntry.class.getName(), commerceAccountId);
+			_commerceContext.getCommerceChannelId(),
+			AccountEntry.class.getName(), commerceAccountId, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
 	}
 
 	public PortletURL getTransitionOrderPortletURL() throws PortalException {
@@ -1005,6 +1072,14 @@ public class CommerceOrderContentDisplayContext {
 			CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_PAYMENT_TERMS);
 	}
 
+	public boolean hasManageQuotePermission() {
+		ThemeDisplay themeDisplay = _cpRequestHelper.getThemeDisplay();
+
+		return _portletResourcePermission.contains(
+			themeDisplay.getPermissionChecker(), themeDisplay.getScopeGroupId(),
+			CommerceOrderActionKeys.MANAGE_QUOTES);
+	}
+
 	public boolean hasModelPermission(
 			CommerceOrder commerceOrder, String actionId)
 		throws PortalException {
@@ -1020,6 +1095,18 @@ public class CommerceOrderContentDisplayContext {
 			_cpRequestHelper.getPermissionChecker(), commerceOrderId, actionId);
 	}
 
+	public boolean hasPermission(AccountEntry accountEntry, String actionId)
+		throws PortalException {
+
+		if (accountEntry == null) {
+			return false;
+		}
+
+		return _portletResourcePermission.contains(
+			_cpRequestHelper.getPermissionChecker(),
+			_accountEntry.getAccountEntryGroupId(), actionId);
+	}
+
 	public boolean hasPermission(String actionId) {
 		return _portletResourcePermission.contains(
 			_cpRequestHelper.getPermissionChecker(),
@@ -1027,15 +1114,12 @@ public class CommerceOrderContentDisplayContext {
 	}
 
 	public boolean hasViewBillingAddressPermission(
-			PermissionChecker permissionChecker,
-			CommerceAccount commerceAccount)
+			PermissionChecker permissionChecker, AccountEntry accountEntry)
 		throws PortalException {
 
-		if ((commerceAccount.getType() ==
-				CommerceAccountConstants.ACCOUNT_TYPE_GUEST) ||
-			commerceAccount.isPersonalAccount() ||
+		if (accountEntry.isGuestAccount() || accountEntry.isPersonalAccount() ||
 			_portletResourcePermission.contains(
-				permissionChecker, commerceAccount.getCommerceAccountGroup(),
+				permissionChecker, accountEntry.getAccountEntryGroup(),
 				CommerceOrderActionKeys.VIEW_BILLING_ADDRESS)) {
 
 			return true;
@@ -1046,7 +1130,7 @@ public class CommerceOrderContentDisplayContext {
 
 	public boolean isCommerceSiteTypeB2C() {
 		if (_commerceContext.getCommerceSiteType() ==
-				CommerceAccountConstants.SITE_TYPE_B2C) {
+				CommerceChannelConstants.SITE_TYPE_B2C) {
 
 			return true;
 		}
@@ -1061,14 +1145,63 @@ public class CommerceOrderContentDisplayContext {
 			CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
 	}
 
+	public boolean isRequestQuoteButtonEnabled() throws PortalException {
+		CommerceOrder commerceOrder = getCommerceOrder();
+
+		if (commerceOrder == null) {
+			return false;
+		}
+
+		List<CommerceOrderItem> commerceOrderItems =
+			commerceOrder.getCommerceOrderItems();
+
+		if ((isRequestQuoteEnabled() && !commerceOrderItems.isEmpty()) ||
+			ListUtil.exists(
+				commerceOrderItems,
+				CommerceOrderItemModel::isPriceOnApplication)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isRequestQuoteEnabled() throws PortalException {
+		if (!FeatureFlagManagerUtil.isEnabled("COMMERCE-11028")) {
+			return false;
+		}
+
+		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
+			_getCommerceOrderFieldsConfiguration();
+
+		if (commerceOrderFieldsConfiguration == null) {
+			return false;
+		}
+
+		return commerceOrderFieldsConfiguration.requestQuoteEnabled();
+	}
+
 	public boolean isShowCommerceOrderCreateTime() throws PortalException {
 		CommerceOrderContentPortletInstanceConfiguration
 			commerceOrderContentPortletInstanceConfiguration =
-				_portletDisplay.getPortletInstanceConfiguration(
-					CommerceOrderContentPortletInstanceConfiguration.class);
+				_configurationProvider.getPortletInstanceConfiguration(
+					CommerceOrderContentPortletInstanceConfiguration.class,
+					_themeDisplay);
 
 		return commerceOrderContentPortletInstanceConfiguration.
 			showCommerceOrderCreateTime();
+	}
+
+	public boolean isShowProcessQuote() throws PortalException {
+		CommerceOrder commerceOrder = getCommerceOrder();
+
+		if (hasManageQuotePermission() &&
+			_hasOrderStatusQuoteRequested(commerceOrder.getOrderStatus())) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isShowPurchaseOrderNumber() throws PortalException {
@@ -1104,6 +1237,47 @@ public class CommerceOrderContentDisplayContext {
 		}
 
 		return false;
+	}
+
+	public boolean isValidCommerceOrder() throws PortalException {
+		CommerceOrder commerceOrder = getCommerceOrder();
+
+		if (commerceOrder == null) {
+			return false;
+		}
+
+		List<CommerceOrderItem> commerceOrderItems =
+			commerceOrder.getCommerceOrderItems();
+
+		if (commerceOrderItems.isEmpty()) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private CommerceOrderFieldsConfiguration
+			_getCommerceOrderFieldsConfiguration()
+		throws PortalException {
+
+		if (_commerceOrderFieldsConfiguration != null) {
+			return _commerceOrderFieldsConfiguration;
+		}
+
+		CommerceChannel commerceChannel = fetchCommerceChannel();
+
+		if (commerceChannel == null) {
+			return null;
+		}
+
+		_commerceOrderFieldsConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderFieldsConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER_FIELDS));
+
+		return _commerceOrderFieldsConfiguration;
 	}
 
 	private List<StepModel> _getWorkflowSteps(CommerceOrder commerceOrder) {
@@ -1149,6 +1323,16 @@ public class CommerceOrderContentDisplayContext {
 		return false;
 	}
 
+	private boolean _hasOrderStatusQuoteRequested(int orderStatus) {
+		if (CommerceOrderConstants.ORDER_STATUS_QUOTE_REQUESTED ==
+				orderStatus) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _hasPaymentStatusRetryPayment(int paymentStatus) {
 		return ArrayUtil.contains(
 			CommerceOrderPaymentConstants.STATUSES_RETRY_PAYMENT,
@@ -1174,21 +1358,35 @@ public class CommerceOrderContentDisplayContext {
 			_commercePaymentMethodRegistry.getCommercePaymentMethod(
 				commercePaymentMethodKey);
 
-		return ArrayUtil.contains(
-			CommercePaymentConstants.COMMERCE_PAYMENT_METHOD_TYPES_ONLINE,
-			commercePaymentMethod.getPaymentType());
+		if (commercePaymentMethod != null) {
+			return ArrayUtil.contains(
+				CommercePaymentMethodConstants.TYPES_ONLINE,
+				commercePaymentMethod.getPaymentType());
+		}
+
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentIntegrationRegistry.getCommercePaymentIntegration(
+				commercePaymentMethodKey);
+
+		if (commercePaymentIntegration != null) {
+			return ArrayUtil.contains(
+				CommercePaymentIntegrationConstants.TYPES_ONLINE,
+				commercePaymentIntegration.getPaymentIntegrationType());
+		}
+
+		return false;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceOrderContentDisplayContext.class);
 
-	private final CommerceAccount _commerceAccount;
+	private final AccountEntry _accountEntry;
 	private final CommerceAddressService _commerceAddressService;
 	private final CommerceChannelLocalService _commerceChannelLocalService;
 	private final CommerceContext _commerceContext;
-	private final Format _commerceOrderDateFormatDate;
-	private final Format _commerceOrderDateFormatTime;
+	private final Format _commerceOrderDateFormat;
 	private final CommerceOrderEngine _commerceOrderEngine;
+	private CommerceOrderFieldsConfiguration _commerceOrderFieldsConfiguration;
 	private final CommerceOrderHttpHelper _commerceOrderHttpHelper;
 	private final CommerceOrderImporterTypeRegistry
 		_commerceOrderImporterTypeRegistry;
@@ -1198,12 +1396,15 @@ public class CommerceOrderContentDisplayContext {
 	private final CommerceOrderPriceCalculation _commerceOrderPriceCalculation;
 	private final CommerceOrderService _commerceOrderService;
 	private final CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
+	private final Format _commerceOrderTimeFormat;
 	private final CommerceOrderTypeService _commerceOrderTypeService;
+	private final CommercePaymentIntegrationRegistry
+		_commercePaymentIntegrationRegistry;
 	private final CommercePaymentMethodGroupRelLocalService
 		_commercePaymentMethodGroupRelLocalService;
 	private final CommercePaymentMethodRegistry _commercePaymentMethodRegistry;
-	private final CommerceShipmentItemService _commerceShipmentItemService;
 	private final CommerceTermEntryService _commerceTermEntryService;
+	private final ConfigurationProvider _configurationProvider;
 	private final CPRequestHelper _cpRequestHelper;
 	private final DLAppLocalService _dlAppLocalService;
 	private final HttpServletRequest _httpServletRequest;
@@ -1214,5 +1415,6 @@ public class CommerceOrderContentDisplayContext {
 	private final PortletDisplay _portletDisplay;
 	private final PortletResourcePermission _portletResourcePermission;
 	private SearchContainer<CommerceOrder> _searchContainer;
+	private final ThemeDisplay _themeDisplay;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -25,13 +16,13 @@ import React, {useState} from 'react';
 
 import Button from '../../common/components/Button';
 import InvisibleFieldset from '../../common/components/InvisibleFieldset';
-import {openImageSelector} from '../../core/openImageSelector';
+import {openImageSelector} from '../../common/openImageSelector';
 import {config} from '../config/index';
 import {useActiveItemId} from '../contexts/ControlsContext';
 import {useDispatch, useSelector} from '../contexts/StoreContext';
 import addFragmentComposition from '../thunks/addFragmentComposition';
 
-const SaveFragmentCompositionModal = ({onCloseModal}) => {
+const SaveFragmentCompositionModal = ({itemId, onCloseModal}) => {
 	const dispatch = useDispatch();
 
 	const activeItemId = useActiveItemId();
@@ -74,7 +65,7 @@ const SaveFragmentCompositionModal = ({onCloseModal}) => {
 				addFragmentComposition({
 					description,
 					fragmentCollectionId,
-					itemId: activeItemId,
+					itemId: itemId || activeItemId,
 					name,
 					previewImageURL: thumbnail.url,
 					saveInlineContent,
@@ -139,6 +130,11 @@ const SaveFragmentCompositionModal = ({onCloseModal}) => {
 								onChange={(event) =>
 									setName(event.target.value)
 								}
+								onClick={(event) => {
+									if (Liferay.Browser.isFirefox()) {
+										event.target.focus();
+									}
+								}}
 								placeholder={Liferay.Language.get('name')}
 								required
 								type="text"
@@ -360,6 +356,7 @@ const SaveFragmentCompositionModal = ({onCloseModal}) => {
 };
 
 SaveFragmentCompositionModal.propTypes = {
+	itemId: PropTypes.string,
 	onCloseModal: PropTypes.func.isRequired,
 };
 

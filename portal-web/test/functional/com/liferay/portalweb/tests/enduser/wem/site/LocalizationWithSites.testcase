@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Site Localization";
@@ -14,15 +15,15 @@ definition {
 
 		task ("Add two sites") {
 			for (var i : list "1,2") {
-				JSONGroup.addGroup(groupName = "Test Site Name ${i}");
+				HeadlessSite.addSite(siteName = "Test Site Name ${i}");
 			}
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,9 +36,9 @@ definition {
 	}
 
 	@description = "Add site name translation in site settings."
-	@priority = "4"
+	@priority = 4
 	test AddSiteNameTranslations {
-		property testray.component.names = "Localization,Site Administration";
+		property testray.component.names = "Localization,Sites Administration";
 
 		task ("Add two localized site names") {
 			Site.openSiteSettingsAdmin(siteURLKey = "test-site-name-1");
@@ -75,7 +76,7 @@ definition {
 	}
 
 	@description = "Can not remove the site default language in instance settings."
-	@priority = "5"
+	@priority = 5
 	test CannotRemoveSiteDefaultLanguageInInstanceSettings {
 		property portal.acceptance = "true";
 
@@ -101,14 +102,14 @@ definition {
 				configurationScope = "Virtual Instance Scope");
 
 			PortalSettings.configureCurrentLanguagesCP(
-				currentPortalLanguages = "Arabic (Saudi Arabia),Czech (Czech Republic),French (France)",
+				currentPortalLanguages = "Arabic (Saudi Arabia),Czech (Czechia),French (France)",
 				errorMessage = "Error: You cannot remove a language that is the current default language.",
 				failExpected = "true");
 		}
 	}
 
 	@description = "The user can configure languages of a site created from a site template."
-	@priority = "5"
+	@priority = 5
 	test ConfigureLanguagesOfSiteBasedOnSiteTemplate {
 		property portal.acceptance = "true";
 		property testray.component.names = "Site and Page Templates";
@@ -133,6 +134,7 @@ definition {
 				siteName = "Test Site Name",
 				siteTemplateActive = "Yes",
 				siteTemplateName = "Site Template Name",
+				siteTemplateTab = "Custom Site Templates",
 				siteType = "Site Template",
 				uncheckPropagation = "true");
 		}
@@ -156,7 +158,7 @@ definition {
 	}
 
 	@description = "The user can configure the site default language."
-	@priority = "5"
+	@priority = 5
 	test ConfigureSiteDefaultLanguage {
 		property portal.acceptance = "true";
 		property testray.component.names = "Site Localization";
@@ -204,7 +206,7 @@ definition {
 	}
 
 	@description = "A new user can add an organization with localized country name."
-	@priority = "3"
+	@priority = 3
 	test LocalizeCountryName {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property testray.component.names = "Users and Organizations";
@@ -248,7 +250,9 @@ definition {
 		}
 
 		task ("Sign out and sign in as new user") {
-			User.logoutAndLoginPG(userLoginEmailAddress = "userea@liferay.com");
+			User.logoutAndLoginPG(
+				signOutLocalizationName = "Salir",
+				userLoginEmailAddress = "userea@liferay.com");
 		}
 
 		task ("View localized country organization is shown") {
@@ -270,7 +274,7 @@ definition {
 	}
 
 	@description = "The locale won't be prepended when it matches with user's preferred locale."
-	@priority = "3"
+	@priority = 3
 	test NoLocalePrependedWhenItMatchUserPreferredLocale {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -287,12 +291,12 @@ definition {
 		}
 
 		task ("Configure default custom language for each site") {
-			var i = "1";
+			var i = 1;
 
 			for (var language : list "English (United States),Spanish (Spain)") {
 				Site.openSiteSettingsAdmin(siteURLKey = "test-site-name-${i}");
 
-				Site.configureCurrentLanguagesCP(defaultSiteLanguage = "${language}");
+				Site.configureCurrentLanguagesCP(defaultSiteLanguage = ${language});
 
 				var i = ${i} + 1;
 			}
@@ -333,7 +337,9 @@ definition {
 		}
 
 		task ("Sign in as Test Test") {
-			User.logoutAndLoginPG(userLoginEmailAddress = "test@liferay.com");
+			User.logoutAndLoginPG(
+				signOutLocalizationName = "Salir",
+				userLoginEmailAddress = "test@liferay.com");
 		}
 
 		task ("View locale is shown in URL when it doesn't match with user's preferred locale") {
@@ -346,7 +352,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-59345. The user must be redirected when the friendly url does not match."
-	@priority = "4"
+	@priority = 4
 	test RedirectLocalizedFriendlyURL {
 		task ("Get portal url") {
 			var portalURL = PropsUtil.get("portal.url");
@@ -391,7 +397,7 @@ definition {
 	}
 
 	@description = "An alert localization message will be shown for user with different language from the site."
-	@priority = "4"
+	@priority = 4
 	test ViewAvailableSiteLocaleAlternatives {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -440,7 +446,7 @@ definition {
 	}
 
 	@description = "View page is shown when access to unavailable locale if set locale.use.default.if.not.available to true."
-	@priority = "4"
+	@priority = 4
 	test ViewPageShownWhenAccessToUnavailableLocaleIfSetNotAvailableToTrue {
 		property custom.properties = "locale.use.default.if.not.available=true";
 
@@ -516,7 +522,7 @@ definition {
 	}
 
 	@description = "View portlets interact with localization."
-	@priority = "4"
+	@priority = 4
 	test ViewPortletInteractWithLocalization {
 		task ("Add a localized site") {
 			Site.openSiteSettingsAdmin(siteURLKey = "test-site-name-1");
@@ -539,7 +545,7 @@ definition {
 				JSONLayout.addWidgetToPublicLayout(
 					groupName = "Test Site Name 1",
 					layoutName = "Test Page Name 1",
-					widgetName = "${widgetName}");
+					widgetName = ${widgetName});
 			}
 		}
 
@@ -662,7 +668,7 @@ definition {
 	}
 
 	@description = "View URLs in different languages when set locale.prepend.friendly.url.style to 0."
-	@priority = "3"
+	@priority = 3
 	test ViewURLInDifferentLanguagesWhenSetStyle0 {
 		property custom.properties = "locale.prepend.friendly.url.style=0";
 
@@ -709,7 +715,7 @@ definition {
 	}
 
 	@description = "View URLs in different languages when set locale.prepend.friendly.url.style to 1."
-	@priority = "3"
+	@priority = 3
 	test ViewURLInDifferentLanguagesWhenSetStyle1 {
 		property custom.properties = "locale.prepend.friendly.url.style=1";
 
@@ -756,7 +762,7 @@ definition {
 	}
 
 	@description = "View URLs in different languages when set locale.prepend.friendly.url.style to 2."
-	@priority = "3"
+	@priority = 3
 	test ViewURLInDifferentLanguagesWhenSetStyle2 {
 		property custom.properties = "locale.prepend.friendly.url.style=2";
 

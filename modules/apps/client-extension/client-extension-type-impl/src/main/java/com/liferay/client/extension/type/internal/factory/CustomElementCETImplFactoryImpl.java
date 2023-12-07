@@ -1,31 +1,24 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.type.internal.factory;
 
 import com.liferay.client.extension.exception.ClientExtensionEntryTypeSettingsException;
-import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.type.CustomElementCET;
-import com.liferay.client.extension.type.factory.CETImplFactory;
 import com.liferay.client.extension.type.internal.CustomElementCETImpl;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Date;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -37,42 +30,62 @@ import javax.portlet.PortletRequest;
  * @author Iván Zaera Avellón
  */
 public class CustomElementCETImplFactoryImpl
-	implements CETImplFactory<CustomElementCET> {
+	extends BaseCETImplFactoryImpl<CustomElementCET> {
 
-	@Override
-	public CustomElementCET create(ClientExtensionEntry clientExtensionEntry)
-		throws PortalException {
-
-		return new CustomElementCETImpl(clientExtensionEntry);
-	}
-
-	@Override
-	public CustomElementCET create(PortletRequest portletRequest)
-		throws PortalException {
-
-		return new CustomElementCETImpl(portletRequest);
+	public CustomElementCETImplFactoryImpl() {
+		super(CustomElementCET.class);
 	}
 
 	@Override
 	public CustomElementCET create(
-			String baseURL, long companyId, String description,
-			String externalReferenceCode, String name, Properties properties,
-			String sourceCodeURL, UnicodeProperties unicodeProperties)
-		throws PortalException {
+		String baseURL, long companyId, Date createDate, String description,
+		String externalReferenceCode, Date modifiedDate, String name,
+		Properties properties, boolean readOnly, String sourceCodeURL,
+		int status, UnicodeProperties typeSettingsUnicodeProperties) {
 
 		return new CustomElementCETImpl(
-			baseURL, companyId, description, externalReferenceCode, name,
-			properties, sourceCodeURL, unicodeProperties);
+			baseURL, companyId, createDate, description, externalReferenceCode,
+			modifiedDate, name, properties, readOnly, sourceCodeURL, status,
+			typeSettingsUnicodeProperties);
+	}
+
+	@Override
+	public UnicodeProperties getUnicodeProperties(
+		PortletRequest portletRequest) {
+
+		return UnicodePropertiesBuilder.create(
+			true
+		).put(
+			"cssURLs",
+			StringUtil.merge(
+				ParamUtil.getStringValues(portletRequest, "cssURLs"),
+				StringPool.NEW_LINE)
+		).put(
+			"friendlyURLMapping",
+			ParamUtil.getString(portletRequest, "friendlyURLMapping")
+		).put(
+			"htmlElementName",
+			ParamUtil.getString(portletRequest, "htmlElementName")
+		).put(
+			"instanceable", ParamUtil.getBoolean(portletRequest, "instanceable")
+		).put(
+			"portletCategoryName",
+			ParamUtil.getString(portletRequest, "portletCategoryName")
+		).put(
+			"urls",
+			StringUtil.merge(
+				ParamUtil.getStringValues(portletRequest, "urls"),
+				StringPool.NEW_LINE)
+		).put(
+			"useESM", ParamUtil.getBoolean(portletRequest, "useESM")
+		).build();
 	}
 
 	@Override
 	public void validate(
-			UnicodeProperties newTypeSettingsUnicodeProperties,
-			UnicodeProperties oldTypeSettingsUnicodeProperties)
+			CustomElementCET newCustomElementCET,
+			CustomElementCET oldCustomElementCET)
 		throws PortalException {
-
-		CustomElementCET newCustomElementCET = new CustomElementCETImpl(
-			StringPool.NEW_LINE, newTypeSettingsUnicodeProperties);
 
 		String cssURLs = newCustomElementCET.getCSSURLs();
 
@@ -80,24 +93,29 @@ public class CustomElementCETImplFactoryImpl
 			for (String cssURL : cssURLs.split(StringPool.NEW_LINE)) {
 				if (!Validator.isUrl(cssURL, true)) {
 					throw new ClientExtensionEntryTypeSettingsException(
-						"css-url-x-is-invalid", cssURL);
+						"Invalid CSS URL: " + cssURL, "css-url-x-is-invalid",
+						cssURL);
 				}
 			}
 		}
 
+		String friendlyURLMapping = newCustomElementCET.getFriendlyURLMapping();
+
 		Matcher matcher = _friendlyURLMappingPattern.matcher(
-			newCustomElementCET.getFriendlyURLMapping());
+			friendlyURLMapping);
 
 		if (!matcher.matches()) {
 			throw new ClientExtensionEntryTypeSettingsException(
-				"please-enter-a-valid-friendly-url-mapping");
+				"Invalid friendly URL mapping: " + friendlyURLMapping,
+				"friendly-url-mapping-x-is-invalid", friendlyURLMapping);
 		}
 
 		String htmlElementName = newCustomElementCET.getHTMLElementName();
 
 		if (Validator.isNull(htmlElementName)) {
 			throw new ClientExtensionEntryTypeSettingsException(
-				"html-element-name-is-empty");
+				"HTML element name is null",
+				"please-enter-an-html-element-name");
 		}
 
 		char[] htmlElementNameCharArray = htmlElementName.toCharArray();
@@ -106,6 +124,7 @@ public class CustomElementCETImplFactoryImpl
 			!Character.isLowerCase(htmlElementNameCharArray[0])) {
 
 			throw new ClientExtensionEntryTypeSettingsException(
+				"HTML element name must start with a lowercase letter",
 				"html-element-name-must-start-with-a-lowercase-letter");
 		}
 
@@ -122,17 +141,20 @@ public class CustomElementCETImplFactoryImpl
 			}
 			else {
 				throw new ClientExtensionEntryTypeSettingsException(
+					"HTML element name contains an invalid character: " + c,
 					"html-element-name-contains-invalid-character-x", c);
 			}
 		}
 
 		if (!containsDash) {
 			throw new ClientExtensionEntryTypeSettingsException(
+				"HTML element name must contain at least one hyphen",
 				"html-element-name-must-contain-at-least-one-hyphen");
 		}
 
 		if (_reservedHTMLElementNames.contains(htmlElementName)) {
 			throw new ClientExtensionEntryTypeSettingsException(
+				"Reserved custom element HTML element name: " + htmlElementName,
 				"x-is-a-reserved-html-element-name", htmlElementName);
 		}
 
@@ -140,26 +162,25 @@ public class CustomElementCETImplFactoryImpl
 
 		if (Validator.isNull(urls)) {
 			throw new ClientExtensionEntryTypeSettingsException(
-				"please-enter-at-least-one-url");
+				"At least one JavaScript URL is required",
+				"please-enter-at-least-one-javascript-url");
 		}
 
 		for (String url : urls.split(StringPool.NEW_LINE)) {
 			if (!Validator.isUrl(url, true)) {
 				throw new ClientExtensionEntryTypeSettingsException(
-					"url-x-is-invalid", url);
+					"Invalid JavaScript URL: " + url,
+					"javascript-url-x-is-invalid", url);
 			}
 		}
 
-		if (oldTypeSettingsUnicodeProperties != null) {
-			CustomElementCET oldCustomElementCET = new CustomElementCETImpl(
-				StringPool.NEW_LINE, oldTypeSettingsUnicodeProperties);
+		if ((oldCustomElementCET != null) &&
+			(newCustomElementCET.isInstanceable() !=
+				oldCustomElementCET.isInstanceable())) {
 
-			if (newCustomElementCET.isInstanceable() !=
-					oldCustomElementCET.isInstanceable()) {
-
-				throw new ClientExtensionEntryTypeSettingsException(
-					"the-instanceable-value-cannot-be-changed");
-			}
+			throw new ClientExtensionEntryTypeSettingsException(
+				"The instanceable value cannot be changed",
+				"the-instanceable-value-cannot-be-changed");
 		}
 	}
 

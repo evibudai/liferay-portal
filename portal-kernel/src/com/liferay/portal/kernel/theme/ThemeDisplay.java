@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.theme;
@@ -20,6 +11,7 @@ import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -47,12 +39,14 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutFriendlyURLLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
+import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.Mergeable;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.TimeZoneThreadLocal;
@@ -327,25 +321,19 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * Returns the portal instance's default user.
-	 *
-	 * @return the portal instance's default user
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #getGuestUser}
 	 */
+	@Deprecated
 	public User getDefaultUser() throws PortalException {
-		if (_defaultUser == null) {
-			_defaultUser = _company.getDefaultUser();
-		}
-
-		return _defaultUser;
+		return getGuestUser();
 	}
 
 	/**
-	 * Returns the ID of the portal instance's default user.
-	 *
-	 * @return the ID of the portal instance's default user
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #getGuestUserId}
 	 */
+	@Deprecated
 	public long getDefaultUserId() throws PortalException {
-		return getDefaultUser().getUserId();
+		return getGuestUserId();
 	}
 
 	/**
@@ -385,6 +373,28 @@ public class ThemeDisplay
 
 		return getPathThemeImages() + "/" +
 			PropsUtil.get(PropsKeys.THEME_SHORTCUT_ICON);
+	}
+
+	/**
+	 * Returns the portal instance's guest user.
+	 *
+	 * @return the portal instance's guest user
+	 */
+	public User getGuestUser() throws PortalException {
+		if (_guestUser == null) {
+			_guestUser = _company.getGuestUser();
+		}
+
+		return _guestUser;
+	}
+
+	/**
+	 * Returns the ID of the portal instance's guest user.
+	 *
+	 * @return the ID of the portal instance's guest user
+	 */
+	public long getGuestUserId() throws PortalException {
+		return getGuestUser().getUserId();
 	}
 
 	/**
@@ -589,6 +599,15 @@ public class ThemeDisplay
 
 	public String getPathContext() {
 		return _pathContext;
+	}
+
+	/**
+	 * Returns the URL for the control panel's spritemap.
+	 *
+	 * @return the URL for the control panel's spritemap
+	 */
+	public String getPathControlPanelSpritemap() {
+		return _pathControlPanelSpritemap;
 	}
 
 	/**
@@ -1201,6 +1220,10 @@ public class ThemeDisplay
 		return _secure;
 	}
 
+	public boolean isShowControlMenu() {
+		return _showControlMenu;
+	}
+
 	public boolean isShowControlPanelIcon() {
 		return _showControlPanelIcon;
 	}
@@ -1477,6 +1500,17 @@ public class ThemeDisplay
 			cdnBaseURL + themeStaticResourcePath +
 				colorScheme.getColorSchemeImagesPath());
 
+		Theme controlPanelTheme = ThemeLocalServiceUtil.getTheme(
+			_company.getCompanyId(),
+			PrefsPropsUtil.getString(
+				_company.getCompanyId(),
+				PropsKeys.CONTROL_PANEL_LAYOUT_REGULAR_THEME_ID));
+
+		setPathControlPanelSpritemap(
+			StringBundler.concat(
+				cdnBaseURL, controlPanelTheme.getStaticResourcePath(),
+				controlPanelTheme.getImagesPath(), "/clay/icons.svg"));
+
 		String dynamicResourcesHost = getCDNDynamicResourcesHost();
 
 		if (Validator.isNull(dynamicResourcesHost)) {
@@ -1514,7 +1548,6 @@ public class ThemeDisplay
 			StringBundler.concat(
 				cdnBaseURL, themeStaticResourcePath, theme.getImagesPath(),
 				"/clay/icons.svg"));
-
 		setPathThemeTemplates(
 			cdnBaseURL + themeStaticResourcePath + theme.getTemplatesPath());
 	}
@@ -1545,6 +1578,10 @@ public class ThemeDisplay
 
 	public void setPathContext(String pathContext) {
 		_pathContext = pathContext;
+	}
+
+	public void setPathControlPanelSpritemap(String pathControlPanelSpritemap) {
+		_pathControlPanelSpritemap = pathControlPanelSpritemap;
 	}
 
 	public void setPathFriendlyURLPrivateGroup(
@@ -1704,6 +1741,10 @@ public class ThemeDisplay
 
 	public void setSessionId(String sessionId) {
 		_sessionId = sessionId;
+	}
+
+	public void setShowControlMenu(boolean showControlMenu) {
+		_showControlMenu = showControlMenu;
 	}
 
 	public void setShowControlPanelIcon(boolean showControlPanelIcon) {
@@ -1905,6 +1946,12 @@ public class ThemeDisplay
 			}
 		}
 
+		if (layout.getCtCollectionId() !=
+				CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION) {
+
+			return layout.getFriendlyURL(_locale);
+		}
+
 		String layoutFriendlyURL = _layoutFriendlyURLs.get(layout.getPlid());
 
 		if (layoutFriendlyURL == null) {
@@ -1957,12 +2004,12 @@ public class ThemeDisplay
 	private Contact _contact;
 	private Group _controlPanelGroup;
 	private Layout _controlPanelLayout;
-	private User _defaultUser;
 	private Device _device;
 	private long _doAsGroupId;
 	private String _doAsUserId = StringPool.BLANK;
 	private String _doAsUserLanguageId = StringPool.BLANK;
 	private String _faviconURL;
+	private User _guestUser;
 	private transient HttpServletRequest _httpServletRequest;
 	private transient HttpServletResponse _httpServletResponse;
 	private boolean _hubAction;
@@ -1994,6 +2041,7 @@ public class ThemeDisplay
 	private String _pathCms = StringPool.BLANK;
 	private String _pathColorSchemeImages = StringPool.BLANK;
 	private String _pathContext = StringPool.BLANK;
+	private String _pathControlPanelSpritemap = StringPool.BLANK;
 	private String _pathFriendlyURLPrivateGroup = StringPool.BLANK;
 	private String _pathFriendlyURLPrivateUser = StringPool.BLANK;
 	private String _pathFriendlyURLPublic = StringPool.BLANK;
@@ -2030,6 +2078,7 @@ public class ThemeDisplay
 	private String _serverName;
 	private int _serverPort;
 	private String _sessionId = StringPool.BLANK;
+	private boolean _showControlMenu;
 	private boolean _showControlPanelIcon;
 	private boolean _showHomeIcon;
 	private boolean _showLayoutTemplatesIcon;

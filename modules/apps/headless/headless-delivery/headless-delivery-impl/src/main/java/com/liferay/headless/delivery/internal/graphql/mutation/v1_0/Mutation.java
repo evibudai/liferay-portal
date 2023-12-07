@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.graphql.mutation.v1_0;
@@ -28,6 +19,7 @@ import com.liferay.headless.delivery.dto.v1_0.MessageBoardSection;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardThread;
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenu;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
+import com.liferay.headless.delivery.dto.v1_0.SitePage;
 import com.liferay.headless.delivery.dto.v1_0.StructuredContent;
 import com.liferay.headless.delivery.dto.v1_0.StructuredContentFolder;
 import com.liferay.headless.delivery.dto.v1_0.WikiNode;
@@ -36,17 +28,21 @@ import com.liferay.headless.delivery.dto.v1_0.WikiPageAttachment;
 import com.liferay.headless.delivery.resource.v1_0.BlogPostingImageResource;
 import com.liferay.headless.delivery.resource.v1_0.BlogPostingResource;
 import com.liferay.headless.delivery.resource.v1_0.CommentResource;
+import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
+import com.liferay.headless.delivery.resource.v1_0.ContentTemplateResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseAttachmentResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseFolderResource;
+import com.liferay.headless.delivery.resource.v1_0.LanguageResource;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardAttachmentResource;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardMessageResource;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardSectionResource;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardThreadResource;
 import com.liferay.headless.delivery.resource.v1_0.NavigationMenuResource;
+import com.liferay.headless.delivery.resource.v1_0.SitePageResource;
 import com.liferay.headless.delivery.resource.v1_0.StructuredContentFolderResource;
 import com.liferay.headless.delivery.resource.v1_0.StructuredContentResource;
 import com.liferay.headless.delivery.resource.v1_0.WikiNodeResource;
@@ -55,9 +51,11 @@ import com.liferay.headless.delivery.resource.v1_0.WikiPageResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
@@ -109,12 +107,28 @@ public class Mutation {
 			commentResourceComponentServiceObjects;
 	}
 
+	public static void setContentElementResourceComponentServiceObjects(
+		ComponentServiceObjects<ContentElementResource>
+			contentElementResourceComponentServiceObjects) {
+
+		_contentElementResourceComponentServiceObjects =
+			contentElementResourceComponentServiceObjects;
+	}
+
 	public static void setContentStructureResourceComponentServiceObjects(
 		ComponentServiceObjects<ContentStructureResource>
 			contentStructureResourceComponentServiceObjects) {
 
 		_contentStructureResourceComponentServiceObjects =
 			contentStructureResourceComponentServiceObjects;
+	}
+
+	public static void setContentTemplateResourceComponentServiceObjects(
+		ComponentServiceObjects<ContentTemplateResource>
+			contentTemplateResourceComponentServiceObjects) {
+
+		_contentTemplateResourceComponentServiceObjects =
+			contentTemplateResourceComponentServiceObjects;
 	}
 
 	public static void setDocumentResourceComponentServiceObjects(
@@ -158,6 +172,14 @@ public class Mutation {
 			knowledgeBaseFolderResourceComponentServiceObjects;
 	}
 
+	public static void setLanguageResourceComponentServiceObjects(
+		ComponentServiceObjects<LanguageResource>
+			languageResourceComponentServiceObjects) {
+
+		_languageResourceComponentServiceObjects =
+			languageResourceComponentServiceObjects;
+	}
+
 	public static void setMessageBoardAttachmentResourceComponentServiceObjects(
 		ComponentServiceObjects<MessageBoardAttachmentResource>
 			messageBoardAttachmentResourceComponentServiceObjects) {
@@ -196,6 +218,14 @@ public class Mutation {
 
 		_navigationMenuResourceComponentServiceObjects =
 			navigationMenuResourceComponentServiceObjects;
+	}
+
+	public static void setSitePageResourceComponentServiceObjects(
+		ComponentServiceObjects<SitePageResource>
+			sitePageResourceComponentServiceObjects) {
+
+		_sitePageResourceComponentServiceObjects =
+			sitePageResourceComponentServiceObjects;
 	}
 
 	public static void setStructuredContentResourceComponentServiceObjects(
@@ -378,6 +408,28 @@ public class Mutation {
 			});
 	}
 
+	@GraphQLField
+	public Response createSiteBlogPostingsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_blogPostingResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			blogPostingResource ->
+				blogPostingResource.postSiteBlogPostingsPageExportBatch(
+					Long.valueOf(siteKey), search,
+					_filterBiFunction.apply(blogPostingResource, filterString),
+					_sortsBiFunction.apply(blogPostingResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new blog post.")
 	public BlogPosting createSiteBlogPosting(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -521,6 +573,31 @@ public class Mutation {
 					callbackURL, object));
 	}
 
+	@GraphQLField
+	public Response createSiteBlogPostingImagesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_blogPostingImageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			blogPostingImageResource ->
+				blogPostingImageResource.
+					postSiteBlogPostingImagesPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							blogPostingImageResource, filterString),
+						_sortsBiFunction.apply(
+							blogPostingImageResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates a blog post image. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`blogPostingImage`) with the metadata."
 	)
@@ -555,6 +632,28 @@ public class Mutation {
 			blogPostingImageResource ->
 				blogPostingImageResource.postSiteBlogPostingImageBatch(
 					Long.valueOf(siteKey), multipartBody, callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createBlogPostingCommentsPageExportBatch(
+			@GraphQLName("blogPostingId") Long blogPostingId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_commentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			commentResource ->
+				commentResource.postBlogPostingCommentsPageExportBatch(
+					blogPostingId, search,
+					_filterBiFunction.apply(commentResource, filterString),
+					_sortsBiFunction.apply(commentResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(description = "Creates a new comment on the blog post.")
@@ -651,6 +750,28 @@ public class Mutation {
 			this::_populateResourceContext,
 			commentResource -> commentResource.postCommentComment(
 				parentCommentId, comment));
+	}
+
+	@GraphQLField
+	public Response createDocumentCommentsPageExportBatch(
+			@GraphQLName("documentId") Long documentId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_commentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			commentResource ->
+				commentResource.postDocumentCommentsPageExportBatch(
+					documentId, search,
+					_filterBiFunction.apply(commentResource, filterString),
+					_sortsBiFunction.apply(commentResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(description = "Creates a new comment on the document.")
@@ -872,6 +993,28 @@ public class Mutation {
 						externalReferenceCode, comment));
 	}
 
+	@GraphQLField
+	public Response createStructuredContentCommentsPageExportBatch(
+			@GraphQLName("structuredContentId") Long structuredContentId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_commentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			commentResource ->
+				commentResource.postStructuredContentCommentsPageExportBatch(
+					structuredContentId, search,
+					_filterBiFunction.apply(commentResource, filterString),
+					_sortsBiFunction.apply(commentResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates a new comment on the structured content."
 	)
@@ -900,6 +1043,79 @@ public class Mutation {
 			commentResource ->
 				commentResource.postStructuredContentCommentBatch(
 					structuredContentId, callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryContentElementsPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentElementResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentElementResource ->
+				contentElementResource.
+					postAssetLibraryContentElementsPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							contentElementResource, filterString),
+						_sortsBiFunction.apply(
+							contentElementResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createSiteContentElementsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentElementResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentElementResource ->
+				contentElementResource.postSiteContentElementsPageExportBatch(
+					Long.valueOf(siteKey), search,
+					_filterBiFunction.apply(
+						contentElementResource, filterString),
+					_sortsBiFunction.apply(contentElementResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryContentStructuresPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentStructureResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentStructureResource ->
+				contentStructureResource.
+					postAssetLibraryContentStructuresPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							contentStructureResource, filterString),
+						_sortsBiFunction.apply(
+							contentStructureResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -946,6 +1162,31 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Response createSiteContentStructuresPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentStructureResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentStructureResource ->
+				contentStructureResource.
+					postSiteContentStructuresPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							contentStructureResource, filterString),
+						_sortsBiFunction.apply(
+							contentStructureResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
 	public java.util.Collection<com.liferay.portal.vulcan.permission.Permission>
 			updateSiteContentStructurePermissionsPage(
 				@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -965,6 +1206,77 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryContentTemplatesPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentTemplateResource ->
+				contentTemplateResource.
+					postAssetLibraryContentTemplatesPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							contentTemplateResource, filterString),
+						_sortsBiFunction.apply(
+							contentTemplateResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createSiteContentTemplatesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentTemplateResource ->
+				contentTemplateResource.postSiteContentTemplatesPageExportBatch(
+					Long.valueOf(siteKey), search,
+					_filterBiFunction.apply(
+						contentTemplateResource, filterString),
+					_sortsBiFunction.apply(
+						contentTemplateResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryDocumentsPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentResource ->
+				documentResource.postAssetLibraryDocumentsPageExportBatch(
+					Long.valueOf(assetLibraryId), search,
+					_filterBiFunction.apply(documentResource, filterString),
+					_sortsBiFunction.apply(documentResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -1060,6 +1372,28 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response createDocumentFolderDocumentsPageExportBatch(
+			@GraphQLName("documentFolderId") Long documentFolderId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentResource ->
+				documentResource.postDocumentFolderDocumentsPageExportBatch(
+					documentFolderId, search,
+					_filterBiFunction.apply(documentResource, filterString),
+					_sortsBiFunction.apply(documentResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(
@@ -1243,6 +1577,28 @@ public class Mutation {
 			});
 	}
 
+	@GraphQLField
+	public Response createSiteDocumentsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentResource ->
+				documentResource.postSiteDocumentsPageExportBatch(
+					Long.valueOf(siteKey), search,
+					_filterBiFunction.apply(documentResource, filterString),
+					_sortsBiFunction.apply(documentResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates a new document. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`document`) with the metadata."
 	)
@@ -1336,6 +1692,31 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryDocumentFoldersPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource ->
+				documentFolderResource.
+					postAssetLibraryDocumentFoldersPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							documentFolderResource, filterString),
+						_sortsBiFunction.apply(
+							documentFolderResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -1464,6 +1845,55 @@ public class Mutation {
 					callbackURL, object));
 	}
 
+	@GraphQLField(
+		description = "Deletes the document folder's rating and returns a 204 if the operation succeeded."
+	)
+	public boolean deleteDocumentFolderMyRating(
+			@GraphQLName("documentFolderId") Long documentFolderId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource ->
+				documentFolderResource.deleteDocumentFolderMyRating(
+					documentFolderId));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Creates a new rating for the document folder, by the user who authenticated the request."
+	)
+	public Rating createDocumentFolderMyRating(
+			@GraphQLName("documentFolderId") Long documentFolderId,
+			@GraphQLName("rating") Rating rating)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource ->
+				documentFolderResource.postDocumentFolderMyRating(
+					documentFolderId, rating));
+	}
+
+	@GraphQLField(
+		description = "Replaces the rating with the information sent in the request body. Any missing fields are deleted, unless they are required."
+	)
+	public Rating updateDocumentFolderMyRating(
+			@GraphQLName("documentFolderId") Long documentFolderId,
+			@GraphQLName("rating") Rating rating)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource ->
+				documentFolderResource.putDocumentFolderMyRating(
+					documentFolderId, rating));
+	}
+
 	@GraphQLField
 	public java.util.Collection<com.liferay.portal.vulcan.permission.Permission>
 			updateDocumentFolderPermissionsPage(
@@ -1531,6 +1961,29 @@ public class Mutation {
 					parentDocumentFolderId, documentFolder));
 	}
 
+	@GraphQLField
+	public Response createSiteDocumentFoldersPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource ->
+				documentFolderResource.postSiteDocumentFoldersPageExportBatch(
+					Long.valueOf(siteKey), search,
+					_filterBiFunction.apply(
+						documentFolderResource, filterString),
+					_sortsBiFunction.apply(documentFolderResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new document folder.")
 	public DocumentFolder createSiteDocumentFolder(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -1579,6 +2032,44 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField(
+		description = "Deletes the site's document folder by external reference code returns a 204 if the operation succeeds."
+	)
+	public boolean deleteSiteDocumentsFolderByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource ->
+				documentFolderResource.
+					deleteSiteDocumentsFolderByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Replaces the document folder by external reference code with the information sent in the request body, or replaces it if it not exists."
+	)
+	public DocumentFolder updateSiteDocumentsFolderByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("documentFolder") DocumentFolder documentFolder)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource ->
+				documentFolderResource.
+					putSiteDocumentsFolderByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode,
+						documentFolder));
 	}
 
 	@GraphQLField(
@@ -1781,6 +2272,33 @@ public class Mutation {
 						parentKnowledgeBaseArticleId, knowledgeBaseArticle));
 	}
 
+	@GraphQLField
+	public Response
+			createKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch(
+				@GraphQLName("knowledgeBaseFolderId") Long
+					knowledgeBaseFolderId,
+				@GraphQLName("search") String search,
+				@GraphQLName("filter") String filterString,
+				@GraphQLName("sort") String sortsString,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_knowledgeBaseArticleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			knowledgeBaseArticleResource ->
+				knowledgeBaseArticleResource.
+					postKnowledgeBaseFolderKnowledgeBaseArticlesPageExportBatch(
+						knowledgeBaseFolderId, search,
+						_filterBiFunction.apply(
+							knowledgeBaseArticleResource, filterString),
+						_sortsBiFunction.apply(
+							knowledgeBaseArticleResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates a new knowledge base article in the folder."
 	)
@@ -1813,6 +2331,31 @@ public class Mutation {
 				knowledgeBaseArticleResource.
 					postKnowledgeBaseFolderKnowledgeBaseArticleBatch(
 						knowledgeBaseFolderId, callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createSiteKnowledgeBaseArticlesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_knowledgeBaseArticleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			knowledgeBaseArticleResource ->
+				knowledgeBaseArticleResource.
+					postSiteKnowledgeBaseArticlesPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							knowledgeBaseArticleResource, filterString),
+						_sortsBiFunction.apply(
+							knowledgeBaseArticleResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(description = "Creates a new knowledge base article.")
@@ -1940,6 +2483,26 @@ public class Mutation {
 		return true;
 	}
 
+	@GraphQLField
+	public Response
+			createKnowledgeBaseArticleKnowledgeBaseAttachmentsPageExportBatch(
+				@GraphQLName("knowledgeBaseArticleId") Long
+					knowledgeBaseArticleId,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_knowledgeBaseAttachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			knowledgeBaseAttachmentResource ->
+				knowledgeBaseAttachmentResource.
+					postKnowledgeBaseArticleKnowledgeBaseAttachmentsPageExportBatch(
+						knowledgeBaseArticleId, callbackURL, contentType,
+						fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates a new attachment for an existing knowledge base article. The request body must be `multipart/form-data` with two parts, a `file` part with the file's bytes, and an optional JSON string (`knowledgeBaseAttachment`) with the metadata."
 	)
@@ -2011,6 +2574,31 @@ public class Mutation {
 			knowledgeBaseAttachmentResource ->
 				knowledgeBaseAttachmentResource.
 					deleteKnowledgeBaseAttachmentBatch(callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Delete the knowledge base attachment by knowledge base article's and knowledge base attachment's external reference codes."
+	)
+	public boolean
+			deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+				@GraphQLName("siteKey") @NotEmpty String siteKey,
+				@GraphQLName("knowledgeBaseArticleExternalReferenceCode") String
+					knowledgeBaseArticleExternalReferenceCode,
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_knowledgeBaseAttachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			knowledgeBaseAttachmentResource ->
+				knowledgeBaseAttachmentResource.
+					deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode(
+						Long.valueOf(siteKey),
+						knowledgeBaseArticleExternalReferenceCode,
+						externalReferenceCode));
+
+		return true;
 	}
 
 	@GraphQLField(
@@ -2134,6 +2722,24 @@ public class Mutation {
 						parentKnowledgeBaseFolderId, knowledgeBaseFolder));
 	}
 
+	@GraphQLField
+	public Response createSiteKnowledgeBaseFoldersPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_knowledgeBaseFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			knowledgeBaseFolderResource ->
+				knowledgeBaseFolderResource.
+					postSiteKnowledgeBaseFoldersPageExportBatch(
+						Long.valueOf(siteKey), callbackURL, contentType,
+						fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new knowledge base folder.")
 	public KnowledgeBaseFolder createSiteKnowledgeBaseFolder(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -2227,6 +2833,40 @@ public class Mutation {
 			});
 	}
 
+	@GraphQLField
+	public Response createAssetLibraryLanguagesPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_languageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			languageResource ->
+				languageResource.postAssetLibraryLanguagesPageExportBatch(
+					Long.valueOf(assetLibraryId), callbackURL, contentType,
+					fieldNames));
+	}
+
+	@GraphQLField
+	public Response createSiteLanguagesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_languageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			languageResource ->
+				languageResource.postSiteLanguagesPageExportBatch(
+					Long.valueOf(siteKey), callbackURL, contentType,
+					fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Deletes the message board attachment and returns a 204 if the operation succeeds."
 	)
@@ -2257,6 +2897,26 @@ public class Mutation {
 			messageBoardAttachmentResource ->
 				messageBoardAttachmentResource.
 					deleteMessageBoardAttachmentBatch(callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response
+			createMessageBoardMessageMessageBoardAttachmentsPageExportBatch(
+				@GraphQLName("messageBoardMessageId") Long
+					messageBoardMessageId,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardAttachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardAttachmentResource ->
+				messageBoardAttachmentResource.
+					postMessageBoardMessageMessageBoardAttachmentsPageExportBatch(
+						messageBoardMessageId, callbackURL, contentType,
+						fieldNames));
 	}
 
 	@GraphQLField(
@@ -2300,6 +2960,25 @@ public class Mutation {
 						object));
 	}
 
+	@GraphQLField
+	public Response
+			createMessageBoardThreadMessageBoardAttachmentsPageExportBatch(
+				@GraphQLName("messageBoardThreadId") Long messageBoardThreadId,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardAttachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardAttachmentResource ->
+				messageBoardAttachmentResource.
+					postMessageBoardThreadMessageBoardAttachmentsPageExportBatch(
+						messageBoardThreadId, callbackURL, contentType,
+						fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates a new attachment for the message board thread. The request body should be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`knowledgeBaseAttachment`) with the metadata."
 	)
@@ -2338,6 +3017,31 @@ public class Mutation {
 					postMessageBoardThreadMessageBoardAttachmentBatch(
 						messageBoardThreadId, multipartBody, callbackURL,
 						object));
+	}
+
+	@GraphQLField(
+		description = "Delete the message board attachment by message board message's and message board attachment's external reference codes."
+	)
+	public boolean
+			deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode(
+				@GraphQLName("siteKey") @NotEmpty String siteKey,
+				@GraphQLName("messageBoardMessageExternalReferenceCode") String
+					messageBoardMessageExternalReferenceCode,
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_messageBoardAttachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardAttachmentResource ->
+				messageBoardAttachmentResource.
+					deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode(
+						Long.valueOf(siteKey),
+						messageBoardMessageExternalReferenceCode,
+						externalReferenceCode));
+
+		return true;
 	}
 
 	@GraphQLField(
@@ -2540,6 +3244,31 @@ public class Mutation {
 						parentMessageBoardMessageId, messageBoardMessage));
 	}
 
+	@GraphQLField
+	public Response createMessageBoardThreadMessageBoardMessagesPageExportBatch(
+			@GraphQLName("messageBoardThreadId") Long messageBoardThreadId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardMessageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardMessageResource ->
+				messageBoardMessageResource.
+					postMessageBoardThreadMessageBoardMessagesPageExportBatch(
+						messageBoardThreadId, search,
+						_filterBiFunction.apply(
+							messageBoardMessageResource, filterString),
+						_sortsBiFunction.apply(
+							messageBoardMessageResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates a new message in the message board thread."
 	)
@@ -2572,6 +3301,31 @@ public class Mutation {
 				messageBoardMessageResource.
 					postMessageBoardThreadMessageBoardMessageBatch(
 						messageBoardThreadId, callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createSiteMessageBoardMessagesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardMessageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardMessageResource ->
+				messageBoardMessageResource.
+					postSiteMessageBoardMessagesPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							messageBoardMessageResource, filterString),
+						_sortsBiFunction.apply(
+							messageBoardMessageResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(
@@ -2788,6 +3542,31 @@ public class Mutation {
 						parentMessageBoardSectionId, messageBoardSection));
 	}
 
+	@GraphQLField
+	public Response createSiteMessageBoardSectionsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardSectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardSectionResource ->
+				messageBoardSectionResource.
+					postSiteMessageBoardSectionsPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							messageBoardSectionResource, filterString),
+						_sortsBiFunction.apply(
+							messageBoardSectionResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new message board section.")
 	public MessageBoardSection createSiteMessageBoardSection(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -2838,6 +3617,31 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response createMessageBoardSectionMessageBoardThreadsPageExportBatch(
+			@GraphQLName("messageBoardSectionId") Long messageBoardSectionId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardThreadResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardThreadResource ->
+				messageBoardThreadResource.
+					postMessageBoardSectionMessageBoardThreadsPageExportBatch(
+						messageBoardSectionId, search,
+						_filterBiFunction.apply(
+							messageBoardThreadResource, filterString),
+						_sortsBiFunction.apply(
+							messageBoardThreadResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(
@@ -3052,6 +3856,31 @@ public class Mutation {
 		return true;
 	}
 
+	@GraphQLField
+	public Response createSiteMessageBoardThreadsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_messageBoardThreadResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardThreadResource ->
+				messageBoardThreadResource.
+					postSiteMessageBoardThreadsPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							messageBoardThreadResource, filterString),
+						_sortsBiFunction.apply(
+							messageBoardThreadResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new message board thread.")
 	public MessageBoardThread createSiteMessageBoardThread(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -3184,6 +4013,23 @@ public class Mutation {
 			});
 	}
 
+	@GraphQLField
+	public Response createSiteNavigationMenusPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_navigationMenuResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			navigationMenuResource ->
+				navigationMenuResource.postSiteNavigationMenusPageExportBatch(
+					Long.valueOf(siteKey), callbackURL, contentType,
+					fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new navigation menu.")
 	public NavigationMenu createSiteNavigationMenu(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -3232,6 +4078,80 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response createSiteSitePagesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_sitePageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			sitePageResource ->
+				sitePageResource.postSiteSitePagesPageExportBatch(
+					Long.valueOf(siteKey), search,
+					_filterBiFunction.apply(sitePageResource, filterString),
+					_sortsBiFunction.apply(sitePageResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField(description = "Adds a new site page")
+	public SitePage createSiteSitePage(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("sitePage") SitePage sitePage)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_sitePageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			sitePageResource -> sitePageResource.postSiteSitePage(
+				Long.valueOf(siteKey), sitePage));
+	}
+
+	@GraphQLField
+	public Response createSiteSitePageBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_sitePageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			sitePageResource -> sitePageResource.postSiteSitePageBatch(
+				Long.valueOf(siteKey), callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryStructuredContentsPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentResource ->
+				structuredContentResource.
+					postAssetLibraryStructuredContentsPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							structuredContentResource, filterString),
+						_sortsBiFunction.apply(
+							structuredContentResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -3328,6 +4248,56 @@ public class Mutation {
 			});
 	}
 
+	@GraphQLField
+	public Response createContentStructureStructuredContentsPageExportBatch(
+			@GraphQLName("contentStructureId") Long contentStructureId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentResource ->
+				structuredContentResource.
+					postContentStructureStructuredContentsPageExportBatch(
+						contentStructureId, search,
+						_filterBiFunction.apply(
+							structuredContentResource, filterString),
+						_sortsBiFunction.apply(
+							structuredContentResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public Response createSiteStructuredContentsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentResource ->
+				structuredContentResource.
+					postSiteStructuredContentsPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							structuredContentResource, filterString),
+						_sortsBiFunction.apply(
+							structuredContentResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new structured content.")
 	public StructuredContent createSiteStructuredContent(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -3417,6 +4387,33 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response
+			createStructuredContentFolderStructuredContentsPageExportBatch(
+				@GraphQLName("structuredContentFolderId") Long
+					structuredContentFolderId,
+				@GraphQLName("search") String search,
+				@GraphQLName("filter") String filterString,
+				@GraphQLName("sort") String sortsString,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentResource ->
+				structuredContentResource.
+					postStructuredContentFolderStructuredContentsPageExportBatch(
+						structuredContentFolderId, search,
+						_filterBiFunction.apply(
+							structuredContentResource, filterString),
+						_sortsBiFunction.apply(
+							structuredContentResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(
@@ -3634,6 +4631,31 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Response createAssetLibraryStructuredContentFoldersPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentFolderResource ->
+				structuredContentFolderResource.
+					postAssetLibraryStructuredContentFoldersPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							structuredContentFolderResource, filterString),
+						_sortsBiFunction.apply(
+							structuredContentFolderResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
 	public StructuredContentFolder createAssetLibraryStructuredContentFolder(
 			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
 			@GraphQLName("structuredContentFolder") StructuredContentFolder
@@ -3728,6 +4750,31 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response createSiteStructuredContentFoldersPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentFolderResource ->
+				structuredContentFolderResource.
+					postSiteStructuredContentFoldersPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							structuredContentFolderResource, filterString),
+						_sortsBiFunction.apply(
+							structuredContentFolderResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(description = "Creates a new structured content folder.")
@@ -3980,6 +5027,28 @@ public class Mutation {
 		return true;
 	}
 
+	@GraphQLField
+	public Response createSiteWikiNodesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_wikiNodeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			wikiNodeResource ->
+				wikiNodeResource.postSiteWikiNodesPageExportBatch(
+					Long.valueOf(siteKey), search,
+					_filterBiFunction.apply(wikiNodeResource, filterString),
+					_sortsBiFunction.apply(wikiNodeResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new wiki node")
 	public WikiNode createSiteWikiNode(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
@@ -4202,6 +5271,28 @@ public class Mutation {
 					Long.valueOf(siteKey), externalReferenceCode, wikiPage));
 	}
 
+	@GraphQLField
+	public Response createWikiNodeWikiPagesPageExportBatch(
+			@GraphQLName("wikiNodeId") Long wikiNodeId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_wikiPageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			wikiPageResource ->
+				wikiPageResource.postWikiNodeWikiPagesPageExportBatch(
+					wikiNodeId, search,
+					_filterBiFunction.apply(wikiPageResource, filterString),
+					_sortsBiFunction.apply(wikiPageResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(description = "Creates a new wiki page")
 	public WikiPage createWikiNodeWikiPage(
 			@GraphQLName("wikiNodeId") Long wikiNodeId,
@@ -4403,6 +5494,23 @@ public class Mutation {
 					callbackURL, object));
 	}
 
+	@GraphQLField
+	public Response createWikiPageWikiPageAttachmentsPageExportBatch(
+			@GraphQLName("wikiPageId") Long wikiPageId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_wikiPageAttachmentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			wikiPageAttachmentResource ->
+				wikiPageAttachmentResource.
+					postWikiPageWikiPageAttachmentsPageExportBatch(
+						wikiPageId, callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Creates an attachment for the wiki page. The request body must be `multipart/form-data` with two parts, the file's bytes (`file`), and an optional JSON string (`WikiPageAttachment`) with the metadata."
 	)
@@ -4490,6 +5598,9 @@ public class Mutation {
 		blogPostingResource.setGroupLocalService(_groupLocalService);
 		blogPostingResource.setRoleLocalService(_roleLocalService);
 
+		blogPostingResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		blogPostingResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4509,6 +5620,9 @@ public class Mutation {
 		blogPostingImageResource.setGroupLocalService(_groupLocalService);
 		blogPostingImageResource.setRoleLocalService(_roleLocalService);
 
+		blogPostingImageResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		blogPostingImageResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4525,7 +5639,32 @@ public class Mutation {
 		commentResource.setGroupLocalService(_groupLocalService);
 		commentResource.setRoleLocalService(_roleLocalService);
 
+		commentResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		commentResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ContentElementResource contentElementResource)
+		throws Exception {
+
+		contentElementResource.setContextAcceptLanguage(_acceptLanguage);
+		contentElementResource.setContextCompany(_company);
+		contentElementResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		contentElementResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		contentElementResource.setContextUriInfo(_uriInfo);
+		contentElementResource.setContextUser(_user);
+		contentElementResource.setGroupLocalService(_groupLocalService);
+		contentElementResource.setRoleLocalService(_roleLocalService);
+
+		contentElementResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		contentElementResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
 
@@ -4544,7 +5683,32 @@ public class Mutation {
 		contentStructureResource.setGroupLocalService(_groupLocalService);
 		contentStructureResource.setRoleLocalService(_roleLocalService);
 
+		contentStructureResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		contentStructureResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ContentTemplateResource contentTemplateResource)
+		throws Exception {
+
+		contentTemplateResource.setContextAcceptLanguage(_acceptLanguage);
+		contentTemplateResource.setContextCompany(_company);
+		contentTemplateResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		contentTemplateResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		contentTemplateResource.setContextUriInfo(_uriInfo);
+		contentTemplateResource.setContextUser(_user);
+		contentTemplateResource.setGroupLocalService(_groupLocalService);
+		contentTemplateResource.setRoleLocalService(_roleLocalService);
+
+		contentTemplateResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		contentTemplateResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
 
@@ -4559,6 +5723,9 @@ public class Mutation {
 		documentResource.setContextUser(_user);
 		documentResource.setGroupLocalService(_groupLocalService);
 		documentResource.setRoleLocalService(_roleLocalService);
+
+		documentResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		documentResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -4579,6 +5746,9 @@ public class Mutation {
 		documentFolderResource.setGroupLocalService(_groupLocalService);
 		documentFolderResource.setRoleLocalService(_roleLocalService);
 
+		documentFolderResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		documentFolderResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4597,6 +5767,9 @@ public class Mutation {
 		knowledgeBaseArticleResource.setContextUser(_user);
 		knowledgeBaseArticleResource.setGroupLocalService(_groupLocalService);
 		knowledgeBaseArticleResource.setRoleLocalService(_roleLocalService);
+
+		knowledgeBaseArticleResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		knowledgeBaseArticleResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -4619,6 +5792,9 @@ public class Mutation {
 			_groupLocalService);
 		knowledgeBaseAttachmentResource.setRoleLocalService(_roleLocalService);
 
+		knowledgeBaseAttachmentResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		knowledgeBaseAttachmentResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4638,7 +5814,29 @@ public class Mutation {
 		knowledgeBaseFolderResource.setGroupLocalService(_groupLocalService);
 		knowledgeBaseFolderResource.setRoleLocalService(_roleLocalService);
 
+		knowledgeBaseFolderResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		knowledgeBaseFolderResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(LanguageResource languageResource)
+		throws Exception {
+
+		languageResource.setContextAcceptLanguage(_acceptLanguage);
+		languageResource.setContextCompany(_company);
+		languageResource.setContextHttpServletRequest(_httpServletRequest);
+		languageResource.setContextHttpServletResponse(_httpServletResponse);
+		languageResource.setContextUriInfo(_uriInfo);
+		languageResource.setContextUser(_user);
+		languageResource.setGroupLocalService(_groupLocalService);
+		languageResource.setRoleLocalService(_roleLocalService);
+
+		languageResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		languageResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
 
@@ -4657,6 +5855,9 @@ public class Mutation {
 		messageBoardAttachmentResource.setContextUser(_user);
 		messageBoardAttachmentResource.setGroupLocalService(_groupLocalService);
 		messageBoardAttachmentResource.setRoleLocalService(_roleLocalService);
+
+		messageBoardAttachmentResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		messageBoardAttachmentResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -4677,6 +5878,9 @@ public class Mutation {
 		messageBoardMessageResource.setGroupLocalService(_groupLocalService);
 		messageBoardMessageResource.setRoleLocalService(_roleLocalService);
 
+		messageBoardMessageResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		messageBoardMessageResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4695,6 +5899,9 @@ public class Mutation {
 		messageBoardSectionResource.setContextUser(_user);
 		messageBoardSectionResource.setGroupLocalService(_groupLocalService);
 		messageBoardSectionResource.setRoleLocalService(_roleLocalService);
+
+		messageBoardSectionResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		messageBoardSectionResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -4715,6 +5922,9 @@ public class Mutation {
 		messageBoardThreadResource.setGroupLocalService(_groupLocalService);
 		messageBoardThreadResource.setRoleLocalService(_roleLocalService);
 
+		messageBoardThreadResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		messageBoardThreadResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4734,7 +5944,29 @@ public class Mutation {
 		navigationMenuResource.setGroupLocalService(_groupLocalService);
 		navigationMenuResource.setRoleLocalService(_roleLocalService);
 
+		navigationMenuResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		navigationMenuResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(SitePageResource sitePageResource)
+		throws Exception {
+
+		sitePageResource.setContextAcceptLanguage(_acceptLanguage);
+		sitePageResource.setContextCompany(_company);
+		sitePageResource.setContextHttpServletRequest(_httpServletRequest);
+		sitePageResource.setContextHttpServletResponse(_httpServletResponse);
+		sitePageResource.setContextUriInfo(_uriInfo);
+		sitePageResource.setContextUser(_user);
+		sitePageResource.setGroupLocalService(_groupLocalService);
+		sitePageResource.setRoleLocalService(_roleLocalService);
+
+		sitePageResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		sitePageResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
 
@@ -4752,6 +5984,9 @@ public class Mutation {
 		structuredContentResource.setContextUser(_user);
 		structuredContentResource.setGroupLocalService(_groupLocalService);
 		structuredContentResource.setRoleLocalService(_roleLocalService);
+
+		structuredContentResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		structuredContentResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -4774,6 +6009,9 @@ public class Mutation {
 			_groupLocalService);
 		structuredContentFolderResource.setRoleLocalService(_roleLocalService);
 
+		structuredContentFolderResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		structuredContentFolderResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4790,6 +6028,9 @@ public class Mutation {
 		wikiNodeResource.setGroupLocalService(_groupLocalService);
 		wikiNodeResource.setRoleLocalService(_roleLocalService);
 
+		wikiNodeResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		wikiNodeResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4805,6 +6046,9 @@ public class Mutation {
 		wikiPageResource.setContextUser(_user);
 		wikiPageResource.setGroupLocalService(_groupLocalService);
 		wikiPageResource.setRoleLocalService(_roleLocalService);
+
+		wikiPageResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		wikiPageResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -4825,6 +6069,9 @@ public class Mutation {
 		wikiPageAttachmentResource.setGroupLocalService(_groupLocalService);
 		wikiPageAttachmentResource.setRoleLocalService(_roleLocalService);
 
+		wikiPageAttachmentResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		wikiPageAttachmentResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -4835,8 +6082,12 @@ public class Mutation {
 		_blogPostingImageResourceComponentServiceObjects;
 	private static ComponentServiceObjects<CommentResource>
 		_commentResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ContentElementResource>
+		_contentElementResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ContentStructureResource>
 		_contentStructureResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ContentTemplateResource>
+		_contentTemplateResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentResource>
 		_documentResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentFolderResource>
@@ -4847,6 +6098,8 @@ public class Mutation {
 		_knowledgeBaseAttachmentResourceComponentServiceObjects;
 	private static ComponentServiceObjects<KnowledgeBaseFolderResource>
 		_knowledgeBaseFolderResourceComponentServiceObjects;
+	private static ComponentServiceObjects<LanguageResource>
+		_languageResourceComponentServiceObjects;
 	private static ComponentServiceObjects<MessageBoardAttachmentResource>
 		_messageBoardAttachmentResourceComponentServiceObjects;
 	private static ComponentServiceObjects<MessageBoardMessageResource>
@@ -4857,6 +6110,8 @@ public class Mutation {
 		_messageBoardThreadResourceComponentServiceObjects;
 	private static ComponentServiceObjects<NavigationMenuResource>
 		_navigationMenuResourceComponentServiceObjects;
+	private static ComponentServiceObjects<SitePageResource>
+		_sitePageResourceComponentServiceObjects;
 	private static ComponentServiceObjects<StructuredContentResource>
 		_structuredContentResourceComponentServiceObjects;
 	private static ComponentServiceObjects<StructuredContentFolderResource>
@@ -4870,6 +6125,7 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
+	private BiFunction<Object, String, Filter> _filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
@@ -4877,6 +6133,8 @@ public class Mutation {
 	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
+	private VulcanBatchEngineExportTaskResource
+		_vulcanBatchEngineExportTaskResource;
 	private VulcanBatchEngineImportTaskResource
 		_vulcanBatchEngineImportTaskResource;
 

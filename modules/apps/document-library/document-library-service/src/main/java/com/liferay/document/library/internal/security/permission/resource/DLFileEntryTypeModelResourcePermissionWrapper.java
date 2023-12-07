@@ -1,24 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.security.permission.resource;
 
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeModel;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
 import com.liferay.exportimport.kernel.staging.permission.StagingPermission;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.BaseModelResourcePermissionWrapper;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
@@ -40,6 +35,30 @@ public class DLFileEntryTypeModelResourcePermissionWrapper
 	extends BaseModelResourcePermissionWrapper<DLFileEntryType> {
 
 	@Override
+	public boolean contains(
+			PermissionChecker permissionChecker,
+			DLFileEntryType dlFileEntryType, String actionId)
+		throws PortalException {
+
+		String structureModelResourceName =
+			_ddmPermissionSupport.getStructureModelResourceName(
+				DLFileEntryMetadata.class.getName());
+
+		if (permissionChecker.hasOwnerPermission(
+				dlFileEntryType.getCompanyId(), structureModelResourceName,
+				dlFileEntryType.getDataDefinitionId(),
+				dlFileEntryType.getUserId(), actionId) ||
+			permissionChecker.hasPermission(
+				dlFileEntryType.getGroupId(), structureModelResourceName,
+				dlFileEntryType.getDataDefinitionId(), actionId)) {
+
+			return true;
+		}
+
+		return super.contains(permissionChecker, dlFileEntryType, actionId);
+	}
+
+	@Override
 	protected ModelResourcePermission<DLFileEntryType>
 		doGetModelResourcePermission() {
 
@@ -52,6 +71,9 @@ public class DLFileEntryTypeModelResourcePermissionWrapper
 					_stagingPermission, DLPortletKeys.DOCUMENT_LIBRARY,
 					DLFileEntryTypeModel::getFileEntryTypeId)));
 	}
+
+	@Reference
+	private DDMPermissionSupport _ddmPermissionSupport;
 
 	@Reference
 	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;

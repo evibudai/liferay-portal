@@ -1,21 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.web.internal.asset.model;
 
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
@@ -31,11 +25,13 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.trash.TrashHelper;
 
 import java.util.Locale;
 
@@ -49,16 +45,18 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * @author Peter Shin
  */
-public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
+public class KBArticleAssetRenderer
+	extends BaseJSPAssetRenderer<KBArticle> implements TrashRenderer {
 
 	public KBArticleAssetRenderer(
 		AssetDisplayPageFriendlyURLProvider assetDisplayPageFriendlyURLProvider,
-		HtmlParser htmlParser, KBArticle kbArticle) {
+		HtmlParser htmlParser, KBArticle kbArticle, TrashHelper trashHelper) {
 
 		_assetDisplayPageFriendlyURLProvider =
 			assetDisplayPageFriendlyURLProvider;
 		_htmlParser = htmlParser;
 		_kbArticle = kbArticle;
+		_trashHelper = trashHelper;
 	}
 
 	@Override
@@ -95,6 +93,14 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 	}
 
 	@Override
+	public String getPortletId() {
+		AssetRendererFactory<KBArticle> assetRendererFactory =
+			getAssetRendererFactory();
+
+		return assetRendererFactory.getPortletId();
+	}
+
+	@Override
 	public int getStatus() {
 		return _kbArticle.getStatus();
 	}
@@ -113,7 +119,16 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 
 	@Override
 	public String getTitle(Locale locale) {
-		return _kbArticle.getTitle();
+		if (_trashHelper == null) {
+			return _kbArticle.getTitle();
+		}
+
+		return _trashHelper.getOriginalTitle(_kbArticle.getTitle());
+	}
+
+	@Override
+	public String getType() {
+		return KBArticleAssetRendererFactory.TYPE;
 	}
 
 	@Override
@@ -155,7 +170,10 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 
 		String friendlyURL =
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				getClassName(), _kbArticle.getKbArticleId(), themeDisplay);
+				new InfoItemReference(
+					getClassName(),
+					new ClassPKInfoItemIdentifier(_kbArticle.getKbArticleId())),
+				themeDisplay);
 
 		if (Validator.isNotNull(friendlyURL)) {
 			return friendlyURL;
@@ -242,5 +260,6 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 		_assetDisplayPageFriendlyURLProvider;
 	private final HtmlParser _htmlParser;
 	private final KBArticle _kbArticle;
+	private final TrashHelper _trashHelper;
 
 }

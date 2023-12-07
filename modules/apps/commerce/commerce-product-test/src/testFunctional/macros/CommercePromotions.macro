@@ -1,9 +1,28 @@
 definition {
 
-	macro openPromotionsAdmin {
+	@summary = "Default summary"
+	macro openPromotionsAdmin(baseURL = null) {
 		Navigator.openWithAppendToBaseURL(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_pricing_web_internal_portlet_CommercePromotionPortlet");
+	}
+
+	@summary = "Default summary"
+	macro setOverrideDiscount(overrideDiscounts = null) {
+		Check.checkToggleSwitch(
+			key_toggleSwitchLabel = "Override Discount",
+			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+		for (var overrideDiscount : list ${overrideDiscounts}) {
+			var key_text = StringUtil.extractFirst(${overrideDiscount}, "-");
+			var currentValue = StringUtil.extractLast(${overrideDiscount}, "-");
+
+			Type(
+				locator1 = "TextInput#ANY",
+				value1 = ${currentValue});
+		}
+
+		Button.clickSave();
 	}
 
 }

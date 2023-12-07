@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,11 +33,12 @@ definition {
 	}
 
 	@description = "This test asserts that an image is auto-tagged during upload when Auto-Tagging is enabled."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAddAutoTag {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "DMAutoTagging#CanAddAutoTag";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -57,9 +58,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-93334. It checks that an ODT file can be auto-tagged."
-	@priority = "4"
+	@priority = 4
 	test CanAddAutoTagForODTFile {
-		property test.name.skip.portal.instance = "DMAutoTagging#CanAddAutoTagForODTFile";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -83,20 +85,21 @@ definition {
 	}
 
 	@description = "This test asserts that auto-tags added to an image uploaded on a staged site gets published to Live."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAssertImageAutoTagAfterPublishToLive {
 		property custom.properties = "dl.actions.visible=true";
-		property test.name.skip.portal.instance = "DMAutoTagging#CanAssertImageAutoTagAfterPublishToLive";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -134,12 +137,13 @@ definition {
 	}
 
 	@description = "This test covers LPS-101885. It asserts that an auto-tagged document can be deleted when OpenNLP Auto-Tagging is enabled."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDeleteAutoTaggedDocument {
-		property test.name.skip.portal.instance = "DMAutoTagging#CanDeleteAutoTaggedDocument";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -164,10 +168,11 @@ definition {
 	}
 
 	@description = "This test asserts that no auto-tags are generated for manually tagged images."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddAutoTagForManuallyTaggedImage {
-		property test.name.skip.portal.instance = "DMAutoTagging#CannotAddAutoTagForManuallyTaggedImage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			assetTagNames = "manualtag",
@@ -190,10 +195,11 @@ definition {
 	}
 
 	@description = "This test asserts that auto-tags can be deleted."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanRemoveImageAutoTag {
-		property test.name.skip.portal.instance = "DMAutoTagging#CanRemoveImageAutoTag";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "Auto Tagged Image Description",
@@ -224,10 +230,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-94209. It asserts that OpenNLP auto-tags can be deleted."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanRemoveOpenNLPAutoTag {
-		property test.name.skip.portal.instance = "DMAutoTagging#CanRemoveOpenNLPAutoTag";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -248,7 +255,7 @@ definition {
 		Panel.expandPanel(panel = "Categorization");
 
 		for (var tagName : list "alice,adventures") {
-			AssetCategorization.removeTag(tagName = "${tagName}");
+			AssetCategorization.removeTag(tagName = ${tagName});
 		}
 
 		Button.clickPublish();
@@ -261,14 +268,15 @@ definition {
 		DMDocument.viewCP(dmDocumentTitle = "DM Document DOCX");
 
 		for (var tagName : list "alice,adventures") {
-			DMDocument.viewNoTagInfo(tagName = "${tagName}");
+			DMDocument.viewNoTagInfo(tagName = ${tagName});
 		}
 	}
 
 	@description = "This test asserts that tags are not updated if user unchecked Update Auto Tags when updating an image."
-	@priority = "5"
+	@priority = 5
 	test NoTagUpdatesForImageAfterDisablingUpdateAutoTags {
-		property test.name.skip.portal.instance = "DMAutoTagging#NoTagUpdatesForImageAfterDisablingUpdateAutoTags";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableUpdateAutoTags(enableUpdateAutoTagsFor = "System Settings");
 
@@ -300,9 +308,10 @@ definition {
 	}
 
 	@description = "This test asserts that tags are not updated if user unchecked Update Auto Tags when updating a text document."
-	@priority = "5"
+	@priority = 5
 	test NoTagUpdatesForTextDMAfterDisablingUpdateAutoTags {
-		property test.name.skip.portal.instance = "DMAutoTagging#NoTagUpdatesForTextDMAfterDisablingUpdateAutoTags";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -346,9 +355,10 @@ definition {
 	}
 
 	@description = "This test asserts that new tags detected are added if user checked Update Auto Tags when updating an image."
-	@priority = "5"
+	@priority = 5
 	test TagUpdatesForImageAfterEnablingUpdateAutoTags {
-		property test.name.skip.portal.instance = "DMAutoTagging#TagUpdatesForImageAfterEnablingUpdateAutoTags";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableUpdateAutoTags(enableUpdateAutoTagsFor = "System Settings");
 
@@ -384,9 +394,10 @@ definition {
 	}
 
 	@description = "This test asserts that new tags detected are added if user checked Update Auto Tags when updating a text document."
-	@priority = "5"
+	@priority = 5
 	test TagUpdatesForTextDMAfterEnablingUpdateAutoTags {
-		property test.name.skip.portal.instance = "DMAutoTagging#TagUpdatesForTextDMAfterEnablingUpdateAutoTags";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service.persistence.test;
@@ -126,6 +117,8 @@ public class KBCommentPersistenceTest {
 
 		newKBComment.setMvccVersion(RandomTestUtil.nextLong());
 
+		newKBComment.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newKBComment.setUuid(RandomTestUtil.randomString());
 
 		newKBComment.setGroupId(RandomTestUtil.nextLong());
@@ -159,6 +152,9 @@ public class KBCommentPersistenceTest {
 
 		Assert.assertEquals(
 			existingKBComment.getMvccVersion(), newKBComment.getMvccVersion());
+		Assert.assertEquals(
+			existingKBComment.getCtCollectionId(),
+			newKBComment.getCtCollectionId());
 		Assert.assertEquals(
 			existingKBComment.getUuid(), newKBComment.getUuid());
 		Assert.assertEquals(
@@ -300,11 +296,12 @@ public class KBCommentPersistenceTest {
 
 	protected OrderByComparator<KBComment> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"KBComment", "mvccVersion", true, "uuid", true, "kbCommentId", true,
-			"groupId", true, "companyId", true, "userId", true, "userName",
-			true, "createDate", true, "modifiedDate", true, "classNameId", true,
-			"classPK", true, "content", true, "userRating", true,
-			"lastPublishDate", true, "status", true);
+			"KBComment", "mvccVersion", true, "ctCollectionId", true, "uuid",
+			true, "kbCommentId", true, "groupId", true, "companyId", true,
+			"userId", true, "userName", true, "createDate", true,
+			"modifiedDate", true, "classNameId", true, "classPK", true,
+			"content", true, "userRating", true, "lastPublishDate", true,
+			"status", true);
 	}
 
 	@Test
@@ -585,6 +582,8 @@ public class KBCommentPersistenceTest {
 		KBComment kbComment = _persistence.create(pk);
 
 		kbComment.setMvccVersion(RandomTestUtil.nextLong());
+
+		kbComment.setCtCollectionId(RandomTestUtil.nextLong());
 
 		kbComment.setUuid(RandomTestUtil.randomString());
 

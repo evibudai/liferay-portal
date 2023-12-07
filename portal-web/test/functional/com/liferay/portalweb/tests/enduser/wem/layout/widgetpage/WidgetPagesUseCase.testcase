@@ -1,39 +1,37 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Pages Administration";
+	property testray.main.component.name = "Page Administration";
+
+	static var randomSiteName = StringUtil.randomString(8);
+
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
 
 	setUp {
-		task ("Set up instance and sign in") {
+		task ("Set up virtual instance") {
 			TestCase.setUpPortalInstance();
+		}
 
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 	}
 
 	@description = "This is a test for LPS-75936. The admin user should access to product menu on page with Full Page Application type."
-	@priority = "5"
+	@priority = 5
 	test AccessToProductMenuOnFullPageApplicationPageAsAdmin {
+		property portal.acceptance = "true";
+
 		task ("Given an admin user has a page with Full Page Application type") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "full_page_application");
 		}
@@ -47,7 +45,7 @@ definition {
 		task ("Then the admin user could access to product menu after sign in") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
-				siteName = "Test Site name");
+				siteName = ${randomSiteName});
 
 			User.signInPG(userEmailAddress = "test@liferay.com");
 
@@ -60,11 +58,11 @@ definition {
 	}
 
 	@description = "The user can add a blogs entry and message boards via collaboration panel page."
-	@priority = "3"
+	@priority = 3
 	@uitest
 	test AddAssetsViaCollaborationPanel {
 		task ("Add a panel page with collaboration component") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "Test Site Name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteName});
 
 			PagesAdmin.addPage(
 				componentName = "Collaboration",
@@ -75,7 +73,7 @@ definition {
 		task ("View collaboration portlets are shown") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			Page.viewPanelPortletListPG(
 				componentName = "Collaboration",
@@ -86,7 +84,7 @@ definition {
 		task ("Add a blogs entry") {
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 		}
 
@@ -111,12 +109,12 @@ definition {
 
 			MessageboardsThread.gotoPG(
 				lastPostUserName = "Test Test",
-				replyCount = "0",
+				replyCount = 0,
 				threadBody = "MB Thread Message Body",
 				threadSubject = "MB Thread Message Subject");
 
 			MessageboardsThread.viewPG(
-				replyCount = "0",
+				replyCount = 0,
 				threadBody = "MB Thread Message Body",
 				threadSubject = "MB Thread Message Subject",
 				userName = "Test Test");
@@ -124,7 +122,7 @@ definition {
 	}
 
 	@description = "The user can not delete the last public page on Liferay instance."
-	@priority = "3"
+	@priority = 3
 	test CannotDeleteLastPublicPageOnDefaultSite {
 		task ("Delete the Search page in Liferay instance") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
@@ -140,14 +138,14 @@ definition {
 	}
 
 	@description = "The user can add an embedded and panel page via pages administration."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test ConfigureEmbeddedAndPanelPage {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		task ("Add an embedded page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.addPage(
 				pageName = "Test Page Name 1",
@@ -158,12 +156,12 @@ definition {
 		task ("Change embedded type URL") {
 			PagesAdmin.configurePage(
 				pageName = "Test Page Name 1",
-				pageTypeURL = "http://iscaliforniaonfire.com/",
+				pageTypeURL = "http://whereiscaliforniaonfire.com",
 				sitePageType = "Embedded");
 		}
 
 		task ("Add a panel page with community component") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.addPage(
 				componentName = "Community",
@@ -181,19 +179,19 @@ definition {
 		task ("View california page is shown") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name 1",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EMBEDDED_IFRAME");
 
 			AssertVisible(
-				key_title = "Yes",
+				key_title = "Fires",
 				locator1 = "Header#H1_TITLE");
 		}
 
 		task ("View community portlets are shown") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name 2",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			Page.viewPanelPortletListPG(
 				componentName = "Community",
@@ -202,22 +200,158 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-172971. As a page admin, I can edit friendly URL of page sets."
+	@priority = 4
+	test EditFriendlyURLOfPageSet {
+		task ("Given a page admin has a page set with child pages") {
+			HeadlessSite.addSite(
+				siteName = "Site Name",
+				templateName = "Welcome",
+				templateType = "Site Initializer");
+
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
+
+			PagesAdmin.addPage(
+				pageName = "Test Page Set",
+				sitePageType = "Page Set");
+
+			for (var pageName : list "Test Page Name 1,Test Page Name 2") {
+				JSONLayout.addPublicLayout(
+					groupName = "Site Name",
+					layoutName = ${pageName},
+					parentLayoutName = "Test Page Set",
+					type = "content");
+			}
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 1",
+				siteName = "Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 2",
+				siteName = "Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page admin navigates to the Pages admin") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
+		}
+
+		task ("Then the page admin could edit the friendly URL of page set") {
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Set");
+
+			PagesAdmin.editFriendlyURL(friendlyURLEdit = "/presentation");
+		}
+
+		task ("When the page admin navigates to the page set via new friendly URL") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			Navigator.openSpecificURL(url = "${portalURL}/web/site-name/presentation");
+		}
+
+		task ("Then the page admin is redirected to the first child page") {
+			ControlMenu.viewHeaderTitle(headerTitle = "Test Page Name 1");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Heading Example");
+		}
+
+		task ("When the page admin navigates to the Pages admin") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
+		}
+
+		task ("Then the page admin could delete the new friendly URL of page set") {
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Set");
+
+			PagesAdmin.gotoFriendlyURLHistory();
+
+			MouseOver(
+				key_oldFriendlyURL = "/test-page-set",
+				locator1 = "PagesAdmin#FRIENDLY_URL_HISTORY_ITEM");
+
+			Click(locator1 = "Icon#FRIENDLY_URL_HISTORY_ITEM_RESTORE");
+
+			PagesAdmin.removeOldFriendlyURL(oldFriendlyURL = "/presentation");
+
+			IFrame.closeFrame();
+
+			PortletEntry.save();
+		}
+
+		task ("When the page admin navigates to the page set via new friendly URL") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			Navigator.openSpecificURL(url = "${portalURL}/web/site-name/presentation");
+		}
+
+		task ("Then the page admin is redirected to not found") {
+			ContentPages.viewFragmentText(
+				fragmentName = "paragraph",
+				id = "element-text",
+				text = "Page Not Found");
+		}
+
+		task ("When the page admin navigates to the Pages admin") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
+		}
+
+		task ("Then the page admin could delete the page set and child pages") {
+			for (var pageName : list "Test Page Name 1,Test Page Name 2,Test Page Set") {
+				JSONLayout.deletePublicLayout(
+					groupName = "Site Name",
+					layoutName = ${pageName});
+			}
+		}
+
+		task ("When the page admin navigates to the page set via friendly URL") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			Navigator.openSpecificURL(url = "${portalURL}/web/site-name/test-page-set");
+		}
+
+		task ("Then the page admin is redirected to not found") {
+			ContentPages.viewFragmentText(
+				fragmentName = "paragraph",
+				id = "element-text",
+				text = "Page Not Found");
+
+			JSONGroup.deleteGroupByName(groupName = "Site Name");
+		}
+	}
+
 	@description = "This is a use case for LPS-71160. Can edit the SEO settings in a widget page via control menu."
-	@priority = "5"
+	@priority = 5
 	test EditPageViaControlMenu {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		task ("Add a widget page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name");
 		}
 
 		task ("Edit the page via control menu") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			Navigator.gotoEditPageViaControlMenu(pageName = "Test Page Name");
 
@@ -227,7 +361,7 @@ definition {
 		task ("View the edited name in pages admin") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name Edit",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PagesAdmin.viewPageItemPresent(pageName = "Test Page Name Edit");
 		}
@@ -235,7 +369,7 @@ definition {
 		task ("Edit the SEO settings") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name Edit",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			Navigator.gotoEditPageViaControlMenu(pageName = "Test Page Name Edit");
 
@@ -248,7 +382,7 @@ definition {
 		task ("View the SEO settings is shown") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name Edit",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			Navigator.gotoEditPageViaControlMenu(pageName = "Test Page Name Edit");
 
@@ -260,18 +394,18 @@ definition {
 	}
 
 	@description = "This is a test for LPS-145264. The changes on widget page template should be propagate to widget page when Inherit Changes is enabled."
-	@priority = "4"
+	@priority = 4
 	test PropagateChangesFromWidgetPageTemplate {
-		property testray.component.names = "Site Pages Administration,Widget Page Templates";
+		property testray.component.names = "Page Administration,Widget Page Templates";
 
 		task ("Given a page creator has a widget page template") {
 			task ("Add a widget page template") {
 				JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					layoutPageTemplateCollectionName = "Widget Template Collection");
 
 				JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					layoutPageTemplateCollectionName = "Widget Template Collection",
 					layoutPageTemplateEntryName = "Widget Template Name",
 					layoutPageTemplateStatus = "Approved",
@@ -279,7 +413,7 @@ definition {
 			}
 
 			task ("Add a Blogs widget to page template") {
-				PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+				PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 				Navigator.gotoNavNested(navNested = "Widget Template Collection");
 
@@ -290,7 +424,7 @@ definition {
 		}
 
 		task ("When the page creator adds a widget page based on template") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.addPage(
 				collectionName = "Widget Template Collection",
@@ -307,7 +441,7 @@ definition {
 		}
 
 		task ("When the page creator adds an Asset Publisher on widget page template") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Widget Template Collection");
 
@@ -319,25 +453,25 @@ definition {
 		task ("Then the page creator should see the Asset Publisher is propagated to widget page") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
-				siteName = "Test Site name");
+				siteName = ${randomSiteName});
 
 			for (var widgetName : list "Blogs,Asset Publisher") {
-				Portlet.viewSpecificPG(portletName = "${widgetName}");
+				Portlet.viewSpecificPG(portletName = ${widgetName});
 			}
 		}
 	}
 
 	@description = "An error is thrown when the default language has an empty friendly url in widget page."
-	@priority = "3"
+	@priority = 3
 	test ViewNoExceptionWhenPageWithoutFriendlyURLInDefaultLanguage {
 		task ("Add a widget page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name");
 		}
 
 		task ("Add a localized friendly url") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
@@ -357,13 +491,13 @@ definition {
 		task ("View no error thrown on console when navigating to page") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertConsoleTextNotPresent(value1 = "java.lang.StringIndexOutOfBoundsException: String index out of range: -1");
 		}
 
 		task ("View default friendly url") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",

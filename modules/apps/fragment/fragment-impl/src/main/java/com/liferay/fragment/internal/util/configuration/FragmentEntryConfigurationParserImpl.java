@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.internal.util.configuration;
@@ -18,6 +9,7 @@ import com.liferay.fragment.constants.FragmentConfigurationFieldDataType;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.fragment.util.configuration.FragmentEntryMenuDisplayConfiguration;
 import com.liferay.frontend.token.definition.FrontendToken;
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
@@ -25,6 +17,8 @@ import com.liferay.frontend.token.definition.FrontendTokenMapping;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
+import com.liferay.info.pagination.InfoPage;
+import com.liferay.info.pagination.Pagination;
 import com.liferay.layout.list.retriever.DefaultLayoutListRetrieverContext;
 import com.liferay.layout.list.retriever.LayoutListRetriever;
 import com.liferay.layout.list.retriever.LayoutListRetrieverRegistry;
@@ -53,6 +47,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.site.navigation.taglib.servlet.taglib.util.NavItemUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -217,11 +212,25 @@ public class FragmentEntryConfigurationParserImpl
 
 				Object contextListObject = _getInfoListObjectEntry(
 					configurationValuesJSONObject.getString(name),
-					segmentsEntryIds);
+					segmentsEntryIds,
+					fragmentConfigurationField.getTypeOptionsJSONObject());
 
 				if (contextListObject != null) {
 					contextObjects.put(
 						name + _CONTEXT_OBJECT_LIST_SUFFIX, contextListObject);
+				}
+			}
+
+			if (StringUtil.equalsIgnoreCase(
+					fragmentConfigurationField.getType(),
+					"navigationMenuSelector")) {
+
+				Object contextObject = _getNavItemsContextObject(
+					configurationValuesJSONObject.getString(name));
+
+				if (contextObject != null) {
+					contextObjects.put(
+						name + _CONTEXT_OBJECT_SUFFIX, contextObject);
 				}
 			}
 		}
@@ -392,6 +401,10 @@ public class FragmentEntryConfigurationParserImpl
 
 		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
 
+		if (themeDisplay == null) {
+			return fieldValue;
+		}
+
 		Group group = themeDisplay.getScopeGroup();
 
 		LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
@@ -458,7 +471,7 @@ public class FragmentEntryConfigurationParserImpl
 		String parsedValue = GetterUtil.getString(value);
 
 		if (fragmentConfigurationField.isLocalizable() &&
-			JSONUtil.isValid(parsedValue)) {
+			JSONUtil.isJSONObject(parsedValue)) {
 
 			try {
 				JSONObject valueJSONObject = _jsonFactory.createJSONObject(
@@ -497,7 +510,9 @@ public class FragmentEntryConfigurationParserImpl
 			JSONObject jsonObject = (JSONObject)_getFieldValue(
 				FragmentConfigurationFieldDataType.OBJECT, parsedValue);
 
-			if (jsonObject.isNull("color") && !jsonObject.isNull("cssClass")) {
+			if ((jsonObject != null) && jsonObject.isNull("color") &&
+				!jsonObject.isNull("cssClass")) {
+
 				jsonObject.put("color", jsonObject.getString("cssClass"));
 			}
 
@@ -610,21 +625,18 @@ public class FragmentEntryConfigurationParserImpl
 		try {
 			JSONObject jsonObject = _jsonFactory.createJSONObject(value);
 
-			String className = GetterUtil.getString(
-				jsonObject.getString("className"));
-
 			InfoItemObjectProvider<?> infoItemObjectProvider =
 				_infoItemServiceRegistry.getFirstInfoItemService(
-					InfoItemObjectProvider.class, className);
+					InfoItemObjectProvider.class,
+					jsonObject.getString("className"),
+					ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
 
 			if (infoItemObjectProvider == null) {
 				return null;
 			}
 
-			long classPK = GetterUtil.getLong(jsonObject.getString("classPK"));
-
 			return infoItemObjectProvider.getInfoItem(
-				new ClassPKInfoItemIdentifier(classPK));
+				new ClassPKInfoItemIdentifier(jsonObject.getLong("classPK")));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -650,17 +662,15 @@ public class FragmentEntryConfigurationParserImpl
 				_jsonFactory.looseSerialize(_getInfoDisplayObjectEntry(value)));
 
 			jsonObject.put(
-				"className",
-				GetterUtil.getString(
-					configurationValueJSONObject.getString("className"))
+				"className", configurationValueJSONObject.getString("className")
 			).put(
 				"classNameId",
-				GetterUtil.getString(
-					configurationValueJSONObject.getString("classNameId"))
+				configurationValueJSONObject.getLong("classNameId")
 			).put(
-				"classPK",
-				GetterUtil.getLong(
-					configurationValueJSONObject.getString("classPK"))
+				"classPK", configurationValueJSONObject.getLong("classPK")
+			).put(
+				"externalReferenceCode",
+				configurationValueJSONObject.getString("externalReferenceCode")
 			).put(
 				"template", configurationValueJSONObject.get("template")
 			).put(
@@ -682,7 +692,8 @@ public class FragmentEntryConfigurationParserImpl
 	}
 
 	private Object _getInfoListObjectEntry(
-		String value, long[] segmentsEntryIds) {
+		String value, long[] segmentsEntryIds,
+		JSONObject typeOptionsJSONObject) {
 
 		if (Validator.isNull(value)) {
 			return Collections.emptyList();
@@ -717,12 +728,24 @@ public class FragmentEntryConfigurationParserImpl
 				defaultLayoutListRetrieverContext =
 					new DefaultLayoutListRetrieverContext();
 
+			if (typeOptionsJSONObject != null) {
+				int numberOfItems = typeOptionsJSONObject.getInt(
+					"numberOfItems", 0);
+
+				if (numberOfItems > 0) {
+					defaultLayoutListRetrieverContext.setPagination(
+						Pagination.of(numberOfItems, 0));
+				}
+			}
+
 			defaultLayoutListRetrieverContext.setSegmentsEntryIds(
 				segmentsEntryIds);
 
-			return layoutListRetriever.getList(
+			InfoPage<?> infoPage = layoutListRetriever.getInfoPage(
 				listObjectReferenceFactory.getListObjectReference(jsonObject),
 				defaultLayoutListRetrieverContext);
+
+			return infoPage.getPageItems();
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -751,6 +774,23 @@ public class FragmentEntryConfigurationParserImpl
 		}
 
 		return null;
+	}
+
+	private Object _getNavItemsContextObject(String value) {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		FragmentEntryMenuDisplayConfiguration
+			fragmentEntryMenuDisplayConfiguration =
+				new FragmentEntryMenuDisplayConfiguration(value);
+
+		return NavItemUtil.getNavigationMenuContext(
+			1, "auto", serviceContext.getRequest(),
+			fragmentEntryMenuDisplayConfiguration.getNavigationMenuMode(),
+			false, fragmentEntryMenuDisplayConfiguration.getRootItemId(),
+			fragmentEntryMenuDisplayConfiguration.getRootItemLevel(),
+			fragmentEntryMenuDisplayConfiguration.getRootItemType(),
+			fragmentEntryMenuDisplayConfiguration.getSiteNavigationMenuId());
 	}
 
 	private Object _getURLValue(String value) {

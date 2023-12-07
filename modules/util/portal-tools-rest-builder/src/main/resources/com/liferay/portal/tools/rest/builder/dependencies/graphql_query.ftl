@@ -20,7 +20,7 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 <#assign
 	javaMethodSignatures = freeMarkerTool.getGraphQLJavaMethodSignatures(configYAML, "query", openAPIYAML)
 
-	generateAggregationFunction = freeMarkerTool.containsAggregationFunction(javaMethodSignatures)
+	generateAggregationFunction = freeMarkerTool.containsParameterType(javaMethodSignatures, "com.liferay.portal.vulcan.aggregation.Aggregation")
 />
 
 <#if generateAggregationFunction>
@@ -125,14 +125,14 @@ public class Query {
 						Query.this::_populateResourceContext,
 						${freeMarkerTool.getSchemaVarName(javaMethodSignature.schemaName)}Resource ->
 							new ${javaMethodSignature.schemaName}Page(
-								${freeMarkerTool.getSchemaVarName(javaMethodSignature.schemaName)}Resource.${javaMethodSignature.methodName}(_${javaMethodSignature.parentSchemaName?uncap_first}.get${freeMarkerTool.getGraphQLJavaParameterName(configYAML, openAPIYAML, javaMethodSignature.parentSchemaName, javaMethodSignature.javaMethodParameters[0])}()
+								${freeMarkerTool.getSchemaVarName(javaMethodSignature.schemaName)}Resource.${javaMethodSignature.methodName}(_${javaMethodSignature.parentSchemaName?uncap_first}.get${freeMarkerTool.getGraphQLJavaParameterName(configYAML, openAPIYAML, javaMethodSignature.parentSchemaName, allSchemas, javaMethodSignature.javaMethodParameters[0])}()
 
 								<#if arguments?has_content>
 									, ${arguments}
 								</#if>)));
 				<#else>
 					return _applyComponentServiceObjects(_${freeMarkerTool.getSchemaVarName(javaMethodSignature.schemaName)}ResourceComponentServiceObjects, Query.this::_populateResourceContext, ${freeMarkerTool.getSchemaVarName(javaMethodSignature.schemaName)}Resource -> ${freeMarkerTool.getSchemaVarName(javaMethodSignature.schemaName)}Resource.${javaMethodSignature.methodName}(
-						_${javaMethodSignature.parentSchemaName?uncap_first}.get${freeMarkerTool.getGraphQLJavaParameterName(configYAML, openAPIYAML, javaMethodSignature.parentSchemaName, javaMethodSignature.javaMethodParameters[0])}()
+						_${javaMethodSignature.parentSchemaName?uncap_first}.get${freeMarkerTool.getGraphQLJavaParameterName(configYAML, openAPIYAML, javaMethodSignature.parentSchemaName, allSchemas, javaMethodSignature.javaMethodParameters[0])}()
 
 						<#if arguments?has_content>
 							, ${arguments}
@@ -164,7 +164,7 @@ public class Query {
 			}
 
 			@GraphQLField
-			protected Map<String, Map> actions;
+			protected Map<String, Map<String, String>> actions;
 
 			<#if generateAggregationFunction>
 				@GraphQLField

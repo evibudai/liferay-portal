@@ -1,23 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.rule.web.internal.portlet.action;
 
+import com.liferay.commerce.order.rule.constants.COREntryConstants;
 import com.liferay.commerce.order.rule.constants.COREntryPortletKeys;
 import com.liferay.commerce.order.rule.exception.NoSuchCOREntryException;
 import com.liferay.commerce.order.rule.model.COREntry;
 import com.liferay.commerce.order.rule.service.COREntryService;
+import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -27,8 +23,11 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Calendar;
+import java.util.List;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -56,10 +55,9 @@ public class EditCOREntryMVCActionCommand extends BaseMVCActionCommand {
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		try {
-			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				long corEntryId = ParamUtil.getLong(
-					actionRequest, "corEntryId");
+			long corEntryId = ParamUtil.getLong(actionRequest, "corEntryId");
 
+			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
 				boolean active = ParamUtil.getBoolean(actionRequest, "active");
 				String description = ParamUtil.getString(
 					actionRequest, "description");
@@ -131,6 +129,13 @@ public class EditCOREntryMVCActionCommand extends BaseMVCActionCommand {
 						serviceContext);
 				}
 			}
+			else if (cmd.equals("deleteProduct")) {
+				COREntry corEntry = _corEntryService.getCOREntry(corEntryId);
+
+				_corEntryService.updateCOREntryTypeSettings(
+					corEntry.getCOREntryId(),
+					_getTypeSettings(actionRequest, corEntry));
+			}
 		}
 		catch (Throwable throwable) {
 			if (throwable instanceof NoSuchCOREntryException) {
@@ -155,8 +160,59 @@ public class EditCOREntryMVCActionCommand extends BaseMVCActionCommand {
 			PropertiesParamUtil.getProperties(
 				actionRequest, "type--settings--");
 
+		String quantity = typeSettingsUnicodeProperties.getProperty(
+			COREntryConstants.TYPE_PRODUCTS_LIMIT_FIELD_PRODUCT_QUANTITY);
+
+		if (Validator.isNotNull(quantity)) {
+			try {
+				quantity = String.valueOf(Double.valueOf(quantity));
+			}
+			catch (NumberFormatException numberFormatException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(numberFormatException);
+				}
+
+				quantity = "0";
+			}
+
+			typeSettingsUnicodeProperties.setProperty(
+				COREntryConstants.TYPE_PRODUCTS_LIMIT_FIELD_PRODUCT_QUANTITY,
+				quantity);
+		}
+
 		return typeSettingsUnicodeProperties.toString();
 	}
+
+	private String _getTypeSettings(
+		ActionRequest actionRequest, COREntry corEntry) {
+
+		String cProductId = ParamUtil.getString(actionRequest, "cProductId");
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			UnicodePropertiesBuilder.fastLoad(
+				corEntry.getTypeSettings()
+			).build();
+
+		List<String> cProductIds = StringUtil.split(
+			typeSettingsUnicodeProperties.getProperty(
+				COREntryConstants.TYPE_PRODUCTS_LIMIT_FIELD_PRODUCT_IDS));
+
+		cProductIds.remove(cProductId);
+
+		return UnicodePropertiesBuilder.create(
+			true
+		).setProperty(
+			COREntryConstants.TYPE_PRODUCTS_LIMIT_FIELD_PRODUCT_IDS,
+			StringUtil.merge(cProductIds, StringPool.COMMA)
+		).setProperty(
+			COREntryConstants.TYPE_PRODUCTS_LIMIT_FIELD_PRODUCT_QUANTITY,
+			typeSettingsUnicodeProperties.getProperty(
+				COREntryConstants.TYPE_PRODUCTS_LIMIT_FIELD_PRODUCT_QUANTITY)
+		).buildString();
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditCOREntryMVCActionCommand.class);
 
 	@Reference
 	private COREntryService _corEntryService;

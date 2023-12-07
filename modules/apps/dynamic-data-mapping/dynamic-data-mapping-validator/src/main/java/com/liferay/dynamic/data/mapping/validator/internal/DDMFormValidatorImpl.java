@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.validator.internal;
@@ -29,6 +20,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustNotDuplicateFieldName;
+import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustNotDuplicateFieldReference;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustSetAvailableLocales;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustSetDefaultLocale;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustSetDefaultLocaleAsAvailableLocale;
@@ -91,6 +83,16 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 
 		_validateDDMFormFieldNames(ddmFormFields);
 
+		Set<String> duplicatedDDMFormFieldReferences = new HashSet<>();
+
+		_addDuplicatedDDMFormFieldReferences(
+			ddmFormFields, new HashSet<>(), duplicatedDDMFormFieldReferences);
+
+		if (SetUtil.isNotEmpty(duplicatedDDMFormFieldReferences)) {
+			throw new MustNotDuplicateFieldReference(
+				duplicatedDDMFormFieldReferences);
+		}
+
 		_validateDDMFormFields(
 			ddmFormFields, new HashSet<String>(),
 			ddmForm.allowInvalidAvailableLocalesForProperty(),
@@ -146,6 +148,24 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 			throw new MustSetValidValidationExpression(
 				ddmFormField.getName(),
 				ddmFormFieldValidationExpression.getValue());
+		}
+	}
+
+	private void _addDuplicatedDDMFormFieldReferences(
+		List<DDMFormField> ddmFormFields, Set<String> ddmFormFieldReferences,
+		Set<String> duplicatedDDMFormFieldReferences) {
+
+		for (DDMFormField ddmFormField : ddmFormFields) {
+			if (!ddmFormFieldReferences.add(
+					StringUtil.toLowerCase(ddmFormField.getFieldReference()))) {
+
+				duplicatedDDMFormFieldReferences.add(
+					ddmFormField.getFieldReference());
+			}
+
+			_addDuplicatedDDMFormFieldReferences(
+				ddmFormField.getNestedDDMFormFields(), ddmFormFieldReferences,
+				duplicatedDDMFormFieldReferences);
 		}
 	}
 

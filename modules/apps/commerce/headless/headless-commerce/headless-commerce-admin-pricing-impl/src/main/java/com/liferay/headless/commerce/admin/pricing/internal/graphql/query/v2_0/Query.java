@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.graphql.query.v2_0;
 
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Account;
-import com.liferay.headless.commerce.admin.pricing.dto.v2_0.AccountGroup;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Category;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Channel;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Discount;
@@ -40,11 +30,11 @@ import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifier;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifierCategory;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifierProduct;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifierProductGroup;
+import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PricingAccountGroup;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Product;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.ProductGroup;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Sku;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.TierPrice;
-import com.liferay.headless.commerce.admin.pricing.resource.v2_0.AccountGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.AccountResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.CategoryResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ChannelResource;
@@ -70,6 +60,7 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierCa
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierProductGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierProductResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierResource;
+import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PricingAccountGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ProductGroupResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ProductResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.SkuResource;
@@ -112,14 +103,6 @@ public class Query {
 
 		_accountResourceComponentServiceObjects =
 			accountResourceComponentServiceObjects;
-	}
-
-	public static void setAccountGroupResourceComponentServiceObjects(
-		ComponentServiceObjects<AccountGroupResource>
-			accountGroupResourceComponentServiceObjects) {
-
-		_accountGroupResourceComponentServiceObjects =
-			accountGroupResourceComponentServiceObjects;
 	}
 
 	public static void setCategoryResourceComponentServiceObjects(
@@ -315,6 +298,14 @@ public class Query {
 			priceModifierProductGroupResourceComponentServiceObjects;
 	}
 
+	public static void setPricingAccountGroupResourceComponentServiceObjects(
+		ComponentServiceObjects<PricingAccountGroupResource>
+			pricingAccountGroupResourceComponentServiceObjects) {
+
+		_pricingAccountGroupResourceComponentServiceObjects =
+			pricingAccountGroupResourceComponentServiceObjects;
+	}
+
 	public static void setProductResourceComponentServiceObjects(
 		ComponentServiceObjects<ProductResource>
 			productResourceComponentServiceObjects) {
@@ -379,43 +370,6 @@ public class Query {
 			this::_populateResourceContext,
 			accountResource -> accountResource.getPriceListAccountAccount(
 				priceListAccountId));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountAccountGroupAccountGroup(discountAccountGroupId: ___){id, name}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public AccountGroup discountAccountGroupAccountGroup(
-			@GraphQLName("discountAccountGroupId") Long discountAccountGroupId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_accountGroupResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			accountGroupResource ->
-				accountGroupResource.getDiscountAccountGroupAccountGroup(
-					discountAccountGroupId));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceListAccountGroupAccountGroup(priceListAccountGroupId: ___){id, name}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public AccountGroup priceListAccountGroupAccountGroup(
-			@GraphQLName("priceListAccountGroupId") Long
-				priceListAccountGroupId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_accountGroupResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			accountGroupResource ->
-				accountGroupResource.getPriceListAccountGroupAccountGroup(
-					priceListAccountGroupId));
 	}
 
 	/**
@@ -516,7 +470,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountByExternalReferenceCode(externalReferenceCode: ___){actions, active, amountFormatted, couponCode, customFields, discountAccountGroups, discountAccounts, discountCategories, discountChannels, discountOrderTypes, discountProductGroups, discountProducts, discountRules, displayDate, expirationDate, externalReferenceCode, id, level, limitationTimes, limitationTimesPerAccount, limitationType, maximumDiscountAmount, neverExpire, numberOfUse, percentageLevel1, percentageLevel2, percentageLevel3, percentageLevel4, rulesConjunction, target, title, useCouponCode, usePercentage}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountByExternalReferenceCode(externalReferenceCode: ___){actions, active, amountFormatted, couponCode, customFields, discountAccountGroups, discountAccounts, discountCategories, discountChannels, discountOrderTypes, discountProductGroups, discountProducts, discountRules, displayDate, expirationDate, externalReferenceCode, id, level, limitationTimes, limitationTimesPerAccount, limitationType, maximumDiscountAmount, modifiedDate, neverExpire, numberOfUse, percentageLevel1, percentageLevel2, percentageLevel3, percentageLevel4, rulesConjunction, target, title, useCouponCode, usePercentage}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public Discount discountByExternalReferenceCode(
@@ -534,7 +488,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discount(id: ___){actions, active, amountFormatted, couponCode, customFields, discountAccountGroups, discountAccounts, discountCategories, discountChannels, discountOrderTypes, discountProductGroups, discountProducts, discountRules, displayDate, expirationDate, externalReferenceCode, id, level, limitationTimes, limitationTimesPerAccount, limitationType, maximumDiscountAmount, neverExpire, numberOfUse, percentageLevel1, percentageLevel2, percentageLevel3, percentageLevel4, rulesConjunction, target, title, useCouponCode, usePercentage}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discount(id: ___){actions, active, amountFormatted, couponCode, customFields, discountAccountGroups, discountAccounts, discountCategories, discountChannels, discountOrderTypes, discountProductGroups, discountProducts, discountRules, displayDate, expirationDate, externalReferenceCode, id, level, limitationTimes, limitationTimesPerAccount, limitationType, maximumDiscountAmount, modifiedDate, neverExpire, numberOfUse, percentageLevel1, percentageLevel2, percentageLevel3, percentageLevel4, rulesConjunction, target, title, useCouponCode, usePercentage}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public Discount discount(@GraphQLName("id") Long id) throws Exception {
@@ -1037,7 +991,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceEntryByExternalReferenceCode(externalReferenceCode: ___){actions, active, bulkPricing, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevelsFormatted, displayDate, expirationDate, externalReferenceCode, hasTierPrice, neverExpire, price, priceEntryId, priceFormatted, priceListExternalReferenceCode, priceListId, product, sku, skuExternalReferenceCode, skuId, tierPrices}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceEntryByExternalReferenceCode(externalReferenceCode: ___){actions, active, bulkPricing, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevelsFormatted, displayDate, expirationDate, externalReferenceCode, hasTierPrice, neverExpire, price, priceEntryId, priceFormatted, priceListExternalReferenceCode, priceListId, priceOnApplication, product, quantity, sku, skuExternalReferenceCode, skuId, tierPrices, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public PriceEntry priceEntryByExternalReferenceCode(
@@ -1055,7 +1009,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceEntry(priceEntryId: ___){actions, active, bulkPricing, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevelsFormatted, displayDate, expirationDate, externalReferenceCode, hasTierPrice, neverExpire, price, priceEntryId, priceFormatted, priceListExternalReferenceCode, priceListId, product, sku, skuExternalReferenceCode, skuId, tierPrices}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceEntry(priceEntryId: ___){actions, active, bulkPricing, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevelsFormatted, displayDate, expirationDate, externalReferenceCode, hasTierPrice, neverExpire, price, priceEntryId, priceFormatted, priceListExternalReferenceCode, priceListId, priceOnApplication, product, quantity, sku, skuExternalReferenceCode, skuId, tierPrices, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public PriceEntry priceEntry(@GraphQLName("priceEntryId") Long priceEntryId)
@@ -1660,6 +1614,44 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountAccountGroupAccountGroup(discountAccountGroupId: ___){id, name}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public PricingAccountGroup discountAccountGroupAccountGroup(
+			@GraphQLName("discountAccountGroupId") Long discountAccountGroupId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_pricingAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			pricingAccountGroupResource ->
+				pricingAccountGroupResource.getDiscountAccountGroupAccountGroup(
+					discountAccountGroupId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceListAccountGroupAccountGroup(priceListAccountGroupId: ___){id, name}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public PricingAccountGroup priceListAccountGroupAccountGroup(
+			@GraphQLName("priceListAccountGroupId") Long
+				priceListAccountGroupId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_pricingAccountGroupResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			pricingAccountGroupResource ->
+				pricingAccountGroupResource.
+					getPriceListAccountGroupAccountGroup(
+						priceListAccountGroupId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountProductProduct(discountProductId: ___){id, name, sku, thumbnail}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -1817,7 +1809,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {tierPriceByExternalReferenceCode(externalReferenceCode: ___){actions, active, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, displayDate, expirationDate, externalReferenceCode, id, minimumQuantity, neverExpire, price, priceEntryExternalReferenceCode, priceEntryId, priceFormatted}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {tierPriceByExternalReferenceCode(externalReferenceCode: ___){actions, active, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, displayDate, expirationDate, externalReferenceCode, id, minimumQuantity, neverExpire, price, priceEntryExternalReferenceCode, priceEntryId, priceFormatted, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public TierPrice tierPriceByExternalReferenceCode(
@@ -1835,7 +1827,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {tierPrice(id: ___){actions, active, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, displayDate, expirationDate, externalReferenceCode, id, minimumQuantity, neverExpire, price, priceEntryExternalReferenceCode, priceEntryId, priceFormatted}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {tierPrice(id: ___){actions, active, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, displayDate, expirationDate, externalReferenceCode, id, minimumQuantity, neverExpire, price, priceEntryExternalReferenceCode, priceEntryId, priceFormatted, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public TierPrice tierPrice(@GraphQLName("id") Long id) throws Exception {
@@ -2683,43 +2675,10 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Account> items;
-
-		@GraphQLField
-		protected long lastPage;
-
-		@GraphQLField
-		protected long page;
-
-		@GraphQLField
-		protected long pageSize;
-
-		@GraphQLField
-		protected long totalCount;
-
-	}
-
-	@GraphQLName("AccountGroupPage")
-	public class AccountGroupPage {
-
-		public AccountGroupPage(Page accountGroupPage) {
-			actions = accountGroupPage.getActions();
-
-			items = accountGroupPage.getItems();
-			lastPage = accountGroupPage.getLastPage();
-			page = accountGroupPage.getPage();
-			pageSize = accountGroupPage.getPageSize();
-			totalCount = accountGroupPage.getTotalCount();
-		}
-
-		@GraphQLField
-		protected Map<String, Map> actions;
-
-		@GraphQLField
-		protected java.util.Collection<AccountGroup> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -2749,7 +2708,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Category> items;
@@ -2782,7 +2741,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Channel> items;
@@ -2815,7 +2774,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Discount> items;
@@ -2848,7 +2807,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountAccount> items;
@@ -2881,7 +2840,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountAccountGroup> items;
@@ -2914,7 +2873,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountCategory> items;
@@ -2947,7 +2906,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountChannel> items;
@@ -2980,7 +2939,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountOrderType> items;
@@ -3013,7 +2972,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountProduct> items;
@@ -3046,7 +3005,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountProductGroup> items;
@@ -3079,7 +3038,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountRule> items;
@@ -3112,7 +3071,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<DiscountSku> items;
@@ -3145,7 +3104,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<OrderType> items;
@@ -3178,7 +3137,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceEntry> items;
@@ -3211,7 +3170,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceList> items;
@@ -3244,7 +3203,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceListAccount> items;
@@ -3277,7 +3236,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceListAccountGroup> items;
@@ -3310,7 +3269,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceListChannel> items;
@@ -3343,7 +3302,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceListDiscount> items;
@@ -3376,7 +3335,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceListOrderType> items;
@@ -3409,7 +3368,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceModifier> items;
@@ -3442,7 +3401,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceModifierCategory> items;
@@ -3475,7 +3434,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceModifierProduct> items;
@@ -3510,10 +3469,43 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PriceModifierProductGroup> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
+	@GraphQLName("PricingAccountGroupPage")
+	public class PricingAccountGroupPage {
+
+		public PricingAccountGroupPage(Page pricingAccountGroupPage) {
+			actions = pricingAccountGroupPage.getActions();
+
+			items = pricingAccountGroupPage.getItems();
+			lastPage = pricingAccountGroupPage.getLastPage();
+			page = pricingAccountGroupPage.getPage();
+			pageSize = pricingAccountGroupPage.getPageSize();
+			totalCount = pricingAccountGroupPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<PricingAccountGroup> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -3543,7 +3535,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Product> items;
@@ -3576,7 +3568,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<ProductGroup> items;
@@ -3609,7 +3601,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Sku> items;
@@ -3642,7 +3634,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<TierPrice> items;
@@ -3691,21 +3683,6 @@ public class Query {
 		accountResource.setContextUser(_user);
 		accountResource.setGroupLocalService(_groupLocalService);
 		accountResource.setRoleLocalService(_roleLocalService);
-	}
-
-	private void _populateResourceContext(
-			AccountGroupResource accountGroupResource)
-		throws Exception {
-
-		accountGroupResource.setContextAcceptLanguage(_acceptLanguage);
-		accountGroupResource.setContextCompany(_company);
-		accountGroupResource.setContextHttpServletRequest(_httpServletRequest);
-		accountGroupResource.setContextHttpServletResponse(
-			_httpServletResponse);
-		accountGroupResource.setContextUriInfo(_uriInfo);
-		accountGroupResource.setContextUser(_user);
-		accountGroupResource.setGroupLocalService(_groupLocalService);
-		accountGroupResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(CategoryResource categoryResource)
@@ -4073,6 +4050,22 @@ public class Query {
 			_roleLocalService);
 	}
 
+	private void _populateResourceContext(
+			PricingAccountGroupResource pricingAccountGroupResource)
+		throws Exception {
+
+		pricingAccountGroupResource.setContextAcceptLanguage(_acceptLanguage);
+		pricingAccountGroupResource.setContextCompany(_company);
+		pricingAccountGroupResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		pricingAccountGroupResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		pricingAccountGroupResource.setContextUriInfo(_uriInfo);
+		pricingAccountGroupResource.setContextUser(_user);
+		pricingAccountGroupResource.setGroupLocalService(_groupLocalService);
+		pricingAccountGroupResource.setRoleLocalService(_roleLocalService);
+	}
+
 	private void _populateResourceContext(ProductResource productResource)
 		throws Exception {
 
@@ -4129,8 +4122,6 @@ public class Query {
 
 	private static ComponentServiceObjects<AccountResource>
 		_accountResourceComponentServiceObjects;
-	private static ComponentServiceObjects<AccountGroupResource>
-		_accountGroupResourceComponentServiceObjects;
 	private static ComponentServiceObjects<CategoryResource>
 		_categoryResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ChannelResource>
@@ -4179,6 +4170,8 @@ public class Query {
 		_priceModifierProductResourceComponentServiceObjects;
 	private static ComponentServiceObjects<PriceModifierProductGroupResource>
 		_priceModifierProductGroupResourceComponentServiceObjects;
+	private static ComponentServiceObjects<PricingAccountGroupResource>
+		_pricingAccountGroupResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProductResource>
 		_productResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProductGroupResource>

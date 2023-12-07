@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.email.otp.model.impl;
@@ -215,101 +206,120 @@ public class MFAEmailOTPEntryModelImpl
 	public Map<String, Function<MFAEmailOTPEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<MFAEmailOTPEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<MFAEmailOTPEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<MFAEmailOTPEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<MFAEmailOTPEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<MFAEmailOTPEntry, Object>>();
-		Map<String, BiConsumer<MFAEmailOTPEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<MFAEmailOTPEntry, ?>>();
+		private static final Map<String, Function<MFAEmailOTPEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", MFAEmailOTPEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<MFAEmailOTPEntry, Long>)
-				MFAEmailOTPEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"mfaEmailOTPEntryId", MFAEmailOTPEntry::getMfaEmailOTPEntryId);
-		attributeSetterBiConsumers.put(
-			"mfaEmailOTPEntryId",
-			(BiConsumer<MFAEmailOTPEntry, Long>)
-				MFAEmailOTPEntry::setMfaEmailOTPEntryId);
-		attributeGetterFunctions.put(
-			"companyId", MFAEmailOTPEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<MFAEmailOTPEntry, Long>)MFAEmailOTPEntry::setCompanyId);
-		attributeGetterFunctions.put("userId", MFAEmailOTPEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<MFAEmailOTPEntry, Long>)MFAEmailOTPEntry::setUserId);
-		attributeGetterFunctions.put("userName", MFAEmailOTPEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<MFAEmailOTPEntry, String>)
-				MFAEmailOTPEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", MFAEmailOTPEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<MFAEmailOTPEntry, Date>)
-				MFAEmailOTPEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", MFAEmailOTPEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<MFAEmailOTPEntry, Date>)
-				MFAEmailOTPEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"failedAttempts", MFAEmailOTPEntry::getFailedAttempts);
-		attributeSetterBiConsumers.put(
-			"failedAttempts",
-			(BiConsumer<MFAEmailOTPEntry, Integer>)
-				MFAEmailOTPEntry::setFailedAttempts);
-		attributeGetterFunctions.put(
-			"lastFailDate", MFAEmailOTPEntry::getLastFailDate);
-		attributeSetterBiConsumers.put(
-			"lastFailDate",
-			(BiConsumer<MFAEmailOTPEntry, Date>)
-				MFAEmailOTPEntry::setLastFailDate);
-		attributeGetterFunctions.put(
-			"lastFailIP", MFAEmailOTPEntry::getLastFailIP);
-		attributeSetterBiConsumers.put(
-			"lastFailIP",
-			(BiConsumer<MFAEmailOTPEntry, String>)
-				MFAEmailOTPEntry::setLastFailIP);
-		attributeGetterFunctions.put(
-			"lastSuccessDate", MFAEmailOTPEntry::getLastSuccessDate);
-		attributeSetterBiConsumers.put(
-			"lastSuccessDate",
-			(BiConsumer<MFAEmailOTPEntry, Date>)
-				MFAEmailOTPEntry::setLastSuccessDate);
-		attributeGetterFunctions.put(
-			"lastSuccessIP", MFAEmailOTPEntry::getLastSuccessIP);
-		attributeSetterBiConsumers.put(
-			"lastSuccessIP",
-			(BiConsumer<MFAEmailOTPEntry, String>)
-				MFAEmailOTPEntry::setLastSuccessIP);
+		static {
+			Map<String, Function<MFAEmailOTPEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<MFAEmailOTPEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", MFAEmailOTPEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"mfaEmailOTPEntryId", MFAEmailOTPEntry::getMfaEmailOTPEntryId);
+			attributeGetterFunctions.put(
+				"companyId", MFAEmailOTPEntry::getCompanyId);
+			attributeGetterFunctions.put("userId", MFAEmailOTPEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", MFAEmailOTPEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", MFAEmailOTPEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", MFAEmailOTPEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"failedAttempts", MFAEmailOTPEntry::getFailedAttempts);
+			attributeGetterFunctions.put(
+				"lastFailDate", MFAEmailOTPEntry::getLastFailDate);
+			attributeGetterFunctions.put(
+				"lastFailIP", MFAEmailOTPEntry::getLastFailIP);
+			attributeGetterFunctions.put(
+				"lastSuccessDate", MFAEmailOTPEntry::getLastSuccessDate);
+			attributeGetterFunctions.put(
+				"lastSuccessIP", MFAEmailOTPEntry::getLastSuccessIP);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<MFAEmailOTPEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<MFAEmailOTPEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<MFAEmailOTPEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<MFAEmailOTPEntry, Long>)
+					MFAEmailOTPEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"mfaEmailOTPEntryId",
+				(BiConsumer<MFAEmailOTPEntry, Long>)
+					MFAEmailOTPEntry::setMfaEmailOTPEntryId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<MFAEmailOTPEntry, Long>)
+					MFAEmailOTPEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<MFAEmailOTPEntry, Long>)
+					MFAEmailOTPEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<MFAEmailOTPEntry, String>)
+					MFAEmailOTPEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<MFAEmailOTPEntry, Date>)
+					MFAEmailOTPEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<MFAEmailOTPEntry, Date>)
+					MFAEmailOTPEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"failedAttempts",
+				(BiConsumer<MFAEmailOTPEntry, Integer>)
+					MFAEmailOTPEntry::setFailedAttempts);
+			attributeSetterBiConsumers.put(
+				"lastFailDate",
+				(BiConsumer<MFAEmailOTPEntry, Date>)
+					MFAEmailOTPEntry::setLastFailDate);
+			attributeSetterBiConsumers.put(
+				"lastFailIP",
+				(BiConsumer<MFAEmailOTPEntry, String>)
+					MFAEmailOTPEntry::setLastFailIP);
+			attributeSetterBiConsumers.put(
+				"lastSuccessDate",
+				(BiConsumer<MFAEmailOTPEntry, Date>)
+					MFAEmailOTPEntry::setLastSuccessDate);
+			attributeSetterBiConsumers.put(
+				"lastSuccessIP",
+				(BiConsumer<MFAEmailOTPEntry, String>)
+					MFAEmailOTPEntry::setLastSuccessIP);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -855,7 +865,8 @@ public class MFAEmailOTPEntryModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<MFAEmailOTPEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

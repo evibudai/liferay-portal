@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.internal.helper;
@@ -92,7 +83,8 @@ public class CTTableMapperHelper {
 	}
 
 	public void publish(
-			long ctCollectionId, PortalCacheManager<?, ?> portalCacheManager)
+			long fromCTCollectionId, long toCTCollectionId,
+			PortalCacheManager<?, ?> portalCacheManager)
 		throws Exception {
 
 		if (_rightColumnName == null) {
@@ -103,7 +95,8 @@ public class CTTableMapperHelper {
 		}
 
 		int count = _ctService.updateWithUnsafeFunction(
-			ctPersistence -> _publish(ctPersistence, ctCollectionId));
+			ctPersistence -> _publish(
+				ctPersistence, fromCTCollectionId, toCTCollectionId));
 
 		if (count != 0) {
 			_clearCache(
@@ -221,7 +214,9 @@ public class CTTableMapperHelper {
 		return mappingChanges;
 	}
 
-	private int _publish(CTPersistence<?> ctPersistence, long ctCollectionId)
+	private int _publish(
+			CTPersistence<?> ctPersistence, long fromCTCollectionId,
+			long toCTCollectionId)
 		throws Exception {
 
 		Connection connection = CurrentConnectionUtil.getConnection(
@@ -233,9 +228,7 @@ public class CTTableMapperHelper {
 				StringBundler.concat(
 					"select ", _leftColumnName, ", ", _rightColumnName,
 					" from ", _tableName, " where ctCollectionId = ",
-					ctCollectionId, " and ctChangeType = ?"))) {
-
-			preparedStatement.setBoolean(1, false);
+					fromCTCollectionId))) {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
@@ -253,7 +246,9 @@ public class CTTableMapperHelper {
 
 			sb.append("delete from ");
 			sb.append(_tableName);
-			sb.append(" where ctCollectionId = 0 and ((");
+			sb.append(" where ctCollectionId = ");
+			sb.append(toCTCollectionId);
+			sb.append(" and ((");
 
 			for (Map.Entry<Long, Long> entry : entries) {
 				sb.append(_leftColumnName);
@@ -282,10 +277,10 @@ public class CTTableMapperHelper {
 					", ctCollectionId) select t1.companyId, t1.",
 					_leftColumnName, ", t1.", _rightColumnName,
 					", 0 as ctCollectionId from ", _tableName, " t1 left join ",
-					_tableName, " t2 on t2.ctCollectionId = 0 and t2.",
-					_leftColumnName, " = t1.", _leftColumnName, " and t2.",
-					_rightColumnName, " = t1.", _rightColumnName,
-					" where t1.ctCollectionId = ", ctCollectionId,
+					_tableName, " t2 on t2.ctCollectionId = ", toCTCollectionId,
+					" and t2.", _leftColumnName, " = t1.", _leftColumnName,
+					" and t2.", _rightColumnName, " = t1.", _rightColumnName,
+					" where t1.ctCollectionId = ", fromCTCollectionId,
 					" and t1.ctChangeType = ?"))) {
 
 			preparedStatement.setBoolean(1, true);

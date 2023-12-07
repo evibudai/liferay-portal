@@ -1,27 +1,120 @@
 definition {
 
-	macro _deleteAllCommerceShipments {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _addCommerceShipment(orderId = null) {
+		Variables.assertDefined(parameterList = ${orderId});
+
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(carrier))) {
+			var carrier = "";
+		}
+
+		if (!(isSet(trackingNumber))) {
+			var trackingNumber = "";
+		}
+
+		if (!(isSet(trackingURL))) {
+			var trackingURL = "";
+		}
+
+		if (isSet(shipmentItemsList)) {
+			var shipmentItems = "";
+			var shipmentItemsList = ListUtil.newListFromString(${shipmentItemsList});
+			var count = 0;
+			var listSize = ListUtil.size(${shipmentItemsList});
+
+			var isLessThanSize = MathUtil.isLessThan(${count}, ${listSize});
+
+			while ((${isLessThanSize} == "true")) {
+				var shipmentItem = ListUtil.get(${shipmentItemsList}, ${count});
+
+				var shipmentItem = StringUtil.replace(${shipmentItem}, ":", ",");
+
+				var shipmentItem = ListUtil.newListFromString(${shipmentItem});
+
+				var orderItemId = ListUtil.get(${shipmentItem}, 0);
+				var quantity = ListUtil.get(${shipmentItem}, 1);
+				var warehouseName = ListUtil.get(${shipmentItem}, 2);
+
+				var warehouseId = CommerceJSONWarehousesAndInventoriesAPI._getWarehouseId(warehouseName = ${warehouseName});
+
+				if (${count} == 0) {
+					var comma = "";
+				}
+				else {
+					var comma = ",";
+				}
+
+				var shipmentItems = '''
+					${shipmentItems}${comma}
+					{
+						"orderItemId": ${orderItemId},
+						"quantity": ${quantity},
+						"warehouseId": ${warehouseId}
+					}
+				''';
+				var count = ${count} + 1;
+
+				var count = StringUtil.valueOf(${count});
+
+				var isLessThanSize = MathUtil.isLessThan(${count}, ${listSize});
+			}
+		}
+		else {
+			var shipmentItems = "";
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-shipment/v1.0/shipments \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"carrier": "${carrier}",
+					"orderId": ${orderId},
+					"shipmentItems": [${shipmentItems}],
+					"trackingNumber": "${trackingNumber}",
+					"trackingURL": "${trackingURL}"
+				}'
+		''';
+
+		var shipmentId = JSONCurlUtil.post(${curl}, "$..['id']");
+
+		return ${shipmentId};
+	}
+
+	@summary = "Default summary"
+	macro _deleteAllCommerceShipments() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var shipmentsCount = CommerceJSONShipmentsAPI._getCommerceShipmentsCount();
 
-		if ("${shipmentsCount}" != "0") {
-			var shipmentIds = CommerceJSONShipmentsAPI._getCommerceShipmentIds(shipmentCount = "${shipmentsCount}");
+		if (${shipmentsCount} != 0) {
+			var shipmentIds = CommerceJSONShipmentsAPI._getCommerceShipmentIds(shipmentCount = ${shipmentsCount});
 
-			for (var shipmentId : list "${shipmentIds}") {
+			for (var shipmentId : list ${shipmentIds}) {
 				echo("Deleting Commerce shipment with id: ${shipmentId}");
+
+				var userLoginInfo = JSONUtil2.formatJSONUser();
 
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-shipment/v1.0/shipments/${shipmentId} \
-					-u test@liferay.com:test \
-					-H 'accept: application/json' \
+						-u ${userLoginInfo} \
+						-H 'accept: application/json' \
 				''';
 
-				JSONCurlUtil.delete("${curl}");
+				JSONCurlUtil.delete(${curl});
 			}
 		}
 		else {
@@ -29,49 +122,87 @@ definition {
 		}
 	}
 
-	macro _getCommerceShipmentIds {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceShipmentIds(shipmentCount = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(shipmentCount)) {
-			var shipmentsCount = "${shipmentCount}";
+			var shipmentsCount = ${shipmentCount};
 		}
 		else {
-			var shipmentsCount = "100";
+			var shipmentsCount = 100;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-shipment/v1.0/shipments?pageSize=${shipmentsCount} \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var shipmentIds = JSONCurlUtil.get("${curl}", "$..['id']");
+		var shipmentIds = JSONCurlUtil.get(${curl}, "$..['id']");
 
-		return "${shipmentIds}";
+		return ${shipmentIds};
 	}
 
-	macro _getCommerceShipmentsCount {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceShipmentsCount() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-shipment/v1.0/shipments \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var shipmentsCount = JSONCurlUtil.get("${curl}", "$['totalCount']");
+		var shipmentsCount = JSONCurlUtil.get(${curl}, "$['totalCount']");
 
 		echo("The Commerce shipments count is: ${shipmentsCount}");
 
-		return "${shipmentsCount}";
+		return ${shipmentsCount};
+	}
+
+	@summary = "Default summary"
+	macro _updateCommerceShipmentStatus(shipmentId = null) {
+		Variables.assertDefined(parameterList = "${shipmentId},${shipmentStatus}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-shipment/v1.0/shipments/${shipmentId}/status-${shipmentStatus} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-d '{ }'
+		''';
+
+		var shipmentStatusLabel = JSONCurlUtil.post(${curl}, "$['status'].['label']");
+
+		echo("shipmentStatusLabel: ${shipmentStatusLabel}");
+
+		if (${shipmentStatus} == "finish-processing") {
+			var shipmentStatus = "ready-to-ship";
+		}
+
+		TestUtils.assertEquals(
+			actual = ${shipmentStatusLabel},
+			expected = ${shipmentStatus});
 	}
 
 }

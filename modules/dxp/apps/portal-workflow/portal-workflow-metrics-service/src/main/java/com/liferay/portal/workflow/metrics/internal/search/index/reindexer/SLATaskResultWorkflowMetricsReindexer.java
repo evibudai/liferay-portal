@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.internal.search.index.reindexer;
@@ -17,6 +8,7 @@ package com.liferay.portal.workflow.metrics.internal.search.index.reindexer;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
+import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.document.BulkDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
@@ -26,16 +18,15 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.workflow.metrics.internal.search.index.SLATaskResultWorkflowMetricsIndexer;
 import com.liferay.portal.workflow.metrics.search.background.task.WorkflowMetricsReindexStatusMessageSender;
-import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
+import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetricsIndexNameConstants;
 import com.liferay.portal.workflow.metrics.search.index.reindexer.WorkflowMetricsReindexer;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,7 +52,8 @@ public class SLATaskResultWorkflowMetricsReindexer
 	private void _creatDefaultDocuments(long companyId) {
 		if (!_searchCapabilities.isWorkflowMetricsSupported() ||
 			!_hasIndex(
-				_nodeWorkflowMetricsIndexNameBuilder.getIndexName(companyId))) {
+				_indexNameBuilder.getIndexName(companyId) +
+					WorkflowMetricsIndexNameConstants.SUFFIX_NODE)) {
 
 			return;
 		}
@@ -69,7 +61,8 @@ public class SLATaskResultWorkflowMetricsReindexer
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(
-			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(companyId));
+			_indexNameBuilder.getIndexName(companyId) +
+				WorkflowMetricsIndexNameConstants.SUFFIX_NODE);
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
@@ -94,37 +87,22 @@ public class SLATaskResultWorkflowMetricsReindexer
 
 		BulkDocumentRequest bulkDocumentRequest = new BulkDocumentRequest();
 
-		Stream.of(
-			searchHits.getSearchHits()
-		).flatMap(
-			List::stream
-		).map(
-			SearchHit::getDocument
-		).map(
-			document ->
-				_slaTaskResultWorkflowMetricsIndexer.creatDefaultDocument(
-					companyId, document.getLong("nodeId"),
-					document.getLong("processId"), document.getString("name"))
-		).map(
-			document -> new IndexDocumentRequest(
-				_slaTaskResultWorkflowMetricsIndexer.getIndexName(companyId),
-				document) {
+		for (SearchHit searchHit : searchHits.getSearchHits()) {
+			Document document = searchHit.getDocument();
 
-				{
-					setType(
-						_slaTaskResultWorkflowMetricsIndexer.getIndexType());
-				}
-			}
-		).forEach(
-			indexDocumentRequest -> {
-				bulkDocumentRequest.addBulkableDocumentRequest(
-					indexDocumentRequest);
+			bulkDocumentRequest.addBulkableDocumentRequest(
+				new IndexDocumentRequest(
+					_slaTaskResultWorkflowMetricsIndexer.getIndexName(
+						companyId),
+					_slaTaskResultWorkflowMetricsIndexer.creatDefaultDocument(
+						companyId, document.getLong("nodeId"),
+						document.getLong("processId"),
+						document.getString("name"))));
 
-				_workflowMetricsReindexStatusMessageSender.sendStatusMessage(
-					atomicCounter.incrementAndGet(), searchHits.getTotalHits(),
-					"sla-task-result");
-			}
-		);
+			_workflowMetricsReindexStatusMessageSender.sendStatusMessage(
+				atomicCounter.incrementAndGet(), searchHits.getTotalHits(),
+				"sla-task-result");
+		}
 
 		if (ListUtil.isNotEmpty(
 				bulkDocumentRequest.getBulkableDocumentRequests())) {
@@ -147,9 +125,8 @@ public class SLATaskResultWorkflowMetricsReindexer
 		return indicesExistsIndexResponse.isExists();
 	}
 
-	@Reference(target = "(workflow.metrics.index.entity.name=node)")
-	private WorkflowMetricsIndexNameBuilder
-		_nodeWorkflowMetricsIndexNameBuilder;
+	@Reference
+	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
 	private Queries _queries;

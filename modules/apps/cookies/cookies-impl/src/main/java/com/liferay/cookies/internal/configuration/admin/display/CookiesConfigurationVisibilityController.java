@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.cookies.internal.configuration.admin.display;
@@ -17,20 +8,13 @@ package com.liferay.cookies.internal.configuration.admin.display;
 import com.liferay.configuration.admin.display.ConfigurationVisibilityController;
 import com.liferay.cookies.configuration.CookiesPreferenceHandlingConfiguration;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
-import com.liferay.portal.kernel.util.PropsUtil;
 
 import java.io.Serializable;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -49,10 +33,6 @@ public class CookiesConfigurationVisibilityController
 	@Override
 	public boolean isVisible(
 		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK) {
-
-		if (!_featureFlagVisibilityController.isVisible(scope, scopePK)) {
-			return false;
-		}
 
 		try {
 			CookiesPreferenceHandlingConfiguration
@@ -87,38 +67,7 @@ public class CookiesConfigurationVisibilityController
 		return false;
 	}
 
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		_serviceRegistration = bundleContext.registerService(
-			ConfigurationVisibilityController.class,
-			_featureFlagVisibilityController,
-			HashMapDictionaryBuilder.put(
-				"visibility.controller.key", "LPS-142518"
-			).build());
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		if (_serviceRegistration != null) {
-			_serviceRegistration.unregister();
-		}
-	}
-
-	private static final ConfigurationVisibilityController
-		_featureFlagVisibilityController = (scope, scopePK) -> {
-			if (GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-142518"))) {
-
-				return true;
-			}
-
-			return false;
-		};
-
 	@Reference
 	private ConfigurationProvider _configurationProvider;
-
-	private ServiceRegistration<ConfigurationVisibilityController>
-		_serviceRegistration;
 
 }

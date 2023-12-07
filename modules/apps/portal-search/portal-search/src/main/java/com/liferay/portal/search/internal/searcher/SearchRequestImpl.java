@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.searcher;
@@ -20,6 +11,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.aggregation.Aggregation;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregation;
+import com.liferay.portal.search.collapse.Collapse;
 import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.filter.ComplexQueryPart;
 import com.liferay.portal.search.groupby.GroupByRequest;
@@ -58,6 +50,7 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 	public SearchRequestImpl(SearchRequestImpl searchRequestImpl) {
 		_aggregationsMap.putAll(searchRequestImpl._aggregationsMap);
 		_basicFacetSelection = searchRequestImpl._basicFacetSelection;
+		_collapse = searchRequestImpl._collapse;
 		_complexQueryParts.addAll(searchRequestImpl._complexQueryParts);
 		_connectionId = searchRequestImpl._connectionId;
 		_emptySearchEnabled = searchRequestImpl._emptySearchEnabled;
@@ -147,6 +140,11 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 	@Override
 	public Map<String, Aggregation> getAggregationsMap() {
 		return Collections.unmodifiableMap(_aggregationsMap);
+	}
+
+	@Override
+	public Collapse getCollapse() {
+		return _collapse;
 	}
 
 	@Override
@@ -329,6 +327,10 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 			Boolean.valueOf(basicFacetSelection));
 	}
 
+	public void setCollapse(Collapse collapse) {
+		_collapse = collapse;
+	}
+
 	public void setCompanyId(Long companyId) {
 		_searchContext.setCompanyId(GetterUtil.getLong(companyId));
 	}
@@ -466,6 +468,7 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 	private final Map<String, Aggregation> _aggregationsMap =
 		new LinkedHashMap<>();
 	private boolean _basicFacetSelection;
+	private Collapse _collapse;
 	private final List<ComplexQueryPart> _complexQueryParts = new ArrayList<>();
 	private String _connectionId;
 	private boolean _emptySearchEnabled;

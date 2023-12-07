@@ -3,23 +3,40 @@
 		"pageElements": [
 			{
 				"definition": {
+					"fragmentStyle": {
+						"marginBottom": "6"
+					},
 					"indexed": true,
 					"layout": {
-						"borderWidth": 0,
-						"marginBottom": 0,
-						"marginLeft": 0,
-						"marginRight": 0,
-						"marginTop": 0,
-						"opacity": 100,
-						"paddingBottom": 0,
-						"paddingLeft": 0,
-						"paddingRight": 0,
-						"paddingTop": 0,
+						"marginBottom": 6,
 						"widthType": "Fluid"
 					},
 					"name": "Organization Container"
 				},
 				"pageElements": [
+					{
+						"definition": {
+							"indexed": true,
+							"layout": {
+								"opacity": 100,
+								"widthType": "Fluid"
+							},
+							"name": "Breadcrumb container"
+						},
+						"pageElements": [
+							{
+								"definition": {
+									"widgetInstance": {
+										"widgetConfig": {
+										},
+										"widgetName": "com_liferay_site_navigation_breadcrumb_web_portlet_SiteNavigationBreadcrumbPortlet"
+									}
+								},
+								"type": "Widget"
+							}
+						],
+						"type": "Section"
+					},
 					{
 						"definition": {
 							"fragmentStyle": {
@@ -90,58 +107,6 @@
 									"indexed": true
 								},
 								"type": "Fragment"
-							},
-							{
-								"definition": {
-									"fragment": {
-										"key": "DIALECT-dialect-button"
-									},
-									"fragmentConfig": {
-										"inverted": false,
-										"style": "primary",
-										"type": "solid",
-										"uppercase": false
-									},
-									"fragmentFields": [
-										{
-											"id": "link",
-											"value": {
-												"fragmentLink": {
-													"value": {
-														"href": {
-															"mapping": {
-																"itemReference": {
-																	"className": "com.liferay.portal.kernel.model.Layout",
-																	"fields": [
-																		{
-																			"fieldName": "friendlyURL",
-																			"fieldValue": "/request-form"
-																		},
-																		{
-																			"fieldName": "privatePage",
-																			"fieldValue": "false"
-																		},
-																		{
-																			"fieldName": "siteKey",
-																			"fieldValue": "[$GROUP_KEY$]"
-																		}
-																	]
-																}
-															}
-														}
-													}
-												},
-												"text": {
-													"value_i18n": {
-														"en_US": "Create a Request"
-													}
-												}
-											}
-										}
-									],
-									"indexed": true
-								},
-								"type": "Fragment"
 							}
 						],
 						"type": "Section"
@@ -151,10 +116,6 @@
 							"indexed": true,
 							"layout": {
 								"opacity": 100,
-								"paddingBottom": 0,
-								"paddingLeft": 0,
-								"paddingRight": 0,
-								"paddingTop": 0,
 								"widthType": "Fluid"
 							},
 							"name": "Table Container"
@@ -168,26 +129,14 @@
 									"fragmentStyle": {
 										"backgroundColor": "colorNeutral0",
 										"borderColor": "colorNeutral4",
-										"borderRadius": "",
-										"height": "65px",
-										"shadow": "",
-										"textAlign": ""
+										"height": "65px"
 									},
 									"indexed": true,
 									"layout": {
 										"align": "Center",
 										"borderColor": "colorNeutral4",
-										"borderWidth": 0,
 										"contentDisplay": "FlexRow",
-										"marginBottom": 0,
-										"marginLeft": 0,
-										"marginRight": 0,
-										"marginTop": 0,
 										"opacity": 100,
-										"paddingBottom": 0,
-										"paddingLeft": 0,
-										"paddingRight": 0,
-										"paddingTop": 0,
 										"widthType": "Fluid"
 									},
 									"name": "Header Container"
@@ -197,29 +146,17 @@
 										"definition": {
 											"fragmentStyle": {
 												"borderColor": "colorNeutral4",
-												"borderRadius": "",
 												"height": "65px",
-												"maxWidth": "16%",
+												"maxWidth": "19%",
 												"paddingLeft": "2",
-												"shadow": "",
-												"textAlign": "",
-												"width": "16%"
+												"width": "19%"
 											},
 											"indexed": true,
 											"layout": {
 												"align": "Center",
 												"borderColor": "colorNeutral4",
-												"borderWidth": 0,
 												"contentDisplay": "FlexRow",
-												"marginBottom": 0,
-												"marginLeft": 0,
-												"marginRight": 0,
-												"marginTop": 0,
 												"opacity": 100,
-												"paddingBottom": 0,
-												"paddingLeft": 0,
-												"paddingRight": 0,
-												"paddingTop": 0,
 												"widthType": "Fluid"
 											}
 										},
@@ -248,10 +185,7 @@
 														}
 													],
 													"fragmentStyle": {
-														"borderRadius": "",
-														"fontWeight": "fontWeightBold",
-														"shadow": "",
-														"textAlign": ""
+														"fontWeight": "fontWeightBold"
 													},
 													"indexed": true
 												},
@@ -264,29 +198,17 @@
 										"definition": {
 											"fragmentStyle": {
 												"borderColor": "colorNeutral4",
-												"borderRadius": "",
 												"height": "65px",
 												"maxWidth": "16%",
 												"paddingLeft": "2",
-												"shadow": "",
-												"textAlign": "",
 												"width": "16%"
 											},
 											"indexed": true,
 											"layout": {
 												"align": "Center",
 												"borderColor": "colorNeutral4",
-												"borderWidth": 0,
 												"contentDisplay": "FlexRow",
-												"marginBottom": 0,
-												"marginLeft": 0,
-												"marginRight": 0,
-												"marginTop": 0,
 												"opacity": 100,
-												"paddingBottom": 0,
-												"paddingLeft": 0,
-												"paddingRight": 0,
-												"paddingTop": 0,
 												"widthType": "Fluid"
 											}
 										},
@@ -315,10 +237,7 @@
 														}
 													],
 													"fragmentStyle": {
-														"borderRadius": "",
-														"fontWeight": "fontWeightBold",
-														"shadow": "",
-														"textAlign": ""
+														"fontWeight": "fontWeightBold"
 													},
 													"indexed": true
 												},
@@ -331,29 +250,17 @@
 										"definition": {
 											"fragmentStyle": {
 												"borderColor": "colorNeutral4",
-												"borderRadius": "",
 												"height": "65px",
 												"maxWidth": "16%",
 												"paddingLeft": "2",
-												"shadow": "",
-												"textAlign": "",
 												"width": "16%"
 											},
 											"indexed": true,
 											"layout": {
 												"align": "Center",
 												"borderColor": "colorNeutral4",
-												"borderWidth": 0,
 												"contentDisplay": "FlexRow",
-												"marginBottom": 0,
-												"marginLeft": 0,
-												"marginRight": 0,
-												"marginTop": 0,
 												"opacity": 100,
-												"paddingBottom": 0,
-												"paddingLeft": 0,
-												"paddingRight": 0,
-												"paddingTop": 0,
 												"widthType": "Fluid"
 											}
 										},
@@ -382,10 +289,7 @@
 														}
 													],
 													"fragmentStyle": {
-														"borderRadius": "",
-														"fontWeight": "fontWeightBold",
-														"shadow": "",
-														"textAlign": ""
+														"fontWeight": "fontWeightBold"
 													},
 													"indexed": true
 												},
@@ -398,28 +302,16 @@
 										"definition": {
 											"fragmentStyle": {
 												"borderColor": "colorNeutral4",
-												"borderRadius": "",
 												"height": "65px",
 												"maxWidth": "14%",
-												"shadow": "",
-												"textAlign": "",
 												"width": "14%"
 											},
 											"indexed": true,
 											"layout": {
 												"align": "Center",
 												"borderColor": "colorNeutral4",
-												"borderWidth": 0,
 												"contentDisplay": "FlexRow",
-												"marginBottom": 0,
-												"marginLeft": 0,
-												"marginRight": 0,
-												"marginTop": 0,
 												"opacity": 100,
-												"paddingBottom": 0,
-												"paddingLeft": 0,
-												"paddingRight": 0,
-												"paddingTop": 0,
 												"widthType": "Fluid"
 											}
 										},
@@ -448,11 +340,8 @@
 														}
 													],
 													"fragmentStyle": {
-														"borderRadius": "",
 														"fontWeight": "fontWeightBold",
-														"paddingLeft": "2",
-														"shadow": "",
-														"textAlign": ""
+														"paddingLeft": "2"
 													},
 													"indexed": true
 												},
@@ -465,29 +354,17 @@
 										"definition": {
 											"fragmentStyle": {
 												"borderColor": "colorNeutral4",
-												"borderRadius": "",
 												"height": "65px",
 												"maxWidth": "16%",
 												"paddingLeft": "2",
-												"shadow": "",
-												"textAlign": "",
 												"width": "16%"
 											},
 											"indexed": true,
 											"layout": {
 												"align": "Center",
 												"borderColor": "colorNeutral4",
-												"borderWidth": 0,
 												"contentDisplay": "FlexRow",
-												"marginBottom": 0,
-												"marginLeft": 0,
-												"marginRight": 0,
-												"marginTop": 0,
 												"opacity": 100,
-												"paddingBottom": 0,
-												"paddingLeft": 0,
-												"paddingRight": 0,
-												"paddingTop": 0,
 												"widthType": "Fluid"
 											}
 										},
@@ -516,10 +393,7 @@
 														}
 													],
 													"fragmentStyle": {
-														"borderRadius": "",
-														"fontWeight": "fontWeightBold",
-														"shadow": "",
-														"textAlign": ""
+														"fontWeight": "fontWeightBold"
 													},
 													"indexed": true
 												},
@@ -532,29 +406,17 @@
 										"definition": {
 											"fragmentStyle": {
 												"borderColor": "colorNeutral4",
-												"borderRadius": "",
 												"height": "65px",
-												"maxWidth": "14%",
+												"maxWidth": "15%",
 												"paddingLeft": "2",
-												"shadow": "",
-												"textAlign": "",
-												"width": "14%"
+												"width": "15%"
 											},
 											"indexed": true,
 											"layout": {
 												"align": "Center",
 												"borderColor": "colorNeutral4",
-												"borderWidth": 0,
 												"contentDisplay": "FlexRow",
-												"marginBottom": 0,
-												"marginLeft": 0,
-												"marginRight": 0,
-												"marginTop": 0,
 												"opacity": 100,
-												"paddingBottom": 0,
-												"paddingLeft": 0,
-												"paddingRight": 0,
-												"paddingTop": 0,
 												"widthType": "Fluid"
 											}
 										},
@@ -583,10 +445,7 @@
 														}
 													],
 													"fragmentStyle": {
-														"borderRadius": "",
-														"fontWeight": "fontWeightBold",
-														"shadow": "",
-														"textAlign": ""
+														"fontWeight": "fontWeightBold"
 													},
 													"indexed": true
 												},
@@ -602,7 +461,7 @@
 								"definition": {
 									"collectionConfig": {
 										"collectionReference": {
-											"className": "com.liferay.object.internal.info.collection.provider.ObjectEntrySingleFormVariationInfoCollectionProvider_20097_C_EVPOrganization"
+											"className": "com.liferay.object.web.internal.info.collection.provider.ObjectEntrySingleFormVariationInfoCollectionProvider_[$COMPANY_ID$]_C_EVPOrganization"
 										},
 										"collectionType": "CollectionProvider"
 									},
@@ -626,15 +485,12 @@
 									],
 									"displayAllItems": false,
 									"displayAllPages": true,
-									"listItemStyle": "",
-									"listStyle": "",
 									"numberOfColumns": 1,
 									"numberOfItems": 5,
 									"numberOfItemsPerPage": 10,
 									"numberOfPages": 5,
 									"paginationType": "Numeric",
-									"showAllItems": false,
-									"templateKey": ""
+									"showAllItems": false
 								},
 								"pageElements": [
 									{
@@ -651,26 +507,14 @@
 													"customCSS": ".evp-table-border{\nborder-bottom: 1px solid var(--color-neutral-4) !important;\n}",
 													"fragmentStyle": {
 														"borderColor": "colorNeutral4",
-														"borderRadius": "",
-														"height": "65px",
-														"shadow": "",
-														"textAlign": ""
+														"height": "65px"
 													},
 													"indexed": true,
 													"layout": {
 														"align": "Center",
 														"borderColor": "colorNeutral4",
-														"borderWidth": 0,
 														"contentDisplay": "FlexRow",
-														"marginBottom": 0,
-														"marginLeft": 0,
-														"marginRight": 0,
-														"marginTop": 0,
 														"opacity": 100,
-														"paddingBottom": 0,
-														"paddingLeft": 0,
-														"paddingRight": 0,
-														"paddingTop": 0,
 														"widthType": "Fluid"
 													},
 													"name": "Row Container"
@@ -679,28 +523,17 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"borderRadius": "",
 																"borderWidth": "0",
 																"height": "65px",
-																"maxWidth": "16%",
+																"maxWidth": "19%",
 																"paddingLeft": "2",
-																"shadow": "",
-																"textAlign": "",
-																"width": "16%"
+																"width": "19%"
 															},
 															"indexed": true,
 															"layout": {
 																"align": "Center",
 																"contentDisplay": "FlexRow",
-																"marginBottom": 0,
-																"marginLeft": 0,
-																"marginRight": 0,
-																"marginTop": 0,
 																"opacity": 100,
-																"paddingBottom": 0,
-																"paddingLeft": 0,
-																"paddingRight": 0,
-																"paddingTop": 0,
 																"widthType": "Fluid"
 															}
 														},
@@ -732,10 +565,7 @@
 																		}
 																	],
 																	"fragmentStyle": {
-																		"borderRadius": "",
 																		"maxWidth": "90%",
-																		"shadow": "",
-																		"textAlign": "",
 																		"width": "90%"
 																	},
 																	"indexed": true
@@ -748,28 +578,16 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"borderRadius": "",
 																"height": "65px",
 																"maxWidth": "16%",
 																"paddingLeft": "2",
-																"shadow": "",
-																"textAlign": "",
 																"width": "16%"
 															},
 															"indexed": true,
 															"layout": {
 																"align": "Center",
-																"borderWidth": 0,
 																"contentDisplay": "FlexRow",
-																"marginBottom": 0,
-																"marginLeft": 0,
-																"marginRight": 0,
-																"marginTop": 0,
 																"opacity": 100,
-																"paddingBottom": 0,
-																"paddingLeft": 0,
-																"paddingRight": 0,
-																"paddingTop": 0,
 																"widthType": "Fluid"
 															}
 														},
@@ -810,28 +628,16 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"borderRadius": "",
 																"height": "65px",
 																"maxWidth": "16%",
 																"paddingLeft": "2",
-																"shadow": "",
-																"textAlign": "",
 																"width": "16%"
 															},
 															"indexed": true,
 															"layout": {
 																"align": "Center",
-																"borderWidth": 0,
 																"contentDisplay": "FlexRow",
-																"marginBottom": 0,
-																"marginLeft": 0,
-																"marginRight": 0,
-																"marginTop": 0,
 																"opacity": 100,
-																"paddingBottom": 0,
-																"paddingLeft": 0,
-																"paddingRight": 0,
-																"paddingTop": 0,
 																"widthType": "Fluid"
 															}
 														},
@@ -866,10 +672,7 @@
 																		}
 																	],
 																	"fragmentStyle": {
-																		"borderRadius": "",
 																		"maxWidth": "90%",
-																		"shadow": "",
-																		"textAlign": "",
 																		"width": "90%"
 																	},
 																	"indexed": true
@@ -882,28 +685,16 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"borderRadius": "",
 																"height": "65px",
 																"maxWidth": "14%",
 																"paddingLeft": "2",
-																"shadow": "",
-																"textAlign": "",
 																"width": "14%"
 															},
 															"indexed": true,
 															"layout": {
 																"align": "Center",
-																"borderWidth": 0,
 																"contentDisplay": "FlexRow",
-																"marginBottom": 0,
-																"marginLeft": 0,
-																"marginRight": 0,
-																"marginTop": 0,
 																"opacity": 100,
-																"paddingBottom": 0,
-																"paddingLeft": 0,
-																"paddingRight": 0,
-																"paddingTop": 0,
 																"widthType": "Fluid"
 															}
 														},
@@ -944,28 +735,16 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"borderRadius": "",
 																"height": "65px",
 																"maxWidth": "16%",
 																"paddingLeft": "2",
-																"shadow": "",
-																"textAlign": "",
 																"width": "16%"
 															},
 															"indexed": true,
 															"layout": {
 																"align": "Center",
-																"borderWidth": 0,
 																"contentDisplay": "FlexRow",
-																"marginBottom": 0,
-																"marginLeft": 0,
-																"marginRight": 0,
-																"marginTop": 0,
 																"opacity": 100,
-																"paddingBottom": 0,
-																"paddingLeft": 0,
-																"paddingRight": 0,
-																"paddingTop": 0,
 																"widthType": "Fluid"
 															}
 														},
@@ -1006,30 +785,18 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"borderRadius": "",
 																"height": "65px",
-																"maxWidth": "14%",
+																"maxWidth": "15%",
 																"paddingLeft": "2",
 																"paddingRight": "2",
-																"shadow": "",
-																"textAlign": "",
-																"width": "14%"
+																"width": "15%"
 															},
 															"indexed": true,
 															"layout": {
 																"align": "Center",
-																"borderWidth": 0,
 																"contentDisplay": "FlexRow",
 																"flexWrap": "Wrap",
-																"marginBottom": 0,
-																"marginLeft": 0,
-																"marginRight": 0,
-																"marginTop": 0,
 																"opacity": 100,
-																"paddingBottom": 0,
-																"paddingLeft": 0,
-																"paddingRight": 0,
-																"paddingTop": 0,
 																"widthType": "Fluid"
 															}
 														},
@@ -1077,23 +844,15 @@
 																}
 															},
 															"fragmentStyle": {
-																"borderRadius": "",
 																"height": "65px",
-																"maxWidth": "8%",
-																"shadow": "",
-																"textAlign": "",
-																"width": "8%"
+																"maxWidth": "4%",
+																"width": "4%"
 															},
 															"indexed": true,
 															"layout": {
 																"align": "Center",
-																"borderWidth": 0,
 																"contentDisplay": "FlexRow",
 																"opacity": 100,
-																"paddingBottom": 0,
-																"paddingLeft": 0,
-																"paddingRight": 0,
-																"paddingTop": 0,
 																"widthType": "Fluid"
 															}
 														},
@@ -1101,38 +860,12 @@
 															{
 																"definition": {
 																	"fragment": {
-																		"key": "DIALECT-dialect-button"
+																		"key": "evp-organization-kebab-button",
+																		"siteKey": "[$GROUP_KEY$]"
 																	},
 																	"fragmentConfig": {
-																		"buttonSize": "btn-sm",
-																		"inverted": false,
-																		"style": "primary",
-																		"type": "ghost",
-																		"uppercase": false
 																	},
 																	"fragmentFields": [
-																		{
-																			"id": "link",
-																			"value": {
-																				"fragmentLink": {
-																					"value": {
-																						"href": {
-																							"mapping": {
-																								"fieldKey": "ObjectEntry_displayPageURL",
-																								"itemReference": {
-																									"contextSource": "CollectionItem"
-																								}
-																							}
-																						}
-																					}
-																				},
-																				"text": {
-																					"value_i18n": {
-																						"en_US": "Details"
-																					}
-																				}
-																			}
-																		}
 																	],
 																	"indexed": true
 																},
@@ -1152,6 +885,23 @@
 							}
 						],
 						"type": "Section"
+					},
+					{
+						"definition": {
+							"fragment": {
+								"key": "evp-notification-organization-edit",
+								"siteKey": "[$GROUP_KEY$]"
+							},
+							"fragmentConfig": {
+							},
+							"fragmentFields": [
+							],
+							"fragmentStyle": {
+								"marginBottom": "8"
+							},
+							"indexed": true
+						},
+						"type": "Fragment"
 					}
 				],
 				"type": "Section"

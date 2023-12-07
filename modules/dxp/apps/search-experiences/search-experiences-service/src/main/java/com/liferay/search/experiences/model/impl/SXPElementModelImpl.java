@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.model.impl;
@@ -86,10 +77,11 @@ public class SXPElementModelImpl
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"description", Types.VARCHAR}, {"elementDefinitionJSON", Types.CLOB},
-		{"hidden_", Types.BOOLEAN}, {"readOnly", Types.BOOLEAN},
-		{"schemaVersion", Types.VARCHAR}, {"title", Types.VARCHAR},
-		{"type_", Types.INTEGER}, {"version", Types.VARCHAR},
-		{"status", Types.INTEGER}
+		{"fallbackDescription", Types.VARCHAR},
+		{"fallbackTitle", Types.VARCHAR}, {"hidden_", Types.BOOLEAN},
+		{"readOnly", Types.BOOLEAN}, {"schemaVersion", Types.VARCHAR},
+		{"title", Types.VARCHAR}, {"type_", Types.INTEGER},
+		{"version", Types.VARCHAR}, {"status", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -107,6 +99,8 @@ public class SXPElementModelImpl
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("elementDefinitionJSON", Types.CLOB);
+		TABLE_COLUMNS_MAP.put("fallbackDescription", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("fallbackTitle", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("hidden_", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("readOnly", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("schemaVersion", Types.VARCHAR);
@@ -117,7 +111,7 @@ public class SXPElementModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table SXPElement (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,sxpElementId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,description STRING null,elementDefinitionJSON TEXT null,hidden_ BOOLEAN,readOnly BOOLEAN,schemaVersion VARCHAR(75) null,title STRING null,type_ INTEGER,version VARCHAR(75) null,status INTEGER)";
+		"create table SXPElement (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,sxpElementId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,description STRING null,elementDefinitionJSON TEXT null,fallbackDescription STRING null,fallbackTitle VARCHAR(500) null,hidden_ BOOLEAN,readOnly BOOLEAN,schemaVersion VARCHAR(75) null,title STRING null,type_ INTEGER,version VARCHAR(75) null,status INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table SXPElement";
 
@@ -265,103 +259,134 @@ public class SXPElementModelImpl
 	public Map<String, Function<SXPElement, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<SXPElement, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<SXPElement, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<SXPElement, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<SXPElement, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<SXPElement, Object>>();
-		Map<String, BiConsumer<SXPElement, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<SXPElement, ?>>();
+		private static final Map<String, Function<SXPElement, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", SXPElement::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<SXPElement, Long>)SXPElement::setMvccVersion);
-		attributeGetterFunctions.put("uuid", SXPElement::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<SXPElement, String>)SXPElement::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", SXPElement::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<SXPElement, String>)
-				SXPElement::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"sxpElementId", SXPElement::getSXPElementId);
-		attributeSetterBiConsumers.put(
-			"sxpElementId",
-			(BiConsumer<SXPElement, Long>)SXPElement::setSXPElementId);
-		attributeGetterFunctions.put("companyId", SXPElement::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<SXPElement, Long>)SXPElement::setCompanyId);
-		attributeGetterFunctions.put("userId", SXPElement::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<SXPElement, Long>)SXPElement::setUserId);
-		attributeGetterFunctions.put("userName", SXPElement::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<SXPElement, String>)SXPElement::setUserName);
-		attributeGetterFunctions.put("createDate", SXPElement::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<SXPElement, Date>)SXPElement::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", SXPElement::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<SXPElement, Date>)SXPElement::setModifiedDate);
-		attributeGetterFunctions.put("description", SXPElement::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<SXPElement, String>)SXPElement::setDescription);
-		attributeGetterFunctions.put(
-			"elementDefinitionJSON", SXPElement::getElementDefinitionJSON);
-		attributeSetterBiConsumers.put(
-			"elementDefinitionJSON",
-			(BiConsumer<SXPElement, String>)
-				SXPElement::setElementDefinitionJSON);
-		attributeGetterFunctions.put("hidden", SXPElement::getHidden);
-		attributeSetterBiConsumers.put(
-			"hidden", (BiConsumer<SXPElement, Boolean>)SXPElement::setHidden);
-		attributeGetterFunctions.put("readOnly", SXPElement::getReadOnly);
-		attributeSetterBiConsumers.put(
-			"readOnly",
-			(BiConsumer<SXPElement, Boolean>)SXPElement::setReadOnly);
-		attributeGetterFunctions.put(
-			"schemaVersion", SXPElement::getSchemaVersion);
-		attributeSetterBiConsumers.put(
-			"schemaVersion",
-			(BiConsumer<SXPElement, String>)SXPElement::setSchemaVersion);
-		attributeGetterFunctions.put("title", SXPElement::getTitle);
-		attributeSetterBiConsumers.put(
-			"title", (BiConsumer<SXPElement, String>)SXPElement::setTitle);
-		attributeGetterFunctions.put("type", SXPElement::getType);
-		attributeSetterBiConsumers.put(
-			"type", (BiConsumer<SXPElement, Integer>)SXPElement::setType);
-		attributeGetterFunctions.put("version", SXPElement::getVersion);
-		attributeSetterBiConsumers.put(
-			"version", (BiConsumer<SXPElement, String>)SXPElement::setVersion);
-		attributeGetterFunctions.put("status", SXPElement::getStatus);
-		attributeSetterBiConsumers.put(
-			"status", (BiConsumer<SXPElement, Integer>)SXPElement::setStatus);
+		static {
+			Map<String, Function<SXPElement, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<SXPElement, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", SXPElement::getMvccVersion);
+			attributeGetterFunctions.put("uuid", SXPElement::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode", SXPElement::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"sxpElementId", SXPElement::getSXPElementId);
+			attributeGetterFunctions.put("companyId", SXPElement::getCompanyId);
+			attributeGetterFunctions.put("userId", SXPElement::getUserId);
+			attributeGetterFunctions.put("userName", SXPElement::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", SXPElement::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", SXPElement::getModifiedDate);
+			attributeGetterFunctions.put(
+				"description", SXPElement::getDescription);
+			attributeGetterFunctions.put(
+				"elementDefinitionJSON", SXPElement::getElementDefinitionJSON);
+			attributeGetterFunctions.put(
+				"fallbackDescription", SXPElement::getFallbackDescription);
+			attributeGetterFunctions.put(
+				"fallbackTitle", SXPElement::getFallbackTitle);
+			attributeGetterFunctions.put("hidden", SXPElement::getHidden);
+			attributeGetterFunctions.put("readOnly", SXPElement::getReadOnly);
+			attributeGetterFunctions.put(
+				"schemaVersion", SXPElement::getSchemaVersion);
+			attributeGetterFunctions.put("title", SXPElement::getTitle);
+			attributeGetterFunctions.put("type", SXPElement::getType);
+			attributeGetterFunctions.put("version", SXPElement::getVersion);
+			attributeGetterFunctions.put("status", SXPElement::getStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<SXPElement, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<SXPElement, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<SXPElement, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<SXPElement, Long>)SXPElement::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<SXPElement, String>)SXPElement::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<SXPElement, String>)
+					SXPElement::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"sxpElementId",
+				(BiConsumer<SXPElement, Long>)SXPElement::setSXPElementId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<SXPElement, Long>)SXPElement::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<SXPElement, Long>)SXPElement::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<SXPElement, String>)SXPElement::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<SXPElement, Date>)SXPElement::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<SXPElement, Date>)SXPElement::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<SXPElement, String>)SXPElement::setDescription);
+			attributeSetterBiConsumers.put(
+				"elementDefinitionJSON",
+				(BiConsumer<SXPElement, String>)
+					SXPElement::setElementDefinitionJSON);
+			attributeSetterBiConsumers.put(
+				"fallbackDescription",
+				(BiConsumer<SXPElement, String>)
+					SXPElement::setFallbackDescription);
+			attributeSetterBiConsumers.put(
+				"fallbackTitle",
+				(BiConsumer<SXPElement, String>)SXPElement::setFallbackTitle);
+			attributeSetterBiConsumers.put(
+				"hidden",
+				(BiConsumer<SXPElement, Boolean>)SXPElement::setHidden);
+			attributeSetterBiConsumers.put(
+				"readOnly",
+				(BiConsumer<SXPElement, Boolean>)SXPElement::setReadOnly);
+			attributeSetterBiConsumers.put(
+				"schemaVersion",
+				(BiConsumer<SXPElement, String>)SXPElement::setSchemaVersion);
+			attributeSetterBiConsumers.put(
+				"title", (BiConsumer<SXPElement, String>)SXPElement::setTitle);
+			attributeSetterBiConsumers.put(
+				"type", (BiConsumer<SXPElement, Integer>)SXPElement::setType);
+			attributeSetterBiConsumers.put(
+				"version",
+				(BiConsumer<SXPElement, String>)SXPElement::setVersion);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<SXPElement, Integer>)SXPElement::setStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -694,6 +719,46 @@ public class SXPElementModelImpl
 		}
 
 		_elementDefinitionJSON = elementDefinitionJSON;
+	}
+
+	@JSON
+	@Override
+	public String getFallbackDescription() {
+		if (_fallbackDescription == null) {
+			return "";
+		}
+		else {
+			return _fallbackDescription;
+		}
+	}
+
+	@Override
+	public void setFallbackDescription(String fallbackDescription) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_fallbackDescription = fallbackDescription;
+	}
+
+	@JSON
+	@Override
+	public String getFallbackTitle() {
+		if (_fallbackTitle == null) {
+			return "";
+		}
+		else {
+			return _fallbackTitle;
+		}
+	}
+
+	@Override
+	public void setFallbackTitle(String fallbackTitle) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_fallbackTitle = fallbackTitle;
 	}
 
 	@JSON
@@ -1108,6 +1173,8 @@ public class SXPElementModelImpl
 		sxpElementImpl.setModifiedDate(getModifiedDate());
 		sxpElementImpl.setDescription(getDescription());
 		sxpElementImpl.setElementDefinitionJSON(getElementDefinitionJSON());
+		sxpElementImpl.setFallbackDescription(getFallbackDescription());
+		sxpElementImpl.setFallbackTitle(getFallbackTitle());
 		sxpElementImpl.setHidden(isHidden());
 		sxpElementImpl.setReadOnly(isReadOnly());
 		sxpElementImpl.setSchemaVersion(getSchemaVersion());
@@ -1145,6 +1212,10 @@ public class SXPElementModelImpl
 			this.<String>getColumnOriginalValue("description"));
 		sxpElementImpl.setElementDefinitionJSON(
 			this.<String>getColumnOriginalValue("elementDefinitionJSON"));
+		sxpElementImpl.setFallbackDescription(
+			this.<String>getColumnOriginalValue("fallbackDescription"));
+		sxpElementImpl.setFallbackTitle(
+			this.<String>getColumnOriginalValue("fallbackTitle"));
 		sxpElementImpl.setHidden(
 			this.<Boolean>getColumnOriginalValue("hidden_"));
 		sxpElementImpl.setReadOnly(
@@ -1306,6 +1377,24 @@ public class SXPElementModelImpl
 			sxpElementCacheModel.elementDefinitionJSON = null;
 		}
 
+		sxpElementCacheModel.fallbackDescription = getFallbackDescription();
+
+		String fallbackDescription = sxpElementCacheModel.fallbackDescription;
+
+		if ((fallbackDescription != null) &&
+			(fallbackDescription.length() == 0)) {
+
+			sxpElementCacheModel.fallbackDescription = null;
+		}
+
+		sxpElementCacheModel.fallbackTitle = getFallbackTitle();
+
+		String fallbackTitle = sxpElementCacheModel.fallbackTitle;
+
+		if ((fallbackTitle != null) && (fallbackTitle.length() == 0)) {
+			sxpElementCacheModel.fallbackTitle = null;
+		}
+
 		sxpElementCacheModel.hidden = isHidden();
 
 		sxpElementCacheModel.readOnly = isReadOnly();
@@ -1412,6 +1501,8 @@ public class SXPElementModelImpl
 	private String _description;
 	private String _descriptionCurrentLanguageId;
 	private String _elementDefinitionJSON;
+	private String _fallbackDescription;
+	private String _fallbackTitle;
 	private boolean _hidden;
 	private boolean _readOnly;
 	private String _schemaVersion;
@@ -1424,8 +1515,9 @@ public class SXPElementModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<SXPElement, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<SXPElement, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1463,6 +1555,8 @@ public class SXPElementModelImpl
 		_columnOriginalValues.put("description", _description);
 		_columnOriginalValues.put(
 			"elementDefinitionJSON", _elementDefinitionJSON);
+		_columnOriginalValues.put("fallbackDescription", _fallbackDescription);
+		_columnOriginalValues.put("fallbackTitle", _fallbackTitle);
 		_columnOriginalValues.put("hidden_", _hidden);
 		_columnOriginalValues.put("readOnly", _readOnly);
 		_columnOriginalValues.put("schemaVersion", _schemaVersion);
@@ -1517,19 +1611,23 @@ public class SXPElementModelImpl
 
 		columnBitmasks.put("elementDefinitionJSON", 1024L);
 
-		columnBitmasks.put("hidden_", 2048L);
+		columnBitmasks.put("fallbackDescription", 2048L);
 
-		columnBitmasks.put("readOnly", 4096L);
+		columnBitmasks.put("fallbackTitle", 4096L);
 
-		columnBitmasks.put("schemaVersion", 8192L);
+		columnBitmasks.put("hidden_", 8192L);
 
-		columnBitmasks.put("title", 16384L);
+		columnBitmasks.put("readOnly", 16384L);
 
-		columnBitmasks.put("type_", 32768L);
+		columnBitmasks.put("schemaVersion", 32768L);
 
-		columnBitmasks.put("version", 65536L);
+		columnBitmasks.put("title", 65536L);
 
-		columnBitmasks.put("status", 131072L);
+		columnBitmasks.put("type_", 131072L);
+
+		columnBitmasks.put("version", 262144L);
+
+		columnBitmasks.put("status", 524288L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

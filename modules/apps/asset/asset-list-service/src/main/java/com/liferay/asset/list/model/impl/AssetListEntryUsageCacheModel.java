@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.list.model.impl;
@@ -78,7 +69,7 @@ public class AssetListEntryUsageCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(41);
+		StringBundler sb = new StringBundler(35);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -100,12 +91,8 @@ public class AssetListEntryUsageCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
-		sb.append(", assetListEntryId=");
-		sb.append(assetListEntryId);
 		sb.append(", classNameId=");
 		sb.append(classNameId);
-		sb.append(", classPK=");
-		sb.append(classPK);
 		sb.append(", containerKey=");
 		sb.append(containerKey);
 		sb.append(", containerType=");
@@ -114,8 +101,6 @@ public class AssetListEntryUsageCacheModel
 		sb.append(key);
 		sb.append(", plid=");
 		sb.append(plid);
-		sb.append(", portletId=");
-		sb.append(portletId);
 		sb.append(", type=");
 		sb.append(type);
 		sb.append(", lastPublishDate=");
@@ -166,9 +151,7 @@ public class AssetListEntryUsageCacheModel
 			assetListEntryUsageImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
-		assetListEntryUsageImpl.setAssetListEntryId(assetListEntryId);
 		assetListEntryUsageImpl.setClassNameId(classNameId);
-		assetListEntryUsageImpl.setClassPK(classPK);
 
 		if (containerKey == null) {
 			assetListEntryUsageImpl.setContainerKey("");
@@ -187,14 +170,6 @@ public class AssetListEntryUsageCacheModel
 		}
 
 		assetListEntryUsageImpl.setPlid(plid);
-
-		if (portletId == null) {
-			assetListEntryUsageImpl.setPortletId("");
-		}
-		else {
-			assetListEntryUsageImpl.setPortletId(portletId);
-		}
-
 		assetListEntryUsageImpl.setType(type);
 
 		if (lastPublishDate == Long.MIN_VALUE) {
@@ -228,18 +203,13 @@ public class AssetListEntryUsageCacheModel
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 
-		assetListEntryId = objectInput.readLong();
-
 		classNameId = objectInput.readLong();
-
-		classPK = objectInput.readLong();
 		containerKey = objectInput.readUTF();
 
 		containerType = objectInput.readLong();
 		key = objectInput.readUTF();
 
 		plid = objectInput.readLong();
-		portletId = objectInput.readUTF();
 
 		type = objectInput.readInt();
 		lastPublishDate = objectInput.readLong();
@@ -276,11 +246,7 @@ public class AssetListEntryUsageCacheModel
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
 
-		objectOutput.writeLong(assetListEntryId);
-
 		objectOutput.writeLong(classNameId);
-
-		objectOutput.writeLong(classPK);
 
 		if (containerKey == null) {
 			objectOutput.writeUTF("");
@@ -300,13 +266,6 @@ public class AssetListEntryUsageCacheModel
 
 		objectOutput.writeLong(plid);
 
-		if (portletId == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(portletId);
-		}
-
 		objectOutput.writeInt(type);
 		objectOutput.writeLong(lastPublishDate);
 	}
@@ -321,14 +280,11 @@ public class AssetListEntryUsageCacheModel
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
-	public long assetListEntryId;
 	public long classNameId;
-	public long classPK;
 	public String containerKey;
 	public long containerType;
 	public String key;
 	public long plid;
-	public String portletId;
 	public int type;
 	public long lastPublishDate;
 

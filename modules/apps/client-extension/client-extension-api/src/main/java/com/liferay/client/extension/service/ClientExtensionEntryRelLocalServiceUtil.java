@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.service;
@@ -63,12 +54,13 @@ public class ClientExtensionEntryRelLocalServiceUtil {
 
 	public static ClientExtensionEntryRel addClientExtensionEntryRel(
 			long userId, long groupId, long classNameId, long classPK,
-			String cetExternalReferenceCode, String type, String typeSettings)
+			String cetExternalReferenceCode, String type, String typeSettings,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addClientExtensionEntryRel(
 			userId, groupId, classNameId, classPK, cetExternalReferenceCode,
-			type, typeSettings);
+			type, typeSettings, serviceContext);
 	}
 
 	/**
@@ -260,10 +252,10 @@ public class ClientExtensionEntryRelLocalServiceUtil {
 
 	public static ClientExtensionEntryRel
 		fetchClientExtensionEntryRelByExternalReferenceCode(
-			String externalReferenceCode, long companyId) {
+			String externalReferenceCode, long groupId) {
 
 		return getService().fetchClientExtensionEntryRelByExternalReferenceCode(
-			externalReferenceCode, companyId);
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -304,11 +296,11 @@ public class ClientExtensionEntryRelLocalServiceUtil {
 
 	public static ClientExtensionEntryRel
 			getClientExtensionEntryRelByExternalReferenceCode(
-				String externalReferenceCode, long companyId)
+				String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		return getService().getClientExtensionEntryRelByExternalReferenceCode(
-			externalReferenceCode, companyId);
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -465,8 +457,22 @@ public class ClientExtensionEntryRelLocalServiceUtil {
 			clientExtensionEntryRel);
 	}
 
+	public static ClientExtensionEntryRel updateClientExtensionEntryRel(
+			long clientExtensionEntryRelId, long classNameId, long classPK,
+			String cetExternalReferenceCode, String type, String typeSettings)
+		throws PortalException {
+
+		return getService().updateClientExtensionEntryRel(
+			clientExtensionEntryRelId, classNameId, classPK,
+			cetExternalReferenceCode, type, typeSettings);
+	}
+
 	public static ClientExtensionEntryRelLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(ClientExtensionEntryRelLocalService service) {
+		_service = service;
 	}
 
 	private static volatile ClientExtensionEntryRelLocalService _service;

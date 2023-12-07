@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.service.test;
@@ -18,13 +9,14 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
-import com.liferay.document.library.kernel.service.DLAppServiceUtil;
-import com.liferay.document.library.kernel.util.DLProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.PDFProcessorUtil;
+import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.reflect.ReflectionUtil;
-import com.liferay.portal.kernel.messaging.Destination;
+import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.messaging.DestinationNames;
-import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.model.Group;
@@ -38,6 +30,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.test.rule.Inject;
@@ -50,6 +43,7 @@ import java.io.InputStream;
 
 import java.lang.reflect.Field;
 
+import java.util.Dictionary;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -111,13 +105,17 @@ public class PDFProcessorTest {
 		if (_dlProcessorServiceRegistration != null) {
 			_dlProcessorServiceRegistration.unregister();
 		}
+
+		if (_messageListenerServiceRegistration != null) {
+			_messageListenerServiceRegistration.unregister();
+		}
 	}
 
 	@Test
 	public void testShouldCleanUpProcessorsOnCancelCheckOut() throws Exception {
 		AtomicBoolean cleanUp = registerCleanUpDLProcessor();
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -126,10 +124,10 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.checkOutFileEntry(
+		_dlAppService.checkOutFileEntry(
 			fileEntry.getFileEntryId(), _serviceContext);
 
-		DLAppServiceUtil.cancelCheckOut(fileEntry.getFileEntryId());
+		_dlAppService.cancelCheckOut(fileEntry.getFileEntryId());
 
 		Assert.assertTrue(cleanUp.get());
 	}
@@ -138,7 +136,7 @@ public class PDFProcessorTest {
 	public void testShouldCleanUpProcessorsOnDelete() throws Exception {
 		AtomicBoolean cleanUp = registerCleanUpDLProcessor();
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -147,7 +145,7 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.deleteFileEntry(fileEntry.getFileEntryId());
+		_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
 
 		Assert.assertTrue(cleanUp.get());
 	}
@@ -156,7 +154,7 @@ public class PDFProcessorTest {
 	public void testShouldCleanUpProcessorsOnUpdate() throws Exception {
 		AtomicBoolean cleanUp = registerCleanUpDLProcessor();
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -165,7 +163,7 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.updateFileEntry(
+		_dlAppService.updateFileEntry(
 			fileEntry.getFileEntryId(), StringUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -184,7 +182,7 @@ public class PDFProcessorTest {
 
 		AtomicBoolean cleanUp = registerCleanUpDLProcessor();
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -197,7 +195,7 @@ public class PDFProcessorTest {
 
 		InputStream inputStream = new ByteArrayInputStream(bytes);
 
-		DLAppServiceUtil.updateFileEntryAndCheckIn(
+		_dlAppService.updateFileEntryAndCheckIn(
 			fileEntry.getFileEntryId(), StringUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -213,7 +211,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.COPY_PREVIOUS);
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -222,7 +220,7 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.checkInFileEntry(
+		_dlAppService.checkInFileEntry(
 			fileEntry.getFileEntryId(), DLVersionNumberIncrease.MAJOR,
 			StringUtil.randomString(), _serviceContext);
 
@@ -234,7 +232,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.COPY_PREVIOUS);
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -243,7 +241,7 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.checkOutFileEntry(
+		_dlAppService.checkOutFileEntry(
 			fileEntry.getFileEntryId(), _serviceContext);
 
 		Assert.assertEquals(1, count.get());
@@ -254,7 +252,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.COPY_PREVIOUS);
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -265,7 +263,7 @@ public class PDFProcessorTest {
 
 		String version = fileEntry.getVersion();
 
-		fileEntry = DLAppServiceUtil.updateFileEntry(
+		fileEntry = _dlAppService.updateFileEntry(
 			fileEntry.getFileEntryId(), StringUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -276,7 +274,7 @@ public class PDFProcessorTest {
 
 		Assert.assertNotEquals(version, fileEntry.getVersion());
 
-		DLAppServiceUtil.revertFileEntry(
+		_dlAppService.revertFileEntry(
 			fileEntry.getFileEntryId(), version, _serviceContext);
 
 		Assert.assertEquals(1, count.get());
@@ -289,7 +287,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.COPY_PREVIOUS);
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -298,7 +296,7 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.updateFileEntryAndCheckIn(
+		_dlAppService.updateFileEntryAndCheckIn(
 			fileEntry.getFileEntryId(), StringUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -316,7 +314,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.COPY_PREVIOUS);
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -325,7 +323,7 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.updateFileEntry(
+		_dlAppService.updateFileEntry(
 			fileEntry.getFileEntryId(), StringUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -341,7 +339,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.GENERATE_NEW);
 
-		DLAppServiceUtil.addFileEntry(
+		_dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -354,11 +352,23 @@ public class PDFProcessorTest {
 	}
 
 	@Test
-	public void testShouldCreateNewPreviewOnCancelCheckOut() throws Exception {
-		AtomicInteger count = registerPDFProcessorMessageListener(
-			EventType.GENERATE_NEW);
+	public void testShouldCreateNewPreviewOnAddWithCorrectNumberOfPages()
+		throws Exception {
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry1 = _dlAppService.addFileEntry(
+			null, _serviceContext.getScopeGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			FileUtil.getBytes(getClass(), "dependencies/test_2.pdf"), null,
+			null, _serviceContext);
+
+		Assert.assertEquals(
+			2,
+			PDFProcessorUtil.getPreviewFileCount(fileEntry1.getFileVersion()));
+
+		FileEntry fileEntry2 = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -367,10 +377,77 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.checkOutFileEntry(
+		Assert.assertEquals(
+			1,
+			PDFProcessorUtil.getPreviewFileCount(fileEntry2.getFileVersion()));
+	}
+
+	@Test
+	public void testShouldCreateNewPreviewOnAddWithCorrectNumberOfPagesConfiguration()
+		throws Exception {
+
+		_withDLFileEntrySystemConfiguration(
+			10,
+			() -> {
+				FileEntry fileEntry = _dlAppService.addFileEntry(
+					null, _serviceContext.getScopeGroupId(),
+					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+					StringUtil.randomString() + ".pdf",
+					ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
+					StringUtil.randomString(), StringUtil.randomString(),
+					StringUtil.randomString(),
+					FileUtil.getBytes(getClass(), "dependencies/test_2.pdf"),
+					null, null, _serviceContext);
+
+				Assert.assertEquals(
+					2,
+					PDFProcessorUtil.getPreviewFileCount(
+						fileEntry.getFileVersion()));
+			});
+	}
+
+	@Test
+	public void testShouldCreateNewPreviewOnAddWithCorrectNumberOfPagesLimitedByConfiguration()
+		throws Exception {
+
+		_withDLFileEntrySystemConfiguration(
+			1,
+			() -> {
+				FileEntry fileEntry = _dlAppService.addFileEntry(
+					null, _serviceContext.getScopeGroupId(),
+					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+					StringUtil.randomString() + ".pdf",
+					ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
+					StringUtil.randomString(), StringUtil.randomString(),
+					StringUtil.randomString(),
+					FileUtil.getBytes(getClass(), "dependencies/test_2.pdf"),
+					null, null, _serviceContext);
+
+				Assert.assertEquals(
+					1,
+					PDFProcessorUtil.getPreviewFileCount(
+						fileEntry.getFileVersion()));
+			});
+	}
+
+	@Test
+	public void testShouldCreateNewPreviewOnCancelCheckOut() throws Exception {
+		AtomicInteger count = registerPDFProcessorMessageListener(
+			EventType.GENERATE_NEW);
+
+		FileEntry fileEntry = _dlAppService.addFileEntry(
+			null, _serviceContext.getScopeGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
+			StringUtil.randomString(), StringUtil.randomString(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
+			_serviceContext);
+
+		_dlAppService.checkOutFileEntry(
 			fileEntry.getFileEntryId(), _serviceContext);
 
-		DLAppServiceUtil.cancelCheckOut(fileEntry.getFileEntryId());
+		_dlAppService.cancelCheckOut(fileEntry.getFileEntryId());
 
 		Assert.assertEquals(2, count.get());
 	}
@@ -383,7 +460,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.GENERATE_NEW);
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -396,7 +473,7 @@ public class PDFProcessorTest {
 
 		InputStream inputStream = new ByteArrayInputStream(bytes);
 
-		DLAppServiceUtil.updateFileEntryAndCheckIn(
+		_dlAppService.updateFileEntryAndCheckIn(
 			fileEntry.getFileEntryId(), StringUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -414,7 +491,7 @@ public class PDFProcessorTest {
 		AtomicInteger count = registerPDFProcessorMessageListener(
 			EventType.GENERATE_NEW);
 
-		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
+		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString() + ".pdf", ContentTypes.APPLICATION_PDF,
@@ -423,7 +500,7 @@ public class PDFProcessorTest {
 			FileUtil.getBytes(getClass(), "dependencies/test.pdf"), null, null,
 			_serviceContext);
 
-		DLAppServiceUtil.updateFileEntry(
+		_dlAppService.updateFileEntry(
 			fileEntry.getFileEntryId(), StringUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -439,10 +516,6 @@ public class PDFProcessorTest {
 		final AtomicBoolean cleanUp = new AtomicBoolean(false);
 
 		DLProcessor cleanUpDLProcessor = new DLProcessor() {
-
-			@Override
-			public void afterPropertiesSet() throws Exception {
-			}
 
 			@Override
 			public void cleanUp(FileEntry fileEntry) {
@@ -513,26 +586,26 @@ public class PDFProcessorTest {
 	}
 
 	protected AtomicInteger registerPDFProcessorMessageListener(
-		final EventType eventType) {
+		EventType eventType) {
 
-		final AtomicInteger count = new AtomicInteger();
+		AtomicInteger count = new AtomicInteger();
 
-		Destination destination = _messageBus.getDestination(
-			DestinationNames.DOCUMENT_LIBRARY_PDF_PROCESSOR);
+		Bundle bundle = FrameworkUtil.getBundle(PDFProcessorTest.class);
 
-		destination.register(
-			new MessageListener() {
+		BundleContext bundleContext = bundle.getBundleContext();
 
-				@Override
-				public void receive(Message message) {
-					Object[] payload = (Object[])message.getPayload();
+		_messageListenerServiceRegistration = bundleContext.registerService(
+			MessageListener.class,
+			message -> {
+				Object[] payload = (Object[])message.getPayload();
 
-					if (eventType.isMatch(payload[0])) {
-						count.incrementAndGet();
-					}
+				if (eventType.isMatch(payload[0])) {
+					count.incrementAndGet();
 				}
-
-			});
+			},
+			MapUtil.singletonDictionary(
+				"destination.name",
+				DestinationNames.DOCUMENT_LIBRARY_PDF_PROCESSOR));
 
 		return count;
 	}
@@ -564,6 +637,28 @@ public class PDFProcessorTest {
 
 	}
 
+	private void _withDLFileEntrySystemConfiguration(
+			int maxNumberOfPages, UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		Dictionary<String, Object> dictionary =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"maxNumberOfPages", maxNumberOfPages
+			).build();
+
+		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
+				new ConfigurationTemporarySwapper(
+					"com.liferay.document.library.configuration." +
+						"DLFileEntryConfiguration",
+					dictionary)) {
+
+			unsafeRunnable.run();
+		}
+	}
+
+	@Inject
+	private DLAppService _dlAppService;
+
 	private Object _dlFileEntryPreviewForkProcessEnabled;
 	private ServiceRegistration<DLProcessor> _dlProcessorServiceRegistration;
 
@@ -573,6 +668,8 @@ public class PDFProcessorTest {
 	@Inject
 	private MessageBus _messageBus;
 
+	private ServiceRegistration<MessageListener>
+		_messageListenerServiceRegistration;
 	private ServiceContext _serviceContext;
 
 }

@@ -110,7 +110,7 @@
 </tr>
 <tr>
 	<td>COHORT_ANALYSIS_SELECT_VISITOR_TYPE</td>
-	<td>//select[contains(@class,'visitors-type-select')]</td>
+	<td>//button[contains(@class,'visitors-type-select')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -144,8 +144,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PAGE_METRIC_VALUE</td>
+	<td>//a[text()='${key_pageName}']/ancestor::td[contains(@class, 'table-cell')]/following::td[${key_index}][text()='${key_metricValue}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SITE_PATH</td>
 	<td>//*[name()='svg']//*[contains(@class, 'analytics-sankey-title') and @y='0']//*[text()='${key_pageName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_PATH_TOTAL</td>
+	<td>//*[contains(@class, 'recharts-sankey-nodes')]//*[text()='${key_pageTotal}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REMOVE_SEGMENT_FILTER</td>
+	<td>//button[@title="Remove Filter"]</td>
 	<td></td>
 </tr>
 <tr>

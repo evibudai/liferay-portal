@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.currency.service;
@@ -27,8 +18,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.SystemEventConstants;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -42,6 +35,7 @@ import java.io.Serializable;
 
 import java.math.BigDecimal;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -86,6 +80,7 @@ public interface CommerceCurrencyLocalService
 	public CommerceCurrency addCommerceCurrency(
 		CommerceCurrency commerceCurrency);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CommerceCurrency addCommerceCurrency(
 			long userId, String code, Map<Locale, String> nameMap,
 			String symbol, BigDecimal rate,
@@ -332,9 +327,17 @@ public interface CommerceCurrencyLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
-	public void importDefaultValues(ServiceContext serviceContext)
+	public void importDefaultValues(
+			boolean updateExchangeRate, ServiceContext serviceContext)
 		throws Exception;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public BaseModelSearchResult<CommerceCurrency> searchCommerceCurrencies(
+			long companyId, String keywords,
+			LinkedHashMap<String, Object> params, int start, int end, Sort sort)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
 	public CommerceCurrency setActive(long commerceCurrencyId, boolean active)
 		throws PortalException;
 
@@ -355,12 +358,13 @@ public interface CommerceCurrencyLocalService
 	public CommerceCurrency updateCommerceCurrency(
 		CommerceCurrency commerceCurrency);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CommerceCurrency updateCommerceCurrency(
-			long commerceCurrencyId, String code, Map<Locale, String> nameMap,
-			String symbol, BigDecimal rate,
-			Map<Locale, String> formatPatternMap, int maxFractionDigits,
-			int minFractionDigits, String roundingMode, boolean primary,
-			double priority, boolean active, ServiceContext serviceContext)
+			long commerceCurrencyId, Map<Locale, String> nameMap, String symbol,
+			BigDecimal rate, Map<Locale, String> formatPatternMap,
+			int maxFractionDigits, int minFractionDigits, String roundingMode,
+			boolean primary, double priority, boolean active,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommerceCurrency updateCommerceCurrencyRate(

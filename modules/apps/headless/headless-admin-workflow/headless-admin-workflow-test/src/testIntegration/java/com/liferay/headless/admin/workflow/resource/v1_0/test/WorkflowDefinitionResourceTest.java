@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.workflow.resource.v1_0.test;
@@ -20,16 +11,22 @@ import com.liferay.headless.admin.workflow.client.dto.v1_0.Transition;
 import com.liferay.headless.admin.workflow.client.dto.v1_0.WorkflowDefinition;
 import com.liferay.headless.admin.workflow.client.serdes.v1_0.WorkflowDefinitionSerDes;
 import com.liferay.headless.admin.workflow.resource.v1_0.test.util.WorkflowDefinitionTestUtil;
+import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.test.rule.DataGuard;
+import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
+import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,6 +38,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.skyscreamer.jsonassert.JSONAssert;
 
 /**
  * @author Javier Gamarra
@@ -115,15 +114,15 @@ public class WorkflowDefinitionResourceTest
 		assertHttpResponseStatusCode(
 			200,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), null));
+				workflowDefinition.getName(), null, null));
 		assertHttpResponseStatusCode(
 			200,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), 1));
+				workflowDefinition.getName(), null, 1));
 		assertHttpResponseStatusCode(
 			404,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), 2));
+				workflowDefinition.getName(), null, 2));
 
 		testPostWorkflowDefinitionDeploy_addWorkflowDefinition(
 			workflowDefinition);
@@ -131,11 +130,11 @@ public class WorkflowDefinitionResourceTest
 		assertHttpResponseStatusCode(
 			200,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), 2));
+				workflowDefinition.getName(), null, 2));
 
 		WorkflowDefinition latestWorkflowDefinition =
 			workflowDefinitionResource.getWorkflowDefinitionByName(
-				workflowDefinition.getName(), null);
+				workflowDefinition.getName(), null, null);
 
 		Assert.assertEquals(
 			workflowDefinition.getDateCreated(),
@@ -180,6 +179,41 @@ public class WorkflowDefinitionResourceTest
 			Arrays.asList(
 				WorkflowDefinitionSerDes.toDTOs(
 					workflowDefinitionsJSONObject.getString("items"))));
+	}
+
+	@Override
+	@Test
+	public void testPostWorkflowDefinition() throws Exception {
+		super.testPostWorkflowDefinition();
+
+		// The value of "content" is JSON
+
+		JSONObject jsonObject = _getWorkflowDefinitionJSONObject(
+			"workflow-definition.json");
+
+		JSONObject workflowDefinitionJSONObject = _postWorkflowDefinition(
+			jsonObject);
+
+		JSONAssert.assertEquals(
+			jsonObject.getJSONObject(
+				"content"
+			).toString(),
+			WorkflowDefinitionContentUtil.toJSON(
+				workflowDefinitionJSONObject.getString("content")),
+			true);
+
+		// The value of "content" is a JSON string
+
+		jsonObject = _getWorkflowDefinitionJSONObject(
+			"workflow-definition-json-string.json");
+
+		workflowDefinitionJSONObject = _postWorkflowDefinition(jsonObject);
+
+		JSONAssert.assertEquals(
+			jsonObject.getString("content"),
+			WorkflowDefinitionContentUtil.toJSON(
+				workflowDefinitionJSONObject.getString("content")),
+			true);
 	}
 
 	@Override
@@ -440,6 +474,27 @@ public class WorkflowDefinitionResourceTest
 		_workflowDefinitionManager.undeployWorkflowDefinition(
 			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			workflowDefinitionName, workflowDefinitionVersion);
+	}
+
+	private JSONObject _getWorkflowDefinitionJSONObject(String fileName)
+		throws Exception {
+
+		return JSONFactoryUtil.createJSONObject(
+			StreamUtil.toString(
+				getClass().getResourceAsStream(
+					StringBundler.concat(
+						"/com/liferay/headless/admin/workflow/resource/v1_0",
+						"/test/util/dependencies/", fileName))));
+	}
+
+	private JSONObject _postWorkflowDefinition(
+			JSONObject workflowDefinitionJSONObject)
+		throws Exception {
+
+		return HTTPTestUtil.invokeToJSONObject(
+			workflowDefinitionJSONObject.toString(),
+			"headless-admin-workflow/v1.0/workflow-definitions",
+			Http.Method.POST);
 	}
 
 	private static com.liferay.portal.kernel.workflow.WorkflowDefinition

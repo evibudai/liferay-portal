@@ -1,67 +1,67 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useEffect} from 'react';
-import {useParams} from 'react-router-dom';
-
-import Avatar from '../../../../components/Avatar';
-import AssignToMe from '../../../../components/Avatar/AssigneToMe';
-import Code from '../../../../components/Code';
-import Container from '../../../../components/Layout/Container';
-import ListViewRest from '../../../../components/ListView';
-import StatusBadge from '../../../../components/StatusBadge';
-import {StatusBadgeType} from '../../../../components/StatusBadge/StatusBadge';
-import useMutate from '../../../../hooks/useMutate';
-import useRuns from '../../../../hooks/useRuns';
-import i18n from '../../../../i18n';
-import {filters} from '../../../../schema/filter';
+import {useMemo} from 'react';
+import {useParams, useSearchParams} from 'react-router-dom';
+import Avatar from '~/components/Avatar';
+import AssignToMe from '~/components/Avatar/AssignToMe/AssignToMe';
+import Code from '~/components/Code';
+import JiraLink from '~/components/JiraLink';
+import Container from '~/components/Layout/Container';
+import ListView from '~/components/ListView';
+import StatusBadge from '~/components/StatusBadge';
+import {StatusBadgeType} from '~/components/StatusBadge/StatusBadge';
+import useMutate from '~/hooks/useMutate';
+import useSearchBuilder from '~/hooks/useSearchBuilder';
+import i18n from '~/i18n';
 import {
 	PickList,
 	TestrayCaseResult,
+	TestrayCaseResultIssue,
 	testrayCaseResultImpl,
-} from '../../../../services/rest';
-import {SearchBuilder} from '../../../../util/search';
+} from '~/services/rest';
+
 import useBuildTestActions from './useBuildTestActions';
 
 const Build = () => {
+	const [searchParams] = useSearchParams();
+	const {actions, form} = useBuildTestActions();
 	const {buildId} = useParams();
 	const {updateItemFromList} = useMutate();
-	const {actions, form} = useBuildTestActions();
-	const {
-		compareRuns: {runId},
-		setRunId,
-	} = useRuns();
 
-	useEffect(() => {
-		return () => setRunId(null);
-	}, [setRunId]);
+	const runId = searchParams.get('runId');
 
-	const caseResultFilter = new SearchBuilder();
+	const filterInitialContext = useMemo(
+		() => ({
+			entries: [
+				{
+					label: i18n.translate('run'),
+					name: 'runToCaseResult/number',
+					value: runId as string,
+				},
+			],
+			filter: {'runToCaseResult/id': runId as string},
+		}),
+		[runId]
+	);
+
+	const caseResultFilter = useSearchBuilder({useURIEncode: false});
 
 	const filter = runId
-		? caseResultFilter
-				.eq('buildId', buildId as string)
-				.and()
-				.eq('runId', runId)
-				.build()
+		? caseResultFilter.eq('buildId', buildId as string).build()
 		: caseResultFilter.eq('buildId', buildId as string).build();
 
 	return (
 		<Container className="mt-4">
-			<ListViewRest
+			<ListView
+				initialContext={{
+					columns: {environment: false},
+					filters: filterInitialContext,
+				}}
 				managementToolbarProps={{
-					filterFields: filters.build.results as any,
+					filterSchema: 'buildResults',
 					title: i18n.translate('tests'),
 				}}
 				resource={testrayCaseResultImpl.resource}
@@ -70,12 +70,28 @@ const Build = () => {
 					columns: [
 						{
 							clickable: true,
+							key: 'caseType',
+							render: (
+								_,
+								{case: testrayCase}: TestrayCaseResult
+							) => testrayCase?.caseType?.name,
+							value: i18n.translate('case-type'),
+						},
+						{
+							clickable: true,
 							key: 'priority',
 							render: (
 								_,
 								{case: testrayCase}: TestrayCaseResult
 							) => testrayCase?.priority,
 							value: i18n.translate('priority'),
+						},
+						{
+							clickable: true,
+							key: 'team',
+							render: (_, testrayCaseResult: TestrayCaseResult) =>
+								testrayCaseResult.case?.component?.team?.name,
+							value: i18n.translate('team'),
 						},
 						{
 							key: 'component',
@@ -92,6 +108,7 @@ const Build = () => {
 								_,
 								{case: testrayCase}: TestrayCaseResult
 							) => testrayCase?.name,
+							size: 'xl',
 							value: i18n.translate('case'),
 						},
 						{
@@ -101,6 +118,14 @@ const Build = () => {
 									?.toString()
 									.padStart(2, '0'),
 							value: i18n.translate('run'),
+						},
+						{
+							clickable: true,
+							key: 'environment',
+							render: (_, item: TestrayCaseResult) =>
+								item?.run?.name,
+							value: i18n.translate('environment'),
+							width: '250',
 						},
 						{
 							key: 'user',
@@ -114,10 +139,9 @@ const Build = () => {
 										<Avatar
 											className="text-capitalize"
 											displayName
-											name={`${caseResult.user.emailAddress
-												.split('@')[0]
-												.replace('.', ' ')}`}
+											name={caseResult.user.name}
 											size="sm"
+											url={caseResult.user.image}
 										/>
 									);
 								}
@@ -143,7 +167,9 @@ const Build = () => {
 									/>
 								);
 							},
+							truncate: false,
 							value: i18n.translate('assignee'),
+							width: '200',
 						},
 						{
 							key: 'dueStatus',
@@ -158,16 +184,21 @@ const Build = () => {
 						},
 						{
 							key: 'issues',
-							size: 'lg',
+							render: (issues: TestrayCaseResultIssue[]) =>
+								issues.map((caseResultIssue, index) => (
+									<JiraLink
+										issue={caseResultIssue}
+										key={index}
+									/>
+								)),
 							value: i18n.translate('issues'),
 						},
 						{
 							key: 'errors',
 							render: (errors: string) =>
-								errors && (
-									<Code>{errors.substring(0, 100)}...</Code>
-								),
+								errors && <Code>{errors}</Code>,
 							size: 'xl',
+							truncate: true,
 							value: i18n.translate('errors'),
 						},
 						{

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.internal.helper;
@@ -19,6 +10,7 @@ import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.persistence.KBArticlePersistence;
 import com.liferay.knowledge.base.util.comparator.KBArticlePriorityComparator;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.List;
 
@@ -36,9 +28,11 @@ public class KBArticleSiblingNavigationHelper
 
 	@Override
 	protected KBArticle fetchFirstChildKBArticle(KBArticle kbArticle) {
-		List<KBArticle> kbArticles = _kbArticlePersistence.filterFindByG_P_M(
-			kbArticle.getGroupId(), kbArticle.getResourcePrimKey(), true, 0, 1,
-			new KBArticlePriorityComparator(true));
+		List<KBArticle> kbArticles =
+			_kbArticlePersistence.filterFindByG_P_M_NotS(
+				kbArticle.getGroupId(), kbArticle.getResourcePrimKey(), true,
+				WorkflowConstants.STATUS_IN_TRASH, 0, 1,
+				new KBArticlePriorityComparator(true));
 
 		if (kbArticles.isEmpty()) {
 			return null;
@@ -49,10 +43,12 @@ public class KBArticleSiblingNavigationHelper
 
 	@Override
 	protected KBArticle fetchLastChildKBArticle(KBArticle previousKBArticle) {
-		List<KBArticle> kbArticles = _kbArticlePersistence.findByG_P_M(
-			previousKBArticle.getGroupId(),
-			previousKBArticle.getResourcePrimKey(), true, 0, 1,
-			new KBArticlePriorityComparator(false));
+		List<KBArticle> kbArticles =
+			_kbArticlePersistence.filterFindByG_P_M_NotS(
+				previousKBArticle.getGroupId(),
+				previousKBArticle.getResourcePrimKey(), true,
+				WorkflowConstants.STATUS_IN_TRASH, 0, 1,
+				new KBArticlePriorityComparator(false));
 
 		if (kbArticles.isEmpty()) {
 			return null;
@@ -63,10 +59,10 @@ public class KBArticleSiblingNavigationHelper
 
 	@Override
 	protected List<KBArticle> findChildKBArticles(KBArticle kbArticle) {
-		return _kbArticlePersistence.filterFindByG_P_M(
+		return _kbArticlePersistence.filterFindByG_P_M_NotS(
 			kbArticle.getGroupId(), kbArticle.getParentResourcePrimKey(), true,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new KBArticlePriorityComparator(true));
+			WorkflowConstants.STATUS_IN_TRASH, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, new KBArticlePriorityComparator(true));
 	}
 
 	@Override

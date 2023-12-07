@@ -1,47 +1,43 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-	}
-
 	@description = "This is a test for LPS-146373. The page creator could access to Look and Feel settings via the configuration icon."
-	@priority = "4"
+	@priority = 4
 	test AccessToLookAndFeelSettings {
 		task ("Given a page creator accesses to the Page Design Options panel") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
 		}
@@ -52,24 +48,24 @@ definition {
 
 		task ("Then the page creator accesses to the Look and Feel settings") {
 			AssertElementPresent(
-				key_title = "General",
+				key_title = "Design",
 				locator1 = "Header#H2_TITLE");
 
-			for (var sectionName : list "Favicon,Master,Style Book,Theme") {
+			for (var sectionName : list "Theme,Basic Settings,Customization") {
 				AssertElementPresent(
-					key_sectionTitle = "${sectionName}",
+					key_sectionTitle = ${sectionName},
 					locator1 = "PagesAdmin#SECTION_TITLE");
 			}
 		}
 	}
 
 	@description = "This is a test for LPS-153383. The page creator cannot resize editor sidebar to an invalid size."
-	@priority = "4"
+	@priority = 4
 	test CannotResizeLeftSidebarPanelBeyoundLimitation {
 		task ("Given a page creator accesses to the page editor") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("When the page creator accesses to the left sidebar panel") {
@@ -117,13 +113,23 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-188909. The portal version info shouldn't be shown on the Home page."
+	@priority = 4
+	test CannotViewPortalVersionInfoOnHomePage {
+		ContentPages.viewFragmentText(
+			fragmentName = "paragraph",
+			id = "element-text",
+			position = 2,
+			text = "Enjoy using the best DXP on Earth!");
+	}
+
 	@description = "This is a test for LPS-146373. The page creator could close the left sidebar panel via the times icon."
-	@priority = "4"
+	@priority = 4
 	test CloseLeftPageEditorSidebar {
 		task ("Given a page creator accesses to the page editor") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("When the page creator click the times icon on the Fragments and Widgets panel") {
@@ -138,12 +144,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session on content page in card view."
-	@priority = "3"
+	@priority = 3
 	test CouldAddAndRemoveFragmentInCardView {
 		task ("Given go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("When switch to card view") {
@@ -185,7 +191,7 @@ definition {
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM");
 
 			AssertElementPresent(
-				index = "1",
+				index = 1,
 				key_panel = "Favorites",
 				locator1 = "Panel#PANEL_BY_INDEX");
 
@@ -218,14 +224,15 @@ definition {
 	}
 
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session and widget to Highlighted session on content page."
-	@priority = "5"
-	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToighlightedSession {
+	@priority = 5
+	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToHighlightedSession {
+		property portal.acceptance = "true";
 		property portal.release = "false";
 
 		task ("When go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Then could add and remove fragment to Favorites session and widget to Highlighted session") {
@@ -262,7 +269,7 @@ definition {
 					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
 
 				AssertElementPresent(
-					index = "1",
+					index = 1,
 					key_panel = "Favorites",
 					locator1 = "Panel#PANEL_BY_INDEX");
 
@@ -296,10 +303,7 @@ definition {
 			task ("Go to add and remove favorite widget") {
 				Navigator.gotoNavTab(navTab = "Widgets");
 
-				AssertClick(
-					key_collectionName = "Collaboration",
-					locator1 = "PageEditor#FRAGMENT_SIDEBAR_COLLECTION_PANEL_COLLAPSED",
-					value1 = "Collaboration");
+				PageEditor.expandWidgetCategory(categoryName = "Collaboration");
 
 				MouseOver(
 					key_collectionName = "Collaboration",
@@ -342,14 +346,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session and widget to Highlighted session on content page."
-	@priority = "5"
-	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToighlightedSessionOnReleaseBundle {
+	@priority = 5
+	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToHighlightedSessionOnReleaseBundle {
 		property portal.upstream = "false";
 
 		task ("When go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Then could add and remove fragment to Favorites session and widget to Highlighted session") {
@@ -386,7 +390,7 @@ definition {
 					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
 
 				AssertElementPresent(
-					index = "1",
+					index = 1,
 					key_panel = "Favorites",
 					locator1 = "Panel#PANEL_BY_INDEX");
 
@@ -419,6 +423,8 @@ definition {
 
 			task ("Go to add and remove favorite widget") {
 				Navigator.gotoNavTab(navTab = "Widgets");
+
+				PageEditor.expandWidgetCategory(categoryName = "Collaboration");
 
 				MouseOver(
 					key_collectionName = "Collaboration",
@@ -461,13 +467,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-140266. The user could look for color samples via scroll bar."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test FindColorSamplesViaScrollBar {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -483,23 +489,23 @@ definition {
 
 			ScrollWebElementIntoView(
 				category = "Button Link",
-				index = "1",
+				index = 1,
 				locator1 = "PageEditor#COLOR_SWATCH_ITEM",
 				panel = "Buttons");
 
 			ScrollWebElementIntoView(
 				category = "Brand Colors",
-				index = "1",
+				index = 1,
 				locator1 = "PageEditor#COLOR_SWATCH_ITEM",
 				panel = "Color System");
 		}
 	}
 
 	@description = "This is a test for LPS-146373. The page creator should be redirected to the previous page when clicking the back button in the page editor."
-	@priority = "4"
+	@priority = 4
 	test RedirectToPreviousPageWhenClickBackInPageEditor {
 		task ("Given a page creator adds a content page via the Pages admin") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			ContentPages.addPage(pageName = "Content Page Name");
 		}
@@ -515,7 +521,7 @@ definition {
 		task ("Given the page creator accesses to page editor via view mode") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -525,7 +531,7 @@ definition {
 
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.gotoPageEditor();
 		}
@@ -545,12 +551,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-146373. The page creator could use a scroll bar for each section in the page editor."
-	@priority = "4"
+	@priority = 4
 	test UseScrollBarInEachSection {
 		task ("Given a page creator accesses to the page editor") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("When the page creator accesses to the Fragments and Widgets panel") {
@@ -593,7 +599,7 @@ definition {
 			ScrollWebElementIntoView(
 				fragmentName = "card",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
 
 			var leftSidebarButtonsWidth = selenium.getElementWidth("PageEditor#FRAGMENT_SIDEBAR_BODY");
@@ -608,22 +614,81 @@ definition {
 			var scrollBarWidth = ${offsetWidth} - ${clientWidth};
 			var bothSidebarWidth = ${leftSidebarWidth} + ${rightSidebarWidth};
 			var pageContentWidth = ${gridFragmentWidth} + ${scrollBarWidth};
+			var difference = ${bodyWidth} - ${bothSidebarWidth};
 
-			TestUtils.assertEquals(
-				actual = MathUtil.difference("${bodyWidth}", "${bothSidebarWidth}"),
-				expected = "${pageContentWidth}");
+			StringUtil.assertEquals(${pageContentWidth}, ${difference});
+		}
+	}
+
+	@description = "This is a test for LPS-170955. View Autosave icon styles are adjusted."
+	@priority = 5
+	test ViewAutosaveIconStyles {
+		property portal.acceptance = "true";
+
+		task ("Given a page designer navigates to the page editor") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+		}
+
+		task ("When the page designer adds a fragment with intercept requests") {
+			var map = MapUtil.newHashMap();
+
+			ExecuteCDPCommand(
+				value1 = "Fetch.enable",
+				value2 = ${map});
+
+			Navigator.gotoNavTab(navTab = "Fragments");
+
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
+				locator2 = "PageEditor#FRAGMENT_DROP_TARGET");
+		}
+
+		task ("Then the page designer see the styles of loading icon") {
+			MouseOver.javaScriptFocus(locator1 = "//span[@aria-label='Saving'][contains(@class,'loading-animation')]");
+
+			AssertVisible(
+				key_content = "Saving",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+		}
+
+		task ("When the page designer forwards the request") {
+			var map = MapUtil.newHashMap();
+
+			ExecuteCDPCommand(
+				value1 = "Fetch.disable",
+				value2 = ${map});
+		}
+
+		task ("Then the page designer sees the styles of autosave icon") {
+			PageEditor.waitForAutoSave();
+
+			MouseOver.javaScriptFocus(locator1 = "//*[name()='svg'][contains(@class,'lexicon-icon-check-circle')]");
+
+			AssertVisible(
+				key_content = "Saved",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+
+			AssertTextEquals(
+				locator1 = "//div[contains(@class,'status-bar')]//span[contains(@class,'sr-only')]",
+				value1 = "Changes have been saved. Page editor will autosave new changes.");
 		}
 	}
 
 	@description = "This is a test for LPS-136412. View collapse style changes in fragment configuration."
-	@priority = "5"
+	@priority = 5
 	test ViewCollapseStyleInFragmentConfiguration {
 		property portal.acceptance = "true";
 
 		task ("Add a dropdown fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -639,7 +704,7 @@ definition {
 
 			Panel.collapsePanel(panel = "Frame");
 
-			AssertElementNotPresent(locator1 = "//div[contains(@class,'fieldset')]");
+			AssertNotVisible(locator1 = "//div[contains(@class,'fieldset')]");
 
 			Panel.expandPanel(panel = "Dropdown Options");
 
@@ -650,24 +715,24 @@ definition {
 			Navigator.gotoNavTab(navTab = "Styles");
 
 			for (var key_panel : list "Spacing,Text,Background,Borders,Effects") {
-				Panel.collapsePanel(panel = "${key_panel}");
+				Panel.collapsePanel(panel = ${key_panel});
 			}
 
-			AssertElementNotPresent(locator1 = "//div[contains(@class,'fieldset')]");
+			AssertNotVisible(locator1 = "//div[contains(@class,'fieldset')]");
 
 			for (var key_panel : list "Spacing,Text,Background,Borders,Effects") {
-				Panel.expandPanel(panel = "${key_panel}");
+				Panel.expandPanel(panel = ${key_panel});
 			}
 		}
 	}
 
 	@description = "This is a test for LPS-158746. The favorite fragment is hidden if it is not allowed on master page."
-	@priority = "3"
+	@priority = 3
 	test ViewFavoriteFragmentIsHiddenWhenItIsNotAllowedOnMasterPage {
 		task ("Given go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("And choose Button and Card fragment as Favorites") {
@@ -706,10 +771,10 @@ definition {
 
 		task ("When not allow Button fragment on master page") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				masterPageTemplateEntryName = "Custom Masters Page Template");
 
-			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteURLKey});
 
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
@@ -727,7 +792,7 @@ definition {
 
 			Button.clickNoError(button = "Publish Master");
 
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
@@ -739,7 +804,7 @@ definition {
 		task ("Then Button fragment is hidden on conetent page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 2",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertElementNotPresent(
 				key_collectionName = "Favorites",
@@ -754,12 +819,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-158746. Favorite session is hidden when no favorite fragment is chosen."
-	@priority = "4"
+	@priority = 4
 	test ViewFavoriteSessionIsHiddenWhenNoFavoriteFragmentIsChosen {
 		task ("Given go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Then assert favorite session is hidden") {
@@ -782,45 +847,64 @@ definition {
 	}
 
 	@description = "This is a test for LPS-158746. Different users keep their own favorites list."
-	@priority = "4"
+	@priority = 4
 	test ViewFavoritesListInDifferentUsers {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		task ("Given having 2 users") {
-			for (var number : list "1,2") {
-				JSONUser.addUser(
-					userEmailAddress = "user${number}@liferay.com",
-					userFirstName = "userfn${number}",
-					userLastName = "userln${number}",
-					userScreenName = "usersn${number}");
+			var userEmailAddress = StringUtil.randomString(8);
+			var userFirstName = StringUtil.randomString(8);
+			var userLastName = StringUtil.randomString(8);
+			var userScreenName = StringUtil.randomString(8);
 
-				JSONUser.setFirstPassword(
-					agreeToTermsAndAnswerReminderQuery = "true",
-					requireReset = "false",
-					userEmailAddress = "user${number}@liferay.com");
+			JSONUser.addUser(
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}1@liferay.com"),
+				userFirstName = "${userFirstName}1",
+				userLastName = "${userLastName}1",
+				userScreenName = StringUtil.toLowerCase("${userScreenName}1"));
 
-				JSONUser.addUserToSite(
-					groupName = "Test Site Name",
-					userEmailAddress = "user${number}@liferay.com");
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}1@liferay.com"));
 
-				JSONRole.assignSiteRoleToUser(
-					groupName = "Test Site Name",
-					roleTitle = "Site Administrator",
-					userEmailAddress = "user${number}@liferay.com");
-			}
+			JSONUser.addUserToSite(
+				groupName = ${randomSiteName},
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}1@liferay.com"));
+
+			JSONRole.assignSiteRoleToUser(
+				groupName = ${randomSiteName},
+				roleTitle = "Site Administrator",
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}1@liferay.com"));
+
+			JSONUser.addUser(
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}2@liferay.com"),
+				userFirstName = "${userFirstName}2",
+				userLastName = "${userLastName}2",
+				userScreenName = StringUtil.toLowerCase("${userScreenName}2"));
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}2@liferay.com"));
+
+			JSONUser.addUserToSite(
+				groupName = ${randomSiteName},
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}2@liferay.com"));
+
+			JSONRole.assignSiteRoleToUser(
+				groupName = ${randomSiteName},
+				roleTitle = "Site Administrator",
+				userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}2@liferay.com"));
 		}
 
 		task ("When the users add their own favorites list on content page") {
 			task ("Assert user1 could add favorites list") {
-				User.logoutPG();
-
-				User.loginPG(
-					password = "test",
-					userEmailAddress = "user1@liferay.com");
+				User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${userEmailAddress}1@liferay.com"));
 
 				ContentPagesNavigator.openEditContentPage(
 					pageName = "Test Page Name",
-					siteName = "Test Site Name");
+					siteName = ${randomSiteName});
 
 				MouseOver(
 					key_collectionName = "Basic Components",
@@ -840,15 +924,11 @@ definition {
 			}
 
 			task ("Assert user2 could add favorites list") {
-				User.logoutPG();
-
-				User.loginPG(
-					password = "test",
-					userEmailAddress = "user2@liferay.com");
+				User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${userEmailAddress}2@liferay.com"));
 
 				ContentPagesNavigator.openEditContentPage(
 					pageName = "Test Page Name",
-					siteName = "Test Site Name");
+					siteName = ${randomSiteName});
 
 				AssertElementNotPresent(
 					key_panel = "Favorites",
@@ -873,15 +953,11 @@ definition {
 		}
 
 		task ("Then assert favorites list is kept for user session") {
-			User.logoutPG();
-
-			User.loginPG(
-				password = "test",
-				userEmailAddress = "user1@liferay.com");
+			User.logoutAndLoginPG(userLoginEmailAddress = "${userEmailAddress}1@liferay.com");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			AssertElementPresent(
 				key_collectionName = "Favorites",
@@ -896,7 +972,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-140266. The color samples are sorted by the token definition doc order and sections."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test ViewOrderOfColorSamplesInColorPicker {
 		property portal.acceptance = "true";
@@ -904,7 +980,7 @@ definition {
 		task ("Add a Button fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -918,39 +994,39 @@ definition {
 				key_fieldLabel = "Text Color",
 				locator1 = "Button#COLOR_PICKER");
 
-			var n = "1";
+			var n = 1;
 
 			for (var panel : list "Color System,General,Typography,Buttons") {
 				AssertTextEquals(
-					index = "${n}",
+					index = ${n},
 					locator1 = "PageEditor#COLOR_SWATCH_PANEL",
-					value1 = "${panel}");
+					value1 = ${panel});
 
 				var n = ${n} + 1;
 			}
 
-			var n = "1";
+			var n = 1;
 
 			for (var category : list "Brand Colors,Grays,Theme Colors") {
 				AssertTextEquals(
-					index = "${n}",
+					index = ${n},
 					locator1 = "PageEditor#COLOR_SWATCH_CATEGORY",
 					panel = "Color System",
-					value1 = "${category}");
+					value1 = ${category});
 
 				var n = ${n} + 1;
 			}
 
-			var n = "1";
+			var n = 1;
 
 			for (var i : list "1,2,3,4") {
 				AssertAttributeValue(
-					attribute1 = "title",
 					category = "Brand Colors",
-					index = "${n}",
+					index = ${n},
 					locator1 = "PageEditor#COLOR_SWATCH_ITEM",
 					panel = "Color System",
-					value1 = "Brand Color ${i}");
+					value1 = "title",
+					value2 = "Brand Color ${i}");
 
 				var n = ${n} + 1;
 			}
@@ -959,7 +1035,7 @@ definition {
 		task ("View the token name shown in tooltip when hover on color swatch item") {
 			MouseOver.javaScriptFocus(
 				category = "Grays",
-				index = "1",
+				index = 1,
 				locator1 = "PageEditor#COLOR_SWATCH_ITEM",
 				panel = "Color System");
 
@@ -970,12 +1046,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-132422. The list of actions appear in right order for pages."
-	@priority = "3"
+	@priority = 3
 	test ViewOrderOfContentPagesActions {
 		task ("Add a Heading fragment to a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -987,33 +1063,33 @@ definition {
 		task ("Remove the Heading fragment") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.removeFragment(fragmentName = "Heading");
 		}
 
 		task ("Assert the actions order for content pages") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
 
 			PagesAdmin.openPageEllipsisMenu(pageName = "Test Page Name");
 
-			MenuItem.viewOrder(menuItemList = "Edit,Translate,View,Preview Draft,Discard Draft,Orphan Widgets,Copy Page,Export for Translation,Import Translation,Configure,Permissions,Delete");
+			MenuItem.viewOrder(menuItemList = "Edit,Translate,View,Preview Draft,Discard Draft,Orphan Widgets,Convert to Page Template,Make a Copy,Export for Translation,Import Translation,Configure,Permissions,Delete");
 		}
 	}
 
 	@description = "This is a test for LPS-146373. The page creator could find Fragments and Widgets, Browser, Page Design Options, Page Content, and Comments on the left sidebar while fragment configuration on the right sidebar. Both page editor sidebars shouldn't overlay the page content."
-	@priority = "4"
+	@priority = 4
 	test ViewPageEditorSidebars {
 		task ("When the page creator accesses to the page editor") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("Then the page creator sees Fragments and Widgets, Browser, Page Design Options, Page Content, and Comments on the left sidebar while fragment configuration on the right sidebar and both page editor sidebars don't overlay the page content") {
 			for (var tabName : list "Fragments and Widgets,Browser,Page Design Options,Page Content,Comments") {
 				AssertVisible(
-					key_tabName = "${tabName}",
+					key_tabName = ${tabName},
 					locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
 			}
 
@@ -1033,7 +1109,7 @@ definition {
 
 			for (var tabName : list "General,Styles,Advanced") {
 				AssertVisible(
-					key_tab = "${tabName}",
+					key_tab = ${tabName},
 					locator1 = "NavTab#TAB_LINK");
 			}
 
@@ -1046,19 +1122,19 @@ definition {
 
 			var bothSidebarWidth = ${leftSidebarWidth} + ${rightSidebarWidth};
 
-			TestUtils.assertEquals(
-				actual = MathUtil.difference("${bodyWidth}", "${bothSidebarWidth}"),
-				expected = "${headingFragmentWidth}");
+			var difference = ${bodyWidth} - ${bothSidebarWidth};
+
+			StringUtil.assertEquals(${headingFragmentWidth}, ${difference});
 		}
 	}
 
 	@description = "This is a test for LPS-146373. Both page editor sidebars should be closed when the product menu is open."
-	@priority = "4"
+	@priority = 4
 	test ViewPageEditorSidebarsClosedWhenProductMenuOpen {
 		task ("Given a page creator accesses to the page editor") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 		}
 
 		task ("When the page creator opens the Product Menu") {
@@ -1069,21 +1145,6 @@ definition {
 			AssertElementNotPresent(locator1 = "Sidebar#PANEL_OPEN");
 
 			AssertElementNotPresent(locator1 = "PageEditor#ITEM_CONFIGURATION_SIDEBAR_OPEN");
-		}
-	}
-
-	@description = "This is a test for LPS-153650. The portal version info should be shown on the Home page."
-	@priority = "4"
-	test ViewPortalVersionInfoOnHomePage {
-		var portalVersionInfo = selenium.getText("//div[contains(@id,'fragment-')][.//*[contains(@class,'paragraph')]]//*[contains(@data-lfr-editable-id,'element-text')]");
-
-		var match = StringUtil.matches("${portalVersionInfo}", "Liferay Digital Experience Platform \d+\.\d+\.\d+ Update \d+ \(\w+ \/ Build \d+ \/ \w+ \d+, \d+\)");
-
-		if ("${match}" == "true") {
-			echo("The portal version info ${portalVersionInfo} is shown on the Home page");
-		}
-		else {
-			fail("The portal version info ${portalVersionInfo} is missing on the Home page");
 		}
 	}
 

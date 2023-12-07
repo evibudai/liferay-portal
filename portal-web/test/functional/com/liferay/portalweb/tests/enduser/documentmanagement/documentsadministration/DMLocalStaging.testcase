@@ -11,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -22,8 +22,21 @@ definition {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
 	}
 
-	@description = "This ensures that the document using custom document type can be deleted and republished."
-	@priority = "5"
+	tearDown {
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		if (${testLiferayVirtualInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "Site Name");
+
+			JSONDepot.deleteDepot(depotName = "Test Depot Name");
+		}
+	}
+
+	@description = "This ensures that the document using custom document type can be deleted and republished. Skip the instance for performance improvement."
+	@priority = 5
 	@refactordone
 	test CanDeleteDocumentWithCustomType {
 		property portal.acceptance = "true";
@@ -77,7 +90,7 @@ definition {
 	}
 
 	@description = "This ensures that the document using custom document type can be edited and republished."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditDocumentWithCustomType {
 		property portal.acceptance = "true";
@@ -147,7 +160,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-126751. It ensures that a user cannot create a document type without a field."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddDocumentTypeWithEmptyField {
 		DMNavigator.openToAddDocumentType(siteURLKey = "site-name-staging");
@@ -162,7 +175,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-126751. It ensures that a user cannot create a metadata set without a field."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddMetadataSetWithEmptyField {
 		DMNavigator.openMetadataSetsAdmin(siteURLKey = "site-name-staging");
@@ -176,8 +189,52 @@ definition {
 			value1 = "Error:At least one field must be added.");
 	}
 
+	@description = "This ensures that a document can not be copied to a staging site."
+	@priority = 4
+	test CannotCopyDocumentToStagedSite {
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.copy(
+			copyToStagingSite = "true",
+			dmDocumentTitle = "DM Document Title",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a folder can not be copied to a staging site."
+	@priority = 4
+	test CannotCopyFolderToStagedSite {
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Guest");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMFolder.copy(
+			copyToStagingSite = "true",
+			dmFolderName = "DM Folder Name",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Folder Name");
+	}
+
 	@description = "This is a test for LPS-95290. It asserts that an unauthorized user can not download the file through the document URL of the staged site."
-	@priority = "5"
+	@priority = 3
 	test CannotDownloadFileThroughDocumentURLOfStagedSiteWithoutPermissions {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -214,7 +271,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-91043. It asserts that user can not publish from old versions to live."
-	@priority = "5"
+	@priority = 4
 	test CanNotPublishFromOldVersions {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -247,14 +304,14 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-74621."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanOnlyCommentOnLiveSite {
 		property portal.acceptance = "true";
 		property testray.component.names = "Comment";
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -292,7 +349,7 @@ definition {
 		DMDocument.gotoEntry(dmDocumentTitle = "DM Document Title");
 
 		Comments.viewPG(
-			commentCount = "1",
+			commentCount = 1,
 			entryComment = "DM Document Comment",
 			userFullName = "Test Test (You)");
 
@@ -306,7 +363,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136819. It checks that a file version can be deleted and published."
-	@priority = "4"
+	@priority = 4
 	test CanPublishDeletedFileVersion {
 		property portal.acceptance = "true";
 
@@ -346,7 +403,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136824. It checks that a folder with multiple files can be deleted using the normal publication process."
-	@priority = "3"
+	@priority = 3
 	test CanPublishDeletedFolderWithMultipleFiles {
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
@@ -399,7 +456,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-79925."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanPublishDocumentFromRestrictedFolder {
 		JSONFolder.addFolder(
@@ -452,7 +509,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-119234. It ensures that a document type can be published to live via SAP."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanPublishDocumentTypeViaSAP {
 		property portal.acceptance = "true";
@@ -482,7 +539,7 @@ definition {
 	}
 
 	@description = "This ensures that the custom document type being used by document can be edited and republished."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanPublishEditsToDocumentType {
 		DMNavigator.gotoDocumentType();
@@ -521,7 +578,9 @@ definition {
 			dmDocumentType = "DM Document Type Name",
 			previewImage = "Image_1.jpg");
 
-		DMDocument.viewDocumentTypePG(imageName = "Document_1.jpg");
+		DMDocument.viewDocumentTypePG(
+			imageName = "Document_1.jpg",
+			panelName = "DM Document Type Name");
 
 		DMNavigator.openDocumentTypesAdmin(siteURLKey = "site-name-staging");
 
@@ -560,15 +619,14 @@ definition {
 
 		DMDocument.viewDocumentTypePG(
 			fieldFieldLabel = "Photo",
-			imageName = "Document_2.jpg");
+			imageName = "Document_2.jpg",
+			panelName = "DM Document Type Name Edit");
 	}
 
 	@description = "This ensures that the document using custom document type and custom metadataset can be edited and republished."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanPublishEditsToDocumentUsingCustomTypeAndSet {
-		property portal.acceptance = "true";
-
 		task ("Add a metadata set with image field") {
 			DMNavigator.gotoMetadataSets();
 
@@ -655,13 +713,13 @@ definition {
 	}
 
 	@description = "This ensures that the custom metadataset used in custom document type can be edited and republished."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanPublishEditsToMetadataSet {
 		property custom.properties = "dl.actions.visible=true";
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -698,7 +756,7 @@ definition {
 				dmDocumentFileName = "Document_1.doc",
 				dmDocumentTitle = "DM Document Title",
 				dmDocumentTypeName = "DM Document Type Name",
-				numericField = "123",
+				numericField = 123,
 				textField = "DM Document Text");
 		}
 
@@ -737,13 +795,13 @@ definition {
 			dmDocumentType = "DM Document Type Name");
 
 		DMDocument.viewDocumentTypePG(
-			numericValue = "123",
+			numericValue = 123,
 			textContent = "DM Document Text",
 			textFieldLabel = "Company");
 	}
 
 	@description = "This is a test for LPS-136818. It checks that a folder with multiple files can be published using the SAP."
-	@priority = "4"
+	@priority = 4
 	test CanPublishFolderWithMultipleFilesViaSAP {
 		property portal.acceptance = "true";
 
@@ -780,7 +838,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136828. It checks that multiple metadata sets can be published."
-	@priority = "3"
+	@priority = 3
 	test CanPublishMetadataSets {
 		DMNavigator.openMetadataSetsAdmin(siteURLKey = "site-name-staging");
 
@@ -810,10 +868,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136823. It checks that a minor version of a file can be published."
-	@priority = "3"
+	@priority = 3
 	test CanPublishMinorVersion {
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -857,7 +915,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136827. It checks that the related asset of a file can be published."
-	@priority = "3"
+	@priority = 3
 	test CanPublishRelatedAsset {
 		JSONWebcontent.addWebContent(
 			content = "Web Content Content",
@@ -904,9 +962,9 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136826. It checks that a shortcut can be published using the normal publication process."
-	@priority = "3"
+	@priority = 3
 	test CanPublishShortcut {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -937,11 +995,11 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136817. It checks that a shortcut can be published using the SAP."
-	@priority = "4"
+	@priority = 4
 	test CanPublishShortcutViaSAP {
 		property portal.acceptance = "true";
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -968,11 +1026,12 @@ definition {
 	}
 
 	@description = "This test covers LPS-82532. It ensures documents inside the subfolder that's being published to live are also published."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanPublishSubfolderWithDocumentsViaSAP {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "StagingDM#PublishSubfolderWithDocumentsViaSAP";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
@@ -1026,12 +1085,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136822. It checks that a document type can be updated and published using the normal publication process."
-	@priority = "3"
+	@priority = 3
 	test CanPublishUpdatedDocumentType {
-		property osgi.modules.includes = "document-library-google-docs";
-
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -1043,6 +1100,13 @@ definition {
 			groupName = "Site Name-staging",
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpeg");
+
+		DMNavigator.openDocumentTypesAdmin(siteURLKey = "site-name-staging");
+
+		DMDocumentType.add(
+			dmDocumentTypeDescription = "DM Document Type Description",
+			dmDocumentTypeFieldNames = "Text",
+			dmDocumentTypeName = "DM Document Type Name");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging DM Page",
@@ -1062,9 +1126,11 @@ definition {
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
 
+		WaitForPageLoad();
+
 		DMDocument.editCP(
 			dmDocumentTitle = "Document_1.jpeg",
-			dmDocumentTypeEdit = "Google Drive Shortcut");
+			dmDocumentTypeEdit = "DM Document Type Name");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging DM Page",
@@ -1080,13 +1146,13 @@ definition {
 
 		DMDocument.viewCP(
 			dmDocumentTitle = "Document_1.jpeg",
-			dmDocumentType = "Google Drive Shortcut");
+			dmDocumentType = "DM Document Type Name");
 	}
 
 	@description = "This is a test for LPS-136830. It checks that a shortcut can be updated and published."
-	@priority = "3"
+	@priority = 3
 	test CanPublishUpdatedShortcut {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		for (var entryCount : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
@@ -1140,7 +1206,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136831. It checks that a file can be replaced and republished."
-	@priority = "3"
+	@priority = 3
 	test CanReplaceFileAndRepublish {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -1189,13 +1255,13 @@ definition {
 	}
 
 	@description = "This test covers LPS-99265. It ensures that a staged document file cannot be shared unless it is first published to Live."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanShareDocumentOnLiveSite {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}dl.actions.visible=true";
+		property custom.properties = "dl.actions.visible=true${line.separator}jsonws.web.service.paths.excludes=";
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -1257,7 +1323,7 @@ definition {
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
-		Notifications.viewBadgeCount(notificationCount = "1");
+		Notifications.viewBadgeCount(notificationCount = 1);
 
 		Notifications.gotoNotifications();
 
@@ -1268,7 +1334,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154415. It checks that an external video displays properly in the Media Gallery widget after the friendlyURL has been edited and published on a site."
-	@priority = "4"
+	@priority = 4
 	test CanViewExternalVideoInMGAfterFriendlyURLIsUpdated {
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1318,6 +1384,8 @@ definition {
 
 		Staging.publishToLive();
 
+		Refresh();
+
 		DepotNavigator.openToEditDMEntryInDepot(
 			depotName = "Test Depot Name",
 			dmDocumentTitle = "Test YouTube Video",
@@ -1355,7 +1423,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154396."
-	@priority = "4"
+	@priority = 4
 	test CanViewExternalVideoInMGAfterPublish {
 		VideoShortcut.addCP(
 			videoShortcutTitle = "Test YouTube Video",
@@ -1372,7 +1440,7 @@ definition {
 			friendlyURLEdit = "custom-url");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -1396,7 +1464,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154417. It checks that an external video with a custom friendlyURL added to the Web content field displays properly after its friendlyURL is edited and published on a site"
-	@priority = "4"
+	@priority = 4
 	test CanViewExternalVideotInWCAfterFriendlyURLIsUpdated {
 		VideoShortcut.addCP(
 			videoShortcutTitle = "Test YouTube Video",
@@ -1467,8 +1535,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-154413. It checks that an image with a custom friendlyURL added to a dynamic collection displayed in an Asset Publisher can be rendered properly on a site after its friendlyURL is edited and republished."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInDynamicCollectionViaAPAfterFriendlyURLIsUpdated {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
@@ -1556,7 +1627,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154412. It checks that an image with a custom friendlyURL added to a manual collection displayed in an Asset Publisher can be rendered properly on a site after its friendlyURL is edited and republished."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInManualCollectionViaAPAfterFriendlyURLIsUpdated {
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1652,7 +1723,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154414. It checks that an image displays properly in the Media Gallery widget after the friendlyURL has been edited and published on a site."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInMGAfterFriendlyURLIsUpdated {
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -1738,7 +1809,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154416. It checks that an image with a custom friendlyURL added to the Web content field displays properly after its friendlyURL is edited and published on a site."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInWCAfterFriendlyURLIsUpdated {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -1820,18 +1891,18 @@ definition {
 	}
 
 	@description = "This ensures that the document info is displayed correctly after publishing and republishing."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanViewRepublishedDocumentInfo {
 		property custom.properties = "dl.actions.visible=true";
 
 		JSONAssettag.addTag(
-			groupKey = "Site Name-staging",
-			staging = "true",
+			groupName = "Site Name (Staging)",
+			site = "false",
 			tagName = "tag1");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -1843,7 +1914,7 @@ definition {
 			dmDocumentTitle = "DM Document Title",
 			dmFriendlyURL = "Document_1",
 			groupName = "Site Name-staging",
-			increaseMinutes = "0",
+			increaseMinutes = 0,
 			mimeType = "image/jpeg",
 			reviewDate = "true",
 			sourceFileName = "Document_1.jpg");
@@ -1939,7 +2010,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-155794. It ensures that an image that was published on a site can still be accessed after local staging is disabled."
-	@priority = "5"
+	@priority = 4
 	test ImageIsStillAccessibleAfterDisablingStaging {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -1979,7 +2050,7 @@ definition {
 
 		Staging.deactivateStagingCP(siteName = "Site Name");
 
-		Navigator.openSpecificURL(url = "${latestVersionURL}");
+		Navigator.openSpecificURL(url = ${latestVersionURL});
 
 		AssertVisible(
 			key_imageSourceURL = "${portalURL}/documents/d/site-name/document_2_edit",
@@ -1987,7 +2058,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-82539."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test PendingEntryWillNotBePublishedToLive {
 		property portal.acceptance = "true";
@@ -2029,16 +2100,14 @@ definition {
 
 		DMFolder.viewCP(dmFolderName = "DM Folder 1");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no documents or media files in this folder.");
 	}
 
 	@description = "This test covers LPS-90557. It ensures that a basic document and a shortcut pointing to it can be removed and republished when enabling local staging."
-	@priority = "5"
+	@priority = 4
 	test ShortcutDisppearsAfterTargetDeletionIsPublished {
-		property portal.acceptance = "true";
-
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "DM Document Title",
@@ -2081,13 +2150,13 @@ definition {
 	}
 
 	@description = "This ensures that the image can be deleted and republished in web content."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test ViewWebContentWithDeletedImage {
 		property portal.acceptance = "true";
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",
@@ -2181,13 +2250,13 @@ definition {
 	}
 
 	@description = "This ensures that the image can be edited and republished in web content."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test ViewWebContentWithRepublishedImage {
 		property portal.acceptance = "true";
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name (Staging)",
 			layoutName = "Staging DM Page",
 			site = "false",

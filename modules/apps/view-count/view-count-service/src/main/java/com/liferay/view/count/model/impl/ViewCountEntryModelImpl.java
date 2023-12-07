@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.view.count.model.impl;
@@ -209,48 +200,68 @@ public class ViewCountEntryModelImpl
 	public Map<String, Function<ViewCountEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ViewCountEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ViewCountEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ViewCountEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ViewCountEntry, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<ViewCountEntry, Object>>();
-		Map<String, BiConsumer<ViewCountEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<ViewCountEntry, ?>>();
+		private static final Map<String, Function<ViewCountEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("companyId", ViewCountEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ViewCountEntry, Long>)ViewCountEntry::setCompanyId);
-		attributeGetterFunctions.put(
-			"classNameId", ViewCountEntry::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<ViewCountEntry, Long>)ViewCountEntry::setClassNameId);
-		attributeGetterFunctions.put("classPK", ViewCountEntry::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<ViewCountEntry, Long>)ViewCountEntry::setClassPK);
-		attributeGetterFunctions.put("viewCount", ViewCountEntry::getViewCount);
-		attributeSetterBiConsumers.put(
-			"viewCount",
-			(BiConsumer<ViewCountEntry, Long>)ViewCountEntry::setViewCount);
+		static {
+			Map<String, Function<ViewCountEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<ViewCountEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"companyId", ViewCountEntry::getCompanyId);
+			attributeGetterFunctions.put(
+				"classNameId", ViewCountEntry::getClassNameId);
+			attributeGetterFunctions.put("classPK", ViewCountEntry::getClassPK);
+			attributeGetterFunctions.put(
+				"viewCount", ViewCountEntry::getViewCount);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ViewCountEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ViewCountEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<ViewCountEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ViewCountEntry, Long>)ViewCountEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<ViewCountEntry, Long>)
+					ViewCountEntry::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<ViewCountEntry, Long>)ViewCountEntry::setClassPK);
+			attributeSetterBiConsumers.put(
+				"viewCount",
+				(BiConsumer<ViewCountEntry, Long>)ViewCountEntry::setViewCount);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -540,7 +551,8 @@ public class ViewCountEntryModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<ViewCountEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

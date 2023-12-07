@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -30,39 +24,39 @@ import PageToolbar from '../shared/PageToolbar';
 import Sidebar from '../shared/Sidebar';
 import SubmitWarningModal from '../shared/SubmitWarningModal';
 import ThemeContext from '../shared/ThemeContext';
+import {DEFAULT_INDEX_CONFIGURATION} from '../utils/constants';
+import {DEFAULT_ERROR} from '../utils/errorMessages';
+import addParams from '../utils/fetch/add_params';
+import fetchData, {DEFAULT_HEADERS} from '../utils/fetch/fetch_data';
+import fetchPreviewSearch from '../utils/fetch/fetch_preview_search';
+import filterAndSortClassNames from '../utils/functions/filter_and_sort_class_names';
+import getResultsError from '../utils/functions/get_results_error';
+import isDefined from '../utils/functions/is_defined';
+import formatLocaleWithUnderscores from '../utils/language/format_locale_with_underscores';
+import renameKeys from '../utils/language/rename_keys';
 import {
-	DEFAULT_ERROR,
-	DEFAULT_INDEX_CONFIGURATION,
-	SIDEBARS,
-} from '../utils/constants';
-import {addParams, fetchData, fetchPreviewSearch} from '../utils/fetch';
-import {INPUT_TYPES} from '../utils/inputTypes';
-import {formatLocaleWithUnderscores, renameKeys} from '../utils/language';
-import {setStorageAddSXPElementSidebar} from '../utils/sessionStorage';
+	SIDEBAR_STATE,
+	setStorageAddSXPElementSidebar,
+} from '../utils/sessionStorage';
+import cleanUIConfiguration from '../utils/sxp_element/clean_ui_configuration';
+import getUIConfigurationValues from '../utils/sxp_element/get_ui_configuration_values';
+import isCustomJSONSXPElement from '../utils/sxp_element/is_custom_json_sxp_element';
+import parseCustomSXPElement from '../utils/sxp_element/parse_custom_sxp_element';
+import replaceTemplateVariable from '../utils/sxp_element/replace_template_variable';
+import transformToSearchContextAttributes from '../utils/sxp_element/transform_to_search_context_attributes';
+import transformToSearchPreviewHits from '../utils/sxp_element/transform_to_search_preview_hits';
 import {TEST_IDS} from '../utils/testIds';
 import {
 	openErrorToast,
 	openSuccessToast,
 	setInitialSuccessToast,
 } from '../utils/toasts';
-import {
-	cleanUIConfiguration,
-	filterAndSortClassNames,
-	getConfigurationEntry,
-	getResultsError,
-	getUIConfigurationValues,
-	isCustomJSONSXPElement,
-	isDefined,
-	parseCustomSXPElement,
-	transformToSearchContextAttributes,
-	transformToSearchPreviewHits,
-} from '../utils/utils';
-import {
-	validateBoost,
-	validateJSON,
-	validateNumberRange,
-	validateRequired,
-} from '../utils/validation';
+import {INPUT_TYPES} from '../utils/types/inputTypes';
+import {SIDEBAR_TYPES} from '../utils/types/sidebarTypes';
+import validateBoost from '../utils/validation/validate_boost';
+import validateJSON from '../utils/validation/validate_json';
+import validateNumberRange from '../utils/validation/validate_number_range';
+import validateRequired from '../utils/validation/validate_required';
 import AddSXPElementSidebar from './add_sxp_element_sidebar/index';
 import ClauseContributorsSidebar from './clause_contributors_sidebar/index';
 import ConfigurationTab from './configuration_tab/index';
@@ -80,9 +74,12 @@ const TABS = {
 function EditSXPBlueprintForm({
 	entityJSON,
 	initialConfiguration = {},
-	initialDescription = {},
+	initialDescription = '',
+	initialDescriptionI18n = {},
+	initialExternalReferenceCode,
 	initialSXPElementInstances = [],
-	initialTitle = {},
+	initialTitle = '',
+	initialTitleI18n = {},
 	sxpBlueprintId,
 }) {
 	const {
@@ -100,11 +97,17 @@ function EditSXPBlueprintForm({
 	const controllerRef = useRef();
 
 	const [errors, setErrors] = useState([]);
+	const [
+		isTitleAndDescriptionEdited,
+		setIsTitleAndDescriptionEdited,
+	] = useState(false);
 	const [previewInfo, setPreviewInfo] = useState(() => ({
 		loading: false,
 		results: {},
 	}));
-	const [openSidebar, setOpenSidebar] = useState(SIDEBARS.ADD_SXP_ELEMENT);
+	const [openSidebar, setOpenSidebar] = useState(
+		SIDEBAR_TYPES.ADD_SXP_ELEMENT
+	);
 	const [showSubmitWarningModal, setShowSubmitWarningModal] = useState(false);
 	const [tab, setTab] = useState('query-builder');
 
@@ -187,16 +190,14 @@ function EditSXPBlueprintForm({
 						body: JSON.stringify({
 							configuration,
 							description_i18n: renameKeys(
-								formik.values.description,
+								formik.values.description_i18n,
 								formatLocaleWithUnderscores
 							),
 							elementInstances,
-							title_i18n: renameKeys(formik.values.title,
+							title_i18n: renameKeys(formik.values.title_i18n,
 								formatLocaleWithUnderscores),
 						}),
-						headers: new Headers({
-							'Content-Type': 'application/json',
-						}),
+						headers: DEFAULT_HEADERS,
 						method: 'POST',
 					}
 				).then((response) => response.json());
@@ -216,19 +217,19 @@ function EditSXPBlueprintForm({
 					body: JSON.stringify({
 						configuration,
 						description_i18n: renameKeys(
-							formik.values.description,
+							formik.values.description_i18n,
 							formatLocaleWithUnderscores
 						),
 						elementInstances,
+						externalReferenceCode:
+							formik.values.externalReferenceCode,
 						title_i18n: renameKeys(
-							formik.values.title,
+							formik.values.title_i18n,
 							formatLocaleWithUnderscores
 						),
 					}),
-					headers: new Headers({
-						'Content-Type': 'application/json',
-					}),
-					method: 'PATCH',
+					headers: DEFAULT_HEADERS,
+					method: 'PUT',
 				}
 			).then((response) => {
 				if (!response.ok) {
@@ -385,13 +386,14 @@ function EditSXPBlueprintForm({
 			),
 			applyIndexerClauses:
 				initialConfiguration.queryConfiguration?.applyIndexerClauses,
-			description: initialDescription,
+			description_i18n: initialDescriptionI18n,
 			elementInstances: initialSXPElementInstances.map(
 				(elementInstance, index) => ({
 					...elementInstance,
 					id: index,
 				})
 			),
+			externalReferenceCode: initialExternalReferenceCode,
 			frameworkConfig: initialConfiguration.generalConfiguration || {
 				clauseContributorsExcludes: [],
 				clauseContributorsIncludes: [],
@@ -414,7 +416,7 @@ function EditSXPBlueprintForm({
 				null,
 				'\t'
 			),
-			title: initialTitle,
+			title_i18n: initialTitleI18n,
 		},
 		onSubmit: _handleFormikSubmit,
 		validate: _handleFormikValidate,
@@ -451,7 +453,7 @@ function EditSXPBlueprintForm({
 			setSearchIndexes([]);
 		}
 
-		setStorageAddSXPElementSidebar('open');
+		setStorageAddSXPElementSidebar(SIDEBAR_STATE.OPEN);
 	}, []); //eslint-disable-line
 
 	/**
@@ -542,7 +544,7 @@ function EditSXPBlueprintForm({
 				type,
 				uiConfigurationValues,
 			}) => ({
-				configurationEntry: getConfigurationEntry({
+				configurationEntry: replaceTemplateVariable({
 					sxpElement,
 					uiConfigurationValues,
 				}),
@@ -585,27 +587,6 @@ function EditSXPBlueprintForm({
 		formik.setFieldValue('applyIndexerClauses', value);
 	};
 
-	const _handleChangeTab = (tab) => {
-		if (
-			tab !== 'query-builder' &&
-			(openSidebar === SIDEBARS.CLAUSE_CONTRIBUTORS ||
-				openSidebar === SIDEBARS.INDEXER_CLAUSES)
-		) {
-			setOpenSidebar('');
-		}
-
-		setTab(tab);
-	};
-
-	const _handleChangeTitleAndDescription = ({description, title}) => {
-		formik.setFieldValue('description', description);
-		formik.setFieldValue('title', title);
-	};
-
-	const _handleCloseSidebar = () => {
-		setOpenSidebar('');
-	};
-
 	const _handleDeleteSXPElement = (id) => {
 		const index = formik.values.elementInstances.findIndex(
 			(item) => item.id === id
@@ -628,6 +609,10 @@ function EditSXPBlueprintForm({
 		openSuccessToast({
 			message: Liferay.Language.get('element-removed'),
 		});
+	};
+
+	const _handleExternalReferenceCodeChange = (externalReferenceCode) => {
+		formik.setFieldValue('externalReferenceCode', externalReferenceCode);
 	};
 
 	/**
@@ -837,6 +822,10 @@ function EditSXPBlueprintForm({
 		[formik]
 	);
 
+	const _handleSidebarClose = () => {
+		setOpenSidebar('');
+	};
+
 	const _handleSubmit = (event) => {
 		event.preventDefault();
 
@@ -851,9 +840,31 @@ function EditSXPBlueprintForm({
 		}
 	};
 
+	const _handleTabChange = (tab) => {
+		if (
+			tab !== 'query-builder' &&
+			(openSidebar === SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS ||
+				openSidebar === SIDEBAR_TYPES.INDEXER_CLAUSES)
+		) {
+			setOpenSidebar('');
+		}
+
+		setTab(tab);
+	};
+
+	const _handleTitleAndDescriptionChange = ({
+		description_i18n,
+		title_i18n,
+	}) => {
+		formik.setFieldValue('description_i18n', description_i18n);
+		formik.setFieldValue('title_i18n', title_i18n);
+
+		setIsTitleAndDescriptionEdited(true);
+	};
+
 	const _handleToggleSidebar = (type) => () => {
-		if (type === SIDEBARS.PREVIEW) {
-			setStorageAddSXPElementSidebar('closed');
+		if (type === SIDEBAR_TYPES.PREVIEW) {
+			setStorageAddSXPElementSidebar(SIDEBAR_STATE.CLOSED);
 		}
 
 		setOpenSidebar(openSidebar === type ? '' : type);
@@ -890,8 +901,10 @@ function EditSXPBlueprintForm({
 						<AddSXPElementSidebar
 							isIndexCompany={_isIndexCompany()}
 							onAddSXPElement={_handleAddSXPElement}
-							onClose={_handleCloseSidebar}
-							visible={openSidebar === SIDEBARS.ADD_SXP_ELEMENT}
+							onClose={_handleSidebarClose}
+							visible={
+								openSidebar === SIDEBAR_TYPES.ADD_SXP_ELEMENT
+							}
 						/>
 
 						<ClauseContributorsSidebar
@@ -910,7 +923,7 @@ function EditSXPBlueprintForm({
 									value: queryPrefilterContributors,
 								},
 							]}
-							onClose={_handleCloseSidebar}
+							onClose={_handleSidebarClose}
 							onFetchContributors={() => {
 								refetchKeywordQueryContributors();
 								refetchModelPrefilterContributors();
@@ -920,17 +933,20 @@ function EditSXPBlueprintForm({
 								_handleFrameworkConfigChange
 							}
 							visible={
-								openSidebar === SIDEBARS.CLAUSE_CONTRIBUTORS
+								openSidebar ===
+								SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS
 							}
 						/>
 
 						<Sidebar
 							className="info-sidebar"
-							onClose={_handleCloseSidebar}
+							onClose={_handleSidebarClose}
 							title={Liferay.Language.get(
 								'search-framework-indexer-clauses'
 							)}
-							visible={openSidebar === SIDEBARS.INDEXER_CLAUSES}
+							visible={
+								openSidebar === SIDEBAR_TYPES.INDEXER_CLAUSES
+							}
 						>
 							<div className="container-fluid text-secondary">
 								<span className="help-text">
@@ -946,12 +962,14 @@ function EditSXPBlueprintForm({
 						<div
 							className={getCN({
 								'open-add-sxp-element':
-									openSidebar === SIDEBARS.ADD_SXP_ELEMENT,
+									openSidebar ===
+									SIDEBAR_TYPES.ADD_SXP_ELEMENT,
 								'open-clause-contributors':
 									openSidebar ===
-									SIDEBARS.CLAUSE_CONTRIBUTORS,
+									SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS,
 								'open-info':
-									openSidebar === SIDEBARS.INDEXER_CLAUSES,
+									openSidebar ===
+									SIDEBAR_TYPES.INDEXER_CLAUSES,
 							})}
 						>
 							<QueryBuilderTab
@@ -1015,25 +1033,33 @@ function EditSXPBlueprintForm({
 			/>
 
 			<PageToolbar
-				description={formik.values.description}
+				description={initialDescription}
+				descriptionI18n={formik.values.description_i18n}
+				entityId={sxpBlueprintId}
+				externalReferenceCode={formik.values.externalReferenceCode}
 				isSubmitting={formik.isSubmitting}
 				onCancel={redirectURL}
-				onChangeTab={_handleChangeTab}
+				onChangeTab={_handleTabChange}
+				onExternalReferenceCodeChange={
+					_handleExternalReferenceCodeChange
+				}
 				onSubmit={_handleSubmit}
-				onTitleAndDescriptionChange={_handleChangeTitleAndDescription}
+				onTitleAndDescriptionChange={_handleTitleAndDescriptionChange}
 				tab={tab}
 				tabs={TABS}
-				title={formik.values.title}
+				title={initialTitle}
+				titleAndDescriptionEdited={isTitleAndDescriptionEdited}
+				titleI18n={formik.values.title_i18n}
 			>
 				<ClayToolbar.Item>
 					<ClayButton
 						borderless
 						className={getCN({
-							active: openSidebar === SIDEBARS.PREVIEW,
+							active: openSidebar === SIDEBAR_TYPES.PREVIEW,
 						})}
 						data-testid={TEST_IDS.PREVIEW_SIDEBAR_BUTTON}
 						displayType="secondary"
-						onClick={_handleToggleSidebar(SIDEBARS.PREVIEW)}
+						onClick={_handleToggleSidebar(SIDEBAR_TYPES.PREVIEW)}
 						small
 					>
 						{Liferay.Language.get('preview')}
@@ -1045,19 +1071,19 @@ function EditSXPBlueprintForm({
 				errors={previewInfo.results.errors}
 				hits={transformToSearchPreviewHits(previewInfo.results)}
 				loading={previewInfo.loading}
-				onClose={_handleCloseSidebar}
+				onClose={_handleSidebarClose}
 				onFetchCancel={_handleFetchPreviewCancel}
 				onFetchResults={_handleFetchPreviewSearch}
 				onFocusSXPElement={_handleFocusSXPElement}
 				requestString={previewInfo.results.requestString}
 				responseString={previewInfo.results.responseString}
 				totalHits={previewInfo.results.searchHits?.totalHits}
-				visible={openSidebar === SIDEBARS.PREVIEW}
+				visible={openSidebar === SIDEBAR_TYPES.PREVIEW}
 			/>
 
 			<div
 				className={getCN({
-					'open-preview': openSidebar === SIDEBARS.PREVIEW,
+					'open-preview': openSidebar === SIDEBAR_TYPES.PREVIEW,
 				})}
 			>
 				{_renderTabContent()}
@@ -1069,9 +1095,12 @@ function EditSXPBlueprintForm({
 EditSXPBlueprintForm.propTypes = {
 	entityJSON: PropTypes.object,
 	initialConfiguration: PropTypes.object,
-	initialDescription: PropTypes.object,
+	initialDescription: PropTypes.string,
+	initialDescriptionI18n: PropTypes.object,
 	initialSXPElementInstances: PropTypes.arrayOf(PropTypes.object),
-	initialTitle: PropTypes.object,
+	initialTitle: PropTypes.string,
+	initialTitleI18n: PropTypes.object,
+	sxpBlueprintExternalReferenceCode: PropTypes.string,
 	sxpBlueprintId: PropTypes.string,
 };
 

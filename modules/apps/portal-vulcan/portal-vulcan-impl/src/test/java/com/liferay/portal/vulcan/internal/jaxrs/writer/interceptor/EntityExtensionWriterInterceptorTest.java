@@ -1,27 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.writer.interceptor;
 
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.vulcan.extension.EntityExtensionHandler;
 import com.liferay.portal.vulcan.extension.EntityExtensionThreadLocal;
-import com.liferay.portal.vulcan.internal.extension.EntityExtensionHandler;
 import com.liferay.portal.vulcan.internal.jaxrs.context.resolver.EntityExtensionHandlerContextResolver;
-import com.liferay.portal.vulcan.internal.jaxrs.extension.ExtendedEntity;
+import com.liferay.portal.vulcan.jaxrs.extension.ExtendedEntity;
 
 import java.util.Collections;
 
@@ -54,6 +46,8 @@ public class EntityExtensionWriterInterceptorTest {
 			_entityExtensionWriterInterceptor, "_company", _company);
 		ReflectionTestUtil.setFieldValue(
 			_entityExtensionWriterInterceptor, "_providers", _providers);
+		ReflectionTestUtil.setFieldValue(
+			_entityExtensionWriterInterceptor, "_user", _user);
 	}
 
 	@Test
@@ -83,6 +77,12 @@ public class EntityExtensionWriterInterceptorTest {
 		);
 
 		Mockito.when(
+			_user.getUserId()
+		).thenReturn(
+			_USER_ID
+		);
+
+		Mockito.when(
 			_writerInterceptorContext.getEntity()
 		).thenReturn(
 			_TEST_ENTITY
@@ -106,7 +106,8 @@ public class EntityExtensionWriterInterceptorTest {
 		Mockito.verify(
 			_entityExtensionHandler
 		).getExtendedProperties(
-			Mockito.eq(_COMPANY_ID), Mockito.eq(_TEST_ENTITY)
+			Mockito.eq(_COMPANY_ID), Mockito.eq(_USER_ID),
+			Mockito.eq(_TEST_ENTITY)
 		);
 
 		Mockito.verify(
@@ -190,6 +191,12 @@ public class EntityExtensionWriterInterceptorTest {
 		);
 
 		Mockito.when(
+			_user.getUserId()
+		).thenReturn(
+			_USER_ID
+		);
+
+		Mockito.when(
 			_providers.getContextResolver(
 				Mockito.eq(EntityExtensionHandler.class),
 				Mockito.any(MediaType.class))
@@ -220,7 +227,8 @@ public class EntityExtensionWriterInterceptorTest {
 		Mockito.verify(
 			_entityExtensionHandler
 		).getExtendedProperties(
-			Mockito.eq(_COMPANY_ID), Mockito.eq(_TEST_ENTITY)
+			Mockito.eq(_COMPANY_ID), Mockito.eq(_USER_ID),
+			Mockito.eq(_TEST_ENTITY)
 		);
 
 		Mockito.verify(
@@ -263,6 +271,8 @@ public class EntityExtensionWriterInterceptorTest {
 
 	private static final TestEntity _TEST_ENTITY = new TestEntity();
 
+	private static final long _USER_ID = RandomTestUtil.randomLong();
+
 	private final Company _company = Mockito.mock(Company.class);
 	private final EntityExtensionHandler _entityExtensionHandler = Mockito.mock(
 		EntityExtensionHandler.class);
@@ -273,6 +283,7 @@ public class EntityExtensionWriterInterceptorTest {
 		_entityExtensionWriterInterceptor =
 			new EntityExtensionWriterInterceptor();
 	private final Providers _providers = Mockito.mock(Providers.class);
+	private final User _user = Mockito.mock(User.class);
 	private final WriterInterceptorContext _writerInterceptorContext =
 		Mockito.mock(WriterInterceptorContext.class);
 

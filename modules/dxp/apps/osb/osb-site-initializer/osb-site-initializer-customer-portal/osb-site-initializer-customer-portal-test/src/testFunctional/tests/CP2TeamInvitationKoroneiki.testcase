@@ -7,9 +7,10 @@ definition {
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "OSB Site Initializer Customer Portal";
 
+	var testAccount = "Test Account LXC - SM";
 	var testSiteName = "Customer Portal Site";
 	var testSiteURL = "customer-portal-site";
-	var testAccount = "Test Account LXC - SM";
+	var testProduct = "LXC - SM";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -19,40 +20,44 @@ definition {
 		}
 
 		task ("Create a new Customer Portal Site") {
-			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+			CustomerPortal.addCustomerPortalSite(siteName = ${testSiteName});
 		}
 
 		task ("Add test user access to all Accounts") {
 			CustomerPortal.assignUserToOrganization();
 
-			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = "${testAccount}");
+			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = ${testAccount});
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		CP2Utils.deleteSpecificObjectEntry(
-			email = "test01@liferay.com",
+			entry = "test01@liferay.com",
 			portlet = "Team Members Invitation");
 
 		CustomerPortal.customerPortalTearDown();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			JSONGroup.deleteGroupByName(groupName = "${testSiteName}");
+			JSONGroup.deleteGroupByName(groupName = ${testSiteName});
 		}
 	}
 
 	@description = "Automation ID: LPS-148181 | Test Summary: Verify if when the user types a email at Invite Your Team Members the same email appears at Accounts - Details - Project that you are testing"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test IfInvitedIsSeenOnAccountRoles {
+
+		// Ignored due to deprecated object
+
 		task ("Change the user role in the project") {
 			Account.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "${testAccount}");
+			CustomerPortal.accountTableProject(title = ${testAccount});
 
 			Account.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -60,17 +65,18 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			CP2Utils.goToCustomerPortalSiteWithRefresh();
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-			CustomerPortal.enterOnProject(title = "${testAccount}");
+			CustomerPortal.enterOnProject(title = ${testAccount});
 		}
 
 		task ("Start the project configuration and invite a user to the project") {
 			CustomerPortal.clickOnStartProjectSetup();
 
 			CP2TeamMembers.addFieldsTeamMembersExtra(
-				position = "0",
-				positionNumber = "0",
+				firstName = "Test",
+				lastName = "Testing",
+				positionNumber = 0,
 				rowEmail = "test01@liferay.com",
 				rowRole = "User");
 

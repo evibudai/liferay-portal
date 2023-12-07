@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.warehouse.web.internal.display.context;
 
 import com.liferay.commerce.frontend.model.HeaderActionModel;
+import com.liferay.commerce.inventory.constants.CommerceInventoryActionKeys;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
 import com.liferay.commerce.product.constants.CPPortletKeys;
@@ -29,7 +21,10 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -134,6 +129,10 @@ public class CommerceInventoryWarehousesDisplayContext {
 	public List<HeaderActionModel> getHeaderActionModels() throws Exception {
 		List<HeaderActionModel> headerActionModels = new ArrayList<>();
 
+		if (!hasPermission()) {
+			return headerActionModels;
+		}
+
 		LiferayPortletResponse liferayPortletResponse =
 			cpRequestHelper.getLiferayPortletResponse();
 
@@ -209,10 +208,10 @@ public class CommerceInventoryWarehousesDisplayContext {
 		).buildPortletURL();
 	}
 
-	public CreationMenu getWarehouseCreationMenu() {
+	public CreationMenu getWarehouseCreationMenu() throws PortalException {
 		CreationMenu creationMenu = new CreationMenu();
 
-		if (hasManageCommerceInventoryWarehousePermission()) {
+		if (hasAddWarehousePermission()) {
 			creationMenu.addDropdownItem(
 				dropdownItem -> {
 					dropdownItem.setHref(getAddCommerceWarehouseRenderURL());
@@ -239,8 +238,6 @@ public class CommerceInventoryWarehousesDisplayContext {
 				).setMVCRenderCommandName(
 					"/commerce_inventory_warehouse" +
 						"/edit_commerce_inventory_warehouse"
-				).setRedirect(
-					cpRequestHelper.getCurrentURL()
 				).setParameter(
 					"commerceInventoryWarehouseId", "{id}"
 				).setParameter(
@@ -259,18 +256,35 @@ public class CommerceInventoryWarehousesDisplayContext {
 				"get", "permissions", "modal-permissions"));
 	}
 
+	public boolean hasAddWarehousePermission() {
+		PortletResourcePermission portletResourcePermission =
+			_commerceInventoryWarehouseModelResourcePermission.
+				getPortletResourcePermission();
+
+		if (portletResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), null,
+				CommerceInventoryActionKeys.MANAGE_INVENTORY)) {
+
+			return true;
+		}
+
+		return portletResourcePermission.contains(
+			cpRequestHelper.getPermissionChecker(), null,
+			CommerceInventoryActionKeys.ADD_WAREHOUSE);
+	}
+
 	public boolean hasManageCommerceInventoryWarehousePermission() {
 		return true;
 	}
 
-	public boolean hasPermission(String actionId) throws PortalException {
+	public boolean hasPermission() throws PortalException {
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			getCommerceInventoryWarehouse();
 
 		return _commerceInventoryWarehouseModelResourcePermission.contains(
 			cpRequestHelper.getPermissionChecker(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			actionId);
+			ActionKeys.UPDATE);
 	}
 
 	protected CommerceChannelRelService commerceChannelRelService;

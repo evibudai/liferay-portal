@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,19 +33,20 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-75457, LPS-80246 and LPS-75393. Automate Numeric field with Decimal configurations."
-	@priority = "4"
+	@priority = 4
 	test AutomateNumericFieldWithDecimalConfigurations {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "FormsNumericField#AutomateNumericFieldWithDecimalConfigurations";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.selectRadioOption(
 			fieldName = "",
@@ -61,15 +62,15 @@ definition {
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
-			fieldValue = "123123");
+			fieldValue = 123123);
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "111111111111111111111");
+			fieldValue = 111111111111111111111);
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
-			fieldValue = "111111111111111111111");
+			fieldValue = 111111111111111111111);
 
 		Navigator.openURL();
 
@@ -111,7 +112,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field can be created"
-	@priority = "5"
+	@priority = 5
 	test CanBeCreated {
 		property portal.acceptance = "true";
 
@@ -120,7 +121,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.save();
@@ -137,7 +138,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field can be deleted"
-	@priority = "5"
+	@priority = 5
 	test CanBeDeleted {
 		property portal.acceptance = "true";
 
@@ -145,14 +146,14 @@ definition {
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormViewBuilder.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormViewBuilder.closeSidebar();
 
@@ -170,14 +171,14 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field can be duplicated"
-	@priority = "5"
+	@priority = 5
 	test CanBeDuplicated {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormViewBuilder.setPlaceholder(fieldValue = "Placeholder Text Test");
@@ -210,7 +211,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field can be edited"
-	@priority = "5"
+	@priority = 5
 	test CanBeEdited {
 		property portal.acceptance = "true";
 
@@ -219,7 +220,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.save();
@@ -246,7 +247,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field can be required"
-	@priority = "5"
+	@priority = 5
 	test CanBeRequired {
 		property portal.acceptance = "true";
 
@@ -255,9 +256,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.enableSwitch(fieldName = "Required Field");
 
@@ -275,13 +276,13 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.submitSuccessfully();
 	}
 
 	@description = "Verify that a Numeric Field can accept decimals when the numeric type set to Decimal"
-	@priority = "5"
+	@priority = 5
 	test CanBeSetToAcceptDecimals {
 		property portal.acceptance = "true";
 
@@ -290,9 +291,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.selectRadioOption(
 			fieldName = "",
@@ -316,7 +317,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field can be set to repeatable"
-	@priority = "5"
+	@priority = 5
 	test CanBeSetToRepeatable {
 		property portal.acceptance = "true";
 
@@ -325,9 +326,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.gotoAdvancedTab();
 
@@ -335,7 +336,7 @@ definition {
 
 		FormFields.viewFieldRepeatableButton(
 			fieldName = "Numeric",
-			key_repeatableFieldsNumber = "1");
+			key_repeatableFieldsNumber = 1);
 
 		Form.save();
 
@@ -345,7 +346,7 @@ definition {
 
 		FormFields.addRepeatableField(
 			key_fieldName = "Numeric",
-			key_repeatableFieldNumber = "1");
+			key_repeatableFieldNumber = 1);
 
 		FormFields.viewFieldRepeatableButton(
 			fieldName = "Numeric",
@@ -354,24 +355,24 @@ definition {
 		for (var number : list "1,2") {
 			FormFields.editRepeatingText(
 				fieldName = "Numeric",
-				fieldValue = "123",
-				fieldValueRepeat = "123");
+				fieldValue = 123,
+				fieldValueRepeat = 123);
 		}
 
 		FormPortlet.submitSuccessfullyAndViewSuccessPage();
 	}
 
 	@description = "Verify that a Form can be submitted with the Numeric Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmitted {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.save();
 
@@ -381,7 +382,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.submitSuccessfully();
 
@@ -402,11 +403,11 @@ definition {
 		FormsAdmin.viewTextEntry(
 			fieldLabel = "Numeric",
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 	}
 
 	@description = "Verify that the "Is Equal To" option can be used to validate a Numeric Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeValidatedUsingIsEqualTo {
 		property portal.acceptance = "true";
 
@@ -415,7 +416,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.gotoAdvancedTab();
@@ -425,7 +426,7 @@ definition {
 		FormFields.editValidationTargetArgument(
 			validationArgument = "Is Equal To",
 			validationErrorMessage = "Test Error",
-			validationInput = "123");
+			validationInput = 123);
 
 		Form.save();
 
@@ -435,7 +436,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "122");
+			fieldValue = 122);
 
 		FormPortlet.viewValidationErrorMessage(validationErrorMessage = "Test Error");
 
@@ -445,7 +446,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.waitForValidationErrorNotPresent(validationErrorMessage = "Test Error");
 
@@ -453,7 +454,7 @@ definition {
 	}
 
 	@description = "Verify that the "Is Greater Than" option can be used to validate a Numeric Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeValidatedUsingIsGreaterThan {
 		property portal.acceptance = "true";
 
@@ -462,7 +463,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.gotoAdvancedTab();
@@ -472,7 +473,7 @@ definition {
 		FormFields.editValidationTargetArgument(
 			validationArgument = "Is Greater Than",
 			validationErrorMessage = "Test Error",
-			validationInput = "122");
+			validationInput = 122);
 
 		Form.save();
 
@@ -482,7 +483,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "121");
+			fieldValue = 121);
 
 		FormFields.viewFieldValidationErrorMessage(
 			fieldName = "Numeric",
@@ -492,7 +493,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.waitForValidationErrorNotPresent(validationErrorMessage = "Test Error");
 
@@ -500,7 +501,7 @@ definition {
 	}
 
 	@description = "Verify that the "Is Greater Than Or Equal To" option can be used to validate a Numeric Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeValidatedUsingIsGreaterThanOrEqualTo {
 		property portal.acceptance = "true";
 
@@ -509,7 +510,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.gotoAdvancedTab();
@@ -519,7 +520,7 @@ definition {
 		FormFields.editValidationTargetArgument(
 			validationArgument = "Is Greater Than Or Equal To",
 			validationErrorMessage = "Test Error",
-			validationInput = "123");
+			validationInput = 123);
 
 		Form.save();
 
@@ -529,7 +530,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "122");
+			fieldValue = 122);
 
 		FormFields.viewFieldValidationErrorMessage(
 			fieldName = "Numeric",
@@ -539,7 +540,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.waitForValidationErrorNotPresent(validationErrorMessage = "Test Error");
 
@@ -547,7 +548,7 @@ definition {
 	}
 
 	@description = "Verify that the "Is Less Than" option can be used to validate a Numeric Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeValidatedUsingIsLessThan {
 		property portal.acceptance = "true";
 
@@ -556,7 +557,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.gotoAdvancedTab();
@@ -566,7 +567,7 @@ definition {
 		FormFields.editValidationTargetArgument(
 			validationArgument = "Is Less Than",
 			validationErrorMessage = "Test Error",
-			validationInput = "123");
+			validationInput = 123);
 
 		Form.save();
 
@@ -576,7 +577,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormFields.viewFieldValidationErrorMessage(
 			fieldName = "Numeric",
@@ -586,7 +587,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "122");
+			fieldValue = 122);
 
 		FormPortlet.waitForValidationErrorNotPresent(validationErrorMessage = "Test Error");
 
@@ -594,7 +595,7 @@ definition {
 	}
 
 	@description = "Verify that the "Is Less Than Or Equal To" option can be used to validate a Numeric Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeValidatedUsingIsLessThanOrEqualTo {
 		property portal.acceptance = "true";
 
@@ -603,7 +604,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.gotoAdvancedTab();
@@ -613,7 +614,7 @@ definition {
 		FormFields.editValidationTargetArgument(
 			validationArgument = "Is Less Than Or Equal To",
 			validationErrorMessage = "Test Error",
-			validationInput = "123");
+			validationInput = 123);
 
 		Form.save();
 
@@ -623,7 +624,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "124");
+			fieldValue = 124);
 
 		FormFields.viewFieldValidationErrorMessage(
 			fieldName = "Numeric",
@@ -633,7 +634,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.waitForValidationErrorNotPresent(validationErrorMessage = "Test Error");
 
@@ -641,7 +642,7 @@ definition {
 	}
 
 	@description = "Verify that the "Is Not Equal To" option can be used to validate a Numeric Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeValidatedUsingIsNotEqualTo {
 		property portal.acceptance = "true";
 
@@ -650,7 +651,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.gotoAdvancedTab();
@@ -660,7 +661,7 @@ definition {
 		FormFields.editValidationTargetArgument(
 			validationArgument = "Is Not Equal To",
 			validationErrorMessage = "Test Error",
-			validationInput = "123");
+			validationInput = 123);
 
 		Form.save();
 
@@ -670,7 +671,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormFields.viewFieldValidationErrorMessage(
 			fieldName = "Numeric",
@@ -680,7 +681,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "122");
+			fieldValue = 122);
 
 		FormPortlet.waitForValidationErrorNotPresent(validationErrorMessage = "Test Error");
 
@@ -689,7 +690,7 @@ definition {
 
 	@description = "Verify that changes to a Field can be canceled"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ChangesCanBeCanceled {
 		property portal.acceptance = "false";
 
@@ -698,14 +699,14 @@ definition {
 	}
 
 	@description = "Verify that Validation options are reset after changing the Field Type from a Numeric Field to Text Field"
-	@priority = "4"
+	@priority = 4
 	test ConfirmationWithDecimal {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -730,7 +731,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "1");
+			fieldValue = 1);
 
 		FormPortlet.viewValidationErrorMessage(validationErrorMessage = "The information does not match.");
 
@@ -760,7 +761,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field does not accept decimals by default"
-	@priority = "5"
+	@priority = 5
 	test DoesNotAcceptDecimalsByDefault {
 		property portal.acceptance = "true";
 
@@ -769,9 +770,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.selectRadioOption(
 			fieldName = "",
@@ -789,20 +790,20 @@ definition {
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
-			fieldValue = "123123");
+			fieldValue = 123123);
 	}
 
 	@description = "Verify that a help text can be added"
-	@priority = "5"
+	@priority = 5
 	test HelpTextCanBeAdded {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormViewBuilder.setFieldHelpText(fieldLabel = "Numeric Help Text");
 
@@ -818,7 +819,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.submitSuccessfully();
 
@@ -828,7 +829,7 @@ definition {
 	}
 
 	@description = "LPS-129411 - Verify that a field can be hidden"
-	@priority = "5"
+	@priority = 5
 	test HiddenFieldCanBeEnabled {
 		property portal.acceptance = "true";
 
@@ -837,9 +838,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.gotoAdvancedTab();
 
@@ -849,13 +850,13 @@ definition {
 
 		for (var switchName : list "Show Label,Repeatable,Require Confirmation,Validation,Input Mask") {
 			AssertElementPresent(
-				key_switchOption = "${switchName}",
+				key_switchOption = ${switchName},
 				locator1 = "FormFields#SWITCH_NOT_VISIBLE");
 		}
 	}
 
 	@description = "LPS-129411 - Verify that hidden field is working on Forms Rules"
-	@priority = "5"
+	@priority = 5
 	test HiddenFieldIWorkingOnRules {
 		property portal.acceptance = "true";
 
@@ -864,9 +865,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.editFieldLabelMetal(fieldValue = "Numeric 1");
 
@@ -879,9 +880,9 @@ definition {
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.editFieldLabelMetal(fieldValue = "Numeric 2");
 
@@ -891,22 +892,22 @@ definition {
 
 		FormRules.selectConditionField(
 			conditionField = "Numeric 2",
-			conditionRowNumber = "1");
+			conditionRowNumber = 1);
 
 		FormRules.selectConditionOperator(
 			conditionOperator = "Is Not Empty",
-			conditionRowNumber = "1");
+			conditionRowNumber = 1);
 
 		FormRules.configureActionOptions(
 			action = "Calculate",
-			actionRowNumber = "1",
+			actionRowNumber = 1,
 			actionTarget = "Numeric 1");
 
-		FormRules.clickOnCalculatorNumbersKeyboard(buttonName = "2");
+		FormRules.clickOnCalculatorNumbersKeyboard(buttonName = 2);
 
 		FormRules.clickOnCalculatorNumbersKeyboard(buttonName = "+");
 
-		FormRules.clickOnCalculatorNumbersKeyboard(buttonName = "2");
+		FormRules.clickOnCalculatorNumbersKeyboard(buttonName = 2);
 
 		FormRules.save();
 
@@ -918,7 +919,7 @@ definition {
 
 		FormViewBuilder.editText(
 			fieldName = "Numeric 2",
-			fieldValue = "1");
+			fieldValue = 1);
 
 		FormPortlet.submitSuccessfullyAndViewSuccessPage();
 
@@ -932,15 +933,15 @@ definition {
 
 		FormsAdmin.viewFormTableEntry(
 			fieldLabel = "Numeric 1",
-			fieldValue = "4");
+			fieldValue = 4);
 
 		FormsAdmin.viewFormTableEntry(
 			fieldLabel = "Numeric 2",
-			fieldValue = "1");
+			fieldValue = 1);
 	}
 
 	@description = "LPS-130164 - Verify that the Input Mask can be enabled on decimals"
-	@priority = "5"
+	@priority = 5
 	test InputMaskCanBeEnabledOnDecimal {
 		property portal.acceptance = "true";
 
@@ -949,9 +950,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.editNumericType(numericType = "Decimal");
 
@@ -962,8 +963,8 @@ definition {
 		FormFields.enableSwitch(fieldName = "Input Mask");
 
 		for (var default : list "Thousands Separator-None,Decimal Separator-0.0") {
-			var key_fieldName = StringUtil.extractFirst("${default}", "-");
-			var key_fieldValue = StringUtil.extractLast("${default}", "-");
+			var key_fieldName = StringUtil.extractFirst(${default}, "-");
+			var key_fieldValue = StringUtil.extractLast(${default}, "-");
 
 			AssertElementPresent(locator1 = "FormFields#PREDEFINED_VALUE_AT_FORM_SELECT");
 		}
@@ -1009,13 +1010,13 @@ definition {
 		for (var radioOption : list "Prefix,Suffix") {
 			AssertElementNotPresent(
 				key_fieldName = "",
-				key_radioOption = "${radioOption}",
+				key_radioOption = ${radioOption},
 				locator1 = "FormFields#RADIO_OPTION_LABEL");
 		}
 	}
 
 	@description = "LPS-125861 - Verify that the Input Mask can be enabled on integers"
-	@priority = "5"
+	@priority = 5
 	test InputMaskCanBeEnabledOnIntegers {
 		property portal.acceptance = "true";
 
@@ -1024,9 +1025,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.viewOptionSelected(optionSelected = "integer");
 
@@ -1046,7 +1047,7 @@ definition {
 	}
 
 	@description = "LPS-130164 - Verify that the Input Mask can be enabled on decimals using prefix"
-	@priority = "5"
+	@priority = 5
 	test InputMaskIsWorkingOnDecimalWithPrefix {
 		property portal.acceptance = "true";
 
@@ -1055,9 +1056,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.editNumericType(numericType = "Decimal");
 
@@ -1085,16 +1086,16 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "9999999");
+			fieldValue = 9999999);
 
 		FormFields.viewNumericFieldValue(
 			fieldName = "Numeric",
-			rowNumber = "1",
+			rowNumber = 1,
 			value = "9 999 999");
 
 		FormPortlet.submitSuccessfullyAndViewSuccessPage();
 
-		FormsAdmin.openFormsAdmin(siteURLKey = "guest");
+		FormsAdminNavigator.openFormsAdmin(siteURLKey = "guest");
 
 		FormsAdminNavigator.gotoViewEntries();
 
@@ -1110,7 +1111,7 @@ definition {
 	}
 
 	@description = "LPS-130164 - Verify that the Input Mask can be enabled on decimals using suffix"
-	@priority = "5"
+	@priority = 5
 	test InputMaskIsWorkingOnDecimalWithSuffix {
 		property portal.acceptance = "true";
 
@@ -1119,9 +1120,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.editNumericType(numericType = "Decimal");
 
@@ -1149,16 +1150,16 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "9999999");
+			fieldValue = 9999999);
 
 		FormFields.viewNumericFieldValue(
 			fieldName = "Numeric",
-			rowNumber = "1",
+			rowNumber = 1,
 			value = "9,999,999");
 
 		FormPortlet.submitSuccessfullyAndViewSuccessPage();
 
-		FormsAdmin.openFormsAdmin(siteURLKey = "guest");
+		FormsAdminNavigator.openFormsAdmin(siteURLKey = "guest");
 
 		FormsAdminNavigator.gotoViewEntries();
 
@@ -1174,7 +1175,7 @@ definition {
 	}
 
 	@description = "LPS-130848 - Verify that the Input Mask can be applied on integers"
-	@priority = "5"
+	@priority = 5
 	test InputMaskIsWorkingOnIntegers {
 		property portal.acceptance = "true";
 
@@ -1183,9 +1184,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.viewOptionSelected(optionSelected = "integer");
 
@@ -1203,13 +1204,13 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.submitWithValidationError(validationErrorMessage = "Input format is not satisfied.");
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "123412341234");
+			fieldValue = 123412341234);
 
 		FormPortlet.submitSuccessfully();
 
@@ -1230,7 +1231,7 @@ definition {
 	}
 
 	@description = "LRQA-70003 - Verify that input mask on decimal can be translated"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnDecimalCanBeTranslated {
 		property portal.acceptance = "true";
 
@@ -1239,9 +1240,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.editNumericType(numericType = "Decimal");
 
@@ -1264,7 +1265,7 @@ definition {
 
 		FormFields.setInputMaskOnDecimal(
 			decimalSeparator = "0.00",
-			prefix = "123");
+			prefix = 123);
 
 		FormFields.viewNumericInputMask(inputMaskValue = "0.00");
 
@@ -1272,19 +1273,19 @@ definition {
 
 		FormsAdminNavigator.gotoPublishCopyURLLink();
 
-		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = "${publishedFormPublicURL}");
+		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = ${publishedFormPublicURL});
 
-		Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
+		Navigator.openSpecificURL(url = ${publishedFormPublicURL});
 
 		FormFields.viewNumericInputMask(inputMaskValue = "0,00");
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "1000");
+			fieldValue = 1000);
 
 		FormPortlet.submitSuccessfully();
 
-		Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
+		Navigator.openSpecificURL(url = ${publishedFormPublicURL});
 
 		FormPortlet.changeLocale(locale = "português-Brasil");
 
@@ -1292,13 +1293,13 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "1000");
+			fieldValue = 1000);
 
 		FormPortlet.submitSuccessfully();
 	}
 
 	@description = "Verify if Input Mask On Decimal With Decimal Places is working correctly"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnDecimalWithDecimalPlaces {
 		property portal.acceptance = "true";
 
@@ -1307,7 +1308,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -1322,23 +1323,23 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "FormFields#INPUT_MASK_DECIMAL_PLACES",
-			value1 = "2");
+			value1 = 2);
 
-		FormFields.setInputMaskOnDecimal(decimalPlaces = "0");
+		FormFields.setInputMaskOnDecimal(decimalPlaces = 0);
 
 		Click(locator1 = "FormFields#INPUT_MASK_PREFIX_OR_SUFFIX");
 
 		AssertTextEquals(
 			locator1 = "FormFields#INPUT_MASK_DECIMAL_PLACES",
-			value1 = "2");
+			value1 = 2);
 
-		FormFields.setInputMaskOnDecimal(decimalPlaces = "11");
+		FormFields.setInputMaskOnDecimal(decimalPlaces = 11);
 
 		AssertTextEquals(
 			locator1 = "FormFields#INPUT_MASK_DECIMAL_PLACES",
-			value1 = "1");
+			value1 = 1);
 
-		FormFields.setInputMaskOnDecimal(decimalPlaces = "7");
+		FormFields.setInputMaskOnDecimal(decimalPlaces = 7);
 
 		FormViewBuilder.assertPlaceholderTextFormField(
 			key_fieldLabel = "Numeric",
@@ -1350,7 +1351,7 @@ definition {
 			key_fieldLabel = "Numeric",
 			placeHolder = "0,0000000");
 
-		FormFields.setInputMaskOnDecimal(decimalPlaces = "5");
+		FormFields.setInputMaskOnDecimal(decimalPlaces = 5);
 
 		FormFields.setInputMaskOnDecimal(decimalSeparator = "0.00");
 
@@ -1397,7 +1398,7 @@ definition {
 	}
 
 	@description = "verify if Input Mask On Decimal With Decimal Places Is Working On Validation is working correctly"
-	@priority = "4"
+	@priority = 4
 	test InputMaskOnDecimalWithDecimalPlacesIsWorkingOnValidation {
 		property portal.acceptance = "true";
 
@@ -1406,7 +1407,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -1421,7 +1422,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "FormFields#INPUT_MASK_DECIMAL_PLACES",
-			value1 = "2");
+			value1 = 2);
 
 		FormFields.editFieldPredefined(key_fieldReference = "1.2000");
 
@@ -1440,7 +1441,7 @@ definition {
 			locator1 = "FormFields#VALIDATION_INPUT",
 			value1 = "1.00");
 
-		FormFields.setInputMaskOnDecimal(decimalPlaces = "7");
+		FormFields.setInputMaskOnDecimal(decimalPlaces = 7);
 
 		FormFields.editFieldPredefined(key_fieldReference = "1.200000000");
 
@@ -1486,7 +1487,7 @@ definition {
 	}
 
 	@description = "Verify if Input Mask On Decimal With Decimal Places With Predefined Value is working correctly"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnDecimalWithDecimalPlacesWithPredefinedValue {
 		property portal.acceptance = "true";
 
@@ -1495,7 +1496,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -1510,7 +1511,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "FormFields#INPUT_MASK_DECIMAL_PLACES",
-			value1 = "2");
+			value1 = 2);
 
 		FormFields.editFieldPredefined(key_fieldReference = "1.2000");
 
@@ -1518,7 +1519,7 @@ definition {
 			fieldName = "Numeric",
 			fieldValue = "1.20");
 
-		FormFields.setInputMaskOnDecimal(decimalPlaces = "7");
+		FormFields.setInputMaskOnDecimal(decimalPlaces = 7);
 
 		FormFields.editFieldPredefined(key_fieldReference = "1,234.7654321");
 
@@ -1529,7 +1530,7 @@ definition {
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.editFieldLabelMetal(fieldValue = "Numeric 2");
@@ -1554,12 +1555,12 @@ definition {
 
 		FormFields.viewNumericFieldValue(
 			fieldName = "Numeric",
-			rowNumber = "1",
+			rowNumber = 1,
 			value = "1234.7654321");
 
 		FormFields.viewNumericFieldValue(
 			fieldName = "Numeric",
-			rowNumber = "2",
+			rowNumber = 2,
 			value = "1.23");
 
 		FormViewBuilder.editText(
@@ -1586,7 +1587,7 @@ definition {
 	}
 
 	@description = "Verify if input mask on decimal with decimal separator is working on validation"
-	@priority = "4"
+	@priority = 4
 	test InputMaskOnDecimalWithDecimalSeparatorIsWorkingOnValidation {
 		property portal.acceptance = "true";
 
@@ -1595,7 +1596,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -1672,7 +1673,7 @@ definition {
 	}
 
 	@description = "Verify if Input Mask On Decimal With Thousand Separator is working correctly"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnDecimalWithThousandSeparator {
 		property portal.acceptance = "true";
 
@@ -1681,7 +1682,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -1700,7 +1701,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "5000");
+			fieldValue = 5000);
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
@@ -1725,7 +1726,7 @@ definition {
 	}
 
 	@description = "verify if Input Mask On Decimal With Thousand Separator Is Working On Validation is working correctly"
-	@priority = "4"
+	@priority = 4
 	test InputMaskOnDecimalWithThousandSeparatorIsWorkingOnValidation {
 		property portal.acceptance = "true";
 
@@ -1734,7 +1735,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -1749,7 +1750,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "FormFields#INPUT_MASK_DECIMAL_PLACES",
-			value1 = "2");
+			value1 = 2);
 
 		FormFields.enableCheckbox(fieldName = "Validation");
 
@@ -1758,14 +1759,14 @@ definition {
 			validationErrorMessage = "Test Error",
 			validationInput = "1.00");
 
-		AssertTextEquals(
+		AssertElementPresent(
 			key_fieldName = "Thousands Separator",
 			locator1 = "FormFields#SELECT_FIELD",
 			value1 = "None");
 
 		FormFields.setInputMaskOnDecimal(thousandsSeparator = "1'000");
 
-		AssertTextEquals(
+		AssertElementPresent(
 			key_fieldName = "Thousands Separator",
 			locator1 = "FormFields#SELECT_FIELD",
 			value1 = "1'000");
@@ -1808,7 +1809,7 @@ definition {
 	}
 
 	@description = "Verify if unput mask on decimal with thousand separator with predefined value"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnDecimalWithThousandSeparatorWithPredefinedValue {
 		property portal.acceptance = "true";
 
@@ -1817,7 +1818,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -1846,7 +1847,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "100000");
+			fieldValue = 100000);
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
@@ -1871,7 +1872,7 @@ definition {
 	}
 
 	@description = "LRQA-70003 - Verify if the decimal input mask is working in the rules"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnDecimalWorkingOnRules {
 		property portal.acceptance = "true";
 
@@ -1880,7 +1881,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.editFieldLabelMetal(fieldValue = "Numeric 1");
@@ -1912,7 +1913,7 @@ definition {
 		FormViewBuilder.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.editFieldLabelMetal(fieldValue = "Numeric 2");
@@ -1929,14 +1930,14 @@ definition {
 
 		FormRules.configureConditionOptions(
 			conditionField = "Numeric 1",
-			conditionFieldValue = "1000",
+			conditionFieldValue = 1000,
 			conditionOperator = "Is Equal To",
-			conditionRowNumber = "1",
+			conditionRowNumber = 1,
 			conditionValueType = "Value");
 
 		FormRules.configureActionOptions(
 			action = "Show",
-			actionRowNumber = "1",
+			actionRowNumber = 1,
 			actionTarget = "Numeric 2");
 
 		FormRules.save();
@@ -1953,7 +1954,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "1000");
+			fieldValue = 1000);
 
 		FormFields.viewLabel(
 			fieldLabel = "Numeric 2",
@@ -1961,7 +1962,7 @@ definition {
 	}
 
 	@description = "Verify that input mask on integers can be translated"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnIntegersCanBeTranslated {
 		property portal.acceptance = "true";
 
@@ -1970,9 +1971,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.viewOptionSelected(optionSelected = "integer");
 
@@ -1998,7 +1999,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "11111111111");
+			fieldValue = 11111111111);
 
 		FormPortlet.submitSuccessfully();
 
@@ -2010,13 +2011,13 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "2222222222222");
+			fieldValue = 2222222222222);
 
 		FormPortlet.submitSuccessfully();
 	}
 
 	@description = "Verify that input mask on integers working on rules"
-	@priority = "5"
+	@priority = 5
 	test InputMaskOnIntegersWorkingOnRules {
 		property portal.acceptance = "true";
 
@@ -2025,7 +2026,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.editFieldLabelMetal(fieldValue = "Numeric 1");
@@ -2043,7 +2044,7 @@ definition {
 		FormViewBuilder.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.editFieldLabelMetal(fieldValue = "Numeric 2");
@@ -2064,14 +2065,14 @@ definition {
 
 		FormRules.configureConditionOptions(
 			conditionField = "Numeric 1",
-			conditionFieldValue = "999999999999",
+			conditionFieldValue = 999999999999,
 			conditionOperator = "Is Equal To",
-			conditionRowNumber = "1",
+			conditionRowNumber = 1,
 			conditionValueType = "Value");
 
 		FormRules.configureActionOptions(
 			action = "Show",
-			actionRowNumber = "1",
+			actionRowNumber = 1,
 			actionTarget = "Numeric 2");
 
 		FormRules.save();
@@ -2086,7 +2087,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "999999999999");
+			fieldValue = 999999999999);
 
 		FormFields.viewLabel(
 			fieldLabel = "Numeric 2",
@@ -2094,7 +2095,7 @@ definition {
 	}
 
 	@description = "verify if Input Mask Prefix And Suffix On Decimal With Decimal Separator is working correctly"
-	@priority = "4"
+	@priority = 4
 	test InputMaskPrefixAndSuffixOnDecimalWithDecimalSeparator {
 		property portal.acceptance = "true";
 
@@ -2103,7 +2104,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -2170,7 +2171,7 @@ definition {
 	}
 
 	@description = "verify if Input Mask With Repeatable Option is working correctly"
-	@priority = "4"
+	@priority = 4
 	test InputMaskWithRepeatableOption {
 		property portal.acceptance = "true";
 
@@ -2179,7 +2180,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormFields.selectRadioOption(
@@ -2201,7 +2202,7 @@ definition {
 
 		FormFields.viewFieldRepeatableButton(
 			fieldName = "Numeric",
-			key_repeatableFieldsNumber = "1");
+			key_repeatableFieldsNumber = 1);
 
 		Form.publishForm();
 
@@ -2213,7 +2214,7 @@ definition {
 
 		FormFields.addRepeatableField(
 			key_fieldName = "Numeric",
-			key_repeatableFieldNumber = "1");
+			key_repeatableFieldNumber = 1);
 
 		FormFields.viewFieldRepeatableButton(
 			fieldName = "Numeric",
@@ -2245,16 +2246,16 @@ definition {
 	}
 
 	@description = "Verify that the Field Label can be edited"
-	@priority = "5"
+	@priority = 5
 	test LabelCanBeEdited {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.editFieldLabelMetal(fieldValue = "Test Numeric");
 
@@ -2270,7 +2271,7 @@ definition {
 	}
 
 	@description = "Verify that the Field Label can be hidden"
-	@priority = "5"
+	@priority = 5
 	test LabelCanBeHidden {
 		property portal.acceptance = "true";
 
@@ -2279,9 +2280,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.viewFieldLabel(
 			fieldName = "label",
@@ -2303,7 +2304,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field only accepts numbers"
-	@priority = "5"
+	@priority = 5
 	test OnlyAcceptsNumbers {
 		property portal.acceptance = "true";
 
@@ -2312,9 +2313,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.save();
 
@@ -2328,11 +2329,11 @@ definition {
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 	}
 
 	@description = "Verify that a Placeholder Text can be set"
-	@priority = "5"
+	@priority = 5
 	test PlaceholderTextCanBeSet {
 		property portal.acceptance = "true";
 
@@ -2341,9 +2342,9 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormViewBuilder.setPlaceholder(fieldValue = "Numeric Placeholder Text");
 
@@ -2366,7 +2367,7 @@ definition {
 	}
 
 	@description = "Verify that a Predefined Value can be set"
-	@priority = "5"
+	@priority = 5
 	test PredefinedValueCanBeSet {
 		property portal.acceptance = "true";
 
@@ -2375,14 +2376,14 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
-		FormFields.editFieldPredefined(key_fieldReference = "123");
+		FormFields.editFieldPredefined(key_fieldReference = 123);
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		Form.save();
 
@@ -2392,28 +2393,28 @@ definition {
 
 		FormFields.viewTextValue(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormPortlet.submitSuccessfullyAndViewSuccessPage();
 	}
 
 	@description = "Verify that Predefined Value has higher priority than Placeholder Text for the Numeric Field"
-	@priority = "4"
+	@priority = 4
 	test PredefinedValueHasHigherPriorityThanPlaceholderText {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormViewBuilder.setPlaceholder(fieldValue = "Numeric Placeholder Text");
 
 		Form.gotoAdvancedTab();
 
-		FormViewBuilder.setFieldPredefinedDate(fieldValue = "123");
+		FormViewBuilder.setFieldPredefinedDate(fieldValue = 123);
 
 		Form.save();
 
@@ -2424,7 +2425,7 @@ definition {
 		AssertElementPresent(
 			key_fieldName = "Numeric",
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "123");
+			value1 = 123);
 
 		FormPortlet.submitSuccessfully();
 
@@ -2434,25 +2435,25 @@ definition {
 	}
 
 	@description = "Verify that when erasing the Predefined Value in the Numeric Field it will be replaced by the Placeholder Text"
-	@priority = "4"
+	@priority = 4
 	test PredefinedValueIsReplacedByPlaceholderText {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		FormViewBuilder.setPlaceholder(fieldValue = "Numeric Placeholder Text");
 
 		Form.gotoAdvancedTab();
 
-		FormViewBuilder.setFieldPredefinedText(fieldValue = "123");
+		FormViewBuilder.setFieldPredefinedText(fieldValue = 123);
 
 		FormViewBuilder.validatePredefinedText(
 			fieldName = "Numeric",
-			fieldValue = "123");
+			fieldValue = 123);
 
 		FormViewBuilder.setFieldPredefinedText(fieldValue = " ");
 
@@ -2462,7 +2463,7 @@ definition {
 	}
 
 	@description = "Verify that the Field Reference can be Edited"
-	@priority = "5"
+	@priority = 5
 	test ReferenceCanBeEdited {
 		property portal.acceptance = "true";
 
@@ -2471,7 +2472,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.gotoAdvancedTab();
@@ -2491,7 +2492,7 @@ definition {
 
 	@description = "Verify that the Field Type can be changed"
 	@ignore = "Test Stub"
-	@priority = "5"
+	@priority = 5
 	test TypeCanBeChanged {
 		property portal.acceptance = "false";
 
@@ -2501,7 +2502,7 @@ definition {
 
 	@description = "Verify that Validation options are reset after changing the Field Type from a Numeric Field to Text Field"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ValidationIsResetAfterChangingFieldType {
 		property portal.acceptance = "false";
 

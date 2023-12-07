@@ -1,38 +1,28 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import {useResource} from '@clayui/data-provider';
 import ClayDropDown from '@clayui/drop-down';
 import ClayForm, {ClayCheckbox} from '@clayui/form';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
-import {DefinitionBuilderContext} from '../../../../../DefinitionBuilderContext';
-import {contextUrl} from '../../../../../constants';
-import {
-	headers,
-	retrieveAccountRoles,
-	userBaseURL,
-} from '../../../../../util/fetchUtil';
 import {titleCase} from '../../../../../util/utils';
 
 const BaseRoleType = ({
+	accountRoles,
 	autoCreate = false,
 	buttonName,
 	errors,
 	identifier,
 	index,
 	inputLabel,
-	roleName = null,
+	networkStatus,
+	resource,
+	roleKey,
+	roleName,
 	roleType = '',
 	sectionsLength,
 	setErrors,
@@ -40,13 +30,13 @@ const BaseRoleType = ({
 	notificationIndex,
 	updateSelectedItem = () => {},
 }) => {
-	const [accountRoles, setAccountRoles] = useState([]);
 	const [filterRoleName, setFilterRoleName] = useState(true);
 	const [filterRoleType, setFilterRoleType] = useState(true);
-	const [networkStatus, setNetworkStatus] = useState(4);
 	const [roleNameDropdownActive, setRoleNameDropdownActive] = useState(false);
 	const [roleTypeDropdownActive, setRoleTypeDropdownActive] = useState(false);
-	const [selectedRoleName, setSelectedRoleName] = useState(roleName);
+	const [selectedRoleName, setSelectedRoleName] = useState(
+		roleName || roleKey
+	);
 	const [selectedRoleType, setSelectedRoleType] = useState(
 		titleCase(roleType)
 	);
@@ -55,38 +45,6 @@ const BaseRoleType = ({
 	}
 
 	const [checked, setChecked] = useState(autoCreate);
-
-	const {resource} = useResource({
-		fetchOptions: {
-			headers: {
-				...headers,
-				'accept': `application/json`,
-				'x-csrf-token': Liferay.authToken,
-			},
-		},
-		fetchPolicy: 'cache-first',
-		link: `${window.location.origin}${contextUrl}${userBaseURL}/roles`,
-		onNetworkStatusChange: setNetworkStatus,
-		variables: {
-			pageSize: -1,
-		},
-	});
-
-	const {accountEntryId} = useContext(DefinitionBuilderContext);
-
-	useEffect(() => {
-		retrieveAccountRoles(accountEntryId)
-			.then((response) => response.json())
-			.then(({items}) => {
-				const roles = items.map((item) => {
-					return {roleName: item.displayName, roleType: 'Account'};
-				});
-
-				setAccountRoles(roles);
-			});
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
 
 	const checkRoleTypeErrors = (errors, selectedRoleName) => {
 		const temp = errors?.roleName ? [...errors.roleName] : [];
@@ -125,17 +83,14 @@ const BaseRoleType = ({
 		const roles = {};
 
 		resource.items.forEach((item) => {
-			let roleType = titleCase(item.roleType);
-
-			if (roleType === 'Depot') {
-				roleType = 'Asset Library';
-			}
+			const roleType = titleCase(item.roleType);
 
 			if (!roles[roleType]) {
 				roles[roleType] = [];
 			}
 
 			roles[roleType].push({
+				roleKey: item.externalReferenceCode,
 				roleName: item.name,
 				roleType,
 			});
@@ -168,6 +123,7 @@ const BaseRoleType = ({
 				? item
 				: item?.toLowerCase().match(selectedRoleType?.toLowerCase())
 		);
+
 	const roleNameInputFocus = () => {
 		setFilterRoleName(selectedRoleName === '');
 		setRoleNameDropdownActive(true);
@@ -177,7 +133,6 @@ const BaseRoleType = ({
 		event.persist();
 
 		setFilterRoleName(true);
-
 		setSelectedRoleName(event.target.value);
 	};
 
@@ -285,10 +240,15 @@ const BaseRoleType = ({
 						disabled={!selectedRoleType}
 						id="role-name"
 						onBlur={(event) => {
+							const roleName = titleCase(event.target.value);
+
 							if (selectedRoleName !== '') {
 								roleNameItemUpdate({
 									autoCreate: checked,
-									roleName: titleCase(event.target.value),
+									roleKey: filteredRoleNames().find(
+										(item) => item.roleName === roleName
+									).roleKey,
+									roleName,
 									roleType: selectedRoleType.toLowerCase(),
 								});
 							}
@@ -324,6 +284,7 @@ const BaseRoleType = ({
 										onMouseDown={() =>
 											roleNameItemUpdate({
 												autoCreate: checked,
+												roleKey: item.roleKey,
 												roleName: item.roleName,
 												roleType: item.roleType.toLowerCase(),
 											})

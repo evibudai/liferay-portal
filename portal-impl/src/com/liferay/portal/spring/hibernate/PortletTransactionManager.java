@@ -1,26 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.spring.hibernate;
 
+import com.liferay.portal.kernel.db.partition.DBPartition;
+
 import java.sql.Connection;
 
 import java.util.Date;
+import java.util.function.Supplier;
 
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionCreationOptions;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionImpl;
@@ -41,10 +36,20 @@ public class PortletTransactionManager implements PlatformTransactionManager {
 
 	public PortletTransactionManager(
 		HibernateTransactionManager portalHibernateTransactionManager,
-		SessionFactory portletSessionFactory) {
+		SessionFactoryImplementor sessionFactoryImplementor) {
+
+		this(
+			portalHibernateTransactionManager, () -> sessionFactoryImplementor);
+	}
+
+	public PortletTransactionManager(
+		HibernateTransactionManager portalHibernateTransactionManager,
+		Supplier<SessionFactoryImplementor>
+			portletSessionFactoryImplementorSupplier) {
 
 		_portalHibernateTransactionManager = portalHibernateTransactionManager;
-		_portletSessionFactory = portletSessionFactory;
+		_portletSessionFactoryImplementorSupplier =
+			portletSessionFactoryImplementorSupplier;
 	}
 
 	@Override
@@ -83,7 +88,7 @@ public class PortletTransactionManager implements PlatformTransactionManager {
 	}
 
 	public SessionFactory getPortletSessionFactory() {
-		return _portletSessionFactory;
+		return _portletSessionFactoryImplementorSupplier.get();
 	}
 
 	@Override
@@ -105,9 +110,11 @@ public class PortletTransactionManager implements PlatformTransactionManager {
 
 		Connection portalConnection = _getConnection(portalSessionHolder);
 
+		SessionFactory portletSessionFactory = getPortletSessionFactory();
+
 		SessionHolder portletSessionHolder =
 			(SessionHolder)SpringHibernateThreadLocalUtil.getResource(
-				_portletSessionFactory);
+				portletSessionFactory);
 
 		if (portletSessionHolder != null) {
 			if (portalConnection == _getConnection(portletSessionHolder)) {
@@ -119,12 +126,12 @@ public class PortletTransactionManager implements PlatformTransactionManager {
 			portalSession.flush();
 		}
 
-		SessionBuilder<?> sessionBuilder = _portletSessionFactory.withOptions();
+		SessionBuilder<?> sessionBuilder = portletSessionFactory.withOptions();
 
 		sessionBuilder = sessionBuilder.connection(portalConnection);
 
 		Session portletSession = new SessionImpl(
-			(SessionFactoryImpl)_portletSessionFactory,
+			(SessionFactoryImpl)portletSessionFactory,
 			(SessionCreationOptions)sessionBuilder) {
 
 			@Override
@@ -141,11 +148,15 @@ public class PortletTransactionManager implements PlatformTransactionManager {
 		};
 
 		SpringHibernateThreadLocalUtil.setResource(
-			_portletSessionFactory,
+			portletSessionFactory,
 			_createSessionHolder(portletSession, portalSessionHolder));
 
+		if (DBPartition.isPartitionEnabled()) {
+			LastSessionRecorderUtil.addPortletSession(portletSession);
+		}
+
 		return new TransactionStatusWrapper(
-			portalTransactionStatus, _portletSessionFactory,
+			portalTransactionStatus, portletSessionFactory,
 			portletSessionHolder, portletSession);
 	}
 
@@ -223,7 +234,8 @@ public class PortletTransactionManager implements PlatformTransactionManager {
 
 	private final HibernateTransactionManager
 		_portalHibernateTransactionManager;
-	private final SessionFactory _portletSessionFactory;
+	private final Supplier<SessionFactoryImplementor>
+		_portletSessionFactoryImplementorSupplier;
 
 	private static class ConnectionReference {
 

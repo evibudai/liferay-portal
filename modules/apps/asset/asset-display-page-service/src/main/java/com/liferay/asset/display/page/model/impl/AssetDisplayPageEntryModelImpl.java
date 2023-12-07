@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.display.page.model.impl;
@@ -258,124 +249,143 @@ public class AssetDisplayPageEntryModelImpl
 	public Map<String, Function<AssetDisplayPageEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<AssetDisplayPageEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<AssetDisplayPageEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<AssetDisplayPageEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<AssetDisplayPageEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<AssetDisplayPageEntry, Object>>();
-		Map<String, BiConsumer<AssetDisplayPageEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<AssetDisplayPageEntry, ?>>();
+		private static final Map
+			<String, Function<AssetDisplayPageEntry, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", AssetDisplayPageEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", AssetDisplayPageEntry::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", AssetDisplayPageEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<AssetDisplayPageEntry, String>)
-				AssetDisplayPageEntry::setUuid);
-		attributeGetterFunctions.put(
-			"assetDisplayPageEntryId",
-			AssetDisplayPageEntry::getAssetDisplayPageEntryId);
-		attributeSetterBiConsumers.put(
-			"assetDisplayPageEntryId",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setAssetDisplayPageEntryId);
-		attributeGetterFunctions.put(
-			"groupId", AssetDisplayPageEntry::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", AssetDisplayPageEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", AssetDisplayPageEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setUserId);
-		attributeGetterFunctions.put(
-			"userName", AssetDisplayPageEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<AssetDisplayPageEntry, String>)
-				AssetDisplayPageEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", AssetDisplayPageEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<AssetDisplayPageEntry, Date>)
-				AssetDisplayPageEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", AssetDisplayPageEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<AssetDisplayPageEntry, Date>)
-				AssetDisplayPageEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"classNameId", AssetDisplayPageEntry::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setClassNameId);
-		attributeGetterFunctions.put(
-			"classPK", AssetDisplayPageEntry::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setClassPK);
-		attributeGetterFunctions.put(
-			"layoutPageTemplateEntryId",
-			AssetDisplayPageEntry::getLayoutPageTemplateEntryId);
-		attributeSetterBiConsumers.put(
-			"layoutPageTemplateEntryId",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setLayoutPageTemplateEntryId);
-		attributeGetterFunctions.put("type", AssetDisplayPageEntry::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<AssetDisplayPageEntry, Integer>)
-				AssetDisplayPageEntry::setType);
-		attributeGetterFunctions.put("plid", AssetDisplayPageEntry::getPlid);
-		attributeSetterBiConsumers.put(
-			"plid",
-			(BiConsumer<AssetDisplayPageEntry, Long>)
-				AssetDisplayPageEntry::setPlid);
+		static {
+			Map<String, Function<AssetDisplayPageEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<AssetDisplayPageEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", AssetDisplayPageEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", AssetDisplayPageEntry::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"uuid", AssetDisplayPageEntry::getUuid);
+			attributeGetterFunctions.put(
+				"assetDisplayPageEntryId",
+				AssetDisplayPageEntry::getAssetDisplayPageEntryId);
+			attributeGetterFunctions.put(
+				"groupId", AssetDisplayPageEntry::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", AssetDisplayPageEntry::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", AssetDisplayPageEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", AssetDisplayPageEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", AssetDisplayPageEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", AssetDisplayPageEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"classNameId", AssetDisplayPageEntry::getClassNameId);
+			attributeGetterFunctions.put(
+				"classPK", AssetDisplayPageEntry::getClassPK);
+			attributeGetterFunctions.put(
+				"layoutPageTemplateEntryId",
+				AssetDisplayPageEntry::getLayoutPageTemplateEntryId);
+			attributeGetterFunctions.put(
+				"type", AssetDisplayPageEntry::getType);
+			attributeGetterFunctions.put(
+				"plid", AssetDisplayPageEntry::getPlid);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<AssetDisplayPageEntry, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<AssetDisplayPageEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<AssetDisplayPageEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<AssetDisplayPageEntry, String>)
+					AssetDisplayPageEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"assetDisplayPageEntryId",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setAssetDisplayPageEntryId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<AssetDisplayPageEntry, String>)
+					AssetDisplayPageEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<AssetDisplayPageEntry, Date>)
+					AssetDisplayPageEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<AssetDisplayPageEntry, Date>)
+					AssetDisplayPageEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setClassPK);
+			attributeSetterBiConsumers.put(
+				"layoutPageTemplateEntryId",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setLayoutPageTemplateEntryId);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<AssetDisplayPageEntry, Integer>)
+					AssetDisplayPageEntry::setType);
+			attributeSetterBiConsumers.put(
+				"plid",
+				(BiConsumer<AssetDisplayPageEntry, Long>)
+					AssetDisplayPageEntry::setPlid);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1056,7 +1066,8 @@ public class AssetDisplayPageEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<AssetDisplayPageEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

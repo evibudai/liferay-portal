@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.seo.web.internal.util;
@@ -17,8 +8,8 @@ package com.liferay.layout.seo.web.internal.util;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
 import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
-import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.localized.InfoLocalizedValue;
@@ -38,7 +29,6 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Optional;
 
 /**
  * @author Alejandro Tardín
@@ -46,13 +36,13 @@ import java.util.Optional;
 public class OpenGraphImageProvider {
 
 	public OpenGraphImageProvider(
+		DDMFieldLocalService ddmFieldLocalService,
 		DDMStructureLocalService ddmStructureLocalService,
 		DLAppLocalService dlAppLocalService,
 		DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService,
 		DLURLHelper dlurlHelper,
 		LayoutSEOSiteLocalService layoutSEOSiteLocalService,
-		LayoutSEOTemplateProcessor layoutSEOTemplateProcessor, Portal portal,
-		StorageEngine storageEngine) {
+		LayoutSEOTemplateProcessor layoutSEOTemplateProcessor, Portal portal) {
 
 		_dlAppLocalService = dlAppLocalService;
 		_dlurlHelper = dlurlHelper;
@@ -61,33 +51,34 @@ public class OpenGraphImageProvider {
 
 		_fileEntryMetadataOpenGraphTagsProvider =
 			new FileEntryMetadataOpenGraphTagsProvider(
-				ddmStructureLocalService, dlFileEntryMetadataLocalService,
-				portal, storageEngine);
+				ddmFieldLocalService, ddmStructureLocalService,
+				dlFileEntryMetadataLocalService, portal);
 	}
 
-	public Optional<OpenGraphImage> getOpenGraphImageOptional(
+	public OpenGraphImage getOpenGraphImage(
 		InfoItemFieldValues infoItemFieldValues, Layout layout,
 		LayoutSEOEntry layoutSEOEntry, ThemeDisplay themeDisplay) {
 
-		return _getMappedOpenGraphImageOptional(
-			infoItemFieldValues, layout, layoutSEOEntry, themeDisplay
-		).map(
-			Optional::of
-		).orElseGet(
-			() -> _getFileEntryOpenGraphImageOptional(
-				infoItemFieldValues, layout, layoutSEOEntry, themeDisplay)
-		);
+		OpenGraphImage openGraphImage = _getMappedOpenGraphImage(
+			infoItemFieldValues, layout, layoutSEOEntry, themeDisplay);
+
+		if (openGraphImage == null) {
+			return _getFileEntryOpenGraphImage(
+				infoItemFieldValues, layout, layoutSEOEntry, themeDisplay);
+		}
+
+		return openGraphImage;
 	}
 
 	public interface OpenGraphImage {
 
-		public Optional<String> getAltOptional();
+		public String getAlt();
 
 		public Iterable<KeyValuePair> getMetadataTagKeyValuePairs();
 
-		public Optional<String> getMimeTypeOptional();
+		public String getMimeType();
 
-		public String getUrl();
+		public String getURL();
 
 	}
 
@@ -99,7 +90,7 @@ public class OpenGraphImageProvider {
 		return themeDisplay.getPortalURL() + url;
 	}
 
-	private Optional<OpenGraphImage> _getFileEntryOpenGraphImageOptional(
+	private OpenGraphImage _getFileEntryOpenGraphImage(
 		InfoItemFieldValues infoItemFieldValues, Layout layout,
 		LayoutSEOEntry layoutSEOEntry, ThemeDisplay themeDisplay) {
 
@@ -108,14 +99,14 @@ public class OpenGraphImageProvider {
 				layout, layoutSEOEntry);
 
 			if (openGraphImageFileEntryId == 0) {
-				return Optional.empty();
+				return null;
 			}
 
 			FileEntry fileEntry = _dlAppLocalService.getFileEntry(
 				openGraphImageFileEntryId);
 
 			if ((fileEntry == null) || fileEntry.isInTrash()) {
-				return Optional.empty();
+				return null;
 			}
 
 			Iterable<KeyValuePair> fileEntryMetadataOpenGraphTagKeyValuePairs =
@@ -125,41 +116,37 @@ public class OpenGraphImageProvider {
 			String imagePreviewURL = _dlurlHelper.getImagePreviewURL(
 				fileEntry, themeDisplay);
 
-			return Optional.of(
-				new OpenGraphImage() {
+			return new OpenGraphImage() {
 
-					@Override
-					public Optional<String> getAltOptional() {
-						return Optional.ofNullable(
-							_getImageAltTagValue(
-								infoItemFieldValues, layout, layoutSEOEntry,
-								themeDisplay.getLocale()));
-					}
+				@Override
+				public String getAlt() {
+					return _getImageAltTagValue(
+						infoItemFieldValues, layout, layoutSEOEntry,
+						themeDisplay.getLocale());
+				}
 
-					@Override
-					public Iterable<KeyValuePair>
-						getMetadataTagKeyValuePairs() {
+				@Override
+				public Iterable<KeyValuePair> getMetadataTagKeyValuePairs() {
+					return fileEntryMetadataOpenGraphTagKeyValuePairs;
+				}
 
-						return fileEntryMetadataOpenGraphTagKeyValuePairs;
-					}
+				@Override
+				public String getMimeType() {
+					return fileEntry.getMimeType();
+				}
 
-					@Override
-					public Optional<String> getMimeTypeOptional() {
-						return Optional.of(fileEntry.getMimeType());
-					}
+				@Override
+				public String getURL() {
+					return imagePreviewURL;
+				}
 
-					@Override
-					public String getUrl() {
-						return imagePreviewURL;
-					}
-
-				});
+			};
 		}
 		catch (Exception exception) {
 			_log.error(exception);
 		}
 
-		return Optional.empty();
+		return null;
 	}
 
 	private String _getImageAltTagValue(
@@ -200,7 +187,7 @@ public class OpenGraphImageProvider {
 		return null;
 	}
 
-	private Optional<OpenGraphImage> _getMappedOpenGraphImageOptional(
+	private OpenGraphImage _getMappedOpenGraphImage(
 		InfoItemFieldValues infoItemFieldValues, Layout layout,
 		LayoutSEOEntry layoutSEOEntry, ThemeDisplay themeDisplay) {
 
@@ -211,52 +198,49 @@ public class OpenGraphImageProvider {
 		if (mappedImageObject instanceof WebImage) {
 			WebImage mappedWebImage = (WebImage)mappedImageObject;
 
-			return Optional.of(
-				new OpenGraphImage() {
+			return new OpenGraphImage() {
 
-					@Override
-					public Optional<String> getAltOptional() {
-						String openGraphImageAlt = _getImageAltTagValue(
-							infoItemFieldValues, layout, layoutSEOEntry,
+				@Override
+				public String getAlt() {
+					String openGraphImageAlt = _getImageAltTagValue(
+						infoItemFieldValues, layout, layoutSEOEntry,
+						themeDisplay.getLocale());
+
+					if (Validator.isNotNull(openGraphImageAlt)) {
+						return openGraphImageAlt;
+					}
+
+					InfoLocalizedValue<String> altInfoLocalizedValue =
+						mappedWebImage.getAltInfoLocalizedValue();
+
+					if (altInfoLocalizedValue != null) {
+						return altInfoLocalizedValue.getValue(
 							themeDisplay.getLocale());
-
-						if (Validator.isNotNull(openGraphImageAlt)) {
-							return Optional.of(openGraphImageAlt);
-						}
-
-						Optional<InfoLocalizedValue<String>>
-							altInfoLocalizedValueOptional =
-								mappedWebImage.
-									getAltInfoLocalizedValueOptional();
-
-						return altInfoLocalizedValueOptional.map(
-							altInfoLocalizedValue ->
-								altInfoLocalizedValue.getValue(
-									themeDisplay.getLocale()));
 					}
 
-					@Override
-					public Iterable<KeyValuePair>
-						getMetadataTagKeyValuePairs() {
+					return null;
+				}
 
-						return Collections.emptyList();
-					}
+				@Override
+				public Iterable<KeyValuePair> getMetadataTagKeyValuePairs() {
+					return Collections.emptyList();
+				}
 
-					@Override
-					public Optional<String> getMimeTypeOptional() {
-						return Optional.empty();
-					}
+				@Override
+				public String getMimeType() {
+					return null;
+				}
 
-					@Override
-					public String getUrl() {
-						return _getAbsoluteURL(
-							themeDisplay, mappedWebImage.getUrl());
-					}
+				@Override
+				public String getURL() {
+					return _getAbsoluteURL(
+						themeDisplay, mappedWebImage.getURL());
+				}
 
-				});
+			};
 		}
 
-		return Optional.empty();
+		return null;
 	}
 
 	private String _getMappedStringValue(

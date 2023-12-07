@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.internal.events;
@@ -23,15 +14,21 @@ import com.liferay.client.extension.type.ThemeFaviconCET;
 import com.liferay.client.extension.type.ThemeJSCET;
 import com.liferay.client.extension.type.ThemeSpritemapCET;
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.events.Action;
 import com.liferay.portal.kernel.events.LifecycleAction;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,7 +55,29 @@ public class ClientExtensionsServicePreAction extends Action {
 
 		Layout layout = themeDisplay.getLayout();
 
-		if ((layout == null) || layout.isTypeControlPanel()) {
+		if (layout.isTypeControlPanel()) {
+			String mode = ParamUtil.getString(
+				httpServletRequest, "p_l_mode", Constants.VIEW);
+
+			if (!Objects.equals(mode, Constants.PREVIEW)) {
+				return;
+			}
+
+			long selPlid = ParamUtil.getLong(
+				httpServletRequest,
+				StringBundler.concat(
+					StringPool.UNDERLINE,
+					ParamUtil.getString(httpServletRequest, "p_p_id"),
+					"_selPlid"));
+
+			if (selPlid <= 0) {
+				return;
+			}
+
+			layout = _layoutLocalService.fetchLayout(selPlid);
+		}
+
+		if (layout == null) {
 			return;
 		}
 

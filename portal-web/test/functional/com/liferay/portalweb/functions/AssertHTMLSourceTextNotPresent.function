@@ -1,10 +1,14 @@
 @default = "assertHTMLSourceTextNotPresent"
 definition {
 
-	function assertHTMLSourceTextNotPresent {
+	function assertHTMLSourceTextNotPresent(value1) {
 		WaitForSPARefresh();
 
-		selenium.assertHTMLSourceTextNotPresent();
+		selenium.assertHTMLSourceTextNotPresent(${value1});
+	}
+
+	function assertHTMLSourceTextNotPresentNoSPARefresh(value1) {
+		selenium.assertHTMLSourceTextNotPresent(${value1});
 	}
 
 }

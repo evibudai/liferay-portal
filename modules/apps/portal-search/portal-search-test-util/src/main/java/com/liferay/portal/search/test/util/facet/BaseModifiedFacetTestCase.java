@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.facet;
@@ -53,8 +44,7 @@ public abstract class BaseModifiedFacetTestCase extends BaseFacetTestCase {
 				helper.search();
 
 				helper.assertFrequencies(
-					facet,
-					Arrays.asList("[20170101000000 TO 20170105000000]=2"));
+					facet, Arrays.asList("custom-range=2"));
 			});
 	}
 
@@ -70,8 +60,7 @@ public abstract class BaseModifiedFacetTestCase extends BaseFacetTestCase {
 		String customRange = "[11110101010101 TO 22220202020202]";
 
 		List<String> expectedRanges = Arrays.asList(
-			"[11110101010101 TO 19990101010101]=0",
-			"[11110101010101 TO 22220202020202]=1",
+			"[11110101010101 TO 19990101010101]=0", "custom-range=1",
 			"[19990202020202 TO 22220202020202]=1");
 
 		assertSearchFacet(
@@ -118,16 +107,20 @@ public abstract class BaseModifiedFacetTestCase extends BaseFacetTestCase {
 		JSONArray jsonArray = jsonFactory.createJSONArray();
 
 		for (String range : ranges) {
-			jsonArray.put(createRangeArrayElement(range));
+			jsonArray.put(createRangeArrayElement(range, range));
 		}
 
 		return jsonArray;
 	}
 
-	protected JSONObject createRangeArrayElement(String range) {
+	protected JSONObject createRangeArrayElement(String label, String range) {
 		JSONObject jsonObject = jsonFactory.createJSONObject();
 
-		jsonObject.put("range", range);
+		jsonObject.put(
+			"label", label
+		).put(
+			"range", range
+		);
 
 		return jsonObject;
 	}
@@ -169,9 +162,19 @@ public abstract class BaseModifiedFacetTestCase extends BaseFacetTestCase {
 	}
 
 	protected void setCustomRange(Facet facet, String customRange) {
-		SearchContext searchContext = facet.getSearchContext();
+		FacetConfiguration facetConfiguration = facet.getFacetConfiguration();
 
-		searchContext.setAttribute(facet.getFieldId(), customRange);
+		JSONObject jsonObject = facetConfiguration.getData();
+
+		JSONArray jsonArray = jsonObject.getJSONArray("ranges");
+
+		if (jsonArray == null) {
+			jsonArray = jsonFactory.createJSONArray();
+		}
+
+		jsonArray.put(createRangeArrayElement("custom-range", customRange));
+
+		jsonObject.put("ranges", jsonArray);
 	}
 
 }

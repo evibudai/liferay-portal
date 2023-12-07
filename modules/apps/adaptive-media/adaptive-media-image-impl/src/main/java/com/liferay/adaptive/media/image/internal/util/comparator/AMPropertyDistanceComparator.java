@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.util.comparator;
@@ -17,62 +8,58 @@ package com.liferay.adaptive.media.image.internal.util.comparator;
 import com.liferay.adaptive.media.AMAttribute;
 import com.liferay.adaptive.media.AMDistanceComparator;
 import com.liferay.adaptive.media.AdaptiveMedia;
-import com.liferay.adaptive.media.image.processor.AMImageProcessor;
+import com.liferay.adaptive.media.processor.AMProcessor;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Adolfo Pérez
  */
 public class AMPropertyDistanceComparator
-	implements AMDistanceComparator<AdaptiveMedia<AMImageProcessor>> {
+	implements AMDistanceComparator<AdaptiveMedia<AMProcessor<FileVersion>>> {
 
 	public AMPropertyDistanceComparator(
-		Map<AMAttribute<AMImageProcessor, ?>, ?> amAttributes) {
+		Map<AMAttribute<AMProcessor<FileVersion>, ?>, ?> amAttributes) {
 
 		_amAttributes = amAttributes;
 	}
 
 	@Override
 	public long compare(
-		AdaptiveMedia<AMImageProcessor> adaptiveMedia1,
-		AdaptiveMedia<AMImageProcessor> adaptiveMedia2) {
+		AdaptiveMedia<AMProcessor<FileVersion>> adaptiveMedia1,
+		AdaptiveMedia<AMProcessor<FileVersion>> adaptiveMedia2) {
 
-		for (Map.Entry<AMAttribute<AMImageProcessor, ?>, ?> entry :
+		for (Map.Entry<AMAttribute<AMProcessor<FileVersion>, ?>, ?> entry :
 				_amAttributes.entrySet()) {
 
-			AMAttribute<AMImageProcessor, Object> amAttribute =
-				(AMAttribute<AMImageProcessor, Object>)entry.getKey();
+			AMAttribute<AMProcessor<FileVersion>, Object> amAttribute =
+				(AMAttribute<AMProcessor<FileVersion>, Object>)entry.getKey();
 
-			Object requestedValue = entry.getValue();
+			Object value1 = adaptiveMedia1.getValue(amAttribute);
+			Object value2 = adaptiveMedia2.getValue(amAttribute);
 
-			Optional<?> valueOptional1 = adaptiveMedia1.getValueOptional(
-				amAttribute);
+			if ((value1 != null) && (value2 != null)) {
+				Object requestedValue = entry.getValue();
 
-			Optional<Long> valueDistanceOptional1 = valueOptional1.map(
-				value1 -> amAttribute.distance(value1, requestedValue));
+				long valueDistance1 = amAttribute.distance(
+					value1, requestedValue);
 
-			Optional<?> valueOptional2 = adaptiveMedia2.getValueOptional(
-				amAttribute);
+				long valueDistance2 = amAttribute.distance(
+					value2, requestedValue);
 
-			Optional<Long> valueDistanceOptional2 = valueOptional2.map(
-				value2 -> amAttribute.distance(value2, requestedValue));
+				long result = valueDistance1 - valueDistance2;
 
-			Optional<Long> resultOptional = valueDistanceOptional1.flatMap(
-				value1 -> valueDistanceOptional2.map(
-					value2 -> value1 - value2));
-
-			long result = resultOptional.orElse(0L);
-
-			if (result != 0) {
-				return result;
+				if (result != 0) {
+					return result;
+				}
 			}
 		}
 
 		return 0L;
 	}
 
-	private final Map<AMAttribute<AMImageProcessor, ?>, ?> _amAttributes;
+	private final Map<AMAttribute<AMProcessor<FileVersion>, ?>, ?>
+		_amAttributes;
 
 }

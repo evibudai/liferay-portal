@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.theme.contributor.extender.internal.servlet.taglib;
 
 import com.liferay.frontend.theme.contributor.extender.internal.BundleWebResources;
+import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
 import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
@@ -29,6 +21,7 @@ import java.io.PrintWriter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,9 +31,10 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Carlos Sierra Andrés
@@ -69,7 +63,11 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 			portalCDNURL = themeDisplay.getPortalURL();
 		}
 
-		if (_cssResourceURLs.length > 0) {
+		ResourceURLsBag resourceURLsBag = _getResourceURLsBag();
+
+		List<String> cssResourceURLs = resourceURLsBag._cssResourceURLs;
+
+		if (!cssResourceURLs.isEmpty()) {
 			if (themeDisplay.isThemeCssFastLoad()) {
 				_renderComboCSS(
 					themeLastModified, httpServletRequest, portalCDNURL,
@@ -78,11 +76,13 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 			else {
 				_renderSimpleCSS(
 					themeLastModified, httpServletRequest, portalCDNURL,
-					httpServletResponse.getWriter(), _cssResourceURLs);
+					httpServletResponse.getWriter(), cssResourceURLs);
 			}
 		}
 
-		if (_jsResourceURLs.length == 0) {
+		List<String> jsResourceURLs = resourceURLsBag._jsResourceURLs;
+
+		if (jsResourceURLs.isEmpty()) {
 			return;
 		}
 
@@ -94,7 +94,7 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 		else {
 			_renderSimpleJS(
 				themeLastModified, httpServletRequest, portalCDNURL,
-				httpServletResponse.getWriter(), _jsResourceURLs);
+				httpServletResponse.getWriter(), jsResourceURLs);
 		}
 	}
 
@@ -108,46 +108,77 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
 
-		_rebuild();
-
 		_comboContextPath = _portal.getPathContext() + "/combo";
+
+		_serviceTracker = ServiceTrackerFactory.open(
+			bundleContext, BundleWebResources.class,
+			new ServiceTrackerCustomizer
+				<BundleWebResources, BundleWebResources>() {
+
+				@Override
+				public BundleWebResources addingService(
+					ServiceReference<BundleWebResources> serviceReference) {
+
+					synchronized (_bundleWebResourcesServiceReferences) {
+						_bundleWebResourcesServiceReferences.add(
+							serviceReference);
+
+						_resourceURLsBag = null;
+					}
+
+					return bundleContext.getService(serviceReference);
+				}
+
+				@Override
+				public void modifiedService(
+					ServiceReference<BundleWebResources> serviceReference,
+					BundleWebResources bundleWebResources) {
+				}
+
+				@Override
+				public void removedService(
+					ServiceReference<BundleWebResources> serviceReference,
+					BundleWebResources bundleWebResources) {
+
+					synchronized (_bundleWebResourcesServiceReferences) {
+						_bundleWebResourcesServiceReferences.remove(
+							serviceReference);
+
+						_resourceURLsBag = null;
+					}
+
+					bundleContext.ungetService(serviceReference);
+				}
+
+			});
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC
-	)
-	protected void addBundleWebResources(
-		ServiceReference<BundleWebResources>
-			bundleWebResourcesServiceReference) {
+	@Deactivate
+	protected void deactivate() {
+		_serviceTracker.close();
+	}
+
+	private ResourceURLsBag _getResourceURLsBag() {
+		ResourceURLsBag resourceURLsBag = _resourceURLsBag;
+
+		if (resourceURLsBag != null) {
+			return resourceURLsBag;
+		}
 
 		synchronized (_bundleWebResourcesServiceReferences) {
-			_bundleWebResourcesServiceReferences.add(
-				bundleWebResourcesServiceReference);
+			if (_resourceURLsBag != null) {
+				return _resourceURLsBag;
+			}
 
-			_rebuild();
+			_resourceURLsBag = _rebuild();
+
+			return _resourceURLsBag;
 		}
 	}
 
-	protected void removeBundleWebResources(
-		ServiceReference<BundleWebResources>
-			bundleWebResourcesServiceReference) {
-
-		synchronized (_bundleWebResourcesServiceReferences) {
-			_bundleWebResourcesServiceReferences.remove(
-				bundleWebResourcesServiceReference);
-
-			_rebuild();
-		}
-	}
-
-	private void _rebuild() {
-		if (_bundleContext == null) {
-			return;
-		}
-
-		Collection<String> cssResourceURLs = new ArrayList<>();
-		Collection<String> jsResourceURLs = new ArrayList<>();
+	private ResourceURLsBag _rebuild() {
+		List<String> cssResourceURLs = new ArrayList<>();
+		List<String> jsResourceURLs = new ArrayList<>();
 
 		for (ServiceReference<BundleWebResources>
 				bundleWebResourcesServiceReference :
@@ -179,31 +210,7 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 			}
 		}
 
-		_cssResourceURLs = cssResourceURLs.toArray(new String[0]);
-
-		StringBundler sb = new StringBundler((cssResourceURLs.size() * 2) + 1);
-
-		for (String cssResourceURL : cssResourceURLs) {
-			sb.append("&");
-			sb.append(cssResourceURL);
-		}
-
-		sb.append("\" rel=\"stylesheet\" type = \"text/css\" />\n");
-
-		_mergedCSSResourceURLs = sb.toString();
-
-		_jsResourceURLs = jsResourceURLs.toArray(new String[0]);
-
-		sb = new StringBundler((jsResourceURLs.size() * 2) + 1);
-
-		for (String jsResourceURL : jsResourceURLs) {
-			sb.append("&");
-			sb.append(jsResourceURL);
-		}
-
-		sb.append("\" type = \"text/javascript\"></script>\n");
-
-		_mergedJSResourceURLs = sb.toString();
+		return new ResourceURLsBag(cssResourceURLs, jsResourceURLs);
 	}
 
 	private void _renderComboCSS(
@@ -218,14 +225,20 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 
 		printWriter.write(portalURL + staticResourceURL);
 
-		printWriter.write(_mergedCSSResourceURLs);
+		ResourceURLsBag resourceURLsBag = _getResourceURLsBag();
+
+		printWriter.write(resourceURLsBag.getMergedCSSResourceURLs());
 	}
 
 	private void _renderComboJS(
 		long themeLastModified, HttpServletRequest httpServletRequest,
 		String portalURL, PrintWriter printWriter) {
 
-		printWriter.write("<script data-senna-track=\"permanent\" src=\"");
+		printWriter.write("<script");
+		printWriter.write(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		printWriter.write(" data-senna-track=\"permanent\" src=\"");
 
 		String staticResourceURL = _portal.getStaticResourceURL(
 			httpServletRequest, _comboContextPath, "minifierType=js",
@@ -233,12 +246,14 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 
 		printWriter.write(portalURL + staticResourceURL);
 
-		printWriter.write(_mergedJSResourceURLs);
+		ResourceURLsBag resourceURLsBag = _getResourceURLsBag();
+
+		printWriter.write(resourceURLsBag.getMergedJSResourceURLs());
 	}
 
 	private void _renderSimpleCSS(
 		long themeLastModified, HttpServletRequest httpServletRequest,
-		String portalURL, PrintWriter printWriter, String[] resourceURLs) {
+		String portalURL, PrintWriter printWriter, List<String> resourceURLs) {
 
 		for (String resourceURL : resourceURLs) {
 			printWriter.write("<link data-senna-track=\"permanent\" href=\"");
@@ -254,10 +269,14 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 
 	private void _renderSimpleJS(
 		long themeLastModified, HttpServletRequest httpServletRequest,
-		String portalURL, PrintWriter printWriter, String[] resourceURLs) {
+		String portalURL, PrintWriter printWriter, List<String> resourceURLs) {
 
 		for (String resourceURL : resourceURLs) {
-			printWriter.write("<script data-senna-track=\"permanent\" src=\"");
+			printWriter.write("<script");
+			printWriter.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+					httpServletRequest));
+			printWriter.write(" data-senna-track=\"permanent\" src=\"");
 			printWriter.write(
 				_portal.getStaticResourceURL(
 					httpServletRequest,
@@ -272,12 +291,67 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 	private final Collection<ServiceReference<BundleWebResources>>
 		_bundleWebResourcesServiceReferences = new TreeSet<>();
 	private String _comboContextPath;
-	private volatile String[] _cssResourceURLs = StringPool.EMPTY_ARRAY;
-	private volatile String[] _jsResourceURLs = StringPool.EMPTY_ARRAY;
-	private volatile String _mergedCSSResourceURLs;
-	private volatile String _mergedJSResourceURLs;
 
 	@Reference
 	private Portal _portal;
+
+	private volatile ResourceURLsBag _resourceURLsBag;
+	private ServiceTracker<BundleWebResources, BundleWebResources>
+		_serviceTracker;
+
+	private static class ResourceURLsBag {
+
+		public String getMergedCSSResourceURLs() {
+			String mergedCSSResourceURLs = _mergedCSSResourceURLs;
+
+			if (mergedCSSResourceURLs == null) {
+				mergedCSSResourceURLs =
+					_mergeURLs(_cssResourceURLs) +
+						"\" rel=\"stylesheet\" type = \"text/css\" />\n";
+
+				_mergedCSSResourceURLs = mergedCSSResourceURLs;
+			}
+
+			return mergedCSSResourceURLs;
+		}
+
+		public String getMergedJSResourceURLs() {
+			String mergedJSResourceURLs = _mergedJSResourceURLs;
+
+			if (mergedJSResourceURLs == null) {
+				mergedJSResourceURLs =
+					_mergeURLs(_jsResourceURLs) +
+						"\" type = \"text/javascript\"></script>\n";
+
+				_mergedJSResourceURLs = mergedJSResourceURLs;
+			}
+
+			return mergedJSResourceURLs;
+		}
+
+		private ResourceURLsBag(
+			List<String> cssResourceURLs, List<String> jsResourceURLs) {
+
+			_cssResourceURLs = cssResourceURLs;
+			_jsResourceURLs = jsResourceURLs;
+		}
+
+		private String _mergeURLs(List<String> urls) {
+			StringBundler sb = new StringBundler(urls.size() * 2);
+
+			for (String url : urls) {
+				sb.append("&");
+				sb.append(url);
+			}
+
+			return sb.toString();
+		}
+
+		private final List<String> _cssResourceURLs;
+		private final List<String> _jsResourceURLs;
+		private volatile String _mergedCSSResourceURLs;
+		private volatile String _mergedJSResourceURLs;
+
+	}
 
 }

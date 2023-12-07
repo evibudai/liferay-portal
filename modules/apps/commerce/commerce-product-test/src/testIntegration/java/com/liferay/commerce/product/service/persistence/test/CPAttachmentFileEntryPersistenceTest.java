@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.persistence.test;
@@ -165,6 +156,9 @@ public class CPAttachmentFileEntryPersistenceTest {
 
 		newCPAttachmentFileEntry.setExpirationDate(RandomTestUtil.nextDate());
 
+		newCPAttachmentFileEntry.setGalleryEnabled(
+			RandomTestUtil.randomBoolean());
+
 		newCPAttachmentFileEntry.setTitle(RandomTestUtil.randomString());
 
 		newCPAttachmentFileEntry.setJson(RandomTestUtil.randomString());
@@ -251,6 +245,9 @@ public class CPAttachmentFileEntryPersistenceTest {
 			Time.getShortTimestamp(
 				newCPAttachmentFileEntry.getExpirationDate()));
 		Assert.assertEquals(
+			existingCPAttachmentFileEntry.isGalleryEnabled(),
+			newCPAttachmentFileEntry.isGalleryEnabled());
+		Assert.assertEquals(
 			existingCPAttachmentFileEntry.getTitle(),
 			newCPAttachmentFileEntry.getTitle());
 		Assert.assertEquals(
@@ -336,6 +333,13 @@ public class CPAttachmentFileEntryPersistenceTest {
 	}
 
 	@Test
+	public void testCountByFileEntryId() throws Exception {
+		_persistence.countByFileEntryId(RandomTestUtil.nextLong());
+
+		_persistence.countByFileEntryId(0L);
+	}
+
+	@Test
 	public void testCountByC_C() throws Exception {
 		_persistence.countByC_C(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
@@ -407,6 +411,28 @@ public class CPAttachmentFileEntryPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_C_G_T_ST() throws Exception {
+		_persistence.countByC_C_G_T_ST(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByC_C_G_T_ST(
+			0L, 0L, RandomTestUtil.randomBoolean(), 0, 0);
+	}
+
+	@Test
+	public void testCountByC_C_G_T_NotST() throws Exception {
+		_persistence.countByC_C_G_T_NotST(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByC_C_G_T_NotST(
+			0L, 0L, RandomTestUtil.randomBoolean(), 0, 0);
+	}
+
+	@Test
 	public void testCountByERC_C() throws Exception {
 		_persistence.countByERC_C("", RandomTestUtil.nextLong());
 
@@ -449,10 +475,10 @@ public class CPAttachmentFileEntryPersistenceTest {
 			"userId", true, "userName", true, "createDate", true,
 			"modifiedDate", true, "classNameId", true, "classPK", true,
 			"fileEntryId", true, "cdnEnabled", true, "cdnURL", true,
-			"displayDate", true, "expirationDate", true, "title", true,
-			"priority", true, "type", true, "lastPublishDate", true, "status",
-			true, "statusByUserId", true, "statusByUserName", true,
-			"statusDate", true);
+			"displayDate", true, "expirationDate", true, "galleryEnabled", true,
+			"title", true, "priority", true, "type", true, "lastPublishDate",
+			true, "status", true, "statusByUserId", true, "statusByUserName",
+			true, "statusDate", true);
 	}
 
 	@Test
@@ -812,6 +838,8 @@ public class CPAttachmentFileEntryPersistenceTest {
 		cpAttachmentFileEntry.setDisplayDate(RandomTestUtil.nextDate());
 
 		cpAttachmentFileEntry.setExpirationDate(RandomTestUtil.nextDate());
+
+		cpAttachmentFileEntry.setGalleryEnabled(RandomTestUtil.randomBoolean());
 
 		cpAttachmentFileEntry.setTitle(RandomTestUtil.randomString());
 

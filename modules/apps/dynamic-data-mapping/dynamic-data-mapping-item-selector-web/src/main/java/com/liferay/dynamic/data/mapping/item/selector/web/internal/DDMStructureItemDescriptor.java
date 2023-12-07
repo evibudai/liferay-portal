@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.item.selector.web.internal;
@@ -17,6 +8,9 @@ package com.liferay.dynamic.data.mapping.item.selector.web.internal;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -32,9 +26,11 @@ public class DDMStructureItemDescriptor
 	implements ItemSelectorViewDescriptor.ItemDescriptor {
 
 	public DDMStructureItemDescriptor(
-		DDMStructure ddmStructure, HttpServletRequest httpServletRequest) {
+		DDMStructure ddmStructure, GroupLocalService groupLocalService,
+		HttpServletRequest httpServletRequest) {
 
 		_ddmStructure = ddmStructure;
+		_groupLocalService = groupLocalService;
 		_httpServletRequest = httpServletRequest;
 	}
 
@@ -65,6 +61,20 @@ public class DDMStructureItemDescriptor
 			"ddmstructurekey", _ddmStructure.getStructureKey()
 		).put(
 			"name", _ddmStructure.getName(themeDisplay.getLocale())
+		).put(
+			"scope",
+			() -> {
+				Group group = _groupLocalService.fetchGroup(
+					_ddmStructure.getGroupId());
+
+				if (group != null) {
+					return LanguageUtil.get(
+						themeDisplay.getLocale(),
+						group.getScopeLabel(themeDisplay));
+				}
+
+				return null;
+			}
 		).toString();
 	}
 
@@ -94,6 +104,7 @@ public class DDMStructureItemDescriptor
 	}
 
 	private final DDMStructure _ddmStructure;
+	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;
 
 }

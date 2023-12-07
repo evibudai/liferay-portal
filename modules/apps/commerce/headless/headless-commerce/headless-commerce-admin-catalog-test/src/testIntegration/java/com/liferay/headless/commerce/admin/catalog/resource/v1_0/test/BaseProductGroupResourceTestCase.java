@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.ProductGroupResource;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.ProductGroupSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -217,11 +207,20 @@ public abstract class BaseProductGroupResourceTestCase {
 
 		assertContains(productGroup1, (List<ProductGroup>)page.getItems());
 		assertContains(productGroup2, (List<ProductGroup>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetProductGroupsPage_getExpectedActions());
 
 		productGroupResource.deleteProductGroup(productGroup1.getId());
 
 		productGroupResource.deleteProductGroup(productGroup2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProductGroupsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -254,37 +253,36 @@ public abstract class BaseProductGroupResourceTestCase {
 	public void testGetProductGroupsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetProductGroupsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetProductGroupsPageWithFilterStringContains()
+		throws Exception {
 
-		ProductGroup productGroup1 = testGetProductGroupsPage_addProductGroup(
-			randomProductGroup());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ProductGroup productGroup2 = testGetProductGroupsPage_addProductGroup(
-			randomProductGroup());
-
-		for (EntityField entityField : entityFields) {
-			Page<ProductGroup> page = productGroupResource.getProductGroupsPage(
-				null, getFilterString(entityField, "eq", productGroup1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(productGroup1),
-				(List<ProductGroup>)page.getItems());
-		}
+		testGetProductGroupsPageWithFilter("contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetProductGroupsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetProductGroupsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetProductGroupsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetProductGroupsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetProductGroupsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -299,7 +297,7 @@ public abstract class BaseProductGroupResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<ProductGroup> page = productGroupResource.getProductGroupsPage(
-				null, getFilterString(entityField, "eq", productGroup1),
+				null, getFilterString(entityField, operator, productGroup1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -310,10 +308,11 @@ public abstract class BaseProductGroupResourceTestCase {
 
 	@Test
 	public void testGetProductGroupsPageWithPagination() throws Exception {
-		Page<ProductGroup> totalPage =
+		Page<ProductGroup> productGroupPage =
 			productGroupResource.getProductGroupsPage(null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			productGroupPage.getTotalCount());
 
 		ProductGroup productGroup1 = testGetProductGroupsPage_addProductGroup(
 			randomProductGroup());
@@ -345,7 +344,7 @@ public abstract class BaseProductGroupResourceTestCase {
 			productGroups2.toString(), 1, productGroups2.size());
 
 		Page<ProductGroup> page3 = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 		assertContains(productGroup1, (List<ProductGroup>)page3.getItems());
 		assertContains(productGroup2, (List<ProductGroup>)page3.getItems());
@@ -462,24 +461,29 @@ public abstract class BaseProductGroupResourceTestCase {
 
 		productGroup2 = testGetProductGroupsPage_addProductGroup(productGroup2);
 
+		Page<ProductGroup> page = productGroupResource.getProductGroupsPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ProductGroup> ascPage =
 				productGroupResource.getProductGroupsPage(
-					null, null, Pagination.of(1, 2),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(productGroup1, productGroup2),
-				(List<ProductGroup>)ascPage.getItems());
+			assertContains(
+				productGroup1, (List<ProductGroup>)ascPage.getItems());
+			assertContains(
+				productGroup2, (List<ProductGroup>)ascPage.getItems());
 
 			Page<ProductGroup> descPage =
 				productGroupResource.getProductGroupsPage(
-					null, null, Pagination.of(1, 2),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(productGroup2, productGroup1),
-				(List<ProductGroup>)descPage.getItems());
+			assertContains(
+				productGroup2, (List<ProductGroup>)descPage.getItems());
+			assertContains(
+				productGroup1, (List<ProductGroup>)descPage.getItems());
 		}
 	}
 
@@ -967,6 +971,13 @@ public abstract class BaseProductGroupResourceTestCase {
 	}
 
 	protected void assertValid(Page<ProductGroup> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<ProductGroup> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<ProductGroup> productGroups = page.getItems();
@@ -981,6 +992,25 @@ public abstract class BaseProductGroupResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1166,14 +1196,16 @@ public abstract class BaseProductGroupResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1190,6 +1222,10 @@ public abstract class BaseProductGroupResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1199,18 +1235,18 @@ public abstract class BaseProductGroupResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1237,9 +1273,47 @@ public abstract class BaseProductGroupResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(productGroup.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = productGroup.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

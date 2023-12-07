@@ -1,23 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 export default {
 	'a-task-for-this-build-already-exists':
 		'A task for this build already exists.',
 	'abandon': 'Abandon',
+	'abandoned': 'Abandoned',
 	'activate': 'Activate',
-	'active': 'Active',
+	'activated': 'Activated',
 	'add': 'Add',
 	'add-another': 'Add Another',
 	'add-case': 'Add Case',
@@ -50,7 +42,6 @@ export default {
 	'assign-to-me-and-x': 'Assign to Me and {0}',
 	'assign-user-groups': 'Assign User Groups',
 	'assign-users': 'Assign Users',
-	'assigned': 'Assigned',
 	'assigned-users': 'Assigned Users',
 	'assignee': 'Assignee',
 	'associated-requirements': 'Associated Requirements',
@@ -87,6 +78,7 @@ export default {
 	'case-name': 'Case Name',
 	'case-parameters': 'Case Parameters',
 	'case-result': 'Case Result',
+	'case-result-warning': 'Case Result Warning',
 	'case-results-status': 'Case Results Status',
 	'case-type': 'Case Type',
 	'case-types': 'Case Types',
@@ -104,12 +96,12 @@ export default {
 	'columns': 'Columns',
 	'comment': 'Comment',
 	'comments': 'Comments',
-	'compare-details': 'Compare Details',
-	'compare-runs': 'Compare Runs',
+	'compare-x': 'Compare {0}',
 	'complete': 'Complete',
 	'complete-test': 'Complete Test',
 	'complete-x': 'Complete {0}',
 	'component': 'Component',
+	'component-name': 'Component Name',
 	'components': 'Components',
 	'confirm-password': 'Confirm Password',
 	'copy-x': 'Copy - {0}',
@@ -122,6 +114,7 @@ export default {
 	'create-x': 'Create {0}',
 	'created': 'Created',
 	'created-by': 'Created By',
+	'creator': 'Creator',
 	'current': 'Current',
 	'current-case-types': 'Current Case Types',
 	'current-main-components': 'Current Main Components',
@@ -132,12 +125,12 @@ export default {
 	'current-subcomponents': 'Current Sub Components',
 	'current-teams': 'Current Teams',
 	'database': 'Database',
-	'date-created': 'Date  Created',
+	'date-created': 'Date Created',
 	'date-last-modified': 'Date Last Modified',
 	'date-modified': 'Date Modified',
 	'dates': 'Dates',
 	'deactivate': 'Deactivate',
-	'deactive': 'Deactive',
+	'deactivated': 'Deactivated',
 	'delete': 'Delete',
 	'delete-build': 'Delete Build',
 	'delete-case': 'Delete Case',
@@ -146,12 +139,14 @@ export default {
 	'delete-requirement': 'Delete Requirement',
 	'delete-routine': 'Delete Routine',
 	'delete-suite': 'Delete Suite',
+	'delete-user': 'Delete User',
 	'delete-x': 'Delete {0}',
 	'demote': 'Demote',
 	'description': 'Description',
 	'description-type': 'Description type',
-	'deselect-items': 'Deselect Items',
+	'deselect-items': 'Deselect Items.',
 	'details': 'Details',
+	'dnr': 'DNR',
 	'edit': 'Edit',
 	'edit-build': 'Edit Build',
 	'edit-case': 'Edit Case',
@@ -165,6 +160,7 @@ export default {
 	'edit-user-account': 'Edit User Account',
 	'edit-x': 'Edit {0}',
 	'email-address': 'Email Address',
+	'empty': 'Empty',
 	'enter-the-case-name': 'Enter the Case Name',
 	'environment': 'Environment',
 	'environment-factors': 'Enviroment Factors',
@@ -178,16 +174,25 @@ export default {
 	'export-csv': 'Export CSV',
 	'failed': 'Failed',
 	'filter-results': 'Filter Results',
+	'filters-pinned-successfully': 'Filters pinned successfully.',
+	'filters-unpinned-successfully': 'Filters unpinned successfully.',
 	'first-name': 'First Name',
 	'git-hash': 'Git Hash',
 	'github-compare-urls': 'GitHub Compare URLs',
+	'go-to-homepage': 'Go to homepage',
+	'has-requirements': 'Has Requirements',
 	'hide': 'Hide',
 	'history': 'History',
 	'import-jira-issues': 'Import JIRA Issues',
+	'in-analysis': 'In Analysis',
 	'in-progress': 'In Progress',
 	'issue': 'Issue',
 	'issues': 'Issues',
+	'issues-keys': 'Issues Keys',
+	'jira-authorization': 'Jira Authorization',
 	'jira-components': 'Jira Components',
+	'job-scheduler': 'Job Scheduler',
+	'job-scheduler-x': 'Job Scheduler {0}',
 	'key': 'Key',
 	'last-name': 'Last Name',
 	'last-used-date': 'Last Used Date',
@@ -217,11 +222,13 @@ export default {
 		'Mark at least one case type for processing.',
 	'mark-at-least-one-user-for-assignment':
 		'Mark at least one user for assignment.',
+	'max': 'Max',
 	'merge-selected-subtasks-into-the-highest-scoring-subtask':
 		'Merge selected subtasks into the highest scoring subtask.',
 	'merge-subtasks': 'Merge Subtasks',
 	'merged-with': 'Merged With',
 	'metrics': 'Metrics',
+	'min': 'Min',
 	'minimum-x-characters': 'Minimum {0} characters.',
 	'modified-date': 'Modified Date',
 	'move-selected-tests-to-a-new-subtask':
@@ -249,6 +256,9 @@ export default {
 	'no-permissions': 'No Permissions',
 	'no-results-found': 'No results found',
 	'no-x': 'No {0}',
+	'none': 'None',
+	'notifications': 'Notifications',
+	'number-of-case-results': 'Number of Case Results',
 	'open': 'Open',
 	'operating-system': 'Operating System',
 	'option': 'Option',
@@ -263,9 +273,11 @@ export default {
 	'please-select-at-least-two-subtasks-to-merge':
 		'Please select at least two subtasks to merge.',
 	'please-select-one-or-more-roles': 'Please, select one or more roles.',
+	'preparing-your-task': 'Preparing your task ...',
 	'priority': 'Priority',
 	'processing': 'Processing',
 	'product-version': 'Product Version',
+	'product-version-name': 'Product Version Name',
 	'progress': 'Progress',
 	'progress-score': 'Progress (Score)',
 	'project': 'Project',
@@ -274,6 +286,7 @@ export default {
 	'projects': 'Projects',
 	'promote': 'Promote',
 	'reanalyze': 'Reanalyze',
+	'refresh': 'Refresh',
 	'remaining-estimated': 'Remaining Estimated',
 	'remove': 'Remove',
 	'reopen-test': 'Reopen Test',
@@ -297,8 +310,10 @@ export default {
 	'score': 'Score',
 	'screen-name': 'Screen Name',
 	'search': 'Search',
+	'search-filters': 'Search Filters',
 	'search-in': 'Search in...',
 	'search-x': 'Search {0}',
+	'select-all': 'Select All',
 	'select-build': 'Select Build',
 	'select-case-parameters': 'Select Case Parameters',
 	'select-cases': 'Select Cases',
@@ -320,6 +335,7 @@ export default {
 	'smart': 'Smart',
 	'smart-suite': 'Smart Suite',
 	'sorry-there-are-no-results-found': 'Sorry, there are no results found',
+	'sorry-this-page-does-not-exist': 'Sorry, this page does not exist',
 	'split-from': 'Split From',
 	'split-tests': 'Split Tests',
 	'split-to': 'Split To',
@@ -327,6 +343,7 @@ export default {
 	'start-test': 'Start Test',
 	'static': 'Static',
 	'status': 'Status',
+	'status-in-x': 'Status In {0}',
 	'steps': 'Steps',
 	'steps-type': 'Steps type',
 	'subcomponents': 'SubComponents',
@@ -345,7 +362,7 @@ export default {
 	'suites': 'Suites',
 	'summary': 'Summary',
 	'task': 'Task',
-	'task-details': 'Task Details',
+	'task-x': 'Task {0}',
 	'tasks': 'Tasks',
 	'team': 'Team',
 	'team-name': 'Team Name',
@@ -359,6 +376,7 @@ export default {
 	'test-history': 'Test History',
 	'test-lead-should-only-have-access-to-builds-test-plans-test-suites-and-test-cases-.-this-role-will-be-responsible-for-creating-builds-and-for-creating-test-plans-test-runs-the-people-assigned-to-these-would-be-our-current-product-leads':
 		'Test Lead should only have access to Builds, Test Plans, Test Suites and Test Cases. This role will be responsible for creating Builds and for creating Test Plans/Test Runs. The people assigned to these would be our current product leads.',
+	'test-type': 'Test Type',
 	'testers-carry-permissions-to-analyze-test-results-by-workflowing-results-or-collaborating-on-tasks':
 		'Testers carry permissions to analyze test results by workflowing results or collaborating on tasks',
 	'testflow': 'TestFlow',
@@ -366,6 +384,7 @@ export default {
 	'testray-user': ' User',
 	'tests': 'Tests',
 	'the-component-name-already-exists': 'The component name already exists.',
+	'the-issue-x-does-not-exists': 'The issue(s) {0} does not exists.',
 	'the-link-url-must-be-a-valid-url': 'The link URL must be a valid URL.',
 	'the-name-already-exists': 'The name already exists.',
 	'the-project-cannot-be-deleted-because-it-has-associated-builds':
@@ -389,6 +408,8 @@ export default {
 	'this-field-is-required': 'This field is required.',
 	'this-role-is-for-general-liferay-employees-and-enables-authenticated-users-to-view-test-results':
 		'This role is for general Liferay employees and enables authenticated users to view test results.',
+	'this-user-does-not-have-authentication-with-jira':
+		'This user does not have authentication with jira',
 	'time-x-total-issues': 'Time {0} Total Issues',
 	'total': 'Total',
 	'total-completed': 'Total Completed',
@@ -407,16 +428,19 @@ export default {
 	'user-groups': 'User Groups',
 	'user-information': 'User Information',
 	'users': 'Users',
-	'view-associete-build': 'View Associete Build',
+	'view-associated-build': 'View Associated Build',
 	'view-case': 'View Case',
+	'view-in-jira': 'View in JIRA',
 	'view-page': 'View Page',
 	'view-task': 'View Task',
 	'warning': 'Warning',
 	'warnings': 'Warnings',
 	'warnings-x': 'Warnings ({0})',
+	'x-create-date': '{0}. Create Date',
 	'x-is-a-required-field': '{0} is a required field.',
 	'x-items': '{0} Items',
 	'x-items-cannot-be-deleted': '{0} items cannot be deleted',
+	'x-jobs-in-progress': '{0} Jobs in Progress',
 	'x-minutes': '{0} Minutes',
 	'x-results-for-x': '{0} Results for {1}',
 	'x-tests-were-split-into-x-successfully-view-x':
@@ -424,10 +448,14 @@ export default {
 	'you-are-not-the-assigned-user': 'You are not the assigned user.',
 	'you-cannot-split-all-case-results-from-a-subtask':
 		'You cannot split all case results from a subtask.',
+	'you-do-not-have-permission-to-access-the-requested-resource.':
+		'You do not have permission to access the requested resource.',
 	'you-do-not-have-permissions-to-access-this-app-contact-the-app-administrator-to-request-the-access':
 		'You do not have permissions to access this app. Contact the app administrator to request the access.',
 	'you-must-have-at-least-one-column-selected':
 		'You must have at least one column selected',
+	'you-must-select-one-or-more-filters-before-pinning':
+		'You must select one or more filters before pinning.',
 	'your-request-completed-successfully':
 		'Your request completed successfully',
 };

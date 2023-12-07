@@ -1,13 +1,14 @@
 definition {
 
-	macro _gotoPage {
-		var key_pageName = "${pageName}";
-		var count = "0";
+	@summary = "Default summary"
+	macro _gotoPage(pageName = null) {
+		var key_pageName = ${pageName};
+		var count = 0;
 
-		while (("${count}" != "3") && (IsElementNotPresent(locator1 = "Home#PAGE_ACTIVE"))) {
+		while ((${count} != 3) && (IsElementNotPresent(locator1 = "Home#PAGE_ACTIVE"))) {
 			AssertClick.assertPartialTextClickAt(
 				locator1 = "Home#PAGE",
-				value1 = "${pageName}");
+				value1 = ${pageName});
 
 			var count = ${count} + 1;
 		}
@@ -15,62 +16,71 @@ definition {
 		AssertVisible(locator1 = "Home#PAGE_ACTIVE");
 	}
 
-	macro _isLocalizedURL {
+	@summary = "Default summary"
+	macro _isLocalizedURL(locale = null) {
 		var currentURL = Navigator.getCurrentURL();
-		var portalURL = PropsUtil.get("portal.url");
+		var portalURL = JSONCompany.getPortalURL();
 		var isLocalizedURL = "false";
 
-		if (contains("${currentURL}", "${portalURL}/${locale}")) {
+		if (contains(${currentURL}, "${portalURL}/${locale}")) {
 			var isLocalizedURL = "true";
 		}
 
-		return "${isLocalizedURL}";
+		return ${isLocalizedURL};
 	}
 
-	macro closeSpecificWindow {
-		Navigator.selectSpecificWindow(windowTitle = "${closeWindowTitle}");
+	@summary = "Default summary"
+	macro closeSpecificWindow(closeWindowTitle = null, selectWindowTitle = null) {
+		Navigator.selectSpecificWindow(windowTitle = ${closeWindowTitle});
 
-		Close.closeAndSelectWindow(locator1 = "title=${selectWindowTitle}");
+		Close.closeAndSelectWindow(value1 = "title=${selectWindowTitle}");
 	}
 
-	macro closeWindow {
+	@summary = "Default summary"
+	macro closeWindow() {
 		Close.closeWindow();
 	}
 
-	macro ensureLocaleURL {
-		var isLocalizedURL = Navigator._isLocalizedURL(locale = "${locale}");
+	@summary = "Default summary"
+	macro ensureLocaleURL(locale = null) {
+		var isLocalizedURL = Navigator._isLocalizedURL(locale = ${locale});
 
-		if ("${isLocalizedURL}" == "false") {
+		if (${isLocalizedURL} == "false") {
 			var currentURL = Navigator.getCurrentURL();
-			var portalURL = PropsUtil.get("portal.url");
+			var portalURL = JSONCompany.getPortalURL();
 
-			Navigator.openSpecificURL(url = StringUtil.replace("${currentURL}", "${portalURL}", "${portalURL}/${locale}"));
+			Navigator.openSpecificURL(url = StringUtil.replace(${currentURL}, ${portalURL}, "${portalURL}/${locale}"));
 		}
 	}
 
-	macro getCurrentURL {
+	@summary = "Default summary"
+	macro getCurrentURL() {
 		var currentURL = selenium.getLocation();
 
-		return "${currentURL}";
+		return ${currentURL};
 	}
 
-	macro gotoAccountSettings {
+	@summary = "Default summary"
+	macro gotoAccountSettings() {
 		UserBar.gotoDropdownItem(dropdownItem = "Account Settings");
 	}
 
-	macro gotoBack {
+	@summary = "Default summary"
+	macro gotoBack() {
 		Click(locator1 = "Icon#BACK");
 	}
 
-	macro gotoEditPageViaControlMenu {
+	@summary = "Default summary"
+	macro gotoEditPageViaControlMenu(pageName = null) {
 		Click(locator1 = "ControlMenu#EDIT_COG");
 
 		AssertTextEquals(
 			locator1 = "Portlet#HEADER",
-			value1 = "${pageName}");
+			value1 = ${pageName});
 	}
 
-	macro gotoLiveView {
+	@summary = "Default summary"
+	macro gotoLiveView() {
 		if (isSet(remoteStaging)) {
 			Click(
 				key_navItem = "Go to Remote Live",
@@ -83,39 +93,43 @@ definition {
 		}
 	}
 
-	macro gotoLoginPage {
+	@summary = "Default summary"
+	macro gotoLoginPage() {
 		AssertClick(
 			locator1 = "UserBar#USER_SIGN_IN",
 			value1 = "Sign In");
 	}
 
-	macro gotoNavItem {
-		var key_navItem = "${navItem}";
+	@summary = "Default summary"
+	macro gotoNavItem(navItem = null) {
+		var key_navItem = ${navItem};
 
 		AssertClick(
 			locator1 = "NavBar#NAV_ITEM_LINK",
-			value1 = "${navItem}");
+			value1 = ${navItem});
 
 		AssertElementPresent(locator1 = "NavBar#ACTIVE_NAV_ITEM_LINK");
 	}
 
-	macro gotoNavNested {
-		var key_navNested = "${navNested}";
+	@summary = "Default summary"
+	macro gotoNavNested(navNested = null) {
+		var key_navNested = ${navNested};
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "NavNested#NAV_NESTED_LINK",
-			value1 = "${navNested}");
+			value1 = ${navNested});
 
 		AssertElementPresent(locator1 = "NavNested#ACTIVE_NAV_NESTED_LINK");
 	}
 
-	macro gotoNavTab {
-		var key_tab = "${navTab}";
+	@summary = "Default summary"
+	macro gotoNavTab(navTab = null) {
+		var key_tab = ${navTab};
 
 		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK")) {
 			AssertClick.assertPartialTextClickAt(
 				locator1 = "NavTab#TAB_LINK",
-				value1 = "${navTab}");
+				value1 = ${navTab});
 		}
 
 		AssertElementPresent(locator1 = "NavTab#ACTIVE_TAB_LINK");
@@ -123,54 +137,59 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	macro gotoNavUnderline {
-		var key_navUnderline = "${navUnderline}";
+	@summary = "Default summary"
+	macro gotoNavUnderline(navUnderline = null) {
+		var key_navUnderline = ${navUnderline};
 
 		if (IsElementNotPresent(locator1 = "NavUnderline#ACTIVE_NAV_UNDERLINE_LINK")) {
 			AssertClick(
 				locator1 = "NavUnderline#NAV_UNDERLINE_LINK",
-				value1 = "${navUnderline}");
+				value1 = ${navUnderline});
 		}
 
 		AssertElementPresent(locator1 = "NavUnderline#ACTIVE_NAV_UNDERLINE_LINK");
 	}
 
-	macro gotoNotifications {
+	@summary = "Default summary"
+	macro gotoNotifications() {
 		UserBar.gotoDropdownItem(dropdownItem = "Notifications");
 	}
 
-	@summary = "Navigate to the page named '${pageName}'"
-	macro gotoPage {
-		Navigator.openURL(baseURL = "${baseURL}");
+	@summary = "Default summary"
+	macro gotoPage(baseURL = null, pageName = null) {
+		Navigator.openURL(baseURL = ${baseURL});
 
-		Pause(locator1 = "3000");
+		Pause(value1 = 3000);
 
-		Navigator._gotoPage(pageName = "${pageName}");
+		Navigator._gotoPage(pageName = ${pageName});
 	}
 
-	macro gotoPersonalSite {
+	@summary = "Default summary"
+	macro gotoPersonalSite() {
 		UserBar.gotoDropdownItem(dropdownItem = "My Profile");
 	}
 
-	macro gotoPrivateSitePage {
+	@summary = "Default summary"
+	macro gotoPrivateSitePage(baseURL = null, siteName = null, pageName = null) {
 		Navigator.openPrivateSiteURL(
-			baseURL = "${baseURL}",
-			siteName = "${siteName}");
+			baseURL = ${baseURL},
+			siteName = ${siteName});
 
-		Navigator._gotoPage(pageName = "${pageName}");
+		Navigator._gotoPage(pageName = ${pageName});
 	}
 
-	@summary = "Navigate to the page named '${pageName}'"
-	macro gotoPrivateStagedSitePage {
+	@summary = "Default summary"
+	macro gotoPrivateStagedSitePage(baseURL = null, siteName = null, pageName = null) {
 		Navigator.openPrivateStagedSiteURL(
-			baseURL = "${baseURL}",
-			siteNameURL = "${siteName}");
+			baseURL = ${baseURL},
+			siteNameURL = ${siteName});
 
-		Navigator._gotoPage(pageName = "${pageName}");
+		Navigator._gotoPage(pageName = ${pageName});
 	}
 
-	macro gotoSidebarTab {
-		var key_tabName = "${tabName}";
+	@summary = "Default summary"
+	macro gotoSidebarTab(tabName = null) {
+		var key_tabName = ${tabName};
 
 		if (IsElementNotPresent(locator1 = "Sidebar#ACTIVE_TAB")) {
 			Click(locator1 = "Sidebar#TAB");
@@ -181,31 +200,34 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	macro gotoSitePage {
+	@summary = "Default summary"
+	macro gotoSitePage(baseURL = null, siteName = null, pageName = null) {
 		Navigator.openSiteURL(
-			baseURL = "${baseURL}",
-			siteName = "${siteName}");
+			baseURL = ${baseURL},
+			siteName = ${siteName});
 
-		Navigator._gotoPage(pageName = "${pageName}");
+		Navigator._gotoPage(pageName = ${pageName});
 	}
 
-	macro gotoSpecificURLPage {
-		Navigator.openSpecificURL(url = "${url}");
+	@summary = "Default summary"
+	macro gotoSpecificURLPage(pageName = null, url = null) {
+		Navigator.openSpecificURL(url = ${url});
 
-		Navigator._gotoPage(pageName = "${pageName}");
+		Navigator._gotoPage(pageName = ${pageName});
 	}
 
-	@summary = "Navigate to the page named '${pageName}'"
-	macro gotoStagedSitePage {
+	@summary = "Default summary"
+	macro gotoStagedSitePage(baseURL = null, siteName = null, defaultSite = null, pageName = null) {
 		Navigator.openStagingSiteURL(
-			baseURL = "${baseURL}",
-			defaultSite = "${defaultSite}",
-			siteName = "${siteName}");
+			baseURL = ${baseURL},
+			defaultSite = ${defaultSite},
+			siteName = ${siteName});
 
-		Navigator._gotoPage(pageName = "${pageName}");
+		Navigator._gotoPage(pageName = ${pageName});
 	}
 
-	macro gotoStagedView {
+	@summary = "Default summary"
+	macro gotoStagedView() {
 		ProductMenuHelper.openProductMenu();
 
 		Click(locator1 = "Link#STAGING");
@@ -213,194 +235,218 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	macro openNodePort {
-		Open(locator1 = "http://localhost:${nodePort}");
+	@summary = "Default summary"
+	macro openNodePort(nodePort = null) {
+		Open(value1 = "http://localhost:${nodePort}");
 	}
 
-	macro openPrivateSitePageURL {
-		var siteNameURL = StringUtil.replace("${siteName}", " ", "-");
+	@summary = "Default summary"
+	macro openPrivateSitePageURL(siteName = null, pageName = null) {
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
 
-		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
-		var pageNameURL = StringUtil.replace("${pageName}", " ", "-");
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+		var pageNameURL = StringUtil.replace(${pageName}, " ", "-");
 
-		var pageNameURL = StringUtil.lowerCase("${pageNameURL}");
-		var baseURL = "${baseURL}";
+		var pageNameURL = StringUtil.lowerCase(${pageNameURL});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/group/${siteNameURL}/${pageNameURL}");
+		Open(value1 = "${baseURL}/group/${siteNameURL}/${pageNameURL}");
 	}
 
-	macro openPrivateSiteURL {
-		var siteNameURL = StringUtil.replace("${siteName}", " ", "-");
+	@summary = "Default summary"
+	macro openPrivateSiteURL(siteName = null) {
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
 
-		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
-		var baseURL = "${baseURL}";
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/group/${siteNameURL}");
+		Open(value1 = "${baseURL}/group/${siteNameURL}");
 	}
 
-	macro openPrivateStagedSiteURL {
-		var siteNameURL = StringUtil.replace("${siteNameURL}", " ", "-");
+	@summary = "Default summary"
+	macro openPrivateStagedSiteURL() {
+		var siteNameURL = StringUtil.replace(${siteNameURL}, " ", "-");
 
-		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
-		var baseURL = "${baseURL}";
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/group/${siteNameURL}-staging");
+		Open(value1 = "${baseURL}/group/${siteNameURL}-staging");
 	}
 
-	macro openPrivateURL {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro openPrivateURL() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/group/guest");
+		Open(value1 = "${baseURL}/group/guest");
 	}
 
-	macro openSitePage {
-		var siteNameURL = StringUtil.replace("${siteName}", " ", "-");
+	@summary = "Default summary"
+	macro openSitePage(siteName = null, pageName = null) {
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
 
-		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
-		var baseURL = "${baseURL}";
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		var pageNameURL = StringUtil.replace("${pageName}", " ", "-");
+		var pageNameURL = StringUtil.replace(${pageName}, " ", "-");
 
-		var pageNameURL = StringUtil.lowerCase("${pageNameURL}");
+		var pageNameURL = StringUtil.lowerCase(${pageNameURL});
 
-		Open(locator1 = "${baseURL}/web/${siteNameURL}/${pageNameURL}");
+		Open(value1 = "${baseURL}/web/${siteNameURL}/${pageNameURL}");
 	}
 
-	macro openSiteStagingConfiguration {
-		var siteNameURL = StringUtil.replace("${siteName}", " ", "-");
+	@summary = "Default summary"
+	macro openSiteStagingConfiguration(siteName = null) {
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
 
-		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
-		var baseURL = "${baseURL}";
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteNameURL}-staging/~/control_panel/manage?p_p_id=com_liferay_staging_processes_web_portlet_StagingProcessesPortlet");
 	}
 
-	macro openSiteURL {
-		var siteNameURL = StringUtil.replace("${siteName}", " ", "-");
+	@summary = "Default summary"
+	macro openSiteURL(siteName = null) {
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
 
-		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
-		var baseURL = "${baseURL}";
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/web/${siteNameURL}");
+		Open(value1 = "${baseURL}/web/${siteNameURL}");
 	}
 
-	macro openSpecificURL {
-		Open(locator1 = "${url}");
+	@summary = "Default summary"
+	macro openSpecificURL(domain = null, url = null) {
+		Open(value1 = ${url});
 
-		Alert.confirmSecurity(domain = "${domain}");
+		Alert.confirmSecurity(domain = ${domain});
 	}
 
-	macro openStagingSiteURL {
-		var siteNameURL = StringUtil.replace("${siteName}", " ", "-");
+	@summary = "Default summary"
+	macro openStagingSiteURL(siteName = null) {
+		var siteNameURL = StringUtil.replace(${siteName}, " ", "-");
 
-		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
-		var baseURL = "${baseURL}";
+		var siteNameURL = StringUtil.lowerCase(${siteNameURL});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(defaultSite)) {
-			Open(locator1 = "${baseURL}/web/guest-staging");
+			Open(value1 = "${baseURL}/web/guest-staging");
 		}
 		else {
-			Open(locator1 = "${baseURL}/web/${siteNameURL}-staging");
+			Open(value1 = "${baseURL}/web/${siteNameURL}-staging");
 		}
 	}
 
-	macro openStoreURL {
+	@summary = "Default summary"
+	macro openStoreURL() {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_marketplace_store_web_portlet_MarketplaceStorePortlet");
 	}
 
-	macro openToGroupPagesPortlet {
+	@summary = "Default summary"
+	macro openToGroupPagesPortlet(groupName = null, site = null, portalURL = null, siteURLKey = null, portlet = null, layoutName = null) {
 		var plid = JSONLayout.getPlid(
-			groupName = "${groupName}",
-			layoutName = "${layoutName}",
-			portalURL = "${portalURL}",
-			site = "${site}");
+			groupName = ${groupName},
+			layoutName = ${layoutName},
+			portalURL = ${portalURL},
+			site = ${site});
 
-		if ("${portlet}" == "General") {
+		if (${portlet} == "General") {
 			var screenNavigationEntryKey = "general";
 		}
 
-		if ("${portlet}" == "Open Graph") {
+		if (${portlet} == "Open Graph") {
 			var screenNavigationEntryKey = "open-graph";
 		}
 
-		if ("${portlet}" == "SEO") {
+		if (${portlet} == "SEO") {
 			var screenNavigationEntryKey = "seo";
 		}
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_tabs1=pages&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_privateLayout=false&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_displayStyle=miller-columns&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_mvcRenderCommandName=%2Flayout_admin%2Fedit_layout&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_portletResource=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&p_r_p_selPlid=${plid}&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_screenNavigationEntryKey=${screenNavigationEntryKey}");
+		Open(value1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_tabs1=pages&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_privateLayout=false&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_displayStyle=miller-columns&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_mvcRenderCommandName=%2Flayout_admin%2Fedit_layout&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_portletResource=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&p_r_p_selPlid=${plid}&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_screenNavigationEntryKey=${screenNavigationEntryKey}");
 	}
 
-	macro openURL {
+	@summary = "Default summary"
+	macro openURL() {
 		WaitForSPARefresh();
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/web/guest/home");
+		Open(value1 = "${baseURL}/web/guest/home");
 	}
 
-	macro openWithAppendToBaseURL {
+	@summary = "Default summary"
+	macro openWithAppendToBaseURL(urlAppend = null) {
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/${urlAppend}");
+		Open(value1 = "${baseURL}/${urlAppend}");
 	}
 
-	macro selectSpecificWindow {
-		SelectWindow(locator1 = "title=${windowTitle}");
+	@summary = "Default summary"
+	macro selectSpecificWindow(windowTitle = null) {
+		SelectWindow(value1 = "title=${windowTitle}");
 	}
 
-	macro viewActivatedNavTab {
+	@summary = "Default summary"
+	macro viewActivatedNavTab(navTab = null) {
 		AssertElementPresent(
-			key_tab = "${navTab}",
+			key_tab = ${navTab},
 			locator1 = "NavTab#ACTIVE_TAB_LINK");
 	}
 
-	macro viewNoNavTab {
+	@summary = "Default summary"
+	macro viewNavTab(navTab = null) {
+		AssertVisible(
+			key_tab = ${navTab},
+			locator1 = "NavTab#TAB_LINK");
+	}
+
+	@summary = "Default summary"
+	macro viewNoNavTab(navTab = null) {
 		AssertElementNotPresent(
-			key_tab = "${navTab}",
+			key_tab = ${navTab},
 			locator1 = "NavTab#TAB_LINK");
 	}
 

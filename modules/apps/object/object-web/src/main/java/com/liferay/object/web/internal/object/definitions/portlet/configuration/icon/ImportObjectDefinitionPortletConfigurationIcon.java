@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.definitions.portlet.configuration.icon;
 
 import com.liferay.object.constants.ObjectPortletKeys;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.configuration.icon.BaseJSPPortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -49,6 +41,11 @@ public class ImportObjectDefinitionPortletConfigurationIcon
 	}
 
 	@Override
+	public String getIconCssClass() {
+		return "download";
+	}
+
+	@Override
 	public String getJspPath() {
 		return "/object_definitions/configuration/icon" +
 			"/import_object_definition.jsp";
@@ -56,11 +53,16 @@ public class ImportObjectDefinitionPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return _language.get(getLocale(portletRequest), "import");
+		return _language.get(
+			getLocale(portletRequest), "import-object-definition");
 	}
 
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-148856")) {
+			return false;
+		}
+
 		return true;
 	}
 

@@ -1,34 +1,32 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import {useModal} from '@clayui/modal';
-import {Panel, PanelBody, PanelHeader} from '@liferay/object-js-components-web';
+import {
+	Panel,
+	PanelBody,
+	PanelHeader,
+	getLocalizableLabel,
+} from '@liferay/object-js-components-web';
 import React, {useState} from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
 import {HeaderDropdown} from './HeaderDropdown';
 import {ModalAddObjectLayoutBox} from './ModalAddObjectLayoutBox';
 import {ObjectLayoutBox} from './ObjectLayoutBox';
 import {ObjectLayoutRelationship} from './ObjectLayoutRelationship';
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 const ObjectLayoutTabs: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
-	const [{isViewOnly, objectLayout}, dispatch] = useLayoutContext();
+	const [
+		{creationLanguageId, isViewOnly, objectLayout},
+		dispatch,
+	] = useLayoutContext();
 	const [visibleModal, setVisibleModal] = useState(false);
 	const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 	const {observer, onClose} = useModal({
@@ -112,7 +110,10 @@ const ObjectLayoutTabs: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 										/>
 									</>
 								}
-								title={name[defaultLanguageId]!}
+								title={getLocalizableLabel(
+									creationLanguageId,
+									name
+								)}
 								type="regular"
 							/>
 
@@ -133,9 +134,10 @@ const ObjectLayoutTabs: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 													boxIndex={boxIndex}
 													collapsable={collapsable}
 													key={`box_${boxIndex}`}
-													label={
-														name[defaultLanguageId]!
-													}
+													label={getLocalizableLabel(
+														creationLanguageId,
+														name
+													)}
 													objectLayoutRows={
 														objectLayoutRows
 													}

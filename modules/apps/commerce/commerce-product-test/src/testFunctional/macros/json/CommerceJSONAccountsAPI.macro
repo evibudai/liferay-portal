@@ -1,27 +1,469 @@
 definition {
 
-	macro _deleteAllCommerceAccounts {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _addChannelDefaultsBillingAddress(billingAddressName = null, channelName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${billingAddressName}");
+
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var billingAddressId = CommerceJSONAccountsAPI._getAccountAddressIdByAddressName(
+			accountEntryId = ${accountEntryId},
+			addressName = ${billingAddressName});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-billing-addresses \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${billingAddressId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addChannelDefaultsChannelAccountManager(userEmailAddress = null, channelName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${userEmailAddress}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = ${userEmailAddress});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-users \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${userId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addChannelDefaultsCurrency(channelName = null, accountEntryName = null, currencyCode = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${currencyCode}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var commerceCurrencyId = CommerceJSONCurrenciesAPI._getCommerceCurrencyIdByCode(code = ${currencyCode});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-currencies \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${commerceCurrencyId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addChannelDefaultsDeliveryTerm(termsAndConditionsName = null, channelName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${termsAndConditionsName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var termId = CommerceJSONTermsAndConditionsAPI._getCommerceTermsAndConditionsIdByName(termsAndConditionsName = ${termsAndConditionsName});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-delivery-terms \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${termId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addChannelDefaultsDiscount(discountTitle = null, channelName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${discountTitle}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var commerceDiscountId = CommerceJSONDiscountsAPI._getDiscountId(discountTitle = ${discountTitle});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-discounts \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${commerceDiscountId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addChannelDefaultsPaymentTerm(termsAndConditionsName = null, channelName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${termsAndConditionsName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var termId = CommerceJSONTermsAndConditionsAPI._getCommerceTermsAndConditionsIdByName(termsAndConditionsName = ${termsAndConditionsName});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-payment-terms \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${termId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addChannelDefaultsPriceList(channelName = null, priceListName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${priceListName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var priceListId = CommerceJSONPriceListsAndPromotionsAPI._getCommercePriceListsAndPromotionsIdByName(priceListAndPromotionName = ${priceListName});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-price-lists \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${priceListId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addChannelDefaultsShippingAddress(shippingAddressName = null, channelName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${channelName},${shippingAddressName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var commerceChannelId = CommerceJSONChannelsAPI._getCommerceChannelIdByName(channelName = ${channelName});
+		var shippingAddressId = CommerceJSONAccountsAPI._getAccountAddressIdByAddressName(
+			accountEntryId = ${accountEntryId},
+			addressName = ${shippingAddressName});
+
+		if (!(isSet(overrideEligibility))) {
+			var overrideEligibility = "false";
+		}
+
+		if (!(isSet(priority))) {
+			var priority = 0;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/account-channel-shipping-addresses \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelId},
+					"classPK": ${shippingAddressId},
+					"overrideEligibility": ${overrideEligibility},
+					"priority": ${priority}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addCommerceAccount(accountName = null) {
+		Variables.assertDefined(parameterList = ${accountName});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(accountType))) {
+			var accountType = "";
+		}
+
+		if (!(isSet(externalReferenceCode))) {
+			var externalReferenceCode = "";
+		}
+
+		var accountType = StringUtil.lowerCase(${accountType});
+
+		var curl = '''
+			${baseURL}/o/headless-admin-user/v1.0/accounts \
+				-u test@liferay.com:test \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"externalReferenceCode": "${externalReferenceCode}",
+					"name": "${accountName}",
+					"type": "${accountType}"
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _addCommerceAccountAddress(zip = null, city = null, countryISOCode = null, name = null, street1 = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = "${accountEntryName},${countryISOCode},${name},${street1},${city},${zip}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+
+		if (!(isSet(defaultBilling))) {
+			var defaultBilling = "true";
+		}
+
+		if (!(isSet(defaultShipping))) {
+			var defaultShipping = "true";
+		}
+
+		if (!(isSet(description))) {
+			var description = "";
+		}
+
+		if (!(isSet(latitude))) {
+			var latitude = "0.0";
+		}
+
+		if (!(isSet(longitude))) {
+			var longitude = "0.0";
+		}
+
+		if (!(isSet(phoneNumber))) {
+			var phoneNumber = "";
+		}
+
+		if (!(isSet(regionISOCode))) {
+			var regionISOCode = "";
+		}
+
+		if (!(isSet(street2))) {
+			var street2 = "";
+		}
+
+		if (!(isSet(street3))) {
+			var street3 = "";
+		}
+
+		if (!(isSet(type))) {
+			var type = 2;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/accountAddresses \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"city": "${city}",
+					"countryISOCode": "${countryISOCode}",
+					"defaultBilling": "${defaultBilling}",
+					"defaultShipping": "${defaultShipping}",
+					"description": "${description}",
+					"latitude": "${latitude}",
+					"longitude": "${longitude}",
+					"name": "${name}",
+					"regionISOCode": "${regionISOCode}",
+					"street1": "${street1}",
+					"street2": "${street2}",
+					"street3": "${street3}",
+					"type": ${type},
+					"zip": "${zip}"
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _deleteAllCommerceAccounts() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var accountsCount = CommerceJSONAccountsAPI._getCommerceAccountsCount();
 
-		if ("${accountsCount}" != "0") {
-			var accountIds = CommerceJSONAccountsAPI._getCommerceAccountIds(accountCount = "${accountsCount}");
+		if (${accountsCount} != 0) {
+			var accountIds = CommerceJSONAccountsAPI._getCommerceAccountIds(accountCount = ${accountsCount});
 
-			for (var accountId : list "${accountIds}") {
+			for (var accountId : list ${accountIds}) {
 				echo("Deleting Commerce account with id: ${accountId}");
+
+				var userLoginInfo = JSONUtil2.formatJSONUser();
 
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountId} \
-					-u test@liferay.com:test \
-					-H 'accept: application/json' \
+						-u ${userLoginInfo} \
+						-H 'accept: application/json' \
 				''';
 
-				JSONCurlUtil.delete("${curl}");
+				JSONCurlUtil.delete(${curl});
 			}
 		}
 		else {
@@ -29,177 +471,237 @@ definition {
 		}
 	}
 
-	macro _getAccountAddressCityByAddressName {
-		Variables.assertDefined(parameterList = "${addressName}");
+	@summary = "Default summary"
+	macro _getAccountAddressCityByAddressName(addressName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = ${addressName});
 
 		if (isSet(accountEntryName) && !(isSet(accountEntryId))) {
-			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
+			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
 		}
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-admin-user/v1.0/accounts/${accountEntryId}/postal-addresses \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var accountAddressCity = JSONCurlUtil.get("${curl}", "$.items.[?(@['name']=='${addressName}')].['addressLocality']]");
+		var accountAddressCity = JSONCurlUtil.get(${curl}, "$.items.[?(@['name']=='${addressName}')].['addressLocality']]");
 
-		return "${accountAddressCity}";
+		return ${accountAddressCity};
 	}
 
-	macro _getAccountAddressCountryByAddressName {
-		Variables.assertDefined(parameterList = "${addressName}");
+	@summary = "Default summary"
+	macro _getAccountAddressCountryByAddressName(addressName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = ${addressName});
 
 		if (isSet(accountEntryName) && !(isSet(accountEntryId))) {
-			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
+			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
 		}
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-admin-user/v1.0/accounts/${accountEntryId}/postal-addresses \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var accountAddressCountry = JSONCurlUtil.get("${curl}", "$.items.[?(@['name']=='${addressName}')].['addressCountry']]");
+		var accountAddressCountry = JSONCurlUtil.get(${curl}, "$.items.[?(@['name']=='${addressName}')].['addressCountry']]");
 
-		return "${accountAddressCountry}";
+		return ${accountAddressCountry};
 	}
 
-	macro _getAccountAddressIdByAddressName {
-		Variables.assertDefined(parameterList = "${addressName}");
+	@summary = "Default summary"
+	macro _getAccountAddressIdByAddressName(addressName = null, accountEntryName = null) {
+		Variables.assertDefined(parameterList = ${addressName});
 
 		if (isSet(accountEntryName) && !(isSet(accountEntryId))) {
-			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
+			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
 		}
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts/${accountEntryId}/accountAddresses \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var accountAddressId = JSONCurlUtil.get("${curl}", "$.items.[?(@['name']=='${addressName}')].['id']]");
+		var accountAddressId = JSONCurlUtil.get(${curl}, "$.items.[?(@['name']=='${addressName}')].['id']]");
 
-		return "${accountAddressId}";
+		return ${accountAddressId};
 	}
 
-	macro _getAccountAddressStreetByAddressName {
+	@summary = "Default summary"
+	macro _getAccountAddressStreetByAddressName(streetNumber = null, addressName = null, accountEntryName = null) {
 		Variables.assertDefined(parameterList = "${addressName},${streetNumber}");
 
 		if (isSet(accountEntryName) && !(isSet(accountEntryId))) {
-			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
+			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
 		}
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-admin-user/v1.0/accounts/${accountEntryId}/postal-addresses \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var accountAddressStreet = JSONCurlUtil.get("${curl}", "$.items.[?(@['name']=='${addressName}')].['streetAddressLine${streetNumber}']]");
+		var accountAddressStreet = JSONCurlUtil.get(${curl}, "$.items.[?(@['name']=='${addressName}')].['streetAddressLine${streetNumber}']]");
 
-		return "${accountAddressStreet}";
+		return ${accountAddressStreet};
 	}
 
-	macro _getCommerceAccountEmail {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getAccounts(accountCount = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
-		}
-
-		if (isSet(accountName)) {
-			var accountName = "${accountName}";
-		}
-
-		if ("${accountType}" == "Guest") {
-			var accountTypeValue = "0";
-		}
-		else if ("${accountType}" == "Person") {
-			var accountTypeValue = "1";
-		}
-		else if ("${accountType}" == "Business") {
-			var accountTypeValue = "2";
-		}
-
-		var curl = '''
-			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
-		''';
-
-		var accountEmail = JSONCurlUtil.get("${curl}", "$.items.[?(@['name']=='${accountName}' && @['type']==${accountTypeValue})].['emailAddresses'][:1]");
-
-		return "${accountEmail}";
-	}
-
-	macro _getCommerceAccountIds {
-		var baseURL = "${baseURL}";
-
-		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(accountCount)) {
-			var accountsCount = "${accountCount}";
+			var accountsCount = ${accountCount};
 		}
 		else {
-			var accountsCount = "100";
+			var accountsCount = 100;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
-			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts?pageSize=${accountsCount} \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+			${baseURL}/o/headless-admin-user/v1.0/accounts?pageSize=${accountsCount} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var accountIds = JSONCurlUtil.get("${curl}", "$..['id']");
+		var responseBody = JSONCurlUtil.get(${curl});
 
-		return "${accountIds}";
+		return ${responseBody};
 	}
 
-	macro _getCommerceAccountsCount {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceAccountEmail(accountType = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		if (isSet(accountName)) {
+			var accountName = ${accountName};
+		}
+
+		if (${accountType} == "Guest") {
+			var accountTypeValue = 0;
+		}
+		else if (${accountType} == "Person") {
+			var accountTypeValue = 1;
+		}
+		else if (${accountType} == "Business") {
+			var accountTypeValue = 2;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var accountsCount = JSONCurlUtil.get("${curl}", "$['totalCount']");
+		var accountEmail = JSONCurlUtil.get(${curl}, "$.items.[?(@['name']=='${accountName}' && @['type']==${accountTypeValue})].['emailAddresses'][:1]");
+
+		return ${accountEmail};
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceAccountIds(accountCount = null) {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (isSet(accountCount)) {
+			var accountsCount = ${accountCount};
+		}
+		else {
+			var accountsCount = 100;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts?pageSize=${accountsCount} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var accountIds = JSONCurlUtil.get(${curl}, "$..['id']");
+
+		return ${accountIds};
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceAccountsCount() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-account/v1.0/accounts \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var accountsCount = JSONCurlUtil.get(${curl}, "$['totalCount']");
 
 		echo("The Commerce accounts count is: ${accountsCount}");
 
-		return "${accountsCount}";
+		return ${accountsCount};
+	}
+
+	@summary = "Default summary"
+	macro getAccountFieldByAccountName(field = null, accountName = null) {
+		Variables.assertDefined(parameterList = ${accountName});
+
+		var responseBody = CommerceJSONAccountsAPI._getAccounts();
+
+		var fieldValue = JSONUtil.getWithJSONPath(${responseBody}, "$..[?(@['name'] == '${accountName}')]['${field}']");
+
+		return ${fieldValue};
 	}
 
 }

@@ -1,8 +1,11 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Nested Portlets,Upgrades WEM";
 	property testray.main.component.name = "Upgrades WEM";
 
@@ -16,61 +19,64 @@ definition {
 		SearchAdministration.executeReindex();
 	}
 
-	@priority = "5"
+	@description = "View nested portlets after upgrade from 625."
+	@priority = 5
 	test ViewNestedPortletsArchive625 {
 		property data.archive.type = "data-archive-nested-portlets";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "6.2.5";
 
-		Upgrade.viewNestedPortlets();
+		ValidateWebContentUpgrade.viewNestedPortlets();
 	}
 
-	@priority = "5"
+	@description = "View nested portlets after upgrade from 621015."
+	@priority = 5
 	test ViewNestedPortletsArchive621015 {
 		property data.archive.type = "data-archive-nested-portlets";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.15";
 
-		Upgrade.viewNestedPortlets();
+		ValidateWebContentUpgrade.viewNestedPortlets();
 	}
 
-	@priority = "5"
+	@description = "View nested portlets after upgrade from 621021."
+	@priority = 5
 	test ViewNestedPortletsArchive621021 {
 		property data.archive.type = "data-archive-nested-portlets";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.21";
 
-		Upgrade.viewNestedPortlets();
+		ValidateWebContentUpgrade.viewNestedPortlets();
 	}
 
-	@description = "This is a use case for LPS-66141."
-	@priority = "5"
+	@description = "This is a use case for LPS-66141. View nested portlets in staging site after upgrade from 625."
+	@priority = 5
 	test ViewStagingNestedPortletsArchive625 {
 		property data.archive.type = "data-archive-staging-nested-portlets";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "6.2.5";
 
-		Upgrade.viewStagingNestedPortlets();
+		ValidateStagingUpgrade.viewStagingNestedPortlets();
 	}
 
-	@description = "This is a use case for LPS-66141."
-	@priority = "5"
+	@description = "This is a use case for LPS-66141. View nested portlets in staging site after upgrade from 62105."
+	@priority = 5
 	test ViewStagingNestedPortletsArchive621015 {
 		property data.archive.type = "data-archive-staging-nested-portlets";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.15";
 
-		Upgrade.viewStagingNestedPortlets();
+		ValidateStagingUpgrade.viewStagingNestedPortlets();
 	}
 
-	@description = "This is a use case for LPS-66141."
-	@priority = "5"
+	@description = "This is a use case for LPS-66141. View nested portlets in staging site after upgrade from 621021."
+	@priority = 5
 	test ViewStagingNestedPortletsArchive621021 {
 		property data.archive.type = "data-archive-staging-nested-portlets";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.21";
 
-		Upgrade.viewStagingNestedPortlets();
+		ValidateStagingUpgrade.viewStagingNestedPortlets();
 	}
 
 }

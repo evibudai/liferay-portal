@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link SXPElementLocalService}.
@@ -40,16 +32,16 @@ public class SXPElementLocalServiceWrapper
 	public com.liferay.search.experiences.model.SXPElement addSXPElement(
 			String externalReferenceCode, long userId,
 			java.util.Map<java.util.Locale, String> descriptionMap,
-			String elementDefinitionJSON, boolean readOnly,
-			String schemaVersion,
+			String elementDefinitionJSON, String fallbackDescription,
+			String fallbackTitle, boolean readOnly, String schemaVersion,
 			java.util.Map<java.util.Locale, String> titleMap, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _sxpElementLocalService.addSXPElement(
 			externalReferenceCode, userId, descriptionMap,
-			elementDefinitionJSON, readOnly, schemaVersion, titleMap, type,
-			serviceContext);
+			elementDefinitionJSON, fallbackDescription, fallbackTitle, readOnly,
+			schemaVersion, titleMap, type, serviceContext);
 	}
 
 	/**
@@ -415,7 +407,7 @@ public class SXPElementLocalServiceWrapper
 
 	@Override
 	public com.liferay.search.experiences.model.SXPElement updateSXPElement(
-			long userId, long sxpElementId,
+			String externalReferenceCode, long userId, long sxpElementId,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			String elementDefinitionJSON, boolean hidden, String schemaVersion,
 			java.util.Map<java.util.Locale, String> titleMap,
@@ -423,8 +415,9 @@ public class SXPElementLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _sxpElementLocalService.updateSXPElement(
-			userId, sxpElementId, descriptionMap, elementDefinitionJSON, hidden,
-			schemaVersion, titleMap, serviceContext);
+			externalReferenceCode, userId, sxpElementId, descriptionMap,
+			elementDefinitionJSON, hidden, schemaVersion, titleMap,
+			serviceContext);
 	}
 
 	/**
@@ -442,6 +435,11 @@ public class SXPElementLocalServiceWrapper
 		com.liferay.search.experiences.model.SXPElement sxpElement) {
 
 		return _sxpElementLocalService.updateSXPElement(sxpElement);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _sxpElementLocalService.getBasePersistence();
 	}
 
 	@Override

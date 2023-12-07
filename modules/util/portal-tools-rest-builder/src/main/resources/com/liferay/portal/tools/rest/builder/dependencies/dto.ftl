@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -26,6 +27,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.jackson.databind.deser.JSONStringStdDeserializer;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -126,13 +128,14 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 	}
 
 	<#assign
-		enumSchemas = freeMarkerTool.getDTOEnumSchemas(openAPIYAML, schema)
-		properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema)
+		enumSchemas = freeMarkerTool.getDTOEnumSchemas(configYAML, openAPIYAML, schema)
+		jsonMapPropertyNames = []
+		properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema, allSchemas)
 	/>
 
 	<#list properties?keys as propertyName>
 		<#assign
-			propertySchema = freeMarkerTool.getDTOPropertySchema(propertyName, schema)
+			propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)
 			propertyType = properties[propertyName]
 			sizeParameters = []
 		/>
@@ -147,6 +150,8 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 
 		<#if propertySchema.jsonMap>
 			@JsonAnyGetter
+
+			<#assign jsonMapPropertyNames = jsonMapPropertyNames + [propertyName] />
 		</#if>
 
 		<#if propertySchema.maxLength??>
@@ -235,6 +240,9 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 		<#if propertySchema.jsonMap>
 			@JsonAnySetter
 		</#if>
+		<#if freeMarkerTool.isVersionCompatible(configYAML, 3) && propertySchema.jsonString>
+			@JsonDeserialize(using = JSONStringStdDeserializer.class)
+		</#if>
 		@JsonProperty(
 			<#if propertySchema.readOnly>
 				access = JsonProperty.Access.READ_ONLY
@@ -276,6 +284,33 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 		return Objects.equals(toString(), ${schemaVarName}.toString());
 	}
 
+	<#if jsonMapPropertyNames?has_content>
+		public Object getPropertyValue(String propertyName) {
+			<#list properties?keys as propertyName>
+				<#if jsonMapPropertyNames?seq_contains(propertyName)>
+					<#continue>
+				</#if>
+
+				if (Objects.equals(propertyName, "${propertyName}")) {
+					return ${propertyName};
+				}
+				else
+			</#list>
+
+			<#list jsonMapPropertyNames as propertyName>
+				if (${propertyName}.containsKey(propertyName)) {
+					return ${propertyName}.get(propertyName);
+				}
+
+				<#sep>
+					else
+				</#sep>
+			</#list>
+
+			return null;
+		}
+	</#if>
+
 	@Override
 	public int hashCode() {
 		String string = toString();
@@ -300,7 +335,7 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 
 		<#list properties?keys as propertyName>
 			<#assign
-				propertySchema = freeMarkerTool.getDTOPropertySchema(propertyName, schema)
+				propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)
 				propertyType = properties[propertyName]
 			/>
 
@@ -519,5 +554,7 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

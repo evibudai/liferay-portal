@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.sort;
@@ -42,7 +33,6 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Date;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
@@ -79,7 +69,7 @@ public class ElasticsearchSortFieldTranslatorTest
 
 		addDocuments(
 			value -> DocumentCreationHelpers.singleKeyword(fieldName, value),
-			Stream.of("beta", "alpha beta", "beta gamma"));
+			"beta", "alpha beta", "beta gamma");
 
 		FieldSort fieldSort = _sorts.field(fieldName, SortOrder.DESC);
 
@@ -110,7 +100,7 @@ public class ElasticsearchSortFieldTranslatorTest
 
 		addDocuments(
 			value -> DocumentCreationHelpers.singleText(fieldName, value),
-			Stream.of("delta", "alpha delta", "delta gamma"));
+			"delta", "alpha delta", "delta gamma");
 
 		FieldSort fieldSortMissing = _sorts.field(fieldName + "_String");
 
@@ -161,7 +151,7 @@ public class ElasticsearchSortFieldTranslatorTest
 		addDocuments(
 			value -> DocumentCreationHelpers.singleText(
 				fieldNameForScoreSort, value),
-			Stream.of("beta", "alpha beta", "beta gamma", "gamma"));
+			"beta", "alpha beta", "beta gamma", "gamma");
 
 		ScoreSort scoreSort = _sorts.score();
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.context.vocabulary.internal.configuration.admin.definition;
@@ -17,18 +8,18 @@ package com.liferay.segments.context.vocabulary.internal.configuration.admin.def
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.configuration.admin.definition.ConfigurationFieldOptionsProvider;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -62,15 +53,11 @@ public class AssetVocabularyConfigurationFieldOptionsProvider
 				_assetVocabularyLocalService.getGroupsVocabularies(
 					new long[] {company.getGroupId()});
 
-			Stream<AssetVocabulary> stream = assetVocabularies.stream();
-
-			return stream.map(
-				this::_toOption
-			).sorted(
-				Comparator.comparing(Option::getValue)
-			).collect(
-				Collectors.toList()
-			);
+			return ListUtil.sort(
+				TransformUtil.transform(
+					assetVocabularies,
+					assetVocabularie -> _toOption(assetVocabularie)),
+				Comparator.comparing(Option::getValue));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {

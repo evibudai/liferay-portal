@@ -11,13 +11,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,10 +26,10 @@ definition {
 	}
 
 	@description = "This test ensures that user can map the blogs with SEO meta tags for display pages."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanMapBlogsToDisplayPage {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 			contentType = "Blogs Entry",
@@ -40,13 +40,14 @@ definition {
 			collectionName = "Content Display",
 			displayPageName = "Display Page Template Name",
 			fragmentName = "Display Page Content",
+			publish = "false",
 			siteURLKey = "test-site-name");
 
-		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-		PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
-			item = "Configure",
-			pageTemplateName = "Display Page Template Name");
+		SelectWindow.selectPopUp(value1 = "null");
+
+		Navigator.gotoNavNested(navNested = "SEO");
 
 		OpenGraph.viewDefaultMappedField(portlet = "SEO");
 
@@ -63,6 +64,10 @@ definition {
 			mappedField = "description",
 			mappedFieldValue = "Description is Description: ${description:Description}",
 			textType = "TextArea");
+
+		Navigator.gotoBack();
+
+		PageEditor.publish();
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "test-site-name");
 
@@ -89,10 +94,10 @@ definition {
 	}
 
 	@description = "This test ensures that user can map the document with SEO meta tags for display pages."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanMapDocumentToDisplayPage {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 			contentType = "Document",
@@ -104,13 +109,14 @@ definition {
 			collectionName = "Content Display",
 			displayPageName = "Display Page Template Name",
 			fragmentName = "Display Page Content",
+			publish = "false",
 			siteURLKey = "test-site-name");
 
-		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-		PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
-			item = "Configure",
-			pageTemplateName = "Display Page Template Name");
+		SelectWindow.selectPopUp(value1 = "null");
+
+		Navigator.gotoNavNested(navNested = "SEO");
 
 		OpenGraph.viewDefaultMappedField(portlet = "SEO");
 
@@ -138,6 +144,10 @@ definition {
 			mappedField = "description",
 			mappedFieldValue = "Description is MIME Type: ${mimeType:MIME Type}Version: ${version:Version}",
 			textType = "TextArea");
+
+		Navigator.gotoBack();
+
+		PageEditor.publish();
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
 
@@ -171,10 +181,10 @@ definition {
 	}
 
 	@description = "This test ensures that user can map the web content with SEO meta tags for display pages."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanMapWebContentToDisplayPage {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 			contentType = "Web Content Article",
@@ -186,13 +196,14 @@ definition {
 			collectionName = "Content Display",
 			displayPageName = "Display Page Template Name",
 			fragmentName = "Display Page Content",
+			publish = "false",
 			siteURLKey = "test-site-name");
 
-		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-		PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
-			item = "Configure",
-			pageTemplateName = "Display Page Template Name");
+		SelectWindow.selectPopUp(value1 = "null");
+
+		Navigator.gotoNavNested(navNested = "SEO");
 
 		OpenGraph.viewDefaultMappedField(portlet = "SEO");
 
@@ -220,6 +231,10 @@ definition {
 			mappedField = "description",
 			mappedFieldValue = "Description is Content: ${content:Content}",
 			textType = "TextArea");
+
+		Navigator.gotoBack();
+
+		PageEditor.publish();
 
 		JSONWebcontent.addWebContent(
 			content = "Web Content Content",

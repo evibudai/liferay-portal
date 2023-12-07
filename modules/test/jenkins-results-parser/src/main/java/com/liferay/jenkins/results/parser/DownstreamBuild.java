@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -20,10 +11,10 @@ import com.liferay.jenkins.results.parser.failure.message.generator.FailureMessa
 import com.liferay.jenkins.results.parser.failure.message.generator.GenericFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.GradleTaskFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.IntegrationTestTimeoutFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.JSUnitTestFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.LocalGitMirrorFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ModulesCompilationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PMDFailureMessageGenerator;
-import com.liferay.jenkins.results.parser.failure.message.generator.PluginFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PluginGitIDFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SemanticVersioningFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ServiceBuilderFailureMessageGenerator;
@@ -32,6 +23,7 @@ import com.liferay.jenkins.results.parser.failure.message.generator.StartupFailu
 import com.liferay.jenkins.results.parser.test.clazz.FunctionalTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.JUnitTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassMethod;
 import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
 
 import java.io.IOException;
@@ -41,7 +33,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
@@ -51,18 +46,16 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
+import org.json.JSONObject;
+
 /**
  * @author Michael Hashimoto
  */
 public class DownstreamBuild extends BaseBuild {
 
 	@Override
-	public void addTimelineData(BaseBuild.TimelineData timelineData) {
+	public void addTimelineData(TimelineData timelineData) {
 		timelineData.addTimelineData(this);
-	}
-
-	@Override
-	public void findDownstreamBuilds() {
 	}
 
 	@Override
@@ -88,17 +81,29 @@ public class DownstreamBuild extends BaseBuild {
 	public long getAverageDuration() {
 		AxisTestClassGroup axisTestClassGroup = getAxisTestClassGroup();
 
+		if (axisTestClassGroup == null) {
+			return 0L;
+		}
+
 		return axisTestClassGroup.getAverageDuration();
 	}
 
 	public long getAverageOverheadDuration() {
 		AxisTestClassGroup axisTestClassGroup = getAxisTestClassGroup();
 
+		if (axisTestClassGroup == null) {
+			return 0L;
+		}
+
 		return axisTestClassGroup.getAverageOverheadDuration();
 	}
 
 	public long getAverageTotalTestDuration() {
 		AxisTestClassGroup axisTestClassGroup = getAxisTestClassGroup();
+
+		if (axisTestClassGroup == null) {
+			return 0L;
+		}
 
 		return axisTestClassGroup.getAverageTotalTestDuration();
 	}
@@ -150,6 +155,11 @@ public class DownstreamBuild extends BaseBuild {
 	}
 
 	@Override
+	public String getBuildName() {
+		return getAxisName();
+	}
+
+	@Override
 	public String getDisplayName() {
 		StringBuilder sb = new StringBuilder();
 
@@ -165,12 +175,22 @@ public class DownstreamBuild extends BaseBuild {
 		String status = getStatus();
 
 		if (!status.equals("completed") && (getParentBuild() != null)) {
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"[", getBuildName(), "] Skipped creating a failure GitHub ",
+					"message because status is ", status));
+
 			return null;
 		}
 
 		String result = getResult();
 
 		if (result.equals("SUCCESS")) {
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"[", getBuildName(), "] Skipped creating a failure GitHub ",
+					"message because result is ", result));
+
 			return null;
 		}
 
@@ -182,6 +202,14 @@ public class DownstreamBuild extends BaseBuild {
 		if (result.equals("ABORTED")) {
 			messageElement.add(
 				Dom4JUtil.toCodeSnippetElement("Build was aborted"));
+
+			List<Element> untestedElements = getTestResultGitHubElements(
+				getUniqueFailureTestResults(), true);
+
+			if (!untestedElements.isEmpty()) {
+				Dom4JUtil.getOrderedListElement(
+					untestedElements, messageElement, 3);
+			}
 		}
 
 		if (result.equals("FAILURE")) {
@@ -189,6 +217,14 @@ public class DownstreamBuild extends BaseBuild {
 
 			if (failureMessageElement != null) {
 				messageElement.add(failureMessageElement);
+			}
+
+			List<Element> untestedElements = getTestResultGitHubElements(
+				getUniqueFailureTestResults(), true);
+
+			if (!untestedElements.isEmpty()) {
+				Dom4JUtil.getOrderedListElement(
+					untestedElements, messageElement, 3);
 			}
 		}
 
@@ -211,16 +247,76 @@ public class DownstreamBuild extends BaseBuild {
 				Dom4JUtil.getOrderedListElement(
 					upstreamJobFailureElements,
 					upstreamJobFailureMessageElement, 3);
+
+				System.out.println(
+					JenkinsResultsParserUtil.combine(
+						"[", getBuildName(), "] Saved an upstream failure ",
+						"GitHub message"));
 			}
 
 			Dom4JUtil.getOrderedListElement(failureElements, messageElement, 3);
 
 			if (failureElements.isEmpty()) {
+				System.out.println(
+					JenkinsResultsParserUtil.combine(
+						"[", getBuildName(),
+						"] Skipped creating a failure GitHub message because ",
+						"no failure elements were created"));
+
 				return null;
 			}
 		}
 
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"[", getBuildName(), "] Created a failure GitHub message"));
+
 		return messageElement;
+	}
+
+	public Map<String, List<String>> getTestClassMethodsMap() {
+		String batchName = getBatchName();
+
+		if (!batchName.contains("integration") && !batchName.contains("unit")) {
+			return Collections.emptyMap();
+		}
+
+		Map<String, List<String>> testClassMethodsMap = new HashMap<>();
+
+		AxisTestClassGroup axisTestClassGroup = getAxisTestClassGroup();
+
+		if ((axisTestClassGroup == null) ||
+			!axisTestClassGroup.hasTestClasses()) {
+
+			return testClassMethodsMap;
+		}
+
+		List<TestClass> testClasses = axisTestClassGroup.getTestClasses();
+
+		for (TestClass testClass : testClasses) {
+			if (!(testClass instanceof JUnitTestClass)) {
+				continue;
+			}
+
+			JUnitTestClass jUnitTestClass = (JUnitTestClass)testClass;
+
+			List<String> methodNames = new ArrayList<>();
+
+			for (TestClassMethod testClassMethod :
+					testClass.getTestClassMethods()) {
+
+				String testMethodName = testClassMethod.getName();
+
+				if (!methodNames.contains(testMethodName)) {
+					methodNames.add(testClassMethod.getName());
+				}
+			}
+
+			testClassMethodsMap.put(
+				jUnitTestClass.getTestClassName(), methodNames);
+		}
+
+		return testClassMethodsMap;
 	}
 
 	@Override
@@ -244,7 +340,19 @@ public class DownstreamBuild extends BaseBuild {
 	public List<TestResult> getUniqueFailureTestResults() {
 		List<TestResult> uniqueFailureTestResults = new ArrayList<>();
 
-		for (TestResult testResult : getTestResults(null)) {
+		List<TestResult> testResults = new ArrayList<>();
+
+		testResults.addAll(getTestResults(null));
+
+		List<TestResult> passedTestResults = getTestResults("PASSED");
+
+		if (isFailing() && (passedTestResults.size() == 1) &&
+			testResults.isEmpty()) {
+
+			testResults.addAll(passedTestResults);
+		}
+
+		for (TestResult testResult : testResults) {
 			if (!testResult.isFailing()) {
 				continue;
 			}
@@ -254,20 +362,136 @@ public class DownstreamBuild extends BaseBuild {
 			}
 		}
 
+		for (TestResult untestedTestResult : getUntestedTestResults()) {
+			if (untestedTestResult.isUniqueFailure()) {
+				uniqueFailureTestResults.add(untestedTestResult);
+			}
+		}
+
 		return uniqueFailureTestResults;
+	}
+
+	public Map<String, List<String>> getUntestedTestClassMethodsMap() {
+		Map<String, List<String>> untestedTestClassMethodsMap =
+			getTestClassMethodsMap();
+
+		if (untestedTestClassMethodsMap.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		List<TestResult> testResults = getTestResults();
+
+		if (testResults.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		for (TestResult testResult : testResults) {
+			String testResultClassName = testResult.getClassName();
+
+			if (untestedTestClassMethodsMap.containsKey(testResultClassName)) {
+				List<String> testClassMethods = untestedTestClassMethodsMap.get(
+					testResultClassName);
+
+				testClassMethods.remove(testResult.getTestName());
+
+				untestedTestClassMethodsMap.put(
+					testResultClassName, testClassMethods);
+			}
+		}
+
+		return untestedTestClassMethodsMap;
+	}
+
+	public List<TestResult> getUntestedTestResults() {
+		Map<String, List<String>> untestedTestsMap =
+			getUntestedTestClassMethodsMap();
+
+		if (untestedTestsMap.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<TestResult> untestedTestResults = new ArrayList<>();
+
+		for (Map.Entry<String, List<String>> entry :
+				untestedTestsMap.entrySet()) {
+
+			List<String> testClassMethods = entry.getValue();
+
+			if (testClassMethods.isEmpty()) {
+				continue;
+			}
+
+			for (String methodName : testClassMethods) {
+				JSONObject caseJSONObject = new JSONObject();
+
+				String testClassName = entry.getKey();
+
+				caseJSONObject.put(
+					"className", testClassName
+				).put(
+					"duration", 0
+				).put(
+					"errorDetails", "This test was untested."
+				).put(
+					"errorStackTrace", ""
+				).put(
+					"name", methodName
+				).put(
+					"status", "UNTESTED"
+				).put(
+					"testName", methodName
+				);
+
+				TestResult testResult = TestResultFactory.newTestResult(
+					this, caseJSONObject);
+
+				TestClassResult testClassResult =
+					testResult.getTestClassResult();
+
+				if (testClassResult != null) {
+					String status = testClassResult.getStatus();
+
+					if (status.equals("SKIPPED")) {
+						continue;
+					}
+				}
+
+				untestedTestResults.add(testResult);
+			}
+		}
+
+		return untestedTestResults;
 	}
 
 	@Override
 	public List<TestResult> getUpstreamJobFailureTestResults() {
 		List<TestResult> upstreamFailureTestResults = new ArrayList<>();
 
-		for (TestResult testResult : getTestResults(null)) {
+		List<TestResult> testResults = new ArrayList<>();
+
+		testResults.addAll(getTestResults(null));
+
+		List<TestResult> passedTestResults = getTestResults("PASSED");
+
+		if (isFailing() && (passedTestResults.size() == 1) &&
+			testResults.isEmpty()) {
+
+			testResults.addAll(passedTestResults);
+		}
+
+		for (TestResult testResult : testResults) {
 			if (!testResult.isFailing()) {
 				continue;
 			}
 
 			if (!testResult.isUniqueFailure()) {
 				upstreamFailureTestResults.add(testResult);
+			}
+		}
+
+		for (TestResult untestedTestResult : getUntestedTestResults()) {
+			if (!untestedTestResult.isUniqueFailure()) {
+				upstreamFailureTestResults.add(untestedTestResult);
 			}
 		}
 
@@ -327,14 +551,6 @@ public class DownstreamBuild extends BaseBuild {
 		}
 
 		return warningMessages;
-	}
-
-	public synchronized void update() {
-		super.update();
-
-		if (!JenkinsResultsParserUtil.isNullOrEmpty(getResult())) {
-			setStatus("completed");
-		}
 	}
 
 	protected DownstreamBuild(String url, TopLevelBuild topLevelBuild) {
@@ -535,7 +751,7 @@ public class DownstreamBuild extends BaseBuild {
 			!batchName.startsWith("modules-unit") &&
 			!batchName.startsWith("unit")) {
 
-			return new ArrayList<>();
+			return Collections.emptyList();
 		}
 
 		String urlSuffix = "testDurationsElements";
@@ -593,82 +809,86 @@ public class DownstreamBuild extends BaseBuild {
 
 		AxisTestClassGroup axisTestClassGroup = getAxisTestClassGroup();
 
-		List<TestClass> testClasses = axisTestClassGroup.getTestClasses();
+		if (axisTestClassGroup != null) {
+			List<TestClass> testClasses = axisTestClassGroup.getTestClasses();
 
-		for (int i = 0; i < testClasses.size(); i++) {
-			TestClass testClass = testClasses.get(i);
+			for (int i = 0; i < testClasses.size(); i++) {
+				TestClass testClass = testClasses.get(i);
 
-			TestClassResult testClassResult = null;
+				TestClassResult testClassResult = null;
 
-			String testClassName = null;
+				String testClassName = null;
 
-			long duration = 0L;
+				long duration = 0L;
 
-			if (testClass instanceof JUnitTestClass) {
-				JUnitTestClass jUnitTestClass = (JUnitTestClass)testClass;
+				if (testClass instanceof JUnitTestClass) {
+					JUnitTestClass jUnitTestClass = (JUnitTestClass)testClass;
 
-				testClassName = jUnitTestClass.getTestClassName();
+					testClassName = jUnitTestClass.getTestClassName();
 
-				testClassResult = getTestClassResult(testClassName);
+					testClassResult = getTestClassResult(testClassName);
 
-				if (testClassResult != null) {
-					duration = testClassResult.getDuration();
-				}
-			}
-			else if (testClass instanceof FunctionalTestClass) {
-				FunctionalTestClass functionalTestClass =
-					(FunctionalTestClass)testClass;
-
-				testClassName = functionalTestClass.getTestClassMethodName();
-
-				testClassResult = getTestClassResult(
-					"com.liferay.poshi.runner.PoshiRunner");
-
-				if (testClassResult != null) {
-					for (TestResult testResult :
-							testClassResult.getTestResults()) {
-
-						String testMethodName = "test[" + testClassName + "]";
-
-						if (!Objects.equals(
-								testMethodName, testResult.getTestName())) {
-
-							continue;
-						}
-
-						duration = testResult.getDuration();
-
-						break;
+					if (testClassResult != null) {
+						duration = testClassResult.getDuration();
 					}
 				}
+				else if (testClass instanceof FunctionalTestClass) {
+					FunctionalTestClass functionalTestClass =
+						(FunctionalTestClass)testClass;
+
+					testClassName =
+						functionalTestClass.getTestClassMethodName();
+
+					testClassResult = getTestClassResult(
+						"com.liferay.poshi.runner.PoshiRunner");
+
+					if (testClassResult != null) {
+						for (TestResult testResult :
+								testClassResult.getTestResults()) {
+
+							String testMethodName =
+								"test[" + testClassName + "]";
+
+							if (!Objects.equals(
+									testMethodName, testResult.getTestName())) {
+
+								continue;
+							}
+
+							duration = testResult.getDuration();
+
+							break;
+						}
+					}
+				}
+
+				Element durationValuesElement = Dom4JUtil.getNewElement("tr");
+
+				childStopWatchRows.add("test-duration-values-" + i);
+
+				durationValuesElement.addAttribute(
+					"id", hashCode() + "-test-duration-values-" + i);
+				durationValuesElement.addAttribute("style", "display: none;");
+
+				Element durationValuesDataElement = Dom4JUtil.getNewElement(
+					"td", durationValuesElement, testClassName);
+
+				durationValuesDataElement.addAttribute("style", style);
+
+				long averageDuration = testClass.getAverageDuration();
+
+				Dom4JUtil.getNewElement(
+					"td", durationValuesElement,
+					JenkinsResultsParserUtil.toDurationString(duration));
+				Dom4JUtil.getNewElement(
+					"td", durationValuesElement,
+					JenkinsResultsParserUtil.toDurationString(averageDuration));
+				Dom4JUtil.getNewElement(
+					"td", durationValuesElement,
+					getDiffDurationString(duration - averageDuration));
+
+				jenkinsReportTableRowElements.add(durationValuesElement);
 			}
-
-			Element durationValuesElement = Dom4JUtil.getNewElement("tr");
-
-			childStopWatchRows.add("test-duration-values-" + i);
-
-			durationValuesElement.addAttribute(
-				"id", hashCode() + "-test-duration-values-" + i);
-			durationValuesElement.addAttribute("style", "display: none;");
-
-			Element durationValuesDataElement = Dom4JUtil.getNewElement(
-				"td", durationValuesElement, testClassName);
-
-			durationValuesDataElement.addAttribute("style", style);
-
-			long averageDuration = testClass.getAverageDuration();
-
-			Dom4JUtil.getNewElement(
-				"td", durationValuesElement,
-				JenkinsResultsParserUtil.toDurationString(duration));
-			Dom4JUtil.getNewElement(
-				"td", durationValuesElement,
-				JenkinsResultsParserUtil.toDurationString(averageDuration));
-			Dom4JUtil.getNewElement(
-				"td", durationValuesElement,
-				getDiffDurationString(duration - averageDuration));
-
-			jenkinsReportTableRowElements.add(durationValuesElement);
 		}
 
 		testDurationsHeaderElement.addAttribute(
@@ -745,23 +965,15 @@ public class DownstreamBuild extends BaseBuild {
 		return testResultGitHubElements;
 	}
 
-	protected void setResult(String result) {
-		this.result = result;
-
-		if (JenkinsResultsParserUtil.isNullOrEmpty(result)) {
-			setStatus("running");
-		}
-	}
-
 	private static final FailureMessageGenerator[] _FAILURE_MESSAGE_GENERATORS =
 	{
 		new ModulesCompilationFailureMessageGenerator(),
 		//
 		new CompileFailureMessageGenerator(),
 		new IntegrationTestTimeoutFailureMessageGenerator(),
+		new JSUnitTestFailureMessageGenerator(),
 		new LocalGitMirrorFailureMessageGenerator(),
 		new PMDFailureMessageGenerator(),
-		new PluginFailureMessageGenerator(),
 		new PluginGitIDFailureMessageGenerator(),
 		new SemanticVersioningFailureMessageGenerator(),
 		new ServiceBuilderFailureMessageGenerator(),

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context.logic;
@@ -250,6 +241,18 @@ public class UIItemsBuilder {
 		).build();
 	}
 
+	public DropdownItem createCopyDropdownItem() {
+		return DropdownItemBuilder.setHref(
+			_getCopyEntryURL()
+		).setIcon(
+			"copy"
+		).setKey(
+			DLUIItemKeys.COPY
+		).setLabel(
+			LanguageUtil.get(_httpServletRequest, "copy-to")
+		).build();
+	}
+
 	public DropdownItem createDeleteDropdownItem() throws PortalException {
 		String cmd = null;
 
@@ -394,6 +397,22 @@ public class UIItemsBuilder {
 			DLUIItemKeys.EDIT_IMAGE
 		).setLabel(
 			LanguageUtil.get(_httpServletRequest, "edit-image")
+		).build();
+	}
+
+	public DropdownItem createHistoryDropdownItem() {
+		return DropdownItemBuilder.setHref(
+			PortletURLBuilder.create(
+				_getRenderURL("/document_library/view_file_entry_history")
+			).setBackURL(
+				_getCurrentURL()
+			).buildPortletURL()
+		).setIcon(
+			"date-time"
+		).setKey(
+			DLUIItemKeys.VIEW_HISTORY
+		).setLabel(
+			LanguageUtil.get(_httpServletRequest, "view-history")
 		).build();
 	}
 
@@ -595,6 +614,18 @@ public class UIItemsBuilder {
 			_fileVersion.getExtension());
 	}
 
+	public boolean isCopyActionAvailable() throws PortalException {
+		if (((_fileShortcut != null) &&
+			 !_fileShortcutDisplayContextHelper.isCopyActionAvailable()) ||
+			((_fileShortcut == null) &&
+			 !_fileEntryDisplayContextHelper.isCopyActionAvailable())) {
+
+			return false;
+		}
+
+		return true;
+	}
+
 	public boolean isDeleteActionAvailable() throws PortalException {
 		if (_isDeleteActionAvailable() ||
 			_isMoveToTheRecycleBinActionAvailable()) {
@@ -656,6 +687,14 @@ public class UIItemsBuilder {
 		}
 
 		return true;
+	}
+
+	public boolean isHistoryActionAvailable() throws PortalException {
+		if (_fileShortcut == null) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isMoveActionAvailable() throws PortalException {
@@ -854,6 +893,46 @@ public class UIItemsBuilder {
 		}
 
 		return portletURL;
+	}
+
+	private PortletURL _getCopyEntryURL() {
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				_getLiferayPortletRequest(), _themeDisplay.getScopeGroup(),
+				DLPortletKeys.DOCUMENT_LIBRARY_ADMIN, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/document_library/copy_dl_objects"
+		).setRedirect(
+			_getCurrentURL()
+		).setParameter(
+			"dlObjectIds",
+			() -> {
+				if (_fileShortcut != null) {
+					return _fileShortcut.getFileShortcutId();
+				}
+
+				return _fileEntry.getFileEntryId();
+			}
+		).setParameter(
+			"sourceFolderId",
+			() -> {
+				if (_fileShortcut != null) {
+					return _fileShortcut.getFolderId();
+				}
+
+				return _fileEntry.getFolderId();
+			}
+		).setParameter(
+			"sourceRepositoryId",
+			() -> {
+				if (_fileShortcut != null) {
+					return _fileShortcut.getRepositoryId();
+				}
+
+				return _fileEntry.getRepositoryId();
+			}
+		).buildPortletURL();
 	}
 
 	private String _getCurrentURL() {

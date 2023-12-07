@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.internal.graphql.servlet.v1_0;
 
 import com.liferay.headless.commerce.admin.channel.internal.graphql.mutation.v1_0.Mutation;
 import com.liferay.headless.commerce.admin.channel.internal.graphql.query.v1_0.Query;
+import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.AccountAddressChannelResourceImpl;
 import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.ChannelResourceImpl;
 import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.OrderTypeResourceImpl;
 import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.PaymentMethodGroupRelOrderTypeResourceImpl;
@@ -25,6 +17,7 @@ import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.Shippi
 import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.ShippingMethodResourceImpl;
 import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.TaxCategoryResourceImpl;
 import com.liferay.headless.commerce.admin.channel.internal.resource.v1_0.TermResourceImpl;
+import com.liferay.headless.commerce.admin.channel.resource.v1_0.AccountAddressChannelResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ChannelResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.OrderTypeResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.PaymentMethodGroupRelOrderTypeResource;
@@ -59,6 +52,8 @@ public class ServletDataImpl implements ServletData {
 
 	@Activate
 	public void activate(BundleContext bundleContext) {
+		Mutation.setAccountAddressChannelResourceComponentServiceObjects(
+			_accountAddressChannelResourceComponentServiceObjects);
 		Mutation.setChannelResourceComponentServiceObjects(
 			_channelResourceComponentServiceObjects);
 		Mutation.
@@ -70,7 +65,13 @@ public class ServletDataImpl implements ServletData {
 			_shippingFixedOptionOrderTypeResourceComponentServiceObjects);
 		Mutation.setShippingFixedOptionTermResourceComponentServiceObjects(
 			_shippingFixedOptionTermResourceComponentServiceObjects);
+		Mutation.setShippingMethodResourceComponentServiceObjects(
+			_shippingMethodResourceComponentServiceObjects);
+		Mutation.setTaxCategoryResourceComponentServiceObjects(
+			_taxCategoryResourceComponentServiceObjects);
 
+		Query.setAccountAddressChannelResourceComponentServiceObjects(
+			_accountAddressChannelResourceComponentServiceObjects);
 		Query.setChannelResourceComponentServiceObjects(
 			_channelResourceComponentServiceObjects);
 		Query.setOrderTypeResourceComponentServiceObjects(
@@ -125,6 +126,31 @@ public class ServletDataImpl implements ServletData {
 		_resourceMethodObjectValuePairs =
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
+					put(
+						"mutation#deleteAccountAddressChannel",
+						new ObjectValuePair<>(
+							AccountAddressChannelResourceImpl.class,
+							"deleteAccountAddressChannel"));
+					put(
+						"mutation#deleteAccountAddressChannelBatch",
+						new ObjectValuePair<>(
+							AccountAddressChannelResourceImpl.class,
+							"deleteAccountAddressChannelBatch"));
+					put(
+						"mutation#createAccountAddressByExternalReferenceCodeAccountAddressChannel",
+						new ObjectValuePair<>(
+							AccountAddressChannelResourceImpl.class,
+							"postAccountAddressByExternalReferenceCodeAccountAddressChannel"));
+					put(
+						"mutation#createAccountAddressIdAccountAddressChannel",
+						new ObjectValuePair<>(
+							AccountAddressChannelResourceImpl.class,
+							"postAccountAddressIdAccountAddressChannel"));
+					put(
+						"mutation#createChannelsPageExportBatch",
+						new ObjectValuePair<>(
+							ChannelResourceImpl.class,
+							"postChannelsPageExportBatch"));
 					put(
 						"mutation#createChannel",
 						new ObjectValuePair<>(
@@ -228,7 +254,32 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ShippingFixedOptionTermResourceImpl.class,
 							"postShippingFixedOptionIdShippingFixedOptionTerm"));
+					put(
+						"mutation#createChannelShippingMethodsPageExportBatch",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"postChannelShippingMethodsPageExportBatch"));
+					put(
+						"mutation#createTaxCategoriesPageExportBatch",
+						new ObjectValuePair<>(
+							TaxCategoryResourceImpl.class,
+							"postTaxCategoriesPageExportBatch"));
 
+					put(
+						"query#accountAddressByExternalReferenceCodeAccountAddressChannels",
+						new ObjectValuePair<>(
+							AccountAddressChannelResourceImpl.class,
+							"getAccountAddressByExternalReferenceCodeAccountAddressChannelsPage"));
+					put(
+						"query#accountAddressIdAccountAddressChannels",
+						new ObjectValuePair<>(
+							AccountAddressChannelResourceImpl.class,
+							"getAccountAddressIdAccountAddressChannelsPage"));
+					put(
+						"query#accountAddressChannelChannel",
+						new ObjectValuePair<>(
+							ChannelResourceImpl.class,
+							"getAccountAddressChannelChannel"));
 					put(
 						"query#channels",
 						new ObjectValuePair<>(
@@ -296,8 +347,23 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							TermResourceImpl.class,
 							"getShippingFixedOptionTermTerm"));
+
+					put(
+						"query#Channel.accountAddressByExternalReferenceCodeAccountAddressChannels",
+						new ObjectValuePair<>(
+							AccountAddressChannelResourceImpl.class,
+							"getAccountAddressByExternalReferenceCodeAccountAddressChannelsPage"));
+					put(
+						"query#Channel.shippingMethods",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"getChannelShippingMethodsPage"));
 				}
 			};
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<AccountAddressChannelResource>
+		_accountAddressChannelResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ChannelResource>
@@ -320,16 +386,16 @@ public class ServletDataImpl implements ServletData {
 		_shippingFixedOptionTermResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<OrderTypeResource>
-		_orderTypeResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ShippingMethodResource>
 		_shippingMethodResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<TaxCategoryResource>
 		_taxCategoryResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<OrderTypeResource>
+		_orderTypeResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<TermResource>

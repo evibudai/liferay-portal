@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Order Management";
@@ -43,8 +43,10 @@ definition {
 	}
 
 	@description = " COMMERCE-9883 | As a Sales Agent, if he has the permission, I want to be able to see all the accounts and the orders that are present in th organization to which the same Sales Agent belongs"
-	@priority = "4"
+	@priority = 5
 	test CanAddNewUserToAccountAsSalesAgent {
+		property portal.acceptance = "true";
+
 		task ("And the admin creates an account called Commerce Account") {
 			JSONAccountEntry.addAccountEntry(
 				accountEntryName = "Commerce Account",
@@ -101,7 +103,7 @@ definition {
 	}
 
 	@description = "COMMERCE-9880 | As a Sales Agent, I want to be able to checkout orders"
-	@priority = "4"
+	@priority = 5
 	test CanCheckoutOrdersAsSalesAgent {
 		property portal.acceptance = "true";
 
@@ -148,9 +150,9 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Account A",
 				orderItems = "MIN55861:1",
-				orderStatus = "2",
+				orderStatus = 2,
 				paymentMethod = "money-order",
-				paymentStatus = "2");
+				paymentStatus = 2);
 		}
 
 		task ("When the Sales Agent logs in") {
@@ -174,8 +176,8 @@ definition {
 				manageShippingOptionsPermission = "false",
 				paymentMethod = "Money Order",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				selectedShippingAddressName = "Test Name",
 				shippingMethod = "Standard");
 		}
@@ -189,7 +191,7 @@ definition {
 		task ("Then the Sales Agent can create and checkout an order") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -203,14 +205,91 @@ definition {
 				newAddressZipCode = "Test Zip Code",
 				paymentMethod = "Money Order",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 	}
 
+	@description = "COMMERCE-11277. As a Sales Agent, I can create a Quote Request in the Open Order's Details Page by entering a personal message."
+	@priority = 5
+	test CanCreateQuoteRequestAsSalesAgent {
+		property portal.acceptance = "true";
+
+		task ("Given 'Allow Request a Quote on a Fully Priced Cart' is enabled for the site") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Request a Quote",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		task ("And a Commerce Account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And that Commerce Account is linked to the Test Organization") {
+			JSONAccountEntry.addAccountEntryOrganization(
+				accountEntryName = "Commerce Account",
+				organizationName = "Test Organization");
+		}
+
+		task ("And the Sales Agent clicks the 'Request a Quote' button in the Mini Cart") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "sales.agent@liferay.com");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+
+			CommerceNavigator.gotoMiniCart();
+
+			Button.click(button = "Request a Quote");
+		}
+
+		task ("When the Sales Agent clicks again the 'Request a Quote' button in the Open Order's Details Page") {
+			Click(
+				buttonId = "requestQuote",
+				locator1 = "Button#BUTTON_ID");
+		}
+
+		task ("Then the a modal named Request a Quote is shown") {
+			AssertElementPresent(
+				key_title = "Request a Quote",
+				locator1 = "CommerceFrontStore#MODAL_TITLE");
+		}
+
+		task ("When the Sales Agent submits the request after writing a message in the note area") {
+			CommerceOrders.createQuoteRequest(quoteRequestValue = "I kindly request a quote for this product.");
+		}
+
+		task ("Then the quote request is placed with the status 'Quote Requested' in the Placed Order's Details Page") {
+			AssertElementPresent(
+				key_status = "Quote Requested",
+				locator1 = "CommerceOrders#PLACED_ORDERS_DETAILS_STATUS");
+		}
+
+		task ("And the quote request cannot be edited") {
+			Click.javaScriptClick(locator1 = "CommerceFrontStore#ORDER_PAGES_NOTES_BUTTON");
+
+			AssertTextNotPresent(
+				locator1 = "CommerceAccelerators#PORTLET_CONTENT",
+				value1 = "Edit");
+		}
+	}
+
 	@description = "COMMERCE-9882 | As a Sales Agent, if he has the permission, I want to be able to see all the accounts and the orders that are present in the organization to which the same Sales Agent belongs"
-	@priority = "4"
+	@priority = 5
 	test CanEditAccountDetailsAsSalesAgent {
 		property portal.acceptance = "true";
 
@@ -260,12 +339,12 @@ definition {
 
 			PortletEntry.inputText(
 				fieldLabel = "Tax ID",
-				text = "123456");
+				text = 123456);
 
 			Button.clickSave();
 
 			for (var addressType : list "Billing,Shipping") {
-				var addressTypeUppercase = StringUtil.upperCase("${addressType}");
+				var addressTypeUppercase = StringUtil.upperCase(${addressType});
 
 				AssertClick(
 					locator1 = "Account#DEFAULT_ACCOUNT_ADDRESSES_SET_DEFAULT_${addressTypeUppercase}",
@@ -302,7 +381,7 @@ definition {
 			Account.viewAccountDetails(
 				accountDescription = "Commerce Account Edit Description",
 				accountName = "Commerce Account Edit",
-				accountTaxId = "123456");
+				accountTaxId = 123456);
 
 			Account.viewDefaultBillingAddress(
 				addressCity = "Test Address",
@@ -322,9 +401,68 @@ definition {
 		}
 	}
 
+	@description = "COMMERCE-12693. As a Sales Agent, I cannot view or manage channel defaults of the account without the Update and View Channel Defaults permissions"
+	@priority = 3
+	test CannotSalesAgentWithoutPermissionsViewAndManageChannelDefaults {
+		property portal.acceptance = "false";
+
+		task ("Given the admin creates two business types of accounts and assigns account 1 to Sales Agent") {
+			for (var index : list "1,2") {
+				JSONAccountEntry.addAccountEntry(
+					accountEntryName = "Commerce Account ${index}",
+					accountEntryType = "Business");
+			}
+
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account 1");
+
+			Account.assignUsers(
+				accountName = "Commerce Account",
+				assigneeName = "sales.agent@liferay.com");
+		}
+
+		task ("When the Sales Agent navigates to the Account Management page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "sales.agent@liferay.com");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/account-management");
+		}
+
+		task ("Then can view only account 1 is listed and cannot click on it") {
+			for (var index : list "1,2") {
+				AssertElementNotPresent(
+					key_entryName = "Commerce Account ${index}",
+					locator1 = "CommerceNavigation#ENTRY_NAME");
+			}
+
+			AssertElementPresent(
+				key_tableEntry = "Commerce Account 1",
+				locator1 = "LexiconTable#TABLE_ENTRY");
+
+			AssertElementNotPresent(
+				key_tableEntry = "Commerce Account 2",
+				locator1 = "LexiconTable#TABLE_ENTRY");
+		}
+
+		task ("And cannot see the account entry has an Edit operation") {
+			Click(locator1 = "Icon#SVG_ELLIPSIS");
+
+			AssertElementNotPresent(
+				key_menuItem = "Edit",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+	}
+
 	@description = "COMMERCE-9874 | As a Sales Agent, I want to not be able to see accounts and orders when 'Manage Available Accounts' permission is removed"
-	@priority = "4"
+	@priority = 5
 	test CannotViewAccountsAndOrdersAsSalesAgentWithoutPermission {
+		property portal.acceptance = "true";
+
 		task ("Given 4 accounts are created") {
 			for (var account : list "A,B,C,D") {
 				JSONAccountEntry.addAccountEntry(
@@ -345,18 +483,18 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Account A",
 				orderItems = "MIN55861:1",
-				orderStatus = "1",
+				orderStatus = 1,
 				paymentMethod = "money-order",
-				paymentStatus = "2");
+				paymentStatus = 2);
 		}
 
 		task ("And the Account B has a pending order") {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Account B",
 				orderItems = "MIN55861:1",
-				orderStatus = "2",
+				orderStatus = 2,
 				paymentMethod = "money-order",
-				paymentStatus = "2");
+				paymentStatus = 2);
 		}
 
 		task ("And Manage Available Accounts permission is removed for the Sales Agent role") {
@@ -386,14 +524,14 @@ definition {
 
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "No accounts were found.");
 		}
 	}
 
 	@description = "COMMERCE-9872 | As a Sales Agent, I want to not be able to see accounts that are outside the organization I'm part of"
-	@priority = "4"
+	@priority = 5
 	test CannotViewAccountsOutsideOrganizationAsSalesAgent {
 		property portal.acceptance = "true";
 
@@ -406,16 +544,16 @@ definition {
 		task ("And the acccount has a pending and a placed order") {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
-				orderStatus = "1",
+				orderStatus = 1,
 				paymentMethod = "money-order",
-				paymentStatus = "2");
+				paymentStatus = 2);
 
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
 				orderItems = "MIN55861:1",
-				orderStatus = "2",
+				orderStatus = 2,
 				paymentMethod = "money-order",
-				paymentStatus = "2");
+				paymentStatus = 2);
 		}
 
 		task ("When the Sales Agent logs in") {
@@ -436,7 +574,7 @@ definition {
 		task ("And the Sales Agent will not see any account in the Account Management page") {
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "No accounts were found.");
 		}
@@ -458,8 +596,439 @@ definition {
 		}
 	}
 
+	@description = "COMMERCE-11509. As a sales agent, I want to be able to mark a quote as processed in the store-front"
+	@priority = 5
+	test CanSalesAgentProcessQuote {
+		property portal.acceptance = "true";
+
+		task ("Given 'Allow Request a Quote on a Fully Priced Cart' is enabled for the site") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Request a Quote",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		task ("And a Commerce Account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And that Commerce Account is linked to the Test Organization") {
+			JSONAccountEntry.addAccountEntryOrganization(
+				accountEntryName = "Commerce Account",
+				organizationName = "Test Organization");
+		}
+
+		task ("And 2 quotes are requested for 2 orders") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+
+			var firstOrderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+
+			CommerceAcceleratorsInitializer.createNewOrderFromAccountSelectorDropdown();
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			var secondOrderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 3);
+
+			for (var orderId : list "${firstOrderId},${secondOrderId}") {
+				Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+				WaitForElementPresent(
+					currentOrderId = ${orderId},
+					locator1 = "CommerceOrders#SELECT_ORDER_FROM_LIST");
+
+				Click(
+					currentOrderId = ${orderId},
+					locator1 = "CommerceOrders#SELECT_ORDER_FROM_LIST");
+
+				CommerceOrders.createQuoteRequest(
+					quoteRequestValue = "I kindly request a quote for this product.",
+					requestAQuoteInOpenOrdersPage = "true");
+			}
+		}
+
+		task ("When the Sales Agent logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "sales.agent@liferay.com");
+		}
+
+		task ("And navigates to the first order's detail page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
+
+			Click.clickAt(
+				key_entryName = ${firstOrderId},
+				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
+		}
+
+		task ("Then the sales agent is able to mark the quote as processed") {
+			AssertElementPresent(
+				key_text = "Process Quote",
+				locator1 = "Button#ANY_WITH_SPAN");
+
+			AssertElementPresent(
+				key_status = "Quote Requested",
+				locator1 = "CommerceOrders#PLACED_ORDERS_DETAILS_STATUS");
+
+			Click(
+				key_text = "Process Quote",
+				locator1 = "Button#ANY_WITH_SPAN");
+
+			AssertElementPresent(
+				key_status = "Quote Processed",
+				locator1 = "CommerceOrders#PLACED_ORDERS_DETAILS_STATUS");
+
+			AssertElementNotPresent(
+				key_text = "Process Quote",
+				locator1 = "Button#ANY_WITH_SPAN");
+		}
+
+		task ("When the Manage Quotes permission is removed from the Sales Agent role") {
+			Permissions.removePermissionViaAPI(
+				resourceAction = "MANAGE_QUOTES",
+				resourceName = "com.liferay.commerce.order",
+				roleTitle = "Sales Agent");
+		}
+
+		task ("Then the Sales Agent user is not able to mark a quote as processed") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
+
+			Click.clickAt(
+				key_entryName = ${secondOrderId},
+				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
+
+			AssertElementNotPresent(
+				key_text = "Process Quote",
+				locator1 = "Button#ANY_WITH_SPAN");
+		}
+	}
+
+	@description = "COMMERCE-12692. As a Sales Agent, I can view and manage channel defaults of the account with the required permissions assigned"
+	@priority = 5
+	test CanSalesAgentWithPermissionManageChannelDefaults {
+		property portal.acceptance = "true";
+
+		task ("Given the Sales Agent has manage entries permissions under Channel Defaults tab") {
+			for (var resourceLists : list "com.liferay.account.model.AccountEntry:UPDATE,com.liferay.account.model.AccountEntry:MANAGE_CHANNEL_DEFAULTS,com.liferay.commerce.product.model.CommerceChannel:VIEW,com.liferay.commerce.product.model.CommerceChannel:UPDATE,com.liferay.commerce.price.list.model.CommercePriceList:VIEW,com.liferay.commerce.currency:MANAGE_COMMERCE_CURRENCIES,com.liferay.commerce.term.model.CommerceTermEntry:VIEW,com.liferay.commerce.term:VIEW_COMMERCE_TERM_ENTRY,com.liferay.commerce.discount.model.CommerceDiscount:VIEW,com.liferay.commerce.discount:VIEW_COMMERCE_DISCOUNTS,com.liferay.portal.kernel.model.User:VIEW,com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel:VIEW,com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel:UPDATE,com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet:ACCESS_IN_CONTROL_PANEL") {
+				var resourceName = StringUtil.extractFirst(${resourceLists}, ":");
+				var resourceAction = StringUtil.extractLast(${resourceLists}, ":");
+
+				Permissions.definePermissionViaJSONAPI(
+					resourceAction = ${resourceAction},
+					resourceName = ${resourceName},
+					roleTitle = "Sales Agent");
+			}
+		}
+
+		task ("And the admin creates two business type of accounts and assigns account 1 to Sales Agent") {
+			for (var index : list "1,2") {
+				JSONAccountEntry.addAccountEntry(
+					accountEntryName = "Commerce Account ${index}",
+					accountEntryType = "Business");
+			}
+
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account 1");
+
+			Account.assignUsers(
+				accountName = "Commerce Account 1",
+				assigneeName = "sales.agent@liferay.com");
+		}
+
+		task ("And an account address is added") {
+			CommerceJSONAccountsAPI._addCommerceAccountAddress(
+				accountEntryName = "Commerce Account 1",
+				city = "Test City",
+				countryISOCode = "US",
+				name = "Test Address",
+				street1 = "Test Street",
+				zip = "Test Zip Code");
+		}
+
+		task ("And two active Delivery, Payment type terms are created") {
+			for (var termsType : list "Delivery,Payment") {
+				CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
+					termsCount = 1,
+					termsType = ${termsType});
+			}
+		}
+
+		task ("And 1 Payment Method is enabled(PayPal)") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			CommerceChannels.editPaymentMethod(
+				active = "true",
+				paymentMethod = "PayPal");
+		}
+
+		task ("And an active discounts applied to the ABS Sensor product is created") {
+			CommerceJSONDiscountsAPI._addDiscount(
+				active = "true",
+				level = "L1",
+				percentageLevel1 = 20,
+				productNames = "ABS Sensor",
+				target = "products",
+				title = "Discount 1",
+				usePercentage = "true");
+		}
+
+		task ("When the Sales Agent navigates to the Account Management page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "sales.agent@liferay.com");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/account-management");
+		}
+
+		task ("Then can view only the account 1 listed") {
+			AssertElementPresent(
+				key_entryName = "Commerce Account 1",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+
+			AssertElementNotPresent(
+				key_entryName = "Commerce Account 2",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+		}
+
+		task ("And can view the Channel Defaults of account 1") {
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account 1");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Channel Defaults");
+
+			for (var entryNames : list "Billing,Shipping,Delivery,Payment,Price,Discounts,Currencies,Users") {
+				AssertElementPresent(
+					key_termType = ${entryNames},
+					locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_PLUS");
+			}
+
+			for (var entryNames : list "ShippingOption,PaymentMethod") {
+				AssertElementPresent(
+					key_firstColumnValue = "Minium Portal",
+					key_secondColumnValue = "Use Priority Settings",
+					key_table = ${entryNames},
+					locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+			}
+		}
+
+		task ("And can manage all the entries under the Channel Defaults of account 1") {
+			for (var typeList : list "Billing,Shipping") {
+				Account.addDefaultCommerceAddressEntry(
+					addressEntry = "Test Address",
+					addressType = ${typeList},
+					channelEntry = "Minium Portal");
+
+				AssertElementPresent(
+					key_entryDetails = "Test Address",
+					key_termType = ${typeList},
+					locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+			}
+
+			CommerceAccountChannelDefaults.setDefaultPriceList(
+				channelEntry = "Minium Portal",
+				priceListTitle = "Minium Base Price List");
+
+			AssertElementPresent(
+				key_entryDetails = "Minium Base Price List",
+				key_termType = "Price",
+				locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+
+			Account.setDefaultCurrency(currencyName = "Euro");
+
+			SelectFrameTop();
+
+			AssertElementPresent(
+				key_entryDetails = "Euro",
+				key_termType = "Currencies",
+				locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+
+			for (var typeList : list "Delivery,Payment") {
+				Account.setDefaultCommerceTermsEntry(
+					channelEntry = "Minium Portal",
+					termEntry = "${typeList} Term 1",
+					termType = ${typeList});
+
+				CommerceEntry.gotoMenuTab(menuTab = "Channel Defaults");
+
+				AssertElementPresent(
+					key_entryDetails = "${typeList} Term 1",
+					key_termType = ${typeList},
+					locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+			}
+
+			Account.setDefaultDiscount(
+				channelEntry = "Minium Portal",
+				discountTitle = "Discount 1");
+
+			SelectFrameTop();
+
+			AssertElementPresent(
+				key_entryDetails = "Discount 1",
+				key_termType = "Discounts",
+				locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+
+			CommerceAccountChannelDefaults.addChannelAccountManagersEntry(
+				channelName = "All Channels",
+				userName = "Test");
+
+			AssertElementPresent(
+				key_entryDetails = "Test Test",
+				key_termType = "Users",
+				locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+
+			Click(
+				key_firstColumnValue = "Minium Portal",
+				key_secondColumnValue = "Use Priority Settings",
+				key_table = "PaymentMethod",
+				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+			Click(
+				key_radioOption = "PayPal",
+				locator1 = "CommerceEntry#RADIO_BUTTON");
+
+			Button.clickSave();
+
+			SelectFrameTop();
+
+			AssertElementPresent(
+				key_entryDetails = "PayPal",
+				key_termType = "PaymentMethod",
+				locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+
+			Click(
+				key_firstColumnValue = "Minium Portal",
+				key_secondColumnValue = "Use Priority Settings",
+				key_table = "ShippingOption",
+				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+			Click(
+				key_radioOption = "Flat Rate / Standard Delivery",
+				locator1 = "CommerceEntry#RADIO_BUTTON");
+
+			Button.clickSave();
+
+			SelectFrameTop();
+
+			AssertElementPresent(
+				key_entryDetails = "Flat Rate",
+				key_termType = "ShippingOption",
+				locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_DROPDOWN");
+		}
+	}
+
+	@description = "COMMERCE-12691. As a Sales Agent, I can view the channel defaults of the account with the Update and View Channel Defaults permissions"
+	@priority = 5
+	test CanSalesAgentWithPermissionViewChannelDefaults {
+		property portal.acceptance = "true";
+
+		task ("Given the Sales Agent has Update and View Channel Defaults permissions for Account Entry") {
+			for (var permissions : list "UPDATE,VIEW_CHANNEL_DEFAULTS") {
+				Permissions.definePermissionViaJSONAPI(
+					resourceAction = ${permissions},
+					resourceName = "com.liferay.account.model.AccountEntry",
+					roleTitle = "Sales Agent");
+			}
+
+			Permissions.removePermissionViaAPI(
+				resourceAction = "VIEW_COMMERCE_ORDERS",
+				resourceName = "com.liferay.commerce.order",
+				roleTitle = "Sales Agent");
+		}
+
+		task ("And the admin creates and assigns a business type of account to Sales Agent") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
+			Account.assignUsers(
+				accountName = "Commerce Account",
+				assigneeName = "sales.agent@liferay.com");
+		}
+
+		task ("When the Sales Agent navigates to the Account Management page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "sales.agent@liferay.com");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/account-management");
+		}
+
+		task ("Then can view the account listed") {
+			AssertElementPresent(
+				key_entryName = "Commerce Account",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+		}
+
+		task ("And can view the Channel Defaults of the account") {
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Channel Defaults");
+
+			for (var entryHeaders : list "Billing Addresses,Shipping Addresses,Delivery Terms and Conditions,Payment Terms and Conditions,Shipping Options,Price Lists,Discounts,Currencies,Payment Methods,Channel Account Managers") {
+				AssertVisible(
+					key_title = ${entryHeaders},
+					locator1 = "Header#H3_TITLE");
+			}
+
+			for (var entryNames : list "Billing,Shipping,Delivery,Payment,Price,Discounts,Currencies,Users") {
+				AssertElementNotPresent(
+					key_termType = ${entryNames},
+					locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_PLUS");
+
+				AssertVisible(
+					key_termType = ${entryNames},
+					locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_EMPTY_SEARCH_CONTAINER");
+			}
+
+			for (var entryNames : list "ShippingOption,PaymentMethod") {
+				AssertElementNotPresent(
+					key_firstColumnValue = "Minium Portal",
+					key_secondColumnValue = "Use Priority Settings",
+					key_table = ${entryNames},
+					locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+
+				AssertVisible(
+					key_termType = ${entryNames},
+					locator1 = "Account#DEFAULT_ACCOUNT_TERMS_AND_CONDITION_EMPTY_SEARCH_CONTAINER");
+			}
+		}
+	}
+
 	@description = "COMMERCE-9871 |  As a Sales Agent, I want to be able to see all the accounts and orders that are present in the organization to which the Sales Agent belongs"
-	@priority = "4"
+	@priority = 5
 	test CanViewAccountsAndOrdersAsSalesAgent {
 		property portal.acceptance = "true";
 
@@ -483,18 +1052,18 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Account A",
 				orderItems = "MIN55861:1",
-				orderStatus = "1",
+				orderStatus = 1,
 				paymentMethod = "money-order",
-				paymentStatus = "2");
+				paymentStatus = 2);
 		}
 
 		task ("And the account B has a pending order") {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Account B",
 				orderItems = "MIN55861:1",
-				orderStatus = "2",
+				orderStatus = 2,
 				paymentMethod = "money-order",
-				paymentStatus = "2");
+				paymentStatus = 2);
 		}
 
 		task ("When the Sales Agent logs in") {
@@ -562,7 +1131,7 @@ definition {
 			FrontStore.viewMiniCartItem(
 				cartItemName = "U-Joint",
 				cartItemPriceValue = "24.00",
-				cartItemQuantity = "1",
+				cartItemQuantity = 1,
 				cartItemSku = "MIN55861");
 		}
 	}

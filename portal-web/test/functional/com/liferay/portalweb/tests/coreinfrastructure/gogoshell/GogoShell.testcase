@@ -1,6 +1,7 @@
 @component-name = "portal-gogo-shell"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Gogo Shell";
@@ -12,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -24,10 +25,11 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test AccessGogoShellCommandViaPortlet {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "GogoShell#AccessGogoShellCommandViaPortlet";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "System",
@@ -40,20 +42,31 @@ definition {
 
 		GogoShell.executeCommand(commandName = "system:check");
 
-		for (var outputContent : list "Declarative Service Soft Circular Dependency Checker check result: No issues were found,Declarative Service Unsatisfied Component Checker check result: No issues were found,Spring Extender Unavailable Component Checker check result: No issues were found") {
-			GogoShell.viewOutput(outputContent = "${outputContent}");
+		for (var outputContent : list "Declarative Service Soft Circular Dependency System Checker check result: No issues were found,Declarative Service Unsatisfied Component System Checker check result: No issues were found,Spring Extender Unavailable Component System Checker check result: No issues were found") {
+			GogoShell.viewOutput(outputContent = ${outputContent});
 		}
 	}
 
-	@description = "This is a use case for LPS-83660."
-	@priority = "3"
-	test GogoShellCommandDisconnectNotSupported {
-		property test.name.skip.portal.instance = "GogoShell#GogoShellCommandDisconnectNotSupported";
+	@description = "This is a use case for LPS-189944. Verify no errors are thrown when running the disconnect command from Gogo Shell."
+	@priority = 3
+	test CanRunDisconnectCommandViaTelnet {
+		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Gogo Shell");
+		GogoShell.executeCommandViaTelnet(
+			command = "disconnect",
+			expectedOutput = "Connection closed by foreign host",
+			nodePort = 8080);
+	}
+
+	@description = "This is a use case for LPS-83660."
+	@priority = 3
+	test GogoShellCommandDisconnectNotSupported {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
+
+		GogoShell.openGogoShellAdmin();
 
 		GogoShell.executeCommand(commandName = "disconnect");
 
@@ -62,26 +75,23 @@ definition {
 		AssertConsoleTextNotPresent(value1 = "is not serializable and will prevent this session from being replicated");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test GogoShellPortletOnlyOnMainInstance {
-		property test.name.skip.portal.instance = "GogoShell#GogoShellPortletOnlyOnMainInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		HeadlessPortalInstanceAPI.addPortalInstance(
+			domain = "www.able.com",
+			portalInstanceId = "www.able.com",
+			virtualHost = "www.able.com");
 
-		PortalInstances.addCP(
-			mailDomain = "www.able.com",
-			virtualHost = "www.able.com",
-			webId = "www.able.com");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.viewCP(virtualHost = "www.able.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Gogo Shell");
+		GogoShell.openGogoShellAdmin();
+
+		AssertElementPresent(locator1 = "GogoShell#COMMAND_FIELD");
 
 		User.firstLoginPG(
 			password = "test",
@@ -96,9 +106,11 @@ definition {
 			portlet = "Gogo Shell");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test OmniAdminCanAccessGogoShellCommandViaPortlet {
-		property test.name.skip.portal.instance = "GogoShell#OmniAdminCanAccessGogoShellCommandViaPortlet";
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -110,33 +122,27 @@ definition {
 			roleTitle = "Administrator",
 			userEmailAddress = "userea@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.editPasswordCP(
-			requirePasswordReset = "true",
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Gogo Shell");
+		GogoShell.openGogoShellAdmin();
 
 		GogoShell.executeCommand(commandName = "lb | grep Liferay");
 
 		GogoShell.viewOutput(outputContent = "Liferay Portal");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SiteAdminCannotAccessGogoShellPortlet {
-		property test.name.skip.portal.instance = "GogoShell#SiteAdminCannotAccessGogoShellPortlet";
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -144,40 +150,36 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			requirePasswordReset = "true",
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		User.openUsersAdmin();
+
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		User.editUserSiteCP(
-			siteName = "${siteName}",
+			siteName = ${siteName},
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Memberships",
-			site = "${siteName}");
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
+		Site.openSiteMembershipsAdmin(siteURLKey = "guest");
 
 		Site.assignSiteRoleCP(
 			resourceName = "userfn userln",
 			roleTitle = "Site Administrator");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Gogo Shell");
+		GogoShell.openGogoShellAdmin();
+
+		AssertElementPresent(locator1 = "GogoShell#COMMAND_FIELD");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.internal.info.collection.provider;
@@ -20,14 +11,12 @@ import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.info.collection.provider.CollectionQuery;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
 import com.liferay.info.pagination.InfoPage;
-import com.liferay.info.sort.Sort;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,10 +34,7 @@ public class RelatedAssetsRelatedInfoItemCollectionProvider
 	public InfoPage<AssetEntry> getCollectionInfoPage(
 		CollectionQuery collectionQuery) {
 
-		Optional<Object> relatedItemOptional =
-			collectionQuery.getRelatedItemObjectOptional();
-
-		Object relatedItem = relatedItemOptional.orElse(null);
+		Object relatedItem = collectionQuery.getRelatedItem();
 
 		if (!(relatedItem instanceof AssetEntry)) {
 			return InfoPage.of(
@@ -57,12 +43,11 @@ public class RelatedAssetsRelatedInfoItemCollectionProvider
 
 		AssetEntry assetEntry = (AssetEntry)relatedItem;
 
-		Optional<Sort> sortOptional = collectionQuery.getSortOptional();
-
 		try {
 			AssetEntryQuery assetEntryQuery = getAssetEntryQuery(
 				assetEntry.getCompanyId(), assetEntry.getGroupId(),
-				collectionQuery.getPagination(), sortOptional.orElse(null));
+				collectionQuery.getPagination(), collectionQuery.getSort(),
+				null);
 
 			assetEntryQuery.setLinkedAssetEntryIds(
 				new long[] {assetEntry.getEntryId()});

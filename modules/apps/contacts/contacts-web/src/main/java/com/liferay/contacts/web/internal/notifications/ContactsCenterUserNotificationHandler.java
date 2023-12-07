@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.contacts.web.internal.notifications;
@@ -81,28 +72,7 @@ public class ContactsCenterUserNotificationHandler
 			return null;
 		}
 
-		String creatorUserName = _getUserNameLink(
-			socialRequest.getUserId(), serviceContext);
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			serviceContext.getLocale(),
-			ContactsCenterUserNotificationHandler.class);
-
-		String title = StringPool.BLANK;
-
-		if (socialRequest.getType() ==
-				SocialRelationConstants.TYPE_BI_CONNECTION) {
-
-			title = ResourceBundleUtil.getString(
-				resourceBundle,
-				"request-social-networking-summary-add-connection",
-				new Object[] {creatorUserName});
-		}
-		else {
-			title = ResourceBundleUtil.getString(
-				resourceBundle, "x-sends-you-a-social-relationship-request",
-				new Object[] {creatorUserName});
-		}
+		String title = getTitle(userNotificationEvent, serviceContext);
 
 		if ((socialRequest.getStatus() !=
 				SocialRequestConstants.STATUS_PENDING) ||
@@ -169,6 +139,48 @@ public class ContactsCenterUserNotificationHandler
 		throws Exception {
 
 		return StringPool.BLANK;
+	}
+
+	@Override
+	protected String getTitle(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject(
+			userNotificationEvent.getPayload());
+
+		long socialRequestId = jsonObject.getLong("classPK");
+
+		SocialRequest socialRequest =
+			_socialRequestLocalService.fetchSocialRequest(socialRequestId);
+
+		if (socialRequest == null) {
+			_userNotificationEventLocalService.deleteUserNotificationEvent(
+				userNotificationEvent.getUserNotificationEventId());
+
+			return null;
+		}
+
+		String creatorUserName = _getUserNameLink(
+			socialRequest.getUserId(), serviceContext);
+
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			serviceContext.getLocale(),
+			ContactsCenterUserNotificationHandler.class);
+
+		if (socialRequest.getType() ==
+				SocialRelationConstants.TYPE_BI_CONNECTION) {
+
+			return ResourceBundleUtil.getString(
+				resourceBundle,
+				"request-social-networking-summary-add-connection",
+				new Object[] {creatorUserName});
+		}
+
+		return ResourceBundleUtil.getString(
+			resourceBundle, "x-sends-you-a-social-relationship-request",
+			new Object[] {creatorUserName});
 	}
 
 	private String _getUserNameLink(

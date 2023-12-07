@@ -1,3 +1,6 @@
+assemble:
+    - from: src/fonts
+      into: static/fonts
 liferay-learn-theme-css:
     clayURL: css/clay.css
     mainURL: css/main.css

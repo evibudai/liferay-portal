@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.taglib.clay.servlet.taglib;
@@ -23,16 +14,16 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
 import java.util.HashMap;
@@ -169,6 +160,10 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		return _itemsTotal;
 	}
 
+	public String getItemsType() {
+		return _itemsType;
+	}
+
 	public ManagementToolbarDisplayContext
 		getManagementToolbarDisplayContext() {
 
@@ -260,6 +255,26 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		}
 
 		return _searchInputName;
+	}
+
+	public String getSearchResultsTitle() {
+		String searchResultsTitle = _searchResultsTitle;
+
+		if (searchResultsTitle == null) {
+			if (_managementToolbarDisplayContext != null) {
+				searchResultsTitle =
+					_managementToolbarDisplayContext.getSearchResultsTitle();
+			}
+
+			if (searchResultsTitle == null) {
+				searchResultsTitle =
+					ManagementToolbarDefaults.getSearchResultsTitle();
+			}
+		}
+
+		return LanguageUtil.get(
+			TagResourceBundleUtil.getResourceBundle(pageContext),
+			searchResultsTitle);
 	}
 
 	public String getSearchValue() {
@@ -472,6 +487,10 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		_itemsTotal = itemsTotal;
 	}
 
+	public void setItemsType(String itemsType) {
+		_itemsType = itemsType;
+	}
+
 	public void setManagementToolbarDisplayContext(
 		ManagementToolbarDisplayContext managementToolbarDisplayContext) {
 
@@ -509,6 +528,10 @@ public class ManagementToolbarTag extends BaseContainerTag {
 
 	public void setSearchInputName(String searchInputName) {
 		_searchInputName = searchInputName;
+	}
+
+	public void setSearchResultsTitle(String searchResultsTitle) {
+		_searchResultsTitle = searchResultsTitle;
 	}
 
 	public void setSearchValue(String searchValue) {
@@ -602,6 +625,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		_filterLabelItems = null;
 		_infoPanelId = null;
 		_itemsTotal = null;
+		_itemsType = "items";
 		_managementToolbarDisplayContext = null;
 		_namespace = null;
 		_orderDropdownItems = null;
@@ -611,6 +635,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		_searchFormName = null;
 		_searchInputAutoFocus = null;
 		_searchInputName = null;
+		_searchResultsTitle = null;
 		_searchValue = null;
 		_selectable = null;
 		_selectAllURL = null;
@@ -652,6 +677,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		props.put("initialSelectAllButtonVisible", isShowSelectAllButton());
 		props.put("initialSelectedItems", getSelectedItems());
 		props.put("itemsTotal", getItemsTotal());
+		props.put("itemsType", _getLocalizedItemsType());
 		props.put("orderDropdownItems", getOrderDropdownItems());
 
 		String searchActionURL = getSearchActionURL();
@@ -672,13 +698,14 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		props.put("searchInputAutoFocus", isSearchInputAutoFocus());
 		props.put(
 			"searchInputName", _namespace(namespace, getSearchInputName()));
+		props.put("searchResultsTitle", getSearchResultsTitle());
 		props.put("searchValue", getSearchValue());
 		props.put("selectAllURL", getSelectAllURL());
 		props.put("selectable", isSelectable());
 		props.put("showCreationMenu", isShowCreationMenu());
 		props.put(
 			"showDesignImprovementsFF",
-			GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-144527")));
+			FeatureFlagManagerUtil.isEnabled("LPS-144527"));
 		props.put("showInfoButton", isShowInfoButton());
 		props.put("showResultsBar", isShowResultsBar());
 		props.put("showSearch", isShowSearch());
@@ -707,12 +734,12 @@ public class ManagementToolbarTag extends BaseContainerTag {
 	protected int processStartTag() throws Exception {
 		super.processStartTag();
 
-		Boolean showDesignImprovementsFF = GetterUtil.getBoolean(
-			PropsUtil.get("feature.flag.LPS-144527"));
+		Boolean showDesignImprovementsFF = FeatureFlagManagerUtil.isEnabled(
+			"LPS-144527");
 
 		JspWriter jspWriter = pageContext.getOut();
 
-		Boolean active = !getCheckboxStatus().equals("unchecked");
+		Boolean active = !Objects.equals(getCheckboxStatus(), "unchecked");
 
 		jspWriter.write("<nav class=\"management-bar navbar navbar-expand-md");
 
@@ -724,9 +751,20 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		}
 
 		jspWriter.write("\"><div class=\"container-fluid");
-		jspWriter.write(" container-fluid-max-xl\"><ul class=\"navbar-nav\">");
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-184404")) {
+			jspWriter.write(" container-fluid-max-xl");
+		}
+
+		jspWriter.write("\"><ul class=\"navbar-nav\">");
+
+		ResourceBundle resourceBundle = TagResourceBundleUtil.getResourceBundle(
+			pageContext);
 
 		Boolean disabled = isDisabled();
+		Integer itemsTotal = getItemsTotal();
+		String localizedItemsType = _getLocalizedItemsType();
+		Integer selectedItems = getSelectedItems();
 
 		if (isSelectable()) {
 			jspWriter.write("<li class=\"nav-item\"><div class=\"");
@@ -740,35 +778,50 @@ public class ManagementToolbarTag extends BaseContainerTag {
 				jspWriter.write(" disabled");
 			}
 
-			jspWriter.write(" class=\"custom-control-input\" type=\"checkbox");
+			jspWriter.write(" aria-label=\"");
+
+			if (active) {
+				jspWriter.write(
+					LanguageUtil.format(
+						resourceBundle,
+						"clear-selection.-there-are-currently-x-of-x-x-" +
+							"selected",
+						new Object[] {
+							selectedItems, itemsTotal, localizedItemsType
+						}));
+			}
+			else {
+				jspWriter.write(
+					LanguageUtil.format(
+						resourceBundle, "select-all-x-on-the-page",
+						new Object[] {localizedItemsType}));
+			}
+
+			jspWriter.write(
+				"\" class=\"custom-control-input\" type=\"checkbox");
 			jspWriter.write("\" /><span class=\"custom-control-label\">");
 			jspWriter.write("</span></label></div></li>");
 		}
 
 		IconTag iconTag;
 
-		ResourceBundle resourceBundle = TagResourceBundleUtil.getResourceBundle(
-			pageContext);
-
 		if (active) {
-			Integer itemsTotal = getItemsTotal();
-			Integer selectedItems = getSelectedItems();
-
 			jspWriter.write("<li class=\"nav-item\"><span class=\"navbar-text");
 			jspWriter.write("\">");
+
+			String selectedItemslabel = LanguageUtil.format(
+				resourceBundle, "x-of-x-x-selected",
+				new Object[] {selectedItems, itemsTotal, localizedItemsType});
 
 			if (itemsTotal == selectedItems) {
 				jspWriter.write(
 					LanguageUtil.get(resourceBundle, "all-selected"));
+				jspWriter.write(" (");
+				jspWriter.write(selectedItemslabel);
+				jspWriter.write(")");
 			}
 			else {
-				jspWriter.write(
-					LanguageUtil.format(
-						resourceBundle, "x-of-x",
-						new Object[] {selectedItems, itemsTotal}));
-
-				jspWriter.write(StringPool.SPACE);
-				jspWriter.write(LanguageUtil.get(resourceBundle, "selected"));
+				jspWriter.write(selectedItemslabel);
 			}
 
 			jspWriter.write("</span></li>");
@@ -911,7 +964,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 
 			String orderSymbol = "order-list-down";
 
-			if (getSortingOrder().equals("asc")) {
+			if (Objects.equals(getSortingOrder(), "asc")) {
 				orderSymbol = "order-list-up";
 			}
 
@@ -1012,7 +1065,12 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		if (!active && isShowSearch()) {
 			jspWriter.write("<div class=\"navbar-form navbar-form-autofit ");
 			jspWriter.write(" navbar-overlay navbar-overlay-sm-down\"><div");
-			jspWriter.write(" class=\"container-fluid container-fluid-max-xl");
+			jspWriter.write(" class=\"container-fluid");
+
+			if (!FeatureFlagManagerUtil.isEnabled("LPS-184404")) {
+				jspWriter.write(" container-fluid-max-xl");
+			}
+
 			jspWriter.write("\"><form");
 
 			String searchActionURL = getSearchActionURL();
@@ -1070,13 +1128,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			jspWriter.write(" /><span class=\"input-group-inset-item");
 			jspWriter.write(" input-group-inset-item-after\"><button class=\"");
 			jspWriter.write(" navbar-breakpoint-d-none btn btn-monospaced");
-			jspWriter.write(" btn-unstyled\">");
-
-			if (disabled) {
-				jspWriter.write(" disabled");
-			}
-
-			jspWriter.write(" type=\"button\">");
+			jspWriter.write(" btn-unstyled\" disabled type=\"button\">");
 
 			iconTag = new IconTag();
 
@@ -1087,13 +1139,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			jspWriter.write("</button><button aria-label=\"");
 			jspWriter.write(LanguageUtil.get(resourceBundle, "search"));
 			jspWriter.write("\" class=\"btn btn-monospaced");
-			jspWriter.write(" btn-unstyled\"");
-
-			if (disabled) {
-				jspWriter.write(" disabled");
-			}
-
-			jspWriter.write(" type=\"submit\">");
+			jspWriter.write(" btn-unstyled\" disabled type=\"submit\">");
 
 			iconTag = new IconTag();
 
@@ -1229,7 +1275,13 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		if (isShowResultsBar()) {
 			jspWriter.write("<nav class=\"subnav-tbar subnav-tbar-primary");
 			jspWriter.write(" tbar tbar-inline-xs-down\"><div class=\"");
-			jspWriter.write("container-fluid container-fluid-max-xl\">");
+			jspWriter.write("container-fluid");
+
+			if (!FeatureFlagManagerUtil.isEnabled("LPS-184404")) {
+				jspWriter.write(" container-fluid-max-xl");
+			}
+
+			jspWriter.write("\">");
 			jspWriter.write("<ul class=\"tbar-nav tbar-nav-wrap\">");
 			jspWriter.write("<li class=\"tbar-item");
 
@@ -1242,17 +1294,17 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			jspWriter.write("\"><div class=\"tbar-section\"><span class=\"");
 			jspWriter.write("component-text text-truncate-inline\"><span");
 			jspWriter.write(" class=\"text-truncate\">");
+
+			String searchValueHTML =
+				"<strong>\"" + HtmlUtil.escape(searchValue) + "\"</strong>";
+
 			jspWriter.write(
 				LanguageUtil.format(
 					resourceBundle,
-					(getItemsTotal() == 1) ? "x-result-for" : "x-results-for",
-					new Object[] {getItemsTotal()}));
-
-			if (searchValue != null) {
-				jspWriter.write("<strong> \"");
-				jspWriter.write(HtmlUtil.escape(searchValue));
-				jspWriter.write("\"</strong>");
-			}
+					_getResultsLanguageKey(
+						ListUtil.isNotEmpty(filterLabelItems), getItemsTotal(),
+						searchValue),
+					new Object[] {getItemsTotal(), searchValueHTML}));
 
 			jspWriter.write("</span></span></div></li>");
 
@@ -1278,7 +1330,28 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			jspWriter.write("</div></li></ul></div></nav>");
 		}
 
+		String searchResultsTitle = getSearchResultsTitle();
+
+		if (isShowResultsBar() && Validator.isNotNull(searchResultsTitle)) {
+			jspWriter.write("<div class=\"c-mt-4 container-fluid ");
+			jspWriter.write("container-fluid-max-xl\"><h3>");
+			jspWriter.write(searchResultsTitle);
+			jspWriter.write("<h3></div>");
+		}
+
 		return SKIP_BODY;
+	}
+
+	private String _getLocalizedItemsType() {
+		String itemsType = getItemsType();
+
+		if (Validator.isNotNull(itemsType)) {
+			return LanguageUtil.get(
+				TagResourceBundleUtil.getResourceBundle(pageContext),
+				itemsType);
+		}
+
+		return itemsType;
 	}
 
 	private Map<String, List<String>> _getParamsMap(String url) {
@@ -1321,6 +1394,40 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		}
 
 		return searchData;
+	}
+
+	private String _getResultsLanguageKey(
+		boolean hasFilters, int itemsTotal, String searchValue) {
+
+		if (Validator.isNull(searchValue)) {
+			if (hasFilters) {
+				if (itemsTotal == 1) {
+					return "x-result-found-with-filters";
+				}
+
+				return "x-results-found-with-filters";
+			}
+
+			if (itemsTotal == 1) {
+				return "x-result-found";
+			}
+
+			return "x-results-found";
+		}
+
+		if (hasFilters) {
+			if (itemsTotal == 1) {
+				return "x-result-found-for-x-with-filters";
+			}
+
+			return "x-results-found-for-x-with-filters";
+		}
+
+		if (itemsTotal == 1) {
+			return "x-result-found-for-x";
+		}
+
+		return "x-results-found-for-x";
 	}
 
 	private String _namespace(String namespace, String prop) {
@@ -1373,6 +1480,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 	private List<LabelItem> _filterLabelItems;
 	private String _infoPanelId;
 	private Integer _itemsTotal;
+	private String _itemsType = "items";
 	private ManagementToolbarDisplayContext _managementToolbarDisplayContext;
 	private String _namespace;
 	private List<DropdownItem> _orderDropdownItems;
@@ -1382,6 +1490,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 	private String _searchFormName;
 	private Boolean _searchInputAutoFocus;
 	private String _searchInputName;
+	private String _searchResultsTitle;
 	private String _searchValue;
 	private Boolean _selectable;
 	private String _selectAllURL;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.css.builder;
@@ -19,6 +10,7 @@ import com.beust.jcommander.ParameterException;
 
 import com.liferay.css.builder.internal.util.CSSBuilderUtil;
 import com.liferay.css.builder.internal.util.FileUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.rtl.css.RTLCSSConverter;
 import com.liferay.sass.compiler.SassCompiler;
@@ -39,7 +31,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -91,9 +82,9 @@ public class CSSBuilder implements AutoCloseable {
 	public CSSBuilder(CSSBuilderArgs cssBuilderArgs) throws Exception {
 		_cssBuilderArgs = cssBuilderArgs;
 
-		List<File> importPaths = _cssBuilderArgs.getImportPaths();
+		List<File> importPaths = cssBuilderArgs.getImportPaths();
 
-		List<String> excludes = _cssBuilderArgs.getExcludes();
+		List<String> excludes = cssBuilderArgs.getExcludes();
 
 		_excludes = excludes.toArray(new String[0]);
 
@@ -118,7 +109,7 @@ public class CSSBuilder implements AutoCloseable {
 		}
 
 		List<String> rtlExcludedPathRegexps =
-			_cssBuilderArgs.getRtlExcludedPathRegexps();
+			cssBuilderArgs.getRtlExcludedPathRegexps();
 
 		_rtlExcludedPathPatterns = new Pattern[rtlExcludedPathRegexps.size()];
 
@@ -127,7 +118,7 @@ public class CSSBuilder implements AutoCloseable {
 				rtlExcludedPathRegexps.get(i));
 		}
 
-		_initSassCompiler(_cssBuilderArgs.getSassCompilerClassName());
+		_initSassCompiler(cssBuilderArgs.getSassCompilerClassName());
 	}
 
 	@Override
@@ -196,13 +187,11 @@ public class CSSBuilder implements AutoCloseable {
 		String[] scssFiles = _getScssFiles(basedir);
 
 		if (!_isModified(basedir, scssFiles)) {
-			long oldestSassModifiedTime = _getOldestModifiedTime(
-				basedir, scssFiles);
+			long oldestSassModifiedTime = _getModifiedTime(
+				basedir, scssFiles, Comparator.naturalOrder());
 
-			String[] scssFragments = _getScssFragments(basedir);
-
-			long newestFragmentModifiedTime = _getNewestModifiedTime(
-				basedir, scssFragments);
+			long newestFragmentModifiedTime = _getModifiedTime(
+				basedir, _getScssFragments(basedir), Comparator.reverseOrder());
 
 			if (oldestSassModifiedTime > newestFragmentModifiedTime) {
 				return fileNames;
@@ -220,32 +209,21 @@ public class CSSBuilder implements AutoCloseable {
 		return fileNames;
 	}
 
-	private long _getNewestModifiedTime(String baseDir, String[] fileNames) {
-		return Stream.of(
-			fileNames
-		).map(
-			fileName -> Paths.get(baseDir, fileName)
-		).map(
-			FileUtil::getLastModifiedTime
-		).max(
-			Comparator.naturalOrder()
-		).orElse(
-			Long.MIN_VALUE
-		);
-	}
+	private long _getModifiedTime(
+		String baseDir, String[] fileNames, Comparator<Long> comparator) {
 
-	private long _getOldestModifiedTime(String baseDir, String[] fileNames) {
-		return Stream.of(
-			fileNames
-		).map(
-			fileName -> Paths.get(baseDir, fileName)
-		).map(
-			FileUtil::getLastModifiedTime
-		).min(
-			Comparator.naturalOrder()
-		).orElse(
-			Long.MIN_VALUE
-		);
+		List<Long> lastModifiedTimes = TransformUtil.transformToList(
+			fileNames,
+			fileName -> FileUtil.getLastModifiedTime(
+				Paths.get(baseDir, fileName)));
+
+		if (lastModifiedTimes.isEmpty()) {
+			return Long.MIN_VALUE;
+		}
+
+		lastModifiedTimes.sort(comparator);
+
+		return lastModifiedTimes.get(0);
 	}
 
 	private String _getRtlCss(String fileName, String css) {
@@ -422,6 +400,12 @@ public class CSSBuilder implements AutoCloseable {
 				name = name.substring(19);
 
 				Path path = outputPath.resolve(name);
+
+				Path canonicalPath = path.normalize();
+
+				if (!canonicalPath.equals(path)) {
+					continue;
+				}
 
 				Files.createDirectories(path.getParent());
 

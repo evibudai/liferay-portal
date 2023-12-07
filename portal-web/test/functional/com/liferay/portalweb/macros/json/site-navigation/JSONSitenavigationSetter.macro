@@ -1,72 +1,84 @@
 definition {
 
-	macro setGroupId {
-		Variables.assertDefined(parameterList = "${groupName}");
+	@summary = "Default summary"
+	macro setGroupId(groupName = null, grandParentGroupName = null, parentGroupName = null) {
+		Variables.assertDefined(parameterList = ${groupName});
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			grandParentGroupName = ${grandParentGroupName},
+			groupName = ${groupName},
+			parentGroupName = ${parentGroupName},
+			site = ${site});
 
-		return "${groupId}";
+		return ${groupId};
 	}
 
-	macro setSiteNavigationMenuId {
-		Variables.assertDefined(parameterList = "${groupName},${siteNavigationMenuName}");
+	@summary = "Default summary"
+	macro setSiteNavigationMenuId(groupName = null, site = null, siteNavigationMenuName = null, grandParentGroupName = null, parentGroupName = null) {
+		Variables.assertDefined(parameterList = ${siteNavigationMenuName});
 
-		var groupId = JSONSitenavigationSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+		if (!(isSet(groupId))) {
+			var groupId = JSONSitenavigationSetter.setGroupId(
+				grandParentGroupName = ${grandParentGroupName},
+				groupName = ${groupName},
+				parentGroupName = ${parentGroupName},
+				site = ${site});
+		}
 
 		var siteNavigationMenuId = JSONSitenavigationAPI._getSiteNavigationMenuIdByName(
-			groupId = "${groupId}",
-			siteNavigationMenuName = "${siteNavigationMenuName}");
+			groupId = ${groupId},
+			siteNavigationMenuName = ${siteNavigationMenuName});
 
-		return "${siteNavigationMenuId}";
+		return ${siteNavigationMenuId};
 	}
 
-	macro setSiteNavigationMenuItemId {
+	@summary = "Default summary"
+	macro setSiteNavigationMenuItemId(groupName = null, site = null, siteNavigationMenuName = null, grandParentGroupName = null, parentGroupName = null, siteNavigationMenuItemName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${siteNavigationMenuItemName},${siteNavigationMenuName}");
 
 		var groupId = JSONSitenavigationSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+			grandParentGroupName = ${grandParentGroupName},
+			groupName = ${groupName},
+			parentGroupName = ${parentGroupName},
+			site = ${site});
 
 		var siteNavigationMenuId = JSONSitenavigationAPI._getSiteNavigationMenuIdByName(
-			groupId = "${groupId}",
-			siteNavigationMenuName = "${siteNavigationMenuName}");
+			groupId = ${groupId},
+			siteNavigationMenuName = ${siteNavigationMenuName});
 
 		var siteNavigationMenuItemId = JSONSitenavigationAPI._getSiteNavigationMenuItemIdByName(
-			siteNavigationMenuId = "${siteNavigationMenuId}",
-			siteNavigationMenuItemName = "${siteNavigationMenuItemName}");
+			siteNavigationMenuId = ${siteNavigationMenuId},
+			siteNavigationMenuItemName = ${siteNavigationMenuItemName});
 
-		return "${siteNavigationMenuItemId}";
+		return ${siteNavigationMenuItemId};
 	}
 
-	macro setTypeSettings {
+	@summary = "Default summary"
+	macro setTypeSettings(groupId = null, type = null, privateLayout = null, url = null, siteNavigationMenuItemName = null, useNewTab = null) {
 		Variables.assertDefined(parameterList = "${siteNavigationMenuItemName},${type}");
 
-		if ("${type}" == "layout") {
+		if (${type} == "layout") {
 			var layoutUuid = JSONLayoutAPI._getUuidByName(
-				groupId = "${groupId}",
-				layoutName = "${siteNavigationMenuItemName}",
-				privateLayout = "${privateLayout}");
+				groupId = ${groupId},
+				layoutName = ${siteNavigationMenuItemName},
+				privateLayout = ${privateLayout});
 
 			var typeSettings = '''groupId=${groupId}%0AlayoutUuid=${layoutUuid}%0AprivateLayout=${privateLayout}%0Atitle=${siteNavigationMenuItemName}%0A''';
 		}
 
-		if ("${type}" == "node") {
+		if (${type} == "node") {
 			var typeSettings = '''defaultLanguageId=en_US%0Aname_en_US=${siteNavigationMenuItemName}%0A''';
 		}
 
-		if ("${type}" == "url") {
+		if (${type} == "url") {
 			var typeSettings = '''defaultLanguageId=en_US%0Aname_en_US=${siteNavigationMenuItemName}%0Aurl=${url}%0AuseNewTab=${useNewTab}%0A''';
 		}
 
-		return "${typeSettings}";
+		return ${typeSettings};
 	}
 
 }

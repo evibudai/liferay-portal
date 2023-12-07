@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.portlet.action;
 
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.exception.MaxAddMenuFavItemsException;
+import com.liferay.journal.util.JournalHelper;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.util.JournalPortletUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -34,13 +26,13 @@ import javax.portlet.ActionResponse;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
  */
 @Component(
 	configurationPid = "com.liferay.journal.web.internal.configuration.JournalWebConfiguration",
-	immediate = true,
 	property = {
 		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/add_menu_fav_item"
@@ -65,7 +57,7 @@ public class AddMenuFavItemMVCActionCommand extends BaseMVCActionCommand {
 			PortletPreferencesFactoryUtil.getPortalPreferences(actionRequest);
 
 		String key = JournalPortletUtil.getAddMenuFavItemKey(
-			actionRequest, actionResponse);
+			_journalHelper, actionRequest);
 
 		String[] addMenuFavItems = portalPreferences.getValues(
 			JournalPortletKeys.JOURNAL, key, new String[0]);
@@ -78,13 +70,16 @@ public class AddMenuFavItemMVCActionCommand extends BaseMVCActionCommand {
 			throw new MaxAddMenuFavItemsException();
 		}
 
-		String ddmStructureKey = ParamUtil.getString(
-			actionRequest, "ddmStructureKey");
+		long ddmStructureId = ParamUtil.getLong(
+			actionRequest, "ddmStructureId");
 
 		portalPreferences.setValues(
 			JournalPortletKeys.JOURNAL, key,
-			ArrayUtil.append(addMenuFavItems, ddmStructureKey));
+			ArrayUtil.append(addMenuFavItems, String.valueOf(ddmStructureId)));
 	}
+
+	@Reference
+	private JournalHelper _journalHelper;
 
 	private volatile JournalWebConfiguration _journalWebConfiguration;
 

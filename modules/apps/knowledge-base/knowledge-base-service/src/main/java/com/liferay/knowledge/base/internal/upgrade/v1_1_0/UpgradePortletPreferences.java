@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.internal.upgrade.v1_1_0;
@@ -84,10 +75,11 @@ public class UpgradePortletPreferences
 			String portletId, String xml)
 		throws Exception {
 
-		PortletPreferences preferences = PortletPreferencesFactoryUtil.fromXML(
-			companyId, ownerId, ownerType, plid, portletId, xml);
+		PortletPreferences portletPreferences =
+			PortletPreferencesFactoryUtil.fromXML(
+				companyId, ownerId, ownerType, plid, portletId, xml);
 
-		Map<String, String[]> preferencesMap = preferences.getMap();
+		Map<String, String[]> preferencesMap = portletPreferences.getMap();
 
 		String rootPortletId = PortletIdCodec.decodePortletName(portletId);
 
@@ -96,10 +88,10 @@ public class UpgradePortletPreferences
 
 			String newName = getName(rootPortletId, oldName);
 
-			preferences.reset(oldName);
+			portletPreferences.reset(oldName);
 
 			if (newName != null) {
-				preferences.setValues(newName, entry.getValue());
+				portletPreferences.setValues(newName, entry.getValue());
 			}
 		}
 
@@ -111,12 +103,13 @@ public class UpgradePortletPreferences
 
 			String name = entry.getKey();
 
-			if (preferences.getValues(name, null) == null) {
-				preferences.setValues(name, StringUtil.split(entry.getValue()));
+			if (portletPreferences.getValues(name, null) == null) {
+				portletPreferences.setValues(
+					name, StringUtil.split(entry.getValue()));
 			}
 		}
 
-		return PortletPreferencesFactoryUtil.toXML(preferences);
+		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
 	}
 
 	private static final String[] _PORTLET_IDS = {

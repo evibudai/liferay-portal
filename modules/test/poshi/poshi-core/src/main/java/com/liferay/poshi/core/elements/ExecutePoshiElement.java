@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
 
 import com.liferay.poshi.core.PoshiContext;
+import com.liferay.poshi.core.PoshiProperties;
 import com.liferay.poshi.core.script.PoshiScriptParserException;
 import com.liferay.poshi.core.script.PoshiScriptParserUtil;
+import com.liferay.poshi.core.selenium.LiferaySeleniumMethod;
 import com.liferay.poshi.core.util.CharPool;
 import com.liferay.poshi.core.util.ListUtil;
 import com.liferay.poshi.core.util.NaturalOrderStringComparator;
@@ -68,6 +61,8 @@ public class ExecutePoshiElement extends PoshiElement {
 	public void parsePoshiScript(String poshiScript)
 		throws PoshiScriptParserException {
 
+		validateSemicolon(poshiScript);
+
 		String poshiScriptParentheticalContent = getParentheticalContent(
 			poshiScript);
 		String fileExtension = getFileExtension();
@@ -75,21 +70,50 @@ public class ExecutePoshiElement extends PoshiElement {
 		if (fileExtension.equals("function") &&
 			poshiScript.startsWith("selenium.")) {
 
-			addAttribute("selenium", getCommandName(poshiScript));
+			String commandName = getCommandName(poshiScript);
+
+			addAttribute("selenium", commandName);
+
+			LiferaySeleniumMethod liferaySeleniumMethod =
+				PoshiContext.getLiferaySeleniumMethod(commandName);
 
 			List<String> methodParameterValues =
 				PoshiScriptParserUtil.getMethodParameterValues(
 					poshiScriptParentheticalContent, this);
+			PoshiProperties poshiProperties =
+				PoshiProperties.getPoshiProperties();
 
-			for (int i = 0; i < methodParameterValues.size(); i++) {
-				String methodParameterValue = methodParameterValues.get(i);
+			if (!(liferaySeleniumMethod == null) &&
+				(liferaySeleniumMethod.getParameterCount() !=
+					methodParameterValues.size()) &&
+				poshiProperties.generateCommandSignature) {
 
-				if (isQuotedContent(methodParameterValue)) {
-					methodParameterValue = getDoubleQuotedContent(
-						methodParameterValue);
+				List<String> parameterNames =
+					liferaySeleniumMethod.getParameterNames();
+
+				for (int i = 0; i < parameterNames.size(); i++) {
+					StringBuilder sb = new StringBuilder();
+
+					sb.append("${");
+
+					sb.append(parameterNames.get(i));
+
+					sb.append("}");
+
+					addAttribute("argument" + (i + 1), sb.toString());
 				}
+			}
+			else {
+				for (int i = 0; i < methodParameterValues.size(); i++) {
+					String methodParameterValue = methodParameterValues.get(i);
 
-				addAttribute("argument" + (i + 1), methodParameterValue);
+					if (isQuotedContent(methodParameterValue)) {
+						methodParameterValue = getDoubleQuotedContent(
+							methodParameterValue);
+					}
+
+					addAttribute("argument" + (i + 1), methodParameterValue);
+				}
 			}
 
 			return;
@@ -333,9 +357,11 @@ public class ExecutePoshiElement extends PoshiElement {
 
 		String assignmentsString = ListUtil.toString(assignments);
 
-		if ((assignments.size() > 1) &&
-			assignmentsString.matches("(?s)\\w+\\s*=.+") &&
-			!isConditionValidInParent((PoshiElement)getParent())) {
+		if (((assignments.size() == 1) &&
+			 assignmentsString.startsWith("table = '''")) ||
+			((assignments.size() > 1) &&
+			 assignmentsString.matches("(?s)\\w+\\s*=.+") &&
+			 !isConditionValidInParent((PoshiElement)getParent()))) {
 
 			multilineSnippet = true;
 		}
@@ -409,20 +435,37 @@ public class ExecutePoshiElement extends PoshiElement {
 		return "selenium." + attributeValue("selenium");
 	}
 
+	@Override
+	protected Pattern getStatementPattern() {
+		String poshiScript = getPoshiScript();
+
+		poshiScript = poshiScript.trim();
+
+		if (poshiScript.startsWith("var") &&
+			isVarAssignedToMacroInvocation(getPoshiScript())) {
+
+			return varInvocationAssignmentStatementPattern;
+		}
+
+		return _statementPattern;
+	}
+
 	private boolean _isElementType(
 		PoshiElement parentPoshiElement, String poshiScript) {
 
-		if (parentPoshiElement instanceof ExecutePoshiElement) {
+		if (isConditionValidInParent(parentPoshiElement) ||
+			(parentPoshiElement instanceof ExecutePoshiElement)) {
+
 			return false;
 		}
 
 		if ((isVarAssignedToMacroInvocation(poshiScript) ||
-			 isValidPoshiScriptStatement(_statementPattern, poshiScript)) &&
+			 isValidPoshiScriptStatement(
+				 _partialStatementPattern, poshiScript)) &&
 			!isValidPoshiScriptStatement(
 				_utilityInvocationStatementPattern, poshiScript)) {
 
-			return PoshiScriptParserUtil.isBalancedPoshiScript(
-				getParentheticalContent(poshiScript));
+			return true;
 		}
 
 		return false;
@@ -433,11 +476,14 @@ public class ExecutePoshiElement extends PoshiElement {
 	private static final String _FUNCTION_PARAMETER_REGEX =
 		QUOTED_REGEX + "|\\$\\{\\S+\\}|\\d*";
 
+	private static final String _INVOCATION_REGEX =
+		INVOCATION_START_REGEX + "\\(.*?\\)(;|)";
+
 	private static final String _UNQUOTED_PARAMETER_REGEX =
 		"\\w*\\s*=\\s\"(\\$\\{[\\w_-]+\\}|\\d+)\"";
 
 	private static final String _UTILITY_INVOCATION_REGEX =
-		"(echo|fail|takeScreenshot)\\(.*?\\)";
+		"(echo|fail|takeScreenshot|task[\\s]*)\\(.*?\\)";
 
 	private static final Pattern _executeParameterPattern = Pattern.compile(
 		"^[\\s]*(\\w*\\s*=\\s*\"[ \\t\\S]*?\"|\\w*\\s*=\\s*'''.*?'''|" +
@@ -448,9 +494,11 @@ public class ExecutePoshiElement extends PoshiElement {
 		"locator1", "locator2", "value1", "value2", "value3");
 	private static final Pattern _functionParameterPattern = Pattern.compile(
 		_FUNCTION_PARAMETER_REGEX);
+	private static final Pattern _partialStatementPattern = Pattern.compile(
+		"^" + INVOCATION_REGEX + VAR_STATEMENT_END_REGEX, Pattern.DOTALL);
 	private static final Pattern _statementPattern = Pattern.compile(
-		"^" + INVOCATION_REGEX + STATEMENT_END_REGEX, Pattern.DOTALL);
+		"^" + _INVOCATION_REGEX, Pattern.DOTALL);
 	private static final Pattern _utilityInvocationStatementPattern =
-		Pattern.compile("^" + _UTILITY_INVOCATION_REGEX + STATEMENT_END_REGEX);
+		Pattern.compile("^" + _UTILITY_INVOCATION_REGEX);
 
 }

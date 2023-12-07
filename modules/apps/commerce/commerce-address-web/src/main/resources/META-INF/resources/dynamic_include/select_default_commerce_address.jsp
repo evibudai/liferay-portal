@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -43,33 +34,68 @@ int type = commerceChannelAccountEntryRelDisplayContext.getType();
 
 		<aui:model-context bean="<%= commerceChannelAccountEntryRelDisplayContext.fetchCommerceChannelAccountEntryRel() %>" model="<%= CommerceChannelAccountEntryRel.class %>" />
 
-		<aui:select label="channel" name="commerceChannelId">
-			<aui:option label="<%= LanguageUtil.get(request, commerceChannelAccountEntryRelDisplayContext.getCommerceChannelsEmptyOptionKey()) %>" selected="<%= commerceChannelAccountEntryRelDisplayContext.isCommerceChannelSelected(0) %>" value="0" />
+		<aui:select label="channel" name="commerceChannelId" />
 
-			<%
-			for (CommerceChannel commerceChannel : commerceChannelAccountEntryRelDisplayContext.getFilteredCommerceChannels()) {
-			%>
-
-				<aui:option label="<%= commerceChannel.getName() %>" selected="<%= commerceChannelAccountEntryRelDisplayContext.isCommerceChannelSelected(commerceChannel.getCommerceChannelId()) %>" value="<%= commerceChannel.getCommerceChannelId() %>" />
-
-			<%
-			}
-			%>
-
-		</aui:select>
-
-		<aui:select label="<%= commerceChannelAccountEntryRelDisplayContext.getAddressSelectLabel(type) %>" name="classPK" required="<%= true %>">
-
-			<%
-			for (CommerceAddress commerceAddress : commerceChannelAccountEntryRelDisplayContext.getCommerceAddresses()) {
-			%>
-
-				<aui:option label="<%= commerceAddress.getName() %>" selected="<%= commerceChannelAccountEntryRelDisplayContext.isCommerceAddressSelected(commerceAddress.getCommerceAddressId()) %>" value="<%= commerceAddress.getCommerceAddressId() %>" />
-
-			<%
-			}
-			%>
-
-		</aui:select>
+		<aui:select label="<%= commerceChannelAccountEntryRelDisplayContext.getAddressSelectLabel(type) %>" name="classPK" required="<%= true %>" />
 	</aui:form>
 </commerce-ui:modal-content>
+
+<aui:script use="liferay-dynamic-select">
+	new Liferay.DynamicSelect([
+		{
+			select: '<portlet:namespace />commerceChannelId',
+			selectData: function (callback) {
+				function injectCountryPlaceholder(list) {
+					var callbackList = [
+						{
+							commerceChannelId: '0',
+							name:
+								'<%= LanguageUtil.get(request, commerceChannelAccountEntryRelDisplayContext.getCommerceChannelsEmptyOptionKey()) %>',
+						},
+					];
+
+					list.forEach((listElement) => {
+						callbackList.push(listElement);
+					});
+
+					callback(callbackList);
+				}
+
+				Liferay.Service(
+					'/commerce.commercechannel/get-commerce-channels',
+					{
+						companyId: '<%= company.getCompanyId() %>',
+					},
+					injectCountryPlaceholder
+				);
+			},
+			selectDesc: 'name',
+			selectId: 'commerceChannelId',
+			selectNullable: <%= false %>,
+			selectSort: '<%= true %>',
+			selectVal:
+				'<%= (commerceChannelAccountEntryRel == null) ? '0' : commerceChannelAccountEntryRel.getCommerceChannelId() %>',
+		},
+		{
+			select: '<portlet:namespace />classPK',
+			selectData: function (callback, selectKey) {
+				Liferay.Service(
+					'<%= commerceChannelAccountEntryRelDisplayContext.getCommerceAddressAPIURL() %>',
+					{
+						channelId: selectKey,
+						className: '<%= AccountEntry.class.getName() %>',
+						classPK: '<%= accountEntry.getAccountEntryId() %>',
+						start: -1,
+						end: -1,
+					},
+					callback
+				);
+			},
+			selectDesc: 'name',
+			selectId: 'commerceAddressId',
+			selectNullable: <%= false %>,
+			selectVal:
+				'<%= (commerceChannelAccountEntryRel == null) ? '0' : commerceChannelAccountEntryRel.getClassPK() %>',
+		},
+	]);
+</aui:script>

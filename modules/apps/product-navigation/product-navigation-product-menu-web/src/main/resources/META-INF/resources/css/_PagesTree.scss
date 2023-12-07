@@ -4,6 +4,12 @@ $product-menu-pages-administration-link-height: 72px;
 
 html#{$cadmin-selector} {
 	.cadmin {
+		&.copy-page-modal {
+			.modal-content {
+				min-height: 344px;
+			}
+		}
+
 		.pages-tree {
 			margin-bottom: calc(
 				#{$product-menu-pages-administration-link-height} + #{$cadmin-spacer}
@@ -11,6 +17,11 @@ html#{$cadmin-selector} {
 
 			.treeview-dropping-middle {
 				background-color: rgba($white, 0.06);
+			}
+
+			.icon-warning {
+				margin: 1px 4px 0 8px;
+				z-index: 2;
 			}
 		}
 	}

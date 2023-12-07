@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.bulk.selection.internal;
@@ -34,7 +25,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -71,62 +61,56 @@ public class BulkSelectionBackgroundTaskExecutor
 			BulkSelectionBackgroundTaskConstants.
 				BULK_SELECTION_ACTION_CLASS_NAME);
 
-		Optional<BulkSelectionAction<Object>> bulkSelectionActionOptional =
-			_getService(
-				(Class<BulkSelectionAction<Object>>)
-					(Class<?>)BulkSelectionAction.class,
-				bulkSelectionActionClassName);
+		BulkSelectionAction<Object> bulkSelectionAction = _getService(
+			(Class<BulkSelectionAction<Object>>)
+				(Class<?>)BulkSelectionAction.class,
+			bulkSelectionActionClassName);
 
-		bulkSelectionActionOptional.ifPresent(
-			bulkSelectionAction -> {
-				Map<String, String[]> parameterMap =
-					(Map<String, String[]>)taskContextMap.get(
-						BulkSelectionBackgroundTaskConstants.
-							BULK_SELECTION_PARAMETER_MAP);
+		if (bulkSelectionAction == null) {
+			return BackgroundTaskResult.SUCCESS;
+		}
 
-				String bulkSelectionFactoryClassName =
-					(String)taskContextMap.get(
-						BulkSelectionBackgroundTaskConstants.
-							BULK_SELECTION_FACTORY_CLASS_NAME);
+		String bulkSelectionFactoryClassName = (String)taskContextMap.get(
+			BulkSelectionBackgroundTaskConstants.
+				BULK_SELECTION_FACTORY_CLASS_NAME);
 
-				Optional<BulkSelectionFactory<?>> bulkSelectionFactoryOptional =
-					_getService(
-						(Class<BulkSelectionFactory<?>>)
-							(Class<?>)BulkSelectionFactory.class,
-						bulkSelectionFactoryClassName);
+		BulkSelectionFactory<?> bulkSelectionFactory = _getService(
+			(Class<BulkSelectionFactory<?>>)
+				(Class<?>)BulkSelectionFactory.class,
+			bulkSelectionFactoryClassName);
 
-				bulkSelectionFactoryOptional.ifPresent(
-					bulkSelectionFactory -> {
-						try {
-							BulkSelection<?> bulkSelection =
-								bulkSelectionFactory.create(parameterMap);
+		if (bulkSelectionFactory == null) {
+			return BackgroundTaskResult.SUCCESS;
+		}
 
-							Map<String, Serializable> inputMap =
-								(Map<String, Serializable>)taskContextMap.get(
-									BulkSelectionBackgroundTaskConstants.
-										BULK_SELECTION_ACTION_INPUT_MAP);
+		try {
+			Map<String, Serializable> inputMap =
+				(Map<String, Serializable>)taskContextMap.get(
+					BulkSelectionBackgroundTaskConstants.
+						BULK_SELECTION_ACTION_INPUT_MAP);
 
-							boolean assetEntryBulkSelection =
-								(boolean)inputMap.getOrDefault(
-									BulkSelectionInputParameters.
-										ASSET_ENTRY_BULK_SELECTION,
-									false);
+			boolean assetEntryBulkSelection = (boolean)inputMap.getOrDefault(
+				BulkSelectionInputParameters.ASSET_ENTRY_BULK_SELECTION, false);
 
-							if (assetEntryBulkSelection) {
-								bulkSelection =
-									bulkSelection.toAssetEntryBulkSelection();
-							}
+			Map<String, String[]> parameterMap =
+				(Map<String, String[]>)taskContextMap.get(
+					BulkSelectionBackgroundTaskConstants.
+						BULK_SELECTION_PARAMETER_MAP);
 
-							bulkSelectionAction.execute(
-								_userLocalService.getUser(
-									backgroundTask.getUserId()),
-								(BulkSelection<Object>)bulkSelection, inputMap);
-						}
-						catch (Exception exception) {
-							_log.error(exception);
-						}
-					});
-			});
+			BulkSelection<?> bulkSelection = bulkSelectionFactory.create(
+				parameterMap);
+
+			if (assetEntryBulkSelection) {
+				bulkSelection = bulkSelection.toAssetEntryBulkSelection();
+			}
+
+			bulkSelectionAction.execute(
+				_userLocalService.getUser(backgroundTask.getUserId()),
+				(BulkSelection<Object>)bulkSelection, inputMap);
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
 
 		return BackgroundTaskResult.SUCCESS;
 	}
@@ -143,29 +127,27 @@ public class BulkSelectionBackgroundTaskExecutor
 		_bundleContext = bundleContext;
 	}
 
-	private <T> Optional<T> _getService(
-		Class<T> clazz, String concreteClassName) {
-
+	private <T> T _getService(Class<T> clazz, String concreteClassName) {
 		try {
 			Collection<ServiceReference<T>> serviceReferences =
 				_bundleContext.getServiceReferences(
-					clazz, "(objectClass=" + concreteClassName + ")");
+					clazz, "(component.name=" + concreteClassName + ")");
 
 			Iterator<ServiceReference<T>> iterator =
 				serviceReferences.iterator();
 
 			if (iterator.hasNext()) {
-				return Optional.of(_bundleContext.getService(iterator.next()));
+				return _bundleContext.getService(iterator.next());
 			}
 
-			return Optional.empty();
+			return null;
 		}
 		catch (InvalidSyntaxException invalidSyntaxException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(invalidSyntaxException);
 			}
 
-			return Optional.empty();
+			return null;
 		}
 	}
 

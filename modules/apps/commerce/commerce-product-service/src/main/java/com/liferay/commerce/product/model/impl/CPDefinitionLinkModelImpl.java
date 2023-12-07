@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model.impl;
@@ -33,6 +24,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
@@ -79,7 +71,11 @@ public class CPDefinitionLinkModelImpl
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"CPDefinitionId", Types.BIGINT}, {"CProductId", Types.BIGINT},
-		{"priority", Types.DOUBLE}, {"type_", Types.VARCHAR}
+		{"displayDate", Types.TIMESTAMP}, {"expirationDate", Types.TIMESTAMP},
+		{"priority", Types.DOUBLE}, {"type_", Types.VARCHAR},
+		{"lastPublishDate", Types.TIMESTAMP}, {"status", Types.INTEGER},
+		{"statusByUserId", Types.BIGINT}, {"statusByUserName", Types.VARCHAR},
+		{"statusDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -98,12 +94,19 @@ public class CPDefinitionLinkModelImpl
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("CPDefinitionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("CProductId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("displayDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("expirationDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("priority", Types.DOUBLE);
 		TABLE_COLUMNS_MAP.put("type_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("status", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("statusByUserId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("statusByUserName", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("statusDate", Types.TIMESTAMP);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CPDefinitionLink (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPDefinitionLinkId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPDefinitionId LONG,CProductId LONG,priority DOUBLE,type_ VARCHAR(75) null,primary key (CPDefinitionLinkId, ctCollectionId))";
+		"create table CPDefinitionLink (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPDefinitionLinkId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPDefinitionId LONG,CProductId LONG,displayDate DATE null,expirationDate DATE null,priority DOUBLE,type_ VARCHAR(75) null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (CPDefinitionLinkId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table CPDefinitionLink";
 
@@ -141,26 +144,44 @@ public class CPDefinitionLinkModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long GROUPID_COLUMN_BITMASK = 8L;
+	public static final long DISPLAYDATE_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long TYPE_COLUMN_BITMASK = 16L;
+	public static final long EXPIRATIONDATE_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 32L;
+	public static final long GROUPID_COLUMN_BITMASK = 32L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long STATUS_COLUMN_BITMASK = 64L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long TYPE_COLUMN_BITMASK = 128L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 256L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long PRIORITY_COLUMN_BITMASK = 64L;
+	public static final long PRIORITY_COLUMN_BITMASK = 512L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -252,106 +273,171 @@ public class CPDefinitionLinkModelImpl
 	public Map<String, Function<CPDefinitionLink, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CPDefinitionLink, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CPDefinitionLink, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CPDefinitionLink, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CPDefinitionLink, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<CPDefinitionLink, Object>>();
-		Map<String, BiConsumer<CPDefinitionLink, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<CPDefinitionLink, ?>>();
+		private static final Map<String, Function<CPDefinitionLink, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CPDefinitionLink::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CPDefinitionLink, Long>)
-				CPDefinitionLink::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", CPDefinitionLink::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<CPDefinitionLink, Long>)
-				CPDefinitionLink::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", CPDefinitionLink::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<CPDefinitionLink, String>)CPDefinitionLink::setUuid);
-		attributeGetterFunctions.put(
-			"CPDefinitionLinkId", CPDefinitionLink::getCPDefinitionLinkId);
-		attributeSetterBiConsumers.put(
-			"CPDefinitionLinkId",
-			(BiConsumer<CPDefinitionLink, Long>)
-				CPDefinitionLink::setCPDefinitionLinkId);
-		attributeGetterFunctions.put("groupId", CPDefinitionLink::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<CPDefinitionLink, Long>)CPDefinitionLink::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", CPDefinitionLink::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CPDefinitionLink, Long>)CPDefinitionLink::setCompanyId);
-		attributeGetterFunctions.put("userId", CPDefinitionLink::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CPDefinitionLink, Long>)CPDefinitionLink::setUserId);
-		attributeGetterFunctions.put("userName", CPDefinitionLink::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CPDefinitionLink, String>)
-				CPDefinitionLink::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CPDefinitionLink::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CPDefinitionLink, Date>)
-				CPDefinitionLink::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CPDefinitionLink::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CPDefinitionLink, Date>)
-				CPDefinitionLink::setModifiedDate);
-		attributeGetterFunctions.put(
-			"CPDefinitionId", CPDefinitionLink::getCPDefinitionId);
-		attributeSetterBiConsumers.put(
-			"CPDefinitionId",
-			(BiConsumer<CPDefinitionLink, Long>)
-				CPDefinitionLink::setCPDefinitionId);
-		attributeGetterFunctions.put(
-			"CProductId", CPDefinitionLink::getCProductId);
-		attributeSetterBiConsumers.put(
-			"CProductId",
-			(BiConsumer<CPDefinitionLink, Long>)
-				CPDefinitionLink::setCProductId);
-		attributeGetterFunctions.put("priority", CPDefinitionLink::getPriority);
-		attributeSetterBiConsumers.put(
-			"priority",
-			(BiConsumer<CPDefinitionLink, Double>)
-				CPDefinitionLink::setPriority);
-		attributeGetterFunctions.put("type", CPDefinitionLink::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<CPDefinitionLink, String>)CPDefinitionLink::setType);
+		static {
+			Map<String, Function<CPDefinitionLink, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CPDefinitionLink, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CPDefinitionLink::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", CPDefinitionLink::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", CPDefinitionLink::getUuid);
+			attributeGetterFunctions.put(
+				"CPDefinitionLinkId", CPDefinitionLink::getCPDefinitionLinkId);
+			attributeGetterFunctions.put(
+				"groupId", CPDefinitionLink::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", CPDefinitionLink::getCompanyId);
+			attributeGetterFunctions.put("userId", CPDefinitionLink::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CPDefinitionLink::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CPDefinitionLink::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CPDefinitionLink::getModifiedDate);
+			attributeGetterFunctions.put(
+				"CPDefinitionId", CPDefinitionLink::getCPDefinitionId);
+			attributeGetterFunctions.put(
+				"CProductId", CPDefinitionLink::getCProductId);
+			attributeGetterFunctions.put(
+				"displayDate", CPDefinitionLink::getDisplayDate);
+			attributeGetterFunctions.put(
+				"expirationDate", CPDefinitionLink::getExpirationDate);
+			attributeGetterFunctions.put(
+				"priority", CPDefinitionLink::getPriority);
+			attributeGetterFunctions.put("type", CPDefinitionLink::getType);
+			attributeGetterFunctions.put(
+				"lastPublishDate", CPDefinitionLink::getLastPublishDate);
+			attributeGetterFunctions.put("status", CPDefinitionLink::getStatus);
+			attributeGetterFunctions.put(
+				"statusByUserId", CPDefinitionLink::getStatusByUserId);
+			attributeGetterFunctions.put(
+				"statusByUserName", CPDefinitionLink::getStatusByUserName);
+			attributeGetterFunctions.put(
+				"statusDate", CPDefinitionLink::getStatusDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<CPDefinitionLink, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CPDefinitionLink, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CPDefinitionLink, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CPDefinitionLink, String>)
+					CPDefinitionLink::setUuid);
+			attributeSetterBiConsumers.put(
+				"CPDefinitionLinkId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setCPDefinitionLinkId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CPDefinitionLink, String>)
+					CPDefinitionLink::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CPDefinitionLink, Date>)
+					CPDefinitionLink::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CPDefinitionLink, Date>)
+					CPDefinitionLink::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"CPDefinitionId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setCPDefinitionId);
+			attributeSetterBiConsumers.put(
+				"CProductId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setCProductId);
+			attributeSetterBiConsumers.put(
+				"displayDate",
+				(BiConsumer<CPDefinitionLink, Date>)
+					CPDefinitionLink::setDisplayDate);
+			attributeSetterBiConsumers.put(
+				"expirationDate",
+				(BiConsumer<CPDefinitionLink, Date>)
+					CPDefinitionLink::setExpirationDate);
+			attributeSetterBiConsumers.put(
+				"priority",
+				(BiConsumer<CPDefinitionLink, Double>)
+					CPDefinitionLink::setPriority);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<CPDefinitionLink, String>)
+					CPDefinitionLink::setType);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<CPDefinitionLink, Date>)
+					CPDefinitionLink::setLastPublishDate);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<CPDefinitionLink, Integer>)
+					CPDefinitionLink::setStatus);
+			attributeSetterBiConsumers.put(
+				"statusByUserId",
+				(BiConsumer<CPDefinitionLink, Long>)
+					CPDefinitionLink::setStatusByUserId);
+			attributeSetterBiConsumers.put(
+				"statusByUserName",
+				(BiConsumer<CPDefinitionLink, String>)
+					CPDefinitionLink::setStatusByUserName);
+			attributeSetterBiConsumers.put(
+				"statusDate",
+				(BiConsumer<CPDefinitionLink, Date>)
+					CPDefinitionLink::setStatusDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -616,6 +702,54 @@ public class CPDefinitionLinkModelImpl
 
 	@JSON
 	@Override
+	public Date getDisplayDate() {
+		return _displayDate;
+	}
+
+	@Override
+	public void setDisplayDate(Date displayDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_displayDate = displayDate;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public Date getOriginalDisplayDate() {
+		return getColumnOriginalValue("displayDate");
+	}
+
+	@JSON
+	@Override
+	public Date getExpirationDate() {
+		return _expirationDate;
+	}
+
+	@Override
+	public void setExpirationDate(Date expirationDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_expirationDate = expirationDate;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public Date getOriginalExpirationDate() {
+		return getColumnOriginalValue("expirationDate");
+	}
+
+	@JSON
+	@Override
 	public double getPriority() {
 		return _priority;
 	}
@@ -658,10 +792,196 @@ public class CPDefinitionLinkModelImpl
 		return getColumnOriginalValue("type_");
 	}
 
+	@JSON
+	@Override
+	public Date getLastPublishDate() {
+		return _lastPublishDate;
+	}
+
+	@Override
+	public void setLastPublishDate(Date lastPublishDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_lastPublishDate = lastPublishDate;
+	}
+
+	@JSON
+	@Override
+	public int getStatus() {
+		return _status;
+	}
+
+	@Override
+	public void setStatus(int status) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_status = status;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public int getOriginalStatus() {
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("status"));
+	}
+
+	@JSON
+	@Override
+	public long getStatusByUserId() {
+		return _statusByUserId;
+	}
+
+	@Override
+	public void setStatusByUserId(long statusByUserId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_statusByUserId = statusByUserId;
+	}
+
+	@Override
+	public String getStatusByUserUuid() {
+		try {
+			User user = UserLocalServiceUtil.getUserById(getStatusByUserId());
+
+			return user.getUuid();
+		}
+		catch (PortalException portalException) {
+			return "";
+		}
+	}
+
+	@Override
+	public void setStatusByUserUuid(String statusByUserUuid) {
+	}
+
+	@JSON
+	@Override
+	public String getStatusByUserName() {
+		if (_statusByUserName == null) {
+			return "";
+		}
+		else {
+			return _statusByUserName;
+		}
+	}
+
+	@Override
+	public void setStatusByUserName(String statusByUserName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_statusByUserName = statusByUserName;
+	}
+
+	@JSON
+	@Override
+	public Date getStatusDate() {
+		return _statusDate;
+	}
+
+	@Override
+	public void setStatusDate(Date statusDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_statusDate = statusDate;
+	}
+
 	@Override
 	public StagedModelType getStagedModelType() {
 		return new StagedModelType(
 			PortalUtil.getClassNameId(CPDefinitionLink.class.getName()));
+	}
+
+	@Override
+	public boolean isApproved() {
+		if (getStatus() == WorkflowConstants.STATUS_APPROVED) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isDenied() {
+		if (getStatus() == WorkflowConstants.STATUS_DENIED) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isDraft() {
+		if (getStatus() == WorkflowConstants.STATUS_DRAFT) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isExpired() {
+		if (getStatus() == WorkflowConstants.STATUS_EXPIRED) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isInactive() {
+		if (getStatus() == WorkflowConstants.STATUS_INACTIVE) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isIncomplete() {
+		if (getStatus() == WorkflowConstants.STATUS_INCOMPLETE) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isPending() {
+		if (getStatus() == WorkflowConstants.STATUS_PENDING) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isScheduled() {
+		if (getStatus() == WorkflowConstants.STATUS_SCHEDULED) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	public long getColumnBitmask() {
@@ -732,8 +1052,15 @@ public class CPDefinitionLinkModelImpl
 		cpDefinitionLinkImpl.setModifiedDate(getModifiedDate());
 		cpDefinitionLinkImpl.setCPDefinitionId(getCPDefinitionId());
 		cpDefinitionLinkImpl.setCProductId(getCProductId());
+		cpDefinitionLinkImpl.setDisplayDate(getDisplayDate());
+		cpDefinitionLinkImpl.setExpirationDate(getExpirationDate());
 		cpDefinitionLinkImpl.setPriority(getPriority());
 		cpDefinitionLinkImpl.setType(getType());
+		cpDefinitionLinkImpl.setLastPublishDate(getLastPublishDate());
+		cpDefinitionLinkImpl.setStatus(getStatus());
+		cpDefinitionLinkImpl.setStatusByUserId(getStatusByUserId());
+		cpDefinitionLinkImpl.setStatusByUserName(getStatusByUserName());
+		cpDefinitionLinkImpl.setStatusDate(getStatusDate());
 
 		cpDefinitionLinkImpl.resetOriginalValues();
 
@@ -768,10 +1095,24 @@ public class CPDefinitionLinkModelImpl
 			this.<Long>getColumnOriginalValue("CPDefinitionId"));
 		cpDefinitionLinkImpl.setCProductId(
 			this.<Long>getColumnOriginalValue("CProductId"));
+		cpDefinitionLinkImpl.setDisplayDate(
+			this.<Date>getColumnOriginalValue("displayDate"));
+		cpDefinitionLinkImpl.setExpirationDate(
+			this.<Date>getColumnOriginalValue("expirationDate"));
 		cpDefinitionLinkImpl.setPriority(
 			this.<Double>getColumnOriginalValue("priority"));
 		cpDefinitionLinkImpl.setType(
 			this.<String>getColumnOriginalValue("type_"));
+		cpDefinitionLinkImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
+		cpDefinitionLinkImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
+		cpDefinitionLinkImpl.setStatusByUserId(
+			this.<Long>getColumnOriginalValue("statusByUserId"));
+		cpDefinitionLinkImpl.setStatusByUserName(
+			this.<String>getColumnOriginalValue("statusByUserName"));
+		cpDefinitionLinkImpl.setStatusDate(
+			this.<Date>getColumnOriginalValue("statusDate"));
 
 		return cpDefinitionLinkImpl;
 	}
@@ -906,6 +1247,25 @@ public class CPDefinitionLinkModelImpl
 
 		cpDefinitionLinkCacheModel.CProductId = getCProductId();
 
+		Date displayDate = getDisplayDate();
+
+		if (displayDate != null) {
+			cpDefinitionLinkCacheModel.displayDate = displayDate.getTime();
+		}
+		else {
+			cpDefinitionLinkCacheModel.displayDate = Long.MIN_VALUE;
+		}
+
+		Date expirationDate = getExpirationDate();
+
+		if (expirationDate != null) {
+			cpDefinitionLinkCacheModel.expirationDate =
+				expirationDate.getTime();
+		}
+		else {
+			cpDefinitionLinkCacheModel.expirationDate = Long.MIN_VALUE;
+		}
+
 		cpDefinitionLinkCacheModel.priority = getPriority();
 
 		cpDefinitionLinkCacheModel.type = getType();
@@ -914,6 +1274,37 @@ public class CPDefinitionLinkModelImpl
 
 		if ((type != null) && (type.length() == 0)) {
 			cpDefinitionLinkCacheModel.type = null;
+		}
+
+		Date lastPublishDate = getLastPublishDate();
+
+		if (lastPublishDate != null) {
+			cpDefinitionLinkCacheModel.lastPublishDate =
+				lastPublishDate.getTime();
+		}
+		else {
+			cpDefinitionLinkCacheModel.lastPublishDate = Long.MIN_VALUE;
+		}
+
+		cpDefinitionLinkCacheModel.status = getStatus();
+
+		cpDefinitionLinkCacheModel.statusByUserId = getStatusByUserId();
+
+		cpDefinitionLinkCacheModel.statusByUserName = getStatusByUserName();
+
+		String statusByUserName = cpDefinitionLinkCacheModel.statusByUserName;
+
+		if ((statusByUserName != null) && (statusByUserName.length() == 0)) {
+			cpDefinitionLinkCacheModel.statusByUserName = null;
+		}
+
+		Date statusDate = getStatusDate();
+
+		if (statusDate != null) {
+			cpDefinitionLinkCacheModel.statusDate = statusDate.getTime();
+		}
+		else {
+			cpDefinitionLinkCacheModel.statusDate = Long.MIN_VALUE;
 		}
 
 		return cpDefinitionLinkCacheModel;
@@ -991,14 +1382,22 @@ public class CPDefinitionLinkModelImpl
 	private boolean _setModifiedDate;
 	private long _CPDefinitionId;
 	private long _CProductId;
+	private Date _displayDate;
+	private Date _expirationDate;
 	private double _priority;
 	private String _type;
+	private Date _lastPublishDate;
+	private int _status;
+	private long _statusByUserId;
+	private String _statusByUserName;
+	private Date _statusDate;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CPDefinitionLink, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1035,8 +1434,15 @@ public class CPDefinitionLinkModelImpl
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("CPDefinitionId", _CPDefinitionId);
 		_columnOriginalValues.put("CProductId", _CProductId);
+		_columnOriginalValues.put("displayDate", _displayDate);
+		_columnOriginalValues.put("expirationDate", _expirationDate);
 		_columnOriginalValues.put("priority", _priority);
 		_columnOriginalValues.put("type_", _type);
+		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
+		_columnOriginalValues.put("status", _status);
+		_columnOriginalValues.put("statusByUserId", _statusByUserId);
+		_columnOriginalValues.put("statusByUserName", _statusByUserName);
+		_columnOriginalValues.put("statusDate", _statusDate);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1085,9 +1491,23 @@ public class CPDefinitionLinkModelImpl
 
 		columnBitmasks.put("CProductId", 2048L);
 
-		columnBitmasks.put("priority", 4096L);
+		columnBitmasks.put("displayDate", 4096L);
 
-		columnBitmasks.put("type_", 8192L);
+		columnBitmasks.put("expirationDate", 8192L);
+
+		columnBitmasks.put("priority", 16384L);
+
+		columnBitmasks.put("type_", 32768L);
+
+		columnBitmasks.put("lastPublishDate", 65536L);
+
+		columnBitmasks.put("status", 131072L);
+
+		columnBitmasks.put("statusByUserId", 262144L);
+
+		columnBitmasks.put("statusByUserName", 524288L);
+
+		columnBitmasks.put("statusDate", 1048576L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

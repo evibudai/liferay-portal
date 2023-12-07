@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.client.serdes.v1_0;
@@ -78,6 +69,16 @@ public class AccountChannelEntrySerDes {
 			sb.append("\"accountId\": ");
 
 			sb.append(accountChannelEntry.getAccountId());
+		}
+
+		if (accountChannelEntry.getActions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(accountChannelEntry.getActions()));
 		}
 
 		if (accountChannelEntry.getChannelExternalReferenceCode() != null) {
@@ -200,6 +201,14 @@ public class AccountChannelEntrySerDes {
 				String.valueOf(accountChannelEntry.getAccountId()));
 		}
 
+		if (accountChannelEntry.getActions() == null) {
+			map.put("actions", null);
+		}
+		else {
+			map.put(
+				"actions", String.valueOf(accountChannelEntry.getActions()));
+		}
+
 		if (accountChannelEntry.getChannelExternalReferenceCode() == null) {
 			map.put("channelExternalReferenceCode", null);
 		}
@@ -294,6 +303,13 @@ public class AccountChannelEntrySerDes {
 				if (jsonParserFieldValue != null) {
 					accountChannelEntry.setAccountId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "actions")) {
+				if (jsonParserFieldValue != null) {
+					accountChannelEntry.setActions(
+						(Map)AccountChannelEntrySerDes.toMap(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(

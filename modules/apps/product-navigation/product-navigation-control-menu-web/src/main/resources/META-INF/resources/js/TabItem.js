@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -24,7 +15,9 @@ import {LAYOUT_DATA_ITEM_TYPES} from './constants/layoutDataItemTypes';
 import {useDragSymbol} from './useDragAndDrop';
 
 const addItem = ({item, plid, setWidgets, widgets}) => {
-	const targetItem = document.querySelector('.portlet-dropzone');
+	const targetItem = document.querySelector(
+		'.portlet-dropzone:not(.portlet-dropzone-disabled)'
+	);
 
 	addPortlet({item, plid, targetItem});
 
@@ -42,7 +35,6 @@ const TabItem = ({item}) => {
 	const {plid, setWidgets, widgets} = useContext(AddPanelContext);
 
 	const isContent = item.type === LAYOUT_DATA_ITEM_TYPES.content;
-	const title = `${Liferay.Language.get('add')} ${item.label}`;
 
 	const {sourceRef} = useDragSymbol({
 		data: item.data,
@@ -62,16 +54,19 @@ const TabItem = ({item}) => {
 			})}
 			ref={item.disabled ? null : sourceRef}
 		>
-			<div className="sidebar-body__add-panel__tab-item-body">
+			<div
+				className="sidebar-body__add-panel__tab-item-body"
+				title={item.label}
+			>
 				<div className="icon">
 					<ClayIcon symbol={item.icon} />
 				</div>
 
 				<div className="text">
-					<div className="text-truncate title">{item.label}</div>
+					<div className="mr-1 text-truncate title">{item.label}</div>
 
 					{isContent && (
-						<div className="subtitle text-truncate">
+						<div className="subtitle text-break">
 							{item.category}
 						</div>
 					)}
@@ -80,15 +75,15 @@ const TabItem = ({item}) => {
 
 			{!item.disabled && (
 				<ClayButton
+					aria-label={`${Liferay.Language.get('add-content')}`}
 					className="btn-monospaced sidebar-body__add-panel__tab-item-add"
+					data-tooltip-align="top-left"
 					displayType="unstyled"
 					onClick={() => addItem({item, plid, setWidgets, widgets})}
 					size="sm"
-					title={title}
+					title={`${Liferay.Language.get('add-content')}`}
 				>
 					<ClayIcon symbol="plus" />
-
-					<span className="sr-only">{title}</span>
 				</ClayButton>
 			)}
 		</li>

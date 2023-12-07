@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.service.persistence.impl;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -39,7 +31,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.workflow.kaleo.internal.util.RoleUtil;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskInstanceToken;
@@ -51,6 +42,7 @@ import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskInstanceTo
 import java.sql.Timestamp;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -58,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -447,15 +437,12 @@ public class KaleoTaskInstanceTokenFinderImpl
 
 		sb.append("AND (KaleoTaskAssignmentInstance.assigneeClassPK IN (");
 
-		sb.append(
-			Stream.of(
-				assigneeClassPKs
-			).map(
-				String::valueOf
-			).collect(
-				Collectors.joining(StringPool.COMMA_AND_SPACE)
-			));
+		for (Long assigneeClassPK : assigneeClassPKs) {
+			sb.append(String.valueOf(assigneeClassPK));
+			sb.append(StringPool.COMMA_AND_SPACE);
+		}
 
+		sb.setIndex(sb.index() - 1);
 		sb.append("))");
 
 		return sb.toString();
@@ -521,15 +508,12 @@ public class KaleoTaskInstanceTokenFinderImpl
 
 		sb.append("AND (KaleoTaskInstanceToken.kaleoInstanceId IN (");
 
-		sb.append(
-			Stream.of(
-				kaleoInstanceIds
-			).map(
-				String::valueOf
-			).collect(
-				Collectors.joining(StringPool.COMMA_AND_SPACE)
-			));
+		for (Long kaleoInstanceId : kaleoInstanceIds) {
+			sb.append(String.valueOf(kaleoInstanceId));
+			sb.append(StringPool.COMMA_AND_SPACE);
+		}
 
+		sb.setIndex(sb.index() - 1);
 		sb.append("))");
 
 		return sb.toString();
@@ -595,12 +579,10 @@ public class KaleoTaskInstanceTokenFinderImpl
 				user.getUserGroups()));
 
 		for (Group group : groups) {
-			List<Role> roles = _roleLocalService.getGroupRoles(
-				group.getGroupId());
-
-			for (Role role : roles) {
-				roleIds.add(role.getRoleId());
-			}
+			Collections.addAll(
+				roleIds,
+				ArrayUtil.toArray(
+					_groupLocalService.getRolePrimaryKeys(group.getGroupId())));
 		}
 
 		return roleIds;
@@ -738,15 +720,15 @@ public class KaleoTaskInstanceTokenFinderImpl
 			return StringPool.BLANK;
 		}
 
-		taskNames = Stream.of(
-			taskNames
-		).map(
-			taskName -> _customSQL.keywords(taskName, false)
-		).flatMap(
-			Stream::of
-		).toArray(
-			String[]::new
-		);
+		List<String> taskNamesList = new ArrayList<>();
+
+		for (String taskName : taskNames) {
+			for (String keyword : _customSQL.keywords(taskName, false)) {
+				taskNamesList.add(keyword);
+			}
+		}
+
+		taskNames = taskNamesList.toArray(new String[0]);
 
 		if (ArrayUtil.isEmpty(taskNames)) {
 			return StringPool.BLANK;
@@ -916,15 +898,15 @@ public class KaleoTaskInstanceTokenFinderImpl
 			return;
 		}
 
-		taskNames = Stream.of(
-			taskNames
-		).map(
-			taskName -> _customSQL.keywords(taskName, false)
-		).flatMap(
-			Stream::of
-		).toArray(
-			String[]::new
-		);
+		List<String> taskNamesList = new ArrayList<>();
+
+		for (String taskName : taskNames) {
+			for (String keyword : _customSQL.keywords(taskName, false)) {
+				taskNamesList.add(keyword);
+			}
+		}
+
+		taskNames = taskNamesList.toArray(new String[0]);
 
 		if (ArrayUtil.isEmpty(taskNames)) {
 			return;

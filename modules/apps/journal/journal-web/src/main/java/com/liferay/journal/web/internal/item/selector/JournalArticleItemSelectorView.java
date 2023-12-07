@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.item.selector;
@@ -28,6 +19,7 @@ import com.liferay.journal.web.internal.constants.JournalWebConstants;
 import com.liferay.journal.web.internal.display.context.JournalArticleItemSelectorViewDisplayContext;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.staging.StagingGroupHelper;
 
 import java.io.IOException;
 
@@ -101,23 +93,24 @@ public class JournalArticleItemSelectorView
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
 
-		JournalArticleItemSelectorViewDisplayContext
-			journalItemSelectorViewDisplayContext =
-				new JournalArticleItemSelectorViewDisplayContext(
-					(HttpServletRequest)servletRequest,
-					infoItemItemSelectorCriterion, itemSelectedEventName, this,
-					_journalWebConfiguration, portletURL, search);
-
-		servletRequest.setAttribute(
-			JournalWebConstants.
-				JOURNAL_ARTICLE_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT,
-			journalItemSelectorViewDisplayContext);
-
 		ServletContext servletContext = getServletContext();
 
 		RequestDispatcher requestDispatcher =
 			servletContext.getRequestDispatcher(
 				"/item/selector/select_articles.jsp");
+
+		JournalArticleItemSelectorViewDisplayContext
+			journalItemSelectorViewDisplayContext =
+				new JournalArticleItemSelectorViewDisplayContext(
+					(HttpServletRequest)servletRequest,
+					infoItemItemSelectorCriterion, itemSelectedEventName, this,
+					_journalWebConfiguration, portletURL, search,
+					_stagingGroupHelper);
+
+		servletRequest.setAttribute(
+			JournalWebConstants.
+				JOURNAL_ARTICLE_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT,
+			journalItemSelectorViewDisplayContext);
 
 		requestDispatcher.include(servletRequest, servletResponse);
 	}
@@ -143,5 +136,8 @@ public class JournalArticleItemSelectorView
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.journal.web)")
 	private ServletContext _servletContext;
+
+	@Reference
+	private StagingGroupHelper _stagingGroupHelper;
 
 }

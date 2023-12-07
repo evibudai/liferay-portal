@@ -40,9 +40,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -52,8 +52,9 @@ definition {
 		}
 	}
 
-	@description = "LPS-147854. Assert the info button remains displayed on the right after clicking an action"
-	@priority = "5"
+	@description = "Ignored due to LPS-184022 | LPS-144537. Assert the info button remains displayed on the right after clicking an action"
+	@ignore = "true"
+	@priority = 5
 	test InfoButtonAndActionsRender {
 		task ("Given window size is set") {
 			SetWindowSize(value1 = "800,800");
@@ -63,7 +64,7 @@ definition {
 			OcularAssertElementImage(
 				locator1 = "ClaySamplePortlet#DISPLAY_CONTEXT_CONTAINER",
 				value1 = "management_toolbar/info_button_and_actions_render/info_button_before.png",
-				value2 = "80");
+				value2 = 80);
 		}
 
 		task ("And when clicking on an action item") {
@@ -78,7 +79,7 @@ definition {
 			OcularAssertElementImage(
 				locator1 = "ClaySamplePortlet#DISPLAY_CONTEXT_CONTAINER",
 				value1 = "management_toolbar/info_button_and_actions_render/info_button_after.png",
-				value2 = "80");
+				value2 = 80);
 		}
 
 		task ("And there is a separator between info and action buttons") {
@@ -86,8 +87,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147404. Assert the more actions button is displayed"
-	@priority = "5"
+	@description = "LPS-144538. Assert the more actions button is displayed"
+	@priority = 5
 	test MoreActionsButtonCanRender {
 		task ("Assert the 'more actions' button is displayed") {
 			AssertElementPresent(locator1 = "ManagementBar#MORE_ACTIONS_ELLIPSIS");
@@ -106,8 +107,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147832. Assert the more actions button can display quick actions"
-	@priority = "5"
+	@description = "LPS-144538. Assert the more actions button can display quick actions"
+	@priority = 5
 	test MoreActionsButtonRenderQuickActions {
 		task ("Click on 'more actions' button") {
 			Click(locator1 = "ManagementBar#MORE_ACTIONS_ELLIPSIS");
@@ -128,8 +129,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147864. Assert the New button is displayed as a text button"
-	@priority = "5"
+	@description = "LPS-144540. Assert the New button is displayed as a text button"
+	@priority = 5
 	test NewButtonRender {
 		task ("Assert the new button is displayed as a text button") {
 			AssertTextEquals(
@@ -138,8 +139,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147852. Assert a tooltip message will be displayed when hovered over the order toggle button"
-	@priority = "3"
+	@description = "LPS-144536. Assert a tooltip message will be displayed when hovered over the order toggle button"
+	@priority = 3
 	test OrderButtonAsAToggleCanDisplayTooltip {
 		task ("When the user opens any section with the management toolbar") {
 
@@ -159,12 +160,12 @@ definition {
 		task ("Then a tooltip message will be displayed") {
 			AssertTextEquals(
 				locator1 = "Message#TOOLTIP",
-				value1 = "Reverse Order Direction");
+				value1 = "Reverse Sort Direction");
 		}
 	}
 
-	@description = "LPS-147851. Assert the order button can display the correct icons"
-	@priority = "4"
+	@description = "LPS-144536. Assert the order button can display the correct icons"
+	@priority = 4
 	test OrderButtonCanDisplayCorrectOrderIcons {
 		task ("And When order dropdown menu is opened") {
 			Click(
@@ -211,8 +212,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147850. Assert the order button can sort results by descending order"
-	@priority = "5"
+	@description = "LPS-144536. Assert the order button can sort results by descending order"
+	@priority = 5
 	test OrderButtonCanSortOptionsByDescending {
 		task ("When the user opens any section with the management toolbar") {
 
@@ -250,8 +251,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147849. Assert the filter and order buttons are independent dropdowns"
-	@priority = "5"
+	@description = "LPS-144536. Assert the filter and order buttons are independent dropdowns"
+	@priority = 5
 	test RendersIndependentFilterAndOrderButtons {
 		task ("Then 'filter' and 'order' button is not rendered together") {
 			AssertElementNotPresent(locator1 = "ManagementBar#FILTER_AND_ORDER");
@@ -284,8 +285,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147835. Assert the action buttons are displayed as icon buttons in responsive mode"
-	@priority = "3"
+	@description = "LPS-144538. Assert the action buttons are displayed as icon buttons in responsive mode"
+	@priority = 3
 	test ResponsiveModeActionButtonsShouldDisplayAsIcons {
 		task ("Given window size set to tablet size") {
 			SetWindowSize(value1 = "800,1024");
@@ -314,8 +315,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147836. Assert tooltip message will be displayed when hovered over an action button in responsive mode"
-	@priority = "3"
+	@description = "LPS-144538. Assert tooltip message will be displayed when hovered over an action button in responsive mode"
+	@priority = 3
 	test ResponsiveModeActionButtonsShouldDisplayTooltips {
 		task ("Given a window size set to tablet size") {
 			SetWindowSize(value1 = "800,1024");
@@ -334,8 +335,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147859. Assert the clear button will be displayed as an icon button in responsive mode"
-	@priority = "4"
+	@description = "LPS-144539. Assert the clear button will be displayed as an icon button in responsive mode"
+	@priority = 4
 	test ResponsiveModeClearButtonShouldDisplayAsIcon {
 		task ("Given a window size set to phone size") {
 			SetWindowSize(value1 = "360,720");
@@ -350,8 +351,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147860. Assert tooltip message will be displayed when hovered over the clear button in responsive mode"
-	@priority = "3"
+	@description = "LPS-144539. Assert tooltip message will be displayed when hovered over the clear button in responsive mode"
+	@priority = 3
 	test ResponsiveModeClearButtonShouldDisplayTooltip {
 		task ("Given a window size set to phone size") {
 			SetWindowSize(value1 = "360,720");
@@ -370,8 +371,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147853. Assert tooltip messages will be displayed when hovered over the filter and order buttons in responsive mode"
-	@priority = "4"
+	@description = "LPS-144536. Assert tooltip messages will be displayed when hovered over the filter and order buttons in responsive mode"
+	@priority = 4
 	test ResponsiveModeFilterAndOrderButtonsShouldDisplayAsIcons {
 		task ("Given a window size set to phone size") {
 			SetWindowSize(value1 = "360,720");
@@ -410,8 +411,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147865. Assert the new button is displayed as an icon button in responsive mode"
-	@priority = "5"
+	@description = "LPS-144540. Assert the new button is displayed as an icon button in responsive mode"
+	@priority = 5
 	test ResponsiveModeNewButtonAsIconButton {
 		task ("Set window size to phone size") {
 			SetWindowSize(value1 = "360,720");
@@ -426,8 +427,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147866. Assert the tooltip message is displayed when hovered over the new button in responsive mode"
-	@priority = "3"
+	@description = "LPS-144540. Assert the tooltip message is displayed when hovered over the new button in responsive mode"
+	@priority = 3
 	test ResponsiveModeNewButtonShouldDisplayTooltip {
 		task ("When window size to phone size") {
 			SetWindowSize(value1 = "360,720");
@@ -444,8 +445,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147844. Assert the tooltip message is displayed when hovered over the view button"
-	@priority = "3"
+	@description = "LPS-144535. Assert the tooltip message is displayed when hovered over the view button"
+	@priority = 3
 	test ViewButtonCanDisplayTooltip {
 		task ("Hover over the view button") {
 			MouseOver(
@@ -456,12 +457,12 @@ definition {
 		task ("Assert tooltip message is displayed") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#TOOLTIP",
-				value1 = "Show View Options");
+				value1 = "Select View");
 		}
 	}
 
-	@description = "LPS-147839. Assert the view button displays a double caret icon"
-	@priority = "5"
+	@description = "LPS-144535. Assert the view button displays a double caret icon"
+	@priority = 5
 	test ViewButtonCanRenderDoubleCaret {
 		task ("Assert the view button also has a double caret icon") {
 			AssertElementPresent(

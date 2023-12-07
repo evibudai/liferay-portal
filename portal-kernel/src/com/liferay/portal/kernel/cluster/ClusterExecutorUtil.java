@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.cluster;
 
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.List;
 
@@ -24,43 +15,39 @@ import java.util.List;
  */
 public class ClusterExecutorUtil {
 
-	public static void addClusterEventListener(
-		ClusterEventListener clusterEventListener) {
-
-		_clusterExecutor.addClusterEventListener(clusterEventListener);
-	}
-
 	public static FutureClusterResponses execute(
 		ClusterRequest clusterRequest) {
 
-		return _clusterExecutor.execute(clusterRequest);
+		ClusterExecutor clusterExecutor = _clusterExecutorSnapshot.get();
+
+		return clusterExecutor.execute(clusterRequest);
 	}
 
 	public static List<ClusterNode> getClusterNodes() {
-		return _clusterExecutor.getClusterNodes();
+		ClusterExecutor clusterExecutor = _clusterExecutorSnapshot.get();
+
+		return clusterExecutor.getClusterNodes();
 	}
 
 	public static ClusterNode getLocalClusterNode() {
-		return _clusterExecutor.getLocalClusterNode();
+		ClusterExecutor clusterExecutor = _clusterExecutorSnapshot.get();
+
+		return clusterExecutor.getLocalClusterNode();
 	}
 
 	public static boolean isClusterNodeAlive(String clusterNodeId) {
-		return _clusterExecutor.isClusterNodeAlive(clusterNodeId);
+		ClusterExecutor clusterExecutor = _clusterExecutorSnapshot.get();
+
+		return clusterExecutor.isClusterNodeAlive(clusterNodeId);
 	}
 
 	public static boolean isEnabled() {
-		return _clusterExecutor.isEnabled();
+		ClusterExecutor clusterExecutor = _clusterExecutorSnapshot.get();
+
+		return clusterExecutor.isEnabled();
 	}
 
-	public static void removeClusterEventListener(
-		ClusterEventListener clusterEventListener) {
-
-		_clusterExecutor.removeClusterEventListener(clusterEventListener);
-	}
-
-	private static volatile ClusterExecutor _clusterExecutor =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			ClusterExecutor.class, ClusterExecutorUtil.class,
-			"_clusterExecutor", false);
+	private static final Snapshot<ClusterExecutor> _clusterExecutorSnapshot =
+		new Snapshot<>(ClusterExecutorUtil.class, ClusterExecutor.class);
 
 }

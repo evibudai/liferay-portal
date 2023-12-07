@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -33,6 +24,7 @@ EditDDMTemplateDisplayContext editDDMTemplateDisplayContext = (EditDDMTemplateDi
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
+portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 if (ddmTemplate != null) {
 	renderResponse.setTitle(LanguageUtil.format(request, "edit-x", HtmlUtil.escape(ddmTemplate.getName(locale))));
@@ -80,23 +72,31 @@ else {
 		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
-					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= (ddmTemplate == null) ? LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()): ddmTemplate.getDefaultLanguageId() %>" label="" name="name" placeholder='<%= LanguageUtil.format(request, "untitled-x", "template") %>' wrapperCssClass="mb-0" />
+					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= (ddmTemplate == null) ? LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()): ddmTemplate.getDefaultLanguageId() %>" label='<%= LanguageUtil.get(request, "name") %>' labelCssClass="sr-only" name="name" placeholder='<%= LanguageUtil.format(request, "untitled-x", "template") %>' wrapperCssClass="mb-0" />
 				</li>
 				<li class="tbar-item">
-					<div class="tbar-section text-right">
-						<aui:button cssClass="btn-outline-borderless btn-outline-secondary btn-sm mr-3" href="<%= redirect %>" type="cancel" />
+					<div class="c-gap-3 c-mb-0 form-group-sm tbar-section text-right">
+						<clay:link
+							borderless="<%= true %>"
+							displayType="secondary"
+							href="<%= redirect %>"
+							label="cancel"
+							type="button"
+						/>
 
-						<%
-						String taglibOnClickSaveAndContinue = "Liferay.fire('" + liferayPortletResponse.getNamespace() + "saveAndContinue');";
-						%>
+						<clay:button
+							displayType="secondary"
+							id='<%= liferayPortletResponse.getNamespace() + "saveAndContinueButton" %>'
+							label="save-and-continue"
+							type="submit"
+						/>
 
-						<aui:button cssClass="btn-sm mr-3" onClick="<%= taglibOnClickSaveAndContinue %>" primary="<%= false %>" type="submit" value="save-and-continue" />
-
-						<%
-						String taglibOnClickSaveTemplate = "Liferay.fire('" + liferayPortletResponse.getNamespace() + "saveTemplate');";
-						%>
-
-						<aui:button cssClass="btn-sm" onClick="<%= taglibOnClickSaveTemplate %>" type="submit" value="save" />
+						<clay:button
+							displayType="primary"
+							id='<%= liferayPortletResponse.getNamespace() + "saveButton" %>'
+							label="save"
+							type="submit"
+						/>
 					</div>
 				</li>
 			</ul>
@@ -117,15 +117,3 @@ else {
 		</div>
 	</div>
 </aui:form>
-
-<aui:script>
-	Liferay.after('<portlet:namespace />saveAndContinue', () => {
-		document.<portlet:namespace />fm.<portlet:namespace />saveAndContinue.value = true;
-
-		Liferay.fire('<portlet:namespace />saveTemplate');
-	});
-
-	Liferay.after('<portlet:namespace />saveTemplate', () => {
-		submitForm(document.<portlet:namespace />fm);
-	});
-</aui:script>

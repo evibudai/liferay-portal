@@ -1,37 +1,40 @@
 definition {
 
-	macro addOrganization {
+	@summary = "Default summary"
+	macro addOrganization(organizationName = null) {
 		LexiconEntry.gotoAdd();
 
-		PortletEntry.inputName(name = "${organizationName}");
+		PortletEntry.inputName(name = ${organizationName});
 
 		PortletEntry.save();
 	}
 
-	macro changeUserLanguage {
+	@summary = "Default summary"
+	macro changeUserLanguage(saveButton = null, languageName = null) {
 		Select(
 			locator1 = "MyAccount#LANGUAGE_SELECT",
-			value1 = "${languageName}");
+			value1 = ${languageName});
 
-		var key_saveButton = "${saveButton}";
+		var key_saveButton = ${saveButton};
 
 		ScrollWebElementIntoView(locator1 = "Button#SAVE_LOCALIZED");
 
 		AssertClick(
 			locator1 = "Button#SAVE_LOCALIZED",
-			value1 = "${saveButton}");
+			value1 = ${saveButton});
 
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
 	}
 
-	macro configureDisplaySettingsLanguage {
+	@summary = "Default summary"
+	macro configureDisplaySettingsLanguage(languageName = null) {
 		Navigator.openURL();
 
 		Navigator.gotoAccountSettings();
 
 		Select(
 			locator1 = "MyAccount#LANGUAGE_SELECT",
-			value1 = "${languageName}");
+			value1 = ${languageName});
 
 		AssertClick(
 			locator1 = "Button#SAVE",
@@ -40,32 +43,35 @@ definition {
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
 	}
 
-	macro configureDisplaySettingsLanguageLocalized {
+	@summary = "Default summary"
+	macro configureDisplaySettingsLanguageLocalized(portlet = null, category = null, saveButton = null, languageName = null) {
 		ProductMenu.gotoPortlet(
-			category = "${category}",
+			category = ${category},
 			panel = "User",
-			portlet = "${portlet}");
+			portlet = ${portlet});
 
 		Select(
 			locator1 = "MyAccount#LANGUAGE_SELECT",
-			value1 = "${languageName}");
+			value1 = ${languageName});
 
-		var key_saveButton = "${saveButton}";
+		var key_saveButton = ${saveButton};
 
 		AssertClick(
 			locator1 = "Button#SAVE_LOCALIZED",
-			value1 = "${saveButton}");
+			value1 = ${saveButton});
 
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
 	}
 
-	macro openMyAccountAdmin {
+	@summary = "Default summary"
+	macro openMyAccountAdmin(baseURL = null) {
 		Navigator.openWithAppendToBaseURL(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_my_account_web_portlet_MyAccountPortlet");
 	}
 
-	macro view {
+	@summary = "Default summary"
+	macro view() {
 		AssertElementPresent(locator1 = "UsersAndOrganizationsEditUser#CATEGORIZATION_LABEL");
 
 		UserNavigator.gotoOrganizations();

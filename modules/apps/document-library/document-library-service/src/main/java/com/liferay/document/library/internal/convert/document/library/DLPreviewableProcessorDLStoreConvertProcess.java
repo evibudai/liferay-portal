@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.convert.document.library;
 
 import com.liferay.document.library.kernel.store.Store;
-import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
+import com.liferay.document.library.preview.processor.BasePreviewableDLProcessor;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.convert.documentlibrary.DLStoreConvertProcess;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -40,10 +31,10 @@ public class DLPreviewableProcessorDLStoreConvertProcess
 		throws PortalException {
 
 		_transfer(
-			sourceStore, targetStore, DLPreviewableProcessor.THUMBNAIL_PATH,
+			sourceStore, targetStore, BasePreviewableDLProcessor.THUMBNAIL_PATH,
 			false);
 		_transfer(
-			sourceStore, targetStore, DLPreviewableProcessor.PREVIEW_PATH,
+			sourceStore, targetStore, BasePreviewableDLProcessor.PREVIEW_PATH,
 			false);
 	}
 
@@ -52,10 +43,10 @@ public class DLPreviewableProcessorDLStoreConvertProcess
 		throws PortalException {
 
 		_transfer(
-			sourceStore, targetStore, DLPreviewableProcessor.THUMBNAIL_PATH,
+			sourceStore, targetStore, BasePreviewableDLProcessor.THUMBNAIL_PATH,
 			true);
 		_transfer(
-			sourceStore, targetStore, DLPreviewableProcessor.PREVIEW_PATH,
+			sourceStore, targetStore, BasePreviewableDLProcessor.PREVIEW_PATH,
 			true);
 	}
 
@@ -68,7 +59,7 @@ public class DLPreviewableProcessorDLStoreConvertProcess
 		_companyLocalService.forEachCompanyId(
 			companyId -> {
 				String[] fileNames = sourceStore.getFileNames(
-					companyId, DLPreviewableProcessor.REPOSITORY_ID, path);
+					companyId, BasePreviewableDLProcessor.REPOSITORY_ID, path);
 
 				for (String fileName : fileNames) {
 
@@ -80,7 +71,7 @@ public class DLPreviewableProcessorDLStoreConvertProcess
 					try {
 						transferFile(
 							sourceStore, targetStore, companyId,
-							DLPreviewableProcessor.REPOSITORY_ID,
+							BasePreviewableDLProcessor.REPOSITORY_ID,
 							actualFileName, Store.VERSION_DEFAULT, delete);
 					}
 					catch (Exception exception) {

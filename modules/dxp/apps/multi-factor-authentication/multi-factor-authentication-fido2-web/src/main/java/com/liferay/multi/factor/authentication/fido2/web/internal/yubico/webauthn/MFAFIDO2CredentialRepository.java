@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.fido2.web.internal.yubico.webauthn;
@@ -17,6 +8,7 @@ package com.liferay.multi.factor.authentication.fido2.web.internal.yubico.webaut
 import com.liferay.multi.factor.authentication.fido2.credential.model.MFAFIDO2CredentialEntry;
 import com.liferay.multi.factor.authentication.fido2.credential.service.MFAFIDO2CredentialEntryLocalService;
 import com.liferay.multi.factor.authentication.fido2.web.internal.util.ConvertUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -33,7 +25,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author Arthur Chan
@@ -53,29 +44,28 @@ public class MFAFIDO2CredentialRepository implements CredentialRepository {
 	public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(
 		String userName) {
 
-		Optional<Long> userIdOptional = _getUserIdOptional(userName);
+		Long userId = _getUserId(userName);
 
-		return userIdOptional.map(
-			_mfaFIDO2CredentialEntryLocalService::
-				getMFAFIDO2CredentialEntriesByUserId
-		).map(
-			List::stream
-		).map(
-			stream -> stream.map(
-				this::_buildPublicKeyCredentialDescriptor
-			).collect(
-				Collectors.toSet()
-			)
-		).orElse(
-			Collections.emptySet()
-		);
+		if (userId == null) {
+			return Collections.emptySet();
+		}
+
+		return new HashSet<>(
+			TransformUtil.transform(
+				_mfaFIDO2CredentialEntryLocalService.
+					getMFAFIDO2CredentialEntriesByUserId(userId),
+				this::_buildPublicKeyCredentialDescriptor));
 	}
 
 	@Override
 	public Optional<ByteArray> getUserHandleForUsername(String userName) {
-		Optional<Long> userIdOptional = _getUserIdOptional(userName);
+		Long userId = _getUserId(userName);
 
-		return userIdOptional.map(ConvertUtil::toByteArray);
+		if (userId == null) {
+			return Optional.empty();
+		}
+
+		return Optional.of(ConvertUtil.toByteArray(userId));
 	}
 
 	@Override
@@ -155,13 +145,15 @@ public class MFAFIDO2CredentialRepository implements CredentialRepository {
 		).build();
 	}
 
-	private Optional<Long> _getUserIdOptional(String userName) {
-		return Optional.ofNullable(
-			_userLocalService.fetchUserByScreenName(
-				CompanyThreadLocal.getCompanyId(), userName)
-		).map(
-			User::getUserId
-		);
+	private Long _getUserId(String userName) {
+		User user = _userLocalService.fetchUserByScreenName(
+			CompanyThreadLocal.getCompanyId(), userName);
+
+		if (user == null) {
+			return null;
+		}
+
+		return user.getUserId();
 	}
 
 	private final MFAFIDO2CredentialEntryLocalService

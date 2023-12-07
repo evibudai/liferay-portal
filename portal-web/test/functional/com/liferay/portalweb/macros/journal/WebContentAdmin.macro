@@ -1,29 +1,34 @@
 definition {
 
-	macro changeDisplayStyle {
-		ManagementBar.changeDisplayStyle(displayStyle = "${displayStyle}");
+	@summary = "Default summary"
+	macro changeDisplayStyle(displayStyle = null) {
+		ManagementBar.changeDisplayStyle(displayStyle = ${displayStyle});
 	}
 
-	macro clickEntryEllipsis {
-		LexiconList.clickEllipsis(listEntry = "${entry}");
+	@summary = "Default summary"
+	macro clickEntryEllipsis(entry = null) {
+		LexiconList.clickEllipsis(listEntry = ${entry});
 	}
 
-	macro clickEntryEllipsisItem {
+	@summary = "Default summary"
+	macro clickEntryEllipsisItem(entry = null, item = null) {
 		LexiconList.clickEllipsisItem(
-			item = "${item}",
-			listEntry = "${entry}");
+			item = ${item},
+			listEntry = ${entry});
 	}
 
-	macro clickSelectAllCheckbox {
+	@summary = "Default summary"
+	macro clickSelectAllCheckbox() {
 		ManagementBar.clickSelectAllCheckbox();
 	}
 
-	macro configureEmailNotifications {
-		Navigator.gotoNavTab(navTab = "${navTab}");
+	@summary = "Default summary"
+	macro configureEmailNotifications(navTab = null, fieldName = null, notificationsSubject = null, notificationsBody = null, enabled = null) {
+		Navigator.gotoNavTab(navTab = ${navTab});
 
-		if ("${enabled}" == "true") {
+		if (${enabled} == "true") {
 			Check(
-				inputFieldId = "${fieldName}",
+				inputFieldId = ${fieldName},
 				locator1 = "TextInput#INPUT_ID");
 		}
 
@@ -31,43 +36,48 @@ definition {
 			Type(
 				inputFieldId = "${fieldName}Subject",
 				locator1 = "TextInput#INPUT_ID",
-				value1 = "${notificationsSubject}");
+				value1 = ${notificationsSubject});
 		}
 
 		if (isSet(notificationsBody)) {
-			Type.typeCKEditor(
-				bodyFieldId = "${fieldName}",
+			Type.typeEditor(
+				bodyFieldId = ${fieldName},
 				locator1 = "CKEditor#BODY_FIELD_ID",
-				value1 = "${notificationsBody}");
+				value1 = ${notificationsBody});
 		}
 
 		PortletEntry.save();
 	}
 
-	macro gotoEntry {
-		LexiconList.clickListEntryTitle(listEntry = "${entry}");
+	@summary = "Default summary"
+	macro gotoEntry(entry = null) {
+		LexiconList.clickListEntryTitle(listEntry = ${entry});
 	}
 
-	macro moveEntryToRecycleBin {
+	@summary = "Default summary"
+	macro moveEntryToRecycleBin(entry = null) {
 		WebContentAdmin.clickEntryEllipsisItem(
-			entry = "${entry}",
+			entry = ${entry},
 			item = "Delete");
 
-		Confirm();
+		Confirm(value1 = "null");
 	}
 
-	macro viewEntryNotPresent {
-		LexiconList.viewListEntryNotPresent(listEntry = "${entry}");
+	@summary = "Default summary"
+	macro viewEntryNotPresent(entry = null) {
+		LexiconList.viewListEntryNotPresent(listEntry = ${entry});
 	}
 
-	macro viewEntryTitle {
-		LexiconList.viewListEntryTitle(listEntry = "${entry}");
+	@summary = "Default summary"
+	macro viewEntryTitle(entry = null) {
+		LexiconList.viewListEntryTitleLink(listEntry = ${entry});
 	}
 
-	macro viewEntryWorkflowStatus {
+	@summary = "Default summary"
+	macro viewEntryWorkflowStatus(entry = null, workflowStatus = null) {
 		LexiconList.viewListEntryLabel(
-			listEntry = "${entry}",
-			listEntryLabel = "${workflowStatus}");
+			listEntry = ${entry},
+			listEntryLabel = ${workflowStatus});
 	}
 
 }

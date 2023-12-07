@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -45,100 +36,82 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 		<clay:col
 			lg="3"
 		>
-			<div class="panel panel-secondary">
-				<div class="collapse-icon collapse-icon-middle panel-header" data-target="#<portlet:namespace />scopePanelBody" data-toggle="liferay-collapse">
-					<span class="panel-title">
-						<%= StringUtil.toUpperCase(LanguageUtil.get(request, "scope"), locale) %>
-					</span>
+			<div class="mb-3">
+				<clay:panel-group>
+					<clay:panel
+						displayTitle="scope"
+						displayType="secondary"
+						expanded="<%= true %>"
+					>
+						<div class="collapse panel-collapse show" id="<portlet:namespace />scopePanelBody">
+							<div class="panel-body">
 
-					<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
+								<%
+								for (ScopeDisplay scopeDisplay : scopeDisplays) {
+								%>
 
-					<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
-				</div>
+									<clay:radio
+										checked="<%= scopeDisplay.isActive() %>"
+										disabled="<%= !scopeDisplay.hasItems() %>"
+										label="<%= LanguageUtil.get(request, scopeDisplay.getScopeName()) %>"
+										name="scope"
+										value="<%= scopeDisplay.getScopeName() %>"
+									/>
 
-				<div class="collapse panel-collapse show" id="<portlet:namespace />scopePanelBody">
-					<div class="panel-body">
+								<%
+								}
+								%>
 
-						<%
-						for (ScopeDisplay scopeDisplay : scopeDisplays) {
-						%>
-
-							<clay:radio
-								checked="<%= scopeDisplay.isActive() %>"
-								disabled="<%= !scopeDisplay.hasItems() %>"
-								label="<%= LanguageUtil.get(request, scopeDisplay.getScopeName()) %>"
-								name="scope"
-								value="<%= scopeDisplay.getScopeName() %>"
-							/>
-
-						<%
-						}
-						%>
-
-					</div>
-				</div>
+							</div>
+						</div>
+					</clay:panel>
+				</clay:panel-group>
 			</div>
 
-			<div class="panel panel-secondary">
-				<div class="collapse-icon collapse-icon-middle panel-header" data-target="#<portlet:namespace />applicationPanelBody" data-toggle="liferay-collapse">
-					<span class="panel-title">
+			<%
+			UADApplicationSummaryDisplay firstUADApplicationSummaryDisplay = uadApplicationSummaryDisplays.get(0);
+			%>
 
-						<%
-						String applicationPanelTitle = StringUtil.toUpperCase(LanguageUtil.get(request, "applications"), locale);
+			<div class="mb-3">
+				<clay:panel-group>
+					<clay:panel
+						displayTitle='<%= StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "applications"), firstUADApplicationSummaryDisplay.getCount()) %>'
+						displayType="secondary"
+						expanded="<%= true %>"
+					>
+						<div class="collapse panel-collapse show" id="<portlet:namespace />applicationPanelBody">
+							<div class="panel-body">
 
-						UADApplicationSummaryDisplay firstUADApplicationSummaryDisplay = uadApplicationSummaryDisplays.get(0);
-						%>
+								<%
+								for (UADApplicationSummaryDisplay uadApplicationSummaryDisplay : uadApplicationSummaryDisplays) {
+									String applicationName = UADLanguageUtil.getApplicationName(uadApplicationSummaryDisplay.getApplicationKey(), locale);
+								%>
 
-						<%= StringUtil.appendParentheticalSuffix(applicationPanelTitle, firstUADApplicationSummaryDisplay.getCount()) %>
-					</span>
+									<clay:radio
+										checked="<%= Objects.equals(uadApplicationSummaryDisplay.getApplicationKey(), viewUADEntitiesDisplay.getApplicationKey()) %>"
+										disabled="<%= !uadApplicationSummaryDisplay.hasItems() %>"
+										label="<%= StringUtil.appendParentheticalSuffix(applicationName, uadApplicationSummaryDisplay.getCount()) %>"
+										name="applicationKey"
+										value="<%= uadApplicationSummaryDisplay.getApplicationKey() %>"
+									/>
 
-					<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
+								<%
+								}
+								%>
 
-					<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
-				</div>
-
-				<div class="collapse panel-collapse show" id="<portlet:namespace />applicationPanelBody">
-					<div class="panel-body">
-
-						<%
-						for (UADApplicationSummaryDisplay uadApplicationSummaryDisplay : uadApplicationSummaryDisplays) {
-							String applicationName = UADLanguageUtil.getApplicationName(uadApplicationSummaryDisplay.getApplicationKey(), locale);
-						%>
-
-							<clay:radio
-								checked="<%= Objects.equals(uadApplicationSummaryDisplay.getApplicationKey(), viewUADEntitiesDisplay.getApplicationKey()) %>"
-								disabled="<%= !uadApplicationSummaryDisplay.hasItems() %>"
-								label="<%= StringUtil.appendParentheticalSuffix(applicationName, uadApplicationSummaryDisplay.getCount()) %>"
-								name="applicationKey"
-								value="<%= uadApplicationSummaryDisplay.getApplicationKey() %>"
-							/>
-
-						<%
-						}
-						%>
-
-					</div>
-				</div>
+							</div>
+						</div>
+					</clay:panel>
+				</clay:panel-group>
 			</div>
 
 			<c:if test="<%= !Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) %>">
-				<div class="panel-group">
-					<div class="panel panel-secondary">
-						<div class="collapse-icon collapse-icon-middle panel-header" data-target="#<portlet:namespace />entitiesTypePanelBody" data-toggle="liferay-collapse">
-							<span class="panel-title">
-
-								<%
-								String applicationName = UADLanguageUtil.getApplicationName(viewUADEntitiesDisplay.getApplicationKey(), locale);
-								%>
-
-								<%= StringUtil.toUpperCase(applicationName, locale) %>
-							</span>
-
-							<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
-
-							<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
-						</div>
-
+				<clay:panel-group>
+					<clay:panel
+						displayTitle="<%= UADLanguageUtil.getApplicationName(viewUADEntitiesDisplay.getApplicationKey(), locale) %>"
+						displayType="secondary"
+						expanded="<%= true %>"
+					>
 						<div class="collapse panel-collapse show" id="<portlet:namespace />entitiesTypePanelBody">
 							<div class="panel-body">
 								<c:choose>
@@ -167,7 +140,7 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 												disabled="<%= count == 0 %>"
 												label="<%= StringUtil.appendParentheticalSuffix(uadDisplay.getTypeName(locale), (int)count) %>"
 												name="uadRegistryKey"
-												value="<%= uadDisplay.getTypeClass().getName() %>"
+												value="<%= uadDisplay.getTypeKey() %>"
 											/>
 
 										<%
@@ -178,8 +151,8 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 								</c:choose>
 							</div>
 						</div>
-					</div>
-				</div>
+					</clay:panel>
+				</clay:panel-group>
 			</c:if>
 		</clay:col>
 
@@ -204,8 +177,8 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 				<clay:sheet-section>
 					<c:choose>
 						<c:when test="<%= totalReviewableUADEntitiesCount == 0 %>">
-							<liferay-ui:empty-result-message
-								message="all-data-that-requires-review-has-been-anonymized"
+							<liferay-frontend:empty-result-message
+								title='<%= LanguageUtil.get(resourceBundle, "all-data-that-requires-review-has-been-anonymized") %>'
 							/>
 						</c:when>
 						<c:otherwise>

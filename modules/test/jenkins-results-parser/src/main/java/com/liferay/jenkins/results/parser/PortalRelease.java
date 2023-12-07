@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -30,6 +21,14 @@ import org.dom4j.Node;
  * @author Michael Hashimoto
  */
 public class PortalRelease {
+
+	public static boolean isQuarterlyRelease(String portalVersion) {
+		if (JenkinsResultsParserUtil.isNullOrEmpty(portalVersion)) {
+			return false;
+		}
+
+		return portalVersion.matches(_QUARTERLY_RELEASE_VERSION_REGEX);
+	}
 
 	public PortalRelease(String portalVersion) {
 		URL bundlesBaseURL = null;
@@ -123,20 +122,20 @@ public class PortalRelease {
 
 		String bundleFileName = bundleURLMatcher.group("bundleFileName");
 
-		Matcher bundleFileNameMatcher = _bundleFileNamePattern.matcher(
+		Matcher bundleFileNameMatcher = _bundleFileNamePattern.find(
 			bundleFileName);
 
-		if (bundleFileNameMatcher.find()) {
+		if (bundleFileNameMatcher != null) {
 			portalVersion = bundleFileNameMatcher.group("portalVersion");
 		}
 
 		String bundlesBaseURLString = bundleURLMatcher.group("bundlesBaseURL");
 
 		if (portalVersion == null) {
-			Matcher bundlesBaseURLMatcher = _bundlesBaseURLPattern.matcher(
+			Matcher bundlesBaseURLMatcher = _bundlesBaseURLPattern.find(
 				bundlesBaseURLString);
 
-			if (!bundlesBaseURLMatcher.find()) {
+			if (bundlesBaseURLMatcher == null) {
 				throw new RuntimeException(
 					"Invalid bundle file name " + bundleFileName);
 			}
@@ -145,6 +144,7 @@ public class PortalRelease {
 		}
 
 		_bundlesBaseURL = _getLocalURL(bundlesBaseURLString);
+
 		_portalVersion = portalVersion;
 
 		_initializeURLs();
@@ -684,10 +684,15 @@ public class PortalRelease {
 		"(?<portalVersion>\\d\\.([u\\d\\.]+)(-ee)?(-dxp-\\d+)?" +
 			"(\\-(ep|ga|rc|sp)\\d+)?)";
 
-	private static final Pattern _bundleFileNamePattern = Pattern.compile(
-		".+\\-" + _PORTAL_VERSION_REGEX + ".*\\.(7z|tar.gz|zip)");
-	private static final Pattern _bundlesBaseURLPattern = Pattern.compile(
-		"https?://.+/" + _PORTAL_VERSION_REGEX);
+	private static final String _QUARTERLY_RELEASE_VERSION_REGEX =
+		"(?<portalVersion>\\d{4}.[Qq]\\d+.\\d+)";
+
+	private static final MultiPattern _bundleFileNamePattern = new MultiPattern(
+		".+\\-" + _PORTAL_VERSION_REGEX + ".*\\.(7z|tar.gz|zip)",
+		".+\\-" + _QUARTERLY_RELEASE_VERSION_REGEX + ".*\\.(7z|tar.gz|zip)");
+	private static final MultiPattern _bundlesBaseURLPattern = new MultiPattern(
+		"https?://.+/" + _PORTAL_VERSION_REGEX,
+		"https?://.+/" + _QUARTERLY_RELEASE_VERSION_REGEX);
 	private static final Pattern _bundleURLPattern = Pattern.compile(
 		"(?<bundlesBaseURL>https?://.+)/(?<bundleFileName>[^\\/]+" +
 			"\\.(7z|tar.gz|zip))");

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.internal.background.task;
@@ -83,30 +74,65 @@ public class CTPublishBackgroundTaskExecutor
 		Map<String, Serializable> taskContextMap =
 			backgroundTask.getTaskContextMap();
 
-		long ctCollectionId = GetterUtil.getLong(
-			taskContextMap.get("ctCollectionId"));
+		long fromCTCollectionId = GetterUtil.getLong(
+			taskContextMap.get("fromCTCollectionId"));
 
-		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
-			ctCollectionId);
+		CTCollection fromCTCollection =
+			_ctCollectionLocalService.getCTCollection(fromCTCollectionId);
+
+		String fromCTCollectionName = fromCTCollection.getName();
+
+		long toCTCollectionId = GetterUtil.getLong(
+			taskContextMap.get("toCTCollectionId"));
+
+		String toCTCollectionName;
+
+		if (toCTCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			toCTCollectionName = "Production";
+		}
+		else {
+			CTCollection toCTCollection =
+				_ctCollectionLocalService.getCTCollection(toCTCollectionId);
+
+			toCTCollectionName = toCTCollection.getName();
+		}
 
 		if (!_ctSchemaVersionLocalService.isLatestCTSchemaVersion(
-				ctCollection.getSchemaVersionId())) {
+				fromCTCollection.getSchemaVersionId())) {
 
 			throw new IllegalArgumentException(
 				StringBundler.concat(
-					"Unable to publish ", ctCollection.getName(),
+					"Unable to publish from ", fromCTCollectionName, " to ",
+					toCTCollectionName,
 					" because it is out of date with the current release"));
 		}
 
-		try (SafeCloseable safeCloseable =
-				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-					ctCollectionId)) {
+		if (toCTCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						fromCTCollectionId)) {
 
-			_ctServiceRegistry.onBeforePublish(ctCollectionId);
+				_ctServiceRegistry.onBeforePublish(fromCTCollectionId);
+			}
+		}
+
+		List<CTEntry> ctEntries = null;
+
+		long[] ctEntryIds = (long[])taskContextMap.get("ctEntryIds");
+
+		if (ctEntryIds != null) {
+			ctEntries = _ctCollectionLocalService.getRelatedCTEntries(
+				fromCTCollectionId, ctEntryIds);
+		}
+		else {
+			ctEntries = _ctEntryLocalService.getCTCollectionCTEntries(
+				fromCTCollectionId);
 		}
 
 		Map<Long, List<ConflictInfo>> conflictInfosMap =
-			_ctCollectionLocalService.checkConflicts(ctCollection);
+			_ctCollectionLocalService.checkConflicts(
+				fromCTCollection.getCompanyId(), ctEntries, fromCTCollectionId,
+				fromCTCollectionName, toCTCollectionId, toCTCollectionName);
 
 		if (!conflictInfosMap.isEmpty()) {
 			List<ConflictInfo> unresolvedConflictInfos = new ArrayList<>();
@@ -124,14 +150,12 @@ public class CTPublishBackgroundTaskExecutor
 			if (!unresolvedConflictInfos.isEmpty()) {
 				throw new SystemException(
 					StringBundler.concat(
-						"Unable to publish ", ctCollection.getName(),
+						"Unable to publish ", fromCTCollectionName, " to ",
+						toCTCollectionName,
 						" because of unresolved conflicts: ",
 						unresolvedConflictInfos));
 			}
 		}
-
-		List<CTEntry> ctEntries = _ctEntryLocalService.getCTCollectionCTEntries(
-			ctCollectionId);
 
 		Map<Long, CTServicePublisher<?>> ctServicePublishers = new HashMap<>();
 
@@ -146,13 +170,14 @@ public class CTPublishBackgroundTaskExecutor
 						if (ctService != null) {
 							return new CTServicePublisher<>(
 								_ctEntryLocalService, ctService,
-								modelClassNameId, ctCollectionId,
-								CTConstants.CT_COLLECTION_ID_PRODUCTION);
+								modelClassNameId, fromCTCollectionId,
+								toCTCollectionId);
 						}
 
 						throw new SystemException(
 							StringBundler.concat(
-								"Unable to publish ", ctCollection.getName(),
+								"Unable to publish from ", fromCTCollectionName,
+								" to ", toCTCollectionName,
 								" because service for ", modelClassNameId,
 								" is missing"));
 					});
@@ -170,20 +195,30 @@ public class CTPublishBackgroundTaskExecutor
 				_ctServiceRegistry.getCTTableMapperHelpers()) {
 
 			ctTableMapperHelper.publish(
-				ctCollectionId, _multiVMPool.getPortalCacheManager());
+				fromCTCollectionId, toCTCollectionId,
+				_multiVMPool.getPortalCacheManager());
 		}
 
-		Date modifiedDate = new Date();
+		if (toCTCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			Date modifiedDate = new Date();
 
-		ctCollection.setModifiedDate(modifiedDate);
+			fromCTCollection.setModifiedDate(modifiedDate);
 
-		ctCollection.setStatus(WorkflowConstants.STATUS_APPROVED);
-		ctCollection.setStatusByUserId(backgroundTask.getUserId());
-		ctCollection.setStatusDate(modifiedDate);
+			fromCTCollection.setStatus(WorkflowConstants.STATUS_APPROVED);
+			fromCTCollection.setStatusByUserId(backgroundTask.getUserId());
+			fromCTCollection.setStatusDate(modifiedDate);
 
-		_ctCollectionLocalService.updateCTCollection(ctCollection);
+			_ctCollectionLocalService.updateCTCollection(fromCTCollection);
 
-		_ctServiceRegistry.onAfterPublish(ctCollectionId);
+			_ctServiceRegistry.onAfterPublish(fromCTCollectionId);
+		}
+		else {
+			for (CTEntry ctEntry : ctEntries) {
+				ctEntry.setCtCollectionId(toCTCollectionId);
+
+				_ctEntryLocalService.updateCTEntry(ctEntry);
+			}
+		}
 
 		return BackgroundTaskResult.SUCCESS;
 	}

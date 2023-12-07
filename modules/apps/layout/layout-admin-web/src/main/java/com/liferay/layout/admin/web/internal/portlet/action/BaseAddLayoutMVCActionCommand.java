@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -62,8 +54,9 @@ public abstract class BaseAddLayoutMVCActionCommand
 		String backURL = ParamUtil.getString(actionRequest, "backURL");
 
 		if (Validator.isNotNull(backURL)) {
-			layoutFullURL = HttpComponentsUtil.setParameter(
-				layoutFullURL, "p_l_back_url", backURL);
+			layoutFullURL = HttpComponentsUtil.addParameters(
+				layoutFullURL, "p_l_back_url", backURL, "p_l_back_url_title",
+				language.get(themeDisplay.getLocale(), "pages"));
 		}
 
 		return layoutFullURL;
@@ -76,38 +69,47 @@ public abstract class BaseAddLayoutMVCActionCommand
 		LiferayPortletResponse liferayPortletResponse =
 			portal.getLiferayPortletResponse(actionResponse);
 
-		PortletURL configureLayoutURL = PortletURLBuilder.createRenderURL(
+		return PortletURLBuilder.createRenderURL(
 			liferayPortletResponse
 		).setMVCRenderCommandName(
 			"/layout_admin/edit_layout"
-		).buildPortletURL();
+		).setRedirect(
+			() -> {
+				String backURL = ParamUtil.getString(actionRequest, "backURL");
 
-		String backURL = ParamUtil.getString(actionRequest, "backURL");
+				if (Validator.isNull(backURL)) {
+					PortletURL redirectURL =
+						liferayPortletResponse.createRenderURL();
 
-		if (Validator.isNull(backURL)) {
-			PortletURL redirectURL = liferayPortletResponse.createRenderURL();
+					backURL = HttpComponentsUtil.setParameter(
+						redirectURL.toString(), "p_p_state",
+						WindowState.NORMAL.toString());
+				}
 
-			backURL = HttpComponentsUtil.setParameter(
-				redirectURL.toString(), "p_p_state",
-				WindowState.NORMAL.toString());
-		}
+				return backURL;
+			}
+		).setPortletResource(
+			ParamUtil.getString(actionRequest, "portletResource")
+		).setParameter(
+			"backURLTitle",
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)actionRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-		configureLayoutURL.setParameter("redirect", backURL);
-
-		String portletResource = ParamUtil.getString(
-			actionRequest, "portletResource");
-
-		configureLayoutURL.setParameter("portletResource", portletResource);
-
-		configureLayoutURL.setParameter(
-			"groupId", String.valueOf(layout.getGroupId()));
-		configureLayoutURL.setParameter(
-			"selPlid", String.valueOf(layout.getPlid()));
-		configureLayoutURL.setParameter(
-			"privateLayout", String.valueOf(layout.isPrivateLayout()));
-
-		return configureLayoutURL.toString();
+				return language.get(themeDisplay.getLocale(), "pages");
+			}
+		).setParameter(
+			"groupId", layout.getGroupId()
+		).setParameter(
+			"privateLayout", layout.isPrivateLayout()
+		).setParameter(
+			"selPlid", layout.getPlid()
+		).buildString();
 	}
+
+	@Reference
+	protected Language language;
 
 	@Reference
 	protected LayoutLocalService layoutLocalService;

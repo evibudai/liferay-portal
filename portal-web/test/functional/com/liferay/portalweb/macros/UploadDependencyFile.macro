@@ -1,22 +1,24 @@
 definition {
 
-	macro uploadArchiveFile {
+	@summary = "Default summary"
+	macro uploadArchiveFile(fileName = null) {
 		var tempDir = PropsUtil.get("output.dir.name");
-		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = "${fileName}");
+		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = ${fileName});
 
 		UploadFile(
 			locator1 = "TextInput#FILE",
-			value1 = "${dependencyFilePath}");
+			value1 = ${dependencyFilePath});
 	}
 
-	macro uploadFile {
+	@summary = "Default summary"
+	macro uploadFile(fileName = null, filePath = null) {
 		var dependencyFilePath = TestCase.getDependenciesDirPath(
-			fileName = "${fileName}",
-			filePath = "${filePath}");
+			fileName = ${fileName},
+			filePath = ${filePath});
 
 		UploadFile(
 			locator1 = "TextInput#FILE",
-			value1 = "${dependencyFilePath}");
+			value1 = ${dependencyFilePath});
 	}
 
 }

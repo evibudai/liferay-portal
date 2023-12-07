@@ -1,7 +1,8 @@
 definition {
 
-	macro disableAutoTagging {
-		if ("${disableAutoTaggingFor}" == "System Settings") {
+	@summary = "Default summary"
+	macro disableAutoTagging(disableAutoTaggingFor = null, siteURLKey = null) {
+		if (${disableAutoTaggingFor} == "System Settings") {
 			ApplicationsMenu.gotoPortlet(
 				category = "Configuration",
 				panel = "Control Panel",
@@ -14,7 +15,7 @@ definition {
 
 			FormFields.disableCheckbox(fieldName = "enabled");
 		}
-		else if ("${disableAutoTaggingFor}" == "Instance Settings") {
+		else if (${disableAutoTaggingFor} == "Instance Settings") {
 			PortalSettings.gotoConfiguration(
 				configurationCategory = "Assets",
 				configurationName = "Asset Auto Tagging",
@@ -22,10 +23,10 @@ definition {
 
 			FormFields.disableCheckbox(fieldName = "enabled");
 		}
-		else if ("${disableAutoTaggingFor}" == "Site Settings") {
+		else if (${disableAutoTaggingFor} == "Site Settings") {
 			AutoTagging.openToAutoTaggingSiteSettings(
 				portlet = "Asset Auto Tagging",
-				siteURLKey = "${siteURLKey}");
+				siteURLKey = ${siteURLKey});
 
 			Uncheck.uncheckToggleSwitch(locator1 = "Checkbox#ENABLE_AUTO_TAGGING");
 		}
@@ -38,8 +39,9 @@ definition {
 		}
 	}
 
-	macro enableAutoTagging {
-		if ("${enableAutoTaggingFor}" == "System Settings") {
+	@summary = "Default summary"
+	macro enableAutoTagging(maximumNumberOfTags = null, site = null, enableAutoTaggingFor = null, systemSettingsInstanceScope = null, validationError = null) {
+		if (${enableAutoTaggingFor} == "System Settings") {
 			AutoTagging.openToAssetAutoTagging(configurationScope = "System Settings");
 
 			FormFields.enableCheckbox(fieldName = "enabled");
@@ -47,27 +49,27 @@ definition {
 			if (isSet(maximumNumberOfTags)) {
 				SystemSettings.editTextSetting(
 					settingName = "Maximum Number of Tags",
-					settingValue = "${maximumNumberOfTags}");
+					settingValue = ${maximumNumberOfTags});
 			}
 		}
-		else if ("${enableAutoTaggingFor}" == "Instance Settings") {
+		else if (${enableAutoTaggingFor} == "Instance Settings") {
 			AutoTagging.openToAssetAutoTagging(
 				configurationScope = "Instance Settings",
-				systemSettingsInstanceScope = "${systemSettingsInstanceScope}");
+				systemSettingsInstanceScope = ${systemSettingsInstanceScope});
 
 			FormFields.enableCheckbox(fieldName = "enabled");
 
 			if (isSet(maximumNumberOfTags)) {
 				SystemSettings.editTextSetting(
 					settingName = "Maximum Number of Tags",
-					settingValue = "${maximumNumberOfTags}");
+					settingValue = ${maximumNumberOfTags});
 			}
 		}
-		else if ("${enableAutoTaggingFor}" == "Site Settings") {
+		else if (${enableAutoTaggingFor} == "Site Settings") {
 			ProductMenu.gotoPortlet(
 				category = "Configuration",
 				portlet = "Site Settings",
-				site = "${site}");
+				site = ${site});
 
 			Click(
 				key_itemName = "Assets",
@@ -90,7 +92,7 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_1",
-				value1 = "${validationError}");
+				value1 = ${validationError});
 		}
 		else {
 			if (IsElementPresent(locator1 = "Button#UPDATE")) {
@@ -102,18 +104,19 @@ definition {
 		}
 	}
 
-	macro enableOpenNLP {
+	@summary = "Default summary"
+	macro enableOpenNLP(confidenceThreshold = null, assetType = null) {
 		AutoTagging.openToOpenNLP();
 
 		if (isSet(confidenceThreshold)) {
 			SystemSettings.editTextSetting(
 				settingName = "Confidence Threshold",
-				settingValue = "${confidenceThreshold}");
+				settingValue = ${confidenceThreshold});
 		}
 
 		Click(locator1 = "Dropdown#TRIGGER");
 
-		DropdownMenuItem.click(menuItem = "${assetType}");
+		DropdownMenuItem.click(menuItem = ${assetType});
 
 		if (IsElementPresent(locator1 = "Button#UPDATE")) {
 			PortletEntry.update();
@@ -123,7 +126,8 @@ definition {
 		}
 	}
 
-	macro enableTensorFlow {
+	@summary = "Default summary"
+	macro enableTensorFlow() {
 		AutoTagging.openToTensorFlow();
 
 		Alert.viewInfoMessageSpecific(infoMessage = "The TensorFlow model will be downloaded in the background. No tags will be created until the model is fully downloaded");
@@ -154,8 +158,9 @@ definition {
 			locator1 = "Message#INFO_SPECIFIC");
 	}
 
-	macro enableUpdateAutoTags {
-		if ("${enableUpdateAutoTagsFor}" == "System Settings") {
+	@summary = "Default summary"
+	macro enableUpdateAutoTags(enableUpdateAutoTagsFor = null) {
+		if (${enableUpdateAutoTagsFor} == "System Settings") {
 			AutoTagging.openToAssetAutoTagging(configurationScope = "System Settings");
 
 			Click(
@@ -163,7 +168,7 @@ definition {
 				key_configurationScope = "Virtual Instance Scope",
 				locator1 = "SystemSettings#SCOPED_CONFIGURATION_NAME");
 		}
-		else if ("${enableUpdateAutoTagsFor}" == "Instance Settings") {
+		else if (${enableUpdateAutoTagsFor} == "Instance Settings") {
 			AutoTagging.openToAssetAutoTagging(configurationScope = "Instance Settings");
 
 			Click(
@@ -182,15 +187,16 @@ definition {
 		}
 	}
 
-	macro openToAssetAutoTagging {
-		var baseURL = PropsUtil.get("portal.url");
+	@summary = "Default summary"
+	macro openToAssetAutoTagging(configurationScope = null) {
+		var baseURL = JSONCompany.getPortalURL();
 
-		if ("${configurationScope}" == "System Settings") {
+		if (${configurationScope} == "System Settings") {
 			var pid = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerSystemConfiguration";
 			var portlet = "SystemSettingsPortlet";
 		}
 
-		if ("${configurationScope}" == "Instance Settings") {
+		if (${configurationScope} == "Instance Settings") {
 			var pid = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerCompanyConfiguration";
 
 			if (!(isSet(systemSettingsInstanceScope))) {
@@ -198,31 +204,35 @@ definition {
 			}
 		}
 
-		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_${portlet}&_com_liferay_configuration_admin_web_portlet_${portlet}_factoryPid=${pid}&_com_liferay_configuration_admin_web_portlet_${portlet}_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
+		Open(value1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_${portlet}&_com_liferay_configuration_admin_web_portlet_${portlet}_factoryPid=${pid}&_com_liferay_configuration_admin_web_portlet_${portlet}_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
 	}
 
-	macro openToAutoTaggingSiteSettings {
-		if ("${portlet}" == "Asset Auto Tagging") {
+	@summary = "Default summary"
+	macro openToAutoTaggingSiteSettings(siteURLKey = null, portlet = null) {
+		if (${portlet} == "Asset Auto Tagging") {
 			var configurationScreenKey = "site-configuration-asset-auto-tagger";
 		}
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage/-/site/settings?_com_liferay_site_admin_web_portlet_SiteSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fview_configuration_screen&_com_liferay_site_admin_web_portlet_SiteSettingsPortlet_configurationScreenKey=${configurationScreenKey}");
 	}
 
-	macro openToOpenNLP {
-		var baseURL = PropsUtil.get("portal.url");
+	@summary = "Default summary"
+	macro openToOpenNLP() {
+		var baseURL = JSONCompany.getPortalURL();
 
-		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=com.liferay.asset.auto.tagger.opennlp.internal.configuration.OpenNLPDocumentAssetAutoTaggerCompanyConfiguration&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
+		Open(value1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=com.liferay.asset.auto.tagger.opennlp.internal.configuration.OpenNLPDocumentAssetAutoTaggerCompanyConfiguration&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
 	}
 
-	macro openToTensorFlow {
-		var baseURL = PropsUtil.get("portal.url");
+	@summary = "Default summary"
+	macro openToTensorFlow() {
+		var baseURL = JSONCompany.getPortalURL();
 
-		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
+		Open(value1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
 	}
 
-	macro viewUpdateAutoTagsSetting {
-		if ("${updateAutoTagsFor}" == "System Settings") {
+	@summary = "Default summary"
+	macro viewUpdateAutoTagsSetting(updateAutoTagsFor = null, updateAutoTags = null) {
+		if (${updateAutoTagsFor} == "System Settings") {
 			AutoTagging.openToAssetAutoTagging(configurationScope = "System Settings");
 
 			Click(
@@ -234,10 +244,10 @@ definition {
 			Panel.expandPanel(panel = "Categorization");
 		}
 
-		if ("${updateAutoTags}" == "disabled") {
+		if (${updateAutoTags} == "disabled") {
 			FormFields.viewCheckboxNotChecked(fieldName = "Update Auto Tags");
 		}
-		else if ("${updateAutoTags}" == "hidden") {
+		else if (${updateAutoTags} == "hidden") {
 			AssertElementNotPresent(
 				key_fieldName = "Update Auto Tags",
 				locator1 = "FormFields#CHECKBOX_LABEL");

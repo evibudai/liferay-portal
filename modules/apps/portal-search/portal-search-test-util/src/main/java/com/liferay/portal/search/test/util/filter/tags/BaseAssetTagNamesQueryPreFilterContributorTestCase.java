@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.filter.tags;
@@ -37,17 +28,13 @@ public abstract class BaseAssetTagNamesQueryPreFilterContributorTestCase
 	public void testAssetTagNamesQueryPreFilter() throws Exception {
 		String[] tagNames = {"tagNameOne", "tagNameThree tagNameTwo"};
 
-		addDocuments(tagNames);
+		addDocuments(
+			value -> DocumentCreationHelpers.singleText(FIELD, value),
+			tagNames);
 
 		assertSearch(tagNames[0], Arrays.asList(tagNames[0]));
 
 		assertSearch(tagNames[1], Arrays.asList(tagNames[1]));
-	}
-
-	protected void addDocuments(String... values) throws Exception {
-		addDocuments(
-			value -> DocumentCreationHelpers.singleText(FIELD, value),
-			Arrays.asList(values));
 	}
 
 	protected void assertSearch(String queryString, List<String> expectedValues)

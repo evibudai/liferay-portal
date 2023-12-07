@@ -1,83 +1,86 @@
 definition {
 
-	@summary = "Directly creates an Asset List Entry using the JSON API"
-	macro _addAssetListEntry {
+	@summary = "Default summary"
+	macro _addAssetListEntry(groupId = null, title = null, type = null) {
 		Variables.assertDefined(parameterList = "${groupId},${title},${type}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/assetlist.assetlistentry/add-asset-list-entry \
-			-u test@liferay.com:test \
-			-d groupId=${groupId} \
-			-d title=${title} \
-			-d type=${type}
+				-u ${userLoginInfo} \
+				-d groupId=${groupId} \
+				-d title=${title} \
+				-d type=${type}
 		''';
 
-		var assetListEntryId = JSONCurlUtil.post("${curl}", "$.[?(@['title'] == '${title}')]['assetListEntryId']");
+		var assetListEntryId = JSONCurlUtil.post(${curl}, "$.[?(@['title'] == '${title}')]['assetListEntryId']");
 
-		return "${assetListEntryId}";
+		return ${assetListEntryId};
 	}
 
-	@summary = "Directly creates an Dynamic Asset List Entry using the JSON API"
-	macro _addDynamicAssetListEntry {
+	@summary = "Default summary"
+	macro _addDynamicAssetListEntry(itemType = null, groupId = null, itemSubtype = null, title = null) {
 		Variables.assertDefined(parameterList = "${groupId},${itemType},${title}");
 
 		var portalURL = JSONCompany.getPortalURL();
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
 		var typeSettings = JSONAssetlistSetter.setTypeSettings(
-			groupId = "${groupId}",
-			itemSubtype = "${itemSubtype}",
-			itemType = "${itemType}",
+			groupId = ${groupId},
+			itemSubtype = ${itemSubtype},
+			itemType = ${itemType},
 			selectionType = "dynamic");
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/assetlist.assetlistentry/add-dynamic-asset-list-entry \
-			-u test@liferay.com:test \
-			-d userId=${userId} \
-			-d groupId=${groupId} \
-			-d title=${title} \
-			-d typeSettings=${typeSettings}
+				-u ${userLoginInfo} \
+				-d userId=${userId} \
+				-d groupId=${groupId} \
+				-d title=${title} \
+				-d typeSettings=${typeSettings}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Directly create a Manual Asset List Entry using the JSON API"
-	macro _addManualAssetListEntry {
+	@summary = "Default summary"
+	macro _addManualAssetListEntry(itemType = null, groupId = null, itemSubtype = null, title = null) {
 		Variables.assertDefined(parameterList = "${groupId},${itemType},${title}");
 
 		var assetListEntryId = JSONAssetlistAPI._addAssetListEntry(
-			groupId = "${groupId}",
-			title = "${title}",
-			type = "1");
+			groupId = ${groupId},
+			title = ${title},
+			type = 1);
 		var typeSettings = JSONAssetlistSetter.setTypeSettings(
-			groupId = "${groupId}",
-			itemSubtype = "${itemSubtype}",
-			itemType = "${itemType}",
+			groupId = ${groupId},
+			itemSubtype = ${itemSubtype},
+			itemType = ${itemType},
 			selectionType = "manual");
 
 		JSONAssetlistAPI._updateAssetListEntryTypeSettings(
-			assetListEntryId = "${assetListEntryId}",
-			segmentsEntryId = "0",
-			typeSettings = "${typeSettings}");
+			assetListEntryId = ${assetListEntryId},
+			segmentsEntryId = 0,
+			typeSettings = ${typeSettings});
 	}
 
-	@summary = "Directly update the typeSettings of an Asset List Entry using the JSON API"
-	macro _updateAssetListEntryTypeSettings {
+	@summary = "Default summary"
+	macro _updateAssetListEntryTypeSettings(assetListEntryId = null, segmentsEntryId = null, typeSettings = null) {
 		Variables.assertDefined(parameterList = "${assetListEntryId},${segmentsEntryId},${typeSettings}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/assetlist.assetlistentry/update-asset-list-entry-type-settings \
-			-u test@liferay.com:test \
-			-d assetListEntryId=${assetListEntryId} \
-			-d segmentsEntryId=${segmentsEntryId} \
-			-d typeSettings=${typeSettings}
+				-u ${userLoginInfo} \
+				-d assetListEntryId=${assetListEntryId} \
+				-d segmentsEntryId=${segmentsEntryId} \
+				-d typeSettings=${typeSettings}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

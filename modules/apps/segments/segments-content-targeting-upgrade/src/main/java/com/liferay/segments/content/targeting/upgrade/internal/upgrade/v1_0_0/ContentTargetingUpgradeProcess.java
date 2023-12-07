@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.content.targeting.upgrade.internal.upgrade.v1_0_0;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -26,7 +20,6 @@ import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.content.targeting.upgrade.internal.upgrade.v1_0_0.util.RuleConverter;
-import com.liferay.segments.content.targeting.upgrade.internal.upgrade.v1_0_0.util.RuleConverterRegistry;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.CriteriaSerializer;
 import com.liferay.segments.service.SegmentsEntryLocalService;
@@ -43,11 +36,11 @@ import java.util.Map;
 public class ContentTargetingUpgradeProcess extends UpgradeProcess {
 
 	public ContentTargetingUpgradeProcess(
-		RuleConverterRegistry ruleConverterRegistry,
-		SegmentsEntryLocalService segmentsEntryLocalService) {
+		SegmentsEntryLocalService segmentsEntryLocalService,
+		ServiceTrackerMap<String, RuleConverter> serviceTrackerMap) {
 
-		_ruleConverterRegistry = ruleConverterRegistry;
 		_segmentsEntryLocalService = segmentsEntryLocalService;
+		_serviceTrackerMap = serviceTrackerMap;
 	}
 
 	@Override
@@ -58,6 +51,23 @@ public class ContentTargetingUpgradeProcess extends UpgradeProcess {
 
 		_upgradeContentTargetingUserSegments();
 		_deleteContentTargetingData();
+	}
+
+	@Override
+	protected UpgradeStep[] getPostUpgradeSteps() {
+		return new UpgradeStep[] {
+			UpgradeProcessFactory.dropTables(
+				"CT_AU_AnonymousUser", "CT_Analytics_AnalyticsEvent",
+				"CT_Analytics_AnalyticsReferrer", "CT_AnonymousUserUserSegment",
+				"CT_CCR_CampaignContent", "CT_CTA_CTAction",
+				"CT_CTA_CTActionTotal", "CT_Campaign",
+				"CT_Campaigns_UserSegments", "CT_ChannelInstance",
+				"CT_ReportInstance", "CT_RuleInstance",
+				"CT_ScorePoints_ScorePoint", "CT_Tactic",
+				"CT_Tactics_UserSegments", "CT_TrackingActionInstance",
+				"CT_USCR_UserSegmentContent", "CT_UserSegment",
+				"CT_Visited_ContentVisited", "CT_Visited_PageVisited")
+		};
 	}
 
 	private void _deleteContentTargetingData() throws Exception {
@@ -78,33 +88,6 @@ public class ContentTargetingUpgradeProcess extends UpgradeProcess {
 				_CT_PACKAGE_NAME + "%'");
 
 		runSQL("delete from ServiceComponent where buildNamespace like 'CT%'");
-
-		_dropTable("CT_AU_AnonymousUser");
-		_dropTable("CT_Analytics_AnalyticsEvent");
-		_dropTable("CT_Analytics_AnalyticsReferrer");
-		_dropTable("CT_AnonymousUserUserSegment");
-		_dropTable("CT_CCR_CampaignContent");
-		_dropTable("CT_CTA_CTAction");
-		_dropTable("CT_CTA_CTActionTotal");
-		_dropTable("CT_Campaign");
-		_dropTable("CT_Campaigns_UserSegments");
-		_dropTable("CT_ChannelInstance");
-		_dropTable("CT_ReportInstance");
-		_dropTable("CT_RuleInstance");
-		_dropTable("CT_ScorePoints_ScorePoint");
-		_dropTable("CT_Tactic");
-		_dropTable("CT_Tactics_UserSegments");
-		_dropTable("CT_TrackingActionInstance");
-		_dropTable("CT_USCR_UserSegmentContent");
-		_dropTable("CT_UserSegment");
-		_dropTable("CT_Visited_ContentVisited");
-		_dropTable("CT_Visited_PageVisited");
-	}
-
-	private void _dropTable(String tableName) throws Exception {
-		if (hasTable(tableName)) {
-			runSQL("drop table " + tableName);
-		}
 	}
 
 	private String _getCriteria(long userSegmentId) throws Exception {
@@ -120,8 +103,8 @@ public class ContentTargetingUpgradeProcess extends UpgradeProcess {
 				while (resultSet.next()) {
 					String ruleKey = resultSet.getString("ruleKey");
 
-					RuleConverter ruleConverter =
-						_ruleConverterRegistry.getRuleConverter(ruleKey);
+					RuleConverter ruleConverter = _serviceTrackerMap.getService(
+						ruleKey);
 
 					if (ruleConverter == null) {
 						if (_log.isWarnEnabled()) {
@@ -205,7 +188,7 @@ public class ContentTargetingUpgradeProcess extends UpgradeProcess {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContentTargetingUpgradeProcess.class);
 
-	private final RuleConverterRegistry _ruleConverterRegistry;
 	private final SegmentsEntryLocalService _segmentsEntryLocalService;
+	private final ServiceTrackerMap<String, RuleConverter> _serviceTrackerMap;
 
 }

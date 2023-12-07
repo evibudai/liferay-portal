@@ -19,29 +19,27 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Assert a newly connected data source is listed as a source of individual attributes in Definitions > Individuals."
-	@priority = "5"
+	@priority = 5
 	test AssertNewSourceInSourceListForIndividualAttribute {
-		property analytics.cloud.upstream = "false";
-
 		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud();
 
-		var dataSource = StringUtil.replace("${propertyName}", " Combined Property", "");
+		var dataSource = StringUtil.replace(${propertyName}, " Combined Property", "");
 
 		ACUtils.launchAC();
 
-		ACProperties.switchProperty(propertyName = "${propertyName}");
+		ACProperties.switchProperty(propertyName = ${propertyName});
 
 		ACNavigation.goToSettings();
 
@@ -50,8 +48,8 @@ definition {
 		ACDefinitions.goToDefinitionType(definitionType = "Individuals");
 
 		ACDefinitions.assertIndividualAttributesSource(
-			attributeList = "additionalName,address,birthDate,classPK,contactId,createDate,email,familyName,gender,givenName,jobTitle,modifiedDate,telephone,userId,uuid",
-			dataSourceName = "${dataSource}");
+			attributeList = "additionalName,birthDate,email,familyName,givenName,jobTitle,languageId,modifiedDate,screenName",
+			dataSourceName = ${dataSource});
 	}
 
 }

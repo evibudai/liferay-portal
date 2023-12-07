@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model.impl;
@@ -38,6 +29,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
+
+import java.math.BigDecimal;
 
 import java.sql.Blob;
 import java.sql.Types;
@@ -83,7 +76,7 @@ public class CommerceShipmentItemModelImpl
 		{"modifiedDate", Types.TIMESTAMP}, {"commerceShipmentId", Types.BIGINT},
 		{"commerceOrderItemId", Types.BIGINT},
 		{"commerceInventoryWarehouseId", Types.BIGINT},
-		{"quantity", Types.INTEGER}
+		{"quantity", Types.DECIMAL}, {"unitOfMeasureKey", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -103,11 +96,12 @@ public class CommerceShipmentItemModelImpl
 		TABLE_COLUMNS_MAP.put("commerceShipmentId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("commerceOrderItemId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("commerceInventoryWarehouseId", Types.BIGINT);
-		TABLE_COLUMNS_MAP.put("quantity", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("quantity", Types.DECIMAL);
+		TABLE_COLUMNS_MAP.put("unitOfMeasureKey", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceShipmentItem (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,commerceShipmentItemId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commerceShipmentId LONG,commerceOrderItemId LONG,commerceInventoryWarehouseId LONG,quantity INTEGER)";
+		"create table CommerceShipmentItem (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,commerceShipmentItemId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commerceShipmentId LONG,commerceOrderItemId LONG,commerceInventoryWarehouseId LONG,quantity BIGDECIMAL null,unitOfMeasureKey VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CommerceShipmentItem";
@@ -263,121 +257,144 @@ public class CommerceShipmentItemModelImpl
 	public Map<String, Function<CommerceShipmentItem, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CommerceShipmentItem, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CommerceShipmentItem, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CommerceShipmentItem, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CommerceShipmentItem, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<CommerceShipmentItem, Object>>();
-		Map<String, BiConsumer<CommerceShipmentItem, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<CommerceShipmentItem, ?>>();
+		private static final Map<String, Function<CommerceShipmentItem, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CommerceShipmentItem::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setMvccVersion);
-		attributeGetterFunctions.put("uuid", CommerceShipmentItem::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<CommerceShipmentItem, String>)
-				CommerceShipmentItem::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode",
-			CommerceShipmentItem::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<CommerceShipmentItem, String>)
-				CommerceShipmentItem::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"commerceShipmentItemId",
-			CommerceShipmentItem::getCommerceShipmentItemId);
-		attributeSetterBiConsumers.put(
-			"commerceShipmentItemId",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setCommerceShipmentItemId);
-		attributeGetterFunctions.put(
-			"groupId", CommerceShipmentItem::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", CommerceShipmentItem::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setCompanyId);
-		attributeGetterFunctions.put("userId", CommerceShipmentItem::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setUserId);
-		attributeGetterFunctions.put(
-			"userName", CommerceShipmentItem::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CommerceShipmentItem, String>)
-				CommerceShipmentItem::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CommerceShipmentItem::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CommerceShipmentItem, Date>)
-				CommerceShipmentItem::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CommerceShipmentItem::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CommerceShipmentItem, Date>)
-				CommerceShipmentItem::setModifiedDate);
-		attributeGetterFunctions.put(
-			"commerceShipmentId", CommerceShipmentItem::getCommerceShipmentId);
-		attributeSetterBiConsumers.put(
-			"commerceShipmentId",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setCommerceShipmentId);
-		attributeGetterFunctions.put(
-			"commerceOrderItemId",
-			CommerceShipmentItem::getCommerceOrderItemId);
-		attributeSetterBiConsumers.put(
-			"commerceOrderItemId",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setCommerceOrderItemId);
-		attributeGetterFunctions.put(
-			"commerceInventoryWarehouseId",
-			CommerceShipmentItem::getCommerceInventoryWarehouseId);
-		attributeSetterBiConsumers.put(
-			"commerceInventoryWarehouseId",
-			(BiConsumer<CommerceShipmentItem, Long>)
-				CommerceShipmentItem::setCommerceInventoryWarehouseId);
-		attributeGetterFunctions.put(
-			"quantity", CommerceShipmentItem::getQuantity);
-		attributeSetterBiConsumers.put(
-			"quantity",
-			(BiConsumer<CommerceShipmentItem, Integer>)
-				CommerceShipmentItem::setQuantity);
+		static {
+			Map<String, Function<CommerceShipmentItem, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CommerceShipmentItem, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CommerceShipmentItem::getMvccVersion);
+			attributeGetterFunctions.put("uuid", CommerceShipmentItem::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				CommerceShipmentItem::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"commerceShipmentItemId",
+				CommerceShipmentItem::getCommerceShipmentItemId);
+			attributeGetterFunctions.put(
+				"groupId", CommerceShipmentItem::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", CommerceShipmentItem::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", CommerceShipmentItem::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CommerceShipmentItem::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CommerceShipmentItem::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CommerceShipmentItem::getModifiedDate);
+			attributeGetterFunctions.put(
+				"commerceShipmentId",
+				CommerceShipmentItem::getCommerceShipmentId);
+			attributeGetterFunctions.put(
+				"commerceOrderItemId",
+				CommerceShipmentItem::getCommerceOrderItemId);
+			attributeGetterFunctions.put(
+				"commerceInventoryWarehouseId",
+				CommerceShipmentItem::getCommerceInventoryWarehouseId);
+			attributeGetterFunctions.put(
+				"quantity", CommerceShipmentItem::getQuantity);
+			attributeGetterFunctions.put(
+				"unitOfMeasureKey", CommerceShipmentItem::getUnitOfMeasureKey);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<CommerceShipmentItem, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CommerceShipmentItem, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CommerceShipmentItem, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CommerceShipmentItem, String>)
+					CommerceShipmentItem::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<CommerceShipmentItem, String>)
+					CommerceShipmentItem::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"commerceShipmentItemId",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setCommerceShipmentItemId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CommerceShipmentItem, String>)
+					CommerceShipmentItem::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CommerceShipmentItem, Date>)
+					CommerceShipmentItem::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CommerceShipmentItem, Date>)
+					CommerceShipmentItem::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"commerceShipmentId",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setCommerceShipmentId);
+			attributeSetterBiConsumers.put(
+				"commerceOrderItemId",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setCommerceOrderItemId);
+			attributeSetterBiConsumers.put(
+				"commerceInventoryWarehouseId",
+				(BiConsumer<CommerceShipmentItem, Long>)
+					CommerceShipmentItem::setCommerceInventoryWarehouseId);
+			attributeSetterBiConsumers.put(
+				"quantity",
+				(BiConsumer<CommerceShipmentItem, BigDecimal>)
+					CommerceShipmentItem::setQuantity);
+			attributeSetterBiConsumers.put(
+				"unitOfMeasureKey",
+				(BiConsumer<CommerceShipmentItem, String>)
+					CommerceShipmentItem::setUnitOfMeasureKey);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -683,17 +700,37 @@ public class CommerceShipmentItemModelImpl
 
 	@JSON
 	@Override
-	public int getQuantity() {
+	public BigDecimal getQuantity() {
 		return _quantity;
 	}
 
 	@Override
-	public void setQuantity(int quantity) {
+	public void setQuantity(BigDecimal quantity) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
 		_quantity = quantity;
+	}
+
+	@JSON
+	@Override
+	public String getUnitOfMeasureKey() {
+		if (_unitOfMeasureKey == null) {
+			return "";
+		}
+		else {
+			return _unitOfMeasureKey;
+		}
+	}
+
+	@Override
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_unitOfMeasureKey = unitOfMeasureKey;
 	}
 
 	@Override
@@ -778,6 +815,7 @@ public class CommerceShipmentItemModelImpl
 		commerceShipmentItemImpl.setCommerceInventoryWarehouseId(
 			getCommerceInventoryWarehouseId());
 		commerceShipmentItemImpl.setQuantity(getQuantity());
+		commerceShipmentItemImpl.setUnitOfMeasureKey(getUnitOfMeasureKey());
 
 		commerceShipmentItemImpl.resetOriginalValues();
 
@@ -816,7 +854,9 @@ public class CommerceShipmentItemModelImpl
 		commerceShipmentItemImpl.setCommerceInventoryWarehouseId(
 			this.<Long>getColumnOriginalValue("commerceInventoryWarehouseId"));
 		commerceShipmentItemImpl.setQuantity(
-			this.<Integer>getColumnOriginalValue("quantity"));
+			this.<BigDecimal>getColumnOriginalValue("quantity"));
+		commerceShipmentItemImpl.setUnitOfMeasureKey(
+			this.<String>getColumnOriginalValue("unitOfMeasureKey"));
 
 		return commerceShipmentItemImpl;
 	}
@@ -966,6 +1006,15 @@ public class CommerceShipmentItemModelImpl
 
 		commerceShipmentItemCacheModel.quantity = getQuantity();
 
+		commerceShipmentItemCacheModel.unitOfMeasureKey = getUnitOfMeasureKey();
+
+		String unitOfMeasureKey =
+			commerceShipmentItemCacheModel.unitOfMeasureKey;
+
+		if ((unitOfMeasureKey != null) && (unitOfMeasureKey.length() == 0)) {
+			commerceShipmentItemCacheModel.unitOfMeasureKey = null;
+		}
+
 		return commerceShipmentItemCacheModel;
 	}
 
@@ -1042,13 +1091,15 @@ public class CommerceShipmentItemModelImpl
 	private long _commerceShipmentId;
 	private long _commerceOrderItemId;
 	private long _commerceInventoryWarehouseId;
-	private int _quantity;
+	private BigDecimal _quantity;
+	private String _unitOfMeasureKey;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CommerceShipmentItem, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1090,6 +1141,7 @@ public class CommerceShipmentItemModelImpl
 		_columnOriginalValues.put(
 			"commerceInventoryWarehouseId", _commerceInventoryWarehouseId);
 		_columnOriginalValues.put("quantity", _quantity);
+		_columnOriginalValues.put("unitOfMeasureKey", _unitOfMeasureKey);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1140,6 +1192,8 @@ public class CommerceShipmentItemModelImpl
 		columnBitmasks.put("commerceInventoryWarehouseId", 4096L);
 
 		columnBitmasks.put("quantity", 8192L);
+
+		columnBitmasks.put("unitOfMeasureKey", 16384L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

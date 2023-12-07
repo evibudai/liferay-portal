@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.dto.v1_0;
@@ -241,36 +232,6 @@ public class Product implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Category[] categories;
-
-	@Schema
-	@Valid
-	public ProductConfiguration getConfiguration() {
-		return configuration;
-	}
-
-	public void setConfiguration(ProductConfiguration configuration) {
-		this.configuration = configuration;
-	}
-
-	@JsonIgnore
-	public void setConfiguration(
-		UnsafeSupplier<ProductConfiguration, Exception>
-			configurationUnsafeSupplier) {
-
-		try {
-			configuration = configurationUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected ProductConfiguration configuration;
 
 	@Schema(example = "2017-07-21")
 	public Date getCreateDate() {
@@ -586,6 +547,36 @@ public class Product implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Attachment[] images;
+
+	@Schema
+	@Valid
+	public LinkedProduct[] getLinkedProducts() {
+		return linkedProducts;
+	}
+
+	public void setLinkedProducts(LinkedProduct[] linkedProducts) {
+		this.linkedProducts = linkedProducts;
+	}
+
+	@JsonIgnore
+	public void setLinkedProducts(
+		UnsafeSupplier<LinkedProduct[], Exception>
+			linkedProductsUnsafeSupplier) {
+
+		try {
+			linkedProducts = linkedProductsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected LinkedProduct[] linkedProducts;
 
 	@Schema
 	@Valid
@@ -1159,6 +1150,38 @@ public class Product implements Serializable {
 
 	@Schema
 	@Valid
+	public ProductVirtualSettings getProductVirtualSettings() {
+		return productVirtualSettings;
+	}
+
+	public void setProductVirtualSettings(
+		ProductVirtualSettings productVirtualSettings) {
+
+		this.productVirtualSettings = productVirtualSettings;
+	}
+
+	@JsonIgnore
+	public void setProductVirtualSettings(
+		UnsafeSupplier<ProductVirtualSettings, Exception>
+			productVirtualSettingsUnsafeSupplier) {
+
+		try {
+			productVirtualSettings = productVirtualSettingsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ProductVirtualSettings productVirtualSettings;
+
+	@Schema
+	@Valid
 	public RelatedProduct[] getRelatedProducts() {
 		return relatedProducts;
 	}
@@ -1623,16 +1646,6 @@ public class Product implements Serializable {
 			sb.append("]");
 		}
 
-		if (configuration != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"configuration\": ");
-
-			sb.append(String.valueOf(configuration));
-		}
-
 		if (createDate != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1776,6 +1789,26 @@ public class Product implements Serializable {
 				sb.append(String.valueOf(images[i]));
 
 				if ((i + 1) < images.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (linkedProducts != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"linkedProducts\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < linkedProducts.length; i++) {
+				sb.append(String.valueOf(linkedProducts[i]));
+
+				if ((i + 1) < linkedProducts.length) {
 					sb.append(", ");
 				}
 			}
@@ -2045,6 +2078,16 @@ public class Product implements Serializable {
 			sb.append("\"");
 		}
 
+		if (productVirtualSettings != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"productVirtualSettings\": ");
+
+			sb.append(String.valueOf(productVirtualSettings));
+		}
+
 		if (relatedProducts != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -2301,5 +2344,7 @@ public class Product implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

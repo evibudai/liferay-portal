@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model.impl;
@@ -239,85 +230,111 @@ public class CPTaxCategoryModelImpl
 	public Map<String, Function<CPTaxCategory, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CPTaxCategory, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CPTaxCategory, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CPTaxCategory, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CPTaxCategory, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<CPTaxCategory, Object>>();
-		Map<String, BiConsumer<CPTaxCategory, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<CPTaxCategory, ?>>();
+		private static final Map<String, Function<CPTaxCategory, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CPTaxCategory::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", CPTaxCategory::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", CPTaxCategory::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<CPTaxCategory, String>)CPTaxCategory::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", CPTaxCategory::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<CPTaxCategory, String>)
-				CPTaxCategory::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"CPTaxCategoryId", CPTaxCategory::getCPTaxCategoryId);
-		attributeSetterBiConsumers.put(
-			"CPTaxCategoryId",
-			(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setCPTaxCategoryId);
-		attributeGetterFunctions.put("companyId", CPTaxCategory::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setCompanyId);
-		attributeGetterFunctions.put("userId", CPTaxCategory::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setUserId);
-		attributeGetterFunctions.put("userName", CPTaxCategory::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CPTaxCategory, String>)CPTaxCategory::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CPTaxCategory::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CPTaxCategory, Date>)CPTaxCategory::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CPTaxCategory::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CPTaxCategory, Date>)CPTaxCategory::setModifiedDate);
-		attributeGetterFunctions.put("name", CPTaxCategory::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<CPTaxCategory, String>)CPTaxCategory::setName);
-		attributeGetterFunctions.put(
-			"description", CPTaxCategory::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<CPTaxCategory, String>)CPTaxCategory::setDescription);
+		static {
+			Map<String, Function<CPTaxCategory, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CPTaxCategory, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CPTaxCategory::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", CPTaxCategory::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", CPTaxCategory::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				CPTaxCategory::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"CPTaxCategoryId", CPTaxCategory::getCPTaxCategoryId);
+			attributeGetterFunctions.put(
+				"companyId", CPTaxCategory::getCompanyId);
+			attributeGetterFunctions.put("userId", CPTaxCategory::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CPTaxCategory::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CPTaxCategory::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CPTaxCategory::getModifiedDate);
+			attributeGetterFunctions.put("name", CPTaxCategory::getName);
+			attributeGetterFunctions.put(
+				"description", CPTaxCategory::getDescription);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<CPTaxCategory, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CPTaxCategory, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<CPTaxCategory, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<CPTaxCategory, Long>)
+					CPTaxCategory::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CPTaxCategory, String>)CPTaxCategory::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<CPTaxCategory, String>)
+					CPTaxCategory::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"CPTaxCategoryId",
+				(BiConsumer<CPTaxCategory, Long>)
+					CPTaxCategory::setCPTaxCategoryId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CPTaxCategory, Long>)CPTaxCategory::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CPTaxCategory, String>)CPTaxCategory::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CPTaxCategory, Date>)CPTaxCategory::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CPTaxCategory, Date>)
+					CPTaxCategory::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<CPTaxCategory, String>)CPTaxCategory::setName);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<CPTaxCategory, String>)
+					CPTaxCategory::setDescription);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1180,7 +1197,8 @@ public class CPTaxCategoryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CPTaxCategory, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

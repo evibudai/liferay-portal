@@ -1,0 +1,78 @@
+<%--
+/**
+ * SPDX-FileCopyrightText: (c) 2023 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+--%>
+
+<c:if test='<%= !journalDisplayContext.isNavigationMine() && !journalDisplayContext.isNavigationRecent() && !journalDisplayContext.isSearch() && (!FeatureFlagManagerUtil.isEnabled("LPS-194763") || (FeatureFlagManagerUtil.isEnabled("LPS-194763") && (journalDisplayContext.getHighlightedDDMStructureId() == 0))) %>'>
+	<liferay-site-navigation:breadcrumb
+		breadcrumbEntries="<%= JournalPortletUtil.getPortletBreadcrumbEntries(journalDisplayContext.getFolder(), request, false, liferayPortletResponse) %>"
+	/>
+</c:if>
+
+<aui:form action="<%= journalDisplayContext.getPortletURL(null) %>" method="get" name="fm">
+	<aui:input name="<%= ActionRequest.ACTION_NAME %>" type="hidden" />
+	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
+	<aui:input name="groupId" type="hidden" value="<%= scopeGroupId %>" />
+	<aui:input name="newFolderId" type="hidden" />
+
+	<c:choose>
+		<c:when test="<%= !journalDisplayContext.isSearch() %>">
+			<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
+		</c:when>
+		<c:otherwise>
+			<div>
+				<div class="cadmin row">
+					<div class="col d-flex">
+						<div class="c-mr-2 d-inline-flex form-group">
+							<button class="btn btn-secondary btn-sm form-control-select">
+								<%= journalDisplayContext.getSearchResultsLabel() %>
+							</button>
+						</div>
+
+						<%
+						String searchLocationLabel = journalDisplayContext.getSearchLocationLabel();
+						%>
+
+						<c:if test="<%= searchLocationLabel != null %>">
+							<div class="c-mr-2 d-inline-flex form-group">
+								<button class="align-items-center btn btn-secondary btn-sm form-control-select">
+									<svg class="lexicon-icon lexicon-icon-folder mr-2" role="presentation">
+										<use xlink:href="/o/admin-theme/images/clay/icons.svg#folder">
+									</svg><%= searchLocationLabel %>
+								</button>
+							</div>
+						</c:if>
+
+						<div class="d-inline-flex form-group">
+							<button class="btn btn-secondary btn-sm form-control-select">
+								<%= journalDisplayContext.getSearchInLabel() %>
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<react:component
+					module="js/SearchOptions"
+					props="<%= journalDisplayContext.getSearchProps() %>"
+				/>
+			</div>
+
+			<c:choose>
+				<c:when test="<%= journalDisplayContext.isWebContentTabSelected() %>">
+					<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
+				</c:when>
+				<c:when test="<%= journalDisplayContext.isVersionsTabSelected() %>">
+					<liferay-util:include page="/view_versions.jsp" servletContext="<%= application %>" />
+				</c:when>
+				<c:when test="<%= journalDisplayContext.isCommentsTabSelected() %>">
+					<liferay-util:include page="/view_comments.jsp" servletContext="<%= application %>" />
+				</c:when>
+				<c:otherwise>
+					<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
+				</c:otherwise>
+			</c:choose>
+		</c:otherwise>
+	</c:choose>
+</aui:form>

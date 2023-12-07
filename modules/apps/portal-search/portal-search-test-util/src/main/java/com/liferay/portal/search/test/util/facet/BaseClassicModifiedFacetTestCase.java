@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.facet;
@@ -23,8 +14,6 @@ import com.liferay.portal.kernel.search.facet.ModifiedFacet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
-import com.liferay.portal.util.DateFormatFactoryImpl;
 
 import java.util.List;
 
@@ -42,8 +31,6 @@ public abstract class BaseClassicModifiedFacetTestCase
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
-
-		setUpDateFormatFactoryUtil();
 	}
 
 	@Test
@@ -78,7 +65,7 @@ public abstract class BaseClassicModifiedFacetTestCase
 				for (TermCollector termCollector : termCollectors) {
 					String term = termCollector.getTerm();
 
-					Assert.assertTrue(term.contains("00 TO 20"));
+					Assert.assertTrue(term.contains(" TO *"));
 				}
 			});
 	}
@@ -106,7 +93,11 @@ public abstract class BaseClassicModifiedFacetTestCase
 	protected JSONObject createRangeArrayElement(String range) {
 		JSONObject jsonObject = jsonFactory.createJSONObject();
 
-		jsonObject.put("range", range);
+		jsonObject.put(
+			"label", range
+		).put(
+			"range", range
+		);
 
 		return jsonObject;
 	}
@@ -122,13 +113,6 @@ public abstract class BaseClassicModifiedFacetTestCase
 		JSONObject jsonObject = facetConfiguration.getData();
 
 		jsonObject.put("ranges", createRangeArray(ranges));
-	}
-
-	protected void setUpDateFormatFactoryUtil() {
-		DateFormatFactoryUtil dateFormatFactoryUtil =
-			new DateFormatFactoryUtil();
-
-		dateFormatFactoryUtil.setDateFormatFactory(new DateFormatFactoryImpl());
 	}
 
 }

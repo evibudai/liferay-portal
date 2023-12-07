@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.internal.resource.v1_0;
@@ -27,9 +18,8 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem;
-import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.OrderItemDTOConverter;
+import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.util.CustomFieldsUtil;
-import com.liferay.headless.commerce.admin.order.internal.helper.v1_0.OrderItemHelper;
 import com.liferay.headless.commerce.admin.order.internal.odata.entity.v1_0.OrderItemEntityModel;
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.OrderItemUtil;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.OrderItemResource;
@@ -46,9 +36,9 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
@@ -57,7 +47,10 @@ import java.io.Serializable;
 
 import java.math.BigDecimal;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -72,11 +65,10 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/order-item.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, OrderItemResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = OrderItemResource.class
 )
-public class OrderItemResourceImpl
-	extends BaseOrderItemResourceImpl implements NestedFieldSupport {
+public class OrderItemResourceImpl extends BaseOrderItemResourceImpl {
 
 	@Override
 	public Response deleteOrderItem(Long id) throws Exception {
@@ -163,7 +155,7 @@ public class OrderItemResourceImpl
 			commerceOrder.getCommerceOrderId());
 
 		return Page.of(
-			_orderItemHelper.toOrderItems(
+			_toOrderItems(
 				commerceOrderItems, contextAcceptLanguage.getPreferredLocale()),
 			pagination, totalItems);
 	}
@@ -174,8 +166,24 @@ public class OrderItemResourceImpl
 			Long id, Pagination pagination)
 		throws Exception {
 
-		return _orderItemHelper.getOrderItemsPage(
-			id, contextAcceptLanguage.getPreferredLocale(), pagination);
+		CommerceOrder commerceOrder = _commerceOrderService.fetchCommerceOrder(
+			id);
+
+		if (commerceOrder == null) {
+			return Page.of(Collections.emptyList());
+		}
+
+		List<CommerceOrderItem> commerceOrderItems =
+			_commerceOrderItemService.getCommerceOrderItems(
+				id, pagination.getStartPosition(), pagination.getEndPosition());
+
+		int totalItems = _commerceOrderItemService.getCommerceOrderItemsCount(
+			id);
+
+		return Page.of(
+			_toOrderItems(
+				commerceOrderItems, contextAcceptLanguage.getPreferredLocale()),
+			pagination, totalItems);
 	}
 
 	@Override
@@ -288,7 +296,8 @@ public class OrderItemResourceImpl
 		CommerceOrderItem commerceOrderItem =
 			_commerceOrderItemService.updateCommerceOrderItem(
 				id, GetterUtil.getString(orderItem.getOptions(), "[]"),
-				GetterUtil.getInteger(orderItem.getQuantity()),
+				BigDecimal.valueOf(
+					GetterUtil.getInteger(orderItem.getQuantity())),
 				_commerceContextFactory.create(
 					contextCompany.getCompanyId(), commerceOrder.getGroupId(),
 					contextUser.getUserId(), commerceOrder.getCommerceOrderId(),
@@ -401,7 +410,8 @@ public class OrderItemResourceImpl
 				_commerceOrderItemService.updateCommerceOrderItem(
 					commerceOrderItem.getCommerceOrderItemId(),
 					GetterUtil.getString(orderItem.getOptions(), "[]"),
-					GetterUtil.getInteger(orderItem.getQuantity()),
+					BigDecimal.valueOf(
+						GetterUtil.getInteger(orderItem.getQuantity())),
 					_commerceContextFactory.create(
 						contextCompany.getCompanyId(),
 						commerceOrder.getGroupId(), contextUser.getUserId(),
@@ -600,6 +610,22 @@ public class OrderItemResourceImpl
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
+	private List<OrderItem> _toOrderItems(
+			List<CommerceOrderItem> commerceOrderItems, Locale locale)
+		throws Exception {
+
+		List<OrderItem> orderItems = new ArrayList<>();
+
+		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
+			orderItems.add(
+				_orderItemDTOConverter.toDTO(
+					new DefaultDTOConverterContext(
+						commerceOrderItem.getCommerceOrderItemId(), locale)));
+		}
+
+		return orderItems;
+	}
+
 	private OrderItem _updateOrderItem(
 			CommerceOrderItem commerceOrderItem, OrderItem orderItem)
 		throws Exception {
@@ -607,12 +633,14 @@ public class OrderItemResourceImpl
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			commerceOrderItem.getCommerceOrderId());
 
+		BigDecimal quantity = commerceOrderItem.getQuantity();
+
 		commerceOrderItem = _commerceOrderItemService.updateCommerceOrderItem(
 			commerceOrderItem.getCommerceOrderItemId(),
 			GetterUtil.getString(
 				orderItem.getOptions(), commerceOrderItem.getJson()),
-			GetterUtil.get(
-				orderItem.getQuantity(), commerceOrderItem.getQuantity()),
+			BigDecimal.valueOf(
+				GetterUtil.get(orderItem.getQuantity(), quantity.intValue())),
 			_commerceContextFactory.create(
 				contextCompany.getCompanyId(), commerceOrder.getGroupId(),
 				contextUser.getUserId(), commerceOrder.getCommerceOrderId(),
@@ -728,11 +756,8 @@ public class OrderItemResourceImpl
 	@Reference
 	private ExpandoTableLocalService _expandoTableLocalService;
 
-	@Reference
-	private OrderItemDTOConverter _orderItemDTOConverter;
-
-	@Reference
-	private OrderItemHelper _orderItemHelper;
+	@Reference(target = DTOConverterConstants.ORDER_ITEM_DTO_CONVERTER)
+	private DTOConverter<CommerceOrderItem, OrderItem> _orderItemDTOConverter;
 
 	@Reference
 	private Portal _portal;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.service.persistence.test;
@@ -160,6 +151,8 @@ public class NotificationTemplatePersistenceTest {
 
 		newNotificationTemplate.setSubject(RandomTestUtil.randomString());
 
+		newNotificationTemplate.setSystem(RandomTestUtil.randomBoolean());
+
 		newNotificationTemplate.setType(RandomTestUtil.randomString());
 
 		_notificationTemplates.add(
@@ -219,6 +212,9 @@ public class NotificationTemplatePersistenceTest {
 		Assert.assertEquals(
 			existingNotificationTemplate.getSubject(),
 			newNotificationTemplate.getSubject());
+		Assert.assertEquals(
+			existingNotificationTemplate.isSystem(),
+			newNotificationTemplate.isSystem());
 		Assert.assertEquals(
 			existingNotificationTemplate.getType(),
 			newNotificationTemplate.getType());
@@ -308,7 +304,8 @@ public class NotificationTemplatePersistenceTest {
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "objectDefinitionId", true,
 			"description", true, "editorType", true, "name", true,
-			"recipientType", true, "subject", true, "type", true);
+			"recipientType", true, "subject", true, "system", true, "type",
+			true);
 	}
 
 	@Test
@@ -649,6 +646,8 @@ public class NotificationTemplatePersistenceTest {
 		notificationTemplate.setRecipientType(RandomTestUtil.randomString());
 
 		notificationTemplate.setSubject(RandomTestUtil.randomString());
+
+		notificationTemplate.setSystem(RandomTestUtil.randomBoolean());
 
 		notificationTemplate.setType(RandomTestUtil.randomString());
 

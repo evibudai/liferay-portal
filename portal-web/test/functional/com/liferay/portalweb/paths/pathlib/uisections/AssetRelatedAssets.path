@@ -27,7 +27,7 @@
 </tr>
 <tr>
 	<td>RELATED_ASSETS_SELECT</td>
-	<td>//div[contains(@id,'relatedAssets') or contains(@id,'related-assets')]//button[normalize-space()='Select']</td>
+	<td>//div[@class= 'dropdown']//button[contains(@type, 'button') and contains(., 'Select')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -73,7 +73,7 @@
 </tr>
 <tr>
 	<td>RELATED_ASSETS_TABLE_REMOVE_LINK</td>
-	<td>//tr[contains(.,'${key_assetTitle}')]//a</td>
+	<td>//tr[contains(.,'${key_assetTitle}')]//button[contains(@aria-label,'Remove')]</td>
 	<td></td>
 </tr>
 <tr>

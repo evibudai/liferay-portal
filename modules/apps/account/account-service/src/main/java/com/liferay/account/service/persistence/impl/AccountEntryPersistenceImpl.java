@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.service.persistence.impl;
@@ -48,11 +39,10 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -5285,7 +5275,7 @@ public class AccountEntryPersistenceImpl
 		accountEntry.setNew(true);
 		accountEntry.setPrimaryKey(accountEntryId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		accountEntry.setUuid(uuid);
 
@@ -5404,7 +5394,7 @@ public class AccountEntryPersistenceImpl
 			(AccountEntryModelImpl)accountEntry;
 
 		if (Validator.isNull(accountEntry.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			accountEntry.setUuid(uuid);
 		}
@@ -5421,7 +5411,8 @@ public class AccountEntryPersistenceImpl
 				if (ercAccountEntry != null) {
 					throw new DuplicateAccountEntryExternalReferenceCodeException(
 						"Duplicate account entry with external reference code " +
-							accountEntry.getExternalReferenceCode());
+							accountEntry.getExternalReferenceCode() +
+								" and company " + accountEntry.getCompanyId());
 				}
 			}
 			else {
@@ -5431,7 +5422,8 @@ public class AccountEntryPersistenceImpl
 
 					throw new DuplicateAccountEntryExternalReferenceCodeException(
 						"Duplicate account entry with external reference code " +
-							accountEntry.getExternalReferenceCode());
+							accountEntry.getExternalReferenceCode() +
+								" and company " + accountEntry.getCompanyId());
 				}
 			}
 		}
@@ -5870,30 +5862,14 @@ public class AccountEntryPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, false);
 
-		_setAccountEntryUtilPersistence(this);
+		AccountEntryUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setAccountEntryUtilPersistence(null);
+		AccountEntryUtil.setPersistence(null);
 
 		entityCache.removeCache(AccountEntryImpl.class.getName());
-	}
-
-	private void _setAccountEntryUtilPersistence(
-		AccountEntryPersistence accountEntryPersistence) {
-
-		try {
-			Field field = AccountEntryUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, accountEntryPersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -5981,8 +5957,5 @@ public class AccountEntryPersistenceImpl
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

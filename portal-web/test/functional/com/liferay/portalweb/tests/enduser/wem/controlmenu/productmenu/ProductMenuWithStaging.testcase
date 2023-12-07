@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Control Menu";
@@ -13,18 +14,20 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Enable local staging") {
-			JSONStaging.enableLocalStaging(groupName = "Test Site Name");
+			Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+			Staging.activateStagingCP(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,13 +36,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-112994. The Product Menu icon should not be shown when the user is in the Control Panel Apps even though enable Live"
-	@priority = "4"
+	@priority = 4
 	test ViewProductMenuIconInvisibleInGlobalAppAfterEnableLive {
 		task ("View product menu icon is not shown in Control Panel apps") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			AssertElementNotPresent(locator1 = "ProductMenu#TOGGLE");
 		}

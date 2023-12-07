@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.web.internal.display.context;
@@ -29,19 +20,17 @@ import com.liferay.oauth2.provider.service.OAuth2ScopeGrantLocalService;
 import com.liferay.oauth2.provider.web.internal.tree.Tree;
 import com.liferay.oauth2.provider.web.internal.util.ScopeTreeUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 
@@ -113,32 +102,31 @@ public class AssignScopesTreeDisplayContext
 		long oAuth2ApplicationScopeAliasesId,
 		OAuth2ScopeGrantLocalService oAuth2ScopeGrantLocalService) {
 
-		Collection<OAuth2ScopeGrant> oAuth2ScopeGrants =
-			oAuth2ScopeGrantLocalService.getOAuth2ScopeGrants(
-				oAuth2ApplicationScopeAliasesId, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
+		Set<String> assignedScopeAliases = new HashSet<>();
 
-		Stream<OAuth2ScopeGrant> stream = oAuth2ScopeGrants.stream();
+		for (OAuth2ScopeGrant oAuth2ScopeGrant :
+				oAuth2ScopeGrantLocalService.getOAuth2ScopeGrants(
+					oAuth2ApplicationScopeAliasesId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
 
-		return stream.map(
-			OAuth2ScopeGrant::getScopeAliasesList
-		).flatMap(
-			Collection::stream
-		).collect(
-			Collectors.toCollection(HashSet::new)
-		);
+			assignedScopeAliases.addAll(oAuth2ScopeGrant.getScopeAliasesList());
+		}
+
+		return assignedScopeAliases;
 	}
 
 	private Set<String> _getAssignedDeletedScopeAliases(
 		Set<String> scopeAliases) {
 
-		Stream<String> stream = _assignedScopeAliases.stream();
+		Set<String> assignedDeletedScopeAliases = new HashSet<>();
 
-		return stream.filter(
-			scopeAlias -> !scopeAliases.contains(scopeAlias)
-		).collect(
-			Collectors.toCollection(HashSet::new)
-		);
+		for (String assignedScopeAlias : _assignedScopeAliases) {
+			if (!scopeAliases.contains(assignedScopeAlias)) {
+				assignedDeletedScopeAliases.add(assignedScopeAlias);
+			}
+		}
+
+		return assignedDeletedScopeAliases;
 	}
 
 	private String _getDescription(String scopeAlias, Locale locale) {
@@ -171,14 +159,7 @@ public class AssignScopesTreeDisplayContext
 					liferayOAuth2Scope.getScope(), locale));
 		}
 
-		if (!descriptions.isEmpty()) {
-			Stream<String> stream = descriptions.stream();
-
-			return stream.collect(
-				Collectors.joining(StringPool.COMMA_AND_SPACE));
-		}
-
-		return StringPool.BLANK;
+		return StringUtil.merge(descriptions, StringPool.COMMA_AND_SPACE);
 	}
 
 	private Map<String, String> _getScopeAliasesDescriptionsMap(

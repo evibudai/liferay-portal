@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,17 +34,22 @@ definition {
 	}
 
 	@description = "LPS-149424 - When selecting payment in 1 installment, make sure it is possible to complete the payment"
-	@priority = "4"
+	@priority = 4
 	test CanContinueFlowOnePortion {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -67,17 +75,22 @@ definition {
 	}
 
 	@description = "LPS-149425 - When selecting '2 payments', make sure it is possible to complete the payment"
-	@priority = "4"
+	@priority = 4
 	test CanContinueFlowTwoPortion {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -103,17 +116,22 @@ definition {
 	}
 
 	@description = "LPS-149422 - Make sure that when you select Pay in Full the discount appears"
-	@priority = "3"
+	@priority = 3
 	test CanViewDiscountAppearsOnPaypal {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -133,17 +151,22 @@ definition {
 	}
 
 	@description = "LPS-149423 - Check that when selecting '2 payments' the amount appears divided into two exactly equal installments"
-	@priority = "3"
+	@priority = 3
 	test IfDiscountAppearsSplit {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -159,7 +182,7 @@ definition {
 
 		AssertElementPresent(
 			locator1 = "RaylifePaymentMethod#QUOTATION_VALUES",
-			value = "719");
+			value = 719);
 
 		AssertElementPresent(
 			installments = "359.50",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model.impl;
@@ -86,7 +77,8 @@ public class CommerceShippingMethodModelImpl
 		{"modifiedDate", Types.TIMESTAMP}, {"name", Types.VARCHAR},
 		{"description", Types.VARCHAR}, {"active_", Types.BOOLEAN},
 		{"engineKey", Types.VARCHAR}, {"imageId", Types.BIGINT},
-		{"priority", Types.DOUBLE}, {"trackingURL", Types.VARCHAR}
+		{"priority", Types.DOUBLE}, {"trackingURL", Types.VARCHAR},
+		{"typeSettings", Types.CLOB}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -108,10 +100,11 @@ public class CommerceShippingMethodModelImpl
 		TABLE_COLUMNS_MAP.put("imageId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("priority", Types.DOUBLE);
 		TABLE_COLUMNS_MAP.put("trackingURL", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("typeSettings", Types.CLOB);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceShippingMethod (mvccVersion LONG default 0 not null,commerceShippingMethodId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name STRING null,description STRING null,active_ BOOLEAN,engineKey VARCHAR(75) null,imageId LONG,priority DOUBLE,trackingURL STRING null)";
+		"create table CommerceShippingMethod (mvccVersion LONG default 0 not null,commerceShippingMethodId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name STRING null,description STRING null,active_ BOOLEAN,engineKey VARCHAR(75) null,imageId LONG,priority DOUBLE,trackingURL STRING null,typeSettings TEXT null)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CommerceShippingMethod";
@@ -244,125 +237,148 @@ public class CommerceShippingMethodModelImpl
 	public Map<String, Function<CommerceShippingMethod, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CommerceShippingMethod, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CommerceShippingMethod, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CommerceShippingMethod, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CommerceShippingMethod, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<CommerceShippingMethod, Object>>();
-		Map<String, BiConsumer<CommerceShippingMethod, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<CommerceShippingMethod, ?>>();
+		private static final Map
+			<String, Function<CommerceShippingMethod, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CommerceShippingMethod::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CommerceShippingMethod, Long>)
-				CommerceShippingMethod::setMvccVersion);
-		attributeGetterFunctions.put(
-			"commerceShippingMethodId",
-			CommerceShippingMethod::getCommerceShippingMethodId);
-		attributeSetterBiConsumers.put(
-			"commerceShippingMethodId",
-			(BiConsumer<CommerceShippingMethod, Long>)
-				CommerceShippingMethod::setCommerceShippingMethodId);
-		attributeGetterFunctions.put(
-			"groupId", CommerceShippingMethod::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<CommerceShippingMethod, Long>)
-				CommerceShippingMethod::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", CommerceShippingMethod::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CommerceShippingMethod, Long>)
-				CommerceShippingMethod::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", CommerceShippingMethod::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CommerceShippingMethod, Long>)
-				CommerceShippingMethod::setUserId);
-		attributeGetterFunctions.put(
-			"userName", CommerceShippingMethod::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CommerceShippingMethod, String>)
-				CommerceShippingMethod::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CommerceShippingMethod::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CommerceShippingMethod, Date>)
-				CommerceShippingMethod::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CommerceShippingMethod::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CommerceShippingMethod, Date>)
-				CommerceShippingMethod::setModifiedDate);
-		attributeGetterFunctions.put("name", CommerceShippingMethod::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<CommerceShippingMethod, String>)
-				CommerceShippingMethod::setName);
-		attributeGetterFunctions.put(
-			"description", CommerceShippingMethod::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<CommerceShippingMethod, String>)
-				CommerceShippingMethod::setDescription);
-		attributeGetterFunctions.put(
-			"active", CommerceShippingMethod::getActive);
-		attributeSetterBiConsumers.put(
-			"active",
-			(BiConsumer<CommerceShippingMethod, Boolean>)
-				CommerceShippingMethod::setActive);
-		attributeGetterFunctions.put(
-			"engineKey", CommerceShippingMethod::getEngineKey);
-		attributeSetterBiConsumers.put(
-			"engineKey",
-			(BiConsumer<CommerceShippingMethod, String>)
-				CommerceShippingMethod::setEngineKey);
-		attributeGetterFunctions.put(
-			"imageId", CommerceShippingMethod::getImageId);
-		attributeSetterBiConsumers.put(
-			"imageId",
-			(BiConsumer<CommerceShippingMethod, Long>)
-				CommerceShippingMethod::setImageId);
-		attributeGetterFunctions.put(
-			"priority", CommerceShippingMethod::getPriority);
-		attributeSetterBiConsumers.put(
-			"priority",
-			(BiConsumer<CommerceShippingMethod, Double>)
-				CommerceShippingMethod::setPriority);
-		attributeGetterFunctions.put(
-			"trackingURL", CommerceShippingMethod::getTrackingURL);
-		attributeSetterBiConsumers.put(
-			"trackingURL",
-			(BiConsumer<CommerceShippingMethod, String>)
-				CommerceShippingMethod::setTrackingURL);
+		static {
+			Map<String, Function<CommerceShippingMethod, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CommerceShippingMethod, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CommerceShippingMethod::getMvccVersion);
+			attributeGetterFunctions.put(
+				"commerceShippingMethodId",
+				CommerceShippingMethod::getCommerceShippingMethodId);
+			attributeGetterFunctions.put(
+				"groupId", CommerceShippingMethod::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", CommerceShippingMethod::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", CommerceShippingMethod::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CommerceShippingMethod::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CommerceShippingMethod::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CommerceShippingMethod::getModifiedDate);
+			attributeGetterFunctions.put(
+				"name", CommerceShippingMethod::getName);
+			attributeGetterFunctions.put(
+				"description", CommerceShippingMethod::getDescription);
+			attributeGetterFunctions.put(
+				"active", CommerceShippingMethod::getActive);
+			attributeGetterFunctions.put(
+				"engineKey", CommerceShippingMethod::getEngineKey);
+			attributeGetterFunctions.put(
+				"imageId", CommerceShippingMethod::getImageId);
+			attributeGetterFunctions.put(
+				"priority", CommerceShippingMethod::getPriority);
+			attributeGetterFunctions.put(
+				"trackingURL", CommerceShippingMethod::getTrackingURL);
+			attributeGetterFunctions.put(
+				"typeSettings", CommerceShippingMethod::getTypeSettings);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<CommerceShippingMethod, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CommerceShippingMethod, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CommerceShippingMethod, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CommerceShippingMethod, Long>)
+					CommerceShippingMethod::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"commerceShippingMethodId",
+				(BiConsumer<CommerceShippingMethod, Long>)
+					CommerceShippingMethod::setCommerceShippingMethodId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<CommerceShippingMethod, Long>)
+					CommerceShippingMethod::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CommerceShippingMethod, Long>)
+					CommerceShippingMethod::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CommerceShippingMethod, Long>)
+					CommerceShippingMethod::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CommerceShippingMethod, String>)
+					CommerceShippingMethod::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CommerceShippingMethod, Date>)
+					CommerceShippingMethod::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CommerceShippingMethod, Date>)
+					CommerceShippingMethod::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<CommerceShippingMethod, String>)
+					CommerceShippingMethod::setName);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<CommerceShippingMethod, String>)
+					CommerceShippingMethod::setDescription);
+			attributeSetterBiConsumers.put(
+				"active",
+				(BiConsumer<CommerceShippingMethod, Boolean>)
+					CommerceShippingMethod::setActive);
+			attributeSetterBiConsumers.put(
+				"engineKey",
+				(BiConsumer<CommerceShippingMethod, String>)
+					CommerceShippingMethod::setEngineKey);
+			attributeSetterBiConsumers.put(
+				"imageId",
+				(BiConsumer<CommerceShippingMethod, Long>)
+					CommerceShippingMethod::setImageId);
+			attributeSetterBiConsumers.put(
+				"priority",
+				(BiConsumer<CommerceShippingMethod, Double>)
+					CommerceShippingMethod::setPriority);
+			attributeSetterBiConsumers.put(
+				"trackingURL",
+				(BiConsumer<CommerceShippingMethod, String>)
+					CommerceShippingMethod::setTrackingURL);
+			attributeSetterBiConsumers.put(
+				"typeSettings",
+				(BiConsumer<CommerceShippingMethod, String>)
+					CommerceShippingMethod::setTypeSettings);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -850,6 +866,26 @@ public class CommerceShippingMethodModelImpl
 		_trackingURL = trackingURL;
 	}
 
+	@JSON
+	@Override
+	public String getTypeSettings() {
+		if (_typeSettings == null) {
+			return "";
+		}
+		else {
+			return _typeSettings;
+		}
+	}
+
+	@Override
+	public void setTypeSettings(String typeSettings) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_typeSettings = typeSettings;
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -1012,6 +1048,7 @@ public class CommerceShippingMethodModelImpl
 		commerceShippingMethodImpl.setImageId(getImageId());
 		commerceShippingMethodImpl.setPriority(getPriority());
 		commerceShippingMethodImpl.setTrackingURL(getTrackingURL());
+		commerceShippingMethodImpl.setTypeSettings(getTypeSettings());
 
 		commerceShippingMethodImpl.resetOriginalValues();
 
@@ -1053,6 +1090,8 @@ public class CommerceShippingMethodModelImpl
 			this.<Double>getColumnOriginalValue("priority"));
 		commerceShippingMethodImpl.setTrackingURL(
 			this.<String>getColumnOriginalValue("trackingURL"));
+		commerceShippingMethodImpl.setTypeSettings(
+			this.<String>getColumnOriginalValue("typeSettings"));
 
 		return commerceShippingMethodImpl;
 	}
@@ -1214,6 +1253,14 @@ public class CommerceShippingMethodModelImpl
 			commerceShippingMethodCacheModel.trackingURL = null;
 		}
 
+		commerceShippingMethodCacheModel.typeSettings = getTypeSettings();
+
+		String typeSettings = commerceShippingMethodCacheModel.typeSettings;
+
+		if ((typeSettings != null) && (typeSettings.length() == 0)) {
+			commerceShippingMethodCacheModel.typeSettings = null;
+		}
+
 		return commerceShippingMethodCacheModel;
 	}
 
@@ -1294,12 +1341,14 @@ public class CommerceShippingMethodModelImpl
 	private long _imageId;
 	private double _priority;
 	private String _trackingURL;
+	private String _typeSettings;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CommerceShippingMethod, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -1340,6 +1389,7 @@ public class CommerceShippingMethodModelImpl
 		_columnOriginalValues.put("imageId", _imageId);
 		_columnOriginalValues.put("priority", _priority);
 		_columnOriginalValues.put("trackingURL", _trackingURL);
+		_columnOriginalValues.put("typeSettings", _typeSettings);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1392,6 +1442,8 @@ public class CommerceShippingMethodModelImpl
 		columnBitmasks.put("priority", 8192L);
 
 		columnBitmasks.put("trackingURL", 16384L);
+
+		columnBitmasks.put("typeSettings", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

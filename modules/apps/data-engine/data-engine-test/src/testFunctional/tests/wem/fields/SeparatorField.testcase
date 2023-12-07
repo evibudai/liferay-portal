@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -24,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,7 +35,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. Delete Separator Field (sing kebab on the top of the field)"
-	@priority = "5"
+	@priority = 5
 	test DeleteSeparatorOnBuilder {
 		property portal.acceptance = "false";
 
@@ -57,7 +57,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. Duplicate Separator Field (using kebab on the top of the field)"
-	@priority = "4"
+	@priority = 4
 	test DuplicateSeparatorOnBuilder {
 		property portal.acceptance = "false";
 
@@ -77,7 +77,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. Edit the label and help text of Separator Field"
-	@priority = "5"
+	@priority = 5
 	test EditLabelAndHelpTextOfSeparator {
 		property portal.acceptance = "false";
 
@@ -100,7 +100,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. Edit Field Reference with valid and invalid characters"
-	@priority = "4"
+	@priority = 4
 	test EditReferenceOfSeparatorWithValidAndInvalidCharacters {
 		DataEngine.editFieldReference(
 			assertFieldReference = "EditedSeparator",
@@ -126,8 +126,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. Verify Repeatable behavior on Web Content"
-	@priority = "5"
+	@priority = 5
 	test RepeatSeparatorOnWebContent {
+		property ci.retries.disabled = "true";
+
 		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "Separator");
 
 		WebContentStructures.saveCP();
@@ -136,7 +138,7 @@ definition {
 
 		DataEngine.assertFieldRepeated(
 			fieldName = "Separator",
-			index = "1");
+			index = 1);
 
 		WebContentStructures.saveCP();
 
@@ -154,7 +156,7 @@ definition {
 
 		DataEngine.assertFieldRepeated(
 			fieldName = "Separator",
-			index = "2");
+			index = 2);
 	}
 
 }

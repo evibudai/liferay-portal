@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.display.context;
@@ -18,12 +9,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexNameBuilder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSet;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReader;
-
-import java.util.Optional;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -53,7 +41,7 @@ public class EditSynonymSetsDisplayBuilder {
 		EditSynonymSetsDisplayContext editSynonymSetsDisplayContext =
 			new EditSynonymSetsDisplayContext();
 
-		_synonymSetOptional = _getSynonymSetOptional(_getCompanyId());
+		_synonymSet = _getSynonymSet(_getCompanyId());
 
 		_setBackURL(editSynonymSetsDisplayContext);
 		_setData(editSynonymSetsDisplayContext);
@@ -86,23 +74,31 @@ public class EditSynonymSetsDisplayBuilder {
 		return ParamUtil.getString(_httpServletRequest, "redirect");
 	}
 
-	private Optional<SynonymSet> _getSynonymSetOptional(long companyId) {
-		SynonymSetIndexName synonymSetIndexName =
-			_synonymSetIndexNameBuilder.getSynonymSetIndexName(companyId);
+	private SynonymSet _getSynonymSet(long companyId) {
+		String synonymSetId = ParamUtil.getString(
+			_renderRequest, "synonymSetId", null);
 
-		return Optional.ofNullable(
-			ParamUtil.getString(_renderRequest, "synonymSetId", null)
-		).flatMap(
-			id -> _synonymSetIndexReader.fetchOptional(synonymSetIndexName, id)
-		);
+		if (synonymSetId == null) {
+			return null;
+		}
+
+		return _synonymSetIndexReader.fetch(
+			_synonymSetIndexNameBuilder.getSynonymSetIndexName(companyId),
+			synonymSetId);
 	}
 
 	private String _getSynonymSets() {
-		return _synonymSetOptional.map(
-			SynonymSet::getSynonyms
-		).orElse(
-			StringPool.BLANK
-		);
+		if (_synonymSet == null) {
+			return StringPool.BLANK;
+		}
+
+		String synonyms = _synonymSet.getSynonyms();
+
+		if (synonyms == null) {
+			return StringPool.BLANK;
+		}
+
+		return synonyms;
 	}
 
 	private void _setBackURL(
@@ -145,17 +141,18 @@ public class EditSynonymSetsDisplayBuilder {
 	private void _setSynonymSetId(
 		EditSynonymSetsDisplayContext editSynonymSetsDisplayContext) {
 
-		_synonymSetOptional.ifPresent(
-			synonymSet -> editSynonymSetsDisplayContext.setSynonymSetId(
-				synonymSet.getSynonymSetDocumentId()));
+		if (_synonymSet != null) {
+			editSynonymSetsDisplayContext.setSynonymSetId(
+				_synonymSet.getSynonymSetDocumentId());
+		}
 	}
 
 	private final HttpServletRequest _httpServletRequest;
 	private final Portal _portal;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
+	private SynonymSet _synonymSet;
 	private final SynonymSetIndexNameBuilder _synonymSetIndexNameBuilder;
 	private final SynonymSetIndexReader _synonymSetIndexReader;
-	private Optional<SynonymSet> _synonymSetOptional;
 
 }

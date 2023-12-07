@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.util;
@@ -19,6 +10,7 @@ import com.liferay.diff.DiffVersionsInfo;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.journal.configuration.JournalGroupServiceConfiguration;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
@@ -26,6 +18,8 @@ import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.util.comparator.ArticleVersionComparator;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -36,45 +30,37 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.subscription.service.SubscriptionLocalServiceUtil;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletSession;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Tom Wang
  */
 public class JournalUtil {
-
-	public static final int MAX_STACK_SIZE = 20;
-
-	public static void addRecentArticle(
-		PortletRequest portletRequest, JournalArticle article) {
-
-		if (article != null) {
-			Stack<JournalArticle> stack = _getRecentArticles(portletRequest);
-
-			stack.push(article);
-		}
-	}
 
 	public static DiffVersionsInfo getDiffVersionsInfo(
 		long groupId, String articleId, double sourceVersion,
@@ -291,6 +277,54 @@ public class JournalUtil {
 		return false;
 	}
 
+	public static boolean isClassNameIdDefault(JournalArticle journalArticle) {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
+
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
+
+		long classNameId = BeanPropertiesUtil.getLong(
+			journalArticle, "classNameId",
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT);
+
+		if (portletRequest != null) {
+			if (ParamUtil.getLong(portletRequest, "classNameId", classNameId) <=
+					JournalArticleConstants.CLASS_NAME_ID_DEFAULT) {
+
+				return true;
+			}
+
+			return false;
+		}
+
+		String portletId = ParamUtil.getString(httpServletRequest, "p_p_id");
+
+		if (Validator.isNotNull(portletId)) {
+			classNameId = ParamUtil.getLong(
+				httpServletRequest,
+				PortalUtil.getPortletNamespace(portletId) + "classNameId",
+				classNameId);
+		}
+
+		if (classNameId <= JournalArticleConstants.CLASS_NAME_ID_DEFAULT) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public static boolean isEditDefaultValues(JournalArticle article) {
+		if (!isClassNameIdDefault(article)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public static boolean isIncludeVersionHistory() {
 		try {
 			JournalServiceConfiguration journalServiceConfiguration =
@@ -359,71 +393,6 @@ public class JournalUtil {
 
 		return SubscriptionLocalServiceUtil.isSubscribed(
 			companyId, userId, DDMStructure.class.getName(), ddmStructureId);
-	}
-
-	public static void removeRecentArticle(
-		PortletRequest portletRequest, String articleId, double version) {
-
-		Stack<JournalArticle> stack = _getRecentArticles(portletRequest);
-
-		Iterator<JournalArticle> iterator = stack.iterator();
-
-		while (iterator.hasNext()) {
-			JournalArticle journalArticle = iterator.next();
-
-			String journalArticleId = journalArticle.getArticleId();
-
-			if (journalArticleId.equals(articleId) &&
-				((journalArticle.getVersion() == version) || (version == 0))) {
-
-				iterator.remove();
-			}
-		}
-	}
-
-	public static class FiniteUniqueStack<E> extends Stack<E> {
-
-		@Override
-		public E push(E item) {
-			if (contains(item)) {
-				if (!item.equals(peek())) {
-					remove(item);
-
-					super.push(item);
-				}
-			}
-			else if (size() < _maxSize) {
-				super.push(item);
-			}
-
-			return item;
-		}
-
-		private FiniteUniqueStack(int maxSize) {
-			_maxSize = maxSize;
-		}
-
-		private final int _maxSize;
-
-	}
-
-	private static Stack<JournalArticle> _getRecentArticles(
-		PortletRequest portletRequest) {
-
-		PortletSession portletSession = portletRequest.getPortletSession();
-
-		Stack<JournalArticle> recentArticles =
-			(Stack<JournalArticle>)portletSession.getAttribute(
-				WebKeys.JOURNAL_RECENT_ARTICLES);
-
-		if (recentArticles == null) {
-			recentArticles = new FiniteUniqueStack<>(MAX_STACK_SIZE);
-
-			portletSession.setAttribute(
-				WebKeys.JOURNAL_RECENT_ARTICLES, recentArticles);
-		}
-
-		return recentArticles;
 	}
 
 	private static Layout _getViewableLayout(

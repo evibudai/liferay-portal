@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.expando.service.impl;
@@ -27,6 +18,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceMode;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.expando.service.base.ExpandoValueServiceBaseImpl;
 
@@ -49,7 +41,8 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 		ExpandoColumnPermissionUtil.check(
 			getPermissionChecker(),
 			_expandoColumnLocalService.getColumn(
-				companyId, className, tableName, columnName),
+				companyId, _classNameLocalService.getClassNameId(className),
+				tableName, columnName),
 			ActionKeys.UPDATE);
 
 		return expandoValueLocalService.addValue(
@@ -63,11 +56,12 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 			String columnName, long classPK, String data)
 		throws PortalException {
 
+		ExpandoColumn expandoColumn = _expandoColumnLocalService.getColumn(
+			companyId, _classNameLocalService.getClassNameId(className),
+			tableName, columnName);
+
 		ExpandoColumnPermissionUtil.check(
-			getPermissionChecker(),
-			_expandoColumnLocalService.getColumn(
-				companyId, className, tableName, columnName),
-			ActionKeys.UPDATE);
+			getPermissionChecker(), expandoColumn, ActionKeys.UPDATE);
 
 		return expandoValueLocalService.addValue(
 			companyId, className, tableName, columnName, classPK, data);
@@ -99,11 +93,12 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 				companyId, className, tableName, columnNames, classPK);
 
 		for (String columnName : columnNames) {
+			ExpandoColumn expandoColumn = _expandoColumnLocalService.getColumn(
+				companyId, _classNameLocalService.getClassNameId(className),
+				tableName, columnName);
+
 			if (!ExpandoColumnPermissionUtil.contains(
-					getPermissionChecker(),
-					_expandoColumnLocalService.getColumn(
-						companyId, className, tableName, columnName),
-					ActionKeys.VIEW)) {
+					getPermissionChecker(), expandoColumn, ActionKeys.VIEW)) {
 
 				attributeValues.remove(columnName);
 			}
@@ -162,6 +157,9 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 
 		return JSONUtil.put("data", data);
 	}
+
+	@BeanReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
 
 	@BeanReference(type = ExpandoColumnLocalService.class)
 	private ExpandoColumnLocalService _expandoColumnLocalService;

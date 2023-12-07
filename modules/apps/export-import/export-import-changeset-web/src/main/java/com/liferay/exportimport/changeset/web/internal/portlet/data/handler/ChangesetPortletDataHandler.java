@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.exportimport.changeset.web.internal.portlet.data.handler;
 
-import com.liferay.asset.kernel.model.AssetLink;
-import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
-import com.liferay.asset.kernel.service.AssetLinkLocalService;
+import com.liferay.asset.link.model.AssetLink;
+import com.liferay.asset.link.model.adapter.StagedAssetLink;
+import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.changeset.model.ChangesetCollection;
 import com.liferay.changeset.model.ChangesetEntry;
 import com.liferay.changeset.service.ChangesetCollectionLocalService;
@@ -47,19 +38,17 @@ import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.model.TypedModel;
-import com.liferay.portal.kernel.model.adapter.ModelAdapterUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portal.model.adapter.util.ModelAdapterUtil;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
 
@@ -183,22 +172,20 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 				return getExportDataRootElementString(rootElement);
 			}
 
-			Stream<StagedModel> stream = changeset.stream();
-
-			stream.filter(
-				Objects::nonNull
-			).forEach(
-				stagedModel -> {
-					try {
-						StagedModelDataHandlerUtil.exportStagedModel(
-							portletDataContext, stagedModel);
-					}
-					catch (PortletDataException portletDataException) {
-						throw new ExportImportRuntimeException(
-							portletDataException);
-					}
+			for (StagedModel stagedModel : changeset.getStagedModels()) {
+				if (stagedModel == null) {
+					continue;
 				}
-			);
+
+				try {
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, stagedModel);
+				}
+				catch (PortletDataException portletDataException) {
+					throw new ExportImportRuntimeException(
+						portletDataException);
+				}
+			}
 		}
 
 		_exportAssetLinks(portletDataContext);
@@ -269,7 +256,6 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 				RestrictionsFactoryUtil.eq(
 					"changesetCollectionId",
 					changesetCollection.getChangesetCollectionId())));
-
 		actionableDynamicQuery.setPerformActionMethod(
 			(ActionableDynamicQuery.PerformActionMethod<ChangesetEntry>)
 				changesetEntry -> _exportStagedModel(

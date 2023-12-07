@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.portlet.action.test;
 
 import com.liferay.analytics.reports.test.util.MockContextUtil;
-import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockHttpUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockThemeDisplayUtil;
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.UnsafeSupplier;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.exception.NestableRuntimeException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -37,11 +29,13 @@ import com.liferay.portal.kernel.test.portlet.MockLiferayResourceRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceResponse;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.MockHttp;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -80,33 +74,52 @@ public class GetTotalReadsMVCResourceCommandTest {
 
 	@Test
 	public void testServeResponse() throws Exception {
-		ReflectionTestUtil.setFieldValue(
-			_mvcResourceCommand, "_http",
-			MockHttpUtil.geHttp(
-				HashMapBuilder.<String, UnsafeSupplier<String, Exception>>put(
-					"/api/1.0/pages/read-count", () -> "12345"
-				).put(
-					"/api/1.0/pages/read-counts",
-					() -> {
-						LocalDate localDate = LocalDate.now();
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						AnalyticsConfiguration.class.getName(),
+						HashMapDictionaryBuilder.<String, Object>put(
+							"liferayAnalyticsDataSourceId",
+							RandomTestUtil.nextLong()
+						).put(
+							"liferayAnalyticsEnableAllGroupIds", true
+						).put(
+							"liferayAnalyticsFaroBackendSecuritySignature",
+							RandomTestUtil.randomString()
+						).put(
+							"liferayAnalyticsFaroBackendURL",
+							"http://" + RandomTestUtil.randomString()
+						).build())) {
 
-						return () -> JSONUtil.put(
-							"histogram",
-							JSONUtil.put(
-								JSONUtil.put(
-									"key",
-									localDate.format(
-										DateTimeFormatter.ISO_LOCAL_DATE)
+			ReflectionTestUtil.setFieldValue(
+				_mvcResourceCommand, "_http",
+				new MockHttp(
+					HashMapBuilder.
+						<String, UnsafeSupplier<String, Exception>>put(
+							"/api/1.0/pages/read-count", () -> "12345"
+						).put(
+							"/api/1.0/pages/read-counts",
+							() -> {
+								LocalDate localDate = LocalDate.now();
+
+								return () -> JSONUtil.put(
+									"histogram",
+									JSONUtil.put(
+										JSONUtil.put(
+											"key",
+											localDate.format(
+												DateTimeFormatter.
+													ISO_LOCAL_DATE)
+										).put(
+											"value", 5
+										))
 								).put(
 									"value", 5
-								))
-						).put(
-							"value", 5
-						).toString();
-					}
-				).build()));
+								).toString();
+							}
+						).build()));
 
-		try {
 			MockContextUtil.testWithMockContext(
 				MockContextUtil.MockContext.builder(
 				).build(),
@@ -152,7 +165,7 @@ public class GetTotalReadsMVCResourceCommandTest {
 	public void testServeResponseWithError() throws Exception {
 		ReflectionTestUtil.setFieldValue(
 			_mvcResourceCommand, "_http",
-			MockHttpUtil.geHttp(
+			new MockHttp(
 				Collections.singletonMap(
 					"/api/1.0/pages/read-count",
 					() -> {
@@ -228,8 +241,5 @@ public class GetTotalReadsMVCResourceCommandTest {
 
 	@Inject(filter = "mvc.command.name=/analytics_reports/get_total_reads")
 	private MVCResourceCommand _mvcResourceCommand;
-
-	@Inject
-	private Portal _portal;
 
 }

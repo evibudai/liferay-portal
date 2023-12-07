@@ -1,6 +1,7 @@
 definition {
 
-	macro formsFlowPhone {
+	@summary = "Default summary"
+	macro formsFlowPhone() {
 		RaylifeMobile.typeAllBasicsInfoFieldsPhone();
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
@@ -18,7 +19,8 @@ definition {
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 	}
 
-	macro typeAllBasicsInfoFieldsPhone {
+	@summary = "Default summary"
+	macro typeAllBasicsInfoFieldsPhone() {
 		RaylifeContactInfo.typeBasicsInfoFields(
 			label = "basics.businessInformation.firstName",
 			value = "FirstName");
@@ -53,13 +55,14 @@ definition {
 
 		RaylifeContactInfo.typeBasicsInfoFields(
 			label = "basics.businessInformation.business.location.zip",
-			value = "12345");
+			value = 12345);
 	}
 
-	macro typeAllBusinessInfoFieldsPhone {
+	@summary = "Default summary"
+	macro typeAllBusinessInfoFieldsPhone() {
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -94,7 +97,8 @@ definition {
 			value = "3%");
 	}
 
-	macro typeAllEmployeesInfoFieldsPhone {
+	@summary = "Default summary"
+	macro typeAllEmployeesInfoFieldsPhone() {
 		Click(
 			field = "Does your business have a Federal Employer Identification Number (FEIN)?",
 			locator1 = "RaylifeMobile#BUTTON_YES_FEIN_PHONE");
@@ -107,7 +111,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -117,7 +121,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.partTimeEmployees",
-			value = "200");
+			value = 200);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -138,14 +142,15 @@ definition {
 			value = "$111.00");
 	}
 
-	macro typeAllPropertyInfoFieldsPhone {
+	@summary = "Default summary"
+	macro typeAllPropertyInfoFieldsPhone() {
 		Click(
 			field = "Do you own the building at Address?",
 			locator1 = "Raylife#BUTTON_YES_OPTION");
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.stories",
-			value = "3");
+			value = 3);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -163,7 +168,7 @@ definition {
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.yearBuilding",
-			value = "2015");
+			value = 2015);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 

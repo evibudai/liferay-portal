@@ -49,33 +49,38 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Bug: LRAC-7832 | Automation ID: LRAC-9867 | Test Summary: Check fieldBlurred and fieldFocused is triggered when interacting with form fields (Text, Date, Date and Time, Image, Rich Text, Upload and Color[by color picker and color field])"
-	@priority = "4"
+	@priority = 4
 	test CheckFieldBlurredAndFieldFocusedWhenInteractingWithFields {
+		property portal.upstream = "quarantine";
+
+		// AC Quarantine Reason: Test fix upload field text change
+		// AC Quarantine Ticket: LRAC-12435
+
 		property proxy.server.enabled = "true";
 
 		var fieldNameList = "Date,Image,Rich Text,Upload,Color,Date and Time";
 
 		task ("Edit the form to add more fields") {
-			FormsAdmin.openFormsAdmin(siteURLKey = "site-name");
+			FormsAdminNavigator.openFormsAdmin(siteURLKey = "site-name");
 
 			FormsAdminNavigator.gotoEditFormByName(formName = "Created Form Name");
 
-			DataEngine.addFields(fieldNameList = "${fieldNameList}");
+			DataEngine.addFields(fieldNameList = ${fieldNameList});
 
 			Form.save();
 		}
@@ -94,19 +99,19 @@ definition {
 				}
 
 				task ("Click to focus on form fields") {
-					if ("${fieldName}" == "Date and Time") {
+					if (${fieldName} == "Date and Time") {
 						Click(
 							key_fieldName = "DateAndTime",
 							locator1 = "FormFields#GENERIC_INPUT_FIELD");
 					}
-					else if ("${fieldName}" == "Rich Text") {
+					else if (${fieldName} == "Rich Text") {
 						FormFields.addRichTextContent(
 							content = "",
 							fieldLabel = "Rich Text");
 					}
-					else if (("${fieldName}" != "Rich Text") && ("${fieldName}" != "Date and Time")) {
+					else if ((${fieldName} != "Rich Text") && (${fieldName} != "Date and Time")) {
 						Click(
-							key_fieldName = "${fieldName}",
+							key_fieldName = ${fieldName},
 							locator1 = "FormFields#GENERIC_INPUT_FIELD");
 					}
 				}
@@ -120,7 +125,7 @@ definition {
 						applicationId = "Form",
 						eventId = "fieldFocused",
 						property = "fieldName",
-						value = "${fieldName}");
+						value = ${fieldName});
 				}
 
 				task ("Start Har recording") {
@@ -128,7 +133,7 @@ definition {
 				}
 
 				task ("Close image or upload field modal") {
-					if (("${fieldName}" == "Image") || ("${fieldName}" == "Upload")) {
+					if ((${fieldName} == "Image") || (${fieldName} == "Upload")) {
 						IFrame.closeFrame();
 					}
 				}
@@ -148,7 +153,7 @@ definition {
 						applicationId = "Form",
 						eventId = "fieldBlurred",
 						property = "fieldName",
-						value = "${fieldName}");
+						value = ${fieldName});
 				}
 			}
 		}
@@ -160,21 +165,21 @@ definition {
 				}
 
 				task ("Click on the date field calendar icon") {
-					if ("${fieldName}" == "Date") {
+					if (${fieldName} == "Date") {
 						Click(locator1 = "FormFields#DATE_CALENDAR");
 					}
 				}
 
 				task ("Click on the 'select' button in the image and upload fields") {
-					if (("${fieldName}" == "Image") || ("${fieldName}" == "Upload")) {
+					if ((${fieldName} == "Image") || (${fieldName} == "Upload")) {
 						Click(
-							key_fieldName = "${fieldName}",
+							key_fieldName = ${fieldName},
 							locator1 = "Button#SELECT_BUTTON");
 					}
 				}
 
 				task ("Click on color picker") {
-					if ("${fieldName}" == "Color") {
+					if (${fieldName} == "Color") {
 						Click(locator1 = "Button#COLOR_PICKER_BUTTON");
 					}
 				}
@@ -188,7 +193,7 @@ definition {
 						applicationId = "Form",
 						eventId = "fieldFocused",
 						property = "fieldName",
-						value = "${fieldName}");
+						value = ${fieldName});
 				}
 
 				task ("Start Har recording") {
@@ -196,13 +201,13 @@ definition {
 				}
 
 				task ("Click on the date field calendar icon") {
-					if ("${fieldName}" == "Date") {
+					if (${fieldName} == "Date") {
 						Click(locator1 = "FormFields#DATE_CALENDAR");
 					}
 				}
 
 				task ("Close image or upload field modal") {
-					if (("${fieldName}" == "Image") || ("${fieldName}" == "Upload")) {
+					if ((${fieldName} == "Image") || (${fieldName} == "Upload")) {
 						IFrame.closeFrame();
 					}
 				}
@@ -222,15 +227,20 @@ definition {
 						applicationId = "Form",
 						eventId = "fieldBlurred",
 						property = "fieldName",
-						value = "${fieldName}");
+						value = ${fieldName});
 				}
 			}
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8684 | Test Summary: Check fieldBlurred is triggered when navigating the form hitting the tab key"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CheckFieldBlurredTriggeredWhenNavigateOutOfFieldViaTabKey {
+
+		// AC Bug: Unable to search using special characters
+		// AC Bug ticket: LRAC-13715
+
 		property proxy.server.enabled = "true";
 
 		task ("Get formId of form") {
@@ -240,7 +250,7 @@ definition {
 		}
 
 		task ("Get published form URL") {
-			FormsAdmin.openFormsAdmin(siteURLKey = "site-name");
+			FormsAdminNavigator.openFormsAdmin(siteURLKey = "site-name");
 
 			FormsAdminNavigator.gotoEditFormByName(formName = "Created Form Name");
 
@@ -258,15 +268,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as new user") {
@@ -274,7 +284,7 @@ definition {
 		}
 
 		task ("Navigate to the published form") {
-			Navigator.openSpecificURL(url = "${publishedFormURL}");
+			Navigator.openSpecificURL(url = ${publishedFormURL});
 
 			FormPortlet.waitFormRenderer(text = "Submit");
 		}
@@ -309,7 +319,7 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldBlurred",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the focusDuration of fieldBlurred event is greater than 0 ms") {
@@ -319,8 +329,8 @@ definition {
 				property = "focusDuration");
 
 			TestUtils.isGreaterThan(
-				actual = "${focusDuration}",
-				expected = "0");
+				actual = ${focusDuration},
+				expected = 0);
 		}
 
 		task ("View the fieldName of fieldBlurred event") {
@@ -336,19 +346,24 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldBlurred",
 				property = "page",
-				value = "0");
+				value = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8683 | Test Summary: Check fieldBlurred triggers when a previously focused field loses focus and check its properties (see reference document in comments)"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test CheckFieldBlurredWhenFieldLosesFocus {
+
+		// AC Bug: Unable to search using special characters
+		// AC Bug ticket: LRAC-13715
+
 		property proxy.server.enabled = "true";
 
 		task ("Get formId of form") {
@@ -366,15 +381,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as new user") {
@@ -416,7 +431,7 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldBlurred",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the focusDuration of fieldBlurred event is greater than 0 ms") {
@@ -426,8 +441,8 @@ definition {
 				property = "focusDuration");
 
 			TestUtils.isGreaterThan(
-				actual = "${focusDuration}",
-				expected = "0");
+				actual = ${focusDuration},
+				expected = 0);
 		}
 
 		task ("View the fieldName of fieldBlurred event") {
@@ -443,19 +458,24 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldBlurred",
 				property = "page",
-				value = "0");
+				value = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8685 | Test Summary: Check fieldFocused is triggered when a field is focused (selected) and check its properties (see reference document in comments)"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CheckFieldFocusedTriggeredWhenFieldIsFocused {
+
+		// AC Bug: Unable to search using special characters
+		// AC Bug ticket: LRAC-13715
+
 		property proxy.server.enabled = "true";
 
 		task ("Get formId of form") {
@@ -473,15 +493,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as new user") {
@@ -513,7 +533,7 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldFocused",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the fieldName of fieldFocused event") {
@@ -529,19 +549,24 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldFocused",
 				property = "page",
-				value = "0");
+				value = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8690 | Test Summary: Check fieldFocused is triggered when navigating the form hitting the tab key"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test CheckFieldFocusedWhenNavigatingToFieldViaTabKey {
+
+		// AC Bug: Unable to search using special characters
+		// AC Bug ticket: LRAC-13715
+
 		property proxy.server.enabled = "true";
 
 		task ("Get formId of form") {
@@ -551,7 +576,7 @@ definition {
 		}
 
 		task ("Get published form URL") {
-			FormsAdmin.openFormsAdmin(siteURLKey = "site-name");
+			FormsAdminNavigator.openFormsAdmin(siteURLKey = "site-name");
 
 			FormsAdminNavigator.gotoEditFormByName(formName = "Created Form Name");
 
@@ -569,15 +594,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as new user") {
@@ -585,7 +610,7 @@ definition {
 		}
 
 		task ("Navigate to the published form") {
-			Navigator.openSpecificURL(url = "${publishedFormURL}");
+			Navigator.openSpecificURL(url = ${publishedFormURL});
 
 			FormPortlet.waitFormRenderer(text = "Submit");
 		}
@@ -614,7 +639,7 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldFocused",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the fieldName of fieldFocused event") {
@@ -630,19 +655,24 @@ definition {
 				applicationId = "Form",
 				eventId = "fieldFocused",
 				property = "page",
-				value = "0");
+				value = 0);
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8691 | Test Summary: Check formSubmitted triggers after submitting a form and check its properties (see reference document in comments)"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test CheckFormSubmittedAfterSubmittingForm {
+
+		// AC Bug: Unable to search using special characters
+		// AC Bug ticket: LRAC-13715
+
 		property proxy.server.enabled = "true";
 
 		task ("Get formId of form") {
@@ -660,15 +690,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as new user") {
@@ -696,19 +726,24 @@ definition {
 				applicationId = "Form",
 				eventId = "formSubmitted",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8682 | Test Summary: Check formViewed triggers and check its properties (see reference document in comments)"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test CheckFormViewedProperties {
+
+		// AC Bug: Unable to search using special characters
+		// AC Bug ticket: LRAC-13715
+
 		property proxy.server.enabled = "true";
 
 		task ("Get formId of form") {
@@ -718,7 +753,7 @@ definition {
 		}
 
 		task ("Get published form URL") {
-			FormsAdmin.openFormsAdmin(siteURLKey = "site-name");
+			FormsAdminNavigator.openFormsAdmin(siteURLKey = "site-name");
 
 			FormsAdminNavigator.gotoEditFormByName(formName = "Created Form Name");
 
@@ -736,15 +771,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as new user") {
@@ -756,7 +791,7 @@ definition {
 		}
 
 		task ("Navigate to the published form") {
-			Navigator.openSpecificURL(url = "${publishedFormURL}");
+			Navigator.openSpecificURL(url = ${publishedFormURL});
 		}
 
 		task ("Wait for sending requests") {
@@ -768,7 +803,7 @@ definition {
 				applicationId = "Form",
 				eventId = "formViewed",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the title of formViewed event") {
@@ -781,14 +816,19 @@ definition {
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8692 | Test Summary: Check pageViewed is triggered with formViewed"
-	@priority = "4"
+	@ignore = "true"
+	@priority = 4
 	test CheckPageViewedIsTriggeredWithFormViewed {
+
+		// AC Bug: Unable to search using special characters
+		// AC Bug ticket: LRAC-13715
+
 		property proxy.server.enabled = "true";
 
 		task ("Get formId of form") {
@@ -798,7 +838,7 @@ definition {
 		}
 
 		task ("Get published form URL") {
-			FormsAdmin.openFormsAdmin(siteURLKey = "site-name");
+			FormsAdminNavigator.openFormsAdmin(siteURLKey = "site-name");
 
 			FormsAdminNavigator.gotoEditFormByName(formName = "Created Form Name");
 
@@ -816,15 +856,15 @@ definition {
 
 			ACNavigation.goToSettings();
 
-			var expectedChannelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var expectedChannelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Get the DXP Instance ID in AC") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", "Combined");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "Combined");
 
-			var dataSourceName = StringUtil.trim("${dataSourceName}");
+			var dataSourceName = StringUtil.trim(${dataSourceName});
 
-			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = "${dataSourceName}");
+			var expectedDataSourceId = ACSettings.getDXPInstanceId(dataSourceName = ${dataSourceName});
 		}
 
 		task ("Sign in as new user") {
@@ -842,7 +882,7 @@ definition {
 		}
 
 		task ("Navigate to the published form") {
-			Navigator.openSpecificURL(url = "${publishedFormURL}");
+			Navigator.openSpecificURL(url = ${publishedFormURL});
 		}
 
 		task ("Wait for sending requests") {
@@ -854,7 +894,7 @@ definition {
 				applicationId = "Form",
 				eventId = "formViewed",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the title of formViewed event") {
@@ -870,7 +910,7 @@ definition {
 				applicationId = "Form",
 				eventId = "pageViewed",
 				property = "formId",
-				value = "${formId}");
+				value = ${formId});
 		}
 
 		task ("View the page of pageViewed event") {
@@ -878,7 +918,7 @@ definition {
 				applicationId = "Form",
 				eventId = "pageViewed",
 				property = "page",
-				value = "0");
+				value = 0);
 		}
 
 		task ("View the title of pageViewed event") {
@@ -891,8 +931,8 @@ definition {
 
 		task ("View the request common properties value") {
 			ACUtils.assertRequestCommonPropertiesValue(
-				expectedChannelId = "${expectedChannelId}",
-				expectedDataSourceId = "${expectedDataSourceId}");
+				expectedChannelId = ${expectedChannelId},
+				expectedDataSourceId = ${expectedDataSourceId});
 		}
 	}
 

@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.currency.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link CommerceCurrencyLocalService}.
@@ -454,10 +446,25 @@ public class CommerceCurrencyLocalServiceWrapper
 
 	@Override
 	public void importDefaultValues(
+			boolean updateExchangeRate,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws Exception {
 
-		_commerceCurrencyLocalService.importDefaultValues(serviceContext);
+		_commerceCurrencyLocalService.importDefaultValues(
+			updateExchangeRate, serviceContext);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.commerce.currency.model.CommerceCurrency>
+				searchCommerceCurrencies(
+					long companyId, String keywords,
+					java.util.LinkedHashMap<String, Object> params, int start,
+					int end, com.liferay.portal.kernel.search.Sort sort)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceCurrencyLocalService.searchCommerceCurrencies(
+			companyId, keywords, params, start, end, sort);
 	}
 
 	@Override
@@ -501,7 +508,7 @@ public class CommerceCurrencyLocalServiceWrapper
 	@Override
 	public com.liferay.commerce.currency.model.CommerceCurrency
 			updateCommerceCurrency(
-				long commerceCurrencyId, String code,
+				long commerceCurrencyId,
 				java.util.Map<java.util.Locale, String> nameMap, String symbol,
 				java.math.BigDecimal rate,
 				java.util.Map<java.util.Locale, String> formatPatternMap,
@@ -512,7 +519,7 @@ public class CommerceCurrencyLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceCurrencyLocalService.updateCommerceCurrency(
-			commerceCurrencyId, code, nameMap, symbol, rate, formatPatternMap,
+			commerceCurrencyId, nameMap, symbol, rate, formatPatternMap,
 			maxFractionDigits, minFractionDigits, roundingMode, primary,
 			priority, active, serviceContext);
 	}
@@ -541,6 +548,11 @@ public class CommerceCurrencyLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_commerceCurrencyLocalService.updateExchangeRates();
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _commerceCurrencyLocalService.getBasePersistence();
 	}
 
 	@Override

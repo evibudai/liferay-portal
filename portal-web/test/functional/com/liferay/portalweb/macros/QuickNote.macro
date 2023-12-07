@@ -1,6 +1,7 @@
 definition {
 
-	macro addPG {
+	@summary = "Default summary"
+	macro addPG(noteContent = null) {
 		AssertTextEquals(
 			locator1 = "QuickNote#NOTE_CONTENT",
 			value1 = "Click to edit me...");
@@ -11,13 +12,13 @@ definition {
 
 		Type(
 			locator1 = "TextArea#FIELD_INPUT",
-			value1 = "${noteContent}");
+			value1 = ${noteContent});
 
 		Click(locator1 = "QuickNote#OK_BUTTON");
 
 		AssertTextEquals(
 			locator1 = "QuickNote#NOTE_CONTENT",
-			value1 = "${noteContent}");
+			value1 = ${noteContent});
 	}
 
 }

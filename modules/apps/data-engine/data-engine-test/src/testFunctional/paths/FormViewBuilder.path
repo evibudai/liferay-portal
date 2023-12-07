@@ -23,6 +23,11 @@
 	<td>//span[contains(text(),'${changeAppLanguageTo}')]</td>
 	<td></td>
 </tr>
+<tr>
+	<td>TRANSLATED_TAB_INDEX</td>
+	<td>xpath=(//*[@id='translationManager']//button[span[text()='${key_language}']])[${key_index}]</td>
+	<td></td>
+</tr>
 
 <!--FIELDS_SIDEBAR-->
 
@@ -69,6 +74,11 @@
 <tr>
 	<td>FIELD_LABEL_OPTION</td>
 	<td>//span[contains(text(),'${labelOption}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FIELD_LABEL_OPTION_N</td>
+	<td>xpath=(//span[contains(text(),'${labelOption}')])[${key_indexNumber}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -203,7 +213,7 @@
 </tr>
 <tr>
 	<td>SIDEBAR_ADVANCED_PREDEFINED_SELECT_FROM_LIST</td>
-	<td>//div[contains(@data-field-name,'predefinedValue')]//div[contains(@class,'form-builder-select-field')]</td>
+	<td>//div[contains(@data-field-name,'predefinedValue')]//button[contains(@aria-labelledby, 'predefinedValue')] | //div[contains(@data-field-name,'predefinedValue')]//label[text()='Predefined Value']//following-sibling::div//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -233,7 +243,7 @@
 </tr>
 <tr>
 	<td>PREDEFINED_VALUE_AT_FORM_SELECTLIST</td>
-	<td>//label[contains(text(),'${key_fieldName}')]/..//div[contains(@class,'option-selected') and contains(text(),'${key_fieldValue}')]</td>
+	<td>//label[contains(text(),'${key_fieldName}')]/following-sibling::div//button[text()='${key_fieldValue}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -259,7 +269,7 @@
 
 <tr>
 	<td>SELECT_FIELD</td>
-	<td>//label[contains(text(),'${key_fieldName}')]/following-sibling::div[contains(@class,'ddm-select-dropdown') or contains(@class,'input-group-container')]</td>
+	<td>//label[contains(text(),'${key_fieldName}')]/following-sibling::div//div[contains(@class,'option-selected')] | //label[contains(text(),'${key_fieldName}')]/following-sibling::div//button[contains(@class,'form-control')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -287,12 +297,12 @@
 </tr>
 <tr>
 	<td>CHECKBOX_PREDEFINED</td>
-	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//button[contains(@label,'${key_fieldName}')]//input[contains(@type,'checkbox')]</td>
+	<td>//span[text()='${key_fieldName}']//parent::span/preceding-sibling::input[not(@disabled)]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CHECKBOX_PREDEFINED_LIST</td>
-	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//button[contains(@label,'${key_fieldName}')]</td>
+	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//span[normalize-space(text())='${key_fieldName}']/../preceding-sibling::input</td>
 	<td></td>
 </tr>
 

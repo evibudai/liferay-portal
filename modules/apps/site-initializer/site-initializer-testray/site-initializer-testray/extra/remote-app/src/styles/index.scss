@@ -9,6 +9,7 @@ liferay-remote-app-testray {
 	@import 'typography';
 
 	@import 'components/avatar';
+	@import 'components/avatar/assign_to_me';
 	@import 'components/breadcrumb_finder';
 	@import 'components/chart';
 	@import 'components/code';
@@ -20,14 +21,5 @@ liferay-remote-app-testray {
 	@import 'components/progress_bar';
 	@import 'components/table';
 	@import 'components/tablechart';
-
-	.subnav-tbar-primary {
-		background-color: white;
-
-		.result-filter {
-			background-color: $color-primary-dark;
-			border-color: $color-primary-dark;
-			color: $color-white;
-		}
-	}
+	@import 'components/testflow_loading';
 }

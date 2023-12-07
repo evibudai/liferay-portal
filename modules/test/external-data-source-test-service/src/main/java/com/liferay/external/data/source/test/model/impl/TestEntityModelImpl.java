@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.external.data.source.test.model.impl;
@@ -196,37 +187,51 @@ public class TestEntityModelImpl
 	public Map<String, Function<TestEntity, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<TestEntity, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<TestEntity, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<TestEntity, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<TestEntity, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<TestEntity, Object>>();
-		Map<String, BiConsumer<TestEntity, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<TestEntity, ?>>();
+		private static final Map<String, Function<TestEntity, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("id", TestEntity::getId);
-		attributeSetterBiConsumers.put(
-			"id", (BiConsumer<TestEntity, Long>)TestEntity::setId);
-		attributeGetterFunctions.put("data", TestEntity::getData);
-		attributeSetterBiConsumers.put(
-			"data", (BiConsumer<TestEntity, String>)TestEntity::setData);
+		static {
+			Map<String, Function<TestEntity, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<TestEntity, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put("id", TestEntity::getId);
+			attributeGetterFunctions.put("data", TestEntity::getData);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<TestEntity, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<TestEntity, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<TestEntity, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"id", (BiConsumer<TestEntity, Long>)TestEntity::setId);
+			attributeSetterBiConsumers.put(
+				"data", (BiConsumer<TestEntity, String>)TestEntity::setData);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -484,8 +489,9 @@ public class TestEntityModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<TestEntity, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<TestEntity, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

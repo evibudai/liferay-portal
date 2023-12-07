@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
-import ClayDropDown from '@clayui/drop-down';
+import {Option, Picker} from '@clayui/core';
 import ClayIcon from '@clayui/icon';
+import ClayLabel from '@clayui/label';
+import Layout from '@clayui/layout';
 import classNames from 'classnames';
 import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
@@ -83,14 +76,20 @@ const TRANSLATION_STATUS_LANGUAGE = {
 	),
 };
 
+const TRANSLATION_STATUS_DISPLAY_TYPE = {
+	[TRANSLATION_STATUS_TYPE.default]: 'info',
+	[TRANSLATION_STATUS_TYPE.translated]: 'success',
+	[TRANSLATION_STATUS_TYPE.translating]: 'warning',
+	[TRANSLATION_STATUS_TYPE.untranslated]: 'warning',
+};
+
 const TranslationItem = ({
 	editableValuesLength,
 	isDefault,
-	language,
 	languageIcon,
 	languageId,
 	languageLabel,
-	onClick,
+	selectedLanguageId,
 	translatedValuesLength,
 }) => {
 	const status = getTranslationStatus({
@@ -99,32 +98,83 @@ const TranslationItem = ({
 		translatedValuesLength,
 	});
 
-	return (
-		<ClayDropDown.Item onClick={onClick} symbolLeft={languageIcon}>
-			{languageId === language.languageId ? (
-				<strong>{languageLabel}</strong>
-			) : (
-				<span>{languageLabel}</span>
-			)}
+	const statusText =
+		TRANSLATION_STATUS_TYPE[status] === TRANSLATION_STATUS_TYPE.translating
+			? `${TRANSLATION_STATUS_LANGUAGE[status]} ${sub(
+					Liferay.Language.get('x-of-x'),
+					translatedValuesLength,
+					editableValuesLength
+			  )}`
+			: `${TRANSLATION_STATUS_LANGUAGE[status]}`;
 
-			<span className="dropdown-item-indicator-end page-editor__translation__label-wrapper">
-				<div
-					className={classNames(
-						'page-editor__translation__label label',
-						status
-					)}
+	return (
+		<Layout.ContentRow>
+			<span className="sr-only">
+				{`${sub(
+					Liferay.Language.get('x-language-x'),
+					languageLabel,
+					statusText
+				)}`}
+			</span>
+
+			<Layout.ContentCol expand>
+				<Layout.ContentRow className="align-items-center d-flex">
+					<ClayIcon
+						aria-hidden="true"
+						className="c-mt-0"
+						symbol={languageIcon}
+					/>
+
+					<span
+						aria-hidden="true"
+						className={classNames('c-ml-2', {
+							'font-weight-bold':
+								selectedLanguageId === languageId,
+						})}
+					>
+						{languageLabel}
+					</span>
+				</Layout.ContentRow>
+			</Layout.ContentCol>
+
+			<Layout.ContentCol>
+				<ClayLabel
+					aria-hidden="true"
+					displayType={TRANSLATION_STATUS_DISPLAY_TYPE[status]}
 				>
 					{TRANSLATION_STATUS_LANGUAGE[status]}
 
 					{TRANSLATION_STATUS_TYPE[status] ===
 						TRANSLATION_STATUS_TYPE.translating &&
 						` ${translatedValuesLength}/${editableValuesLength}`}
-				</div>
-			</span>
-		</ClayDropDown.Item>
+				</ClayLabel>
+			</Layout.ContentCol>
+		</Layout.ContentRow>
 	);
 };
 
+const Trigger = React.forwardRef(
+	({languageIcon, w3cLanguageId, ...otherProps}, ref) => (
+		<ClayButton
+			{...otherProps}
+			aria-label={sub(
+				Liferay.Language.get('select-a-language.-current-language-x'),
+				w3cLanguageId
+			)}
+			className=""
+			data-title={sub(
+				Liferay.Language.get('select-x'),
+				Liferay.Language.get('language')
+			)}
+			displayType="secondary"
+			monospaced
+			ref={ref}
+			size="sm"
+		>
+			<ClayIcon symbol={languageIcon} />
+		</ClayButton>
+	)
+);
 export default function Translation({
 	availableLanguages,
 	defaultLanguageId,
@@ -173,62 +223,46 @@ export default function Translation({
 	const {languageIcon, w3cLanguageId} = availableLanguages[languageId];
 
 	return (
-		<ClayDropDown
-			closeOnClick
-			hasLeftSymbols
-			hasRightSymbols
-			menuElementAttrs={{
-				className: 'page-editor__translation',
-				containerProps: {
-					className: 'cadmin',
-				},
+		<Picker
+			UNSAFE_menuClassName="cadmin translation-picker"
+			as={Trigger}
+			items={languageValues}
+			languageIcon={languageIcon}
+			onSelectionChange={(key) => {
+				dispatch(
+					updateLanguageId({
+						languageId: key,
+					})
+				);
 			}}
-			trigger={
-				<ClayButton
-					className="btn-monospaced"
-					displayType="secondary"
-					size="sm"
-				>
-					<ClayIcon symbol={languageIcon} />
-
-					<span className="sr-only">
-						{sub(
-							Liferay.Language.get(
-								'select-a-language.-current-language-x'
-							),
-							w3cLanguageId
-						)}
-					</span>
-				</ClayButton>
-			}
+			selectedKey={languageId}
+			w3cLanguageId={w3cLanguageId}
 		>
-			<ClayDropDown.ItemList>
-				{languageValues.map((language) => (
+			{(language) => (
+				<Option
+					id={language.languageId}
+					key={language.languageId}
+					textValue={
+						availableLanguages[language.languageId].w3cLanguageId
+					}
+				>
 					<TranslationItem
 						editableValuesLength={editableValues.length}
 						isDefault={language.languageId === defaultLanguageId}
-						key={language.languageId}
-						language={language}
 						languageIcon={
 							availableLanguages[language.languageId].languageIcon
 						}
-						languageId={languageId}
+						languageId={language.languageId}
 						languageLabel={
 							availableLanguages[language.languageId]
 								.w3cLanguageId
 						}
-						onClick={() => {
-							dispatch(
-								updateLanguageId({
-									languageId: language.languageId,
-								})
-							);
-						}}
+						selectedLanguageId={languageId}
 						translatedValuesLength={language.values.length}
 					/>
-				))}
-			</ClayDropDown.ItemList>
-		</ClayDropDown>
+				</Option>
+			)}
+		</Picker>
 	);
 }
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.template.web.internal.util;
@@ -25,8 +16,11 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.taglib.security.PermissionsURLTag;
 import com.liferay.template.constants.TemplatePortletKeys;
 import com.liferay.template.web.internal.security.permissions.resource.DDMTemplatePermission;
@@ -51,7 +45,7 @@ public class DDMTemplateActionDropdownItemsProvider {
 		_liferayPortletResponse = liferayPortletResponse;
 		_tabs1 = tabs1;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -85,6 +79,14 @@ public class DDMTemplateActionDropdownItemsProvider {
 								_ddmTemplate.getClassNameId(),
 								_ddmTemplate.getResourceClassNameId()),
 						_getCopyDDMTemplateActionUnsafeConsumer()
+					).build());
+				dropdownGroupItem.setSeparator(true);
+			}
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						_getViewDDMTemplateUsagesActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
 			}
@@ -133,7 +135,7 @@ public class DDMTemplateActionDropdownItemsProvider {
 				).buildPortletURL());
 			dropdownItem.setIcon("copy");
 			dropdownItem.setLabel(
-				LanguageUtil.get(_httpServletRequest, "copy"));
+				LanguageUtil.get(_httpServletRequest, "make-a-copy"));
 		};
 	}
 
@@ -153,6 +155,8 @@ public class DDMTemplateActionDropdownItemsProvider {
 				).setParameter(
 					"ddmTemplateId", _ddmTemplate.getTemplateId()
 				).buildString());
+			dropdownItem.putData(
+				"usagesCount", String.valueOf(_getUsagesCount()));
 			dropdownItem.setIcon("trash");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "delete"));
@@ -198,6 +202,35 @@ public class DDMTemplateActionDropdownItemsProvider {
 			dropdownItem.setIcon("password-policies");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "permissions"));
+		};
+	}
+
+	private int _getUsagesCount() {
+		return PortletPreferenceValueLocalServiceUtil.
+			getPortletPreferenceValuesCount(
+				_ddmTemplate.getCompanyId(), "displayStyle",
+				PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
+					HtmlUtil.escape(_ddmTemplate.getTemplateKey()));
+	}
+
+	private UnsafeConsumer<DropdownItem, Exception>
+		_getViewDDMTemplateUsagesActionUnsafeConsumer() {
+
+		return dropdownItem -> {
+			dropdownItem.setDisabled(_getUsagesCount() == 0);
+			dropdownItem.setHref(
+				PortletURLBuilder.createRenderURL(
+					_liferayPortletResponse
+				).setMVCPath(
+					"/view_widget_templates_usages.jsp"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ddmTemplateId", _ddmTemplate.getTemplateId()
+				).buildPortletURL());
+			dropdownItem.setIcon("list-ul");
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "view-usages"));
 		};
 	}
 

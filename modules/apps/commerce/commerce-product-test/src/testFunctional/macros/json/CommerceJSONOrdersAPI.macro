@@ -1,22 +1,37 @@
 definition {
 
-	macro _addCommerceOrder {
+	@summary = "Default summary"
+	macro _addCommerceOrder(deliveryTermName = null, shippingAddressName = null, billingAddressName = null, orderItems = null, paymentTermName = null, accountEntryName = null) {
 		Variables.assertDefined(parameterList = "${accountEntryName},${orderStatus},${paymentStatus}");
 
-		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
-		var baseURL = "${baseURL}";
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (!(isSet(billingAddressName))) {
-			var billingAddressId = "0";
+			var billingAddressId = 0;
 		}
 		else {
 			var billingAddressId = CommerceJSONAccountsAPI._getAccountAddressIdByAddressName(
-				accountEntryId = "${accountEntryId}",
-				addressName = "${billingAddressName}");
+				accountEntryId = ${accountEntryId},
+				addressName = ${billingAddressName});
+		}
+
+		if (!(isSet(deliveryTermName))) {
+			var deliveryTermId = 0;
+		}
+		else {
+			var deliveryTermId = CommerceJSONTermsAndConditionsAPI._getCommerceTermsAndConditionsIdByName(termsAndConditionsName = ${deliveryTermName});
+		}
+
+		if (isSet(orderDate)) {
+			var orderDate = '''"orderDate": "${orderDate}",''';
+		}
+		else {
+			var orderDate = "";
 		}
 
 		var commerceChannelIds = CommerceJSONChannelsAPI._getCommerceChannelIds();
@@ -27,22 +42,22 @@ definition {
 				var orderItemsCustomFields = "";
 			}
 
-			for (var orderItem : list "${orderItems}") {
-				var itemSku = StringUtil.extractFirst("${orderItem}", ":");
-				var itemQuantity = StringUtil.extractLast("${orderItem}", ":");
-				var itemSkuId = CommerceJSONProductsAPI._getSKUId(productSKU = "${itemSku}");
+			for (var orderItem : list ${orderItems}) {
+				var itemSku = StringUtil.extractFirst(${orderItem}, ":");
+				var itemQuantity = StringUtil.extractLast(${orderItem}, ":");
+				var itemSkuId = CommerceJSONProductsAPI._getSKUId(productSKU = ${itemSku});
 				var orderItemCustomFieldsList = "";
 
-				if ("${orderItemsCustomFields}" != "") {
-					var orderItemCustomFields = StringUtil.extractFirst("${orderItemsCustomFields}", ";");
+				if (${orderItemsCustomFields} != "") {
+					var orderItemCustomFields = StringUtil.extractFirst(${orderItemsCustomFields}, ";");
 
-					var orderItemsCustomFields = StringUtil.replaceFirst("${orderItemsCustomFields}", "${orderItemCustomFields};", "");
+					var orderItemsCustomFields = StringUtil.replaceFirst(${orderItemsCustomFields}, "${orderItemCustomFields};", "");
 
-					for (var orderItemCustomField : list "${orderItemCustomFields}") {
-						var orderItemCustomFieldKey = StringUtil.extractFirst("${orderItemCustomField}", ":");
-						var orderItemCustomFieldValue = StringUtil.extractLast("${orderItemCustomField}", ":");
+					for (var orderItemCustomField : list ${orderItemCustomFields}) {
+						var orderItemCustomFieldKey = StringUtil.extractFirst(${orderItemCustomField}, ":");
+						var orderItemCustomFieldValue = StringUtil.extractLast(${orderItemCustomField}, ":");
 
-						if ("${orderItemCustomFieldsList}" != "") {
+						if (${orderItemCustomFieldsList} != "") {
 							var customFieldsComma = ",";
 						}
 						else {
@@ -65,7 +80,7 @@ definition {
 					}
 				}
 
-				if ("${orderItemsList}" != "") {
+				if (${orderItemsList} != "") {
 					var comma = ",";
 				}
 				else {
@@ -83,46 +98,65 @@ definition {
 			}
 		}
 
+		if (!(isSet(orderStatus))) {
+			var orderStatus = 2;
+		}
+
 		if (!(isSet(paymentMethod))) {
 			var paymentMethod = "";
 		}
 		else {
-			var paymentMethod = CommerceUtilities.convertStringToKey(string = "${paymentMethod}");
+			var paymentMethod = CommerceUtilities.convertStringToKey(string = ${paymentMethod});
 		}
 
 		if (!(isSet(paymentStatus))) {
-			var paymentStatus = "1";
+			var paymentStatus = 1;
 		}
 
-		if (!(isSet(orderStatus))) {
-			var orderStatus = "2";
+		if (!(isSet(paymentTermName))) {
+			var paymentTermId = 0;
+		}
+		else {
+			var paymentTermId = CommerceJSONTermsAndConditionsAPI._getCommerceTermsAndConditionsIdByName(termsAndConditionsName = ${paymentTermName});
+		}
+
+		if (!(isSet(printedNote))) {
+			var printedNote = "";
+		}
+
+		if (!(isSet(purchaseOrderNumber))) {
+			var purchaseOrderNumber = "";
+		}
+
+		if (!(isSet(requestedDeliveryDate))) {
+			var requestedDeliveryDate = "";
 		}
 
 		if (!(isSet(shippingAddressName))) {
-			var shippingAddressId = "0";
+			var shippingAddressId = 0;
 		}
 		else {
 			var shippingAddressId = CommerceJSONAccountsAPI._getAccountAddressIdByAddressName(
-				accountEntryId = "${accountEntryId}",
-				addressName = "${shippingAddressName}");
+				accountEntryId = ${accountEntryId},
+				addressName = ${shippingAddressName});
 		}
 
 		if (isSet(shippingOption)) {
 			if (!(isSet(shippingMethod))) {
-				if (("${shippingOption}" == "Standard Delivery") || ("${shippingOption}" == "Expedited Delivery")) {
+				if ((${shippingOption} == "Standard Delivery") || (${shippingOption} == "Expedited Delivery")) {
 					var shippingMethod = "fixed";
 				}
 			}
 			else {
-				if ("${shippingMethod}" == "Flat Rate") {
+				if (${shippingMethod} == "Flat Rate") {
 					var shippingMethod = "fixed";
 				}
-				else if ("${shippingMethod}" == "Variable Rate") {
+				else if (${shippingMethod} == "Variable Rate") {
 					var shippingMethod = "by-weight";
 				}
 			}
 
-			var shippingOption = CommerceUtilities.convertStringToKey(string = "${shippingOption}");
+			var shippingOption = CommerceUtilities.convertStringToKey(string = ${shippingOption});
 		}
 		else {
 			var shippingMethod = "";
@@ -133,78 +167,127 @@ definition {
 
 		echo("Channel id: ${commerceChannelIds}");
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orders \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
-  			-H 'Content-Type: application/json' \
-  			-d '{
-				  	"accountId": "${accountEntryId}",
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"accountId": "${accountEntryId}",
 					"billingAddressId": ${billingAddressId},
-            		"channelId": "${commerceChannelIds}",
-            		"currencyCode": "USD",
-            		"paymentStatus": "${paymentStatus}",
-					"paymentMethod": "${paymentMethod}",
+					"channelId": "${commerceChannelIds}",
+					"currencyCode": "USD",
+					"deliveryTermId": ${deliveryTermId},${orderDate}
 					"orderItems": [${orderItemsList}],
 					"orderStatus": ${orderStatus},
+					"paymentMethod": "${paymentMethod}",
+					"paymentStatus": "${paymentStatus}",
+					"paymentTermId": ${paymentTermId},
+					"printedNote": "${printedNote}",
+					"purchaseOrderNumber": "${purchaseOrderNumber}",
+					"requestedDeliveryDate": "${requestedDeliveryDate}",
 					"shippingAddressId": ${shippingAddressId},
 					"shippingMethod": "${shippingMethod}",
 					"shippingOption": "${shippingOption}"
 				}'
 		''';
 
-		var orderId = JSONCurlUtil.post("${curl}", "$..['id']");
+		var orderId = JSONCurlUtil.post(${curl}, "$..['id']");
 
 		echo("Order id: ${orderId}");
 
-		return "${orderId}";
+		return ${orderId};
 	}
 
-	macro _addCommerceOrderItem {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _addCommerceOrderItem(productSKU = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (!(isSet(quantity))) {
-			var quantity = "1";
+			var quantity = 1;
 		}
 
-		var skuId = CommerceJSONProductsAPI._getSKUId(productSKU = "${productSKU}");
+		var skuId = CommerceJSONProductsAPI._getSKUId(productSKU = ${productSKU});
 		var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
 
 		echo("SKU id: ${skuId}");
 
 		echo("Order id: ${orderId}");
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId}/orderItems \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
-  			-H 'Content-Type: application/json' \
-  			-d '{
-				  	"quantity": "${quantity}",
-      				"skuId": "${skuId}"
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"quantity": "${quantity}",
+					"skuId": "${skuId}"
 				}'
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _addOrderRule {
-		Variables.assertDefined(parameterList = "${orderRuleName},${orderRuleType},${applyTo}");
+	@summary = "Default summary"
+	macro _addCommerceOrderNote(content = null) {
+		Variables.assertDefined(parameterList = ${content});
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		var applyTo = StringUtil.lowerCase("${applyTo}");
-		var orderRuleType = StringUtil.lowerCase("${orderRuleType}");
+		if (!(isSet(orderId))) {
+			var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
+		}
 
-		var orderRuleType = StringUtil.replace("${orderRuleType}", " ", "-");
+		if (!(isSet(restricted))) {
+			var restricted = "false";
+		}
+
+		if (!(isSet(userEmail))) {
+			var userEmail = "test";
+		}
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId}/orderNotes \
+				-u ${userEmail}@liferay.com:test \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"content": "${content}",
+					"restricted": ${restricted}
+				}'
+		''';
+
+		var responseBody = JSONCurlUtil.post(${curl});
+
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro _addOrderRule(orderRuleName = null) {
+		Variables.assertDefined(parameterList = "${orderRuleName},${orderRuleType},${applyTo}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var applyTo = StringUtil.lowerCase(${applyTo});
+		var orderRuleType = StringUtil.lowerCase(${orderRuleType});
+
+		var orderRuleType = StringUtil.replace(${orderRuleType}, " ", "-");
 
 		if (!(isSet(amount))) {
 			var amount = "0.00";
@@ -219,35 +302,38 @@ definition {
 		}
 
 		if (!(isSet(priority))) {
-			var priority = "0";
+			var priority = 0;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/order-rules \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
- 			-H 'Content-Type: application/json' \
-  			-d '{	
-  				  "active": true,
-				  "description": "${orderRuleDescription}",
-				  "name": "${orderRuleName}",
-				  "neverExpire": true,
-				  "priority": ${priority},
-				  "type": "${orderRuleType}",
-				  "typeSettings": "${orderRuleType}-field-amount=${amount}\n${orderRuleType}-field-apply-to=${orderRuleType}-field-apply-to-order-${applyTo}\n${orderRuleType}-field-currency-code=${currencyCode}\n"
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"active": true,
+					"description": "${orderRuleDescription}",
+					"name": "${orderRuleName}",
+					"neverExpire": true,
+					"priority": ${priority},
+					"type": "${orderRuleType}",
+					"typeSettings": "${orderRuleType}-field-amount=${amount}\n${orderRuleType}-field-apply-to=${orderRuleType}-field-apply-to-order-${applyTo}\n${orderRuleType}-field-currency-code=${currencyCode}\n"
 				}'
-			''';
+		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 	}
 
-	macro _addOrderType {
-		Variables.assertDefined(parameterList = "${orderTypeName}");
+	@summary = "Default summary"
+	macro _addOrderType(orderTypeName = null) {
+		Variables.assertDefined(parameterList = ${orderTypeName});
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (!(isSet(active))) {
@@ -263,7 +349,7 @@ definition {
 		}
 
 		if (!(isSet(displayOrder))) {
-			var displayOrder = "0";
+			var displayOrder = 0;
 		}
 
 		if (!(isSet(neverExpire))) {
@@ -274,13 +360,15 @@ definition {
 			var orderTypeDescription = "Test Order Type Description";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/order-types \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
- 			-H 'Content-Type: application/json' \
-  			-d '{
-  					"active": ${active},
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"active": ${active},
 					"customFields": {},
 					"description": {
 						"en_US": "${orderTypeDescription}"
@@ -293,38 +381,41 @@ definition {
 					},
 					"neverExpire": ${neverExpire},
 					"workflowStatusInfo": {
-					"code": 0,
-					"label": "approved",
-					"label_i18n": "Approved"
+						"code": 0,
+						"label": "approved",
+						"label_i18n": "Approved"
 					}
 				}'
-			''';
+		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 	}
 
-	macro _deleteAllCommerceOrders {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _deleteAllCommerceOrders() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var ordersCount = CommerceJSONOrdersAPI._getCommerceOrdersCount();
 
-		if ("${ordersCount}" != "0") {
-			var orderIds = CommerceJSONOrdersAPI._getCommerceOrderIds(orderCount = "${ordersCount}");
+		if (${ordersCount} != 0) {
+			var orderIds = CommerceJSONOrdersAPI._getCommerceOrderIds(orderCount = ${ordersCount});
 
-			for (var orderId : list "${orderIds}") {
+			for (var orderId : list ${orderIds}) {
 				echo("Deleting Commerce order with id: ${orderId}");
+
+				var userLoginInfo = JSONUtil2.formatJSONUser();
 
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId} \
-					-u test@liferay.com:test \
-					-H 'accept: application/json' \
+						-u ${userLoginInfo} \
+						-H 'accept: application/json' \
 				''';
 
-				JSONCurlUtil.delete("${curl}");
+				JSONCurlUtil.delete(${curl});
 			}
 		}
 		else {
@@ -332,124 +423,438 @@ definition {
 		}
 	}
 
-	macro _deleteAllCommerceOrdersAndCheck {
+	@summary = "Default summary"
+	macro _deleteAllCommerceOrdersAndCheck() {
 		CommerceJSONOrdersAPI._deleteAllCommerceOrders();
 
 		var orderCount = CommerceJSONOrdersAPI._getCommerceOrdersCount();
 
 		TestUtils.assertEquals(
-			actual = "${orderCount}",
-			expected = "0");
+			actual = ${orderCount},
+			expected = 0);
 	}
 
-	macro _getCommerceOrder {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceOrder() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orders \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var orderId = JSONCurlUtil.get("${curl}", "$..['id']");
+		var orderId = JSONCurlUtil.get(${curl}, "$..['id']");
 
 		echo("The Commerce order id is: ${orderId}");
 
-		return "${orderId}";
+		return ${orderId};
 	}
 
-	macro _getCommerceOrderIds {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceOrderIds(orderCount = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(orderCount)) {
-			var ordersCount = "${orderCount}";
+			var ordersCount = ${orderCount};
 		}
 		else {
-			var ordersCount = "100";
+			var ordersCount = 100;
+		}
+
+		if (!(isSet(email))) {
+			var email = "test@liferay.com";
+		}
+
+		if (!(isSet(password))) {
+			var password = "test";
 		}
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orders?pageSize=${ordersCount} \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${email}:${password} \
+				-H 'accept: application/json' \
 		''';
 
-		var orderIds = JSONCurlUtil.get("${curl}", "$..['id']");
+		var orderIds = JSONCurlUtil.get(${curl}, "$..['id']");
 
-		return "${orderIds}";
+		return ${orderIds};
 	}
 
-	macro _getCommerceOrderItemCustomFieldValue {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceOrderItemCustomFieldValue(sku = null, customFieldName = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId}/orderItems \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var orderItemCustomFieldValue = JSONCurlUtil.get("${curl}", "$..items[?(@['sku'] == '${sku}')].customFields[?(@['name'] == '${customFieldName}')].customValue.data");
+		var orderItemCustomFieldValue = JSONCurlUtil.get(${curl}, "$..items[?(@['sku'] == '${sku}')].customFields[?(@['name'] == '${customFieldName}')].customValue.data");
 
 		echo("The Order Item Custom Field Value is: ${orderItemCustomFieldValue}");
 
-		return "${orderItemCustomFieldValue}";
+		return ${orderItemCustomFieldValue};
 	}
 
-	macro _getCommerceOrdersCount {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceOrderItems(orderItemCount = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (isSet(orderItemCount)) {
+			var orderItemsCount = ${orderItemCount};
+		}
+		else {
+			var orderItemsCount = 100;
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-order/v1.0/orderItems?pageSize=${orderItemsCount} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var responseBody = JSONCurlUtil.get(${curl});
+
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceOrderObjectActionIdByName(objectDefinitionName = null, objectActionName = null) {
+		Variables.assertDefined(parameterList = "${objectActionName},${objectDefinitionName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = ${objectDefinitionName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/object-admin/v1.0/object-definitions/${objectDefinitionId}/object-actions \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+		''';
+
+		var objectActionId = JSONCurlUtil.get(${curl}, "$.items[?(@['name'] == '${objectActionName}')].['id']");
+
+		return ${objectActionId};
+	}
+
+	@summary = "Default summary"
+	macro _getCommerceOrdersCount() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(email))) {
+			var email = "test@liferay.com";
+		}
+
+		if (!(isSet(password))) {
+			var password = "test";
 		}
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orders \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${email}:${password} \
+				-H 'accept: application/json' \
 		''';
 
-		var ordersCount = JSONCurlUtil.get("${curl}", "$['totalCount']");
+		var ordersCount = JSONCurlUtil.get(${curl}, "$['totalCount']");
 
 		echo("The Commerce orders count is: ${ordersCount}");
 
-		return "${ordersCount}";
+		return ${ordersCount};
 	}
 
-	macro _updateCommerceOrderERC {
-		Variables.assertDefined(parameterList = "${externalReferenceCode}");
+	@summary = "Default summary"
+	macro _getOrderById(orderId = null, parameterValue = null) {
+		Variables.assertDefined(parameterList = ${orderId});
 
-		var baseURL = "${baseURL}";
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (isSet(parameter)) {
+			var parameter = "?${parameter}=${parameterValue}";
+		}
+		else {
+			var parameter = "";
+		}
+
+		if (!(isSet(email))) {
+			var email = "test@liferay.com";
+		}
+
+		if (!(isSet(password))) {
+			var password = "test";
+		}
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId}${parameter} \
+				-u ${email}:${password} \
+				-H 'accept: application/json' \
+		''';
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
+	}
+
+	@summary = "Default summary"
+	macro _getOrderItemById(orderId = null) {
+		Variables.assertDefined(parameterList = ${orderId});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(email))) {
+			var email = "test@liferay.com";
+		}
+
+		if (!(isSet(password))) {
+			var password = "test";
+		}
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId}/orderItems \
+				-u ${email}:${password} \
+				-H 'accept: application/json' \
+		''';
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
+	}
+
+	@summary = "This macro can be used to update the existing orders via API"
+	macro _patchCommerceOrder() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(orderStatus))) {
+			var orderStatus = 2;
+		}
+
+		var commerceChannelIds = CommerceJSONChannelsAPI._getCommerceChannelIds();
+		var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId} \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"channelId": ${commerceChannelIds},
+					"orderStatus": ${orderStatus}
+				}'
+		''';
+
+		JSONCurlUtil.patch(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _patchCommerceOrderNote(orderNoteId = null) {
+		Variables.assertDefined(parameterList = ${orderNoteId});
+
+		var baseURL = ${baseURL};
+		var fieldsList = ListUtil.newList();
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (isSet(content)) {
+			var content = '''"content": "${content}"''';
+
+			ListUtil.add(${fieldsList}, ${content});
+		}
+
+		if (isSet(restricted)) {
+			var restricted = '''"restricted": ${restricted}''';
+
+			ListUtil.add(${fieldsList}, ${restricted});
+		}
+
+		if (!(isSet(userEmail))) {
+			var userEmail = "test";
+		}
+
+		var fieldsList = ListUtil.toString(${fieldsList});
+
+		echo("Fieldlist: ${fieldsList}");
+
+		var payload = CommerceUtilities.getPayloadFromFieldsList(fieldsList = ${fieldsList});
+
+		echo("payload: ${payload}");
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-order/v1.0/orderNotes/${orderNoteId} \
+				-u ${userEmail}@liferay.com:test \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{${payload}}'
+		''';
+
+		var responseBody = JSONCurlUtil.patch(${curl});
+
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro _patchCommerceOrderObjectAction(objectDefinitionName = null, objectActionName = null) {
+		Variables.assertDefined(parameterList = "${objectActionName},${objectDefinitionName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var objectActionId = CommerceJSONOrdersAPI._getCommerceOrderObjectActionIdByName(
+			objectActionName = ${objectActionName},
+			objectDefinitionName = ${objectDefinitionName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		if (!(isSet(active))) {
+			var active = "false";
+		}
+
+		var curl = '''
+			${baseURL}/o/object-admin/v1.0/object-actions/${objectActionId} \
+				-u ${userLoginInfo} \
+				-H accept: application/json \
+				-H Content-Type: application/json \
+				-d {
+					"active": ${active}
+				}
+		''';
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.patch(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _updateCommerceOrderERC(externalReferenceCode = null) {
+		Variables.assertDefined(parameterList = ${externalReferenceCode});
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (!(isSet(commerceOrderId))) {
 			var commerceOrderId = CommerceJSONOrdersAPI._getCommerceOrder();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${baseURL}/api/jsonws/commerce.commerceorder/update-commerce-order-external-reference-code \
-			-u test@liferay.com:test \
-			-d externalReferenceCode='${externalReferenceCode}' \
-			-d commerceOrderId=${commerceOrderId}
+				-u ${userLoginInfo} \
+				-d externalReferenceCode='${externalReferenceCode}' \
+				-d commerceOrderId=${commerceOrderId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro getCommerceOrderItemFieldByJSONPath(jsonPath = null) {
+		Variables.assertDefined(parameterList = ${jsonPath});
+
+		if (!(isSet(responseBody))) {
+			var responseBody = CommerceJSONOrdersAPI._getCommerceOrderItems();
+		}
+
+		var fieldValue = JSONUtil.getWithJSONPath(${responseBody}, ${jsonPath});
+
+		return ${fieldValue};
+	}
+
+	@summary = "Default summary"
+	macro getOrderField(password = null, orderId = null, parameter = null, jsonPath = null, parameterValue = null, email = null) {
+		Variables.assertDefined(parameterList = "${jsonPath},${orderId}");
+
+		var response = CommerceJSONOrdersAPI._getOrderById(
+			email = ${email},
+			orderId = ${orderId},
+			parameter = ${parameter},
+			parameterValue = ${parameterValue},
+			password = ${password});
+
+		var fieldValue = JSONUtil.getWithJSONPath(${response}, ${jsonPath});
+
+		return ${fieldValue};
+	}
+
+	@summary = "Default summary"
+	macro getOrderItemField(password = null, orderId = null, jsonPath = null, email = null) {
+		Variables.assertDefined(parameterList = "${jsonPath},${orderId}");
+
+		if (!(isSet(response))) {
+			var response = CommerceJSONOrdersAPI._getOrderItemById(
+				email = ${email},
+				orderId = ${orderId},
+				password = ${password});
+		}
+
+		var fieldValue = JSONUtil.getWithJSONPath(${response}, ${jsonPath});
+
+		return ${fieldValue};
+	}
+
+	@summary = "Default summary"
+	macro getOrderNotePostRequestField(field = null, orderId = null, restricted = null, userEmail = null, content = null) {
+		Variables.assertDefined(parameterList = "${content},${field}");
+
+		var responseBody = CommerceJSONOrdersAPI._addCommerceOrderNote(
+			content = ${content},
+			orderId = ${orderId},
+			restricted = ${restricted},
+			userEmail = ${userEmail});
+
+		var fieldValue = JSONUtil.getWithJSONPath(${responseBody}, "$..['${field}']");
+
+		return ${fieldValue};
 	}
 
 }

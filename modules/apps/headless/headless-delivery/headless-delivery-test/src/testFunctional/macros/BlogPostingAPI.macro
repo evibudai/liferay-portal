@@ -1,6 +1,7 @@
 definition {
 
-	macro _createBlogPosting {
+	@summary = "Default summary"
+	macro _createBlogPosting(articleBody = null, headline = null) {
 		Variables.assertDefined(parameterList = "${headline},${articleBody}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -14,26 +15,27 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/blog-postings \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json \
-			-d {
-				"headline": "${headline}",
-				"externalReferenceCode": "${externalReferenceCode}",
-				"articleBody": "${articleBody}"
-			}
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d {
+					"headline": "${headline}",
+					"externalReferenceCode": "${externalReferenceCode}",
+					"articleBody": "${articleBody}"
+				}
 		''';
 
-		var curl = JSONCurlUtil.post("${curl}");
+		var curl = JSONCurlUtil.post(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro _createNBlogPostings {
+	@summary = "Default summary"
+	macro _createNBlogPostings(numberOfBlogPostings = null, createStrategy = null, importStrategy = null, testCase = null) {
 		Variables.assertDefined(parameterList = "${numberOfBlogPostings},${createStrategy}");
 
 		var body = BlogPostingAPI._createNBlogPostingsBody(
-			numberOfBlogPostings = "${numberOfBlogPostings}",
-			testCase = "${testCase}");
+			numberOfBlogPostings = ${numberOfBlogPostings},
+			testCase = ${testCase});
 		var portalURL = JSONCompany.getPortalURL();
 		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
 			groupName = "Guest",
@@ -41,17 +43,18 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/blog-postings/batch?createStrategy=${createStrategy}\&importStrategy=${importStrategy} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json \
-            -d ${body}
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d ${body}
 		''';
 
-		var curl = JSONCurlUtil.post("${curl}");
+		var curl = JSONCurlUtil.post(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro _createNBlogPostingsBody {
+	@summary = "Default summary"
+	macro _createNBlogPostingsBody(numberOfBlogPostings = null, testCase = null) {
 		if (!(isSet(headline))) {
 			var headline = "headline";
 		}
@@ -64,29 +67,24 @@ definition {
 			var externalReferenceCode = "erc";
 		}
 
-		if (!(isSet(testCase))) {
-			var testCase = "";
-		}
+		if ((${testCase} == "updateOneBlogPosting") || (${testCase} == "updateAllFields")) {
+			var response = BlogPostingAPI.getBlogPostings();
 
-		if (isSet(testCase)) {
-			if (("${testCase}" == "updateOneBlogPosting") || ("${testCase}" == "updateAllFields")) {
-				var response = BlogPostingAPI.getBlogPostings();
+			var existingHeadline = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
+				fieldName = "headline",
+				response = ${response});
+			var existingArticleBody = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
+				fieldName = "articleBody",
+				response = ${response});
+			var existingExternalReferenceCode = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
+				fieldName = "externalReferenceCode",
+				response = ${response});
+			var id = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
+				fieldName = "id",
+				response = ${response});
 
-				var existingHeadline = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
-					fieldName = "headline",
-					response = "${response}");
-				var existingArticleBody = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
-					fieldName = "articleBody",
-					response = "${response}");
-				var existingExternalReferenceCode = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
-					fieldName = "externalReferenceCode",
-					response = "${response}");
-				var id = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
-					fieldName = "id",
-					response = "${response}");
-
-				if ("${testCase}" == "updateOneBlogPosting") {
-					var body = '''
+			if (${testCase} == "updateOneBlogPosting") {
+				var body = '''
 						[
 							{
 								"headline": "${existingHeadline}",
@@ -100,9 +98,9 @@ definition {
 							}
 						]
 					''';
-				}
-				else if ("${testCase}" == "updateAllFields") {
-					var body = '''
+			}
+			else if (${testCase} == "updateAllFields") {
+				var body = '''
 						[
 							{
 								"headline": "headlineUpdated",
@@ -112,10 +110,10 @@ definition {
 							}
 						]
 					''';
-				}
 			}
-			else if ("${testCase}" == "incorrectData") {
-				var body = '''
+		}
+		else if (${testCase} == "incorrectData") {
+			var body = '''
 					[
 						{
 							"headline": "headline",
@@ -130,9 +128,9 @@ definition {
 						}
 					]
 				''';
-			}
-			else if ("${testCase}" == "nonExistingId") {
-				var body = '''
+		}
+		else if (${testCase} == "nonExistingId") {
+			var body = '''
 					[
 						{
 							"headline": "headlineUpdated",
@@ -142,61 +140,43 @@ definition {
 						}
 					]
 				''';
-			}
-			else {
-				var size = "${numberOfBlogPostings}";
-				var i = "0";
-				var body = '''
+		}
+		else {
+			var size = ${numberOfBlogPostings};
+			var i = 0;
+			var body = '''
 					[
 				''';
 
-				while (("${i}" != "${size}") && (maxIterations = "100")) {
-					var blogPostingBody = '''
+			while ((${i} != ${size}) && (maxIterations = "100")) {
+				var blogPostingBody = '''
 						{
 							"headline": "${headline}${i}",
 							"articleBody": "${articleBody}${i}",
 							"externalReferenceCode": "${externalReferenceCode}${i}"
 						}
 					''';
-					var j = ${i} + 1;
+				var j = ${i} + 1;
 
-					if ("${j}" == "${size}") {
-						var body = StringUtil.replace("${body}", "${body}", "${body}${blogPostingBody}]");
-					}
-					else {
-						var blogPostingBody = StringUtil.replace("${blogPostingBody}", "${blogPostingBody}", "${blogPostingBody},");
-
-						var body = StringUtil.replace("${body}", "${body}", "${body}${blogPostingBody}");
-					}
-
-					var i = ${i} + 1;
+				if (${j} == ${size}) {
+					var body = StringUtil.replace(${body}, ${body}, "${body}${blogPostingBody}]");
 				}
+				else {
+					var blogPostingBody = StringUtil.replace(${blogPostingBody}, ${blogPostingBody}, "${blogPostingBody},");
+
+					var body = StringUtil.replace(${body}, ${body}, "${body}${blogPostingBody}");
+				}
+
+				var i = ${i} + 1;
 			}
 		}
 
-		return "${body}";
+		return ${body};
 	}
 
-	macro _deleteBlogPosting {
-		Variables.assertDefined(parameterList = "${blogPostingId}");
-
-		var portalURL = JSONCompany.getPortalURL();
-		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-			groupName = "Guest",
-			site = "true");
-		var curl = '''
-			${portalURL}/o/headless-delivery/v1.0/blog-postings/${blogPostingId} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json
-		''';
-
-		var curl = JSONCurlUtil.delete("${curl}");
-
-		return "${curl}";
-	}
-
-	macro _deleteBlogPostingsBatch {
-		Variables.assertDefined(parameterList = "${body}");
+	@summary = "Default summary"
+	macro _deleteBlogPostingsBatch(body = null) {
+		Variables.assertDefined(parameterList = ${body});
 
 		var portalURL = JSONCompany.getPortalURL();
 		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
@@ -204,64 +184,50 @@ definition {
 			site = "true");
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/blog-postings/batch \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json \
-			-d ${body}
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d ${body}
 		''';
 
-		var curl = JSONCurlUtil.delete("${curl}");
+		var curl = JSONCurlUtil.delete(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro _getBlogPostings {
-		var portalURL = JSONCompany.getPortalURL();
-		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-			groupName = "Guest",
-			site = "true");
-
-		var curl = '''
-			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/blog-postings \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json
-		''';
-
-		var curl = JSONCurlUtil.get("${curl}");
-
-		return "${curl}";
-	}
-
-	macro _getFieldValueOfExistingBlogPosting {
+	@summary = "Default summary"
+	macro _getFieldValueOfExistingBlogPosting(fieldName = null, response = null) {
 		Variables.assertDefined(parameterList = "${response},${fieldName}");
 
-		var fieldValue = JSONUtil.getWithJSONPath("${response}", "$.items.[0].${fieldName}");
+		var fieldValue = JSONUtil.getWithJSONPath(${response}, "$.items.[0].${fieldName}");
 
-		return "${fieldValue}";
+		return ${fieldValue};
 	}
 
-	macro _updateBlogPosting {
+	@summary = "Default summary"
+	macro _updateBlogPosting(updateStrategy = null, numberOfBlogPostings = null, importStrategy = null, testCase = null) {
 		Variables.assertDefined(parameterList = "${numberOfBlogPostings},${updateStrategy}");
 
 		var body = BlogPostingAPI._createNBlogPostingsBody(
-			numberOfBlogPostings = "${numberOfBlogPostings}",
-			testCase = "${testCase}");
+			numberOfBlogPostings = ${numberOfBlogPostings},
+			testCase = ${testCase});
 		var portalURL = JSONCompany.getPortalURL();
 		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
 			groupName = "Guest",
 			site = "true");
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/blog-postings/batch?updateStrategy=${updateStrategy}\&importStrategy=${importStrategy} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json \
-            -d ${body}
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d ${body}
 		''';
 
-		var curl = JSONCurlUtil.put("${curl}");
+		var curl = JSONCurlUtil.put(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro _updateOneBlogPostingBodyParameter {
+	@summary = "Default summary"
+	macro _updateOneBlogPostingBodyParameter(updateStrategy = null, blogPostingId = null, bodyParameterValue = null, bodyParameterKey = null) {
 		Variables.assertDefined(parameterList = "${blogPostingId},${bodyParameterKey},${bodyParameterValue},${updateStrategy}");
 
 		var bodyKeyValuePair = '''"${bodyParameterKey}": "${bodyParameterValue}"''';
@@ -269,186 +235,208 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/blog-postings/batch?updateStrategy=${updateStrategy} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json \
-			-d [
-				{
-					${bodyKeyValuePair},
-					"id": "${blogPostingId}"
-				}
-			]
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d [
+					{
+						${bodyKeyValuePair},
+						"id": "${blogPostingId}"
+					}
+				]
 		''';
 
-		var response = JSONCurlUtil.put("${curl}");
+		var response = JSONCurlUtil.put(${curl});
 
-		return "${response}";
+		return ${response};
 	}
 
-	macro assertResponseHasIdFieldValueOnly {
-		var actualValue = JSONUtil.getWithJSONPath("${responseToParse}", "$.items");
+	@summary = "Default summary"
+	macro assertResponseHasIdFieldValueOnly(responseToParse = null, expectedValue = null) {
+		var actualValue = JSONUtil.getWithJSONPath(${responseToParse}, "$.items");
 
 		TestUtils.assertEquals(
-			actual = "${actualValue}",
-			expected = "${expectedValue}");
+			actual = ${actualValue},
+			expected = ${expectedValue});
 	}
 
-	macro deleteAllBlogPostings {
+	@summary = "Default summary"
+	macro deleteAllBlogPostings() {
 		var numberOfItems = BlogPostingAPI.getNumberOfBlogPostingsCreated();
 
-		if ("${numberOfItems}" != "0") {
+		if (${numberOfItems} != 0) {
 			var blogPostingIdsList = BlogPostingAPI.getBlogPostingsIdList();
 			var body = ListUtil.newList();
 
-			for (var blogPostingId : list "${blogPostingIdsList}") {
+			for (var blogPostingId : list ${blogPostingIdsList}) {
 				var value = '''{"id":${blogPostingId}}''';
 
-				ListUtil.add("${body}", "${value}");
+				ListUtil.add(${body}, ${value});
 			}
 
-			BlogPostingAPI._deleteBlogPostingsBatch(body = "${body}");
+			BlogPostingAPI._deleteBlogPostingsBatch(body = ${body});
 
 			var actualNumberOfBlogPostings = BlogPostingAPI.getNumberOfBlogPostingsCreated();
 
 			TestUtils.assertEquals(
-				actual = "${actualNumberOfBlogPostings}",
-				expected = "0");
+				actual = ${actualNumberOfBlogPostings},
+				expected = 0);
 		}
 	}
 
-	macro getBlogPostingDataToString {
+	@summary = "Default summary"
+	macro getBlogPostingDataToString() {
 		if (!(isSet(response))) {
 			var response = BlogPostingAPI.getBlogPostings();
 		}
 
 		var headline = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
 			fieldName = "headline",
-			response = "${response}");
+			response = ${response});
 		var articleBody = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
 			fieldName = "articleBody",
-			response = "${response}");
+			response = ${response});
 		var externalReferenceCode = BlogPostingAPI._getFieldValueOfExistingBlogPosting(
 			fieldName = "externalReferenceCode",
-			response = "${response}");
+			response = ${response});
 
 		var blogPostingData = "${headline},${articleBody},${externalReferenceCode}";
 
-		return "${blogPostingData}";
+		return ${blogPostingData};
 	}
 
-	macro getBlogPostings {
+	@summary = "Default summary"
+	macro getBlogPostings(restrictFieldsValue = null, parameter = null, token = null) {
 		var portalURL = JSONCompany.getPortalURL();
 		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
 			groupName = "Guest",
 			site = "true");
+		var api = "blog-postings";
+
+		if (isSet(parameter)) {
+			var api = StringUtil.add(${api}, "?${parameter}=${restrictFieldsValue}", "");
+		}
 
 		var curl = '''
-			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/blog-postings \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json
+			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/${api} \
+				-u test@liferay.com:test \
+				-H Content-Type: application/json
 		''';
 
-		var curl = JSONCurlUtil.get("${curl}");
+		if (isSet(token)) {
+			var curl = StringUtil.add(${curl}, " -H 'Authorization: Bearer ${token}'", "");
+		}
 
-		return "${curl}";
+		var curl = JSONCurlUtil.get(${curl});
+
+		return ${curl};
 	}
 
-	macro getBlogPostingsbyDifferentParameters {
-		var portalURL = JSONCompany.getPortalURL();
-		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-			groupName = "Guest",
-			site = "true");
+	@summary = "Default summary"
+	macro getBlogPostingsIdList() {
+		var response = BlogPostingAPI.getBlogPostings();
 
-		var curl = '''
-			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/blog-postings?${parameter}=${restrictFieldsValue} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json
-		''';
+		var idList = JSONUtil.getWithJSONPath(${response}, "$.items.[*].id");
 
-		var curl = JSONCurlUtil.get("${curl}");
-
-		return "${curl}";
+		return ${idList};
 	}
 
-	macro getBlogPostingsIdList {
-		var response = BlogPostingAPI._getBlogPostings();
-
-		var idList = JSONUtil.getWithJSONPath("${response}", "$.items.[*].id");
-
-		return "${idList}";
-	}
-
-	macro getIdOfCreatedBlogPosting {
+	@summary = "Default summary"
+	macro getIdOfCreatedBlogPosting(articleBody = null, headline = null, externalReferenceCode = null) {
 		var response = BlogPostingAPI._createBlogPosting(
-			articleBody = "${articleBody}",
-			headline = "${headline}");
+			articleBody = ${articleBody},
+			externalReferenceCode = ${externalReferenceCode},
+			headline = ${headline});
 
-		var blogPostingId = JSONUtil.getWithJSONPath("${response}", "$.['id']");
+		var blogPostingId = JSONPathUtil.getIdValue(response = ${response});
 
-		return "${blogPostingId}";
+		return ${blogPostingId};
 	}
 
-	macro getIdOfCreateNBlogPostingBatchEngineImportTask {
+	@summary = "Default summary"
+	macro getIdOfCreateNBlogPostingBatchEngineImportTask(createStrategy = null, numberOfBlogPostings = null, testCase = null) {
 		if (!(isSet(importStrategy))) {
 			var importStrategy = "ON_ERROR_FAIL";
 		}
 
 		var response = BlogPostingAPI._createNBlogPostings(
-			createStrategy = "${createStrategy}",
-			importStrategy = "${importStrategy}",
-			numberOfBlogPostings = "${numberOfBlogPostings}",
-			testCase = "${testCase}");
+			createStrategy = ${createStrategy},
+			importStrategy = ${importStrategy},
+			numberOfBlogPostings = ${numberOfBlogPostings},
+			testCase = ${testCase});
 
-		var importTaskId = JSONUtil.getWithJSONPath("${response}", "$.id");
+		var importTaskId = JSONPathUtil.getIdValue(response = ${response});
 
-		return "${importTaskId}";
+		return ${importTaskId};
 	}
 
-	macro getIdOfUpdatedPostingBatchEngineImportTask {
+	@summary = "Default summary"
+	macro getIdOfSiteBlogPostingsExportBatch() {
+		var portalURL = JSONCompany.getPortalURL();
+		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
+			groupName = "Guest",
+			site = "true");
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/blog-postings/export-batch \
+				-u test@liferay.com:test \
+				-H Content-Type: application/json
+		''';
+
+		var blogPostingsExportBatchId = JSONCurlUtil.post(${curl}, "$.id");
+
+		return ${blogPostingsExportBatchId};
+	}
+
+	@summary = "Default summary"
+	macro getIdOfUpdatedBlogPostingBatchEngineImportTask(updateStrategy = null, numberOfBlogPostings = null, testCase = null) {
 		if (!(isSet(importStrategy))) {
 			var importStrategy = "ON_ERROR_FAIL";
 		}
 
 		var response = BlogPostingAPI._updateBlogPosting(
-			importStrategy = "${importStrategy}",
-			numberOfBlogPostings = "${numberOfBlogPostings}",
-			testCase = "${testCase}",
-			updateStrategy = "${updateStrategy}");
+			importStrategy = ${importStrategy},
+			numberOfBlogPostings = ${numberOfBlogPostings},
+			testCase = ${testCase},
+			updateStrategy = ${updateStrategy});
 
-		var importTaskId = JSONUtil.getWithJSONPath("${response}", "$.id");
+		var importTaskId = JSONPathUtil.getIdValue(response = ${response});
 
-		return "${importTaskId}";
+		return ${importTaskId};
 	}
 
-	macro getIdOfUpdateOneBlogPostingBodyParameter {
+	@summary = "Default summary"
+	macro getIdOfUpdateOneBlogPostingBodyParameter(updateStrategy = null, blogPostingId = null, bodyParameterValue = null, bodyParameterKey = null) {
 		var response = BlogPostingAPI._updateOneBlogPostingBodyParameter(
-			blogPostingId = "${blogPostingId}",
-			bodyParameterKey = "${bodyParameterKey}",
-			bodyParameterValue = "${bodyParameterValue}",
-			updateStrategy = "${updateStrategy}");
+			blogPostingId = ${blogPostingId},
+			bodyParameterKey = ${bodyParameterKey},
+			bodyParameterValue = ${bodyParameterValue},
+			updateStrategy = ${updateStrategy});
 
-		var importTaskId = JSONUtil.getWithJSONPath("${response}", "$.id");
+		var importTaskId = JSONPathUtil.getIdValue(response = ${response});
 
-		return "${importTaskId}";
+		return ${importTaskId};
 	}
 
-	macro getNumberOfBlogPostingsCreated {
+	@summary = "Default summary"
+	macro getNumberOfBlogPostingsCreated() {
 		if (!(isSet(response))) {
 			var response = BlogPostingAPI.getBlogPostings();
 		}
 
-		var numberOfBlogPostingsCreated = JSONUtil.getWithJSONPath("${response}", "$.totalCount");
+		var numberOfBlogPostingsCreated = JSONUtil.getWithJSONPath(${response}, "$.totalCount");
 
-		return "${numberOfBlogPostingsCreated}";
+		return ${numberOfBlogPostingsCreated};
 	}
 
-	macro setUpGlobalIdOfCreatedBlogPosting {
+	@summary = "Default summary"
+	macro setUpGlobalIdOfCreatedBlogPosting(articleBody = null, headline = null) {
 		var blogPostingId = BlogPostingAPI.getIdOfCreatedBlogPosting(
-			articleBody = "${articleBody}",
-			headline = "${headline}");
+			articleBody = ${articleBody},
+			headline = ${headline});
 
-		static var staticBlogPostingId = "${blogPostingId}";
+		static var staticBlogPostingId = ${blogPostingId};
 
-		return "${staticBlogPostingId}";
+		return ${staticBlogPostingId};
 	}
 
 }

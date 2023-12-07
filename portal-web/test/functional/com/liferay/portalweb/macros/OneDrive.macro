@@ -1,17 +1,20 @@
 definition {
 
-	macro AddDocument {
+	@summary = "Default summary"
+	macro AddDocument(dmDocumentTitle = null, dmDocumentTypeName = null, dmDocumentContent = null) {
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
 		Alert.viewInfoMessageSpecific(infoMessage = "The document has been checked out. Please check in the document after edits are made to save the changes into the document library.");
 
 		Type(
 			locator1 = "TextInput#TITLE",
-			value1 = "${dmDocumentTitle}");
+			value1 = ${dmDocumentTitle});
 
 		Click(locator1 = "Button#SAVE");
 
 		SelectWindow.waitForSelectPopUp(
-			locator1 = "null",
-			value1 = "60000");
+			value1 = "null",
+			value2 = 60000);
 
 		if (IsElementNotPresent(locator1 = "IFrame#WEB_APPLICATION")) {
 			Close.closeWindow(locator1 = "null");
@@ -20,19 +23,19 @@ definition {
 
 			Navigator.gotoPage(pageName = "Documents and Media Page");
 
-			DMDocument.deletePG(dmDocumentTitle = "${dmDocumentTitle}");
+			DMDocument.deletePG(dmDocumentTitle = ${dmDocumentTitle});
 
-			DMNavigator.gotoAddDocumentTypePG(dmDocumentTypeName = "${dmDocumentTypeName}");
+			DMNavigator.gotoAddDocumentTypePG(dmDocumentTypeName = ${dmDocumentTypeName});
 
 			Type(
 				locator1 = "TextInput#TITLE",
-				value1 = "${dmDocumentTitle}");
+				value1 = ${dmDocumentTitle});
 
 			Click(locator1 = "Button#SAVE");
 
 			SelectWindow.waitForSelectPopUp(
-				locator1 = "null",
-				value1 = "60000");
+				value1 = "null",
+				value2 = 60000);
 		}
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#WEB_APPLICATION");
@@ -42,24 +45,38 @@ definition {
 		if (isSet(dmDocumentContent)) {
 			Type.sendKeys(
 				locator1 = "OneDrive#DOCUMENTS_CONTENT",
-				value1 = "${dmDocumentContent}");
-
-			WaitForElementPresent(locator1 = "OneDrive#DOCUMENTS_SAVE_STATUS");
+				value1 = ${dmDocumentContent});
 		}
+
+		WaitForElementPresent(locator1 = "OneDrive#DOCUMENTS_SAVE_STATUS");
+
+		Click(locator1 = "OneDrive#DOCUMENTS_SAVE_STATUS");
+
+		VerifyElementPresent(locator1 = "OneDrive#DOCUMENTS_SAVE_STATUS_DETAILS");
 
 		Navigator.closeWindow();
 
 		SelectFrameTop();
 	}
 
-	macro deleteDocument {
+	@summary = "Default summary"
+	macro deleteDocument(dmDocumentTitle = null) {
 		if (isSet(dmDocumentTitle)) {
-			var key_documentTitle = "${dmDocumentTitle}";
+			var key_documentTitle = ${dmDocumentTitle};
 
 			while (IsElementPresent(locator1 = "OneDrive#FILES_TITLE")) {
 				Click.mouseOverClick(locator1 = "OneDrive#FILES_CHECKBOX");
 
-				Click(locator1 = "OneDrive#DELETE");
+				if (IsElementNotPresent(locator1 = "OneDrive#DELETE")) {
+					Click(locator1 = "OneDrive#MORE_OPTIONS");
+
+					Click(
+						key_menuItem = "Delete",
+						locator1 = "OneDrive#MENU_ITEM");
+				}
+				else {
+					Click(locator1 = "OneDrive#DELETE");
+				}
 
 				Click(locator1 = "OneDrive#DELETE_CONFIRMATION");
 
@@ -76,11 +93,24 @@ definition {
 			while (IsElementPresent(locator1 = "OneDrive#FILES_CHECKBOX")) {
 				Click.mouseOverClick(locator1 = "OneDrive#FILES_CHECKBOX");
 
-				Click(locator1 = "OneDrive#DELETE");
+				if (IsElementNotPresent(locator1 = "OneDrive#DELETE")) {
+					Click(locator1 = "OneDrive#MORE_OPTIONS");
+
+					Click(
+						key_menuItem = "Delete",
+						locator1 = "OneDrive#MENU_ITEM");
+				}
+				else {
+					Click(locator1 = "OneDrive#DELETE");
+				}
 
 				Click(locator1 = "OneDrive#DELETE_CONFIRMATION");
 
 				VerifyElementPresent(locator1 = "OneDrive#DELETE_MESSAGE");
+
+				Navigator.openSpecificURL(url = "https://liferaycolab-my.sharepoint.com/personal/sharepoint_liferaycolab_onmicrosoft_com/_layouts/15/onedrive.aspx?view=0");
+
+				WaitForPageLoad();
 			}
 
 			var key_documentTitle = "Yesterday";
@@ -88,23 +118,39 @@ definition {
 			while (IsElementPresent(locator1 = "OneDrive#FILES_CHECKBOX")) {
 				Click.mouseOverClick(locator1 = "OneDrive#FILES_CHECKBOX");
 
-				Click(locator1 = "OneDrive#DELETE");
+				if (IsElementNotPresent(locator1 = "OneDrive#DELETE")) {
+					Click(locator1 = "OneDrive#MORE_OPTIONS");
+
+					Click(
+						key_menuItem = "Delete",
+						locator1 = "OneDrive#MENU_ITEM");
+				}
+				else {
+					Click(locator1 = "OneDrive#DELETE");
+				}
 
 				Click(locator1 = "OneDrive#DELETE_CONFIRMATION");
 
 				VerifyElementPresent(locator1 = "OneDrive#DELETE_MESSAGE");
+
+				Navigator.openSpecificURL(url = "https://liferaycolab-my.sharepoint.com/personal/sharepoint_liferaycolab_onmicrosoft_com/_layouts/15/onedrive.aspx?view=0");
+
+				WaitForPageLoad();
 			}
 		}
 	}
 
-	macro editTitle {
+	@summary = "Default summary"
+	macro editTitle(dmDocumentTitle = null) {
 		WaitForPageLoad();
 
 		SelectWindow.waitForSelectPopUp(
-			locator1 = "null",
-			value1 = "60000");
+			value1 = "null",
+			value2 = 60000);
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#WEB_APPLICATION");
+
+		WaitForElementPresent(locator1 = "OneDrive#DOCUMENTS_SAVE_STATUS");
 
 		Click(locator1 = "OneDrive#DOCUMENTS_TITLE");
 
@@ -114,9 +160,11 @@ definition {
 			}
 		}
 
+		WaitForEditable(locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME");
+
 		Type(
 			locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME",
-			value1 = "${dmDocumentTitle}");
+			value1 = ${dmDocumentTitle});
 
 		KeyPress(
 			locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME",
@@ -131,7 +179,8 @@ definition {
 		SelectFrameTop();
 	}
 
-	macro enableOneDrive {
+	@summary = "Default summary"
+	macro enableOneDrive() {
 		DMNavigator.openToConfigInSystemSettings(portlet = "One Drive");
 
 		var oneDriveClientId = PropsUtil.get("onedrive.client.id");
@@ -139,21 +188,21 @@ definition {
 		Type(
 			key_text = "clientId",
 			locator1 = "TextArea#ANY",
-			value1 = "${oneDriveClientId}");
+			value1 = ${oneDriveClientId});
 
 		var oneDriveClientSecret = PropsUtil.get("onedrive.client.secret");
 
 		Type(
 			key_text = "clientSecret",
 			locator1 = "TextArea#ANY",
-			value1 = "${oneDriveClientSecret}");
+			value1 = ${oneDriveClientSecret});
 
 		var oneDriveTenant = PropsUtil.get("onedrive.tenant");
 
 		Type(
 			key_text = "tenant",
 			locator1 = "TextArea#ANY",
-			value1 = "${oneDriveTenant}");
+			value1 = ${oneDriveTenant});
 
 		ScrollWebElementIntoView(locator1 = "Button#CANCEL");
 
@@ -165,29 +214,36 @@ definition {
 		}
 	}
 
-	macro gotoEdit {
-		var key_dmDocumentTitle = "${dmDocumentTitle}";
+	@summary = "Default summary"
+	macro gotoEdit(dmDocumentTitle = null) {
+		var key_dmDocumentTitle = ${dmDocumentTitle};
 
-		Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+		if (isSet(editInPreviewPage)) {
+			Click(locator1 = "DocumentsAndMediaDocument#DOCUMENT_TOOLBAR_VERTICAL_ELLIPSIS");
+		}
+		else {
+			Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+		}
 
-		MenuItem.click(menuItem = "Edit in Office 365");
+		MenuItem.clickNoError(menuItem = "Edit in Office 365");
 	}
 
-	macro goToOneDrive {
-		Navigator.openSpecificURL(url = "https://liferaycolab-my.sharepoint.com/personal/sharepoint_liferaycolab_onmicrosoft_com/_layouts/15/onedrive.aspx");
+	@summary = "Default summary"
+	macro goToOneDrive(userPassword = null, userName = null) {
+		Navigator.openSpecificURL(url = "https://liferaycolab-my.sharepoint.com/personal/sharepoint_liferaycolab_onmicrosoft_com/_layouts/15/onedrive.aspx?view=0");
 
 		WaitForPageLoad();
 
 		MicrosoftLogin.accountSignIn(
-			userEmail = "${userName}",
-			userPassword = "${userPassword}",
+			userEmail = ${userName},
+			userPassword = ${userPassword},
 			windowTitle = "Sign in to your account");
 
 		MicrosoftLogin.confirmMicrosoftApp();
 
 		WaitForPageLoad();
 
-		SelectWindow.selectPopUp(locator1 = "null");
+		SelectWindow.selectPopUp(value1 = "null");
 	}
 
 }

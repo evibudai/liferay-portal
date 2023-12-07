@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.revert.schema.version.model.impl;
@@ -191,41 +182,58 @@ public class RSVEntryModelImpl
 	public Map<String, Function<RSVEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<RSVEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<RSVEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<RSVEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<RSVEntry, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<RSVEntry, Object>>();
-		Map<String, BiConsumer<RSVEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<RSVEntry, ?>>();
+		private static final Map<String, Function<RSVEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", RSVEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<RSVEntry, Long>)RSVEntry::setMvccVersion);
-		attributeGetterFunctions.put("rsvEntryId", RSVEntry::getRsvEntryId);
-		attributeSetterBiConsumers.put(
-			"rsvEntryId", (BiConsumer<RSVEntry, Long>)RSVEntry::setRsvEntryId);
-		attributeGetterFunctions.put("companyId", RSVEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<RSVEntry, Long>)RSVEntry::setCompanyId);
+		static {
+			Map<String, Function<RSVEntry, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<RSVEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", RSVEntry::getMvccVersion);
+			attributeGetterFunctions.put("rsvEntryId", RSVEntry::getRsvEntryId);
+			attributeGetterFunctions.put("companyId", RSVEntry::getCompanyId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<RSVEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<RSVEntry, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<RSVEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<RSVEntry, Long>)RSVEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"rsvEntryId",
+				(BiConsumer<RSVEntry, Long>)RSVEntry::setRsvEntryId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<RSVEntry, Long>)RSVEntry::setCompanyId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -492,8 +500,9 @@ public class RSVEntryModelImpl
 	private long _companyId;
 
 	public <T> T getColumnValue(String columnName) {
-		Function<RSVEntry, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<RSVEntry, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

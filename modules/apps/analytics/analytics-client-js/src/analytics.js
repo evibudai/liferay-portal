@@ -1,18 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import uuidv4 from 'uuid/v4';
+import {v4 as uuidv4} from 'uuid';
 
 import middlewares from './middlewares/defaults';
 import defaultPlugins from './plugins/defaults';
@@ -38,7 +29,7 @@ import {
 import {getContexts, setContexts} from './utils/contexts';
 import {normalizeEvent} from './utils/events';
 import hash from './utils/hash';
-import {getItem, setItem} from './utils/storage';
+import {getItem, removeItem, setItem} from './utils/storage';
 import {upgradeStorage} from './utils/storage_version';
 import {isValidEvent} from './utils/validators';
 
@@ -412,7 +403,7 @@ class Analytics {
 		setItem(STORAGE_KEY_USER_ID, userId);
 		this._setCookie(STORAGE_KEY_USER_ID, userId);
 
-		localStorage.removeItem(STORAGE_KEY_IDENTITY);
+		removeItem(STORAGE_KEY_IDENTITY);
 
 		return userId;
 	}

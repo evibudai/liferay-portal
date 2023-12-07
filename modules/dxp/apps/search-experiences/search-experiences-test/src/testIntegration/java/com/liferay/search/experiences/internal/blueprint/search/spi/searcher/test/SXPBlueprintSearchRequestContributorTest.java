@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.internal.blueprint.search.spi.searcher.test;
@@ -18,10 +9,12 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.function.UnsafeRunnable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -37,7 +30,6 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -53,6 +45,7 @@ import com.liferay.search.experiences.service.SXPBlueprintLocalService;
 
 import java.util.Collections;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -119,39 +112,19 @@ public class SXPBlueprintSearchRequestContributorTest {
 				try (ConfigurationTemporarySwapper
 						configurationTemporarySwapper =
 							_getConfigurationTemporarySwapper(
-								"2345", "34.94.32.240", "true")) {
-
-					ReflectionTestUtil.setFieldValue(
-						HttpUtil.class, "_http",
-						_getHttp(
-							JSONUtil.put(
-								"city", "diamond bar"
-							).toString()));
+								"2345", "34.94.32.240", "true");
+					AutoCloseable autoCloseable = _setUpHttp("diamond bar")) {
 
 					_assertSearch("[diamond bar city]", "34.94.32.240", "city");
-				}
-				finally {
-					ReflectionTestUtil.setFieldValue(
-						HttpUtil.class, "_http", _http);
 				}
 
 				try (ConfigurationTemporarySwapper
 						configurationTemporarySwapper =
 							_getConfigurationTemporarySwapper(
-								"2345", "91.233.116.229", "true")) {
-
-					ReflectionTestUtil.setFieldValue(
-						HttpUtil.class, "_http",
-						_getHttp(
-							JSONUtil.put(
-								"city", "walnut"
-							).toString()));
+								"2345", "91.233.116.229", "true");
+					AutoCloseable autoCloseable = _setUpHttp("walnut")) {
 
 					_assertSearch("[walnut city]", "91.233.116.229", "city");
-				}
-				finally {
-					ReflectionTestUtil.setFieldValue(
-						HttpUtil.class, "_http", _http);
 				}
 			});
 	}
@@ -171,11 +144,27 @@ public class SXPBlueprintSearchRequestContributorTest {
 				"[charlie delta, beta delta, alpha delta]", "", "delta"));
 	}
 
+	@Test
+	public void testSXPBlueprintIdAttribute() throws Exception {
+		_test(
+			new String[] {"alpha", "beta", "charlie"},
+			() -> _assertSearch(
+				"[beta]", "", "beta", _sxpBlueprint.getSXPBlueprintId()));
+	}
+
 	@Rule
 	public TestName testName = new TestName();
 
 	private void _assertSearch(
 			String expected, String ipAddress, String keywords)
+		throws Exception {
+
+		_assertSearch(expected, ipAddress, keywords, 0);
+	}
+
+	private void _assertSearch(
+			String expected, String ipAddress, String keywords,
+			long sxpBlueprintId)
 		throws Exception {
 
 		SearchResponse searchResponse = _searcher.search(
@@ -187,9 +176,18 @@ public class SXPBlueprintSearchRequestContributorTest {
 					keywords
 				).withSearchContext(
 					_searchContext -> {
-						_searchContext.setAttribute(
-							"search.experiences.blueprint.id",
-							_sxpBlueprint.getSXPBlueprintId());
+						if (sxpBlueprintId > 0) {
+							_searchContext.setAttribute(
+								"search.experiences.blueprint.id",
+								sxpBlueprintId);
+						}
+						else {
+							_searchContext.setAttribute(
+								"search.experiences.blueprint.external." +
+									"reference.code",
+								_sxpBlueprint.getExternalReferenceCode());
+						}
+
 						_searchContext.setAttribute(
 							"search.experiences.ip.address", ipAddress);
 						_searchContext.setAttribute(
@@ -200,9 +198,8 @@ public class SXPBlueprintSearchRequestContributorTest {
 				).build()));
 
 		DocumentsAssert.assertValues(
-			searchResponse.getRequestString(),
-			searchResponse.getDocumentsStream(), "localized_title_en_US",
-			expected);
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			"localized_title_en_US", expected);
 	}
 
 	private ConfigurationTemporarySwapper _getConfigurationTemporarySwapper(
@@ -221,11 +218,18 @@ public class SXPBlueprintSearchRequestContributorTest {
 			).build());
 	}
 
-	private Http _getHttp(String urlResponse) {
-		return (Http)ProxyUtil.newProxyInstance(
+	private AutoCloseable _setUpHttp(String cityValue) {
+		Snapshot<Http> snapshot = ReflectionTestUtil.getFieldValue(
+			HttpUtil.class, "_httpSnapshot");
+
+		String urlResponse = JSONUtil.put(
+			"city", cityValue
+		).toString();
+
+		Http http = (Http)ProxyUtil.newProxyInstance(
 			Http.class.getClassLoader(), new Class<?>[] {Http.class},
 			(proxy, method, args) -> {
-				if (!Objects.equals("URLtoString", method.getName()) ||
+				if (!Objects.equals(method.getName(), "URLtoString") ||
 					(args.length != 1) || !(args[0] instanceof String)) {
 
 					return method.invoke(_http, args);
@@ -233,6 +237,12 @@ public class SXPBlueprintSearchRequestContributorTest {
 
 				return urlResponse;
 			});
+
+		Supplier<Http> serviceSupplier = ReflectionTestUtil.getAndSetFieldValue(
+			snapshot, "_serviceSupplier", () -> http);
+
+		return () -> ReflectionTestUtil.setFieldValue(
+			snapshot, "_serviceSupplier", serviceSupplier);
 	}
 
 	private void _test(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.virtual.order.service;
@@ -36,6 +27,23 @@ public class CommerceVirtualOrderItemServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.product.type.virtual.order.service.impl.CommerceVirtualOrderItemServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static CommerceVirtualOrderItem fetchCommerceVirtualOrderItem(
+			long commerceVirtualOrderItemId)
+		throws PortalException {
+
+		return getService().fetchCommerceVirtualOrderItem(
+			commerceVirtualOrderItemId);
+	}
+
+	public static CommerceVirtualOrderItem
+			fetchCommerceVirtualOrderItemByCommerceOrderItemId(
+				long commerceOrderItemId)
+		throws PortalException {
+
+		return getService().fetchCommerceVirtualOrderItemByCommerceOrderItemId(
+			commerceOrderItemId);
+	}
+
 	public static java.io.File getFile(long commerceVirtualOrderItemId)
 		throws Exception {
 
@@ -64,6 +72,10 @@ public class CommerceVirtualOrderItemServiceUtil {
 
 	public static CommerceVirtualOrderItemService getService() {
 		return _service;
+	}
+
+	public static void setService(CommerceVirtualOrderItemService service) {
+		_service = service;
 	}
 
 	private static volatile CommerceVirtualOrderItemService _service;

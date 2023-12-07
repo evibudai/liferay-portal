@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,7 +27,7 @@ definition {
 
 	@description = "Verify that is possible to assign Account role type for role assignments trough XML Source"
 	@ignore = "Test Stub"
-	@priority = "5"
+	@priority = 5
 	test CanAssignAccountRoleTroughtSource {
 
 		// TODO LRQA-74664 CanAssignAccountRoleTroughtSource pending implementation
@@ -36,25 +36,16 @@ definition {
 
 	@description = "Verify that when the user clicks on Cancel button he is redirected to the previous page"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CancelButtonTakesToPreviousPage {
 
 		// TODO LRQA-74667 CancelButtonTakesToPreviousPage pending implementation
 
 	}
 
-	@description = "Verify that the user is able to import a XML file"
-	@ignore = "Test Stub"
-	@priority = "4"
-	test CanImportXMLFile {
-
-		// TODO LRQA-74659 CanImportXMLFile pending implementation
-
-	}
-
 	@description = "Verify that, when importing a non XML file, an error message is displayed and the Workflow is not published"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CanNotImportNonXMLFile {
 
 		// TODO LRQA-74660 CanNotImportNonXMLFile pending implementation
@@ -62,17 +53,35 @@ definition {
 	}
 
 	@description = "Verify that the Workflow is not published without title"
-	@ignore = "Test Stub"
-	@priority = "4"
-	test CanNotPublishWithoutTitle {
+	@priority = 4
+	test CannotPublishWithoutTitle {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		// TODO LRQA-74658 CanNotPublishWithoutTitle pending implementation
+		task ("Given a user navigates to Workflow Process Builder") {
+			Workflow.openWorkflowListView();
 
+			Workflow.addNewDefinition(workflowDefinitionTitle = "");
+		}
+
+		task ("When a user attempts to publish a definition with no name") {
+			Button.clickPublish();
+		}
+
+		task ("Then an error to name workflow before publishing will prevent this action") {
+			Alert.viewErrorMessage(errorMessage = "Please name your workflow before publishing");
+
+			Navigator.gotoBack();
+
+			AssertElementNotPresent(
+				key_workflowResourceValue = "",
+				locator1 = "WorkflowConfiguration#RESOURCE_TABLE_SELECT");
+		}
 	}
 
 	@description = "Verify that, when entering valid content, the Workflow is published"
 	@ignore = "Test Stub"
-	@priority = "5"
+	@priority = 5
 	test CanPublishWorkflow {
 
 		// TODO LRQA-74657 CanPublishWorkflow pending implementation
@@ -81,7 +90,7 @@ definition {
 
 	@description = "Verify that the user is able to save a untitled Workflow"
 	@ignore = "Test Stub"
-	@priority = "2"
+	@priority = 2
 	test CanSaveUntitledWorkflow {
 
 		// TODO LRQA-74661 CanSaveUntitledWorkflow pending implementation
@@ -90,7 +99,7 @@ definition {
 
 	@description = "Verify that the user is able to save a Workflow without publishing it"
 	@ignore = "Test Stub"
-	@priority = "3"
+	@priority = 3
 	test CanSaveWorkflow {
 
 		// TODO LRQA-74668 CanSaveWorkflow pending implementation
@@ -99,7 +108,7 @@ definition {
 
 	@description = "Verify that the Single Approver Workflow comes with the Account Member and Account Administrator role names assigned"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test SingleApproverSourceComesWithAccountMemberAndAdminAssigned {
 
 		// TODO LRQA-74663 SingleApproverSourceComesWithAccountMemberAndAdminAssigned pending implementation
@@ -108,7 +117,7 @@ definition {
 
 	@description = "Verify that the Single Approver Workflow comes with the Account role assigned"
 	@ignore = "Test Stub"
-	@priority = "5"
+	@priority = 5
 	test SingleApproverSourceComesWithAccountRoleAssigned {
 
 		// TODO LRQA-74662 SingleApproverSourceComesWithAccountRoleAssigned pending implementation
@@ -117,7 +126,7 @@ definition {
 
 	@description = "Verify that the XML source version is updated for a new workflow"
 	@ignore = "Test Stub"
-	@priority = "3"
+	@priority = 3
 	test XMLSourceVersionIsUpdatedForNewWorkfow {
 
 		// TODO LRQA-74666 XMLSourceVersionIsUpdatedForNewWorkfow pending implementation
@@ -126,7 +135,7 @@ definition {
 
 	@description = "Verify that the XML source version is updated for Single Approver"
 	@ignore = "Test Stub"
-	@priority = "3"
+	@priority = 3
 	test XMLSourceVersionIsUpdatedForSingleApprover {
 
 		// TODO LRQA-74665 XMLSourceVersionIsUpdatedForSingleApprover pending implementation

@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,7 +33,7 @@ definition {
 	}
 
 	@description = "Verify that a Form with required fields can be partially filled out and submitted"
-	@priority = "5"
+	@priority = 5
 	test CanBePartiallyFilledWithRequiredFields {
 		property portal.acceptance = "true";
 
@@ -42,18 +42,18 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Text");
 
 		FormFields.enableSwitch(fieldName = "Required Field");
 
-		DataEngine.waitForAutoSave();
+		WaitForVisible(locator1 = "FormFields#SIDEBAR_BASIC_DEFAULT_ERROR_MESSAGE");
+
+		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
-
-		Form.save();
 
 		Form.publishForm();
 
@@ -77,7 +77,7 @@ definition {
 	}
 
 	@description = "Verify that a Form can be submitted"
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmitted {
 		property portal.acceptance = "true";
 
@@ -86,7 +86,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Text");
 
 		Form.save();
@@ -107,7 +107,7 @@ definition {
 	}
 
 	@description = "Verify that a Form can be submitted from the Forms Widget"
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmittedFromWidget {
 		property portal.acceptance = "true";
 
@@ -116,7 +116,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Text");
 
 		var textFieldName = FormFields.getFieldName();
@@ -125,30 +125,21 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(
-			pageName = "Form Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
-		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
-
-		FormPortletNavigator.gotoSelectForm();
-
-		FormPortletConfiguration.selectForm(formName = "Form 1");
-
-		PortletEntry.save();
-
-		FormPortletNavigator.exitWidgetModal();
+		FormPortletConfiguration.selectFormOnAPage(
+			formName = "Form 1",
+			pageName = "Form Page");
 
 		FormFields.editText(
-			fieldName = "${textFieldName}",
+			fieldName = ${textFieldName},
 			fieldValue = "Test Text");
 
 		FormPortlet.clickSubmit();
@@ -171,12 +162,12 @@ definition {
 
 		FormsAdmin.viewTextEntry(
 			fieldLabel = "Text",
-			fieldName = "${textFieldName}",
+			fieldName = ${textFieldName},
 			fieldValue = "Test Text");
 	}
 
 	@description = "Verify that a Form that is partially filled out can be submitted"
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmittedWhilePartiallyFilled {
 		property portal.acceptance = "true";
 
@@ -184,12 +175,12 @@ definition {
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.save();
@@ -210,11 +201,12 @@ definition {
 	}
 
 	@description = "LPS-59338 - Verify that a Form with a required Field can be submitted"
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmittedWithARequiredField {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsSubmissions#CanBeSubmittedWithARequiredField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -223,7 +215,7 @@ definition {
 		Form.editDescription();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Multiple Selection");
 
 		var fieldMultipleSelectionField = FormFields.getFieldName();
@@ -235,43 +227,34 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Checkbox1",
 			optionValue = "Checkbox 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.closeSidebar();
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
-		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
-
-		FormPortletNavigator.gotoSelectForm();
-
-		FormPortletConfiguration.selectForm();
-
-		PortletEntry.save();
-
-		Navigator.gotoPage(pageName = "Form Page");
+		FormPortletConfiguration.selectFormOnAPage(pageName = "Form Page");
 
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.viewCheckboxLabel(
 			fieldLabel = "Checkbox Field",
-			fieldName = "${fieldMultipleSelectionField}");
+			fieldName = ${fieldMultipleSelectionField});
 
 		FormFields.viewRequiredAsterisk();
 
 		FormFields.selectCheckboxOption(
 			checkboxOption = "Checkbox 1",
-			fieldName = "${fieldMultipleSelectionField}");
+			fieldName = ${fieldMultipleSelectionField});
 
 		FormPortlet.submitSuccessfully();
 
@@ -289,7 +272,7 @@ definition {
 	}
 
 	@description = "Verify that a Form with multiple pages can be submitted"
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmittedWithMultiplePages {
 		property portal.acceptance = "true";
 
@@ -301,11 +284,11 @@ definition {
 
 		Form.closeSidebar();
 
-		Form.addPage(formAddNewPageNumber = "1");
+		Form.addPage(formAddNewPageNumber = 1);
 
 		Form.gotoAddField(
 			fieldType = "Numeric",
-			formPageNumber = "1");
+			formPageNumber = 1);
 
 		Form.save();
 
@@ -321,7 +304,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "5");
+			fieldValue = 5);
 
 		FormPortlet.submitSuccessfully();
 
@@ -331,11 +314,12 @@ definition {
 	}
 
 	@description = "Verify that a Form cannot be submitted without filling out a required field"
-	@priority = "5"
+	@priority = 5
 	test CannotBeSubmittedWithoutARequiredField {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsSubmissions#CannotBeSubmittedWithoutARequiredField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -344,7 +328,7 @@ definition {
 		Form.editDescription();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Multiple Selection");
 
 		var fieldMultipleSelectionField = FormFields.getFieldName();
@@ -356,45 +340,560 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Checkbox1",
 			optionValue = "Checkbox 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.closeSidebar();
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
-		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
-
-		FormPortletNavigator.gotoSelectForm();
-
-		FormPortletConfiguration.selectForm();
-
-		PortletEntry.save();
-
-		Navigator.gotoPage(pageName = "Form Page");
+		FormPortletConfiguration.selectFormOnAPage(pageName = "Form Page");
 
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.viewCheckboxLabel(
 			fieldLabel = "Checkbox Field",
-			fieldName = "${fieldMultipleSelectionField}");
+			fieldName = ${fieldMultipleSelectionField});
 
 		FormFields.viewRequiredAsterisk();
 
 		FormPortlet.submitWithValidationError();
 	}
 
+	@description = "Verify if the user is unable to navigate through pages on public pages with validation error"
+	@priority = 5
+	test CannotNavigateThroughThePagesOnPublicPagesWithContainsValidationError {
+		property portal.acceptance = "true";
+		property portal.upstream = "true";
+
+		task ("Given that the user creates a form with validation") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Form 1");
+
+			Form.editPageTitle(
+				formPageName = "Page 1",
+				formTitleNumber = 1);
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			Form.editFieldLabelMetal(fieldValue = "Text Field");
+
+			Form.gotoAdvancedTab();
+
+			FormFields.enableSwitch(fieldName = "Validation");
+
+			FormFields.editValidation(
+				validationArgument = "Contains",
+				validationErrorMessage = "",
+				validationInput = "Test");
+
+			Form.closeSidebar();
+
+			Form.addPage(formAddNewPageNumber = 1);
+
+			Form.editPageTitle(
+				formPageName = "Page 2",
+				formTitleNumber = 2);
+
+			Form.gotoAddField(
+				fieldType = "Numeric",
+				formPageNumber = 1);
+
+			Form.closeSidebar();
+
+			Form.addPage(formAddNewPageNumber = 2);
+
+			Form.editPageTitle(
+				formPageName = "Page 3",
+				formTitleNumber = 3);
+
+			Form.addTextField(formPageNumber = 2);
+
+			Form.publishForm();
+		}
+
+		task ("When creating a public page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormPortletNavigator.gotoSelectForm();
+
+			FormPortletConfiguration.selectForm(formName = "Form 1");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the user is unable to navigate through pages with validation error") {
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = 123);
+
+			FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is invalid.");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "Test");
+
+			Form.navigateFormPagesTopList(
+				formPageName = "Page 2",
+				formPageNumber = 2);
+
+			AssertTextEquals(
+				key_formPageName = "Page 2",
+				locator1 = "FormPortlet#FORM_PAGE",
+				value1 = "Page 2");
+
+			Form.navigateFormPagesTopList(
+				formPageName = "Page 3",
+				formPageNumber = 3);
+
+			AssertTextEquals(
+				key_formPageName = "Page 3",
+				locator1 = "FormPortlet#FORM_PAGE",
+				value1 = "Page 3");
+		}
+	}
+
+	@description = "Verify if is not possible navigate through pages on public pages with not contains validation error"
+	@priority = 5
+	test CannotNavigateThroughThePagesOnPublicPagesWithDoesNotContainsValidationError {
+		property portal.acceptance = "true";
+
+		task ("Given that the user creates a form with validation") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Form 1");
+
+			Form.editPageTitle(
+				formPageName = "Page 1",
+				formTitleNumber = 1);
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			FormFields.enableSwitch(fieldName = "Validation");
+
+			FormFields.editValidation(
+				validationArgument = "Does Not Contain",
+				validationErrorMessage = "",
+				validationInput = "Do not contain this text");
+
+			Form.closeSidebar();
+
+			Form.publishForm();
+		}
+
+		task ("When creating a public page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormPortletNavigator.gotoSelectForm();
+
+			FormPortletConfiguration.selectForm(formName = "Form 1");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the user is unable to navigate through pages with not contains validation error") {
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "Do not contain this text");
+
+			FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is invalid.");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "Contains this text");
+
+			FormPortlet.submitLocalizedSuccessfully(buttonName = "Submit");
+
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Forms");
+
+			FormsAdminNavigator.gotoViewEntries();
+
+			FormsAdmin.viewFormTableEntry(
+				fieldLabel = "Text",
+				fieldValue = "Contains this text");
+		}
+	}
+
+	@description = "Verify that you cannot navigate through Pages on Public Pages when the Empty Field is Required"
+	@priority = 5
+	test CannotNavigateThroughThePagesOnPublicPagesWithEmptyRequiredField {
+		property portal.acceptance = "true";
+		property portal.upstream = "true";
+
+		task ("Given a user creates a form with the required field") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Form 1");
+
+			Form.editPageTitle(
+				formPageName = "Page 1",
+				formTitleNumber = 1);
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			FormFields.enableSwitch(fieldName = "required");
+
+			Form.gotoAdvancedTab();
+
+			FormFields.enableSwitch(fieldName = "Validation");
+
+			FormFields.editValidation(
+				validationArgument = "Contains",
+				validationErrorMessage = "",
+				validationInput = "Test");
+
+			Form.closeSidebar();
+
+			Form.addPage(formAddNewPageNumber = 1);
+
+			Form.editPageTitle(
+				formPageName = "Page 2",
+				formTitleNumber = 2);
+
+			Form.gotoAddField(
+				fieldType = "Numeric",
+				formPageNumber = 1);
+
+			Form.closeSidebar();
+
+			Form.addPage(formAddNewPageNumber = 2);
+
+			Form.editPageTitle(
+				formPageName = "Page 3",
+				formTitleNumber = 3);
+
+			Form.addTextField(formPageNumber = 2);
+
+			Form.publishForm();
+		}
+
+		task ("When creating a public page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormPortletNavigator.gotoSelectForm();
+
+			FormPortletConfiguration.selectForm(formName = "Form 1");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the user can't browse through pages without filling in the required form") {
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "");
+
+			AssertClick(
+				locator1 = "Button#NEXT",
+				value1 = "Next");
+
+			FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is Required.");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "Test");
+
+			Form.navigateFormPagesTopList(
+				formPageName = "Page 2",
+				formPageNumber = 2);
+
+			AssertTextEquals(
+				key_formPageName = "Page 2",
+				locator1 = "FormPortlet#FORM_PAGE",
+				value1 = "Page 2");
+
+			Form.navigateFormPagesTopList(
+				formPageName = "Page 3",
+				formPageNumber = 3);
+
+			AssertTextEquals(
+				key_formPageName = "Page 3",
+				locator1 = "FormPortlet#FORM_PAGE",
+				value1 = "Page 3");
+		}
+	}
+
+	@description = "Verify if is not possible navigate through pages on public pages with is an email validation error"
+	@priority = 5
+	test CannotNavigateThroughThePagesOnPublicPagesWithIsanemailValidationError {
+		property portal.acceptance = "true";
+
+		task ("Given that the user creates a form with validation") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Form 1");
+
+			Form.editPageTitle(
+				formPageName = "Page 1",
+				formTitleNumber = 1);
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			FormFields.enableSwitch(fieldName = "Validation");
+
+			FormFields.editValidation(
+				validationArgument = "Is an email",
+				validationErrorMessage = "");
+
+			Form.closeSidebar();
+
+			Form.publishForm();
+		}
+
+		task ("When creating a public page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormPortletNavigator.gotoSelectForm();
+
+			FormPortletConfiguration.selectForm(formName = "Form 1");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the user is unable to navigate through pages with is an email validation error") {
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "This is not an email");
+
+			FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is invalid.");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "test@liferay.com");
+
+			FormPortlet.submitLocalizedSuccessfully(buttonName = "Submit");
+
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Forms");
+
+			FormsAdminNavigator.gotoViewEntries();
+
+			FormsAdmin.viewFormTableEntry(
+				fieldLabel = "Text",
+				fieldValue = "test@liferay.com");
+		}
+	}
+
+	@description = "Verify if is not possible navigate through pages on public pages with is a URL validation error"
+	@priority = 5
+	test CannotNavigateThroughThePagesOnPublicPagesWithIsaURLValidationError {
+		property portal.acceptance = "true";
+
+		task ("Given that the user creates a form with validation") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Form 1");
+
+			Form.editPageTitle(
+				formPageName = "Page 1",
+				formTitleNumber = 1);
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			FormFields.enableSwitch(fieldName = "Validation");
+
+			FormFields.editValidation(
+				validationArgument = "Is a URL",
+				validationErrorMessage = "");
+
+			Form.closeSidebar();
+
+			Form.publishForm();
+		}
+
+		task ("When creating a public page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormPortletNavigator.gotoSelectForm();
+
+			FormPortletConfiguration.selectForm(formName = "Form 1");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the user is unable to navigate through pages with is a URL validation error") {
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "This is not a url");
+
+			FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is invalid.");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "https://liferay.com");
+
+			FormPortlet.submitLocalizedSuccessfully(buttonName = "Submit");
+
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Forms");
+
+			FormsAdminNavigator.gotoViewEntries();
+
+			FormsAdmin.viewFormTableEntry(
+				fieldLabel = "Text",
+				fieldValue = "https://liferay.com");
+		}
+	}
+
+	@description = "Verify if is not possible navigate through pages on public pages with matches validation error"
+	@priority = 5
+	test CannotNavigateThroughThePagesOnPublicPagesWithMatchesValidationError {
+		property portal.acceptance = "true";
+
+		task ("Given that the user creates a form with validation") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Form 1");
+
+			Form.editPageTitle(
+				formPageName = "Page 1",
+				formTitleNumber = 1);
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			FormFields.enableSwitch(fieldName = "Validation");
+
+			FormFields.editValidation(
+				validationArgument = "Matches",
+				validationErrorMessage = "",
+				validationInput = "^[A-Z].*");
+
+			Form.closeSidebar();
+
+			Form.publishForm();
+		}
+
+		task ("When creating a public page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormPortletNavigator.gotoSelectForm();
+
+			FormPortletConfiguration.selectForm(formName = "Form 1");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the user is unable to navigate through pages with is a URL validation error") {
+			Navigator.gotoPage(pageName = "Form Page");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "lowercase condition");
+
+			FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is invalid.");
+
+			FormFields.editText(
+				fieldName = "Text",
+				fieldValue = "Uppercase condition");
+
+			FormPortlet.submitLocalizedSuccessfully(buttonName = "Submit");
+
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Forms");
+
+			FormsAdminNavigator.gotoViewEntries();
+
+			FormsAdmin.viewFormTableEntry(
+				fieldLabel = "Text",
+				fieldValue = "Uppercase condition");
+		}
+	}
+
 	@description = "Verify that Forms cannot navigate through pages when there is a empty required field"
-	@priority = "5"
+	@priority = 5
 	test CannotNavigateThroughThePagesWithEmptyRequiredField {
 		property portal.acceptance = "true";
 
@@ -404,9 +903,9 @@ definition {
 
 		Form.editPageTitle(
 			formPageName = "Page 1",
-			formTitleNumber = "1");
+			formTitleNumber = 1);
 
-		Form.addTextField(formPageNumber = "0");
+		Form.addTextField(formPageNumber = 0);
 
 		FormFields.enableSwitch(fieldName = "Required");
 
@@ -414,25 +913,25 @@ definition {
 
 		Form.closeSidebar();
 
-		Form.addPage(formAddNewPageNumber = "1");
+		Form.addPage(formAddNewPageNumber = 1);
 
 		Form.editPageTitle(
 			formPageName = "Page 2",
-			formTitleNumber = "2");
+			formTitleNumber = 2);
 
-		Form.addTextField(formPageNumber = "1");
+		Form.addTextField(formPageNumber = 1);
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 2");
 
 		Form.closeSidebar();
 
-		Form.addPage(formAddNewPageNumber = "2");
+		Form.addPage(formAddNewPageNumber = 2);
 
 		Form.editPageTitle(
 			formPageName = "Page 3",
-			formTitleNumber = "3");
+			formTitleNumber = 3);
 
-		Form.addTextField(formPageNumber = "2");
+		Form.addTextField(formPageNumber = 2);
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 3");
 
@@ -454,7 +953,7 @@ definition {
 
 		Form.navigateFormPagesTopList(
 			formPageName = "Page 2",
-			formPageNumber = "2");
+			formPageNumber = 2);
 
 		AssertTextEquals(
 			key_formPageName = "Page 2",
@@ -463,7 +962,7 @@ definition {
 
 		Form.navigateFormPagesTopList(
 			formPageName = "Page 3",
-			formPageNumber = "3");
+			formPageNumber = 3);
 
 		AssertTextEquals(
 			key_formPageName = "Page 3",
@@ -472,7 +971,7 @@ definition {
 	}
 
 	@description = "Verify that Forms cannot navigate through pages when there is a validation error"
-	@priority = "5"
+	@priority = 5
 	test CannotNavigateThroughThePagesWithValidationError {
 		property portal.acceptance = "true";
 
@@ -482,33 +981,33 @@ definition {
 
 		Form.editPageTitle(
 			formPageName = "Page 1",
-			formTitleNumber = "1");
+			formTitleNumber = 1);
 
-		Form.addTextField(formPageNumber = "0");
+		Form.addTextField(formPageNumber = 0);
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 1");
 
 		Form.closeSidebar();
 
-		Form.addPage(formAddNewPageNumber = "1");
+		Form.addPage(formAddNewPageNumber = 1);
 
 		Form.editPageTitle(
 			formPageName = "Page 2",
-			formTitleNumber = "2");
+			formTitleNumber = 2);
 
-		Form.addTextField(formPageNumber = "1");
+		Form.addTextField(formPageNumber = 1);
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 2");
 
 		Form.closeSidebar();
 
-		Form.addPage(formAddNewPageNumber = "2");
+		Form.addPage(formAddNewPageNumber = 2);
 
 		Form.editPageTitle(
 			formPageName = "Page 3",
-			formTitleNumber = "3");
+			formTitleNumber = 3);
 
-		Form.addTextField(formPageNumber = "2");
+		Form.addTextField(formPageNumber = 2);
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 3");
 
@@ -556,7 +1055,7 @@ definition {
 
 		Form.navigateFormPagesTopList(
 			formPageName = "Page 2",
-			formPageNumber = "2");
+			formPageNumber = 2);
 
 		AssertTextEquals(
 			key_formPageName = "Page 2",
@@ -565,7 +1064,7 @@ definition {
 
 		Form.navigateFormPagesTopList(
 			formPageName = "Page 3",
-			formPageNumber = "3");
+			formPageNumber = 3);
 
 		AssertTextEquals(
 			key_formPageName = "Page 3",
@@ -574,7 +1073,7 @@ definition {
 	}
 
 	@description = "Verify that a Form can redirect a user after being submitted"
-	@priority = "5"
+	@priority = 5
 	test CanRedirectUserAfterFormSubmission {
 		property portal.acceptance = "true";
 
@@ -593,12 +1092,12 @@ definition {
 		Form.editName();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Text");
 
 		FormsAdminNavigator.gotoSettings();
 
-		Form.configureRedirectURL(url = "${friendlyURL}");
+		Form.configureRedirectURL(url = ${friendlyURL});
 
 		Button.clickDone();
 
@@ -614,7 +1113,7 @@ definition {
 
 		FormPortlet.submit();
 
-		Form.viewRedirectedURL(friendlyURL = "${friendlyURL}");
+		Form.viewRedirectedURL(friendlyURL = ${friendlyURL});
 
 		Navigator.gotoPage(pageName = "Form Page 1");
 
@@ -622,13 +1121,7 @@ definition {
 			pageName = "Form Page 1",
 			portletName = "Form");
 
-		FormPortletNavigator.gotoSelectForm();
-
-		FormPortletConfiguration.selectForm();
-
-		PortletEntry.save();
-
-		Navigator.gotoPage(pageName = "Form Page 1");
+		FormPortletConfiguration.selectFormOnAPage(pageName = "Form Page 1");
 
 		FormFields.editText(
 			fieldName = "Text",
@@ -638,11 +1131,12 @@ definition {
 	}
 
 	@description = "LPS-60818 - Verify that a Form can require CAPTCHA before being accessed"
-	@priority = "5"
+	@priority = 5
 	test CanRequireCAPTCHA {
 		property captcha.enabled = "true";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "FormsSubmissions#CanRequireCAPTCHA";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
@@ -650,7 +1144,7 @@ definition {
 
 		Form.editDescription();
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		var fieldTextField = FormFields.getFieldName();
 
@@ -674,21 +1168,20 @@ definition {
 
 		FormsAdminNavigator.gotoPublishCopyURLLink();
 
-		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = "${publishedFormPublicURL}");
+		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = ${publishedFormPublicURL});
 
 		Form.save();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
 		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
 
 		FormPortletNavigator.gotoSelectForm();
 
@@ -697,37 +1190,37 @@ definition {
 		PortletEntry.save();
 
 		for (var formAccessLevel : list "private,public") {
-			if ("${formAccessLevel}" == "private") {
+			if (${formAccessLevel} == "private") {
 				Navigator.gotoPage(pageName = "Form Page");
 			}
-			else if ("${formAccessLevel}" == "public") {
-				Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
+			else if (${formAccessLevel} == "public") {
+				Navigator.openSpecificURL(url = ${publishedFormPublicURL});
 			}
 
 			FormPortlet.waitFormRenderer(text = "Submit");
 
 			FormFields.viewTextField(
 				fieldLabel = "Text Field",
-				fieldName = "${fieldTextField}");
+				fieldName = ${fieldTextField});
 
 			FormFields.editText(
-				fieldName = "${fieldTextField}",
+				fieldName = ${fieldTextField},
 				fieldValue = "Text Field Value");
 
 			FormFields.viewCaptchaField();
 
-			FormFields.editCaptchaTextVerification(fieldValue = "1");
+			FormFields.editCaptchaTextVerification(fieldValue = 1);
 
 			FormPortlet.submitWithError(errorMessage = "Text verification failed.");
 
 			FormFields.viewTextValue(
-				fieldName = "${fieldTextField}",
+				fieldName = ${fieldTextField},
 				fieldValue = "Text Field Value");
 		}
 	}
 
 	@description = "Verify that a Form can require user authentication before being accessed"
-	@priority = "5"
+	@priority = 5
 	test CanRequireUserAuthentication {
 		property portal.acceptance = "true";
 
@@ -735,7 +1228,7 @@ definition {
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoSettings();
 
@@ -747,11 +1240,11 @@ definition {
 
 		FormsAdminNavigator.gotoPublishCopyURLLink();
 
-		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = "${publishedFormPublicURL}");
+		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = ${publishedFormPublicURL});
 
 		SignOut.signOut();
 
-		Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
+		Navigator.openSpecificURL(url = ${publishedFormPublicURL});
 
 		User.viewLoginPG();
 
@@ -778,8 +1271,73 @@ definition {
 			successPageTitle = "Thank you.");
 	}
 
+	@description = "LPS-163696 - Verify that a user on a form that limits one submission per user can see partial results when accessing the forms link."
+	@priority = 4
+	test CanSeePartialResultsButtonWithLimitsOneSubmissionPerUser {
+		property portal.acceptance = "true";
+		property portal.upstream = "true";
+
+		FormsAdmin.addForm();
+
+		Form.editName(formName = "Test Form");
+
+		Form.editDescription(formDescription = "Test description");
+
+		Form.addTextField(fieldPositionNumber = 0);
+
+		FormsAdminNavigator.gotoSettings();
+
+		Form.gotoSubmissionsTab();
+
+		Form.selectOptionSubmissions(checkboxOption = "Show Forms Report Data to Respondents");
+
+		Form.selectOptionSubmissions(checkboxOption = "Limit to One Submission per User");
+
+		Button.clickDone();
+
+		Form.publishForm();
+
+		FormsAdminNavigator.gotoPublishedForm();
+
+		FormFields.editText(
+			fieldName = "Text",
+			fieldValue = "Test Text");
+
+		Form.viewSubmitAgainNotPresent();
+
+		Form.viewPreviewExistingSubmission();
+
+		FormPortlet.clickSubmit();
+
+		WaitForElementPresent(
+			locator1 = "FormPortlet#SUCCESS_PAGE_TITLE",
+			value1 = ${successPageTitle});
+
+		FormsAdminNavigator.closePublishedFormWindow();
+
+		Click(
+			key_formName = "Test Form",
+			locator1 = "FormsAdmin#FORMS_TABLE_NAME");
+
+		FormsAdminNavigator.gotoPublishedForm();
+
+		FormPortlet.viewSuccessPage(
+			successPageDescription = "You can fill out this form only once. Contact the owner of the form if you think this is a mistake.",
+			successPageTitle = "You have already responded.");
+
+		Form.viewSubmitAgainNotPresent();
+
+		Form.viewPreviewExistingSubmission();
+
+		Form.previewExistingSubmissionButton();
+
+		AssertElementPresent(
+			key_reportData = "Test Text",
+			locator1 = "Form#FORM_ANSWER");
+	}
+
 	@description = "Verify that with the option Limit to one submission per user activated, the user cannot send more than one submission."
-	@priority = "4"
+	@priority = 4
 	test CheckCantSendMoreThanOneSubmitPerUser {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -802,7 +1360,7 @@ definition {
 
 		FormsAdminNavigator.gotoPublishCopyURLLink();
 
-		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = "${publishedFormPublicURL}");
+		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = ${publishedFormPublicURL});
 
 		Form.save();
 
@@ -822,8 +1380,64 @@ definition {
 			successPageTitle = "You have already responded.");
 	}
 
+	@description = "Verify that with the option 'Limit to one submission per user' activated and the form is on the page, the user cannot send more than one submission."
+	@priority = 4
+	test CheckCantSendMoreThanOneSubmitPerUserOnPages {
+		property portal.acceptance = "true";
+		property portal.upstream = "true";
+
+		FormsAdmin.addForm();
+
+		Form.editName(formName = "Test Form");
+
+		Form.addTextField(fieldPositionNumber = 0);
+
+		FormsAdminNavigator.gotoSettings();
+
+		Form.gotoSubmissionsTab();
+
+		Form.selectOptionSubmissions(checkboxOption = "Limit to One Submission per User");
+
+		Button.clickDone();
+
+		Form.publishForm();
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
+
+		Navigator.gotoPage(pageName = "Form Page");
+
+		FormPortletNavigator.gotoSelectForm();
+
+		FormPortletConfiguration.selectForm(formName = "Test Form");
+
+		PortletEntry.save();
+
+		Navigator.gotoPage(pageName = "Form Page");
+
+		FormFields.editText(
+			fieldName = "Text",
+			fieldValue = "test");
+
+		FormPortlet.submit();
+
+		FormPortlet.viewSuccessPage(
+			successPageDescription = "Your information was successfully received. Thank you for filling out the form.",
+			successPageTitle = "Thank you.");
+
+		Refresh();
+
+		Form.viewSubmitNotPresent();
+	}
+
 	@description = "Verify if there is an option to allow submitters to see partial form results after submission."
-	@priority = "5"
+	@priority = 5
 	test CheckSeePartialResultsButton {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -832,7 +1446,7 @@ definition {
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoSettings();
 
@@ -848,7 +1462,7 @@ definition {
 
 		FormsAdminNavigator.gotoPublishedForm();
 
-		AssertElementPresent(locator1 = "Form#PREVIEW_EXISTING_SUBMISSIONS");
+		Form.viewPreviewExistingSubmission();
 
 		FormFields.editText(
 			fieldName = "Text",
@@ -856,7 +1470,7 @@ definition {
 
 		FormPortlet.submitSuccessfully();
 
-		Click(locator1 = "Form#PREVIEW_EXISTING_SUBMISSIONS");
+		Form.previewExistingSubmissionButton();
 
 		AssertElementPresent(
 			key_reportData = "Test",
@@ -864,7 +1478,7 @@ definition {
 	}
 
 	@description = "Verify if the option to allow submitters to see partial form results after submission works with more than one response."
-	@priority = "4"
+	@priority = 4
 	test CheckSeePartialResultsButtonWithMoreThanOneAnswer {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -873,7 +1487,7 @@ definition {
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoSettings();
 
@@ -895,7 +1509,7 @@ definition {
 
 		FormPortlet.submitSuccessfully();
 
-		Click(locator1 = "Form#PREVIEW_EXISTING_SUBMISSIONS");
+		Form.previewExistingSubmissionButton();
 
 		AssertElementPresent(
 			key_reportData = "Test",
@@ -915,7 +1529,7 @@ definition {
 
 		FormPortlet.submitSuccessfully();
 
-		Click(locator1 = "Form#PREVIEW_EXISTING_SUBMISSIONS");
+		Form.previewExistingSubmissionButton();
 
 		AssertElementPresent(
 			key_reportData = "Test",
@@ -927,7 +1541,7 @@ definition {
 	}
 
 	@description = "Verify if that the See Partial results page displays graphs correctly."
-	@priority = "3"
+	@priority = 3
 	test CheckSeePartialResultsPageWithGraph {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -945,25 +1559,25 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Single Selection",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 1",
-			optionValue = "1");
+			optionValue = 1);
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 2",
-			optionValue = "2");
+			optionValue = 2);
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 3",
-			optionValue = "3");
+			optionValue = 3);
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 4",
-			optionValue = "4");
+			optionValue = 4);
 
 		Form.publishForm();
 
@@ -974,22 +1588,22 @@ definition {
 			locator1 = "FormPortlet#SELECT_SINGLE_SELECTION_OPTION");
 
 		AssertChecked.assertCheckedNotVisible(
-			key_radioOption = "3",
+			key_radioOption = 3,
 			locator1 = "CommerceEntry#RADIO_BUTTON");
 
 		Button.clickSubmitButton();
 
 		WaitForElementPresent(locator1 = "Form#PREVIEW_EXISTING_SUBMISSIONS");
 
-		Click(locator1 = "Form#PREVIEW_EXISTING_SUBMISSIONS");
+		Form.previewExistingSubmissionButton();
 
 		AssertElementPresent(
 			locator1 = "Form#FORM_ANSWER_SINGLE_SELECTION",
-			optionValue = "3");
+			optionValue = 3);
 	}
 
 	@description = "Verify if with 'Limit to one submit per user' enabled, the translation options are the same as those present in the Form Builder"
-	@priority = "3"
+	@priority = 3
 	test CheckTranslationOptionsOneSubmissionPerUserMessage {
 		property portal.acceptance = "true";
 
@@ -1029,19 +1643,19 @@ definition {
 	}
 
 	@description = "Verify that a Form's Success Page can be restored"
-	@priority = "5"
+	@priority = 5
 	test DefaultSuccessPageCanBeRestored {
 		property portal.acceptance = "true";
 
 		FormsAdmin.addForm();
 
-		Form.deleteSuccessPage(formPageNumber = "2");
+		Form.deleteSuccessPage(formPageNumber = 2);
 
 		Form.addSuccessPageForm();
 	}
 
 	@description = "LPS-167481. Verify if with 'Limit to one submission per user' enabled, visiting users must log in before viewing the form"
-	@priority = "4"
+	@priority = 4
 	test GuestUserCantSeeFormWithOneSubmissionPerUserEnabled {
 		property portal.acceptance = "true";
 
@@ -1050,7 +1664,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Text");
 
 		FormsAdminNavigator.gotoSettings();
@@ -1067,13 +1681,13 @@ definition {
 
 		FormsAdminNavigator.gotoPublishCopyURLLink();
 
-		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = "${publishedFormPublicURL}");
+		var publishedFormPublicURL = Form.getPublishedFormPublicURL(publishedFormPublicURL = ${publishedFormPublicURL});
 
 		Navigator.openURL();
 
 		UserBar.signOut();
 
-		Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
+		Navigator.openSpecificURL(url = ${publishedFormPublicURL});
 
 		AssertElementPresent(locator1 = "TextInput#EMAIL_ADDRESS");
 
@@ -1081,11 +1695,12 @@ definition {
 	}
 
 	@description = "Verify that an email notification is sent after a Form is submitted"
-	@priority = "4"
+	@priority = 4
 	test SendEmailNotificationsSubmittingForm {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsSubmissions#SendEmailNotificationsSubmittingForm";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property test.smtp.server.enabled = "true";
 
 		FormsAdmin.addForm();
@@ -1094,7 +1709,7 @@ definition {
 
 		Form.editDescription();
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		var fieldTextField = FormFields.getFieldName();
 
@@ -1112,34 +1727,25 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
-		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
-
-		FormPortletNavigator.gotoSelectForm();
-
-		FormPortletConfiguration.selectForm();
-
-		PortletEntry.save();
-
-		Navigator.gotoPage(pageName = "Form Page");
+		FormPortletConfiguration.selectFormOnAPage(pageName = "Form Page");
 
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.viewTextLabel(
 			fieldLabel = "Text Field",
-			fieldName = "${fieldTextField}");
+			fieldName = ${fieldTextField});
 
 		FormFields.editText(
-			fieldName = "${fieldTextField}",
+			fieldName = ${fieldTextField},
 			fieldValue = "Text Field Value");
 
 		FormPortlet.submitSuccessfully();
@@ -1155,22 +1761,22 @@ definition {
 			asset = "Form Subject",
 			bodyLink = "Click here to access the form");
 
-		SelectWindow.selectPopUp(locator1 = "null");
+		SelectWindow.selectPopUp(value1 = "null");
 
 		FormsAdmin.viewTextEntry(
 			fieldLabel = "Text Field",
-			fieldName = "${fieldTextField}",
+			fieldName = ${fieldTextField},
 			fieldValue = "Text Field Value");
 	}
 
 	@description = "Verify that the Submit button's default value is restored if the Submit Button Label is left blank"
-	@priority = "4"
+	@priority = 4
 	test SubmitButtonRestoredToDefaultIfLeftBlank {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoSettings();
 
@@ -1210,7 +1816,7 @@ definition {
 	}
 
 	@description = "Verify that a Form's Submit button's text can be customized"
-	@priority = "5"
+	@priority = 5
 	test SubmitButtonTextCanBeCustomized {
 		property portal.acceptance = "true";
 
@@ -1218,7 +1824,7 @@ definition {
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoSettings();
 
@@ -1240,13 +1846,13 @@ definition {
 	}
 
 	@description = "Verify that a Form's Submit button's text can be customized multiple times"
-	@priority = "3"
+	@priority = 3
 	test SubmitButtonTextCanBeCustomizedMultipleTimes {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoSettings();
 
@@ -1284,7 +1890,7 @@ definition {
 	}
 
 	@description = "Verify that a Form's Submit button's text can be customized with numbers"
-	@priority = "3"
+	@priority = 3
 	test SubmitButtonTextCanBeCustomizedWithNumbers {
 		property portal.acceptance = "true";
 
@@ -1293,12 +1899,12 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Text");
 
 		FormsAdminNavigator.gotoSettings();
 
-		Form.configureSubmitLabel(submitLabel = "123456789");
+		Form.configureSubmitLabel(submitLabel = 123456789);
 
 		Form.save();
 
@@ -1306,7 +1912,7 @@ definition {
 
 		FormsAdminNavigator.gotoPublishedForm();
 
-		FormPortlet.submitLocalizedSuccessfully(buttonName = "123456789");
+		FormPortlet.submitLocalizedSuccessfully(buttonName = 123456789);
 
 		FormPortlet.viewSuccessPage(
 			successPageDescription = "Your information was successfully received. Thank you for filling out the form.",
@@ -1314,7 +1920,7 @@ definition {
 	}
 
 	@description = "Verify that a Form's Submit button's text can be customized with special characters"
-	@priority = "3"
+	@priority = 3
 	test SubmitButtonTextCanBeCustomizedWithSpecialCharacters {
 		property portal.acceptance = "true";
 
@@ -1322,7 +1928,7 @@ definition {
 
 		Form.editName(formName = "Form 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoSettings();
 
@@ -1344,11 +1950,12 @@ definition {
 	}
 
 	@description = "LPS-71072 - Verify that a Form's Success Page can be customized"
-	@priority = "5"
+	@priority = 5
 	test SuccessPageCanBeCustomized {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsSubmissions#SuccessPageCanBeCustomized";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Training";
 
 		FormsAdmin.addForm();
@@ -1357,7 +1964,7 @@ definition {
 
 		Form.editDescription();
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		var fieldTextField = FormFields.getFieldName();
 
@@ -1371,34 +1978,25 @@ definition {
 
 		Form.publishForm();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page");
 
-		PagesAdmin.addPage(pageName = "Form Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Form Page",
+			widgetName = "Form");
 
-		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
-
-		FormPortletNavigator.gotoSelectForm();
-
-		FormPortletConfiguration.selectForm();
-
-		PortletEntry.save();
-
-		Navigator.gotoPage(pageName = "Form Page");
+		FormPortletConfiguration.selectFormOnAPage(pageName = "Form Page");
 
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.viewTextLabel(
 			fieldLabel = "Text Field",
-			fieldName = "${fieldTextField}");
+			fieldName = ${fieldTextField});
 
 		FormFields.editText(
-			fieldName = "${fieldTextField}",
+			fieldName = ${fieldTextField},
 			fieldValue = "Text Field Value");
 
 		FormPortlet.submitSuccessfully();
@@ -1409,13 +2007,13 @@ definition {
 	}
 
 	@description = "Verify that a Form's Success Page can be deleted"
-	@priority = "5"
+	@priority = 5
 	test SuccessPageCanBeDeleted {
 		property portal.acceptance = "true";
 
 		FormsAdmin.addForm();
 
-		Form.deleteSuccessPage(formPageNumber = "2");
+		Form.deleteSuccessPage(formPageNumber = 2);
 
 		AssertElementPresent(locator1 = "Form#SUCCESS_PAGE_ADD");
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.internal.util.v1_0;
@@ -19,10 +10,15 @@ import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
 import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductOption;
+import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+
+import java.util.Map;
 
 /**
  * @author Alessio Antonio Rendina
@@ -42,17 +38,40 @@ public class ProductOptionUtil {
 			cpDefinitionOptionRelService.fetchCPDefinitionOptionRel(
 				cpDefinitionId, cpOption.getCPOptionId());
 
+		Map<String, String> nameMap = productOption.getName();
+
+		if ((cpDefinitionOptionRel != null) && (nameMap == null)) {
+			nameMap = LanguageUtils.getLanguageIdMap(
+				cpDefinitionOptionRel.getNameMap());
+		}
+
+		Map<String, String> descriptionMap = productOption.getDescription();
+
+		if ((cpDefinitionOptionRel != null) && (descriptionMap == null)) {
+			descriptionMap = LanguageUtils.getLanguageIdMap(
+				cpDefinitionOptionRel.getDescriptionMap());
+		}
+
+		serviceContext.setExpandoBridgeAttributes(
+			CustomFieldsUtil.toMap(
+				CPDefinitionOptionRel.class.getName(),
+				serviceContext.getCompanyId(), productOption.getCustomFields(),
+				serviceContext.getLocale()));
+
 		if (cpDefinitionOptionRel == null) {
 			cpDefinitionOptionRel =
 				cpDefinitionOptionRelService.addCPDefinitionOptionRel(
 					cpDefinitionId, cpOption.getCPOptionId(),
-					LanguageUtils.getLocalizedMap(productOption.getName()),
-					LanguageUtils.getLocalizedMap(
-						productOption.getDescription()),
+					LanguageUtils.getLocalizedMap(nameMap),
+					LanguageUtils.getLocalizedMap(descriptionMap),
 					GetterUtil.get(
 						productOption.getFieldType(),
-						cpOption.getDDMFormFieldTypeName()),
+						cpOption.getCommerceOptionTypeKey()),
+					GetterUtil.get(
+						productOption.getInfoItemServiceKey(),
+						StringPool.BLANK),
 					GetterUtil.get(productOption.getPriority(), 0D),
+					GetterUtil.get(productOption.getDefinedExternally(), false),
 					GetterUtil.get(
 						productOption.getFacetable(), cpOption.isFacetable()),
 					GetterUtil.get(
@@ -60,22 +79,32 @@ public class ProductOptionUtil {
 					GetterUtil.get(
 						productOption.getSkuContributor(),
 						cpOption.isSkuContributor()),
-					true, serviceContext);
+					ArrayUtil.isEmpty(productOption.getProductOptionValues()),
+					GetterUtil.get(
+						productOption.getPriceType(), StringPool.BLANK),
+					GetterUtil.get(
+						productOption.getTypeSettings(), StringPool.BLANK),
+					serviceContext);
 		}
 		else {
 			cpDefinitionOptionRel =
 				cpDefinitionOptionRelService.updateCPDefinitionOptionRel(
 					cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
-					cpDefinitionOptionRel.getCPOptionId(),
-					LanguageUtils.getLocalizedMap(productOption.getName()),
-					LanguageUtils.getLocalizedMap(
-						productOption.getDescription()),
+					productOption.getOptionId(),
+					LanguageUtils.getLocalizedMap(nameMap),
+					LanguageUtils.getLocalizedMap(descriptionMap),
 					GetterUtil.get(
 						productOption.getFieldType(),
-						cpDefinitionOptionRel.getDDMFormFieldTypeName()),
+						cpDefinitionOptionRel.getCommerceOptionTypeKey()),
+					GetterUtil.get(
+						productOption.getInfoItemServiceKey(),
+						cpDefinitionOptionRel.getInfoItemServiceKey()),
 					GetterUtil.get(
 						productOption.getPriority(),
 						cpDefinitionOptionRel.getPriority()),
+					GetterUtil.get(
+						productOption.getDefinedExternally(),
+						cpDefinitionOptionRel.isDefinedExternally()),
 					GetterUtil.get(
 						productOption.getFacetable(),
 						cpDefinitionOptionRel.isFacetable()),
@@ -85,6 +114,12 @@ public class ProductOptionUtil {
 					GetterUtil.get(
 						productOption.getSkuContributor(),
 						cpDefinitionOptionRel.isSkuContributor()),
+					GetterUtil.get(
+						productOption.getPriceType(),
+						cpDefinitionOptionRel.getPriceType()),
+					GetterUtil.get(
+						productOption.getTypeSettings(),
+						cpDefinitionOptionRel.getTypeSettings()),
 					serviceContext);
 		}
 

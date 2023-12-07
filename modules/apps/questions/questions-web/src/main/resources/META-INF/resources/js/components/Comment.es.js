@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -56,6 +47,7 @@ export default withRouter(
 					})}
 				>
 					<ClayIcon
+						aria-label={Liferay.Language.get('reply')}
 						className="c-mt-3 c-mt-md-0 questions-reply-icon text-secondary"
 						symbol="reply"
 					/>
@@ -67,11 +59,7 @@ export default withRouter(
 							'd-flex flex-column': styledItems,
 						})}
 					>
-						<span
-							className={classnames('text-secondary', {
-								'd-flex': styledItems,
-							})}
-						>
+						<span className="d-flex text-secondary">
 							<EditedTimestamp
 								creator={comment.creator.name}
 								dateCreated={comment.dateCreated}
@@ -79,6 +67,12 @@ export default withRouter(
 								operationText={Liferay.Language.get('replied')}
 								showSignature={showSignature}
 							/>
+
+							{comment.modified && (
+								<span className="question-edited">
+									({Liferay.Language.get('edited')})
+								</span>
+							)}
 						</span>
 
 						{comment.status && comment.status !== 'approved' && (
@@ -102,6 +96,7 @@ export default withRouter(
 						<>
 							<div className="font-weight-bold text-secondary">
 								<ClayButton
+									aria-label={Liferay.Language.get('delete')}
 									className="btn-sm c-mr-2 c-px-2 c-py-1"
 									displayType="secondary"
 									onClick={() => {
@@ -126,6 +121,7 @@ export default withRouter(
 								)}
 
 								<ClayButton
+									aria-label={Liferay.Language.get('edit')}
 									className="btn-sm c-px-2 c-py-1"
 									displayType="secondary"
 								>

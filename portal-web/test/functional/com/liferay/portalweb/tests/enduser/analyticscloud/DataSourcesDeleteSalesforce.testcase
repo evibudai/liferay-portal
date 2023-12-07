@@ -13,18 +13,18 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownAC();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8856 | Test Summary: Cancel Creating a Salesforce Data Source"
 	@ignore = "true"
-	@priority = "2"
+	@priority = 2
 	test CancelCreatingSalesforceDataSource {
 
 		// Accounts and Salesforce tests are no longer possible to run after this one from LRAC-11571
@@ -41,7 +41,7 @@ definition {
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8855 | Test Summary: Delete a Salesforce data source"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test DeleteSalesforceDataSource {
 
 		// TODO LRAC-8855 DeleteSalesforceDataSource pending implementation

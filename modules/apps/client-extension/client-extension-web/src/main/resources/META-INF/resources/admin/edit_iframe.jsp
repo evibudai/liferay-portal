@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -22,10 +13,16 @@ EditClientExtensionEntryDisplayContext<IFrameCET> editClientExtensionEntryDispla
 IFrameCET iFrameCET = editClientExtensionEntryDisplayContext.getCET();
 %>
 
-<aui:input label="url" name="url" type="text" value="<%= iFrameCET.getURL() %>" />
+<aui:field-wrapper cssClass="form-group">
+	<aui:input label="url" name="url" required="<%= true %>" type="text" value="<%= iFrameCET.getURL() %>" />
+
+	<div class="form-text">
+		<liferay-ui:message key="specify-the-url-that-will-be-rendered-in-the-iframe" />
+	</div>
+</aui:field-wrapper>
 
 <c:choose>
-	<c:when test="<%= editClientExtensionEntryDisplayContext.isNew() %>">
+	<c:when test="<%= editClientExtensionEntryDisplayContext.isAdding() %>">
 		<aui:input label="instanceable" name="instanceable" type="checkbox" value="<%= iFrameCET.isInstanceable() %>" />
 	</c:when>
 	<c:otherwise>
@@ -35,10 +32,16 @@ IFrameCET iFrameCET = editClientExtensionEntryDisplayContext.getCET();
 	</c:otherwise>
 </c:choose>
 
+<aui:field-wrapper cssClass="form-group">
+	<aui:input label="friendly-url-mapping" name="friendlyURLMapping" type="text" value="<%= iFrameCET.getFriendlyURLMapping() %>" />
+
+	<div class="form-text">
+		<liferay-ui:message key="define-the-widgets-friendly-url-mapping-so-you-can-refer-to-it-using-a-more-user-readable-url" />
+	</div>
+</aui:field-wrapper>
+
 <clay:select
-	label="portlet-category-name"
+	label="widget-category-name"
 	name="portletCategoryName"
 	options="<%= editClientExtensionEntryDisplayContext.getPortletCategoryNameSelectOptions(iFrameCET.getPortletCategoryName()) %>"
 />
-
-<aui:input label="friendly-url-mapping" name="friendlyURLMapping" type="text" value="<%= iFrameCET.getFriendlyURLMapping() %>" />

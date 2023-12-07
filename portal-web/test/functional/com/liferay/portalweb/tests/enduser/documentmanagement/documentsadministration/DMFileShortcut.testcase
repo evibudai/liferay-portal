@@ -11,13 +11,13 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,9 +30,9 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136839. It checks that a shortcut can still be accessed after the target is moved."
-	@priority = "4"
+	@priority = 4
 	test CanAccessAfterMovingTarget {
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
@@ -65,7 +65,7 @@ definition {
 	}
 
 	@description = "This tests that a shortcut can be added to a document."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAddShortcutToDocument {
 		property portal.acceptance = "true";
@@ -95,8 +95,92 @@ definition {
 		DMDocument.viewCP(dmDocumentTitle = "DM Document Title");
 	}
 
+	@description = "This test ensures that a file shortcut's tags can be copied from a parent to child site."
+	@priority = 4
+	test CanCopyTagFromDepotToConnectedSite {
+		HeadlessSite.addSite(siteName = "Site Name 2");
+
+		JSONDepot.addDepot(
+			depotDescription = "depot description",
+			depotName = "Test Depot Name");
+
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetTagNames = "Tag Name",
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Site Name 2",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMDocument.addDMShortcutCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			siteName = "Site Name 2");
+
+		Refresh();
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMDocument.copy(
+			dmDocumentTitle = "DM Document Title",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		Refresh();
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.viewTagInfo(tagName = "tag name");
+	}
+
+	@description = "This test ensures that a file shortcut's tags can be copied from a parent to child site."
+	@priority = 4
+	test CanCopyTagFromParentToChildSite {
+		HeadlessSite.addSite(
+			parentSiteName = "Site Name",
+			siteName = "Child Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetTagNames = "Tag Name",
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		JSONDocument.addShortcut(
+			dmDocumentTitle = "DM Document Title",
+			sourceGroupName = "Guest",
+			targetGroupName = "Site Name");
+
+		Refresh();
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		DMDocument.copy(
+			dmDocumentTitle = "DM Document Title",
+			homeFolder = "true",
+			siteName = "Child Site Name");
+
+		Refresh();
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "child-site-name");
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.viewTagInfo(tagName = "tag name");
+	}
+
 	@description = "This test covers LPS-155147. It ensures that a user downloading a shortcut will download the related document."
-	@priority = "4"
+	@priority = 4
 	test CanDownloadFileThroughShortcut {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -122,7 +206,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can edit the shortcut."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanEditShortcutDestination {
 		for (var entryCount : list "1,2") {
@@ -166,7 +250,7 @@ definition {
 	}
 
 	@description = "This validates LPS-68795. It ensures that a shortcut can be moved into a folder."
-	@priority = "4"
+	@priority = 4
 	test CanMoveShortcutIntoFolder {
 		property custom.properties = "dl.actions.visible=true";
 
@@ -182,7 +266,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -211,7 +295,7 @@ definition {
 	}
 
 	@description = "This ensures that the shortcut is deleted after deleting the shortcut target."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test ShortcutIsDeletedAfterTargetIsDeleted {
 		JSONDocument.addFileWithUploadedFile(
@@ -221,7 +305,7 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpg");
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDocument.addShortcut(
 			dmDocumentTitle = "Document_1.jpg",
@@ -240,7 +324,7 @@ definition {
 	}
 
 	@description = "This ensures that the shortcut target is not deleted after deleting the shortcut."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test TargetIsPreservedAfterDeletingShortcut {
 		JSONDocument.addFileWithUploadedFile(
@@ -250,7 +334,7 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpg");
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONDocument.addShortcut(
 			dmDocumentTitle = "Document_1.jpg",

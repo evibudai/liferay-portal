@@ -1,44 +1,44 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.spring.extender.internal;
 
+import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.hibernate.SessionFactoryImpl;
 import com.liferay.portal.dao.orm.hibernate.VerifySessionFactoryWrapper;
+import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
+import com.liferay.portal.kernel.concurrent.SystemExecutorServiceUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataSourceFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.spring.extender.internal.jdbc.DataSourceUtil;
 import com.liferay.portal.spring.extender.internal.loader.ModuleAggregareClassLoader;
-import com.liferay.portal.spring.extender.internal.upgrade.InitialUpgradeStep;
+import com.liferay.portal.spring.extender.internal.release.SchemaCreatorImpl;
 import com.liferay.portal.spring.hibernate.PortletHibernateConfiguration;
 import com.liferay.portal.spring.hibernate.PortletTransactionManager;
 import com.liferay.portal.spring.transaction.DefaultTransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionExecutor;
-import com.liferay.portal.spring.transaction.TransactionHandler;
 import com.liferay.portal.spring.transaction.TransactionManagerFactory;
+import com.liferay.portal.upgrade.release.SchemaCreator;
+
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
+import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
@@ -64,10 +64,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Component(service = {})
 public class LiferayServiceExtender
 	implements BundleTrackerCustomizer
-		<LiferayServiceExtender.LiferayServiceExtension> {
+		<Supplier<LiferayServiceExtender.LiferayServiceExtension>> {
 
 	@Override
-	public LiferayServiceExtension addingBundle(
+	public Supplier<LiferayServiceExtension> addingBundle(
 		Bundle bundle, BundleEvent bundleEvent) {
 
 		Dictionary<String, String> headers = bundle.getHeaders(
@@ -79,33 +79,53 @@ public class LiferayServiceExtender
 			return null;
 		}
 
-		try {
-			LiferayServiceExtension liferayServiceExtension =
-				new LiferayServiceExtension(bundle);
+		ExecutorService executorService =
+			SystemExecutorServiceUtil.getExecutorService();
 
-			liferayServiceExtension.start();
+		DefaultNoticeableFuture<LiferayServiceExtension>
+			defaultNoticeableFuture = new DefaultNoticeableFuture<>(
+				() -> {
+					LiferayServiceExtension liferayServiceExtension =
+						new LiferayServiceExtension(bundle);
 
-			return liferayServiceExtension;
-		}
-		catch (Exception exception) {
-			_log.error(exception);
-		}
+					liferayServiceExtension.start();
 
-		return null;
+					return liferayServiceExtension;
+				});
+
+		executorService.submit(defaultNoticeableFuture);
+
+		return () -> {
+			try {
+				return defaultNoticeableFuture.get();
+			}
+			catch (InterruptedException interruptedException) {
+				_log.error(interruptedException);
+			}
+			catch (ExecutionException executionException) {
+				_log.error(executionException.getCause());
+			}
+
+			return null;
+		};
 	}
 
 	@Override
 	public void modifiedBundle(
 		Bundle bundle, BundleEvent bundleEvent,
-		LiferayServiceExtension liferayServiceExtension) {
+		Supplier<LiferayServiceExtension> supplier) {
 	}
 
 	@Override
 	public void removedBundle(
 		Bundle bundle, BundleEvent bundleEvent,
-		LiferayServiceExtension liferayServiceExtension) {
+		Supplier<LiferayServiceExtension> supplier) {
 
-		liferayServiceExtension.destroy();
+		LiferayServiceExtension liferayServiceExtension = supplier.get();
+
+		if (liferayServiceExtension != null) {
+			liferayServiceExtension.destroy();
+		}
 	}
 
 	public class LiferayServiceExtension {
@@ -117,7 +137,8 @@ public class LiferayServiceExtender
 				serviceRegistration.unregister();
 			}
 
-			_sessionFactoryImplementor.close();
+			_sessionFactoryImplementorDCLSingleton.destroy(
+				SessionFactoryImplementor::close);
 
 			if (InfrastructureUtil.getDataSource() != _dataSource) {
 				try {
@@ -145,36 +166,56 @@ public class LiferayServiceExtender
 
 			_serviceRegistrations.add(
 				extendeeBundleContext.registerService(
+					SchemaCreator.class,
+					new SchemaCreatorImpl(_extendeeBundle, _dataSource), null));
+
+			ClassLoader classLoader = new ModuleAggregareClassLoader(
+				extendeeClassLoader, _extendeeBundle.getSymbolicName());
+
+			Supplier<SessionFactoryImplementor>
+				sessionFactoryImplementorSupplier =
+					() -> _sessionFactoryImplementorDCLSingleton.getSingleton(
+						() -> {
+							PortletHibernateConfiguration
+								portletHibernateConfiguration =
+									new PortletHibernateConfiguration(
+										classLoader, _dataSource);
+
+							try {
+								portletHibernateConfiguration.
+									afterPropertiesSet();
+							}
+							catch (IOException ioException) {
+								ReflectionUtil.throwException(ioException);
+							}
+
+							return (SessionFactoryImplementor)
+								portletHibernateConfiguration.getObject();
+						});
+
+			DefaultTransactionExecutor defaultTransactionExecutor =
+				_getTransactionExecutor(
+					_dataSource, sessionFactoryImplementorSupplier);
+
+			_serviceRegistrations.add(
+				extendeeBundleContext.registerService(
+					TransactionExecutor.class, defaultTransactionExecutor,
+					MapUtil.singletonDictionary(
+						"origin.bundle.symbolic.name",
+						_extendeeBundle.getSymbolicName())));
+
+			_serviceRegistrations.add(
+				extendeeBundleContext.registerService(
 					DataSource.class, _dataSource,
 					MapUtil.singletonDictionary(
 						"origin.bundle.symbolic.name",
 						_extendeeBundle.getSymbolicName())));
 
-			InitialUpgradeStep initialUpgradeStep = new InitialUpgradeStep(
-				_extendeeBundle, _dataSource);
-
-			_serviceRegistrations.add(
-				extendeeBundleContext.registerService(
-					UpgradeStep.class, initialUpgradeStep,
-					initialUpgradeStep.buildServiceProperties()));
-
-			ClassLoader classLoader = new ModuleAggregareClassLoader(
-				extendeeClassLoader, _extendeeBundle.getSymbolicName());
-
-			PortletHibernateConfiguration portletHibernateConfiguration =
-				new PortletHibernateConfiguration(classLoader, _dataSource);
-
-			portletHibernateConfiguration.afterPropertiesSet();
-
-			_sessionFactoryImplementor =
-				(SessionFactoryImplementor)
-					portletHibernateConfiguration.getObject();
-
 			SessionFactoryImpl sessionFactoryImpl = new SessionFactoryImpl();
 
 			sessionFactoryImpl.setSessionFactoryClassLoader(classLoader);
-			sessionFactoryImpl.setSessionFactoryImplementor(
-				_sessionFactoryImplementor);
+			sessionFactoryImpl.setSessionFactoryImplementorSupplier(
+				sessionFactoryImplementorSupplier);
 
 			SessionFactory sessionFactory =
 				VerifySessionFactoryWrapper.createVerifySessionFactoryWrapper(
@@ -186,21 +227,6 @@ public class LiferayServiceExtender
 					MapUtil.singletonDictionary(
 						"origin.bundle.symbolic.name",
 						_extendeeBundle.getSymbolicName())));
-
-			DefaultTransactionExecutor defaultTransactionExecutor =
-				_getTransactionExecutor(
-					_dataSource, _sessionFactoryImplementor);
-
-			_serviceRegistrations.add(
-				extendeeBundleContext.registerService(
-					new String[] {
-						TransactionExecutor.class.getName(),
-						TransactionHandler.class.getName()
-					},
-					defaultTransactionExecutor,
-					MapUtil.singletonDictionary(
-						"origin.bundle.symbolic.name",
-						_extendeeBundle.getSymbolicName())));
 		}
 
 		private LiferayServiceExtension(Bundle extendeeBundle) {
@@ -209,7 +235,8 @@ public class LiferayServiceExtender
 
 		private DefaultTransactionExecutor _getTransactionExecutor(
 			DataSource liferayDataSource,
-			SessionFactoryImplementor sessionFactoryImplementor) {
+			Supplier<SessionFactoryImplementor>
+				sessionFactoryImplementorSupplier) {
 
 			PlatformTransactionManager platformTransactionManager = null;
 
@@ -217,12 +244,13 @@ public class LiferayServiceExtender
 				platformTransactionManager = new PortletTransactionManager(
 					(HibernateTransactionManager)
 						InfrastructureUtil.getTransactionManager(),
-					sessionFactoryImplementor);
+					sessionFactoryImplementorSupplier);
 			}
 			else {
 				platformTransactionManager =
 					TransactionManagerFactory.createTransactionManager(
-						liferayDataSource, sessionFactoryImplementor);
+						liferayDataSource,
+						sessionFactoryImplementorSupplier.get());
 			}
 
 			return new DefaultTransactionExecutor(platformTransactionManager);
@@ -232,31 +260,33 @@ public class LiferayServiceExtender
 		private final Bundle _extendeeBundle;
 		private final List<ServiceRegistration<?>> _serviceRegistrations =
 			new ArrayList<>();
-		private SessionFactoryImplementor _sessionFactoryImplementor;
+		private final DCLSingleton<SessionFactoryImplementor>
+			_sessionFactoryImplementorDCLSingleton = new DCLSingleton<>();
 
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleTracker = new BundleTracker<>(
-			bundleContext, Bundle.ACTIVE | Bundle.STARTING, this);
+			bundleContext, Bundle.ACTIVE, this);
 
-		FutureTask<Void> futureTask = new FutureTask<>(
-			() -> {
-				_bundleTracker.open();
+		DependencyManagerSyncUtil.registerSyncFutureTask(
+			new FutureTask<>(
+				() -> {
+					_bundleTracker.open();
 
-				return null;
-			});
+					Map<Bundle, Supplier<LiferayServiceExtension>> map =
+						_bundleTracker.getTracked();
 
-		Thread bundleTrackerOpenerThread = new Thread(
-			futureTask,
+					for (Supplier<LiferayServiceExtension> supplier :
+							map.values()) {
+
+						supplier.get();
+					}
+
+					return null;
+				}),
 			LiferayServiceExtender.class.getName() + "-BundleTrackerOpener");
-
-		bundleTrackerOpenerThread.setDaemon(true);
-
-		bundleTrackerOpenerThread.start();
-
-		DependencyManagerSyncUtil.registerSyncFuture(futureTask);
 	}
 
 	@Deactivate
@@ -267,6 +297,6 @@ public class LiferayServiceExtender
 	private static final Log _log = LogFactoryUtil.getLog(
 		LiferayServiceExtender.class);
 
-	private BundleTracker<?> _bundleTracker;
+	private BundleTracker<Supplier<LiferayServiceExtension>> _bundleTracker;
 
 }

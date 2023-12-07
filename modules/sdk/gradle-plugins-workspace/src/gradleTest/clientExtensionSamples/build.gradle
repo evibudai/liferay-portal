@@ -1,43 +1,38 @@
 task runGradleTest
 
 runGradleTest {
-	dependsOn ":sample-custom-element:createClientExtensionConfig"
-	dependsOn ":sample-iframe:buildClientExtensionZip"
-	dependsOn ":sample-theme-css:buildClientExtensionZip"
+	dependsOn ":sample-custom-element-1:createClientExtensionConfig"
+	dependsOn ":sample-iframe-1:buildClientExtensionZip"
+	dependsOn ":sample-theme-css-1:buildClientExtensionZip"
 	dependsOn ":sample-theme-favicon:buildClientExtensionZip"
 
 	doLast {
-		Project sampleCustomElementProject = project(":sample-custom-element")
+		Project sampleCustomElement1Project = project(":sample-custom-element-1")
 
-		File clientExtensionConfigFile = new File(sampleCustomElementProject.buildDir, "sample-custom-element.client-extension-config.json")
+		File clientExtensionConfigFile = new File(sampleCustomElement1Project.buildDir, "liferay-client-extension-build/sample-custom-element-1.client-extension-config.json")
 
-		assert clientExtensionConfigFile.text.contains("fizz=buzz")
-		assert clientExtensionConfigFile.text.contains("foo=bar")
+		assert clientExtensionConfigFile.exists()
 
-		Project sampleIFrameProject = project(":sample-iframe")
+		Project sampleIFrame1Project = project(":sample-iframe-1")
 
-		FileTree sampleIFrameDistZipFileTree = zipTree(sampleIFrameProject.file("dist/sample-iframe.zip"))
+		FileTree sampleIFrame1DistZipFileTree = zipTree(sampleIFrame1Project.file("dist/sample-iframe-1.zip"))
 
-		File lcpJsonFile = sampleIFrameDistZipFileTree.files.find {
+		File lcpJsonFile = sampleIFrame1DistZipFileTree.files.find {
 			it.name == "LCP.json"
 		}
 
 		assert !lcpJsonFile.text.contains("sample-iframe")
 		assert lcpJsonFile.text.contains("sampleiframe")
 
-		Project sampleThemeCSSProject = project(":sample-theme-css")
+		Project sampleThemeCSS1Project = project(":sample-theme-css-1")
 
-		FileTree sampleThemeCSSZipFileTree = zipTree(sampleThemeCSSProject.file("dist/sample-theme-css.zip"))
+		FileTree sampleThemeCSS1ZipFileTree = zipTree(sampleThemeCSS1Project.file("dist/sample-theme-css-1.zip"))
 
-		File imgFile = sampleThemeCSSZipFileTree.files.find {
-			it.name == "paper.gif"
-		}
-
-		assert imgFile.exists()
+		assert !sampleThemeCSS1ZipFileTree.isEmpty()
 
 		Project sampleThemeFaviconProject = project(":sample-theme-favicon")
 
-		File sampleConfigFile = new File(sampleThemeFaviconProject.buildDir, "sample-theme-favicon.client-extension-config.json")
+		File sampleConfigFile = new File(sampleThemeFaviconProject.buildDir, "liferay-client-extension-build/sample-theme-favicon.client-extension-config.json")
 
 		assert sampleConfigFile.exists()
 
@@ -47,6 +42,6 @@ runGradleTest {
 
 		File clientExtensionYamlFile = sampleThemeFaviconProject.file("client-extension.yaml")
 
-		assert createClientExtensionConfigTask.inputs.files.asPath == clientExtensionYamlFile.path
+		assert createClientExtensionConfigTask.inputs.files.asPath.contains(clientExtensionYamlFile.path)
 	}
 }

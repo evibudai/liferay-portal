@@ -1,9 +1,12 @@
 {
 	"dependencies": {
+		"@clayui/button": "3.107.0",
+		"@clayui/form": "3.107.0",
+		"@clayui/tabs": "3.107.0",
+		"asset-taglib": "*",
 		"commerce-frontend-js": "*",
-		"metal-component": "2.16.8",
-		"metal-soy": "2.16.9",
-		"metal-state": "2.16.8"
+		"frontend-js-web": "*",
+		"react": "16.12.0"
 	},
 	"name": "commerce-product-content-web",
 	"scripts": {
@@ -11,5 +14,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "4.0.78"
+	"version": "4.0.110"
 }

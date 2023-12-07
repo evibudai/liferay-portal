@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.navigation.model.impl;
@@ -253,113 +244,130 @@ public class SiteNavigationMenuModelImpl
 	public Map<String, Function<SiteNavigationMenu, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<SiteNavigationMenu, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<SiteNavigationMenu, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<SiteNavigationMenu, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<SiteNavigationMenu, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<SiteNavigationMenu, Object>>();
-		Map<String, BiConsumer<SiteNavigationMenu, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<SiteNavigationMenu, ?>>();
+		private static final Map<String, Function<SiteNavigationMenu, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", SiteNavigationMenu::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<SiteNavigationMenu, Long>)
-				SiteNavigationMenu::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", SiteNavigationMenu::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<SiteNavigationMenu, Long>)
-				SiteNavigationMenu::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", SiteNavigationMenu::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<SiteNavigationMenu, String>)
-				SiteNavigationMenu::setUuid);
-		attributeGetterFunctions.put(
-			"siteNavigationMenuId",
-			SiteNavigationMenu::getSiteNavigationMenuId);
-		attributeSetterBiConsumers.put(
-			"siteNavigationMenuId",
-			(BiConsumer<SiteNavigationMenu, Long>)
-				SiteNavigationMenu::setSiteNavigationMenuId);
-		attributeGetterFunctions.put("groupId", SiteNavigationMenu::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<SiteNavigationMenu, Long>)
-				SiteNavigationMenu::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", SiteNavigationMenu::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<SiteNavigationMenu, Long>)
-				SiteNavigationMenu::setCompanyId);
-		attributeGetterFunctions.put("userId", SiteNavigationMenu::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<SiteNavigationMenu, Long>)
-				SiteNavigationMenu::setUserId);
-		attributeGetterFunctions.put(
-			"userName", SiteNavigationMenu::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<SiteNavigationMenu, String>)
-				SiteNavigationMenu::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", SiteNavigationMenu::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<SiteNavigationMenu, Date>)
-				SiteNavigationMenu::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", SiteNavigationMenu::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<SiteNavigationMenu, Date>)
-				SiteNavigationMenu::setModifiedDate);
-		attributeGetterFunctions.put("name", SiteNavigationMenu::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<SiteNavigationMenu, String>)
-				SiteNavigationMenu::setName);
-		attributeGetterFunctions.put("type", SiteNavigationMenu::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<SiteNavigationMenu, Integer>)
-				SiteNavigationMenu::setType);
-		attributeGetterFunctions.put("auto", SiteNavigationMenu::getAuto);
-		attributeSetterBiConsumers.put(
-			"auto",
-			(BiConsumer<SiteNavigationMenu, Boolean>)
-				SiteNavigationMenu::setAuto);
-		attributeGetterFunctions.put(
-			"lastPublishDate", SiteNavigationMenu::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<SiteNavigationMenu, Date>)
-				SiteNavigationMenu::setLastPublishDate);
+		static {
+			Map<String, Function<SiteNavigationMenu, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<SiteNavigationMenu, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", SiteNavigationMenu::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", SiteNavigationMenu::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", SiteNavigationMenu::getUuid);
+			attributeGetterFunctions.put(
+				"siteNavigationMenuId",
+				SiteNavigationMenu::getSiteNavigationMenuId);
+			attributeGetterFunctions.put(
+				"groupId", SiteNavigationMenu::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", SiteNavigationMenu::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", SiteNavigationMenu::getUserId);
+			attributeGetterFunctions.put(
+				"userName", SiteNavigationMenu::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", SiteNavigationMenu::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", SiteNavigationMenu::getModifiedDate);
+			attributeGetterFunctions.put("name", SiteNavigationMenu::getName);
+			attributeGetterFunctions.put("type", SiteNavigationMenu::getType);
+			attributeGetterFunctions.put("auto", SiteNavigationMenu::getAuto);
+			attributeGetterFunctions.put(
+				"lastPublishDate", SiteNavigationMenu::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<SiteNavigationMenu, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<SiteNavigationMenu, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<SiteNavigationMenu, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<SiteNavigationMenu, Long>)
+					SiteNavigationMenu::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<SiteNavigationMenu, Long>)
+					SiteNavigationMenu::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<SiteNavigationMenu, String>)
+					SiteNavigationMenu::setUuid);
+			attributeSetterBiConsumers.put(
+				"siteNavigationMenuId",
+				(BiConsumer<SiteNavigationMenu, Long>)
+					SiteNavigationMenu::setSiteNavigationMenuId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<SiteNavigationMenu, Long>)
+					SiteNavigationMenu::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<SiteNavigationMenu, Long>)
+					SiteNavigationMenu::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<SiteNavigationMenu, Long>)
+					SiteNavigationMenu::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<SiteNavigationMenu, String>)
+					SiteNavigationMenu::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<SiteNavigationMenu, Date>)
+					SiteNavigationMenu::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<SiteNavigationMenu, Date>)
+					SiteNavigationMenu::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<SiteNavigationMenu, String>)
+					SiteNavigationMenu::setName);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<SiteNavigationMenu, Integer>)
+					SiteNavigationMenu::setType);
+			attributeSetterBiConsumers.put(
+				"auto",
+				(BiConsumer<SiteNavigationMenu, Boolean>)
+					SiteNavigationMenu::setAuto);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<SiteNavigationMenu, Date>)
+					SiteNavigationMenu::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1019,7 +1027,8 @@ public class SiteNavigationMenuModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<SiteNavigationMenu, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

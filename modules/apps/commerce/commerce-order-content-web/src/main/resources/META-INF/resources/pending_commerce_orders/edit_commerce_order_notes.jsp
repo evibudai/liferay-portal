@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,6 +12,14 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 
 boolean manageNotesPermission = commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_NOTES);
 boolean manageRestrictedNotesPermission = commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES);
+
+PortletURL backURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/commerce_open_order_content/edit_commerce_order"
+).setParameter(
+	"commerceOrderId", commerceOrder.getCommerceOrderId()
+).buildPortletURL();
 %>
 
 <portlet:actionURL name="/commerce_open_order_content/edit_commerce_order_note" var="editCommerceOrderNoteURL">
@@ -31,7 +30,7 @@ boolean manageRestrictedNotesPermission = commerceOrderContentDisplayContext.has
 	<div class="autofit-float autofit-row header-title-bar">
 		<div class="autofit-col autofit-col-expand">
 			<liferay-ui:header
-				backURL="<%= redirect %>"
+				backURL="<%= String.valueOf(backURL) %>"
 				title='<%= LanguageUtil.format(request, "order-x", commerceOrder.getCommerceOrderId()) %>'
 			/>
 		</div>
@@ -52,14 +51,14 @@ boolean manageRestrictedNotesPermission = commerceOrderContentDisplayContext.has
 			<div class="commerce-panel">
 				<div class="commerce-panel__content">
 					<div class="lfr-discussion-details">
-						<liferay-ui:user-portrait
-							cssClass="sticker-lg"
+						<liferay-user:user-portrait
+							size="lg"
 							user="<%= user %>"
 						/>
 					</div>
 
 					<div class="lfr-discussion-body">
-						<aui:input autoFocus="<%= true %>" label="" name="content" placeholder="type-your-note-here" />
+						<aui:input label="" name="content" placeholder="type-your-note-here" />
 
 						<div class="order-notes-submit-actions">
 							<c:if test="<%= manageRestrictedNotesPermission %>">
@@ -76,7 +75,7 @@ boolean manageRestrictedNotesPermission = commerceOrderContentDisplayContext.has
 		</c:if>
 
 		<%
-		Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
+		Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 
 		for (CommerceOrderNote commerceOrderNote : commerceOrderContentDisplayContext.getCommerceOrderNotes(commerceOrder)) {
 		%>
@@ -87,10 +86,9 @@ boolean manageRestrictedNotesPermission = commerceOrderContentDisplayContext.has
 						<div class="card-row">
 							<div class="card-col-content">
 								<div class="lfr-discussion-details">
-									<liferay-ui:user-portrait
-										cssClass="sticker-lg"
+									<liferay-user:user-portrait
+										size="lg"
 										userId="<%= commerceOrderNote.getUserId() %>"
-										userName="<%= commerceOrderNote.getUserName() %>"
 									/>
 								</div>
 
@@ -111,7 +109,10 @@ boolean manageRestrictedNotesPermission = commerceOrderContentDisplayContext.has
 											</aui:a>
 
 											<c:if test="<%= commerceOrderNote.isRestricted() %>">
-												<aui:icon image="lock" markupView="lexicon" message="private" />
+												<clay:icon
+													cssClass="d-block"
+													symbol="lock"
+												/>
 											</c:if>
 
 											<%
@@ -122,7 +123,7 @@ boolean manageRestrictedNotesPermission = commerceOrderContentDisplayContext.has
 												<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
 
 												<c:if test="<%= createDate.before(commerceOrderNote.getModifiedDate()) %>">
-													<strong onmouseover="Liferay.Portal.ToolTip.show(this, '<%= HtmlUtil.escapeJS(dateFormatDateTime.format(commerceOrderNote.getModifiedDate())) %>');">
+													<strong onmouseover="Liferay.Portal.ToolTip.show(this, '<%= HtmlUtil.escapeJS(dateTimeFormat.format(commerceOrderNote.getModifiedDate())) %>');">
 														- <liferay-ui:message key="edited" />
 													</strong>
 												</c:if>

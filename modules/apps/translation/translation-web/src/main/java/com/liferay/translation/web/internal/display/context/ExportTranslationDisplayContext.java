@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.web.internal.display.context;
 
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.localized.InfoLocalizedValue;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -49,13 +41,12 @@ import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -85,7 +76,7 @@ public class ExportTranslationDisplayContext {
 		_translationInfoItemFieldValuesExporterRegistry =
 			translationInfoItemFieldValuesExporterRegistry;
 
-		_className = PortalUtil.getClassName(_classNameId);
+		_className = PortalUtil.getClassName(classNameId);
 		_themeDisplay = (ThemeDisplay)liferayPortletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -138,22 +129,10 @@ public class ExportTranslationDisplayContext {
 	public Map<String, Object> getExportTranslationData() throws Exception {
 		return HashMapBuilder.<String, Object>put(
 			"availableExportFileFormats",
-			() -> {
-				Collection<TranslationInfoItemFieldValuesExporter>
-					translationInfoItemFieldValuesExporters =
-						_translationInfoItemFieldValuesExporterRegistry.
-							getTranslationInfoItemFieldValuesExporters();
-
-				Stream<TranslationInfoItemFieldValuesExporter>
-					translationInfoItemFieldValuesExportersStream =
-						translationInfoItemFieldValuesExporters.stream();
-
-				return translationInfoItemFieldValuesExportersStream.map(
-					this::_getExportFileFormatJSONObject
-				).collect(
-					Collectors.toList()
-				);
-			}
+			() -> TransformUtil.transform(
+				_translationInfoItemFieldValuesExporterRegistry.
+					getTranslationInfoItemFieldValuesExporters(),
+				this::_getExportFileFormatJSONObject)
 		).put(
 			"availableSourceLocales",
 			_getLocalesJSONArray(
@@ -203,6 +182,8 @@ public class ExportTranslationDisplayContext {
 	}
 
 	private Set<Locale> _getAvailableSourceLocales() throws Exception {
+		Set<Locale> availableSourceLocales = new HashSet<>();
+
 		InfoItemLanguagesProvider<Object> infoItemLanguagesProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemLanguagesProvider.class, _className);
@@ -216,12 +197,9 @@ public class ExportTranslationDisplayContext {
 					infoItemLanguagesProvider.getAvailableLanguageIds(model)));
 		}
 
-		Stream<String> stream = languageIds.stream();
-
-		Stream<Locale> localesStream = stream.map(LocaleUtil::fromLanguageId);
-
-		Set<Locale> availableSourceLocales = localesStream.collect(
-			Collectors.toSet());
+		for (String languageId : languageIds) {
+			availableSourceLocales.add(LocaleUtil.fromLanguageId(languageId));
+		}
 
 		if (!availableSourceLocales.contains(
 				PortalUtil.getSiteDefaultLocale(_groupId))) {
@@ -338,8 +316,7 @@ public class ExportTranslationDisplayContext {
 			_intersect(
 				segmentsExperiences,
 				SegmentsExperienceServiceUtil.getSegmentsExperiences(
-					_groupId, PortalUtil.getClassNameId(Layout.class.getName()),
-					classPK, true));
+					_groupId, classPK, true));
 		}
 
 		return segmentsExperiences;
@@ -362,7 +339,7 @@ public class ExportTranslationDisplayContext {
 		for (long classPK : _classPKs) {
 			int segmentsExperiencesCount =
 				SegmentsExperienceLocalServiceUtil.getSegmentsExperiencesCount(
-					_groupId, _classNameId, classPK);
+					_groupId, classPK);
 
 			if (segmentsExperiencesCount > 1) {
 				return true;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
@@ -221,53 +212,71 @@ public class ERCCompanyEntryModelImpl
 	public Map<String, Function<ERCCompanyEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ERCCompanyEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ERCCompanyEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ERCCompanyEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ERCCompanyEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<ERCCompanyEntry, Object>>();
-		Map<String, BiConsumer<ERCCompanyEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<ERCCompanyEntry, ?>>();
+		private static final Map<String, Function<ERCCompanyEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("uuid", ERCCompanyEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<ERCCompanyEntry, String>)ERCCompanyEntry::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", ERCCompanyEntry::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<ERCCompanyEntry, String>)
-				ERCCompanyEntry::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"ercCompanyEntryId", ERCCompanyEntry::getErcCompanyEntryId);
-		attributeSetterBiConsumers.put(
-			"ercCompanyEntryId",
-			(BiConsumer<ERCCompanyEntry, Long>)
-				ERCCompanyEntry::setErcCompanyEntryId);
-		attributeGetterFunctions.put(
-			"companyId", ERCCompanyEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ERCCompanyEntry, Long>)ERCCompanyEntry::setCompanyId);
+		static {
+			Map<String, Function<ERCCompanyEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<ERCCompanyEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put("uuid", ERCCompanyEntry::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				ERCCompanyEntry::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"ercCompanyEntryId", ERCCompanyEntry::getErcCompanyEntryId);
+			attributeGetterFunctions.put(
+				"companyId", ERCCompanyEntry::getCompanyId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ERCCompanyEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ERCCompanyEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<ERCCompanyEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<ERCCompanyEntry, String>)ERCCompanyEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<ERCCompanyEntry, String>)
+					ERCCompanyEntry::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"ercCompanyEntryId",
+				(BiConsumer<ERCCompanyEntry, Long>)
+					ERCCompanyEntry::setErcCompanyEntryId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ERCCompanyEntry, Long>)
+					ERCCompanyEntry::setCompanyId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -613,7 +622,8 @@ public class ERCCompanyEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<ERCCompanyEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

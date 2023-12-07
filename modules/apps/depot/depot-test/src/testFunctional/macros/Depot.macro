@@ -1,9 +1,10 @@
 definition {
 
-	macro activateStaging {
-		Breadcrumb.viewActiveEntry(breadcrumbName = "Staging Configuration");
+	@summary = "Default summary"
+	macro activateStaging(depotName = null, groupId = null, remotePort = null, remoteStaging = null) {
+		Breadcrumb.viewActiveEntry(breadcrumbName = "Staging");
 
-		if ("${remoteStaging}" == "true") {
+		if (${remoteStaging} == "true") {
 			Check.checkHiddenToggleSwitch(locator1 = "SiteSettingsStaging#STAGING_REMOTE_LIVE");
 
 			Type(
@@ -13,17 +14,17 @@ definition {
 			if (isSet(remotePort)) {
 				Type(
 					locator1 = "SiteSettingsStaging#REMOTE_STAGING_PORT",
-					value1 = "${remotePort}");
+					value1 = ${remotePort});
 			}
 			else {
 				Type(
 					locator1 = "SiteSettingsStaging#REMOTE_STAGING_PORT",
-					value1 = "8080");
+					value1 = 8080);
 			}
 
 			Type(
 				locator1 = "SiteSettingsStaging#REMOTE_STAGING_SITE_ID",
-				value1 = "${groupId}");
+				value1 = ${groupId});
 		}
 		else {
 			Check.checkHiddenToggleSwitch(locator1 = "SiteSettingsStaging#STAGING_LOCAL_LIVE");
@@ -33,7 +34,7 @@ definition {
 			locator1 = "Button#SAVE",
 			value1 = "Save");
 
-		if ("${remoteStaging}" == "true") {
+		if (${remoteStaging} == "true") {
 			AssertConfirm(value1 = "Are you sure you want to activate remote staging for ${depotName}?");
 
 			WaitForVisible(locator1 = "Message#SUCCESS");
@@ -57,16 +58,17 @@ definition {
 		}
 	}
 
-	macro addDepot {
+	@summary = "Default summary"
+	macro addDepot(depotName = null, depotDescription = null, duplicate = null) {
 		LexiconEntry.gotoAdd();
 
 		Type(
 			locator1 = "TextInput#NAME",
-			value1 = "${depotName}");
+			value1 = ${depotName});
 
 		Button.clickSave();
 
-		if ("${duplicate}" == "true") {
+		if (${duplicate} == "true") {
 			AssertTextEquals(
 				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
 				value1 = "Please enter a unique name.");
@@ -76,12 +78,12 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "ControlMenu#HEADING",
-				value1 = "${depotName}");
+				value1 = ${depotName});
 
 			if (isSet(depotDescription)) {
 				Type(
 					locator1 = "TextArea#DESCRIPTION",
-					value1 = "${depotDescription}");
+					value1 = ${depotDescription});
 			}
 
 			Button.clickSave();
@@ -90,20 +92,21 @@ definition {
 		}
 	}
 
-	macro assignAssetLibraryRole {
+	@summary = "Default summary"
+	macro assignAssetLibraryRole(roleTitle = null, checkAllRoles = null, resourceName = null) {
 		LexiconCard.clickEllipsisItem(
-			card = "${resourceName}",
+			card = ${resourceName},
 			item = "Assign Roles");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (isSet(checkAllRoles)) {
-			for (var roleName : list "${checkAllRoles}") {
-				LexiconEntry.viewEntryName(rowEntry = "${roleName}");
+			for (var roleName : list ${checkAllRoles}) {
+				LexiconEntry.viewEntryName(rowEntry = ${roleName});
 			}
 		}
 
-		LexiconCard.checkCardCheckbox(card = "${roleTitle}");
+		LexiconCard.checkCardCheckbox(card = ${roleTitle});
 
 		SelectFrameTop();
 
@@ -112,8 +115,9 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro assignOrganizationAsMember {
-		var key_card = "${orgName}";
+	@summary = "Default summary"
+	macro assignOrganizationAsMember(orgName = null) {
+		var key_card = ${orgName};
 
 		Navigator.gotoNavItem(navItem = "Organizations");
 
@@ -125,9 +129,9 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Card#CARD_TITLE",
-			value1 = "${orgName}");
+			value1 = ${orgName});
 
-		LexiconCard.checkCardCheckbox(card = "${orgName}");
+		LexiconCard.checkCardCheckbox(card = ${orgName});
 
 		SelectFrameTop();
 
@@ -136,8 +140,9 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro assignUserAsMember {
-		var key_cardText = "${userScreenName}";
+	@summary = "Default summary"
+	macro assignUserAsMember(userLastName = null, userScreenName = null, userMiddleName = null, userFirstName = null) {
+		var key_cardText = ${userScreenName};
 
 		LexiconEntry.gotoAdd();
 
@@ -149,6 +154,8 @@ definition {
 		else {
 			SelectFrame(locator1 = "IFrame#ADD_USERS_TO_SITE");
 		}
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
 		if (isSet(userMiddleName)) {
 			LexiconCard.checkCardCheckbox(card = "${userFirstName} ${userMiddleName} ${userLastName}");
@@ -164,14 +171,17 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro assignUserGroupAsMember {
+	@summary = "Default summary"
+	macro assignUserGroupAsMember(userGroupName = null) {
 		Navigator.gotoNavItem(navItem = "User Groups");
 
 		LexiconEntry.gotoAdd();
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		LexiconEntry.selectEntry(rowEntry = "${userGroupName}");
+		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+
+		LexiconEntry.selectEntry(rowEntry = ${userGroupName});
 
 		SelectFrameTop();
 
@@ -180,9 +190,10 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro changeLanguagesOrder {
-		var key_fromRowNumber = "${fromRowNumber}";
-		var key_toRowNumber = "${toRowNumber}";
+	@summary = "Default summary"
+	macro changeLanguagesOrder(toRowNumber = null, fromRowNumber = null) {
+		var key_fromRowNumber = ${fromRowNumber};
+		var key_toRowNumber = ${toRowNumber};
 
 		DragAndDrop.javaScriptDragAndDropToObject(
 			locator1 = "LanguageConfiguration#DEPOT_LANGUAGE_ORDER_FROM",
@@ -190,22 +201,23 @@ definition {
 			value1 = "");
 	}
 
-	macro configureApplication {
+	@summary = "Default summary"
+	macro configureApplication(status = null) {
 		DepotNavigator.gotoGeneral();
 
 		Panel.expandPanel(panel = "Applications");
 
-		if ("${status}" == "Enabled") {
-			for (var applicationList : list "${applicationList}") {
+		if (${status} == "Enabled") {
+			for (var applicationList : list ${applicationList}) {
 				Check(
-					checkboxName = "${applicationList}",
+					checkboxName = ${applicationList},
 					locator1 = "Checkbox#ANY_CHECKBOX");
 			}
 		}
-		else if ("${status}" == "Disabled") {
-			for (var applicationList : list "${applicationList}") {
+		else if (${status} == "Disabled") {
+			for (var applicationList : list ${applicationList}) {
 				Uncheck(
-					checkboxName = "${applicationList}",
+					checkboxName = ${applicationList},
 					locator1 = "Checkbox#ANY_CHECKBOX");
 			}
 		}
@@ -213,13 +225,14 @@ definition {
 		PortletEntry.save();
 	}
 
-	macro configureAutoTagging {
-		if ("${autoTagging}" == "Enabled") {
+	@summary = "Default summary"
+	macro configureAutoTagging(autoTagging = null) {
+		if (${autoTagging} == "Enabled") {
 			Check.checkToggleSwitch(
 				key_toggleSwitchLabel = "Enable Auto Tagging",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 		}
-		else if ("${autoTagging}" == "Disabled") {
+		else if (${autoTagging} == "Disabled") {
 			Uncheck.uncheckToggleSwitch(
 				key_toggleSwitchLabel = "Enable Auto Tagging",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
@@ -228,21 +241,22 @@ definition {
 		PortletEntry.save();
 	}
 
-	macro configureCurrentLanguages {
+	@summary = "Default summary"
+	macro configureCurrentLanguages(currentLanguages = null, defaultDepotLanguage = null) {
 		for (var language : list "English (United States),Arabic (Saudi Arabia),Catalan (Spain),Chinese (China),Dutch (Netherlands),Finnish (Finland),French (France),German (Germany),Hungarian (Hungary),Japanese (Japan),Portuguese (Brazil),Spanish (Spain),Swedish (Sweden)") {
-			if ("${language}" != "${defaultDepotLanguage}") {
-				if (IsElementPresent(key_language = "${language}", locator1 = "Checkbox#DEPOT_LANGUAGE_CHECKBOX_CHECKED")) {
+			if (${language} != ${defaultDepotLanguage}) {
+				if (IsElementPresent(key_language = ${language}, locator1 = "Checkbox#DEPOT_LANGUAGE_CHECKBOX_CHECKED")) {
 					Click.clickNoMouseOverNoWaitForVisible(
-						key_language = "${language}",
+						key_language = ${language},
 						locator1 = "Checkbox#DEPOT_LANGUAGE_CHECKBOX");
 				}
 			}
 		}
 
-		for (var currentLanguage : list "${currentLanguages}") {
-			if ("${currentLanguage}" != "${defaultDepotLanguage}") {
+		for (var currentLanguage : list ${currentLanguages}) {
+			if (${currentLanguage} != ${defaultDepotLanguage}) {
 				Click.clickNoMouseOverNoWaitForVisible(
-					key_language = "${currentLanguage}",
+					key_language = ${currentLanguage},
 					locator1 = "Checkbox#DEPOT_LANGUAGE_CHECKBOX");
 			}
 		}
@@ -250,44 +264,45 @@ definition {
 		Button.click(button = "Done");
 	}
 
-	macro configureDDMStructures {
-		DepotNavigator.gotoEdit(depotName = "${depotName}");
+	@summary = "Default summary"
+	macro configureDDMStructures(depotName = null, siteName = null, tableEntryText = null) {
+		DepotNavigator.gotoEdit(depotName = ${depotName});
 
-		DepotNavigator.gotoSites(depotName = "${depotName}");
+		DepotNavigator.gotoSites(depotName = ${depotName});
 
 		if (isSet(makeWcUnavailable)) {
 			LexiconTable.clickEllipsisItem(
 				item = "Make Structures Unavailable",
-				tableEntry = "${siteName}");
+				tableEntry = ${siteName});
 
 			AssertConfirm(value1 = "After disabling structure and document type sharing, any site content that uses the structures or document types will be invalid. Do you want to disable structure and document type sharing?");
 
 			Alert.viewSuccessMessage();
 
 			AssertTextEquals(
-				key_tableEntry = "${siteName}",
-				key_tableEntryText = "${tableEntryText}",
+				key_tableEntry = ${siteName},
+				key_tableEntryText = ${tableEntryText},
 				locator1 = "LexiconTable#TABLE_ENTRY_TEXT",
-				value1 = "${tableEntryText}");
+				value1 = ${tableEntryText});
 		}
 		else {
 			LexiconTable.clickEllipsisItem(
 				item = "Make Structures Available",
-				tableEntry = "${siteName}");
+				tableEntry = ${siteName});
 
 			AssertConfirm(value1 = "You will not be able to disconnect this site when structure and document type sharing is enabled. In order to disconnect this site from this asset library, you must disable structure and document type sharing first.");
 
 			Alert.viewSuccessMessage();
 
 			AssertTextEquals(
-				key_tableEntry = "${siteName}",
-				key_tableEntryText = "${tableEntryText}",
+				key_tableEntry = ${siteName},
+				key_tableEntryText = ${tableEntryText},
 				locator1 = "LexiconTable#TABLE_ENTRY_TEXT_2",
-				value1 = "${tableEntryText}");
+				value1 = ${tableEntryText});
 
 			if (isSet(disconnectDisabled)) {
 				Click.waitForMenuToggleJSClick(
-					key_tableEntry = "${siteName}",
+					key_tableEntry = ${siteName},
 					locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
 
 				AssertElementPresent(
@@ -297,30 +312,32 @@ definition {
 		}
 	}
 
-	macro configureDefaultLanguage {
+	@summary = "Default summary"
+	macro configureDefaultLanguage(defaultDepotLanguage = null, locale = null) {
 		Click(
-			key_language = "${defaultDepotLanguage}",
+			key_language = ${defaultDepotLanguage},
 			locator1 = "Icon#DEPOT_LANGUAGES_ELLIPSIS");
 
 		Click.clickNoMouseOverNoWaitForVisible(
-			key_language = "${locale}",
+			key_language = ${locale},
 			locator1 = "Button#MAKE_DEFAULT");
 
 		Button.click(button = "Save");
 
 		AssertTextEquals.assertPartialText(
-			key_language = "${defaultDepotLanguage}",
+			key_language = ${defaultDepotLanguage},
 			locator1 = "LanguageConfiguration#DEPOT_DEFAULT_LANGUAGE",
-			value1 = "${defaultDepotLanguage}");
+			value1 = ${defaultDepotLanguage});
 	}
 
-	macro configureDirectoryIndexing {
-		if ("${directoryIndexing}" == "Enabled") {
+	@summary = "Default summary"
+	macro configureDirectoryIndexing(directoryIndexing = null) {
+		if (${directoryIndexing} == "Enabled") {
 			Check.checkToggleSwitch(
 				key_toggleSwitchLabel = "Enable Directory Indexing",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 		}
-		else if ("${directoryIndexing}" == "Disabled") {
+		else if (${directoryIndexing} == "Disabled") {
 			Uncheck.uncheckToggleSwitch(
 				key_toggleSwitchLabel = "Enable Directory Indexing",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
@@ -329,15 +346,28 @@ definition {
 		PortletEntry.save();
 	}
 
-	macro configureRecycleBin {
+	@summary = "Default summary"
+	macro configureMaximumFileSize(fieldValue = null, depotName = null) {
+		DepotNavigator.openDepotSettingsGeneral(depotName = ${depotName});
+
+		Type(
+			key_fieldLabel = "File Max Size",
+			locator1 = "TextInput#GENERIC_NUMBER_INPUT",
+			value1 = ${fieldValue});
+
+		PortletEntry.save();
+	}
+
+	@summary = "Default summary"
+	macro configureRecycleBin(recycleBin = null) {
 		Panel.expandPanel(panel = "Recycle Bin");
 
-		if ("${recycleBin}" == "Enabled") {
+		if (${recycleBin} == "Enabled") {
 			Check.checkToggleSwitch(
 				key_toggleSwitchLabel = "Enable Recycle Bin",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 		}
-		else if ("${recycleBin}" == "Disabled") {
+		else if (${recycleBin} == "Disabled") {
 			Uncheck.uncheckToggleSwitchNoErrorNoAssert(locator1 = "Checkbox#ENABLE_RECYCLE_BIN");
 
 			AssertConfirm(value1 = "Disabling the Recycle Bin prevents the restoring of content that has been moved to the Recycle Bin.");
@@ -350,35 +380,37 @@ definition {
 		PortletEntry.save();
 	}
 
-	macro configureSearch {
-		for (var siteName : list "${siteList}") {
-			DepotNavigator.gotoEdit(depotName = "${depotName}");
+	@summary = "Default summary"
+	macro configureSearch(depotName = null, item = null, tableEntryText = null, siteList = null) {
+		for (var siteName : list ${siteList}) {
+			DepotNavigator.gotoEdit(depotName = ${depotName});
 
-			DepotNavigator.gotoSites(depotName = "${depotName}");
+			DepotNavigator.gotoSites(depotName = ${depotName});
 
 			LexiconTable.clickEllipsisItem(
-				item = "${item}",
-				tableEntry = "${siteName}");
+				item = ${item},
+				tableEntry = ${siteName});
 
 			SelectFrame(value1 = "relative=top");
 
 			Alert.viewSuccessMessage();
 
 			AssertTextEquals(
-				key_tableEntry = "${siteName}",
-				key_tableEntryText = "${tableEntryText}",
+				key_tableEntry = ${siteName},
+				key_tableEntryText = ${tableEntryText},
 				locator1 = "LexiconTable#TABLE_ENTRY_TEXT",
-				value1 = "${tableEntryText}");
+				value1 = ${tableEntryText});
 		}
 	}
 
-	macro configureSharing {
-		if ("${sharing}" == "Enabled") {
+	@summary = "Default summary"
+	macro configureSharing(sharing = null) {
+		if (${sharing} == "Enabled") {
 			Check.checkToggleSwitch(
 				key_toggleSwitchLabel = "Enable Sharing",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 		}
-		else if ("${sharing}" == "Disabled") {
+		else if (${sharing} == "Disabled") {
 			Uncheck.uncheckToggleSwitch(
 				key_toggleSwitchLabel = "Enable Sharing",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
@@ -387,19 +419,22 @@ definition {
 		PortletEntry.save();
 	}
 
-	macro connectSite {
-		for (var siteName : list "${siteList}") {
+	@summary = "Default summary"
+	macro connectSite(parentSiteName = null, siteList = null) {
+		for (var siteName : list ${siteList}) {
 			Button.clickAdd();
+
+			IFrame.selectConfigurationFrame();
 
 			Navigator.gotoNavItem(navItem = "All Sites");
 
 			if (isSet(parentSiteName)) {
-				Search.searchCP(searchTerm = "${parentSiteName}");
+				Search.searchCP(searchTerm = ${parentSiteName});
 
-				LexiconEntry.gotoEntry(rowEntry = "${siteList}");
+				LexiconEntry.gotoEntry(rowEntry = ${siteList});
 			}
 			else {
-				SiteSelector.selectSite(site = "${siteName}");
+				SiteSelector.selectSite(site = ${siteName});
 			}
 
 			SelectFrame(value1 = "relative=top");
@@ -411,13 +446,14 @@ definition {
 				Alert.viewSuccessMessage();
 
 				AssertElementPresent.pauseAssertVisible(
-					key_tableEntry = "${siteName}",
+					key_tableEntry = ${siteName},
 					locator1 = "LexiconTable#TABLE_ENTRY");
 			}
 		}
 	}
 
-	macro deactivateStaging {
+	@summary = "Default summary"
+	macro deactivateStaging(depotName = null) {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging Configuration");
 
 		if (IsElementPresent(locator1 = "SiteSettingsStaging#ENABLED_ON_LOCAL_LIVE_CHECKBOX")) {
@@ -455,16 +491,17 @@ definition {
 		}
 	}
 
-	macro deleteContentViaBulkEditing {
+	@summary = "Default summary"
+	macro deleteContentViaBulkEditing(dmDocumentTitle = null, webContentTitle = null) {
 		if (isSet(webContentTitle)) {
 			Check(
-				key_webContentTitle = "${webContentTitle}",
+				key_webContentTitle = ${webContentTitle},
 				locator1 = "WC#ENTRY_LIST_CHECKBOX");
 		}
 		else if (isSet(dmDocumentTitle)) {
 			LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
-			DMDocument.selectDocuments(dmDocumentTitle = "${dmDocumentTitle}");
+			DMDocument.selectDocuments(dmDocumentTitle = ${dmDocumentTitle});
 		}
 
 		if (isSet(recycleBinDisabled)) {
@@ -481,14 +518,15 @@ definition {
 		}
 	}
 
-	macro deleteCP {
+	@summary = "Default summary"
+	macro deleteCP(depotName = null) {
 		if (isSet(deletions)) {
 			ClickNoError(locator1 = "Icon#DELETE");
 		}
 		else {
 			LexiconEntry.gotoEntryMenuItemNoError(
 				menuItem = "Delete",
-				rowEntry = "${depotName}");
+				rowEntry = ${depotName});
 		}
 
 		AssertConfirm(value1 = "Removing an asset library can affect sites that use the contents stored in it. Are you sure you want to continue removing this asset library?");
@@ -496,19 +534,21 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro disableStagingDepot {
+	@summary = "Default summary"
+	macro disableStagingDepot(depotName = null, remoteStaging = null) {
 		DepotNavigator.openDepotStagingConfiguration(
-			depotName = "${depotName}",
-			remoteStaging = "${remoteStaging}");
+			depotName = ${depotName},
+			remoteStaging = ${remoteStaging});
 
-		Depot.deactivateStaging(depotName = "${depotName}");
+		Depot.deactivateStaging(depotName = ${depotName});
 	}
 
-	macro disconnectSite {
-		for (var siteName : list "${siteList}") {
+	@summary = "Default summary"
+	macro disconnectSite(siteList = null) {
+		for (var siteName : list ${siteList}) {
 			LexiconTable.clickEllipsisItem(
 				item = "Disconnect",
-				tableEntry = "${siteName}");
+				tableEntry = ${siteName});
 
 			AssertConfirm(value1 = "Removing this site connection will not allow the site to consume data from this asset library directly.");
 
@@ -516,12 +556,13 @@ definition {
 		}
 	}
 
-	macro editDepot {
+	@summary = "Default summary"
+	macro editDepot(depotName = null, depotDescriptionEdit = null, language = null, duplicate = null, depotNameEdit = null) {
 		if (isSet(listView)) {
 			LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 			Click(
-				key_listEntry = "${depotName}",
+				key_listEntry = ${depotName},
 				locator1 = "LexiconList#LIST_ENTRY_ELLIPSIS");
 
 			MenuItem.click(menuItem = "Edit");
@@ -530,7 +571,7 @@ definition {
 			LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 			Click(
-				key_tableEntry = "${depotName}",
+				key_tableEntry = ${depotName},
 				locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
 
 			MenuItem.click(menuItem = "Edit");
@@ -539,35 +580,35 @@ definition {
 			AssertElementNotPresent(locator1 = "Button#BACK");
 		}
 		else {
-			DepotNavigator.gotoEdit(depotName = "${depotName}");
+			DepotNavigator.gotoEdit(depotName = ${depotName});
 		}
 
 		if (isSet(depotNameEdit)) {
 			if (isSet(language)) {
 				PortletEntry.changeLocale(
 					fieldName = "Name",
-					locale = "${language}");
+					locale = ${language});
 
 				Type(
 					locator1 = "TextInput#NAME",
-					value1 = "${depotNameEdit}");
+					value1 = ${depotNameEdit});
 			}
 			else {
 				Type(
 					locator1 = "TextInput#NAME",
-					value1 = "${depotNameEdit}");
+					value1 = ${depotNameEdit});
 			}
 		}
 
 		if (isSet(depotDescriptionEdit)) {
 			Type(
 				locator1 = "TextArea#DESCRIPTION",
-				value1 = "${depotDescriptionEdit}");
+				value1 = ${depotDescriptionEdit});
 		}
 
 		Button.clickSave();
 
-		if ("${duplicate}" == "true") {
+		if (${duplicate} == "true") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "Please enter a unique name.");
@@ -582,36 +623,38 @@ definition {
 				locator1 = "Button#LOCALIZATION");
 
 			Click(
-				key_locale = "${language}",
+				key_locale = ${language},
 				locator1 = "Translation#LOCALIZATION_NAME");
 
 			AssertTextEquals.assertValue(
 				locator1 = "TextInput#NAME",
-				value1 = "${depotNameEdit}");
+				value1 = ${depotNameEdit});
 		}
 	}
 
-	macro getGroupID {
+	@summary = "Default summary"
+	macro getGroupID(depotName = null) {
 		ApplicationsMenu.gotoPortlet(
 			category = "Content",
 			panel = "Applications",
 			portlet = "Asset Libraries");
 
 		DepotNavigator.gotoDepotPortlet(
-			depotName = "${depotName}",
+			depotName = ${depotName},
 			portlet = "Asset Library Settings");
 
 		var groupId = selenium.getElementValue("//input[contains(@id,'groupId')]");
 
-		return "${groupId}";
+		return ${groupId};
 	}
 
-	macro moveLanguage {
+	@summary = "Default summary"
+	macro moveLanguage(depotLanguage = null, moveDown = null) {
 		Click(
-			key_language = "${depotLanguage}",
+			key_language = ${depotLanguage},
 			locator1 = "Icon#DEPOT_LANGUAGES_ELLIPSIS");
 
-		if ("${moveDown}" == "true") {
+		if (${moveDown} == "true") {
 			MenuItem.click(menuItem = "Move Down");
 		}
 		else {
@@ -623,7 +666,8 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro remoteStagingSetUp {
+	@summary = "Default summary"
+	macro remoteStagingSetUp(depotName = null, remotePort = null) {
 		if (isSet(remotePort)) {
 			User.logoutPG();
 
@@ -647,39 +691,40 @@ definition {
 
 		if (isSet(remotePort)) {
 			User.loginPG(
-				nodePort = "8080",
+				nodePort = 8080,
 				password = "test",
 				userEmailAddress = "test@liferay.com");
 		}
 
 		DepotNavigator.openDepotAdmin();
 
-		DepotNavigator.gotoDepot(depotName = "${depotName}");
+		DepotNavigator.gotoDepot(depotName = ${depotName});
 
 		DepotNavigator.gotoPortlet(portlet = "Staging");
 
 		Depot.activateStaging(
-			depotName = "${depotName}",
-			groupId = "${groupId}",
-			remotePort = "${remotePort}",
+			depotName = ${depotName},
+			groupId = ${groupId},
+			remotePort = ${remotePort},
 			remoteStaging = "true");
 	}
 
-	macro remoteStagingSetUpViaJson {
+	@summary = "Default summary"
+	macro remoteStagingSetUpViaJson(site = null, branchingPublic = null, groupName = null, branchingPrivate = null, remoteDepotName = null) {
 		if (!(isSet(remotePort))) {
-			var remotePort = "8080";
+			var remotePort = 8080;
 		}
 
 		if (isSet(remoteDepotName)) {
 			JSONDepot.addDepot(
 				depotDescription = "This is the description of a remote depot",
-				depotName = "${remoteDepotName}",
+				depotName = ${remoteDepotName},
 				portalURL = "http://localhost:${remotePort}");
 
 			var remoteGroupId = JSONGroupSetter.setGroupId(
-				groupName = "${remoteDepotName}",
+				groupName = ${remoteDepotName},
 				portalURL = "http://localhost:${remotePort}",
-				site = "${site}");
+				site = ${site});
 		}
 		else {
 			JSONDepot.addDepot(
@@ -690,22 +735,23 @@ definition {
 			var remoteGroupId = JSONGroupSetter.setGroupId(
 				groupName = "Remote Depot",
 				portalURL = "http://localhost:${remotePort}",
-				site = "${site}");
+				site = ${site});
 		}
 
 		JSONStaging.enableRemoteStaging(
-			branchingPrivate = "${branchingPrivate}",
-			branchingPublic = "${branchingPublic}",
-			groupName = "${groupName}",
-			remoteGroupId = "${remoteGroupId}",
-			remotePort = "${remotePort}",
-			site = "${site}");
+			branchingPrivate = ${branchingPrivate},
+			branchingPublic = ${branchingPublic},
+			groupName = ${groupName},
+			remoteGroupId = ${remoteGroupId},
+			remotePort = ${remotePort},
+			site = ${site});
 	}
 
-	macro removeMember {
-		var key_cardText = "${userScreenName}";
+	@summary = "Default summary"
+	macro removeMember(userLastName = null, userScreenName = null, userMiddleName = null, userFirstName = null) {
+		var key_cardText = ${userScreenName};
 
-		Search.searchCP(searchTerm = "${userScreenName}");
+		Search.searchCP(searchTerm = ${userScreenName});
 
 		if (isSet(userMiddleName)) {
 			LexiconCard.viewCardTitle(card = "${userFirstName} ${userMiddleName} ${userLastName}");
@@ -716,70 +762,73 @@ definition {
 
 		LexiconCard.viewCardSubtitle(
 			card = "${userFirstName} ${userLastName}",
-			cardSubtitle = "${userScreenName}");
+			cardSubtitle = ${userScreenName});
 
 		LexiconCard.clickEllipsisItem(
-			card = "${userScreenName}",
+			card = ${userScreenName},
 			item = "Remove Membership");
 
-		Confirm();
+		Confirm(value1 = "null");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro removeOrganization {
+	@summary = "Default summary"
+	macro removeOrganization(userGroupName = null, orgNameList = null) {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 		if (isSet(bulkEditing)) {
-			for (var orgName : list "${orgNameList}") {
+			for (var orgName : list ${orgNameList}) {
 				Check(
-					key_tableEntry = "${userGroupName}",
+					key_tableEntry = ${userGroupName},
 					locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
 			}
 
 			ClickNoError(locator1 = "Icon#DELETE");
 		}
 		else {
-			Search.searchCP(searchTerm = "${orgName}");
+			Search.searchCP(searchTerm = ${orgName});
 
 			LexiconTable.clickEllipsisItem(
 				item = "Remove Membership",
-				tableEntry = "${orgName}");
+				tableEntry = ${orgName});
 		}
 
-		Confirm();
+		Confirm(value1 = "null");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro removeUserGroup {
+	@summary = "Default summary"
+	macro removeUserGroup(userGroupNameList = null) {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 		if (isSet(bulkEditing)) {
-			for (var userGroupName : list "${userGroupNameList}") {
+			for (var userGroupName : list ${userGroupNameList}) {
 				Check(
-					key_tableEntry = "${userGroupName}",
+					key_tableEntry = ${userGroupName},
 					locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
 			}
 
 			ClickNoError(locator1 = "Icon#DELETE");
 		}
 		else {
-			Search.searchCP(searchTerm = "${userGroupName}");
+			Search.searchCP(searchTerm = ${userGroupName});
 
 			Click.waitForMenuToggleJSClick(
-				key_rowEntry = "${userGroupName}",
+				key_rowEntry = ${userGroupName},
 				locator1 = "Icon#TABLE_VERTICAL_ELLIPSIS");
 
 			MenuItem.clickNoError(menuItem = "Remove Membership");
 		}
 
-		Confirm();
+		Confirm(value1 = "null");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro tearDownCP {
+	@summary = "Default summary"
+	macro tearDownCP() {
 		DepotNavigator.openDepotAdmin();
 
 		if (IsElementNotPresent(locator1 = "Message#EMPTY_INFO")) {
@@ -797,76 +846,79 @@ definition {
 		}
 	}
 
-	macro viewApplication {
+	@summary = "Default summary"
+	macro viewApplication(depotName = null) {
 		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
 		Click(
-			key_card = "${depotName}",
+			key_card = ${depotName},
 			locator1 = "Card#CARD_TITLE_LINK");
 
 		if (isSet(noApplication)) {
-			for (var applicationList : list "${applicationList}") {
+			for (var applicationList : list ${applicationList}) {
 				AssertElementNotPresent(
-					key_card = "${applicationList}",
+					key_card = ${applicationList},
 					locator1 = "Card#CARD_TITLE");
 			}
 		}
 		else {
-			for (var applicationList : list "${applicationList}") {
+			for (var applicationList : list ${applicationList}) {
 				AssertVisible(
-					key_card = "${applicationList}",
+					key_card = ${applicationList},
 					locator1 = "Card#CARD_TITLE");
 			}
 		}
 	}
 
-	macro viewConnectedSite {
-		for (var siteName : list "${siteList}") {
+	@summary = "Default summary"
+	macro viewConnectedSite(siteList = null) {
+		for (var siteName : list ${siteList}) {
 			AssertElementPresent(
-				key_tableEntry = "${siteName}",
+				key_tableEntry = ${siteName},
 				locator1 = "LexiconTable#TABLE_ENTRY");
 
 			AssertTextEquals(
-				key_tableEntry = "${siteName}",
+				key_tableEntry = ${siteName},
 				key_tableEntryText = "Yes",
 				locator1 = "LexiconTable#TABLE_ENTRY_TEXT",
 				value1 = "Yes");
 		}
 	}
 
-	macro viewConnectedSiteNumber {
+	@summary = "Default summary"
+	macro viewConnectedSiteNumber(depotName = null, connectedSiteNumber = null) {
 		if (isSet(tableView)) {
 			LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 			LexiconTable.viewTableEntryText(
-				tableEntry = "${depotName}",
-				tableEntryText = "${connectedSiteNumber}");
+				tableEntry = ${depotName},
+				tableEntryText = ${connectedSiteNumber});
 		}
 		else if (isSet(cardView)) {
 			LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
-			if ("${connectedSiteNumber}" == "1") {
+			if (${connectedSiteNumber} == 1) {
 				LexiconCard.viewCardSubtitle(
-					card = "${depotName}",
+					card = ${depotName},
 					cardSubtitle = "1 Connected Site");
 			}
 			else {
 				LexiconCard.viewCardSubtitle(
-					card = "${depotName}",
+					card = ${depotName},
 					cardSubtitle = "${connectedSiteNumber} Connected Sites");
 			}
 		}
 		else {
 			LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
-			if ("${connectedSiteNumber}" == "1") {
+			if (${connectedSiteNumber} == 1) {
 				LexiconList.viewListEntrySubtitle(
-					listEntry = "${depotName}",
+					listEntry = ${depotName},
 					listEntrySubtitle = "${connectedSiteNumber} Connected Site");
 			}
 			else {
 				LexiconList.viewListEntrySubtitle(
-					listEntry = "${depotName}",
+					listEntry = ${depotName},
 					listEntrySubtitle = "${connectedSiteNumber} Connected Sites");
 			}
 
@@ -874,52 +926,56 @@ definition {
 		}
 	}
 
-	macro viewCurrentLanguages {
-		for (var currentLanguage : list "${currentLanguages}") {
+	@summary = "Default summary"
+	macro viewCurrentLanguages(currentLanguages = null) {
+		for (var currentLanguage : list ${currentLanguages}) {
 			AssertTextEquals.assertPartialText(
-				key_language = "${currentLanguage}",
+				key_language = ${currentLanguage},
 				locator1 = "LanguageConfiguration#DEPOT_AVAILABLE_LANGUAGES",
-				value1 = "${currentLanguage}");
+				value1 = ${currentLanguage});
 		}
 
 		Button.click(button = "Edit");
 
-		for (var currentLanguage : list "${currentLanguages}") {
+		for (var currentLanguage : list ${currentLanguages}) {
 			AssertChecked.assertCheckedNotVisible(
-				key_language = "${currentLanguage}",
+				key_language = ${currentLanguage},
 				locator1 = "Checkbox#DEPOT_LANGUAGE_CHECKBOX");
 		}
 
 		Click(locator1 = "Icon#TIMES");
 	}
 
-	macro viewDefaultCP {
-		AssertTextEquals(
+	@summary = "Default summary"
+	macro viewDefaultCP() {
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No asset libraries were found.");
 	}
 
-	macro viewDefaultLanguage {
+	@summary = "Default summary"
+	macro viewDefaultLanguage(defaultDepotLanguage = null) {
 		AssertTextEquals.assertPartialText(
-			key_language = "${defaultDepotLanguage}",
+			key_language = ${defaultDepotLanguage},
 			locator1 = "LanguageConfiguration#DEPOT_DEFAULT_LANGUAGE",
-			value1 = "${defaultDepotLanguage}");
+			value1 = ${defaultDepotLanguage});
 
 		Button.click(button = "Edit");
 
 		AssertTextEquals.assertPartialText(
-			key_language = "${defaultDepotLanguage}",
+			key_language = ${defaultDepotLanguage},
 			locator1 = "LanguageConfiguration#DEPOT_MANAGEMENT_PANEL_DEFAULT_LANGUAGE",
-			value1 = "${defaultDepotLanguage}");
+			value1 = ${defaultDepotLanguage});
 
 		AssertElementPresent(
-			key_language = "${defaultDepotLanguage}",
+			key_language = ${defaultDepotLanguage},
 			locator1 = "Checkbox#DEPOT_DEFAULT_LANGUAGE_CHECKBOX_DISABLED");
 
 		Click(locator1 = "Modal#CLOSE_BUTTON");
 	}
 
-	macro viewDefaultLanguagesConfiguration {
+	@summary = "Default summary"
+	macro viewDefaultLanguagesConfiguration() {
 		AssertChecked.assertCheckedNotVisible(
 			key_languagesOption = "Use the default language options.",
 			locator1 = "Radio#DEPOT_LANGUAGES_OPTION");
@@ -935,29 +991,31 @@ definition {
 
 		for (var language : list "English (United States),Arabic (Saudi Arabia),Catalan (Spain),Chinese (China),Dutch (Netherlands),Finnish (Finland),French (France),German (Germany),Hungarian (Hungary),Japanese (Japan),Portuguese (Brazil),Spanish (Spain),Swedish (Sweden)") {
 			AssertTextEquals.assertPartialText(
-				key_language = "${language}",
+				key_language = ${language},
 				locator1 = "LanguageConfiguration#DEPOT_AVAILABLE_LANGUAGES",
-				value1 = "${language}");
+				value1 = ${language});
 		}
 
 		AssertElementPresent(locator1 = "Button#SAVE");
 	}
 
-	macro viewDepotConfiguration {
-		if ("${configuration}" == "enabled") {
+	@summary = "Default summary"
+	macro viewDepotConfiguration(configuration = null, toggleSwitchLabel = null) {
+		if (${configuration} == "enabled") {
 			AssertChecked.assertCheckedNotVisible(
-				key_toggleSwitchLabel = "${toggleSwitchLabel}",
+				key_toggleSwitchLabel = ${toggleSwitchLabel},
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 		}
-		else if ("${configuration}" == "disabled") {
+		else if (${configuration} == "disabled") {
 			AssertNotChecked.assertNotCheckedNotVisible(
-				key_toggleSwitchLabel = "${toggleSwitchLabel}",
+				key_toggleSwitchLabel = ${toggleSwitchLabel},
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 		}
 	}
 
-	macro viewDMWorkflowPresent {
-		DMFolder.gotoEditCP(folderName = "${dmFolderName}");
+	@summary = "Default summary"
+	macro viewDMWorkflowPresent(dmFolderName = null) {
+		DMFolder.gotoEditCP(folderName = ${dmFolderName});
 
 		if (IsElementNotPresent.isNotVisible(locator1 = "Radio#WORKFLOW_PARENT_FOLDER")) {
 			Click(locator1 = "DocumentsAndMediaEditFolder#WORKFLOW_DOCUMENT_TYPE_RESTRICTIONS_TOGGLE");
@@ -970,45 +1028,48 @@ definition {
 		AssertVisible(locator1 = "Radio#WORKFLOW_DEFAULT_WORKFLOW");
 	}
 
-	macro viewDocumentInFTP {
+	@summary = "Default summary"
+	macro viewDocumentInFTP(dmDocumentTitle = null, depotName = null, dmFolderName = null) {
 		var portalURL = PropsUtil.get("portal.url");
-		var depotId = JSONGroupAPI._getDepotIdByName(depotName = "${depotName}");
+		var depotId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
 
 		Navigator.openSpecificURL(url = "${portalURL}/documents/asset-library-${depotId}");
 
 		if (isSet(dmFolderName)) {
 			Click(
-				key_text = "${dmFolderName}",
+				key_text = ${dmFolderName},
 				locator1 = "Link#ANY");
 		}
 
 		AssertTextEquals(
-			key_text = "${dmDocumentTitle}",
+			key_text = ${dmDocumentTitle},
 			locator1 = "Link#ANY",
-			value1 = "${dmDocumentTitle}");
+			value1 = ${dmDocumentTitle});
 	}
 
-	macro viewGeneralLanguageOptions {
+	@summary = "Default summary"
+	macro viewGeneralLanguageOptions(currentLanguageList = null) {
 		PagesAdmin.viewAvailableLanguages(
-			availableLanguageList = "${currentLanguageList}",
+			availableLanguageList = ${currentLanguageList},
 			fieldName = "Name");
 
 		PagesAdmin.viewAvailableLanguages(
-			availableLanguageList = "${currentLanguageList}",
+			availableLanguageList = ${currentLanguageList},
 			fieldName = "Description");
 	}
 
-	macro viewLanguageItems {
+	@summary = "Default summary"
+	macro viewLanguageItems(firstLanguageItem = null, lastLanguageItem = null, depotLanguage = null) {
 		Click(
-			key_language = "${depotLanguage}",
+			key_language = ${depotLanguage},
 			locator1 = "Icon#DEPOT_LANGUAGES_ELLIPSIS");
 
-		if ("${firstLanguageItem}" == "true") {
+		if (${firstLanguageItem} == "true") {
 			MenuItem.viewNotPresent(menuItem = "Move Up");
 
 			MenuItem.viewVisible(menuItem = "Move Down");
 		}
-		else if ("${lastLanguageItem}" == "true") {
+		else if (${lastLanguageItem} == "true") {
 			MenuItem.viewNotPresent(menuItem = "Move Down");
 
 			MenuItem.viewVisible(menuItem = "Move Up");
@@ -1020,14 +1081,15 @@ definition {
 		}
 	}
 
-	macro viewLanguageOrderInWebContent {
+	@summary = "Default summary"
+	macro viewLanguageOrderInWebContent(localizationName4 = null, localizationName1 = null, localizationName2 = null, localizationName3 = null) {
 		Click(locator1 = "Button#LOCALIZATION_GENERIC");
 
 		Depot.viewLanguageSelectionOrder(
-			localizationName1 = "${localizationName1}",
-			localizationName2 = "${localizationName2}",
-			localizationName3 = "${localizationName3}",
-			localizationName4 = "${localizationName4}");
+			localizationName1 = ${localizationName1},
+			localizationName2 = ${localizationName2},
+			localizationName3 = ${localizationName3},
+			localizationName4 = ${localizationName4});
 
 		Panel.expandPanel(panel = "Basic Information");
 
@@ -1036,10 +1098,10 @@ definition {
 			locator1 = "Button#LANGUAGE_DROPDOWN");
 
 		Depot.viewLanguageSelectionOrder(
-			localizationName1 = "${localizationName1}",
-			localizationName2 = "${localizationName2}",
-			localizationName3 = "${localizationName3}",
-			localizationName4 = "${localizationName4}");
+			localizationName1 = ${localizationName1},
+			localizationName2 = ${localizationName2},
+			localizationName3 = ${localizationName3},
+			localizationName4 = ${localizationName4});
 
 		Panel.expandPanel(panel = "Friendly URL");
 
@@ -1048,42 +1110,44 @@ definition {
 			locator1 = "Button#LANGUAGE_DROPDOWN");
 
 		Depot.viewLanguageSelectionOrder(
-			localizationName1 = "${localizationName1}",
-			localizationName2 = "${localizationName2}",
-			localizationName3 = "${localizationName3}",
-			localizationName4 = "${localizationName4}");
+			localizationName1 = ${localizationName1},
+			localizationName2 = ${localizationName2},
+			localizationName3 = ${localizationName3},
+			localizationName4 = ${localizationName4});
 	}
 
-	macro viewLanguageSelectionOrder {
+	@summary = "Default summary"
+	macro viewLanguageSelectionOrder(localizationName4 = null, localizationName1 = null, localizationName2 = null, localizationName3 = null) {
 		AssertTextEquals.assertPartialText(
 			locator1 = "LanguageConfiguration#DEPOT_LANGUAGE_LOCALIZATION_NAME_1",
-			value1 = "${localizationName1}");
+			value1 = ${localizationName1});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "LanguageConfiguration#DEPOT_LANGUAGE_LOCALIZATION_NAME_2",
-			value1 = "${localizationName2}");
+			value1 = ${localizationName2});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "LanguageConfiguration#DEPOT_LANGUAGE_LOCALIZATION_NAME_3",
-			value1 = "${localizationName3}");
+			value1 = ${localizationName3});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "LanguageConfiguration#DEPOT_LANGUAGE_LOCALIZATION_NAME_4",
-			value1 = "${localizationName4}");
+			value1 = ${localizationName4});
 	}
 
-	macro viewMember {
+	@summary = "Default summary"
+	macro viewMember(userLastName = null, userScreenName = null, userFirstName = null) {
 		LexiconCard.viewCardPresent(card = "${userFirstName} ${userLastName}");
 
 		LexiconCard.viewCardTitle(card = "${userFirstName} ${userLastName}");
 
 		LexiconCard.viewCardSubtitle(
 			card = "${userFirstName} ${userLastName}",
-			cardSubtitle = "${userScreenName}");
+			cardSubtitle = ${userScreenName});
 
 		if (isSet(viewOnly)) {
 			AssertElementNotPresent(
-				key_card = "${userScreenName}",
+				key_card = ${userScreenName},
 				locator1 = "Card#CARD_ELLIPSIS");
 		}
 		else {
@@ -1093,8 +1157,9 @@ definition {
 		}
 	}
 
-	macro viewMemberOrganization {
-		var key_tableEntry = "${orgName}";
+	@summary = "Default summary"
+	macro viewMemberOrganization(orgName = null, toolTip = null) {
+		var key_tableEntry = ${orgName};
 
 		Navigator.gotoNavItem(navItem = "Organizations");
 
@@ -1102,9 +1167,9 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "LexiconTable#TABLE_ENTRY_TITLE",
-			value1 = "${orgName}");
+			value1 = ${orgName});
 
-		if ("${toolTip}" == "true") {
+		if (${toolTip} == "true") {
 			MouseOver(locator1 = "Icon#TOOLTIP");
 
 			AssertTextEquals.assertPartialText(
@@ -1113,54 +1178,60 @@ definition {
 		}
 	}
 
-	macro viewMemberUserGroup {
+	@summary = "Default summary"
+	macro viewMemberUserGroup(userGroupName = null) {
 		Navigator.gotoNavItem(navItem = "User Groups");
 
 		AssertTextEquals(
-			key_userGroupName = "${userGroupName}",
+			key_userGroupName = ${userGroupName},
 			locator1 = "SiteMemberships#USER_GROUPS_TABLE_NAME",
-			value1 = "${userGroupName}");
+			value1 = ${userGroupName});
 	}
 
-	macro viewNoConnectedSiteCP {
+	@summary = "Default summary"
+	macro viewNoConnectedSiteCP() {
 		AssertTextEquals(
 			locator1 = "Message#SUBTITLE",
 			value1 = "No sites are connected yet.");
 	}
 
-	macro viewNoDocumentInFTP {
+	@summary = "Default summary"
+	macro viewNoDocumentInFTP(dmDocumentTitle = null, depotName = null, dmFolderName = null) {
 		var portalURL = PropsUtil.get("portal.url");
-		var depotId = JSONGroupAPI._getDepotIdByName(depotName = "${depotName}");
+		var depotId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
 
 		Navigator.openSpecificURL(url = "${portalURL}/documents/asset-library-${depotId}");
 
 		if (isSet(dmFolderName)) {
 			Click(
-				key_text = "${dmFolderName}",
+				key_text = ${dmFolderName},
 				locator1 = "Link#ANY");
 		}
 
 		AssertElementNotPresent(
-			key_text = "${dmDocumentTitle}",
+			key_text = ${dmDocumentTitle},
 			locator1 = "Link#ANY");
 	}
 
-	macro viewNoPanel {
+	@summary = "Default summary"
+	macro viewNoPanel(panelName = null) {
 		AssertElementNotPresent(
-			key_panel = "${panelName}",
+			key_panel = ${panelName},
 			locator1 = "Panel#PANEL");
 	}
 
-	macro viewNoWorkflowResource {
-		AssertTextEquals(
+	@summary = "Default summary"
+	macro viewNoWorkflowResource() {
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No entries were found.");
 	}
 
-	macro viewSearchResult {
+	@summary = "Default summary"
+	macro viewSearchResult(resultCount = null, includedResults = null, excludedResults = null) {
 		var searchTerm = '''"${searchTerm}"''';
 
-		if ("${resultCount}" != "1") {
+		if (${resultCount} != 1) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "ManagementBar#SEARCH_RESULT_SUMMARY",
 				value1 = "${resultCount} Results for ${searchTerm}");
@@ -1171,17 +1242,17 @@ definition {
 				value1 = "1 Result for ${searchTerm}");
 		}
 
-		for (var depotName : list "${includedResults}") {
-			var key_card = "${depotName}";
+		for (var depotName : list ${includedResults}) {
+			var key_card = ${depotName};
 
 			AssertTextEquals(
 				locator1 = "Card#CARD_TITLE",
-				value1 = "${depotName}");
+				value1 = ${depotName});
 		}
 
 		if (isSet(excludedResults)) {
-			for (var depotName : list "${excludedResults}") {
-				var key_card = "${depotName}";
+			for (var depotName : list ${excludedResults}) {
+				var key_card = ${depotName};
 
 				AssertElementNotPresent(locator1 = "Card#CARD_TITLE");
 			}

@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.template.freemarker.internal;
 
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
@@ -28,6 +20,9 @@ import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvoker;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
+import com.liferay.portal.kernel.util.Props;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.spring.aop.AopCacheManager;
 import com.liferay.portal.test.log.LogCapture;
@@ -189,22 +184,15 @@ public class RestrictedLiferayObjectWrapperTest
 
 	@Test
 	public void testIsRestrictedWithNoContextClassloader() {
-		Thread thread = Thread.currentThread();
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				null)) {
 
-		ClassLoader contextClassLoader = thread.getContextClassLoader();
-
-		thread.setContextClassLoader(null);
-
-		try {
 			Assert.assertFalse(
 				_isRestricted(
 					new RestrictedLiferayObjectWrapper(
 						new String[] {TestLiferayObject.class.getName()},
 						new String[] {TestLiferayObject.class.getName()}, null),
 					TestLiferayObject.class));
-		}
-		finally {
-			thread.setContextClassLoader(contextClassLoader);
 		}
 	}
 
@@ -297,6 +285,8 @@ public class RestrictedLiferayObjectWrapperTest
 	public void testWrapWithTransactionStrictReadOnlyForFalse()
 		throws Exception {
 
+		PropsUtil.setProps(ProxyFactory.newDummyInstance(Props.class));
+
 		TransactionInvokerUtil transactionInvokerUtil =
 			new TransactionInvokerUtil();
 
@@ -314,6 +304,8 @@ public class RestrictedLiferayObjectWrapperTest
 	@Test
 	public void testWrapWithTransactionStrictReadOnlyForTrue()
 		throws Exception {
+
+		PropsUtil.setProps(ProxyFactory.newDummyInstance(Props.class));
 
 		TransactionInvokerUtil transactionInvokerUtil =
 			new TransactionInvokerUtil();
@@ -490,7 +482,7 @@ public class RestrictedLiferayObjectWrapperTest
 			Assert.assertEquals(
 				StringBundler.concat(
 					"Denied access to method or field ", key, " of ",
-					TestLiferayMethodObject.class.toString()),
+					TestLiferayMethodObject.class),
 				templateModelException.getMessage());
 		}
 	}

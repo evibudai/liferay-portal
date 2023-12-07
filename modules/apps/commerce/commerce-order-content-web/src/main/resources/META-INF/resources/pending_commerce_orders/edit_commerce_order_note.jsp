@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -18,6 +9,14 @@
 
 <%
 CommerceOrderNote commerceOrderNote = commerceOrderContentDisplayContext.getCommerceOrderNote();
+
+PortletURL backURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/commerce_open_order_content/edit_commerce_order_notes"
+).setParameter(
+	"commerceOrderId", commerceOrderNote.getCommerceOrderId()
+).buildPortletURL();
 %>
 
 <portlet:actionURL name="/commerce_open_order_content/edit_commerce_order_note" var="editCommerceOrderNoteActionURL">
@@ -28,7 +27,7 @@ CommerceOrderNote commerceOrderNote = commerceOrderContentDisplayContext.getComm
 	<div class="autofit-float autofit-row header-title-bar">
 		<div class="autofit-col autofit-col-expand">
 			<liferay-ui:header
-				backURL="<%= redirect %>"
+				backURL="<%= String.valueOf(backURL) %>"
 				title="edit-note"
 			/>
 		</div>
@@ -37,7 +36,7 @@ CommerceOrderNote commerceOrderNote = commerceOrderContentDisplayContext.getComm
 
 <aui:form action="<%= editCommerceOrderNoteActionURL %>" cssClass="order-notes-form" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveCommerceOrderNote();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
-	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="commerceOrderNoteId" type="hidden" value="<%= String.valueOf(commerceOrderNote.getCommerceOrderNoteId()) %>" />
 
 	<div class="lfr-form-content">
@@ -48,7 +47,7 @@ CommerceOrderNote commerceOrderNote = commerceOrderContentDisplayContext.getComm
 		<div class="sheet">
 			<div class="panel-group panel-group-flush">
 				<aui:fieldset>
-					<aui:input autoFocus="<%= true %>" name="content" />
+					<aui:input name="content" />
 
 					<c:if test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrderNote.getCommerceOrderId(), CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES) %>">
 						<aui:input helpMessage="restricted-help" label="private" name="restricted" />
@@ -61,7 +60,7 @@ CommerceOrderNote commerceOrderNote = commerceOrderContentDisplayContext.getComm
 	<aui:button-row>
 		<aui:button cssClass="btn-lg" primary="<%= true %>" type="submit" />
 
-		<aui:button cssClass="btn-lg" href="<%= redirect %>" type="cancel" />
+		<aui:button cssClass="btn-lg" href="<%= String.valueOf(backURL) %>" type="cancel" />
 	</aui:button-row>
 </aui:form>
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.sharepoint.soap.repository.connector.internal.util.test;
@@ -31,8 +22,6 @@ import java.net.URL;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Adolfo Pérez
@@ -80,9 +69,15 @@ public class SharepointConnectionTestUtil {
 		try (BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(httpURLConnection.getInputStream()))) {
 
-			Stream<String> payloadStream = bufferedReader.lines();
+			StringBundler sb = new StringBundler();
 
-			String payload = payloadStream.collect(Collectors.joining());
+			String line;
+
+			while ((line = bufferedReader.readLine()) != null) {
+				sb.append(line);
+			}
+
+			String payload = sb.toString();
 
 			Matcher matcher = _pattern.matcher(payload);
 
@@ -101,13 +96,13 @@ public class SharepointConnectionTestUtil {
 	}
 
 	private static <T> T _withRetries(
-		int tries, UnsafeSupplier<T, ? extends Exception> supplier) {
+		int tries, UnsafeSupplier<T, ? extends Exception> unsafeSupplier) {
 
 		while (tries > 0) {
 			try {
 				tries--;
 
-				T value = supplier.get();
+				T value = unsafeSupplier.get();
 
 				if (value != null) {
 					return value;

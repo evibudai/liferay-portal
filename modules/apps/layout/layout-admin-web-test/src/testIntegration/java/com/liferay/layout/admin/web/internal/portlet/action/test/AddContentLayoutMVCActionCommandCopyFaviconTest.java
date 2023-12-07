@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.portlet.action.test;
@@ -85,7 +76,7 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_BASIC, 0,
+				LayoutPageTemplateEntryTypeConstants.BASIC, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
@@ -94,7 +85,7 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 
 		_expectedBytes = _getExpectedBytes();
 
-		FileEntry fileEntry = _addFileEntry(_expectedBytes);
+		FileEntry fileEntry = _addFileEntry(_expectedBytes, _group);
 
 		layout.setFaviconFileEntryId(fileEntry.getFileEntryId());
 
@@ -117,13 +108,14 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 			_expectedBytes, _getBytes(draftLayout.getFaviconURL()));
 	}
 
-	private FileEntry _addFileEntry(byte[] bytes) throws Exception {
+	private FileEntry _addFileEntry(byte[] bytes, Group group)
+		throws Exception {
+
 		return _dlAppLocalService.addFileEntry(
-			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG, bytes, null,
-			null,
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+			null, ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
 
 	private byte[] _getBytes(String favicon) throws Exception {

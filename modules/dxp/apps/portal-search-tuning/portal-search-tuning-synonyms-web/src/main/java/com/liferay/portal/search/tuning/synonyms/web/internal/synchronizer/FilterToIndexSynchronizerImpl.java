@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer;
@@ -20,9 +11,8 @@ import com.liferay.portal.search.tuning.synonyms.web.internal.filter.name.Synony
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSet;
 import com.liferay.portal.search.tuning.synonyms.web.internal.storage.SynonymSetStorageAdapter;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,16 +46,14 @@ public class FilterToIndexSynchronizerImpl
 	}
 
 	private String[] _getSynonymsFromFilters(String companyIndexName) {
-		LinkedHashSet<String> synonyms = Stream.of(
-			_synonymSetFilterNameHolder.getFilterNames()
-		).map(
-			filterName -> _synonymSetFilterReader.getSynonymSets(
-				companyIndexName, filterName)
-		).flatMap(
-			Stream::of
-		).collect(
-			Collectors.toCollection(LinkedHashSet::new)
-		);
+		LinkedHashSet<String> synonyms = new LinkedHashSet<>();
+
+		for (String filterName : _synonymSetFilterNameHolder.getFilterNames()) {
+			Collections.addAll(
+				synonyms,
+				_synonymSetFilterReader.getSynonymSets(
+					companyIndexName, filterName));
+		}
 
 		return synonyms.toArray(new String[0]);
 	}

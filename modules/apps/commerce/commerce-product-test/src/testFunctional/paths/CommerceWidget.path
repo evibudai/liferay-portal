@@ -11,8 +11,23 @@
 
 <tbody>
 <tr>
+	<td>ASSERT_ACCOUNT_DETAILS_AT_SIDEBAR</td>
+	<td>//div[contains(@class,'sidebar-body')]//div[contains(@class,'sidebar-dd') and contains(.,'${key_fieldValue}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FACET_DEFAULT_LABEL</td>
 	<td>//span[@class='custom-control-label-text' and contains(text(), '${key_facetLabel}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_PUBLISHER_ADD_REMOVE_FILTER_BUTTON</td>
+	<td>//div[contains(@class,'panel-body')]//button[contains(@class,'${key_button}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_PUBLISHER_FILTER_ADD_SELECT_BUTTON</td>
+	<td>//div[contains(@class,'panel-body')]//button[contains(.,'${key_button}')]</td>
 	<td></td>
 </tr>
 <tr>

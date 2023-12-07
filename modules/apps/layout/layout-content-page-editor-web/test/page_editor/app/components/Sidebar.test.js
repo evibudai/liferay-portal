@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
@@ -19,6 +10,7 @@ import {
 	screen,
 	waitForElementToBeRemoved,
 } from '@testing-library/react';
+import {sessionStorage} from 'frontend-js-web';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
@@ -28,8 +20,8 @@ import Sidebar, {
 	MIN_SIZEBAR_WIDTH,
 	SIDEBAR_WIDTH_RESIZE_STEP,
 } from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/Sidebar';
-import {DragAndDropContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/utils/drag-and-drop/useDragAndDrop';
-import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test-utils/StoreMother';
+import {DragAndDropContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/utils/drag_and_drop/useDragAndDrop';
+import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
 
 const renderSidebar = async () => {
 	render(
@@ -50,7 +42,7 @@ const renderSidebar = async () => {
 describe('Sidebar', () => {
 	describe('resize', () => {
 		afterEach(() => {
-			window.sessionStorage.clear();
+			sessionStorage.clear();
 		});
 
 		it('can be resized with mouse', async () => {

@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.upgrade.registry;
 
-import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
+import com.liferay.comment.upgrade.DiscussionSubscriptionClassNameUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v1_0_0.DocumentLibraryUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v1_0_1.DLConfigurationUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v1_0_1.DLFileEntryConfigurationUpgradeProcess;
@@ -24,12 +15,14 @@ import com.liferay.document.library.internal.upgrade.v1_1_2.DLFileEntryTypeUpgra
 import com.liferay.document.library.internal.upgrade.v2_0_0.UpgradeCompanyId;
 import com.liferay.document.library.internal.upgrade.v3_2_1.DDMStructureLinkUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_2.DLFileEntryUpgradeProcess;
-import com.liferay.document.library.internal.upgrade.v3_2_4.UpgradeDLSizeLimitConfiguration;
+import com.liferay.document.library.internal.upgrade.v3_2_4.DLSizeLimitConfigurationUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_5.DLFileEntryTypesDDMStructureUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_6.DeleteStalePWCVersionsUpgradeProcess;
+import com.liferay.document.library.internal.upgrade.v3_2_7.DownloadViewActionResourcePermissionUpgradeProcess;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.configuration.upgrade.PrefsPropsToConfigurationUpgradeHelper;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -84,10 +77,11 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 		registry.register(
 			"3.0.0", "3.0.1",
-			new UpgradeDiscussionSubscriptionClassName(
+			new DiscussionSubscriptionClassNameUpgradeProcess(
 				_classNameLocalService, _subscriptionLocalService,
 				DLFileEntry.class.getName(),
-				UpgradeDiscussionSubscriptionClassName.DeletionMode.UPDATE));
+				DiscussionSubscriptionClassNameUpgradeProcess.DeletionMode.
+					UPDATE));
 
 		registry.register(
 			"3.0.1", "3.1.0",
@@ -123,7 +117,7 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 		registry.register(
 			"3.2.3", "3.2.4",
-			new UpgradeDLSizeLimitConfiguration(_configurationAdmin));
+			new DLSizeLimitConfigurationUpgradeProcess(_configurationAdmin));
 
 		registry.register(
 			"3.2.4", "3.2.5",
@@ -133,6 +127,16 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 		registry.register(
 			"3.2.5", "3.2.6", new DeleteStalePWCVersionsUpgradeProcess(_store));
+
+		registry.register(
+			"3.2.6", "3.2.7",
+			new DownloadViewActionResourcePermissionUpgradeProcess());
+
+		registry.register(
+			"3.2.7", "3.2.8",
+			new com.liferay.document.library.internal.upgrade.v3_2_8.
+				DLFileEntryConfigurationUpgradeProcess(
+					_configurationAdmin, _configurationProvider));
 	}
 
 	@Reference
@@ -140,6 +144,9 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 	@Reference
 	private ConfigurationAdmin _configurationAdmin;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private DDMPermissionSupport _ddmPermissionSupport;

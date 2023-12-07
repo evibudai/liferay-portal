@@ -1,38 +1,43 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.upload;
 
+import com.liferay.blogs.configuration.BlogsFileUploadsConfiguration;
+import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.upload.UniqueFileNameProvider;
 
 import java.io.InputStream;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Alejandro Tardín
  */
-@Component(service = TempImageBlogsUploadFileEntryHandler.class)
 public class TempImageBlogsUploadFileEntryHandler
 	extends ImageBlogsUploadFileEntryHandler {
+
+	public TempImageBlogsUploadFileEntryHandler(
+		BlogsEntryLocalService blogsLocalService,
+		BlogsFileUploadsConfiguration blogsFileUploadsConfiguration,
+		PortletFileRepository portletFileRepository,
+		PortletResourcePermission portletResourcePermission,
+		UniqueFileNameProvider uniqueFileNameProvider) {
+
+		super(
+			blogsLocalService, blogsFileUploadsConfiguration,
+			portletFileRepository, portletResourcePermission);
+
+		_uniqueFileNameProvider = uniqueFileNameProvider;
+	}
 
 	@Override
 	protected FileEntry addFileEntry(
@@ -75,7 +80,6 @@ public class TempImageBlogsUploadFileEntryHandler
 	private static final Log _log = LogFactoryUtil.getLog(
 		TempImageBlogsUploadFileEntryHandler.class);
 
-	@Reference
-	private UniqueFileNameProvider _uniqueFileNameProvider;
+	private final UniqueFileNameProvider _uniqueFileNameProvider;
 
 }

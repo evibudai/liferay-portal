@@ -26,22 +26,22 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Bug: LRAC-8038 | Automation ID: LRAC-11520 | Test Summary: Assert client does not send duplicated requests when the identity is the same (lowercase email string before hash)"
-	@priority = "4"
+	@priority = 4
 	test CheckIdentityEventNotResendWhenEmailIsTheSame {
 		property proxy.server.enabled = "true";
 
@@ -77,8 +77,8 @@ definition {
 
 		task ("Compare the two values") {
 			TestUtils.assertEquals(
-				actual = "${localStorageItem1}",
-				expected = "${localStorageItem2}");
+				actual = ${localStorageItem1},
+				expected = ${localStorageItem2});
 		}
 	}
 

@@ -1,11 +1,28 @@
 {
 	"dependencies": {
+		"@clayui/alert": "3.106.1",
+		"@clayui/autocomplete": "3.107.1",
+		"@clayui/button": "3.107.0",
+		"@clayui/data-provider": "3.107.0",
+		"@clayui/drop-down": "3.107.1",
+		"@clayui/form": "3.107.0",
+		"@clayui/icon": "3.106.1",
+		"@clayui/layout": "3.106.1",
+		"@clayui/link": "3.106.1",
+		"@clayui/loading-indicator": "3.106.1",
+		"@clayui/modal": "3.107.0",
+		"@clayui/tabs": "3.107.0",
+		"@clayui/toolbar": "3.107.0",
+		"@liferay/object-js-components-web": "*",
 		"dagre": "0.8.2",
+		"frontend-editor-ckeditor-web": "*",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"moment": "2.29.4",
+		"prop-types": "15.7.2",
 		"react": "16.12.0",
 		"react-flow-renderer": "9.7.0",
-		"uuid": "^3.3.2"
+		"uuid": "9.0.0"
 	},
 	"jest": {
 		"setupFiles": [
@@ -26,5 +43,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "5.0.94"
+	"version": "5.0.121"
 }

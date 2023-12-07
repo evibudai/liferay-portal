@@ -1,4 +1,4 @@
-@component-name = "portal-user-management-and-portal-configuration"
+@component-name = "portal-platform-experience"
 definition {
 
 	property portal.release = "true";
@@ -8,24 +8,27 @@ definition {
 	setUp {
 		TestCase.setUpPortalInstance();
 
-		User.firstLoginPG();
+		task ("Given signed into portal as admin") {
+			User.firstLoginPG();
+		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanOverrideValueSetInConfigFile {
 		property custom.properties = "configuration.override.com.liferay.journal.configuration.JournalServiceConfiguration_articleCommentsEnabled=B\"false\"";
 		property osgi.module.configuration.file.names = "com.liferay.journal.configuration.JournalServiceConfiguration.config";
 		property osgi.module.configurations = "articleCommentsEnabled=B\"true\"";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "SystemSettings#CanOverrideValueSetInConfigFile";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -71,10 +74,11 @@ definition {
 			locator1 = "Portlet#CONFIGURATION_CHECKBOX");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanOverrideValueWithoutConfigFile {
 		property custom.properties = "configuration.override.com.liferay.journal.configuration.JournalServiceConfiguration_articleCommentsEnabled=B\"false\"";
-		property test.name.skip.portal.instance = "SystemSettings#CanOverrideValueWithoutConfigFile";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -93,11 +97,12 @@ definition {
 			fieldText = "Set this to true to enable comments for journal articles. This field has been set by a portal property and cannot be changed here.");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanUpdateConfigValueViaUI {
 		property osgi.module.configuration.file.names = "com.liferay.journal.configuration.JournalServiceConfiguration.config";
 		property osgi.module.configurations = "articleCommentsEnabled=B\"true\"";
-		property test.name.skip.portal.instance = "SystemSettings#CanUpdateConfigValueViaUI";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given assert the Article Comments Enabled is checked for web content in System Settings") {
 			ApplicationsMenu.gotoPortlet(
@@ -148,7 +153,7 @@ definition {
 				Comments.addPG(entryComment = "WC WebContent Content Comment");
 
 				Comments.viewPG(
-					commentCount = "1",
+					commentCount = 1,
 					entryComment = "WC WebContent Content Comment",
 					userFullName = "Test Test (You)");
 			}
@@ -180,7 +185,7 @@ definition {
 			var fileContent = SystemSettings.getConfigFileContent(configFileName = "com.liferay.journal.configuration.JournalServiceConfiguration.config");
 			var expectedText = "articleCommentsEnabled=B\"false\"";
 
-			if (contains("${fileContent}", "${expectedText}")) {
+			if (contains(${fileContent}, ${expectedText})) {
 				echo("Config file shows updated value: ${expectedText}");
 			}
 			else {
@@ -192,7 +197,7 @@ definition {
 	}
 
 	@description = "This test asserts that Site OSGi configurations can be used across different systems."
-	@priority = "3"
+	@priority = 3
 	test CanUseSiteConfigurationAcrossDifferentSitesInSameCompany {
 		property custom.properties = "feature.flag.LPS-155284=true";
 
@@ -212,7 +217,7 @@ definition {
 		}
 
 		task ("And a new site is created") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 
 		task ("When change groupKey to new instance site and copy it to the configs folder") {
@@ -222,11 +227,11 @@ definition {
 			OSGiConfig.editOSGiConfigFileFromTempFolder(
 				newValue = "liferay.com--site name",
 				oldValue = "liferay.com--Guest",
-				osgiConfigFileName = "${exportConfigFileName}");
+				osgiConfigFileName = ${exportConfigFileName});
 
 			OSGiConfig.copyOSGiConfigFile(
-				osgiConfigFileBaseDir = "${exportFileDirectory}",
-				osgiConfigFileName = "${exportConfigFileName}");
+				osgiConfigFileBaseDir = ${exportFileDirectory},
+				osgiConfigFileName = ${exportConfigFileName});
 
 			OSGiConfig.waitForOSGiConfig();
 		}
@@ -247,29 +252,30 @@ definition {
 
 			AssertElementPresent(
 				key_fieldName = "Allowed Account Types",
-				key_fieldValue = "Business",
+				key_fieldValue = "Person",
 				locator1 = "FormFields#PREDEFINED_VALUE_AT_FORM_SELECT");
 
 			AssertElementNotPresent(
 				key_fieldName = "Allowed Account Types",
-				key_fieldValue = "Person",
+				key_fieldValue = "Business",
 				locator1 = "FormFields#PREDEFINED_VALUE_AT_FORM_SELECT");
 
 			OSGiConfig.assertTextNotInOSGiConfig(
-				osgiConfigFileName = "${exportConfigFileName}",
+				osgiConfigFileName = ${exportConfigFileName},
 				text = "groupKey");
 
 			OSGiConfig.assertTextInOSGiConfig(
-				osgiConfigFileName = "${exportConfigFileName}",
+				osgiConfigFileName = ${exportConfigFileName},
 				text = "groupId");
 		}
 	}
 
 	@description = "This test asserts that Site OSGi configurations can be used across different systems."
-	@priority = "3"
+	@priority = 3
 	test CanUseSiteConfigurationAcrossDifferentSystems {
 		property custom.properties = "feature.flag.LPS-155284=true";
-		property test.name.skip.portal.instance = "SystemSettings#CanUseSiteConfigurationAcrossDifferentSystems";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given change the Site OSGi configurations to export") {
 			Site.openSiteSettingsAdmin(siteURLKey = "guest");
@@ -287,10 +293,7 @@ definition {
 		}
 
 		task ("And a new Virtual Instance is created and login to add the new site") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.addCP(
 				mailDomain = "www.able.com",
@@ -302,10 +305,7 @@ definition {
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Sites",
-				panel = "Control Panel",
-				portlet = "Sites");
+			Site.openSitesAdmin(baseURL = "http://www.able.com:8080");
 
 			Site.addCP(
 				siteName = "Site Name",
@@ -319,11 +319,11 @@ definition {
 			OSGiConfig.editOSGiConfigFileFromTempFolder(
 				newValue = "www.able.com--site name",
 				oldValue = "liferay.com--Guest",
-				osgiConfigFileName = "${exportConfigFileName}");
+				osgiConfigFileName = ${exportConfigFileName});
 
 			OSGiConfig.copyOSGiConfigFile(
-				osgiConfigFileBaseDir = "${exportFileDirectory}",
-				osgiConfigFileName = "${exportConfigFileName}");
+				osgiConfigFileBaseDir = ${exportFileDirectory},
+				osgiConfigFileName = ${exportConfigFileName});
 
 			OSGiConfig.waitForOSGiConfig();
 		}
@@ -344,28 +344,29 @@ definition {
 
 			AssertElementPresent(
 				key_fieldName = "Allowed Account Types",
-				key_fieldValue = "Business",
+				key_fieldValue = "Person",
 				locator1 = "FormFields#PREDEFINED_VALUE_AT_FORM_SELECT");
 
 			AssertElementNotPresent(
 				key_fieldName = "Allowed Account Types",
-				key_fieldValue = "Person",
+				key_fieldValue = "Business",
 				locator1 = "FormFields#PREDEFINED_VALUE_AT_FORM_SELECT");
 
 			OSGiConfig.assertTextNotInOSGiConfig(
-				osgiConfigFileName = "${exportConfigFileName}",
+				osgiConfigFileName = ${exportConfigFileName},
 				text = "groupKey");
 
 			OSGiConfig.assertTextInOSGiConfig(
-				osgiConfigFileName = "${exportConfigFileName}",
+				osgiConfigFileName = ${exportConfigFileName},
 				text = "groupId");
 		}
 	}
 
 	@description = "This is a use case for LPS-79394. This test check that system settings scope is corrected."
-	@priority = "5"
+	@priority = 5
 	test CheckSystemSettingsScopeIsCorrected {
-		property test.name.skip.portal.instance = "SystemSettings#CheckSystemSettingsScopeIsCorrected";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Naviagte to System Settings") {
 			ApplicationsMenu.gotoPortlet(
@@ -386,10 +387,7 @@ definition {
 		}
 
 		task ("Naviagte to Instance Settings") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
+			PortalSettings.openInstanceSettingsAdmin();
 		}
 
 		task ("Disable OpenSSO Configuration") {

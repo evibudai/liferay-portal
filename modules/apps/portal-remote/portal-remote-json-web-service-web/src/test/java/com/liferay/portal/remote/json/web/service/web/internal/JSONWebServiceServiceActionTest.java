@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.remote.json.web.service.web.internal;
@@ -17,20 +8,15 @@ package com.liferay.portal.remote.json.web.service.web.internal;
 import com.liferay.petra.memory.DeleteFileFinalizeAction;
 import com.liferay.petra.memory.FinalizeManager;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceAction;
-import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionsManagerUtil;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.test.FinalizeManagerUtil;
 import com.liferay.portal.kernel.test.GCUtil;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.upload.FileItem;
+import com.liferay.portal.kernel.upload.UploadServletRequest;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portal.upload.UploadServletRequestImpl;
-import com.liferay.portal.util.PortalImpl;
 
 import java.io.File;
 
@@ -39,13 +25,12 @@ import java.nio.file.Path;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -68,28 +53,7 @@ public class JSONWebServiceServiceActionTest
 	public static void setUpClass() throws Exception {
 		initPortalServices();
 
-		Class<?> clazz = JSONWebServiceServiceAction.class;
-
-		PortalClassLoaderUtil.setClassLoader(clazz.getClassLoader());
-
-		PortalUtil portalUtil = new PortalUtil();
-
-		portalUtil.setPortal(new PortalImpl());
-
 		_jsonWebServiceServiceAction = new JSONWebServiceServiceAction();
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		PortalClassLoaderUtil.setClassLoader(null);
-	}
-
-	@Before
-	public void setUp() {
-		ReflectionTestUtil.setFieldValue(
-			new JSONWebServiceActionsManagerUtil(),
-			"_jsonWebServiceActionsManager",
-			new JSONWebServiceActionsManagerImpl());
 	}
 
 	@After
@@ -145,25 +109,11 @@ public class JSONWebServiceServiceActionTest
 	public void testMultipartRequest() throws Exception {
 		registerActionClass(FooService.class);
 
-		Map<String, FileItem[]> fileParams =
+		HttpServletRequest httpServletRequest = _createUploadServletRequest(
+			createHttpRequest("/foo/add-file"),
 			HashMapBuilder.<String, FileItem[]>put(
 				"fileName", new FileItem[] {_createFileItem("aaa")}
-			).build();
-
-		HttpServletRequest httpServletRequest = new UploadServletRequestImpl(
-			createHttpRequest("/foo/add-file"), fileParams, null) {
-
-			@Override
-			public String getFileName(String name) {
-				return "test";
-			}
-
-			@Override
-			public Map<String, FileItem[]> getMultipartParameterMap() {
-				return fileParams;
-			}
-
-		};
+			).build());
 
 		JSONWebServiceAction jsonWebServiceAction = lookupJSONWebServiceAction(
 			httpServletRequest);
@@ -175,15 +125,14 @@ public class JSONWebServiceServiceActionTest
 	public void testMultipartRequestFilesUpload() throws Exception {
 		registerActionClass(FooService.class);
 
-		HttpServletRequest httpServletRequest = new UploadServletRequestImpl(
+		HttpServletRequest httpServletRequest = _createUploadServletRequest(
 			createHttpRequest("/foo/upload-files"),
 			HashMapBuilder.<String, FileItem[]>put(
 				"firstFile", new FileItem[] {_createFileItem("aaa")}
 			).put(
 				"otherFiles",
 				new FileItem[] {_createFileItem("bbb"), _createFileItem("ccc")}
-			).build(),
-			null);
+			).build());
 
 		JSONWebServiceAction jsonWebServiceAction = lookupJSONWebServiceAction(
 			httpServletRequest);
@@ -344,6 +293,24 @@ public class JSONWebServiceServiceActionTest
 
 			},
 			null);
+	}
+
+	private UploadServletRequest _createUploadServletRequest(
+		HttpServletRequest httpServletRequest,
+		Map<String, FileItem[]> multipartParameterMap) {
+
+		return (UploadServletRequest)ProxyUtil.newProxyInstance(
+			JSONWebServiceServiceActionTest.class.getClassLoader(),
+			new Class<?>[] {UploadServletRequest.class},
+			(proxy, method, args) -> {
+				if (Objects.equals(
+						method.getName(), "getMultipartParameterMap")) {
+
+					return multipartParameterMap;
+				}
+
+				return method.invoke(httpServletRequest, args);
+			});
 	}
 
 	private static JSONWebServiceServiceAction _jsonWebServiceServiceAction;

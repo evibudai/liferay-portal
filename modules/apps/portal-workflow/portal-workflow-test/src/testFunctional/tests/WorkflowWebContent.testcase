@@ -14,16 +14,13 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Web Content");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,7 +33,7 @@ definition {
 	}
 
 	@description = "Verify that the user can assign a a different Workflow to a Subfolder"
-	@priority = "4"
+	@priority = 4
 	test CanAssignDifferentWorkflowToSubfolder {
 		WebContentFolder.addCP(
 			folderDescription = "WC Folder Description",
@@ -76,13 +73,8 @@ definition {
 	}
 
 	@description = "Verify that the user can assign a Workflow to the Home folder"
-	@priority = "3"
+	@priority = 3
 	test CanAssignWorkflowToHomeFolder {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Web Content");
-
 		WorkflowWebContent.selectSingleApprover();
 
 		JSONWebcontent.addWebContent(
@@ -90,66 +82,55 @@ definition {
 			groupName = "Guest",
 			title = "WC WebContent Title");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Web Content");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
 		AssertTextEquals(
-			locator1 = "WorkflowWebContent#WEB_CONTENT_STATUS",
+			key_webContentTitle = "WC WebContent Title",
+			locator1 = "WC#ENTRY_LIST_WORKFLOW_TRANSLATIONE_STATUS",
 			value1 = "Pending");
 	}
 
 	@description = "LRQA-70845 Verify that cannot bypass workflow by duplicating article."
-	@priority = "5"
+	@priority = 5
 	test CannotBypassWorkflowByduplicatingArticle {
-		property portal.upstream = "quarantine";
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		Workflow.configureWCWorkflowViaFolderInfo(workflowDefinition = "Single Approver");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "user1@liferay.com",
 			userFirstName = "user1",
 			userLastName = "user1",
 			userScreenName = "user1");
 
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "user1@liferay.com");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
+
 		User.openUsersAdmin();
 
 		User.editUserSiteCP(
-			siteName = "Liferay",
+			siteName = ${siteName},
 			userScreenName = "user1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.assignSiteRoleCP(
 			siteRoleName = "Site Owner",
 			userScreenName = "user1");
 
-		UserNavigator.gotoPassword();
-
-		User.setPasswordByResetLink(
-			newPassword1 = "password",
-			newPassword2 = "password");
-
-		User.logoutPG();
-
-		User.loginPG(
-			password = "password",
-			userEmailAddress = "user1@liferay.com");
-
-		User.setPasswordByResetLink(
-			newPassword1 = "test",
-			newPassword2 = "test");
-
 		Navigator.openURL();
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "user1@liferay.com",
+			userLoginFullName = "user1 user1");
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -162,7 +143,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "EXAMPLE");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		WebContentNavigator.gotoViewStatus(
 			webContentStatus = "PENDING",
@@ -208,7 +189,7 @@ definition {
 
 		WebContent.copyCP(webContentTitle = "EXAMPLE");
 
-		var key_webContentTitle = "EXAMPLE Duplicate 1";
+		var key_webContentTitle = "EXAMPLE (Copy)";
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
@@ -221,7 +202,7 @@ definition {
 			value1 = "APPROVED");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ConfigureFolderWorkflow {
 		Workflow.configureWCWorkflowViaFolderInfo(workflowDefinition = "Single Approver");
 
@@ -250,7 +231,7 @@ definition {
 			workflowRestriction = "Default Workflow");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test EditWebContentInReviewProcess {
 		Navigator.gotoNavItem(navItem = "Structures");
 
@@ -362,10 +343,10 @@ definition {
 	}
 
 	@description = "Verify that, when a Web Content is moved to a Folder, it's Workflow changes"
-	@priority = "4"
+	@priority = 4
 	test MoveWebContentToFolderChangeItsWorkflow {
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "WorkflowWebContent#MoveWebContentToFolderChangeItsWorkflow";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
 
@@ -443,7 +424,7 @@ definition {
 			key_webContentTitle = "Web Content Title",
 			locator1 = "WC#ENTRY_LIST_TITLE");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		WorkflowMetrics.goToDashboardAllItemsWithFilter(
 			workflowFilterOption = "PENDING",
@@ -456,7 +437,7 @@ definition {
 	}
 
 	@description = "Verify that the Subfolder can use the Workflow of the Parent Folder"
-	@priority = "4"
+	@priority = 4
 	test SubfolderCanUseWorkflowOfParentFolder {
 		WebContentFolder.addCP(
 			folderDescription = "WC Folder Description",
@@ -500,6 +481,75 @@ definition {
 			webContentContent = "Web Content Content",
 			webContentStatus = "Pending",
 			webContentTitle = "Web Content Name");
+	}
+
+	@description = "LPS-190808 - Verify if the image added in the Web Content appears when the user enters the notification"
+	@priority = 4
+	test ViewLargeImageAddedByNotification {
+		task ("Given a Structure created with a JSON file") {
+			NavItem.gotoStructures();
+
+			WebContentStructures.importStructure(
+				structureName = "WC Structure Name",
+				uploadFileName = "structure_about_us_section.json");
+		}
+
+		task ("and Given a Template created using that structure") {
+			WebContentNavigator.gotoManageTemplatesViaStructures(structureName = "WC Structure Name");
+
+			WebContentTemplates.addCP(
+				structureName = "WC Structure Name",
+				templateDescription = "WC Template Description",
+				templateFieldNames = "Image",
+				templateName = "WC Template Name");
+		}
+
+		task ("and Given a created Folder based on this structure and assigned a Single Approver Workflow") {
+			NavItem.click(navItem = "Web Content");
+
+			WebContentFolder.addCP(
+				folderDescription = "WC Folder Description",
+				folderName = "WC Folder Name");
+
+			DMFolder.configureWorkflowCP(
+				dmFolderName = "WC Folder Name",
+				workflowDefinition = "Single Approver",
+				workflowRestriction = "Default Workflow");
+		}
+
+		task ("When the user create a Web Content inside the Folder using the Structure") {
+			WebContentFolder.gotoCP(
+				folderName = "WC Folder Name",
+				webContentTitle = "WC Folder Name");
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+		}
+
+		task ("and When the user attach an larger image on the created Web Content") {
+			WebContent.addWithStructureCP(
+				navTab = "Web Content Images",
+				webContentImage = "tree.png",
+				webContentTitle = "WC Title");
+
+			Button.click(button = "Submit for Workflow");
+		}
+
+		task ("and When entering the notification and the user clicks the view button") {
+			UserBar.gotoDropdownItem(dropdownItem = "Notifications");
+
+			Notifications.clickOnTheNotificationTitle(key_notificationsTitle = "Test Test sent you a Web Content Article for review in the workflow.");
+
+			Click(locator1 = "WorkflowSubmissionsTask#PREVIEW_VIEW");
+		}
+
+		task ("Then the image appears in the new tab and should be seen without being overflowed") {
+			SelectWindow(value1 = "WC Title - Liferay DXP");
+
+			OcularAssertElementImage(
+				locator1 = "PageEditor#CONTENT_PAGE_WEB_CONTENT_CONTENT",
+				value1 = "tree.png",
+				value2 = 80);
+		}
 	}
 
 }

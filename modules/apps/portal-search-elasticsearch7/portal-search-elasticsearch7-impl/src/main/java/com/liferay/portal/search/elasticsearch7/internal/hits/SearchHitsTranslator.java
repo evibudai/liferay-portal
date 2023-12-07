@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.hits;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
@@ -32,13 +24,11 @@ import com.liferay.portal.search.hits.SearchHitsBuilderFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.TotalHits;
 
 import org.elasticsearch.common.document.DocumentField;
-import org.elasticsearch.common.text.Text;
 
 /**
  * @author Michael C. Han
@@ -117,6 +107,8 @@ public class SearchHitsTranslator {
 			elasticsearchSearchHit.getMatchedQueries()
 		).score(
 			elasticsearchSearchHit.getScore()
+		).sortValues(
+			elasticsearchSearchHit.getSortValues()
 		).version(
 			elasticsearchSearchHit.getVersion()
 		).build();
@@ -165,11 +157,9 @@ public class SearchHitsTranslator {
 
 		return _highlightFieldBuilderFactory.builder(
 		).fragments(
-			Stream.of(
-				elasticsearchHighlightField.getFragments()
-			).map(
-				Text::string
-			)
+			TransformUtil.transformToList(
+				elasticsearchHighlightField.getFragments(),
+				text -> text.toString())
 		).name(
 			elasticsearchHighlightField.getName()
 		).build();

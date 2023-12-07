@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.upgrade;
@@ -101,10 +92,32 @@ public class UpgradeProcessFactory {
 		};
 	}
 
+	public static UpgradeProcess dropTables(String... tableNames) {
+		return new UpgradeProcess(
+			_getUpgradeInfo("drop tables " + Arrays.toString(tableNames))) {
+
+			@Override
+			protected void doUpgrade() throws Exception {
+				for (String tableName : tableNames) {
+					dropTable(tableName);
+				}
+			}
+
+		};
+	}
+
+	private static String _getUpgradeInfo(String message) {
+		return _getUpgradeInfo(null, "Modifying schema to " + message);
+	}
+
 	private static String _getUpgradeInfo(String tableName, String message) {
 		Thread thread = Thread.currentThread();
 
 		String callerClassName = thread.getStackTrace()[3].getClassName();
+
+		if (tableName == null) {
+			return callerClassName + " - " + message;
+		}
 
 		return StringBundler.concat(
 			callerClassName, " - Modifying table ", tableName, " to ", message);

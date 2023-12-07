@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.model.adapter;
@@ -37,7 +28,6 @@ import java.time.Instant;
 
 import java.util.Date;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.TreeMap;
 
 /**
@@ -58,7 +48,7 @@ public class StagedLayoutSetImpl
 		// Last publish date
 
 		UnicodeProperties settingsUnicodeProperties =
-			_layoutSet.getSettingsProperties();
+			layoutSet.getSettingsProperties();
 
 		String lastPublishDateString = settingsUnicodeProperties.getProperty(
 			"last-publish-date");
@@ -70,12 +60,12 @@ public class StagedLayoutSetImpl
 
 		// Layout set prototype
 
-		if (Validator.isNotNull(_layoutSet.getLayoutSetPrototypeUuid())) {
+		if (Validator.isNotNull(layoutSet.getLayoutSetPrototypeUuid())) {
 			LayoutSetPrototype layoutSetPrototype =
 				LayoutSetPrototypeLocalServiceUtil.
 					fetchLayoutSetPrototypeByUuidAndCompanyId(
-						_layoutSet.getLayoutSetPrototypeUuid(),
-						_layoutSet.getCompanyId());
+						layoutSet.getLayoutSetPrototypeUuid(),
+						layoutSet.getCompanyId());
 
 			if (layoutSetPrototype != null) {
 				_layoutSetPrototypeName = layoutSetPrototype.getName(
@@ -84,7 +74,7 @@ public class StagedLayoutSetImpl
 		}
 
 		try {
-			Group layoutSetGroup = _layoutSet.getGroup();
+			Group layoutSetGroup = layoutSet.getGroup();
 
 			_userId = layoutSetGroup.getCreatorUserId();
 
@@ -124,8 +114,8 @@ public class StagedLayoutSetImpl
 	}
 
 	@Override
-	public Optional<String> getLayoutSetPrototypeName() {
-		return Optional.ofNullable(_layoutSetPrototypeName);
+	public String getLayoutSetPrototypeName() {
+		return _layoutSetPrototypeName;
 	}
 
 	@Override

@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,9 +34,12 @@ definition {
 	}
 
 	@description = "LPS-142371 - Verify if Continue Button is only enabled when all required fields have been filled in."
-	@priority = "4"
+	@priority = 4
 	test CanContinueOnBusinessInfoWithAllFilled {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -55,9 +61,12 @@ definition {
 	}
 
 	@description = "LPS-135198 - Verify clicking 'Dismiss' on the Information Panel closes it (Information Panel from 'Percent of sales from used merchandise?')"
-	@priority = "3"
+	@priority = 3
 	test CanDismissSalesMerchandiseInfoPanel {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -83,9 +92,12 @@ definition {
 	}
 
 	@description = "LPS-142392 - Verify clicking 'Dismiss' on the Information Panel closes it (Information Panel from 'Years of industry experience?')"
-	@priority = "3"
+	@priority = 3
 	test CanDismissYearsOfExperienceInfoPanel {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -111,9 +123,12 @@ definition {
 	}
 
 	@description = "LPS-142379 - Verify if clicking on Previous returns to Previous Screen (Product Selection/'Select a product.') and all information is maintained in the Business page"
-	@priority = "5"
+	@priority = 5
 	test CanGoBackOnBusinessInfoKeepingAllData {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -137,9 +152,12 @@ definition {
 	}
 
 	@description = "LPS-142393 - Verify clicking 'More Info' in the 'Percent of sales from used merchandise?' field opens an Information Panel"
-	@priority = "3"
+	@priority = 3
 	test CanViewSalesMerchandiseInfoPanel {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -163,9 +181,12 @@ definition {
 	}
 
 	@description = "LPS-142390 - Verify clicking 'More Info' in the 'Years of industry experience?' field opens an Information Panel"
-	@priority = "3"
+	@priority = 3
 	test CanViewYearsOfExperienceInfoPanel {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -189,9 +210,12 @@ definition {
 	}
 
 	@description = "LPS-142387 - Verify error message 'Percent of overall sales is required.' in the 'What percentage of overall sales involve delivery?' field"
-	@priority = "4"
+	@priority = 4
 	test OverallSalesIsRequired {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -201,7 +225,7 @@ definition {
 
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		Click(
 			field = "Do you store personally identifiable information about your customers?",
@@ -243,9 +267,12 @@ definition {
 	}
 
 	@description = "LPS-142388 - Verify error message 'Value must not be greater than 100%.' in the 'What percentage of overall sales involve delivery?' field"
-	@priority = "4"
+	@priority = 4
 	test OverallSalesNotAbove100 {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -255,7 +282,7 @@ definition {
 
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		Click(
 			field = "Do you store personally identifiable information about your customers?",
@@ -293,9 +320,12 @@ definition {
 	}
 
 	@description = "LPS-142386 - Verify error message 'Percent of sales is required.' in the 'Percent of sales from used merchandise?' field"
-	@priority = "4"
+	@priority = 4
 	test SalesMerchandiseIsRequired {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -323,9 +353,12 @@ definition {
 	}
 
 	@description = "LPS-142385 - Verify error message 'Value must not be greater than 100%.' in the 'Percent of sales from used merchandise?' field"
-	@priority = "4"
+	@priority = 4
 	test SalesMerchandiseNotAbove100 {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -335,7 +368,7 @@ definition {
 
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		Click(
 			field = "Do you store personally identifiable information about your customers?",
@@ -365,9 +398,12 @@ definition {
 	}
 
 	@description = "LPS-142382 - Verify error message 'This field is required' in the 'Years of industry experience?' field"
-	@priority = "4"
+	@priority = 4
 	test YearsOfExperienceIsRequired {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -377,7 +413,7 @@ definition {
 
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
@@ -396,9 +432,12 @@ definition {
 
 	@description = "LPS-142383 - Verify error message 'Must be equal or greater than 0.' in the 'Years of industry experience?' field"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test YearsOfExperienceNotBelowZero {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 

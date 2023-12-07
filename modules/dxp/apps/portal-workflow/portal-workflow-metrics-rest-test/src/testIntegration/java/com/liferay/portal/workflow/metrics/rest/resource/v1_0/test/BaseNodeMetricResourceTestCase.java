@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.resource.v1_0.test;
@@ -23,6 +14,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -36,6 +28,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -64,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -201,7 +192,7 @@ public abstract class BaseNodeMetricResourceTestCase {
 			RandomTestUtil.nextDate(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantProcessId != null) {
 			NodeMetric irrelevantNodeMetric =
@@ -210,14 +201,16 @@ public abstract class BaseNodeMetricResourceTestCase {
 
 			page = nodeMetricResource.getProcessNodeMetricsPage(
 				irrelevantProcessId, null, null, null, null, null,
-				Pagination.of(1, 2), null);
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantNodeMetric),
-				(List<NodeMetric>)page.getItems());
-			assertValid(page);
+			assertContains(
+				irrelevantNodeMetric, (List<NodeMetric>)page.getItems());
+			assertValid(
+				page,
+				testGetProcessNodeMetricsPage_getExpectedActions(
+					irrelevantProcessId));
 		}
 
 		NodeMetric nodeMetric1 = testGetProcessNodeMetricsPage_addNodeMetric(
@@ -230,17 +223,32 @@ public abstract class BaseNodeMetricResourceTestCase {
 			processId, null, null, null, null, null, Pagination.of(1, 10),
 			null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(nodeMetric1, nodeMetric2),
-			(List<NodeMetric>)page.getItems());
-		assertValid(page);
+		assertContains(nodeMetric1, (List<NodeMetric>)page.getItems());
+		assertContains(nodeMetric2, (List<NodeMetric>)page.getItems());
+		assertValid(
+			page, testGetProcessNodeMetricsPage_getExpectedActions(processId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProcessNodeMetricsPage_getExpectedActions(Long processId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
 	public void testGetProcessNodeMetricsPageWithPagination() throws Exception {
 		Long processId = testGetProcessNodeMetricsPage_getProcessId();
+
+		Page<NodeMetric> nodeMetricPage =
+			nodeMetricResource.getProcessNodeMetricsPage(
+				processId, null, null, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(nodeMetricPage.getTotalCount());
 
 		NodeMetric nodeMetric1 = testGetProcessNodeMetricsPage_addNodeMetric(
 			processId, randomNodeMetric());
@@ -252,27 +260,31 @@ public abstract class BaseNodeMetricResourceTestCase {
 			processId, randomNodeMetric());
 
 		Page<NodeMetric> page1 = nodeMetricResource.getProcessNodeMetricsPage(
-			processId, null, null, null, null, null, Pagination.of(1, 2), null);
+			processId, null, null, null, null, null,
+			Pagination.of(1, totalCount + 2), null);
 
 		List<NodeMetric> nodeMetrics1 = (List<NodeMetric>)page1.getItems();
 
-		Assert.assertEquals(nodeMetrics1.toString(), 2, nodeMetrics1.size());
+		Assert.assertEquals(
+			nodeMetrics1.toString(), totalCount + 2, nodeMetrics1.size());
 
 		Page<NodeMetric> page2 = nodeMetricResource.getProcessNodeMetricsPage(
-			processId, null, null, null, null, null, Pagination.of(2, 2), null);
+			processId, null, null, null, null, null,
+			Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<NodeMetric> nodeMetrics2 = (List<NodeMetric>)page2.getItems();
 
 		Assert.assertEquals(nodeMetrics2.toString(), 1, nodeMetrics2.size());
 
 		Page<NodeMetric> page3 = nodeMetricResource.getProcessNodeMetricsPage(
-			processId, null, null, null, null, null, Pagination.of(1, 3), null);
+			processId, null, null, null, null, null,
+			Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(nodeMetric1, nodeMetric2, nodeMetric3),
-			(List<NodeMetric>)page3.getItems());
+		assertContains(nodeMetric1, (List<NodeMetric>)page3.getItems());
+		assertContains(nodeMetric2, (List<NodeMetric>)page3.getItems());
+		assertContains(nodeMetric3, (List<NodeMetric>)page3.getItems());
 	}
 
 	@Test
@@ -390,24 +402,27 @@ public abstract class BaseNodeMetricResourceTestCase {
 		nodeMetric2 = testGetProcessNodeMetricsPage_addNodeMetric(
 			processId, nodeMetric2);
 
+		Page<NodeMetric> page = nodeMetricResource.getProcessNodeMetricsPage(
+			processId, null, null, null, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<NodeMetric> ascPage =
 				nodeMetricResource.getProcessNodeMetricsPage(
 					processId, null, null, null, null, null,
-					Pagination.of(1, 2), entityField.getName() + ":asc");
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(nodeMetric1, nodeMetric2),
-				(List<NodeMetric>)ascPage.getItems());
+			assertContains(nodeMetric1, (List<NodeMetric>)ascPage.getItems());
+			assertContains(nodeMetric2, (List<NodeMetric>)ascPage.getItems());
 
 			Page<NodeMetric> descPage =
 				nodeMetricResource.getProcessNodeMetricsPage(
 					processId, null, null, null, null, null,
-					Pagination.of(1, 2), entityField.getName() + ":desc");
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(nodeMetric2, nodeMetric1),
-				(List<NodeMetric>)descPage.getItems());
+			assertContains(nodeMetric2, (List<NodeMetric>)descPage.getItems());
+			assertContains(nodeMetric1, (List<NodeMetric>)descPage.getItems());
 		}
 	}
 
@@ -578,6 +593,13 @@ public abstract class BaseNodeMetricResourceTestCase {
 	}
 
 	protected void assertValid(Page<NodeMetric> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<NodeMetric> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<NodeMetric> nodeMetrics = page.getItems();
@@ -592,6 +614,25 @@ public abstract class BaseNodeMetricResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -781,14 +822,16 @@ public abstract class BaseNodeMetricResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -805,6 +848,10 @@ public abstract class BaseNodeMetricResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -814,18 +861,18 @@ public abstract class BaseNodeMetricResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

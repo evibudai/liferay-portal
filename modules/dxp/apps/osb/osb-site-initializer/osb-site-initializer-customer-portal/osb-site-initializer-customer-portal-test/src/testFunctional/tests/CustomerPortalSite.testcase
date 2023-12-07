@@ -18,7 +18,7 @@ definition {
 		}
 
 		task ("Create a new Customer Portal Site") {
-			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+			CustomerPortal.addCustomerPortalSite(siteName = ${testSiteName});
 		}
 
 		task ("Add test user access to all Accounts") {
@@ -29,31 +29,41 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		CustomerPortal.customerPortalApisTearDown();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			JSONGroup.deleteGroupByName(groupName = "${testSiteName}");
+			JSONGroup.deleteGroupByName(groupName = ${testSiteName});
 		}
 	}
 
-	@description = "LPS-146217 - Verify if when Customer Portal is created, Accounts Users will be created for it as well"
-	@priority = "4"
-	test AccountUsersAreCreatedForCP20 {
-		AccountUsers.openAccountUsersAdmin();
+	@description = "Story: LPS-167803 | Test Summary: Verify that it is possible to search for a project with just the project code"
+	@priority = 2
+	test AssertThatAbleToSearchWithProjectCode {
+		task ("Given that the User goes to Customer Portal Site") {
+			ApplicationsMenu.gotoSite(key_site = ${testSiteName});
+		}
 
-		AssertElementPresent(
-			locator1 = "CustomerPortalSite#ACCOUNTS_TABLE",
-			value = "Test Test");
+		task ("When the User searches for a project by ERC") {
+			Type(
+				locator1 = "CustomerPortalSite#SEARCH_BAR",
+				value1 = "TESTACCOUNT01");
+		}
+
+		task ("Then state that the research brings the right project") {
+			AssertElementPresent(
+				locator1 = "CP2LiferayContact#PROJECT_TABLE",
+				title = "Test Account LXC - SM");
+		}
 	}
 
 	@description = "LPS-148456 - Verify if its possible login in Okta, Configure SAML Admin and create CP2.0"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanConnectWithOkta {
 		task ("Login in Okta") {
 
@@ -67,11 +77,11 @@ definition {
 
 			Type(
 				locator1 = "CustomerPortalSite#OKTA_USERNAME",
-				value1 = "${userEmailAddress}");
+				value1 = ${userEmailAddress});
 
 			Type(
 				locator1 = "CustomerPortalSite#OKTA_PASSWORD",
-				value1 = "${userPassword}");
+				value1 = ${userPassword});
 
 			Click(locator1 = "CustomerPortalSite#OKTA_SUBMIT");
 		}
@@ -124,8 +134,8 @@ definition {
 
 			CustomerPortal.addIdPCForCustomerPortal(
 				idpAttributeMapping = "emailAddress,UUID,screenName,lastName,firstName",
-				idpEntityId = "${entityId}",
-				idpMetadataURL = "${metadataURL}",
+				idpEntityId = ${entityId},
+				idpMetadataURL = ${metadataURL},
 				idpNameId = "CP2",
 				nameIdentifierFormat = "Unspecified");
 
@@ -139,7 +149,7 @@ definition {
 			Site.openSitesAdmin();
 
 			TeamExtranet.addSiteTemplateCP(
-				siteName = "${testSiteName}",
+				siteName = ${testSiteName},
 				siteTemplateName = "Liferay OSB Site Initializer Customer Portal");
 
 			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
@@ -157,7 +167,7 @@ definition {
 
 			SAMLNavigation.gotoIdentityProviderConnections();
 
-			SAMLPortlet.deleteSAMLConnection(samlEntityId = "${entityId}");
+			SAMLPortlet.deleteSAMLConnection(samlEntityId = ${entityId});
 
 			ApplicationsMenu.gotoPortlet(
 				category = "Security",
@@ -173,54 +183,54 @@ definition {
 	}
 
 	@description = "Automation ID: LPS-146215 | Test Summary: Verify if Customer Portal can be created"
-	@priority = "5"
+	@priority = 5
 	test CanCP20BeCreated {
 		property portal.acceptance = "true";
 
-		task ("Go to Customer Portal Site") {
-			ApplicationsMenu.gotoSite(site = "${testSiteName}");
+		task ("When a Customer Portal Site is created") {
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
 		}
 
-		task ("Assert the Customer Portal Page is present") {
+		task ("Then I can assert that the Customer Portal Page is present") {
 			AssertElementPresent(
 				key_title = "Welcome,",
 				locator1 = "CustomerPortalSite#FRAGMENT_HEADING");
 		}
-	}
 
-	@description = "Automation ID: LPS-146220 | Test Summary: Verify if when Customer Portal is created, Objects will be created for it as well"
-	@priority = "4"
-	test ObjectsAreCreatedForCP20 {
-		task ("Go to the Objects admin and assert that the objects have been created") {
-			ObjectAdmin.openObjectAdmin();
-
-			AssertElementPresent(
-				locator1 = "CustomerPortalSite#OBJECTS_TABLE",
-				value = "Koroneiki Account");
-		}
-	}
-
-	@description = "Automation ID: LPS-146219 | Test Summary: Verify if when Customer Portal is created, Remote Apps will be created for it as well"
-	@priority = "4"
-	test RemoteAppsAreCreatedForCP20 {
-		task ("Assert that when the Customer Portal is created, remote applications are also created") {
-			RemoteApps.goToRemoteAppsPortlet();
-
-			AssertElementPresent(
-				locator1 = "CustomerPortalSite#OBJECTS_TABLE",
-				value = "Customer Portal");
-		}
-	}
-
-	@description = "Automation ID: LPS-146216 | Test Summary: Verify if when Customer Portal is created, Tests Accounts will be created for it as well"
-	@priority = "4"
-	test TestsAccountsAreCreatedForCP20 {
-		task ("Assert that after the Customer Portal was created, test accounts were also created") {
+		task ("And I can assert that test accounts were also created") {
 			Account.openAccountsAdmin();
 
 			AssertElementPresent(
 				locator1 = "CustomerPortalSite#ACCOUNTS_TABLE",
 				value = "Test Account LXC - SM");
+		}
+
+		task ("And I can assert that account users were also created") {
+			AccountUsers.openAccountUsersAdmin();
+
+			AssertElementPresent(
+				locator1 = "CustomerPortalSite#ACCOUNTS_TABLE",
+				value = "Test Test");
+		}
+
+		task ("And I can assert that remote applications were also created") {
+			ClientExtensionGeneral.goToRemoteAppsPortlet();
+
+			AssertElementPresent(
+				locator1 = "CustomerPortalSite#OBJECTS_TABLE",
+				value = "Customer Portal");
+		}
+
+		task ("And I can assert that the objects were also created") {
+			ObjectAdmin.openObjectAdmin();
+
+			while (IsElementNotPresent(locator1 = "CustomerPortalSite#OBJECTS_TABLE", value = "Koroneiki Account")) {
+				Click(locator1 = "Pagination#NEXT_LINK");
+			}
+
+			AssertElementPresent(
+				locator1 = "CustomerPortalSite#OBJECTS_TABLE",
+				value = "Koroneiki Account");
 		}
 	}
 

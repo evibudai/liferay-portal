@@ -1,70 +1,31 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.cleanup.internal.upgrade.util;
 
-import aQute.bnd.annotation.metatype.Meta;
-
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
-
-import java.io.IOException;
-
-import java.lang.reflect.Method;
-
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Objects;
-
 import org.apache.felix.cm.PersistenceManager;
 
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+
 /**
- * @author Kevin Lee
+ * @author Shuyang Zhou
  */
 public class ConfigurationUtil {
 
-	public static <T> T getAndResetConfiguration(
-			PersistenceManager persistenceManager, Class<T> clazz)
-		throws IOException {
+	public static void deleteConfiguration(
+			ConfigurationAdmin configurationAdmin,
+			PersistenceManager persistenceManager, String pid)
+		throws Exception {
 
-		Dictionary<String, Object> properties = persistenceManager.load(
-			clazz.getName());
+		Configuration configuration = configurationAdmin.getConfiguration(
+			pid, "?");
 
-		if (properties == null) {
-			return ConfigurableUtil.createConfigurable(clazz, new HashMap<>());
-		}
+		configuration.delete();
 
-		Dictionary<String, Object> newProperties =
-			HashMapDictionaryBuilder.<String, Object>putAll(
-				properties
-			).build();
-
-		for (Method method : clazz.getMethods()) {
-			if (!method.isAnnotationPresent(Meta.AD.class) ||
-				!Objects.equals(method.getReturnType(), Boolean.TYPE)) {
-
-				continue;
-			}
-
-			if (properties.get(method.getName()) != null) {
-				newProperties.put(method.getName(), false);
-			}
-		}
-
-		persistenceManager.store(clazz.getName(), newProperties);
-
-		return ConfigurableUtil.createConfigurable(clazz, properties);
+		persistenceManager.delete(pid);
 	}
 
 }

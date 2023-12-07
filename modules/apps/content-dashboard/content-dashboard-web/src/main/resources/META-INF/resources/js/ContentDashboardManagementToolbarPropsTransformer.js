@@ -1,18 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {addParams, navigate, openSelectionModal} from 'frontend-js-web';
+import {
+	addParams,
+	navigate,
+	openCategorySelectionModal,
+	openSelectionModal,
+	openTagSelectionModal,
+} from 'frontend-js-web';
 
 const DEFAULT_VALUES = {
 	buttonAddLabel: Liferay.Language.get('select'),
@@ -78,11 +75,15 @@ export default function propsTransformer({portletNamespace, ...otherProps}) {
 			buttonAddLabel: Liferay.Language.get('select'),
 			height: '70vh',
 			multiple: true,
-			onSelect: (selectedItem) => {
-				if (selectedItem) {
+			onSelect: (data) => {
+				if (data) {
+					const selectedItems = data.value;
+
 					let redirectURL = itemData?.redirectURL;
 
-					selectedItem.forEach((item) => {
+					selectedItems.forEach((selectedItem) => {
+						const item = JSON.parse(selectedItem);
+
 						redirectURL = addParams(
 							`${portletNamespace}authorIds=${item.id}`,
 							redirectURL
@@ -100,61 +101,20 @@ export default function propsTransformer({portletNamespace, ...otherProps}) {
 	};
 
 	const selectAssetCategory = (itemData) => {
-		openSelectionModal({
-			buttonAddLabel: Liferay.Language.get('select'),
-			height: '70vh',
-			iframeBodyCssClass: '',
-			multiple: true,
-			onSelect: (selectedItem) => {
-				if (selectedItem) {
-					const assetCategories = Object.keys(selectedItem).filter(
-						(key) => !selectedItem[key].unchecked
-					);
-
-					let redirectURL = itemData?.redirectURL;
-
-					assetCategories.forEach((assetCategory) => {
-						redirectURL = addParams(
-							`${portletNamespace}assetCategoryId=${selectedItem[assetCategory].categoryId}`,
-							redirectURL
-						);
-					});
-
-					navigate(redirectURL);
-				}
-			},
-			selectEventName: `${portletNamespace}selectedAssetCategory`,
-			size: 'md',
+		openCategorySelectionModal({
+			portletNamespace,
+			redirectURL: itemData?.redirectURL,
+			selectCategoryURL: itemData?.selectAssetCategoryURL,
 			title: itemData?.dialogTitle,
-			url: itemData?.selectAssetCategoryURL,
 		});
 	};
 
 	const selectAssetTag = (itemData) => {
-		openSelectionModal({
-			buttonAddLabel: Liferay.Language.get('select'),
-			height: '70vh',
-			multiple: true,
-			onSelect: (selectedItem) => {
-				if (selectedItem) {
-					const assetTags = selectedItem.map((tag) => tag.value);
-
-					let redirectURL = itemData?.redirectURL;
-
-					assetTags.forEach((assetTag) => {
-						redirectURL = addParams(
-							`${portletNamespace}assetTagId=${assetTag}`,
-							redirectURL
-						);
-					});
-
-					navigate(redirectURL);
-				}
-			},
-			selectEventName: `${portletNamespace}selectedAssetTag`,
-			size: 'lg',
+		openTagSelectionModal({
+			portletNamespace,
+			redirectURL: itemData?.redirectURL,
+			selectTagURL: itemData?.selectTagURL,
 			title: itemData?.dialogTitle,
-			url: itemData?.selectTagURL,
 		});
 	};
 

@@ -1,16 +1,16 @@
 definition {
 
-	@summary = "Add a style book entry to an existing site"
-	macro addStyleBookEntry {
+	@summary = "Default summary"
+	macro addStyleBookEntry(groupName = null, site = null, styleBookEntryName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${styleBookEntryName}");
 
 		var groupId = JSONStylebooksSetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 
 		JSONStylebooksAPI._addStylebookEntry(
-			groupId = "${groupId}",
-			styleBookEntryName = "${styleBookEntryName}");
+			groupId = ${groupId},
+			styleBookEntryName = ${styleBookEntryName});
 	}
 
 }

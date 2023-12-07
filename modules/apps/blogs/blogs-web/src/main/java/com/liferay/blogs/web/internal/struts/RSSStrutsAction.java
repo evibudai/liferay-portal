@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.struts;
@@ -19,10 +10,13 @@ import com.liferay.blogs.constants.BlogsConstants;
 import com.liferay.blogs.service.BlogsEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.GroupPermission;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.struts.StrutsAction;
@@ -118,14 +112,14 @@ public class RSSStrutsAction implements StrutsAction {
 
 		String rss = StringPool.BLANK;
 
-		if (companyId > 0) {
+		if (companyId != CompanyConstants.SYSTEM) {
 			String entryURL = _getFindEntryURL(themeDisplay);
 
 			rss = _blogsEntryService.getCompanyEntriesRSS(
 				companyId, new Date(), status, max, type, version, displayStyle,
 				StringPool.BLANK, entryURL, themeDisplay);
 		}
-		else if (groupId > 0) {
+		else if (groupId != GroupConstants.DEFAULT_LIVE_GROUP_ID) {
 			long plid = ParamUtil.getLong(
 				httpServletRequest, "plid", themeDisplay.getPlid());
 
@@ -135,7 +129,9 @@ public class RSSStrutsAction implements StrutsAction {
 				groupId, new Date(), status, max, type, version, displayStyle,
 				feedURL, feedURL, themeDisplay);
 		}
-		else if (organizationId > 0) {
+		else if (organizationId !=
+					OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID) {
+
 			String entryURL = _getFindEntryURL(themeDisplay);
 
 			rss = _blogsEntryService.getOrganizationEntriesRSS(
@@ -164,7 +160,7 @@ public class RSSStrutsAction implements StrutsAction {
 		long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
 		if ((groupId == 0) ||
-			_groupPermission.contains(
+			GroupPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(), groupId,
 				ActionKeys.VIEW)) {
 
@@ -197,9 +193,6 @@ public class RSSStrutsAction implements StrutsAction {
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
-
-	@Reference
-	private GroupPermission _groupPermission;
 
 	@Reference
 	private Portal _portal;

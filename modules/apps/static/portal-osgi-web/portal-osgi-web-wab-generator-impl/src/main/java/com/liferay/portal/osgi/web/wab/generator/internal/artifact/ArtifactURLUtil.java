@@ -1,34 +1,27 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.osgi.web.wab.generator.internal.artifact;
 
-import aQute.bnd.osgi.Jar;
-import aQute.bnd.osgi.Resource;
-
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.whip.util.ReflectionUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.URL;
 
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.osgi.framework.Constants;
 
@@ -39,9 +32,14 @@ import org.osgi.framework.Constants;
  */
 public class ArtifactURLUtil {
 
-	public static URL transform(URL artifact) throws IOException {
-		String path = artifact.getPath();
+	public static String getClientExtensionSymbolicName(String path) {
+		int x = path.lastIndexOf('/');
+		int y = path.lastIndexOf(CharPool.PERIOD);
 
+		return path.substring(x + 1, y);
+	}
+
+	public static String getSymbolicName(String path) {
 		int x = path.lastIndexOf('/');
 		int y = path.lastIndexOf(CharPool.PERIOD);
 
@@ -53,21 +51,27 @@ public class ArtifactURLUtil {
 			symbolicName = matcher.group(1);
 		}
 
+		return symbolicName;
+	}
+
+	public static URL transform(URL artifact) throws Exception {
 		String contextName = null;
 
-		String fileExtension = path.substring(y + 1);
+		String path = artifact.getPath();
+
+		String fileExtension = path.substring(
+			path.lastIndexOf(CharPool.PERIOD) + 1);
 
 		if (fileExtension.equals("war")) {
-			try (Jar jar = new Jar("WAR", artifact.openStream())) {
-				if (jar.getBsn() != null) {
-					return artifact;
-				}
+			try (ZipFile zipFile = new ZipFile(new File(artifact.toURI()))) {
+				contextName = _readServletContextName(zipFile);
+			}
+		}
 
-				contextName = _readServletContextName(jar);
-			}
-			catch (Exception exception) {
-				ReflectionUtil.throwException(exception);
-			}
+		String symbolicName = getSymbolicName(path);
+
+		if (fileExtension.equals("zip") && _isClientExtensionZip(path)) {
+			symbolicName = getClientExtensionSymbolicName(path);
 		}
 
 		if (contextName == null) {
@@ -82,22 +86,50 @@ public class ArtifactURLUtil {
 				"&fileExtension=", fileExtension, "&protocol=file"));
 	}
 
-	private static String _readServletContextName(Jar jar) throws Exception {
-		Resource resource = jar.getResource(
+	private static boolean _isClientExtensionZip(String path) {
+		try (ZipFile zipFile = new ZipFile(path)) {
+			Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
+
+			while (enumeration.hasMoreElements()) {
+				ZipEntry zipEntry = enumeration.nextElement();
+
+				String name = zipEntry.getName();
+
+				if (name.endsWith(".client-extension-config.json") &&
+					(name.indexOf("/") == -1)) {
+
+					return true;
+				}
+			}
+		}
+		catch (IOException ioException) {
+			_log.error("Path " + path + " is not a valid ZIP", ioException);
+		}
+
+		return false;
+	}
+
+	private static String _readServletContextName(ZipFile zipFile)
+		throws Exception {
+
+		ZipEntry zipEntry = zipFile.getEntry(
 			"WEB-INF/liferay-plugin-package.properties");
 
-		if (resource == null) {
+		if (zipEntry == null) {
 			return null;
 		}
 
 		Properties properties = new Properties();
 
-		try (InputStream inputStream = resource.openInputStream()) {
+		try (InputStream inputStream = zipFile.getInputStream(zipEntry)) {
 			properties.load(inputStream);
 		}
 
 		return properties.getProperty("servlet-context-name");
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ArtifactURLUtil.class);
 
 	private static final Pattern _pattern = Pattern.compile(
 		"(.*?)(-[0-9\\.]+)");

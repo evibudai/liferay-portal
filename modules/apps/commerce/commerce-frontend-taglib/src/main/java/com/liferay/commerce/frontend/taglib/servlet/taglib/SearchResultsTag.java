@@ -1,93 +1,78 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
-import com.liferay.frontend.taglib.soy.servlet.taglib.ComponentRendererTag;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.taglib.util.IncludeTag;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.PageContext;
 
 /**
  * @author Marco Leo
  */
-public class SearchResultsTag extends ComponentRendererTag {
+public class SearchResultsTag extends IncludeTag {
 
 	@Override
-	public int doStartTag() {
-		putValue("queryString", StringPool.BLANK);
+	public void setPageContext(PageContext pageContext) {
+		super.setPageContext(pageContext);
 
-		HttpServletRequest httpServletRequest = getRequest();
+		setServletContext(ServletContextUtil.getServletContext());
+	}
 
+	@Override
+	protected String getPage() {
+		return _PAGE;
+	}
+
+	@Override
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		CommerceContext commerceContext =
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
-			CommerceAccount commerceAccount =
-				commerceContext.getCommerceAccount();
+			AccountEntry accountEntry = commerceContext.getAccountEntry();
 
-			if (commerceAccount != null) {
-				putValue(
-					"commerceAccountId",
-					commerceAccount.getCommerceAccountId());
+			if (accountEntry != null) {
+				httpServletRequest.setAttribute(
+					"liferay-commerce-ui:search-results:commerceAccountId",
+					accountEntry.getAccountEntryId());
 			}
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
 		}
 
-		putValue(
-			"searchAPI",
-			PortalUtil.getPortalURL(httpServletRequest) +
-				PortalUtil.getPathContext() + "/o/commerce-ui/search/");
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		putValue("spritemap", themeDisplay.getPathThemeSpritemap());
+		httpServletRequest.setAttribute(
+			"liferay-commerce-ui:search-results:groupId",
+			themeDisplay.getScopeGroupId());
+		httpServletRequest.setAttribute(
+			"liferay-commerce-ui:search-results:plid", themeDisplay.getPlid());
 
-		putValue("visible", false);
-
-		setTemplateNamespace("SearchResults.render");
-
-		return super.doStartTag();
+		httpServletRequest.setAttribute(
+			"liferay-commerce-ui:search-results:searchURL",
+			PortalUtil.getPortalURL(httpServletRequest) +
+				PortalUtil.getPathContext() + "/o/commerce-ui/search/");
 	}
 
-	@Override
-	public String getModule() {
-		NPMResolver npmResolver = ServletContextUtil.getNPMResolver();
-
-		if (npmResolver == null) {
-			return StringPool.BLANK;
-		}
-
-		return npmResolver.resolveModuleName(
-			"commerce-frontend-taglib/search_results/SearchResults.es");
-	}
+	private static final String _PAGE = "/search_results/page.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SearchResultsTag.class);

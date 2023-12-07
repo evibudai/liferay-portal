@@ -2,19 +2,21 @@ definition {
 
 	var formName = "Created Form Name";
 
-	macro changeLanguage {
+	@summary = "Default summary"
+	macro changeLanguage(newLanguage = null, currentLanguage = null) {
 		Click(
-			key_language = "${currentLanguage}",
+			key_language = ${currentLanguage},
 			locator1 = "FormPortletConfiguration#SELECT_LANGUAGE");
 
 		Click(
-			key_language = "${newLanguage}",
+			key_language = ${newLanguage},
 			locator1 = "FormPortletConfiguration#SELECT_LANGUAGE");
 	}
 
-	macro configureScopePG {
+	@summary = "Default summary"
+	macro configureScopePG(scopeSelection = null, portletName = null) {
 		Portlet.gotoPortletOptions(
-			portletName = "${portletName}",
+			portletName = ${portletName},
 			portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
@@ -23,31 +25,46 @@ definition {
 
 		Select(
 			locator1 = "Select#SCOPE",
-			value1 = "${scopeSelection}");
+			value1 = ${scopeSelection});
 
 		PortletEntry.save();
 	}
 
-	macro selectForm {
+	@summary = "Default summary"
+	macro selectForm(formTitle = null) {
 		if (isSet(formTitle)) {
-			var formName = "${formTitle}";
+			var formName = ${formTitle};
 		}
 
 		Navigator.gotoNavItem(navItem = "Setup");
 
 		AssertClick(
-			key_formName = "${formName}",
+			key_formName = ${formName},
 			locator1 = "FormPortletConfiguration#FORMS_TABLE_NAME",
-			value1 = "${formName}");
+			value1 = ${formName});
 
 		AssertTextEquals(
 			locator1 = "Message#INFO",
 			value1 = "Displaying Form: ${formName} (Modified)");
 	}
 
-	macro viewTranslationLanguage {
+	@summary = "Default summary"
+	macro selectFormOnAPage(formName = null, pageName = null) {
+		Navigator.gotoPage(pageName = ${pageName});
+
+		FormPortletNavigator.gotoSelectForm();
+
+		FormPortletConfiguration.selectForm(formTitle = ${formName});
+
+		PortletEntry.save();
+
+		FormPortletNavigator.exitWidgetModal();
+	}
+
+	@summary = "Default summary"
+	macro viewTranslationLanguage(language = null) {
 		AssertElementPresent(
-			key_language = "${language}",
+			key_language = ${language},
 			locator1 = "FormPortletConfiguration#SELECT_LANGUAGE");
 	}
 

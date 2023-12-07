@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.portlet.action;
 
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributorRegistry;
@@ -57,23 +48,20 @@ public class EditSegmentsEntryMVCRenderCommand implements MVCRenderCommand {
 		portletSession.removeAttribute(
 			SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_CRITERIA);
 
-		EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext =
+		renderRequest.setAttribute(
+			EditSegmentsEntryDisplayContext.class.getName(),
 			new EditSegmentsEntryDisplayContext(
-				_filterParserProvider, _groupLocalService,
+				_companyLocalService, _groupLocalService,
 				_portal.getHttpServletRequest(renderRequest), _itemSelector,
 				renderRequest, renderResponse, _segmentsConfigurationProvider,
 				_segmentsCriteriaContributorRegistry,
-				_segmentsEntryProviderRegistry, _segmentsEntryService);
-
-		renderRequest.setAttribute(
-			SegmentsWebKeys.EDIT_SEGMENTS_ENTRY_DISPLAY_CONTEXT,
-			editSegmentsEntryDisplayContext);
+				_segmentsEntryProviderRegistry, _segmentsEntryService));
 
 		return "/edit_segments_entry.jsp";
 	}
 
 	@Reference
-	private FilterParserProvider _filterParserProvider;
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.search.background.task;
 
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 /**
  * @author Andrew Betts
@@ -24,21 +15,25 @@ public class ReindexStatusMessageSenderUtil {
 	public static void sendStatusMessage(
 		String className, long count, long total) {
 
-		_reindexStatusMessageSender.sendStatusMessage(className, count, total);
+		ReindexStatusMessageSender reindexStatusMessageSender =
+			_reindexStatusMessageSenderSnapshot.get();
+
+		reindexStatusMessageSender.sendStatusMessage(className, count, total);
 	}
 
 	public static void sendStatusMessage(
 		String phase, long companyId, long[] companyIds) {
 
-		_reindexStatusMessageSender.sendStatusMessage(
+		ReindexStatusMessageSender reindexStatusMessageSender =
+			_reindexStatusMessageSenderSnapshot.get();
+
+		reindexStatusMessageSender.sendStatusMessage(
 			phase, companyId, companyIds);
 	}
 
-	private static volatile ReindexStatusMessageSender
-		_reindexStatusMessageSender =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				ReindexStatusMessageSender.class,
-				ReindexStatusMessageSenderUtil.class,
-				"_reindexStatusMessageSender", false);
+	private static final Snapshot<ReindexStatusMessageSender>
+		_reindexStatusMessageSenderSnapshot = new Snapshot<>(
+			ReindexStatusMessageSenderUtil.class,
+			ReindexStatusMessageSender.class);
 
 }

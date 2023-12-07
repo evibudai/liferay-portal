@@ -1,0 +1,62 @@
+definition {
+
+	@summary = "Default summary"
+	macro _getCategories(groupName = null, site = null, vocabularyName = null) {
+		Variables.assertDefined(parameterList = "${groupName},${vocabularyName}");
+
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		var groupId = JSONCategorySetter.setGroupId(
+			groupName = ${groupName},
+			site = ${site});
+
+		var vocabularyId = JSONCategorySetter.setVocabularyId(
+			groupId = ${groupId},
+			vocabularyName = ${vocabularyName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/api/jsonws/assetcategory/get-vocabulary-categories \
+				-u ${userLoginInfo} \
+				-d vocabularyId=${vocabularyId} \
+				-d <CURL_DATA[start=-1]CURL_DATA> \
+				-d <CURL_DATA[end=-1]CURL_DATA> \
+				-d -orderByComparator=
+		''';
+
+		var responseBody = JSONCurlUtil.post(${curl});
+
+		return ${responseBody};
+	}
+
+	@summary = "Default summary"
+	macro _getCategoryIdByName(categoryNames = null, groupName = null, vocabularyName = null) {
+		if (!(isSet(responseBody))) {
+			var responseBody = CommmerceJSONCategoriesAPI._getCategories(
+				groupName = ${groupName},
+				vocabularyName = ${vocabularyName});
+		}
+
+		var categoryIds = "";
+
+		for (var categoryName : list ${categoryNames}) {
+			var categoryId = JSONUtil.getWithJSONPath(${responseBody}, "$.[?(@['titleCurrentValue'] == '${categoryName}')]['categoryId']");
+
+			if (${categoryIds} != "") {
+				var comma = ",";
+			}
+			else {
+				var comma = "";
+			}
+
+			var categoryIds = "${categoryIds}${comma}${categoryId}";
+		}
+
+		return ${categoryIds};
+	}
+
+}

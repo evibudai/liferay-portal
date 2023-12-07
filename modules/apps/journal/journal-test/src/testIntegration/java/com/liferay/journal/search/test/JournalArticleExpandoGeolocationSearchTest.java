@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
@@ -28,6 +20,8 @@ import com.liferay.journal.test.util.search.JournalArticleSearchFixture;
 import com.liferay.journal.test.util.search.JournalArticleTitle;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.search.SearchEngine;
+import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -35,6 +29,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.geolocation.GeoBuilders;
 import com.liferay.portal.search.query.Queries;
@@ -58,6 +53,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -78,7 +74,7 @@ public class JournalArticleExpandoGeolocationSearchTest {
 	@Before
 	public void setUp() throws Exception {
 		_journalArticleSearchFixture = new JournalArticleSearchFixture(
-			journalArticleLocalService);
+			ddmStructureLocalService, journalArticleLocalService, portal);
 
 		_journalArticles = _journalArticleSearchFixture.getJournalArticles();
 
@@ -103,6 +99,8 @@ public class JournalArticleExpandoGeolocationSearchTest {
 
 	@Test
 	public void testGeoDistanceFilter() throws Exception {
+		Assume.assumeFalse(_isSearchEngine("Solr"));
+
 		addJournalArticleWithTwoExpandoColumns(
 			"Software Engineer", _EXPANDO_COLUMN, ExpandoColumnConstants.STRING,
 			_GEOLOCATION_VALUE, _EXPANDO_COLUMN_GEOLOCATION,
@@ -118,7 +116,10 @@ public class JournalArticleExpandoGeolocationSearchTest {
 						_EXPANDO_COLUMN_GEOLOCATION_FULL_NAME,
 						geoBuilders.geoLocationPoint(34.01, -117.42),
 						geoBuilders.geoDistance(1000))
-				).build()),
+				).build()
+			).emptySearchEnabled(
+				true
+			),
 			"[Software Engineer]");
 		assertSearch(
 			searchRequestBuilder -> searchRequestBuilder.addComplexQueryPart(
@@ -130,7 +131,10 @@ public class JournalArticleExpandoGeolocationSearchTest {
 						_EXPANDO_COLUMN_GEOLOCATION_FULL_NAME,
 						geoBuilders.geoLocationPoint(34.01, -117.42),
 						geoBuilders.geoDistance(100))
-				).build()),
+				).build()
+			).emptySearchEnabled(
+				true
+			),
 			"[]");
 	}
 
@@ -228,9 +232,15 @@ public class JournalArticleExpandoGeolocationSearchTest {
 	}
 
 	protected void assertGeolocationExpandoFieldIndexed() {
+		String expected = _GEOLOCATION_EXPECTED;
+
+		if (_isSearchEngine("Solr")) {
+			expected = _GEOLOCATION_EXPECTED_SOLR;
+		}
+
 		assertSearch(
 			searchRequestBuilder -> searchRequestBuilder.queryString("alpha"),
-			_EXPANDO_COLUMN_GEOLOCATION_FULL_NAME, _GEOLOCATION_EXPECTED);
+			_EXPANDO_COLUMN_GEOLOCATION_FULL_NAME, expected);
 	}
 
 	protected void assertNoGeolocationExpandoClauseInSearchQuery(
@@ -290,9 +300,18 @@ public class JournalArticleExpandoGeolocationSearchTest {
 			).build());
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
-			searchResponse.getRequestString(),
-			searchResponse.getDocumentsStream(), fieldName, expected);
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			fieldName, expected);
 	}
+
+	@Inject
+	protected static DDMStructureLocalService ddmStructureLocalService;
+
+	@Inject
+	protected static Portal portal;
+
+	@Inject
+	protected static SearchEngineHelper searchEngineHelper;
 
 	@Inject
 	protected ClassNameLocalService classNameLocalService;
@@ -321,6 +340,14 @@ public class JournalArticleExpandoGeolocationSearchTest {
 	@Inject
 	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
 
+	private boolean _isSearchEngine(String engine) {
+		SearchEngine searchEngine = searchEngineHelper.getSearchEngine();
+
+		String vendor = searchEngine.getVendor();
+
+		return vendor.equals(engine);
+	}
+
 	private static final String _EXPANDO_COLUMN = "expandoColumn";
 
 	private static final String _EXPANDO_COLUMN_GEOLOCATION = "location";
@@ -330,6 +357,9 @@ public class JournalArticleExpandoGeolocationSearchTest {
 
 	private static final String _GEOLOCATION_EXPECTED =
 		"[(34.013727866113186,-117.42460448294878)]";
+
+	private static final String _GEOLOCATION_EXPECTED_SOLR =
+		"[34.013727866113186,-117.42460448294878]";
 
 	private static final String _GEOLOCATION_VALUE =
 		"{\"latitude\":34.013727866113186, \"longitude\":-117.42460448294878}";

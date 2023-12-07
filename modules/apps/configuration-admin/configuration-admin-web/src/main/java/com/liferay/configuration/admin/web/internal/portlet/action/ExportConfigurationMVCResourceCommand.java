@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.configuration.admin.web.internal.portlet.action;
@@ -25,14 +16,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition.Scope;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedAttributeDefinition;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedObjectClassDefinition;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -160,9 +150,7 @@ public class ExportConfigurationMVCResourceCommand
 		if (!Scope.SYSTEM.equals(scope)) {
 			properties.put(scope.getPropertyKey(), scopePK);
 
-			if (GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-155284"))) {
-
+			if (FeatureFlagManagerUtil.isEnabled("LPS-155284")) {
 				_configurationExportImportProcessor.prepareForExport(
 					pid, properties);
 			}
@@ -194,9 +182,9 @@ public class ExportConfigurationMVCResourceCommand
 		for (ConfigurationModel configurationModel :
 				configurationModels.values()) {
 
-			if (configurationModel.isFactory()) {
-				String curFactoryPid = configurationModel.getFactoryPid();
+			String curFactoryPid = configurationModel.getFactoryPid();
 
+			if (configurationModel.isFactory()) {
 				List<ConfigurationModel> factoryInstances =
 					_configurationModelRetriever.getFactoryInstances(
 						configurationModel,
@@ -227,7 +215,7 @@ public class ExportConfigurationMVCResourceCommand
 					curFileName,
 					ConfigurationExporter.getPropertiesAsBytes(
 						getProperties(
-							languageId, curPid, curPid,
+							languageId, curFactoryPid, curPid,
 							configurationScopeDisplayContext.getScope(),
 							configurationScopeDisplayContext.getScopePK())));
 			}

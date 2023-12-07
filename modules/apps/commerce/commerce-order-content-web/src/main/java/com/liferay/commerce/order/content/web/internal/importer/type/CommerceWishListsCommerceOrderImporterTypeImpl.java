@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.importer.type;
@@ -36,8 +27,10 @@ import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
 import com.liferay.commerce.wish.list.service.CommerceWishListService;
+import com.liferay.frontend.data.set.provider.search.FDSPagination;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -48,6 +41,8 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Locale;
@@ -98,7 +93,8 @@ public class CommerceWishListsCommerceOrderImporterTypeImpl
 
 	@Override
 	public List<CommerceOrderImporterItem> getCommerceOrderImporterItems(
-			CommerceOrder commerceOrder, Object object)
+			CommerceOrder commerceOrder, FDSPagination fdsPagination,
+			Object object)
 		throws Exception {
 
 		if ((object == null) || !(object instanceof CommerceWishList)) {
@@ -112,9 +108,19 @@ public class CommerceWishListsCommerceOrderImporterTypeImpl
 		return CommerceOrderImporterTypeUtil.getCommerceOrderImporterItems(
 			_commerceContextFactory, commerceOrder,
 			_getCommerceOrderImporterItemImpls(
-				commerceChannel.getGroupId(), (CommerceWishList)object),
+				commerceChannel.getGroupId(), (CommerceWishList)object,
+				fdsPagination),
 			_commerceOrderItemService, _commerceOrderPriceCalculation,
 			_commerceOrderService, _userLocalService);
+	}
+
+	public int getCommerceOrderImporterItemsCount(Object object)
+		throws Exception {
+
+		CommerceWishList commerceWishList = (CommerceWishList)object;
+
+		return _commerceWishListItemService.getCommerceWishListItemsCount(
+			commerceWishList.getCommerceWishListId());
 	}
 
 	@Override
@@ -168,13 +174,21 @@ public class CommerceWishListsCommerceOrderImporterTypeImpl
 	}
 
 	private CommerceOrderImporterItemImpl[] _getCommerceOrderImporterItemImpls(
-			long commerceChannelGroupId, CommerceWishList commerceWishList)
+			long commerceChannelGroupId, CommerceWishList commerceWishList,
+			FDSPagination fdsPagination)
 		throws Exception {
+
+		int start = QueryUtil.ALL_POS;
+		int end = QueryUtil.ALL_POS;
+
+		if (fdsPagination != null) {
+			start = fdsPagination.getStartPosition();
+			end = fdsPagination.getEndPosition();
+		}
 
 		return TransformUtil.transformToArray(
 			_commerceWishListItemService.getCommerceWishListItems(
-				commerceWishList.getCommerceWishListId(), QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null),
+				commerceWishList.getCommerceWishListId(), start, end, null),
 			commerceWishListItem -> _toCommerceOrderImporterItemImpl(
 				commerceChannelGroupId, commerceWishListItem),
 			CommerceOrderImporterItemImpl.class);
@@ -199,7 +213,8 @@ public class CommerceWishListsCommerceOrderImporterTypeImpl
 
 			commerceOrderImporterItemImpl.setErrorMessages(
 				new String[] {"the-product-is-no-longer-available"});
-			commerceOrderImporterItemImpl.setQuantity(1);
+			commerceOrderImporterItemImpl.setQuantity(BigDecimal.ONE);
+			commerceOrderImporterItemImpl.setUnitOfMeasureKey(StringPool.BLANK);
 		}
 		else {
 			CPInstance firstAvailableReplacementCPInstance =
@@ -225,6 +240,7 @@ public class CommerceWishListsCommerceOrderImporterTypeImpl
 
 			commerceOrderImporterItemImpl.setQuantity(
 				_cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance));
+			commerceOrderImporterItemImpl.setUnitOfMeasureKey(StringPool.BLANK);
 		}
 
 		String json = commerceWishListItem.getJson();

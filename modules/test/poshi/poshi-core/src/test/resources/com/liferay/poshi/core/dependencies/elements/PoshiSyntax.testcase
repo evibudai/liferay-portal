@@ -1,4 +1,5 @@
 <definition component-name="portal-acceptance" ignore="true">
+	<property name="app.server.bundles.size" value="12890"/>
 	<property name="portal.release" value="true" />
 	<property name="portal.upstream" value="true" />
 	<property name="testray.main.component.name" value="Smoke" />
@@ -17,6 +18,7 @@
     <var name="testRef" value="test"/>
     <echo message="${test}"/>
     <var name="reference" value="${testRef}"/>
+    <var name="test" method="StringUtil#replace('${test}', '${test}', '${test} ${test2}')"/>
 
 	<set-up>
 		<execute macro="TestCase#setUpPortalInstance" />
@@ -38,6 +40,15 @@
 
 		<task summary="Add a blogs entry called 'Blogs Entry1 Title' with content 'Blogs Entry1 Content'">
 			<execute macro="Navigator#openURL" />
+
+			<execute class="ListUtil" method="add">
+				<arg value="${orderID}"/>
+				<arg value="${orderIDs}"/>
+			</execute>
+
+			<var name="pages" method="selenium#getElementValue('//tr[td[contains(@class,\'line-content\')][contains(.,\'textAlign = &quot;right&quot;\')]]/td[contains(@class,\'line-number\')]')"/>
+			<var name="camelCase" method="StringUtil#replace('${camelCase}', ' ', '')"/>
+			<var name="payload" method="StringUtil#replace('${payload}', '${payload}', '${payload}}')"/>
 
 			<execute macro="ProductMenu#gotoPortlet">
 				<var name="category" value="Content" />
@@ -67,6 +78,11 @@
 		</task>
 
 		<var name="portalInstanceIds" method="StringUtil#regexReplaceAll('${portalInstanceIds}', '[\[\]&quot;]', '')"/>
+
+		<execute class="StringUtil" method="assertEquals">
+			<arg value="&quot;Row 1&quot;: &quot;Column 1&quot;"/>
+			<arg value="${data}"/>
+		</execute>
 	</command>
 
 	<command priority="5" name="AddUser">
@@ -84,7 +100,7 @@
 		<var name="specialCharacters" value="&quot;\&quot;" />
 		<var name="userEmailAddress" value="userea@liferay.com" />
 		<var name="userFirstName" value="userfn" />
-		<var name="userLastName" value="userln" />
+		<var name="userLastName" value="${userFirstName} userln"/>
 
 		<execute macro="FormFields#editText">
 			<var name="fieldName" value="label" />

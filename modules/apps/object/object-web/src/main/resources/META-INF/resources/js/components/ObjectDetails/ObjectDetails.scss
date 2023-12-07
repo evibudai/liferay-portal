@@ -1,0 +1,30 @@
+.lfr-objects__object-definition-details {
+	margin-bottom: 25px;
+	margin-top: 25px;
+
+	&-configuration {
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+.lfr-objects__object-definition-details-management-toolbar {
+	position: fixed;
+	top: 3.5rem;
+	width: 100%;
+	z-index: 1;
+}
+
+.lfr__object-web-edit-object-details-external-data-source-container {
+	display: grid;
+	position: relative;
+}
+
+.lfr__object-web-edit-object-details-external-data-source-panel {
+	align-items: center;
+	display: flex;
+
+	&-container-beta {
+		margin-left: 5px;
+	}
+}

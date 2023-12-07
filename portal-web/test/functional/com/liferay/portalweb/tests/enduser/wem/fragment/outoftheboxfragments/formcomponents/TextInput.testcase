@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a company Object with a Text field") {
@@ -34,41 +35,26 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ObjectAdmin.deleteObjectViaAPI(objectName = "PurchaseOrder");
-		}
-	}
-
 	@description = "This is a test for LPS-149725. The pages designer can map the Text Input fragment entities text fields."
-	@priority = "4"
+	@priority = 4
 	test AddCustomTextInputFieldsOnContentPage {
 		task ("Given a pages designer has a Text Input fragment inside a mapped Form Container") {
-			task ("Add a Form Container framgment to content page") {
-				JSONLayout.addPublicLayout(
-					groupName = "Test Site Name",
-					layoutName = "Test Page Name",
-					type = "content");
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
 
-				ContentPagesNavigator.openEditContentPage(
-					pageName = "Test Page Name",
-					siteName = "Test Site Name");
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
 
-				PageEditor.addFragment(
-					collectionName = "Form Components",
-					fragmentName = "Form Container");
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
 
-				PageEditor.editFormContainer(
-					contentType = "Purchase Order",
-					panel = "General");
-			}
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
 		}
 
 		task ("When the pages designer adds a custom name in Text Input fields") {
@@ -147,7 +133,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-149725. The pages designer can map the Text Input fragment with translated entities text fields."
-	@priority = "4"
+	@priority = 4
 	test AddCustomTextInputFieldsWithTranslation {
 		task ("Given a pages designer has a Text Input fragment inside a mapped Form Container and Language Selector widget on a content page") {
 			task ("Add a Form Container framgment to content page") {
@@ -254,7 +240,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-150278. The sites designer cannot hide a Text Input fragment on content page."
-	@priority = "4"
+	@priority = 4
 	test CannotHideTextInputFragmentOnContentPage {
 		task ("Given a page designer has a Text Input fragment to content page") {
 			JSONLayout.addPublicLayout(
@@ -281,7 +267,7 @@ definition {
 
 		task ("Then the page designer could not view the hide icon on structure tree") {
 			AssertElementNotPresent(
-				key_index = "1",
+				key_index = 1,
 				key_nodeName = "Text Input",
 				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_HIDE_INDEX");
 		}
@@ -307,12 +293,10 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-149725. The pages designer cannot type more than 280 characters in the text input field."
-	@priority = "4"
-	test CannotType281CharactersInTextInputField {
-		var actualText = "The number of characters is 280.The number of characters is 280.The number of characters is 280.The number of characters is 280.The number of characters is 280.The number of characters is 280.The number of characters is 280.The number of characters is 280.The number of characters";
+	@description = "This is a test for LPS-149725 and LPS-173849. The pages designer should see alert message when the characters count exceeds text field."
+	@priority = 4
+	test ViewAlertMessageWhenCharactersCountExceedMaximum {
 		var inputText = "The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characterss";
-		var modifiedText = "The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters is 281.The number of characters";
 
 		task ("Given a pages designer has a Text Input fragment within published content page") {
 			JSONLayout.addPublicLayout(
@@ -343,37 +327,37 @@ definition {
 			Type.sendKeys(
 				key_text = "Region",
 				locator1 = "TextInput#ANY",
-				value1 = "${inputText}");
+				value1 = ${inputText});
 		}
 
-		task ("Then the pages designer can see just 280 characters in Text Input field") {
-			AssertTextEquals(
-				key_text = "Region",
-				locator1 = "TextInput#ANY",
-				value1 = "${modifiedText}");
+		task ("Then the pages designer sees alert message below the Text Input field") {
+			PageEditor.viewInputStyle(
+				charactersCount = "Maximum Number of Characters Exceeded: 281 / 280",
+				type = "text-input");
 		}
 
-		task ("When the pages designer types 280 characters in the Input Fragment") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+		task ("When the pages designer removes one character from Text Input") {
+			Click(
+				key_text = "Region",
+				locator1 = "TextInput#ANY");
 
-			Type.sendKeys(
+			KeyPress(
 				key_text = "Region",
 				locator1 = "TextInput#ANY",
-				value1 = "${actualText}");
+				value1 = "\BACK_SPACE");
 		}
 
-		task ("Then the pages designer can see 280 characters in Text Input field") {
-			AssertTextEquals(
-				key_text = "Region",
-				locator1 = "TextInput#ANY",
-				value1 = "${actualText}");
+		task ("Then the pages designer cannot see the alert message") {
+			AssertTextNotEquals.assertNotPartialMatch(
+				index = 1,
+				locator1 = "Fragment#INPUT_LENGTH_INFO",
+				type = "text-input",
+				value1 = "Maximum Number of Characters Exceeded");
 		}
 	}
 
 	@description = "This is a test for LPS-151400. The required field has an asterisk symbol on dropdown menu of mapping field selector."
-	@priority = "4"
+	@priority = 4
 	test ViewAsteriskSymbolOfRequiredField {
 		task ("Given a page creator has a Form Container with a Text Input fragment") {
 			task ("Add a required Text field to object") {
@@ -419,7 +403,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-151402. The user could see error message when submit a form with blank required field."
-	@priority = "4"
+	@priority = 4
 	test ViewErrorMessageWhenSubmitFormWithBlankRequiredField {
 		task ("Given a user has a content page where a required Text Input and Submit Button fragments are inside a Form Container") {
 			task ("Add a Form Container framgment to content page") {
@@ -460,22 +444,22 @@ definition {
 
 		task ("Then the user should see an error message") {
 			AssertAttributeValue(
-				attribute1 = "required",
 				key_text = "Region",
 				locator1 = "TextInput#ANY",
-				value1 = "true");
+				value1 = "required",
+				value2 = "true");
 
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
 				key_text = "Region",
 				locator1 = "TextInput#ANY",
-				value1 = "Please fill out this field.");
+				value1 = "validationMessage",
+				value2 = "Please fill out this field.");
 		}
 	}
 
-	@description = "This is a test for LPS-151402. The user could see error message when submit a form with value exceeding the length of field."
-	@priority = "4"
-	test ViewErrorMessageWhenSubmitFormWithValueExceedingTheLengthOfField {
+	@description = "This is a test for LPS-151402 and LPS-173849. The user could see error message when submit a form with value exceeding the customized length of field."
+	@priority = 4
+	test ViewErrorMessageWhenSubmitFormWithValueExceedingTheCustomizedLengthOfField {
 		task ("Given a user has a content page where a Text Input and Submit Button fragments are inside a Form Container") {
 			task ("Change the Maximum Number of Characters of Region field to 20") {
 				ObjectAdmin.openObjectAdmin();
@@ -491,7 +475,7 @@ definition {
 				Type(
 					key_text = "Maximum Number of Characters",
 					locator1 = "TextInput#ANY",
-					value1 = "20");
+					value1 = 20);
 
 				ObjectField.save();
 			}
@@ -516,6 +500,10 @@ definition {
 					contentType = "Purchase Order",
 					panel = "General");
 
+				PageEditor.editInput(
+					fragmentName = "Text Input",
+					showCharactersCount = "true");
+
 				PageEditor.publish();
 			}
 		}
@@ -524,6 +512,10 @@ definition {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
+
+			PageEditor.viewInputStyle(
+				charactersCount = ": 0 / 20",
+				type = "text-input");
 
 			Type(
 				key_text = "Region",
@@ -535,6 +527,80 @@ definition {
 
 		task ("Then the user should see an error message on the top of form") {
 			Alert.viewErrorMessage(errorMessage = "Value exceeds maximum length of 20 for field Region.");
+
+			PageEditor.viewInputStyle(
+				charactersCount = "Maximum Number of Characters Exceeded: 33 / 20",
+				type = "text-input");
+		}
+
+		task ("When the user removes charactors to 20") {
+			Click(
+				key_text = "Region",
+				locator1 = "TextInput#ANY");
+
+			var n = 1;
+
+			while (${n} != 14) {
+				KeyPress(
+					key_text = "Region",
+					locator1 = "TextInput#ANY",
+					value1 = "\BACK_SPACE");
+
+				var n = ${n} + 1;
+			}
+		}
+
+		task ("Then the page designer cannot see the alert message") {
+			PageEditor.viewInputStyle(
+				charactersCount = ": 20 / 20",
+				type = "text-input");
+		}
+	}
+
+	@description = "This is a test for LPS-182728. The user should see the field error below the Text Input fragment."
+	@priority = 3
+	test ViewTextInputFieldErrorMessageWhenPartialValidationFailure {
+		task ("Given a user has a content page where a mapped Text Input fragment has a partial validation") {
+			JSONObject.addObjectValidation(
+				errorMessage = "Please enter a valid region.",
+				fieldName = "region",
+				labelName = "Text Validation",
+				objectName = "PurchaseOrder",
+				outputValidationType = "partialValidation",
+				script = "NOT(contains(region, 'Test'))",
+				validationType = "ddm");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+
+			PageEditor.publish();
+		}
+
+		task ("When the user submits form with invalid value") {
+			Type(
+				key_text = "Region",
+				locator1 = "TextInput#ANY",
+				value1 = "Test");
+
+			Button.clickSubmitButton();
+		}
+
+		task ("Then the user should see a field error message below Text Input") {
+			Alert.viewFieldErrorMessage(
+				errorMessage = "Please enter a valid region.",
+				fieldLabel = "Region");
 		}
 	}
 

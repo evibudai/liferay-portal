@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -22,7 +13,7 @@ JournalManagementToolbarDisplayContext journalManagementToolbarDisplayContext = 
 if (!journalDisplayContext.isSearch() || journalDisplayContext.isWebContentTabSelected()) {
 	journalManagementToolbarDisplayContext = new JournalManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalDisplayContext, trashHelper);
 }
-else if (journalDisplayContext.isVersionsTabSelected()) {
+else if (journalDisplayContext.isIndexAllArticleVersions() && journalDisplayContext.isVersionsTabSelected()) {
 	journalManagementToolbarDisplayContext = new JournalArticleVersionsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalDisplayContext, trashHelper);
 }
 else if (journalDisplayContext.isCommentsTabSelected()) {
@@ -68,76 +59,47 @@ else {
 	<clay:container-fluid
 		cssClass="container-view sidenav-content"
 	>
-		<c:if test="<%= !journalDisplayContext.isNavigationMine() && !journalDisplayContext.isNavigationRecent() %>">
-			<liferay-site-navigation:breadcrumb
-				breadcrumbEntries="<%= JournalPortletUtil.getPortletBreadcrumbEntries(journalDisplayContext.getFolder(), request, journalDisplayContext.getPortletURL()) %>"
-			/>
-		</c:if>
 
-		<aui:form action="<%= journalDisplayContext.getPortletURL() %>" method="get" name="fm">
-			<aui:input name="<%= ActionRequest.ACTION_NAME %>" type="hidden" />
-			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
-			<aui:input name="groupId" type="hidden" value="<%= scopeGroupId %>" />
-			<aui:input name="newFolderId" type="hidden" />
+		<%
+		VerticalNavItemList ddmStructureVerticalNavItemList = journalDisplayContext.getDDMStructureVerticalNavItemList();
+		%>
 
-			<c:choose>
-				<c:when test="<%= !journalDisplayContext.isSearch() %>">
-					<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
-				</c:when>
-				<c:otherwise>
+		<c:choose>
+			<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-194763") && ListUtil.isNotEmpty(ddmStructureVerticalNavItemList) %>'>
+				<clay:row>
+					<clay:col
+						lg="3"
+					>
+						<clay:vertical-nav
+							verticalNavItems="<%= journalDisplayContext.getVerticalNavItemList() %>"
+						/>
 
-					<%
-					String[] tabsNames = new String[0];
-					String[] tabsValues = new String[0];
+						<span class="c-mb-1 c-mt-3 sheet-tertiary-title text-2 text-secondary">
+							<liferay-ui:message key="highlighted-structures" />
+						</span>
 
-					if (journalDisplayContext.hasResults()) {
-						String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "web-content"), journalDisplayContext.getTotalItems());
+						<clay:vertical-nav
+							verticalNavItems="<%= ddmStructureVerticalNavItemList %>"
+						/>
+					</clay:col>
 
-						tabsNames = ArrayUtil.append(tabsNames, tabName);
+					<clay:col
+						lg="9"
+					>
+						<clay:sheet
+							size="full"
+						>
+							<h2 class="sheet-title"><%= journalDisplayContext.getTitle() %></h2>
 
-						tabsValues = ArrayUtil.append(tabsValues, "web-content");
-					}
-
-					if (journalDisplayContext.hasVersionsResults()) {
-						String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "versions"), journalDisplayContext.getVersionsTotal());
-
-						tabsNames = ArrayUtil.append(tabsNames, tabName);
-
-						tabsValues = ArrayUtil.append(tabsValues, "versions");
-					}
-
-					if (journalDisplayContext.hasCommentsResults()) {
-						String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "comments"), journalDisplayContext.getCommentsTotal());
-
-						tabsNames = ArrayUtil.append(tabsNames, tabName);
-
-						tabsValues = ArrayUtil.append(tabsValues, "comments");
-					}
-					%>
-
-					<liferay-ui:tabs
-						names="<%= StringUtil.merge(tabsNames) %>"
-						portletURL="<%= journalDisplayContext.getPortletURL() %>"
-						tabsValues="<%= StringUtil.merge(tabsValues) %>"
-					/>
-
-					<c:choose>
-						<c:when test="<%= journalDisplayContext.isWebContentTabSelected() %>">
-							<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
-						</c:when>
-						<c:when test="<%= journalDisplayContext.isVersionsTabSelected() %>">
-							<liferay-util:include page="/view_versions.jsp" servletContext="<%= application %>" />
-						</c:when>
-						<c:when test="<%= journalDisplayContext.isCommentsTabSelected() %>">
-							<liferay-util:include page="/view_comments.jsp" servletContext="<%= application %>" />
-						</c:when>
-						<c:otherwise>
-							<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
-						</c:otherwise>
-					</c:choose>
-				</c:otherwise>
-			</c:choose>
-		</aui:form>
+							<%@ include file="/view_form.jspf" %>
+						</clay:sheet>
+					</clay:col>
+				</clay:row>
+			</c:when>
+			<c:otherwise>
+				<%@ include file="/view_form.jspf" %>
+			</c:otherwise>
+		</c:choose>
 	</clay:container-fluid>
 </div>
 

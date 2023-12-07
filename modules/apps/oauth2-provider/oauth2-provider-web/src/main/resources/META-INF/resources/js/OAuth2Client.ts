@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import pkceChallenge from 'pkce-challenge';
@@ -29,6 +20,15 @@ interface IOAuth2ClientOptions {
 	homePageURL: string;
 	redirectURIs: Array<string>;
 	tokenURL: string;
+}
+
+interface IOAuth2ClientTokenResponse {
+	access_token: string;
+	expires_after_ms: number;
+	expires_in: number;
+	refresh_token: string;
+	scope: string;
+	token_type: string;
 }
 
 class OAuth2Client {
@@ -69,7 +69,10 @@ class OAuth2Client {
 		});
 	}
 
-	private _createIframe(challenge: any, sessionKey: string): Promise<any> {
+	private _createIframe(
+		challenge: ReturnType<typeof pkceChallenge>,
+		sessionKey: string
+	): Promise<any> {
 		const oauth2Client = this;
 
 		const ifrm = document.createElement('iframe');
@@ -103,7 +106,12 @@ class OAuth2Client {
 					tokenResponse.then((response) =>
 						Liferay.Util.SessionStorage.setItem(
 							sessionKey,
-							JSON.stringify(response),
+							JSON.stringify({
+								...response,
+								expires_after_ms:
+									new Date().getTime() +
+									response.expires_in * 1000,
+							}),
 							Liferay.Util.SessionStorage.TYPES.NECESSARY
 						)
 					);
@@ -121,7 +129,7 @@ class OAuth2Client {
 
 	private async _fetch(
 		resource: RequestInfo | URL,
-		options: any = {}
+		options: RequestInit = {}
 	): Promise<any> {
 		const oauth2Client = this;
 
@@ -156,10 +164,11 @@ class OAuth2Client {
 		// to perform OAuth2 token authentication instead
 		// eslint-disable-next-line @liferay/portal/no-global-fetch
 		return await fetch(resource, {
+			...options,
 			headers: {
+				...options?.headers,
 				Authorization: `Bearer ${tokenData.access_token}`,
 			},
-			...options,
 		});
 	}
 
@@ -174,9 +183,15 @@ class OAuth2Client {
 			);
 
 			if (cachedTokenData !== null && cachedTokenData !== undefined) {
-				resolve(JSON.parse(cachedTokenData));
+				const cachedToken = JSON.parse(
+					cachedTokenData
+				) as IOAuth2ClientTokenResponse;
 
-				return;
+				if (new Date().getTime() < cachedToken.expires_after_ms) {
+					resolve(cachedToken);
+
+					return;
+				}
 			}
 
 			resolve(oauth2Client._requestTokenSilently(sessionKey));
@@ -193,7 +208,7 @@ class OAuth2Client {
 	private async _requestToken(
 		codeVerifier: string,
 		code: string
-	): Promise<any> {
+	): Promise<IOAuth2ClientTokenResponse> {
 		const oauth2Client = this;
 
 		// This client must avoid using @liferay/portal/no-global-fetch in order

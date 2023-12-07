@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.logging;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.test.rule.MethodTestRule;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
@@ -24,8 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Factory;
@@ -162,13 +152,13 @@ public class ExpectedLogMethodTestRule extends MethodTestRule<Void> {
 		}
 
 		protected String toString(T logEntries) {
-			Stream<LogEntry> stream = logEntries.stream();
+			StringBundler sb = new StringBundler(logEntries.size());
 
-			return stream.map(
-				LogEntry::getMessage
-			).collect(
-				Collectors.joining()
-			);
+			for (LogEntry logEntry : logEntries) {
+				sb.append(logEntry.getMessage());
+			}
+
+			return sb.toString();
 		}
 
 		protected final Matcher<String> matcher;

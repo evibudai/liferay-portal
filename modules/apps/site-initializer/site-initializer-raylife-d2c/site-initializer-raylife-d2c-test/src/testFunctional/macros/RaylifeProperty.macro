@@ -1,13 +1,14 @@
 definition {
 
-	macro gotoContactInfoByProperty {
+	@summary = "Default summary"
+	macro gotoContactInfoByProperty() {
 		Click(
 			field = "Do you own the building",
 			locator1 = "Raylife#BUTTON_YES_OPTION");
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.stories",
-			value = "11");
+			value = 11);
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.buildingSquareFeetOccupied",
@@ -19,7 +20,7 @@ definition {
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.yearBuilding",
-			value = "2000");
+			value = 2000);
 
 		Click(
 			field = "Is this the primary location where you conduct business?",
@@ -34,14 +35,15 @@ definition {
 			locator1 = "Raylife#BUTTON_YES_OPTION");
 	}
 
-	macro typeAllPropertyInfoFields {
+	@summary = "Default summary"
+	macro typeAllPropertyInfoFields() {
 		Click(
 			field = "Do you own the building at Address?",
 			locator1 = "Raylife#BUTTON_YES_OPTION");
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.stories",
-			value = "3");
+			value = 3);
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.buildingSquareFeetOccupied",
@@ -53,20 +55,22 @@ definition {
 
 		RaylifeProperty.typePropertyInfoFields(
 			label = "property.yearBuilding",
-			value = "2015");
+			value = 2015);
 
 		Click(
 			field = "Is this the primary location where you conduct business?",
 			locator1 = "Raylife#BUTTON_YES_OPTION");
 	}
 
-	macro typePropertyInfoFields {
+	@summary = "Default summary"
+	macro typePropertyInfoFields(value = null) {
 		Type(
 			locator1 = "Raylife#FORMS_FIELDS",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro viewPropertyInfo {
+	@summary = "Default summary"
+	macro viewPropertyInfo() {
 		AssertElementPresent(
 			field = "Do you own the building at Address?",
 			locator1 = "Raylife#BUTTON_YES_OPTION");
@@ -74,7 +78,7 @@ definition {
 		AssertElementPresent(
 			label = "property.stories",
 			locator1 = "Raylife#FORMS_VALUE",
-			value = "3");
+			value = 3);
 
 		AssertElementPresent(
 			label = "property.buildingSquareFeetOccupied",
@@ -89,7 +93,7 @@ definition {
 		AssertElementPresent(
 			label = "property.yearBuilding",
 			locator1 = "Raylife#FORMS_VALUE",
-			value = "2015");
+			value = 2015);
 
 		AssertElementPresent(
 			field = "Is this the primary location where you conduct business?",

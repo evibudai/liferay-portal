@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.address.service.test;
@@ -133,11 +124,13 @@ public class AddressLocalServiceTest {
 
 	@Test
 	public void testSearchAddressesWithInvalidTypeName() throws Exception {
-		ListType businessType = _listTypeLocalService.getListType(
-			"business", ListTypeConstants.CONTACT_ADDRESS);
+		ListType businessListType = _listTypeLocalService.getListType(
+			TestPropsValues.getCompanyId(), "business",
+			ListTypeConstants.CONTACT_ADDRESS);
 
 		Address address = _addAddress(
-			RandomTestUtil.randomString(), businessType.getListTypeId(), null);
+			RandomTestUtil.randomString(), businessListType.getListTypeId(),
+			null);
 
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
 				_LOG_NAME, LoggerTestUtil.DEBUG)) {
@@ -151,7 +144,7 @@ public class AddressLocalServiceTest {
 				Arrays.asList(address), null,
 				_getLinkedHashMap(
 					"typeNames",
-					new String[] {businessType.getName(), typeName}));
+					new String[] {businessListType.getName(), typeName}));
 
 			List<LogEntry> logEntries = logCapture.getLogEntries();
 
@@ -160,7 +153,7 @@ public class AddressLocalServiceTest {
 			Assert.assertEquals(
 				StringBundler.concat(
 					"No list type found for ",
-					ListTypeConstants.CONTACT_ADDRESS, " with the name: ",
+					ListTypeConstants.CONTACT_ADDRESS, " with the name ",
 					typeName),
 				logEntry.getMessage());
 		}
@@ -204,14 +197,17 @@ public class AddressLocalServiceTest {
 
 	@Test
 	public void testSearchAddressesWithParam() throws Exception {
-		ListType businessType = _listTypeLocalService.getListType(
-			"business", ListTypeConstants.CONTACT_ADDRESS);
+		ListType businessListType = _listTypeLocalService.getListType(
+			TestPropsValues.getCompanyId(), "business",
+			ListTypeConstants.CONTACT_ADDRESS);
 
 		Address businessAddress = _addAddress(
-			RandomTestUtil.randomString(), businessType.getListTypeId(), null);
+			RandomTestUtil.randomString(), businessListType.getListTypeId(),
+			null);
 
 		ListType personalType = _listTypeLocalService.getListType(
-			"personal", ListTypeConstants.CONTACT_ADDRESS);
+			TestPropsValues.getCompanyId(), "personal",
+			ListTypeConstants.CONTACT_ADDRESS);
 
 		Address personalAddress = _addAddress(
 			RandomTestUtil.randomString(), personalType.getListTypeId(), null);
@@ -219,23 +215,26 @@ public class AddressLocalServiceTest {
 		_assertSearchAddress(
 			Arrays.asList(businessAddress), null,
 			_getLinkedHashMap(
-				"listTypeIds", new long[] {businessType.getListTypeId()}));
+				"listTypeIds", new long[] {businessListType.getListTypeId()}));
 		_assertSearchAddress(
 			Arrays.asList(businessAddress, personalAddress), null,
 			_getLinkedHashMap(
 				"listTypeIds",
 				new long[] {
-					businessType.getListTypeId(), personalType.getListTypeId()
+					businessListType.getListTypeId(),
+					personalType.getListTypeId()
 				}));
 		_assertSearchAddress(
 			Arrays.asList(businessAddress), null,
 			_getLinkedHashMap(
-				"typeNames", new String[] {businessType.getName()}));
+				"typeNames", new String[] {businessListType.getName()}));
 		_assertSearchAddress(
 			Arrays.asList(businessAddress, personalAddress), null,
 			_getLinkedHashMap(
 				"typeNames",
-				new String[] {businessType.getName(), personalType.getName()}));
+				new String[] {
+					businessListType.getName(), personalType.getName()
+				}));
 	}
 
 	@Test
@@ -271,10 +270,9 @@ public class AddressLocalServiceTest {
 		User user = TestPropsValues.getUser();
 
 		if (listTypeId < 0) {
-			ListType listType = _listTypeLocalService.getListType(
-				"personal", ListTypeConstants.CONTACT_ADDRESS);
-
-			listTypeId = listType.getListTypeId();
+			listTypeId = _listTypeLocalService.getListTypeId(
+				user.getCompanyId(), "personal",
+				ListTypeConstants.CONTACT_ADDRESS);
 		}
 
 		return _addressLocalService.addAddress(

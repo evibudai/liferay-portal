@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.currency.web.internal.display.context;
@@ -26,13 +17,15 @@ import com.liferay.commerce.currency.service.CommerceCurrencyService;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.currency.util.ExchangeRateProviderRegistry;
 import com.liferay.commerce.currency.web.internal.util.CommerceCurrencyUtil;
+import com.liferay.commerce.product.constants.CPField;
 import com.liferay.petra.string.CharPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -47,6 +40,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
+import java.util.LinkedHashMap;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -195,8 +190,11 @@ public class CommerceCurrenciesDisplayContext {
 	}
 
 	public String getRoundingModeLabel(String roundingModeName) {
-		return StringUtil.replace(
-			roundingModeName, CharPool.UNDERLINE, CharPool.SPACE);
+		return LanguageUtil.get(
+			PortalUtil.getLocale(_renderRequest),
+			StringUtil.replace(
+				StringUtil.toLowerCase(roundingModeName), CharPool.UNDERLINE,
+				CharPool.DASH));
 	}
 
 	public SearchContainer<CommerceCurrency> getSearchContainer()
@@ -232,25 +230,43 @@ public class CommerceCurrenciesDisplayContext {
 				getOrderByCol(), getOrderByType()));
 		_searchContainer.setOrderByType(getOrderByType());
 
-		if (active != null) {
-			boolean navigationActive = active;
+		String keywords = ParamUtil.getString(_renderRequest, "keywords");
 
-			_searchContainer.setResultsAndTotal(
-				() -> _commerceCurrencyService.getCommerceCurrencies(
-					themeDisplay.getCompanyId(), navigationActive,
-					_searchContainer.getStart(), _searchContainer.getEnd(),
-					_searchContainer.getOrderByComparator()),
-				_commerceCurrencyService.getCommerceCurrenciesCount(
-					themeDisplay.getCompanyId(), navigationActive));
+		if (Validator.isBlank(keywords)) {
+			if (active != null) {
+				boolean finalActive = active;
+
+				_searchContainer.setResultsAndTotal(
+					() -> _commerceCurrencyService.getCommerceCurrencies(
+						themeDisplay.getCompanyId(), finalActive,
+						_searchContainer.getStart(), _searchContainer.getEnd(),
+						_searchContainer.getOrderByComparator()),
+					_commerceCurrencyService.getCommerceCurrenciesCount(
+						themeDisplay.getCompanyId(), finalActive));
+			}
+			else {
+				_searchContainer.setResultsAndTotal(
+					() -> _commerceCurrencyService.getCommerceCurrencies(
+						themeDisplay.getCompanyId(),
+						_searchContainer.getStart(), _searchContainer.getEnd(),
+						_searchContainer.getOrderByComparator()),
+					_commerceCurrencyService.getCommerceCurrenciesCount(
+						themeDisplay.getCompanyId()));
+			}
 		}
 		else {
+			LinkedHashMap<String, Object> params = new LinkedHashMap<>();
+
+			if (active != null) {
+				params.put(CPField.ACTIVE, active);
+			}
+
 			_searchContainer.setResultsAndTotal(
-				() -> _commerceCurrencyService.getCommerceCurrencies(
-					themeDisplay.getCompanyId(), _searchContainer.getStart(),
-					_searchContainer.getEnd(),
-					_searchContainer.getOrderByComparator()),
-				_commerceCurrencyService.getCommerceCurrenciesCount(
-					themeDisplay.getCompanyId()));
+				_commerceCurrencyService.searchCommerceCurrencies(
+					themeDisplay.getCompanyId(), keywords, params,
+					_searchContainer.getStart(), _searchContainer.getEnd(),
+					CommerceCurrencyUtil.getCommerceCurrencySort(
+						getOrderByCol(), getOrderByType())));
 		}
 
 		_searchContainer.setRowChecker(_getRowChecker());

@@ -23,23 +23,23 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8356 | Test Summary: 180 Days time period filter in Path Analysis"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CanTimeFilterUse180DaysPathAnalysis {
 
 		// AC Refactor: Need past data
@@ -50,7 +50,7 @@ definition {
 
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${propertyName}");
+			ACProperties.switchProperty(propertyName = ${propertyName});
 		}
 
 		task ("Go to Pages tab in Sites") {
@@ -72,7 +72,7 @@ definition {
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8358 | Test Summary: Custom Range time period filter in Path Analysis"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanTimeFilterUseCustomRangeInPathAnalysis {
 
 		// AC Refactor: Need past data
@@ -83,7 +83,7 @@ definition {
 
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${propertyName}");
+			ACProperties.switchProperty(propertyName = ${propertyName});
 		}
 
 		task ("Go to Pages tab in Sites") {
@@ -96,12 +96,12 @@ definition {
 
 		task ("Assert custom time filter") {
 			ACTimeFilter.setCustomRange(
-				endDay = "13",
+				endDay = 13,
 				endMonth = "July",
-				endYear = "2020",
-				startDay = "1",
+				endYear = 2020,
+				startDay = 1,
 				startMonth = "July",
-				startYear = "2020");
+				startYear = 2020);
 
 			ACTimeFilter.assertCurrentTimeFilterRange(timeFilterRange = "Jul 1, 2020 - Jul 13, 2020");
 		}
@@ -109,7 +109,7 @@ definition {
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8357 | Test Summary: Last Year time period filter in Path Analysis"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CanTimeFilterUseLastYearPathAnalysis {
 
 		// AC Refactor: Need past data
@@ -120,7 +120,7 @@ definition {
 
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${propertyName}");
+			ACProperties.switchProperty(propertyName = ${propertyName});
 		}
 
 		task ("Go to Pages tab in Sites") {
@@ -141,10 +141,8 @@ definition {
 	}
 
 	@description = "Bug: LRAC-8988 | Automation ID: LRAC-11059 | Test Summary: Create the page name with special characters makes the correct name appear in the path part of AC pages"
-	@priority = "3"
+	@priority = 3
 	test CreatePageNameWithSpecialCharactersMakeCorrectNameAppearInPath {
-		property analytics.cloud.upstream = "false";
-
 		task ("Create a site and a blog and add to a page") {
 			ACUtils.addSiteAndPage();
 
@@ -168,7 +166,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Go to Pages tab, change time filter to last 24 hours and select the page") {
@@ -180,7 +178,7 @@ definition {
 
 			ACTimeFilter.setLast24Hours();
 
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", " ");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACNavigation.openItem(itemName = "Snúið Vinsælar þú - Site Name - ${dataSourceName}");
 		}
@@ -193,6 +191,298 @@ definition {
 			AssertElementPresent(
 				key_pageName = "Snúið Vinsælar þú - Site Name - ${dataSourceName}",
 				locator1 = "ACSites#SITE_PATH");
+		}
+	}
+
+	@description = "Feature ID: LRAC-14836 | Automation ID: LRAC-15060 | Test Summary: The dropdown is updated when a segment is deleted"
+	@priority = 4
+	test DeleteSegmentDropdownUpdated {
+		task ("Create a site and a blog and add to a page") {
+			ACUtils.addSiteAndPage();
+
+			ACUtils.createBlogsAndAddToPage(entryTitle = "Blog test");
+		}
+
+		task ("Connect AC to DXP") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Visit the page, then close the sessions") {
+			ACUtils.navigateToSitePage(
+				actionType = "View Blog",
+				documentTitleList = "Blog test",
+				pageName = "AC Page",
+				siteName = "Site Name");
+
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Switch to new property in AC") {
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+		}
+
+		task ("Add a new dynamic segment") {
+			ACNavigation.goToSegments();
+
+			ACSegments.createDynamicSegment();
+
+			ACUtils.setItemName(itemName = "Dynamic Segment Test");
+		}
+
+		task ("Add an email field") {
+			ACSegments.goToSidebarAttributes(criterion = "Individual Attributes");
+
+			ACSegments.addSegmentField(segmentField = "email");
+
+			ACSegments.selectOperator(operator = "is known");
+		}
+
+		task ("Save the segment") {
+			ACSegments.saveSegment();
+		}
+
+		task ("Navigate to Pages tab") {
+			ACNavigation.goToSites();
+
+			ACNavigation.switchTab(tabName = "Pages");
+		}
+
+		task ("Set time filter use 24 hours") {
+			ACTimeFilter.clickTimeFilterButton();
+
+			ACTimeFilter.setLast24Hours();
+		}
+
+		task ("Navigate to page report entry") {
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
+
+			ACNavigation.openItem(itemName = "AC Page - Site Name - ${dataSourceName}");
+		}
+
+		task ("Go to the Path tab") {
+			ACNavigation.switchTab(tabName = "Path");
+		}
+
+		task ("Click Filter button") {
+			Button.click(button = "Filter");
+		}
+
+		task ("Search for segment on the list") {
+			ACUtils.searchBar(searchItem = "Dynamic Segment Test");
+
+			ACPagePath.viewSegmentDropdown(nameList = "Dynamic Segment Test");
+		}
+
+		task ("Delete dynamic segment") {
+			ACNavigation.goToSegments();
+
+			ACSegments.deleteSegment(searchTerm = "Dynamic Segment Test");
+		}
+
+		task ("Navigate to Pages tab") {
+			ACNavigation.goToSites();
+
+			ACNavigation.switchTab(tabName = "Pages");
+		}
+
+		task ("Set time filter use 24 hours") {
+			ACTimeFilter.clickTimeFilterButton();
+
+			ACTimeFilter.setLast24Hours();
+		}
+
+		task ("Navigate to page report entry") {
+			ACNavigation.openItem(itemName = "AC Page - Site Name - ${dataSourceName}");
+		}
+
+		task ("Go to the Path tab") {
+			ACNavigation.switchTab(tabName = "Path");
+		}
+
+		task ("Click Filter button") {
+			Button.click(button = "Filter");
+		}
+
+		task ("Search for segment not on list") {
+			ACUtils.searchBar(searchItem = "Dynamic Segment Test");
+
+			ACUtils.viewNoResultsMessage(noResultMessage = "There are no segments.");
+		}
+	}
+
+	@description = "Feature ID: LRAC-14836 | Automation ID: LRAC-15062 | Test Summary: Remove segments from the filter"
+	@priority = 5
+	test RemoveSegmentFromFilter {
+		task ("Create a site and a blog and add to a page") {
+			ACUtils.addSiteAndPage();
+
+			ACUtils.createBlogsAndAddToPage(entryTitle = "Blog test");
+		}
+
+		task ("Connect AC to DXP") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Visit the page, then close the sessions") {
+			ACUtils.navigateToSitePage(
+				actionType = "View Blog",
+				documentTitleList = "Blog test",
+				pageName = "AC Page",
+				siteName = "Site Name");
+
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Switch to new property in AC") {
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+		}
+
+		task ("Add a new dynamic segment") {
+			ACNavigation.goToSegments();
+
+			ACSegments.createDynamicSegment();
+
+			ACUtils.setItemName(itemName = "Dynamic Segment Test");
+		}
+
+		task ("Add an email field") {
+			ACSegments.goToSidebarAttributes(criterion = "Individual Attributes");
+
+			ACSegments.addSegmentField(segmentField = "email");
+
+			ACSegments.selectOperator(operator = "is unknown");
+		}
+
+		task ("Save the segment") {
+			ACSegments.saveSegment();
+		}
+
+		task ("Navigate to Pages tab") {
+			ACNavigation.goToSites();
+
+			ACNavigation.switchTab(tabName = "Pages");
+		}
+
+		task ("Set time filter use 24 hours") {
+			ACTimeFilter.clickTimeFilterButton();
+
+			ACTimeFilter.setLast24Hours();
+		}
+
+		task ("Navigate to page report entry") {
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
+
+			ACNavigation.openItem(itemName = "AC Page - Site Name - ${dataSourceName}");
+		}
+
+		task ("Go to the Path tab") {
+			ACNavigation.switchTab(tabName = "Path");
+		}
+
+		task ("Observe page total") {
+			ACPagePath.viewPagePathTotal(pageTotal = 1);
+		}
+
+		task ("Click Filter button") {
+			Button.click(button = "Filter");
+		}
+
+		task ("Click Segment for filter") {
+			ACPagePath.clickFilterSegment(segmentName = "Dynamic Segment Test");
+		}
+
+		task ("Observe page total changes with filter") {
+			ACPagePath.viewPagePathTotal(pageTotal = 0);
+		}
+
+		task ("Remove segment from filter") {
+			ACPagePath.removeSegmentFilter();
+		}
+
+		task ("Observe page total changes with filter") {
+			ACPagePath.viewPagePathTotal(pageTotal = 1);
+		}
+	}
+
+	@description = "Feature ID: LRAC-14836 | Automation ID: LRAC-15061 | Test Summary: The filter shows all segments"
+	@priority = 5
+	test ViewSegmentDropdownList {
+		task ("Create a site and a blog and add to a page") {
+			ACUtils.addSiteAndPage();
+
+			ACUtils.createBlogsAndAddToPage(entryTitle = "Blog test");
+		}
+
+		task ("Connect AC to DXP") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Visit the page, then close the sessions") {
+			ACUtils.navigateToSitePage(
+				actionType = "View Blog",
+				documentTitleList = "Blog test",
+				pageName = "AC Page",
+				siteName = "Site Name");
+
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Switch to new property in AC") {
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+		}
+
+		task ("Create four dynamic segments") {
+			for (var n : list "1,2,3,4") {
+				ACNavigation.goToSegments();
+
+				ACSegments.createDynamicSegment();
+
+				ACUtils.setItemName(itemName = "Dynamic Segment Test ${n}");
+
+				ACSegments.goToSidebarAttributes(criterion = "Individual Attributes");
+
+				ACSegments.addSegmentField(segmentField = "email");
+
+				ACSegments.editTextCriterion(textInput = "test@liferay.com");
+
+				ACSegments.saveSegment();
+			}
+		}
+
+		task ("Navigate to Pages tab") {
+			ACNavigation.goToSites();
+
+			ACNavigation.switchTab(tabName = "Pages");
+		}
+
+		task ("Set time filter use 24 hours") {
+			ACTimeFilter.clickTimeFilterButton();
+
+			ACTimeFilter.setLast24Hours();
+		}
+
+		task ("Navigate to page report entry") {
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
+
+			ACNavigation.openItem(itemName = "AC Page - Site Name - ${dataSourceName}");
+		}
+
+		task ("Go to the Path tab") {
+			ACNavigation.switchTab(tabName = "Path");
+		}
+
+		task ("Click Filter button") {
+			Button.click(button = "Filter");
+		}
+
+		task ("View segments on the list") {
+			ACPagePath.viewSegmentDropdown(nameList = "Dynamic Segment Test 1,Dynamic Segment Test 2,Dynamic Segment Test 3,Dynamic Segment Test 4");
 		}
 	}
 

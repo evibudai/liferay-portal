@@ -7,6 +7,7 @@
 		<lstopwatch action="start" name="run.selenium.tomcat" />
 
 		<app-server-properties-update>
+			app.server.parent.dir=${app.server.parent.dir}
 			app.server.type=tomcat
 		</app-server-properties-update>
 
@@ -20,8 +21,6 @@
 				<ant antfile="build-dist.xml" target="build-dist-tomcat" />
 			</then>
 		</if>
-
-		<antcall target="record-test-generated-properties" />
 
 		<antcall inheritAll="false" target="setup-testable-tomcat" />
 
@@ -48,7 +47,9 @@
 	<target name="run-tomcat">
 		<lstopwatch action="start" name="run.tomcat" />
 
-		<antcall target="run-simple-server" />
+		<antcall target="run-simple-server">
+			<param name="startup.testing.cold" value="${startup.testing.cold}" />
+		</antcall>
 
 		<lstopwatch action="total" name="run.tomcat" />
 	</target>

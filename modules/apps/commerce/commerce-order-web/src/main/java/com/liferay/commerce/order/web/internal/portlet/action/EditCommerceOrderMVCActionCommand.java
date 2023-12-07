@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.web.internal.portlet.action;
@@ -20,8 +11,11 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.inventory.constants.CommerceInventoryConstants;
 import com.liferay.commerce.inventory.model.CommerceInventoryBookedQuantity;
 import com.liferay.commerce.inventory.service.CommerceInventoryBookedQuantityLocalService;
+import com.liferay.commerce.inventory.type.CommerceInventoryAuditTypeRegistry;
+import com.liferay.commerce.inventory.type.constants.CommerceInventoryAuditTypeConstants;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
@@ -30,6 +24,7 @@ import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.payment.engine.CommercePaymentEngine;
 import com.liferay.commerce.service.CommerceAddressService;
+import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceShipmentService;
 import com.liferay.petra.string.StringPool;
@@ -43,6 +38,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -297,18 +293,35 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 				for (CommerceOrderItem commerceOrderItem :
 						commerceOrder.getCommerceOrderItems()) {
 
-					if (commerceOrderItem.getBookedQuantityId() > 0) {
+					long commerceInventoryBookedQuantityId =
+						commerceOrderItem.
+							getCommerceInventoryBookedQuantityId();
+
+					if (commerceInventoryBookedQuantityId > 0) {
 						CommerceInventoryBookedQuantity
 							commerceInventoryBookedQuantity =
 								_commerceInventoryBookedQuantityLocalService.
 									fetchCommerceInventoryBookedQuantity(
 										commerceOrderItem.
-											getBookedQuantityId());
+											getCommerceInventoryBookedQuantityId());
 
 						if (commerceInventoryBookedQuantity != null) {
 							_commerceInventoryBookedQuantityLocalService.
 								deleteCommerceInventoryBookedQuantity(
-									commerceInventoryBookedQuantity);
+									_portal.getUserId(actionRequest),
+									commerceOrderItem.
+										getCommerceInventoryBookedQuantityId(),
+									HashMapBuilder.put(
+										CommerceInventoryAuditTypeConstants.
+											ORDER_ID,
+										String.valueOf(
+											commerceOrderItem.
+												getCommerceOrderId())
+									).build(),
+									_commerceInventoryAuditTypeRegistry.
+										getCommerceInventoryAuditType(
+											CommerceInventoryConstants.
+												AUDIT_TYPE_CANCEL_BOOKED_QUANTITY));
 						}
 					}
 				}
@@ -329,7 +342,7 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			else {
 				_commerceOrderEngine.transitionCommerceOrder(
 					commerceOrder, orderStatus,
-					_portal.getUserId(actionRequest));
+					_portal.getUserId(actionRequest), true);
 			}
 		}
 	}
@@ -489,7 +502,7 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 		String paymentMethodKey = ParamUtil.getString(
 			actionRequest, "paymentMethodKey");
 
-		_commerceOrderService.updateCommercePaymentMethodKey(
+		_commerceOrderLocalService.updateCommercePaymentMethodKey(
 			commerceOrderId, paymentMethodKey);
 	}
 
@@ -660,6 +673,10 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 	private CommerceAddressService _commerceAddressService;
 
 	@Reference
+	private CommerceInventoryAuditTypeRegistry
+		_commerceInventoryAuditTypeRegistry;
+
+	@Reference
 	private CommerceInventoryBookedQuantityLocalService
 		_commerceInventoryBookedQuantityLocalService;
 
@@ -668,6 +685,9 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
+
+	@Reference
+	private CommerceOrderLocalService _commerceOrderLocalService;
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;

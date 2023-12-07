@@ -1,6 +1,7 @@
 definition {
 
-	macro configureDisplayCountPG {
+	@summary = "Default summary"
+	macro configureDisplayCountPG(maxDisplayItems = null) {
 		Portlet.gotoPortletOptions(
 			portletName = "Announcements",
 			portletOption = "Configuration");
@@ -9,17 +10,18 @@ definition {
 
 		Select(
 			locator1 = "Select#PAGE_DELTA",
-			value1 = "${maxDisplayItems}");
+			value1 = ${maxDisplayItems});
 
 		PortletEntry.save();
 
 		SelectFrameTop();
 	}
 
-	macro configurePaginationCP {
+	@summary = "Default summary"
+	macro configurePaginationCP(itemsPerPage = null) {
 		Click(locator1 = "Dropdown#ENTRIES");
 
-		MenuItem.click(menuItem = "${itemsPerPage}");
+		MenuItem.click(menuItem = ${itemsPerPage});
 	}
 
 }

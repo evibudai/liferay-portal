@@ -1,60 +1,56 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-	}
-
 	@description = "This is a test for LPS-122204. The Page Creater can access to edit the collection items via Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test EditCollectionItems {
 		property portal.acceptance = "true";
 
 		task ("Add a web content, a blogs entry and a document") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
@@ -62,7 +58,7 @@ definition {
 		task ("Add a Collection Display fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Content Display",
@@ -101,10 +97,10 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 
 			AssertVisible(
-				key_colPosition = "1",
+				key_colPosition = 1,
 				key_entryTitle = "Web Content Title Edit",
 				key_fragmentName = "Collection Display",
-				key_rowPosition = "3",
+				key_rowPosition = 3,
 				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 		}
 
@@ -135,17 +131,17 @@ definition {
 				entryTitle = "Blogs Entry Title",
 				entryTitleEdit = "Blogs Entry Title Edit");
 
-			PortletEntry.publish();
+			Button.clickPublish();
 		}
 
 		task ("View the edited blogs entry title shown in Collection Display") {
 			PageEditor.assertFragmentSidebarLoaded();
 
 			AssertVisible(
-				key_colPosition = "1",
+				key_colPosition = 1,
 				key_entryTitle = "Blogs Entry Title Edit",
 				key_fragmentName = "Collection Display",
-				key_rowPosition = "2",
+				key_rowPosition = 2,
 				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 		}
 
@@ -174,30 +170,30 @@ definition {
 		task ("Edit the document title") {
 			DMDocument.editCmd(dmDocumentTitleEdit = "Document Title Edit");
 
-			PortletEntry.publish();
+			Button.clickPublish();
 		}
 
 		task ("View the document title shown in Collection Display") {
 			PageEditor.assertFragmentSidebarLoaded();
 
 			AssertVisible(
-				key_colPosition = "1",
+				key_colPosition = 1,
 				key_entryTitle = "Document Title Edit",
 				key_fragmentName = "Collection Display",
-				key_rowPosition = "1",
+				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 		}
 	}
 
 	@description = "This is a test for LPS-122204. The Page Creater can access to edit the document via Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test EditDisplayedDocument {
 		property portal.acceptance = "true";
 
 		task ("Add an Image fragment to the content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -227,7 +223,7 @@ definition {
 		task ("Edit the document title") {
 			DMDocument.editCmd(dmDocumentTitleEdit = "Document Title");
 
-			PortletEntry.publish();
+			Button.clickPublish();
 		}
 
 		task ("View the edited title is shown in Page Content panel") {
@@ -242,19 +238,21 @@ definition {
 	}
 
 	@description = "This is a test for LPS-97189. A user can edit displayed content in an Asset Publisher widget through Contents panel."
-	@priority = "4"
+	@priority = 4
 	test EditDisplayedWebContentInAssetPublisher {
+		property timeout.explicit.wait = "20";
+
 		task ("Add a web content based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "WC WebContent Title");
 		}
 
 		task ("Add an Asset Publisher") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addWidget(portletName = "Asset Publisher");
 		}
@@ -291,7 +289,7 @@ definition {
 		task ("View the edited web content in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			WebContent.viewPGViaAP(
 				webContentContent = "WC WebContent Content Edit",
@@ -300,21 +298,21 @@ definition {
 	}
 
 	@description = "This is a test for LPS-97189. A user can edit displayed content in a Web Content Display widget through Contents panel."
-	@priority = "5"
+	@priority = 5
 	test EditDisplayedWebContentInWebContentDisplay {
 		property portal.acceptance = "true";
 
 		task ("Add a web content based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "WC WebContent Title");
 		}
 
 		task ("Add a Web Content Display to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addWidget(portletName = "Web Content Display");
 		}
@@ -334,7 +332,7 @@ definition {
 
 		task ("View the edited web content in Web Content Display") {
 			AssertTextEquals(
-				index = "1",
+				index = 1,
 				locator1 = "WCD#WEB_CONTENT_CONTENT",
 				value1 = "WC WebContent Content Edit");
 
@@ -342,23 +340,19 @@ definition {
 		}
 
 		task ("View the edited web content in view mode") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
-
 			WebContentDisplayPortlet.viewContent(webContentContent = "WC WebContent Content Edit");
 		}
 	}
 
 	@description = "This is a test for LPS-122204. The Page Creater can access to edit the inline text via Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test EditInlineText {
 		property portal.acceptance = "true";
 
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -416,45 +410,46 @@ definition {
 	}
 
 	@description = "This is a test for LPS-122148. Filter the displayed assets by category in Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test FilterDisplayedAssetsByCategory {
 		property portal.acceptance = "true";
+		property testray.component.names = "Item Selector";
 
 		task ("Add a web content, a blogs entry and a document") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
 
 		task ("Add a dynamic collection for All Types") {
 			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				itemType = "All Types",
 				title = "Dynamic Collection");
 		}
 
 		task ("Add a manual collection for All Types") {
 			JSONAssetlist.addManualAssetListEntryWithItemType(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				itemType = "All Types",
 				title = "Manual Collection");
 		}
 
 		task ("Select all assets in manual collection") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = ${siteURLKey});
 
 			AssetListsAdmin.editAssetList(assetListTitle = "Manual Collection");
 
@@ -474,7 +469,7 @@ definition {
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -493,7 +488,7 @@ definition {
 			PageEditorMapping.gotoEditableFieldMapping(
 				fragmentName = "Heading",
 				id = "element-text",
-				index = "2");
+				index = 2);
 
 			PageEditorMapping.mapEditableFieldToAsset(
 				entryTitle = "Web Content Title",
@@ -557,7 +552,7 @@ definition {
 			PageEditor.editCollectionDisplay(
 				assetListName = "Manual Collection",
 				fragmentName = "Collection Display",
-				index = "2");
+				index = 2);
 		}
 
 		task ("Filter the displayed assets by category in Page Content panel") {
@@ -575,7 +570,7 @@ definition {
 
 			for (var itemName : list "Web Content Title,Blogs Entry Title,Document Title,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -587,7 +582,7 @@ definition {
 
 			for (var itemName : list "Heading Example,Web Content Title,Document Title,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -603,7 +598,7 @@ definition {
 
 			for (var itemName : list "Web Content Title,Blogs Entry Title,Heading Example,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -615,13 +610,13 @@ definition {
 
 			for (var itemName : list "Dynamic Collection,Manual Collection") {
 				AssertVisible(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
 			for (var itemName : list "Heading Example,Web Content Title,Blogs Entry Title,Document Title") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -633,7 +628,7 @@ definition {
 
 			for (var itemName : list "Heading Example,Web Content Title,Blogs Entry Title,Document Title,Dynamic Collection,Manual Collection") {
 				AssertVisible(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -644,14 +639,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-133933. The user can resize the displayed image via image editor on Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test ResizeDisplayedImageViaImageEditor {
 		property portal.acceptance = "true";
 
 		task ("Add an Image fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -699,15 +694,13 @@ definition {
 		}
 
 		task ("View the naturalWidth doesn't change") {
-			TestUtils.assertEquals(
-				actual = "${editedNaturalWidth}",
-				expected = "${naturalWidth}");
+			StringUtil.assertEquals(${naturalWidth}, ${editedNaturalWidth});
 		}
 
 		task ("View the naturalHeight becomes smaller") {
 			TestUtils.isGreaterThan(
-				actual = "${naturalHeight}",
-				expected = "${editedNaturalHeight}");
+				actual = ${naturalHeight},
+				expected = ${editedNaturalHeight});
 
 			PageEditor.publish();
 		}
@@ -715,7 +708,7 @@ definition {
 		task ("Take down the new naturalWidth and naturalHeight of image at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.viewFragmentEditableImage(
 				id = "image-square",
@@ -727,27 +720,25 @@ definition {
 		}
 
 		task ("View the naturalWidth doesn't change") {
-			TestUtils.assertEquals(
-				actual = "${editedNaturalWidth}",
-				expected = "${naturalWidth}");
+			StringUtil.assertEquals(${naturalWidth}, ${editedNaturalWidth});
 		}
 
 		task ("View the naturalHeight becomes smaller") {
 			TestUtils.isGreaterThan(
-				actual = "${naturalHeight}",
-				expected = "${editedNaturalHeight}");
+				actual = ${naturalHeight},
+				expected = ${editedNaturalHeight});
 		}
 	}
 
 	@description = "This is a test for LPS-133933. The user can rotate the displayed image via image editor on Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test RotateDisplayedImageViaImageEditor {
 		property portal.acceptance = "true";
 
 		task ("Add a Banner Center fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -773,7 +764,7 @@ definition {
 			AssertVisible(
 				backgroundImageStyle = "version\=1\.0",
 				locator1 = "Fragment#BACKGROUND_IMAGE_STYLE",
-				position = "1");
+				position = 1);
 		}
 
 		task ("Edit the image via the image editor on Page Content panel") {
@@ -796,7 +787,7 @@ definition {
 			AssertVisible(
 				backgroundImageStyle = "version\=2\.0",
 				locator1 = "Fragment#BACKGROUND_IMAGE_STYLE",
-				position = "1");
+				position = 1);
 
 			PageEditor.publish();
 		}
@@ -804,7 +795,7 @@ definition {
 		task ("View the version of mapped image at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.viewFragmentText(
 				fragmentName = "heading",
@@ -814,50 +805,50 @@ definition {
 			AssertVisible(
 				backgroundImageStyle = "version=2.0",
 				locator1 = "Fragment#BACKGROUND_IMAGE_STYLE",
-				position = "1");
+				position = 1);
 		}
 	}
 
 	@description = "This is a test for LPS-122148. Search displayed assets by keyword in Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test SearchDisplayedAssetsByKeyword {
 		property portal.acceptance = "true";
 
 		task ("Add a web content, a blogs entry and a document") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
 
 		task ("Add a dynamic collection for All Types") {
 			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				itemType = "All Types",
 				title = "Dynamic Collection");
 		}
 
 		task ("Add a manual collection for All Types") {
 			JSONAssetlist.addManualAssetListEntryWithItemType(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				itemType = "All Types",
 				title = "Manual Collection");
 		}
 
 		task ("Select all assets in manual collection") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = ${siteURLKey});
 
 			AssetListsAdmin.editAssetList(assetListTitle = "Manual Collection");
 
@@ -877,7 +868,7 @@ definition {
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -896,7 +887,7 @@ definition {
 			PageEditorMapping.gotoEditableFieldMapping(
 				fragmentName = "Heading",
 				id = "element-text",
-				index = "2");
+				index = 2);
 
 			PageEditorMapping.mapEditableFieldToAsset(
 				entryTitle = "Web Content Title",
@@ -960,7 +951,7 @@ definition {
 			PageEditor.editCollectionDisplay(
 				assetListName = "Manual Collection",
 				fragmentName = "Collection Display",
-				index = "2");
+				index = 2);
 		}
 
 		task ("Search the displayed assets by keyword when the content filter is All Content") {
@@ -978,7 +969,7 @@ definition {
 
 			for (var itemName : list "Web Content Title,Blogs Entry Title,Document Title,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -990,7 +981,7 @@ definition {
 
 			for (var itemName : list "Heading Example,Web Content Title,Blogs Entry Title,Document Title,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -1002,7 +993,7 @@ definition {
 
 			for (var itemName : list "Web Content Title,Blogs Entry Title,Heading Example,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -1018,7 +1009,7 @@ definition {
 
 			for (var itemName : list "Web Content Title,Document Title,Heading Example,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -1034,7 +1025,7 @@ definition {
 
 			for (var itemName : list "Document Title,Blogs Entry Title,Heading Example,Dynamic Collection,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -1050,7 +1041,7 @@ definition {
 
 			for (var itemName : list "Web Content Title,Blogs Entry Title,Document Title,Heading Example,Manual Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -1066,7 +1057,7 @@ definition {
 
 			for (var itemName : list "Web Content Title,Blogs Entry Title,Document Title,Heading Example,Dynamic Collection") {
 				AssertElementNotPresent(
-					key_itemName = "${itemName}",
+					key_itemName = ${itemName},
 					locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
 			}
 
@@ -1124,15 +1115,63 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-173139. The page designer could see a tooltip for assets on the Page Content panel of content page."
+	@priority = 3
+	test ViewAssetWithLongTitle {
+		task ("Given a page deisgner displays a web content with long title on a content page") {
+			HeadlessWebcontent.addBasicWebContent(
+				content = "Lighthouse promises life coaching to help people realise their dreams. But an 18-month investigation by the BBC finds it takes over people'\''s lives, separates people from their loved ones and harasses its critics.",
+				groupName = ${randomSiteName},
+				title = "Inside the life coaching cult that takes over lives");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Inside the life coaching cult that takes over lives",
+				navItem = "Web Content");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Content");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("When the page designer navigates to the Page Content panel") {
+			PageEditor.gotoTab(tabName = "Page Content");
+		}
+
+		task ("Then the page designer could see the full title on the tooltip") {
+			MouseOver.javaScriptFocus(
+				key_itemName = "Inside the life coaching cult that takes over lives",
+				locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
+
+			AssertVisible(
+				key_content = "Inside the life coaching cult that takes over lives",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+		}
+	}
+
 	@description = "This is a test for LPS-122396 and LPS-106776. The outline of editable field should be dashed when hover on inline text item in Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test ViewDashedOutlineOfEditableFieldWhenHoverOnInlineTextItems {
 		property portal.acceptance = "true";
 
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1156,7 +1195,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "outline-style",
 				value1 = "dashed");
@@ -1172,7 +1211,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "paragraph",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "outline-style",
 				value1 = "dashed");
@@ -1202,7 +1241,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "outline-style",
 				value1 = "dashed");
@@ -1218,7 +1257,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "paragraph",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "outline-style",
 				value1 = "dashed");
@@ -1226,25 +1265,25 @@ definition {
 	}
 
 	@description = "This is a test for LPS-122396. The outline of editable field should be dashed when hover on mapped assets in Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test ViewDashedOutlineOfMappedEditableFieldWhenHoverOnAssets {
 		property portal.acceptance = "true";
 
 		task ("Add a web content, a blogs entry and a document") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
@@ -1252,7 +1291,7 @@ definition {
 		task ("Add a Banner Center to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Featured Content",
@@ -1315,7 +1354,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "outline-style",
 				value1 = "dashed");
@@ -1331,7 +1370,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "outline-style",
 				value1 = "dashed");
@@ -1349,39 +1388,38 @@ definition {
 				element = "//div[contains(@class,'page-editor__topper')][@draggable][.//div[contains(@style,'Document_1\\.jpg')]]",
 				pseudo = ":after");
 
-			TestUtils.assertEquals(
-				actual = "${backgroundImageOutlineStyle}",
-				expected = "dashed");
+			StringUtil.assertEquals("dashed", ${backgroundImageOutlineStyle});
 		}
 	}
 
 	@description = "This is a test for LPS-122396. The details of displayed assets are shown in Page Content panel."
-	@priority = "5"
+	@priority = 5
 	test ViewDetailsOfDisplayedAssets {
 		property portal.acceptance = "true";
+		property testray.component.names = "Item Selector";
 
 		task ("Add a web content, a blogs entry and a document") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Web Content Title");
 
 			HeadlessBlog.addBlogEntry(
 				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "Blogs Entry Title");
 
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				mimeType = "image/jpeg",
 				sourceFileName = "Document_1.jpg");
 		}
 
 		task ("Add a dynamic collection for Web Content Article and Basic Web Content") {
 			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				itemSubtype = "Basic Web Content",
 				itemType = "Web Content Article",
 				title = "Dynamic Collection");
@@ -1390,7 +1428,7 @@ definition {
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1470,12 +1508,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153356. View Page Content tab on sidebar of content page."
-	@priority = "4"
+	@priority = 4
 	test ViewPageContentOnSidebarOfContentPage {
 		task ("Given a page creator has a content page with Heading fragment") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1508,19 +1546,19 @@ definition {
 	}
 
 	@description = "This is a test for LPS-96794. View permissions and usage of mapped web content in Contents panel."
-	@priority = "4"
+	@priority = 4
 	test ViewPermissionsAndUsageOfMappedWebContent {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				title = "WebContent Title");
 		}
 
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -1547,7 +1585,7 @@ definition {
 		task ("View permissions of mapped web content in Contents panel") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.gotoTab(tabName = "Page Content");
 
@@ -1566,7 +1604,7 @@ definition {
 		task ("View usage of mapped web content in Contents panel") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.gotoTab(tabName = "Page Content");
 
@@ -1578,7 +1616,7 @@ definition {
 
 			AssertElementPresent(
 				locator1 = "AssetLists#ASSET_LIST_USAGES",
-				usageAmount = "2",
+				usageAmount = 2,
 				usageType = "Pages");
 		}
 	}

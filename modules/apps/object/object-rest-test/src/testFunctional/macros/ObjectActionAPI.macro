@@ -1,0 +1,69 @@
+definition {
+
+	@summary = "Default summary"
+	macro _curlCreateObjectAction(objectDefinitionId = null, objectActionExecutorKey = null, objectActionTriggerKey = null, name = null, errorMessage = null, label = null, parameters = null) {
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/o/object-admin/v1.0/object-definitions/${objectDefinitionId}/object-actions \
+				-u test@liferay.com:test \
+				-H accept: application/json \
+				-H Content-Type: application/json \
+				-d {
+					"active": true,
+					"label":{
+						"en_US":"${label}"
+					},
+					"name": "${name}",
+					"objectActionExecutorKey": "${objectActionExecutorKey}",
+					"objectActionTriggerKey": "${objectActionTriggerKey}",
+					"parameters":{${parameters}},
+					"errorMessage": {
+						"en_US": "${errorMessage}"
+					}
+				}
+		''';
+
+		return ${curl};
+	}
+
+	@summary = "Default summary"
+	macro _setParametersForObjectAction(objectActionExecutorKey = null, notificationTemplateId = null) {
+		Variables.assertDefined(parameterList = ${objectActionExecutorKey});
+
+		if (${objectActionExecutorKey} == "notification") {
+			var parameters = '''
+				"notificationTemplateId": "${notificationTemplateId}"
+			''';
+		}
+		else {
+			var parameters = "";
+		}
+
+		return ${parameters};
+	}
+
+	@summary = "Default summary"
+	macro createObjectAction(objectDefinitionId = null, objectActionExecutorKey = null, objectActionTriggerKey = null, name = null, errorMessage = null, label = null, notificationTemplateId = null) {
+		Variables.assertDefined(parameterList = "${objectDefinitionId},${label},${name},${objectActionExecutorKey},${objectActionTriggerKey}");
+
+		var parameters = ObjectActionAPI._setParametersForObjectAction(
+			notificationTemplateId = ${notificationTemplateId},
+			objectActionExecutorKey = ${objectActionExecutorKey},
+			objectDefinitionId = ${objectDefinitionId});
+
+		var curl = ObjectActionAPI._curlCreateObjectAction(
+			errorMessage = ${errorMessage},
+			label = ${label},
+			name = ${name},
+			objectActionExecutorKey = ${objectActionExecutorKey},
+			objectActionTriggerKey = ${objectActionTriggerKey},
+			objectDefinitionId = ${objectDefinitionId},
+			parameters = ${parameters});
+
+		var response = JSONCurlUtil.post(${curl});
+
+		return ${response};
+	}
+
+}

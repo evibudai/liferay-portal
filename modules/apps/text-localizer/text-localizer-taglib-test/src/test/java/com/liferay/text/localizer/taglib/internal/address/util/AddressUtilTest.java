@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.text.localizer.taglib.internal.address.util;
@@ -28,7 +19,6 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -180,17 +170,13 @@ public class AddressUtilTest {
 	private void _testGetCountryNameOptional(
 		Address address, String expectedName) {
 
-		Optional<String> optional = AddressUtil.getCountryNameOptional(address);
-
-		Assert.assertEquals(expectedName, optional.orElse(null));
+		Assert.assertEquals(expectedName, AddressUtil.getCountryName(address));
 	}
 
 	private void _testGetRegionNameOptional(
 		Address address, String expectedName) {
 
-		Optional<String> optional = AddressUtil.getRegionNameOptional(address);
-
-		Assert.assertEquals(expectedName, optional.orElse(null));
+		Assert.assertEquals(expectedName, AddressUtil.getRegionName(address));
 	}
 
 	private static Locale _locale;

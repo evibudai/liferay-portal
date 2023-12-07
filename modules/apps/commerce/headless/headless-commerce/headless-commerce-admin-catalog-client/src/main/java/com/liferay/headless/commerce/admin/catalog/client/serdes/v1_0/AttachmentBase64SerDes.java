@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
@@ -26,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -160,6 +150,16 @@ public class AttachmentBase64SerDes {
 			sb.append("\"");
 		}
 
+		if (attachmentBase64.getGalleryEnabled() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"galleryEnabled\": ");
+
+			sb.append(attachmentBase64.getGalleryEnabled());
+		}
+
 		if (attachmentBase64.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -212,6 +212,30 @@ public class AttachmentBase64SerDes {
 			sb.append(_escape(attachmentBase64.getSrc()));
 
 			sb.append("\"");
+		}
+
+		if (attachmentBase64.getTags() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"tags\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < attachmentBase64.getTags().length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(attachmentBase64.getTags()[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < attachmentBase64.getTags().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (attachmentBase64.getTitle() != null) {
@@ -311,6 +335,15 @@ public class AttachmentBase64SerDes {
 				String.valueOf(attachmentBase64.getExternalReferenceCode()));
 		}
 
+		if (attachmentBase64.getGalleryEnabled() == null) {
+			map.put("galleryEnabled", null);
+		}
+		else {
+			map.put(
+				"galleryEnabled",
+				String.valueOf(attachmentBase64.getGalleryEnabled()));
+		}
+
 		if (attachmentBase64.getId() == null) {
 			map.put("id", null);
 		}
@@ -346,6 +379,13 @@ public class AttachmentBase64SerDes {
 		}
 		else {
 			map.put("src", String.valueOf(attachmentBase64.getSrc()));
+		}
+
+		if (attachmentBase64.getTags() == null) {
+			map.put("tags", null);
+		}
+		else {
+			map.put("tags", String.valueOf(attachmentBase64.getTags()));
 		}
 
 		if (attachmentBase64.getTitle() == null) {
@@ -397,14 +437,18 @@ public class AttachmentBase64SerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
-					attachmentBase64.setCustomFields(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> CustomFieldSerDes.toDTO((String)object)
-						).toArray(
-							size -> new CustomField[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					CustomField[] customFieldsArray =
+						new CustomField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < customFieldsArray.length; i++) {
+						customFieldsArray[i] = CustomFieldSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					attachmentBase64.setCustomFields(customFieldsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "displayDate")) {
@@ -425,6 +469,12 @@ public class AttachmentBase64SerDes {
 				if (jsonParserFieldValue != null) {
 					attachmentBase64.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "galleryEnabled")) {
+				if (jsonParserFieldValue != null) {
+					attachmentBase64.setGalleryEnabled(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -455,6 +505,12 @@ public class AttachmentBase64SerDes {
 			else if (Objects.equals(jsonParserFieldName, "src")) {
 				if (jsonParserFieldValue != null) {
 					attachmentBase64.setSrc((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "tags")) {
+				if (jsonParserFieldValue != null) {
+					attachmentBase64.setTags(
+						toStrings((Object[])jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {

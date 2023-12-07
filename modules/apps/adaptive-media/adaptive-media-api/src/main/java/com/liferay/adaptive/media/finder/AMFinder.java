@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.finder;
@@ -17,8 +8,8 @@ package com.liferay.adaptive.media.finder;
 import com.liferay.adaptive.media.AdaptiveMedia;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * An {@link AMFinder} is responsible for locating and returning media related
@@ -42,13 +33,13 @@ public interface AMFinder<B extends AMQueryBuilder<M, T>, M, T> {
 	 * @param  amQueryBuilderFunction a function to be invoked with an {@link
 	 *         AMQueryBuilder} argument. The query builder provides operations
 	 *         to filter and sort the returned media.
-	 * @return a non-<code>null</code>, possibly empty stream of all media
+	 * @return a non-<code>null</code>, possibly empty list of all media
 	 *         instances matching the query ordered by score: better matches are
 	 *         prioritized first
 	 * @throws PortalException if an error occurred while calling any Liferay
 	 *         service
 	 */
-	public Stream<AdaptiveMedia<T>> getAdaptiveMediaStream(
+	public List<AdaptiveMedia<T>> getAdaptiveMedias(
 			Function<B, AMQuery<M, T>> amQueryBuilderFunction)
 		throws PortalException;
 

@@ -1,28 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {usePrevious} from '@liferay/frontend-js-react-web';
+import {isNullOrUndefined} from '@liferay/layout-js-components-web';
 import React, {useCallback, useContext, useEffect} from 'react';
 
 import {updateFragmentEntryLinkContent} from '../actions/index';
 import FragmentService from '../services/FragmentService';
 import InfoItemService from '../services/InfoItemService';
 import LayoutService from '../services/LayoutService';
-import isMappedToInfoItem from '../utils/editable-value/isMappedToInfoItem';
-import isMappedToLayout from '../utils/editable-value/isMappedToLayout';
-import isMappedToStructure from '../utils/editable-value/isMappedToStructure';
-import isNullOrUndefined from '../utils/isNullOrUndefined';
+import isMappedToInfoItem from '../utils/editable_value/isMappedToInfoItem';
+import isMappedToLayout from '../utils/editable_value/isMappedToLayout';
+import isMappedToStructure from '../utils/editable_value/isMappedToStructure';
 import {useDisplayPagePreviewItem} from './DisplayPagePreviewItemContext';
 import {useDispatch} from './StoreContext';
 
@@ -94,27 +85,46 @@ const useGetContent = (
 
 	const collectionContentId = toControlsId(fragmentEntryLinkId);
 
-	const {className: collectionItemClassName, classPK: collectionItemClassPK} =
-		collectionItemContext.collectionItem || {};
+	const {
+		className: collectionItemClassName,
+		classPK: collectionItemClassPK,
+		externalReferenceCode: collectionItemExternalReferenceCode,
+	} = collectionItemContext.collectionItem || {};
 	const {collectionItemIndex} = collectionItemContext;
 
 	const {
 		className: displayPagePreviewItemClassName,
 		classPK: displayPagePreviewItemClassPK,
+		externalReferenceCode: displayPagePreviewItemExternalReferenceCode,
 	} = useDisplayPagePreviewItem()?.data || {};
 
 	const withinCollection = !isNullOrUndefined(
 		collectionItemContext.collectionItem
 	);
 
-	const [itemClassName, itemClassPK] = withinCollection
-		? [collectionItemClassName, collectionItemClassPK]
-		: [displayPagePreviewItemClassName, displayPagePreviewItemClassPK];
+	const [
+		itemClassName,
+		itemClassPK,
+		itemExternalReferenceCode,
+	] = withinCollection
+		? [
+				collectionItemClassName,
+				collectionItemClassPK,
+				collectionItemExternalReferenceCode,
+		  ]
+		: [
+				displayPagePreviewItemClassName,
+				displayPagePreviewItemClassPK,
+				displayPagePreviewItemExternalReferenceCode,
+		  ];
 
 	const previousEditableValues = usePrevious(editableValues);
 	const previousLanguageId = usePrevious(languageId);
 	const previousItemClassName = usePrevious(itemClassName);
 	const previousItemClassPK = usePrevious(itemClassPK);
+	const previousItemExternalReferenceCode = usePrevious(
+		itemExternalReferenceCode
+	);
 
 	useEffect(() => {
 		const hasLocalizable =
@@ -128,10 +138,12 @@ const useGetContent = (
 				hasLocalizable,
 				itemClassName,
 				itemClassPK,
+				itemExternalReferenceCode,
 				languageId,
 				previousEditableValues,
 				previousItemClassName,
 				previousItemClassPK,
+				previousItemExternalReferenceCode,
 				previousLanguageId,
 				withinCollection,
 			})
@@ -140,8 +152,8 @@ const useGetContent = (
 				fragmentEntryLinkId,
 				itemClassName,
 				itemClassPK,
+				itemExternalReferenceCode,
 				languageId,
-				onNetworkStatus: dispatch,
 				segmentsExperienceId,
 			}).then(({content}) => {
 				dispatch(
@@ -161,10 +173,12 @@ const useGetContent = (
 		fragmentEntryLinkId,
 		itemClassName,
 		itemClassPK,
+		itemExternalReferenceCode,
 		languageId,
 		previousEditableValues,
 		previousItemClassName,
 		previousItemClassPK,
+		previousItemExternalReferenceCode,
 		previousLanguageId,
 		segmentsExperienceId,
 		withinCollection,
@@ -188,10 +202,12 @@ const shouldRenderFragmentEntryLink = ({
 	hasLocalizable,
 	itemClassName,
 	itemClassPK,
+	itemExternalReferenceCode,
 	languageId,
 	previousEditableValues,
 	previousItemClassName,
 	previousItemClassPK,
+	previousItemExternalReferenceCode,
 	previousLanguageId,
 	withinCollection,
 }) => {
@@ -203,7 +219,7 @@ const shouldRenderFragmentEntryLink = ({
 		return true;
 	}
 
-	// For fragments inside a collection, we need to render when previousItemClassName or previousItemClassPK
+	// For fragments inside a collection, we need to render when previousItemClassName, previousItemClassPK or previousExternalReferenceCode
 	// is undefined. This happens when the collection is render at the first time or when changing the "preview with"
 	// to none. When setting the item to none the component is unmounted, which means that we cannot rely on
 	// the usePrevious hook values. Also we need to render when editable values change
@@ -211,7 +227,9 @@ const shouldRenderFragmentEntryLink = ({
 	if (
 		withinCollection &&
 		(isNullOrUndefined(previousItemClassName) ||
-			isNullOrUndefined(previousItemClassPK) ||
+			(itemClassPK && isNullOrUndefined(previousItemClassPK)) ||
+			(itemExternalReferenceCode &&
+				isNullOrUndefined(previousItemExternalReferenceCode)) ||
 			(!isNullOrUndefined(editableValues) &&
 				previousEditableValues !== editableValues))
 	) {
@@ -222,7 +240,8 @@ const shouldRenderFragmentEntryLink = ({
 
 	if (
 		previousItemClassName !== itemClassName &&
-		previousItemClassPK !== itemClassPK
+		(previousItemClassPK !== itemClassPK ||
+			previousItemExternalReferenceCode !== itemExternalReferenceCode)
 	) {
 		return true;
 	}
@@ -239,7 +258,6 @@ const useGetFieldValue = () => {
 			if (isMappedToInfoItem(editable)) {
 				return InfoItemService.getInfoItemFieldValue({
 					...editable,
-					onNetworkStatus: () => {},
 				}).then((response) => {
 					if (!response || !Object.keys(response).length) {
 						throw new Error('Field value does not exist');
@@ -259,10 +277,10 @@ const useGetFieldValue = () => {
 
 			if (isMappedToStructure(editable) && displayPagePreviewItem) {
 				return InfoItemService.getInfoItemFieldValue({
+					...editable,
 					...displayPagePreviewItem.data,
 					fieldId: editable.mappedField,
 					languageId: editable.languageId,
-					onNetworkStatus: () => {},
 				}).then((response) => {
 					if (!response || !Object.keys(response).length) {
 						throw new Error('Field value does not exist');

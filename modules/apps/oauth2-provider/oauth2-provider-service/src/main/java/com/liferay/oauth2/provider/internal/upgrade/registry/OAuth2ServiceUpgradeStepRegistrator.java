@@ -1,28 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.internal.upgrade.registry;
 
 import com.liferay.oauth2.provider.internal.upgrade.v2_0_0.OAuth2ApplicationScopeAliasesUpgradeProcess;
-import com.liferay.oauth2.provider.internal.upgrade.v3_0_0.OAuth2ApplicationClientCredentialUserUpgradeUser;
+import com.liferay.oauth2.provider.internal.upgrade.v3_0_0.OAuth2ApplicationClientCredentialUserUpgradeProcess;
 import com.liferay.oauth2.provider.internal.upgrade.v3_2_0.OAuth2ApplicationFeatureUpgradeProcess;
 import com.liferay.oauth2.provider.internal.upgrade.v4_1_0.OAuth2ApplicationClientAuthenticationMethodUpgradeProcess;
 import com.liferay.oauth2.provider.internal.upgrade.v4_2_1.OAuth2ScopeGrantRemoveCompanyIdFromObjectsRelatedUpgradeProcess;
 import com.liferay.oauth2.provider.scope.liferay.ScopeLocator;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseUuidUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
@@ -68,7 +61,7 @@ public class OAuth2ServiceUpgradeStepRegistrator
 			UpgradeProcessFactory.addColumns(
 				"OAuth2Application",
 				"clientCredentialUserName VARCHAR(75) null"),
-			new OAuth2ApplicationClientCredentialUserUpgradeUser());
+			new OAuth2ApplicationClientCredentialUserUpgradeProcess());
 
 		registry.register(
 			"3.0.0", "3.1.0",
@@ -121,6 +114,28 @@ public class OAuth2ServiceUpgradeStepRegistrator
 		registry.register(
 			"4.2.1", "4.2.2",
 			new OAuth2ScopeGrantRemoveCompanyIdFromObjectsRelatedUpgradeProcess());
+
+		registry.register(
+			"4.2.2", "4.2.3",
+			new UpgradeProcess() {
+
+				@Override
+				protected void doUpgrade() throws Exception {
+					runSQL(
+						StringBundler.concat(
+							"update OAuth2Application set ",
+							"clientAuthenticationMethod = ",
+							"'client_secret_post' where ",
+							"clientAuthenticationMethod = ",
+							"'client_secret_basic'"));
+				}
+
+			});
+
+		registry.register(
+			"4.2.3", "4.2.4",
+			UpgradeProcessFactory.alterColumnType(
+				"OAuth2Application", "name", "VARCHAR(255) null"));
 	}
 
 	@Reference

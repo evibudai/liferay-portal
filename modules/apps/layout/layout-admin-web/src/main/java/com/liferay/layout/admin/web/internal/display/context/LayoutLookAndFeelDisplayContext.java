@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.display.context;
@@ -19,8 +10,13 @@ import com.liferay.client.extension.model.ClientExtensionEntryRel;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalServiceUtil;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.manager.CETManager;
-import com.liferay.exportimport.kernel.staging.StagingUtil;
-import com.liferay.layout.admin.web.internal.util.FaviconUtil;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.TabsItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.TabsItemListBuilder;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.layout.admin.constants.LayoutScreenNavigationEntryConstants;
+import com.liferay.layout.admin.web.internal.item.selector.MasterLayoutPageTemplateEntryItemSelectorCriterion;
+import com.liferay.layout.admin.web.internal.item.selector.StyleBookEntryItemSelectorCriterion;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
@@ -34,7 +30,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
@@ -42,16 +39,11 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.style.book.model.StyleBookEntry;
-import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
 
 import java.util.List;
@@ -74,40 +66,10 @@ public class LayoutLookAndFeelDisplayContext {
 		_layoutsAdminDisplayContext = layoutsAdminDisplayContext;
 		_liferayPortletResponse = liferayPortletResponse;
 
-		_cetManager = (CETManager)_httpServletRequest.getAttribute(
-			CETManager.class.getName());
+		_itemSelector = (ItemSelector)httpServletRequest.getAttribute(
+			ItemSelector.class.getName());
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
-	}
-
-	public Map<String, Object> getChangeFaviconButtonAdditionalProps() {
-		return HashMapBuilder.<String, Object>put(
-			"url", _layoutsAdminDisplayContext.getFileEntryItemSelectorURL()
-		).build();
-	}
-
-	public Map<String, Object> getClearFaviconButtonAdditionalProps() {
-		return HashMapBuilder.<String, Object>put(
-			"faviconTitleValue", _getClearFaviconButtonTitle()
-		).build();
-	}
-
-	public String getFaviconTitle() {
-		return FaviconUtil.getFaviconTitle(
-			_cetManager, _layoutsAdminDisplayContext.getSelLayout(),
-			_themeDisplay.getLocale());
-	}
-
-	public String getFaviconURL() {
-		String faviconURL = FaviconUtil.getFaviconURL(
-			_cetManager, _layoutsAdminDisplayContext.getSelLayout());
-
-		if (Validator.isNotNull(faviconURL)) {
-			return faviconURL;
-		}
-
-		return _themeDisplay.getPathThemeImages() + "/" +
-			PropsUtil.get(PropsKeys.THEME_SHORTCUT_ICON);
 	}
 
 	public Map<String, Object> getGlobalCSSCETsConfigurationProps(
@@ -122,11 +84,11 @@ public class LayoutLookAndFeelDisplayContext {
 			"globalCSSCETSelectorURL",
 			() -> PortletURLBuilder.create(
 				_layoutsAdminDisplayContext.getCETItemSelectorURL(
-					"selectGlobalCSSCETs",
+					true, "selectGlobalCSSCETs",
 					ClientExtensionEntryConstants.TYPE_GLOBAL_CSS)
-			).setParameter(
-				"multipleSelection", true
 			).buildString()
+		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
 		).put(
 			"selectGlobalCSSCETsEventName", "selectGlobalCSSCETs"
 		).build();
@@ -144,11 +106,11 @@ public class LayoutLookAndFeelDisplayContext {
 			"globalJSCETSelectorURL",
 			() -> PortletURLBuilder.create(
 				_layoutsAdminDisplayContext.getCETItemSelectorURL(
-					"selectGlobalJSCETs",
+					true, "selectGlobalJSCETs",
 					ClientExtensionEntryConstants.TYPE_GLOBAL_JS)
-			).setParameter(
-				"multipleSelection", true
 			).buildString()
+		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
 		).put(
 			"selectGlobalJSCETsEventName", "selectGlobalJSCETs"
 		).build();
@@ -157,13 +119,26 @@ public class LayoutLookAndFeelDisplayContext {
 	public Map<String, Object> getMasterLayoutConfigurationProps() {
 		return HashMapBuilder.<String, Object>put(
 			"changeMasterLayoutURL",
-			PortletURLBuilder.createRenderURL(
-				_liferayPortletResponse
-			).setMVCPath(
-				"/select_master_layout.jsp"
-			).setWindowState(
-				LiferayWindowState.POP_UP
-			).buildString()
+			() -> {
+				RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+					RequestBackedPortletURLFactoryUtil.create(
+						_httpServletRequest);
+
+				MasterLayoutPageTemplateEntryItemSelectorCriterion
+					masterLayoutPageTemplateEntryItemSelectorCriterion =
+						new MasterLayoutPageTemplateEntryItemSelectorCriterion();
+
+				masterLayoutPageTemplateEntryItemSelectorCriterion.
+					setDesiredItemSelectorReturnTypes(
+						new UUIDItemSelectorReturnType());
+
+				return String.valueOf(
+					_itemSelector.getItemSelectorURL(
+						requestBackedPortletURLFactory,
+						_liferayPortletResponse.getNamespace() +
+							"selectMasterLayout",
+						masterLayoutPageTemplateEntryItemSelectorCriterion));
+			}
 		).put(
 			"editMasterLayoutURL",
 			() -> {
@@ -176,20 +151,18 @@ public class LayoutLookAndFeelDisplayContext {
 				Layout masterLayout = LayoutLocalServiceUtil.getLayout(
 					selLayout.getMasterLayoutPlid());
 
-				String editLayoutURL = HttpComponentsUtil.addParameter(
-					HttpComponentsUtil.addParameter(
-						PortalUtil.getLayoutFullURL(selLayout, _themeDisplay),
-						"p_l_mode", Constants.EDIT),
-					"p_l_back_url",
-					ParamUtil.getString(_httpServletRequest, "redirect"));
-
-				return HttpComponentsUtil.addParameter(
-					HttpComponentsUtil.addParameter(
-						PortalUtil.getLayoutFullURL(
-							masterLayout.fetchDraftLayout(), _themeDisplay),
-						"p_l_mode", Constants.EDIT),
-					"p_l_back_url", editLayoutURL);
+				return HttpComponentsUtil.addParameters(
+					PortalUtil.getLayoutFullURL(
+						masterLayout.fetchDraftLayout(), _themeDisplay),
+					"p_l_back_url", _themeDisplay.getURLCurrent(),
+					"p_l_back_url_title",
+					LanguageUtil.get(
+						_themeDisplay.getLocale(),
+						LayoutScreenNavigationEntryConstants.ENTRY_KEY_DESIGN),
+					"p_l_mode", Constants.EDIT);
 			}
+		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
 		).put(
 			"masterLayoutName", getMasterLayoutName()
 		).put(
@@ -236,23 +209,30 @@ public class LayoutLookAndFeelDisplayContext {
 	public Map<String, Object> getStyleBookConfigurationProps() {
 		return HashMapBuilder.<String, Object>put(
 			"changeStyleBookURL",
-			() -> PortletURLBuilder.createRenderURL(
-				_liferayPortletResponse
-			).setMVCPath(
-				"/select_style_book.jsp"
-			).setParameter(
-				"editableMasterLayout", hasEditableMasterLayout()
-			).setParameter(
-				"selPlid",
-				() -> {
-					Layout selLayout =
-						_layoutsAdminDisplayContext.getSelLayout();
+			() -> {
+				RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+					RequestBackedPortletURLFactoryUtil.create(
+						_httpServletRequest);
 
-					return selLayout.getPlid();
-				}
-			).setWindowState(
-				LiferayWindowState.POP_UP
-			).buildString()
+				StyleBookEntryItemSelectorCriterion
+					styleBookEntryItemSelectorCriterion =
+						new StyleBookEntryItemSelectorCriterion();
+
+				styleBookEntryItemSelectorCriterion.
+					setDesiredItemSelectorReturnTypes(
+						new UUIDItemSelectorReturnType());
+				styleBookEntryItemSelectorCriterion.setSelPlid(
+					_layoutsAdminDisplayContext.getSelPlid());
+
+				return String.valueOf(
+					_itemSelector.getItemSelectorURL(
+						requestBackedPortletURLFactory,
+						_liferayPortletResponse.getNamespace() +
+							"selectStyleBook",
+						styleBookEntryItemSelectorCriterion));
+			}
+		).put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
 		).put(
 			"styleBookEntryId",
 			() -> {
@@ -288,27 +268,28 @@ public class LayoutLookAndFeelDisplayContext {
 		return LanguageUtil.get(_httpServletRequest, "styles-by-default");
 	}
 
-	public String getThemeFaviconCETExternalReferenceCode() {
-		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
-
-		ClientExtensionEntryRel clientExtensionEntryRel =
-			ClientExtensionEntryRelLocalServiceUtil.
-				fetchClientExtensionEntryRel(
-					PortalUtil.getClassNameId(Layout.class),
-					selLayout.getPlid(),
-					ClientExtensionEntryConstants.TYPE_THEME_FAVICON);
-
-		if (clientExtensionEntryRel != null) {
-			return clientExtensionEntryRel.getCETExternalReferenceCode();
-		}
-
-		return StringPool.BLANK;
+	public List<TabsItem> getTabsItems() {
+		return TabsItemListBuilder.add(
+			tabsItem -> {
+				tabsItem.setActive(true);
+				tabsItem.setLabel(LanguageUtil.get(_httpServletRequest, "css"));
+				tabsItem.setPanelId("css");
+			}
+		).add(
+			tabsItem -> {
+				tabsItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "javascript"));
+				tabsItem.setPanelId("javascript");
+			}
+		).build();
 	}
 
 	public Map<String, Object> getThemeSpritemapCETConfigurationProps(
 		String className, long classPK) {
 
 		return HashMapBuilder.<String, Object>put(
+			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
+		).put(
 			"selectThemeSpritemapCETEventName", "selectThemeSpritemapCET"
 		).put(
 			"themeSpritemapCET",
@@ -333,7 +314,7 @@ public class LayoutLookAndFeelDisplayContext {
 			"themeSpritemapCETSelectorURL",
 			() -> PortletURLBuilder.create(
 				_layoutsAdminDisplayContext.getCETItemSelectorURL(
-					"selectThemeSpritemapCET",
+					false, "selectThemeSpritemapCET",
 					ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP)
 			).buildString()
 		).build();
@@ -361,7 +342,7 @@ public class LayoutLookAndFeelDisplayContext {
 		if ((layoutPageTemplateEntry == null) ||
 			!Objects.equals(
 				layoutPageTemplateEntry.getType(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT)) {
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
 
 			hasEditableMasterLayout = true;
 		}
@@ -396,48 +377,32 @@ public class LayoutLookAndFeelDisplayContext {
 		return _hasMasterLayout;
 	}
 
-	public boolean hasStyleBooks() {
-		if (_hasStyleBooks != null) {
-			return _hasStyleBooks;
-		}
-
-		boolean hasStyleBooks = false;
-
-		Group liveGroup = StagingUtil.getLiveGroup(
-			_layoutsAdminDisplayContext.getGroup());
-
-		int styleBookEntriesCount =
-			StyleBookEntryLocalServiceUtil.getStyleBookEntriesCount(
-				liveGroup.getGroupId());
-
-		if (styleBookEntriesCount > 0) {
-			hasStyleBooks = true;
-		}
-
-		_hasStyleBooks = hasStyleBooks;
-
-		return _hasStyleBooks;
-	}
-
-	public boolean isClearFaviconButtonEnabled() {
+	public boolean isIconSelectorVisible() {
 		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
 
-		if (selLayout.getFaviconFileEntryId() > 0) {
-			return true;
+		if (selLayout.isTypeAssetDisplay()) {
+			return false;
 		}
 
-		ClientExtensionEntryRel clientExtensionEntryRel =
-			ClientExtensionEntryRelLocalServiceUtil.
-				fetchClientExtensionEntryRel(
-					PortalUtil.getClassNameId(Layout.class),
-					selLayout.getPlid(),
-					ClientExtensionEntryConstants.TYPE_THEME_FAVICON);
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.
+				fetchLayoutPageTemplateEntryByPlid(selLayout.getPlid());
 
-		if (clientExtensionEntryRel != null) {
-			return true;
+		if (layoutPageTemplateEntry == null) {
+			layoutPageTemplateEntry =
+				LayoutPageTemplateEntryLocalServiceUtil.
+					fetchLayoutPageTemplateEntryByPlid(selLayout.getClassPK());
 		}
 
-		return false;
+		if ((layoutPageTemplateEntry != null) &&
+			Objects.equals(
+				layoutPageTemplateEntry.getType(),
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	private JSONObject _getCETJSONObject(
@@ -479,36 +444,6 @@ public class LayoutLookAndFeelDisplayContext {
 			() -> typeSettingsUnicodeProperties.getProperty(
 				"scriptLocation", null)
 		);
-	}
-
-	private String _getClearFaviconButtonTitle() {
-		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
-
-		if (hasEditableMasterLayout() &&
-			(selLayout.getMasterLayoutPlid() > 0)) {
-
-			Layout masterLayout = LayoutLocalServiceUtil.fetchLayout(
-				selLayout.getMasterLayoutPlid());
-
-			if (masterLayout != null) {
-				ClientExtensionEntryRel clientExtensionEntryRel =
-					ClientExtensionEntryRelLocalServiceUtil.
-						fetchClientExtensionEntryRel(
-							PortalUtil.getClassNameId(Layout.class),
-							selLayout.getPlid(),
-							ClientExtensionEntryConstants.TYPE_THEME_FAVICON);
-
-				if ((masterLayout.getFaviconFileEntryId() > 0) ||
-					(clientExtensionEntryRel != null)) {
-
-					return LanguageUtil.get(
-						_httpServletRequest, "favicon-from-master");
-				}
-			}
-		}
-
-		return FaviconUtil.getFaviconTitle(
-			selLayout.getLayoutSet(), _themeDisplay.getLocale());
 	}
 
 	private JSONArray _getClientExtensionEntryRelsJSONArray(
@@ -586,11 +521,10 @@ public class LayoutLookAndFeelDisplayContext {
 			layoutSet.isPrivateLayout(), _themeDisplay.getLocale());
 	}
 
-	private final CETManager _cetManager;
 	private Boolean _hasEditableMasterLayout;
 	private Boolean _hasMasterLayout;
-	private Boolean _hasStyleBooks;
 	private final HttpServletRequest _httpServletRequest;
+	private final ItemSelector _itemSelector;
 	private final LayoutsAdminDisplayContext _layoutsAdminDisplayContext;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private String _masterLayoutName;

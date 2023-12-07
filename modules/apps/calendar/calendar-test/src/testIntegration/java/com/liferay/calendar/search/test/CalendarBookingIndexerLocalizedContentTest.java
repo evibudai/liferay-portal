@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.calendar.search.test;
@@ -29,9 +20,9 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -89,32 +80,18 @@ public class CalendarBookingIndexerLocalizedContentTest
 			"title_ja_JP", japaneseName
 		).build();
 
-		String word1 = "新規";
-		String word2 = "作成";
-		String prefix1 = "新";
-		String prefix2 = "作";
-
-		Stream.of(
-			word1, word2, prefix1, prefix2
-		).forEach(
-			keywords -> assertFieldValues(
-				"title", LocaleUtil.JAPAN, titleMap, keywords)
-		);
+		for (String keyword : Arrays.asList("新規", "作成", "新", "作")) {
+			assertFieldValues("title", LocaleUtil.JAPAN, titleMap, keyword);
+		}
 	}
 
 	@Test
 	public void testJapaneseTitleFullWordOnly() throws Exception {
-		String full = "新規作成";
-		String partial1 = "新大阪";
-		String partial2 = "作戦大成功";
-
 		String description = StringUtil.toLowerCase(
 			RandomTestUtil.randomString());
 
-		Stream.of(
-			full, partial1, partial2
-		).forEach(
-			title -> addCalendarBooking(
+		for (String title : Arrays.asList("新規作成", "新大阪", "作戦大成功")) {
+			addCalendarBooking(
 				new LocalizedValuesMap() {
 					{
 						put(LocaleUtil.JAPAN, title);
@@ -131,22 +108,16 @@ public class CalendarBookingIndexerLocalizedContentTest
 						put(LocaleUtil.US, description);
 						put(LocaleUtil.HUNGARY, description);
 					}
-				})
-		);
+				});
+		}
 
 		Map<String, String> titleMap = HashMapBuilder.put(
 			"title_ja_JP", "新規作成"
 		).build();
 
-		String word1 = "新規";
-		String word2 = "作成";
-
-		Stream.of(
-			word1, word2
-		).forEach(
-			keywords -> assertFieldValues(
-				"title", LocaleUtil.JAPAN, titleMap, keywords)
-		);
+		for (String keyword : Arrays.asList("新規", "作成")) {
+			assertFieldValues("title", LocaleUtil.JAPAN, titleMap, keyword);
+		}
 	}
 
 	protected CalendarBooking addCalendarBooking(

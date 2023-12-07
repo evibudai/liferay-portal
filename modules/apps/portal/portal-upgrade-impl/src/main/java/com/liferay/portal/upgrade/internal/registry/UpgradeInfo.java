@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.internal.registry;
@@ -28,11 +19,10 @@ public class UpgradeInfo {
 
 	public UpgradeInfo(
 		String fromSchemaVersionString, String toSchemaVersionString,
-		int buildNumber, UpgradeStep upgradeStep) {
+		UpgradeStep upgradeStep) {
 
 		_fromSchemaVersionString = fromSchemaVersionString;
 		_toSchemaVersionString = toSchemaVersionString;
-		_buildNumber = buildNumber;
 		_upgradeStep = upgradeStep;
 	}
 
@@ -59,10 +49,6 @@ public class UpgradeInfo {
 		}
 
 		return false;
-	}
-
-	public int getBuildNumber() {
-		return _buildNumber;
 	}
 
 	public String getFromSchemaVersionString() {
@@ -95,7 +81,6 @@ public class UpgradeInfo {
 			", upgradeStep=", _upgradeStep, "}");
 	}
 
-	private final int _buildNumber;
 	private final String _fromSchemaVersionString;
 	private final String _toSchemaVersionString;
 	private final UpgradeStep _upgradeStep;

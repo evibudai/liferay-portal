@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
@@ -191,48 +182,66 @@ public class EagerBlobEntryModelImpl
 	public Map<String, Function<EagerBlobEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<EagerBlobEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<EagerBlobEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<EagerBlobEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<EagerBlobEntry, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<EagerBlobEntry, Object>>();
-		Map<String, BiConsumer<EagerBlobEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<EagerBlobEntry, ?>>();
+		private static final Map<String, Function<EagerBlobEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("uuid", EagerBlobEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<EagerBlobEntry, String>)EagerBlobEntry::setUuid);
-		attributeGetterFunctions.put(
-			"eagerBlobEntryId", EagerBlobEntry::getEagerBlobEntryId);
-		attributeSetterBiConsumers.put(
-			"eagerBlobEntryId",
-			(BiConsumer<EagerBlobEntry, Long>)
-				EagerBlobEntry::setEagerBlobEntryId);
-		attributeGetterFunctions.put("groupId", EagerBlobEntry::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<EagerBlobEntry, Long>)EagerBlobEntry::setGroupId);
-		attributeGetterFunctions.put("blob", EagerBlobEntry::getBlob);
-		attributeSetterBiConsumers.put(
-			"blob", (BiConsumer<EagerBlobEntry, Blob>)EagerBlobEntry::setBlob);
+		static {
+			Map<String, Function<EagerBlobEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<EagerBlobEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put("uuid", EagerBlobEntry::getUuid);
+			attributeGetterFunctions.put(
+				"eagerBlobEntryId", EagerBlobEntry::getEagerBlobEntryId);
+			attributeGetterFunctions.put("groupId", EagerBlobEntry::getGroupId);
+			attributeGetterFunctions.put("blob", EagerBlobEntry::getBlob);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<EagerBlobEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<EagerBlobEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<EagerBlobEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<EagerBlobEntry, String>)EagerBlobEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"eagerBlobEntryId",
+				(BiConsumer<EagerBlobEntry, Long>)
+					EagerBlobEntry::setEagerBlobEntryId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<EagerBlobEntry, Long>)EagerBlobEntry::setGroupId);
+			attributeSetterBiConsumers.put(
+				"blob",
+				(BiConsumer<EagerBlobEntry, Blob>)EagerBlobEntry::setBlob);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -525,7 +534,8 @@ public class EagerBlobEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<EagerBlobEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

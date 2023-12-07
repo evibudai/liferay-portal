@@ -1,23 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.upgrade.v4_3_4;
 
+import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.PreparedStatement;
@@ -33,19 +27,31 @@ import java.util.Locale;
 public class DLFileEntryTypeDDMFieldAttributeUpgradeProcess
 	extends UpgradeProcess {
 
+	public DLFileEntryTypeDDMFieldAttributeUpgradeProcess(
+		CompanyLocalService companyLocalService) {
+
+		_companyLocalService = companyLocalService;
+	}
+
 	@Override
 	protected void doUpgrade() throws Exception {
+		_companyLocalService.forEachCompanyId(
+			companyId -> _updateDDMFieldAttribute(companyId));
+	}
+
+	private void _updateDDMFieldAttribute(long companyId) throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				StringBundler.concat(
 					"select DDMField.storageId, DDMField.fieldId from ",
 					"DLFileEntryType inner join DDMStructureLink on ",
+					"DDMStructureLink.classNameId = ? and ",
 					"DDMStructureLink.classPK = ",
 					"DLFileEntryType.fileEntryTypeId inner join ",
 					"DDMStructureVersion on DDMStructureVersion.structureId = ",
 					"DDMStructureLink.structureId inner join DDMField on ",
 					"DDMStructureVersion.structureVersionId = ",
-					"DDMField.structureVersionId and DDMField.fieldType like ",
-					"? "))) {
+					"DDMField.structureVersionId and DDMField.companyId = ? ",
+					"and DDMField.fieldType like ?"))) {
 
 			PreparedStatement preparedStatement2 = connection.prepareStatement(
 				StringBundler.concat(
@@ -59,7 +65,10 @@ public class DLFileEntryTypeDDMFieldAttributeUpgradeProcess
 					"update DDMFieldAttribute set smallAttributeValue = ? " +
 						"where fieldAttributeId = ? ");
 
-			preparedStatement1.setString(1, "numeric");
+			preparedStatement1.setLong(
+				1, PortalUtil.getClassNameId(DLFileEntryType.class));
+			preparedStatement1.setLong(2, companyId);
+			preparedStatement1.setString(3, "numeric");
 
 			try (ResultSet resultSet1 = preparedStatement1.executeQuery()) {
 				while (resultSet1.next()) {
@@ -106,5 +115,7 @@ public class DLFileEntryTypeDDMFieldAttributeUpgradeProcess
 			}
 		}
 	}
+
+	private final CompanyLocalService _companyLocalService;
 
 }

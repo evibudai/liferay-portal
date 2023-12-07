@@ -1,21 +1,15 @@
-.drop-zone-root {
-	position: relative;
+@import 'atlas-variables';
 
+.drop-zone-root {
 	.drop-zone-target {
 		align-items: center;
 		display: flex;
 		height: 16px;
-		position: absolute;
 		width: 100%;
 
 		.drop-zone-indicator {
 			background-color: $primary;
 			height: 2px;
-			width: 100%;
-		}
-
-		&.drop-zone-target-before {
-			top: -16px;
 		}
 	}
 }

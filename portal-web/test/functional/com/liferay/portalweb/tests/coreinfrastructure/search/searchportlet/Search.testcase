@@ -13,274 +13,95 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
-		else {
-			BlogsEntry.tearDownCP();
-
-			MessageboardsThread.tearDownCP();
-
-			JSONUser.tearDownNonAdminUsers();
-
-			WebContent.tearDownCP();
-
-			DMDocument.tearDownCP();
-
-			WikiPage.tearDownCP();
-
-			Vocabulary.tearDownCP();
-
-			Tag.tearDownCP(site = "Guest");
-
-			PagesAdmin.tearDownCP();
-		}
 	}
 
-	@priority = "4"
-	test AssertBasicFacetSelection {
-		var webContentserviceContext1 = '''{"assetTagNames": ["fruit"]}''';
-
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content 1",
-			groupName = "Guest",
-			serviceContext = "${webContentserviceContext1}",
-			title = "apple");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
-			entryContent = "Blog Entry Content",
-			entryTitle = "apple");
-
-		Navigator.openURL();
-
-		SearchPortlets.searchEmbedded(searchTerm = "apple");
-
-		Portlet.gotoPortletOptions(
-			portletName = "Search Options",
-			portletOption = "Configuration");
-
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
-
-		AssertNotChecked(
-			checkboxName = "Basic Facet Selection",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		IFrame.closeFrame();
-
-		AssertElementPresent(
-			checkboxName = "fruit",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Blogs Entry");
-
-		AssertElementNotPresent(
-			checkboxName = "fruit",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		Refresh();
-
-		FormFields.viewCheckboxChecked(fieldName = "Blogs Entry");
-
-		AssertElementNotPresent(
-			checkboxName = "fruit",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		SearchFacetPortlet.uncheckFacet(facetValueName = "Blogs Entry");
-
-		AssertElementPresent(
-			checkboxName = "fruit",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		SearchPortlets.configureSearchOptions(basicFacetSelection = "true");
-
-		SearchPortlets.searchEmbedded(searchTerm = "apple");
-
-		AssertElementPresent(
-			checkboxName = "fruit",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Blogs Entry");
-
-		AssertElementPresent(
-			checkboxName = "fruit",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "fruit");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "apple");
-
-		Refresh();
-
-		FormFields.viewCheckboxChecked(fieldName = "Blogs Entry");
-
-		FormFields.viewCheckboxChecked(fieldName = "fruit");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "apple");
-	}
-
-	@priority = "3"
-	test AssertCategoryFacetTermsWithDifferentDisplayTemplates {
-		JSONCategory.addVocabulary(
-			groupName = "Guest",
-			title = "Vocabulary");
-
-		var categoryId1 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Company",
-			vocabularyName = "Vocabulary");
-		var categoryId2 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Product",
-			vocabularyName = "Vocabulary");
-		var categoryId3 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Engineering",
-			vocabularyName = "Vocabulary");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId1},${categoryId2},${categoryId3}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC WebContent Title 1");
-
-		SearchPortlets.searchEmbedded(searchTerm = "test");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Cloud Layout",
-			portletName = "Category Facet");
-
-		Refresh();
-
-		for (var categories : list "Company,Product,Engineering") {
-			AssertElementPresent(
-				facetName = "Category Facet",
-				facetValue = "${categories}",
-				locator1 = "Search#FACET_CLOUD_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Compact Layout",
-			portletName = "Category Facet");
-
-		Refresh();
-
-		for (var categories : list "Company,Product,Engineering") {
-			AssertElementPresent(
-				facetName = "Category Facet",
-				facetValue = "${categories}",
-				locator1 = "Search#FACET_COMPACT_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Label Layout",
-			portletName = "Category Facet");
-
-		Refresh();
-
-		for (var categories : list "Company,Product,Engineering") {
-			AssertElementPresent(
-				facetName = "Category Facet",
-				facetValue = "${categories}",
-				locator1 = "Search#FACET_LABEL_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Vocabulary Layout",
-			portletName = "Category Facet");
-
-		Refresh();
-
-		for (var categories : list "Company,Product,Engineering") {
-			AssertElementPresent(
-				categoryName = "${categories}",
-				locator1 = "Search#CATEGORY_FACET_VOCABULARY_LAYOUT");
-		}
-	}
-
-	@description = "This is a use case for LPS-138720."
-	@priority = "4"
-	test AssertCustomFacetNoXSS {
-		Search.openSearchPage();
-
-		SearchPortlets.addWidgets(searchPortletList = "Custom Facet");
-
-		SearchFacetPortlet.configureCustomFacet(
-			aggregationField = "title_sortable",
-			customParameterName = "title");
-
-		var portalURL = PropsUtil.get("portal.url");
-
-		Navigator.openSpecificURL(url = "${portalURL}/web/guest/search?title=test1%22()%26%25%3Cacx%3E%3CScRiPt%20%3Ealert(%27XSS%27)%3C%2FScRiPt%3E");
-
-		AssertAlertNotPresent();
-	}
-
-	@priority = "3"
-	test AssertCustomFacetTermsWithDifferentDisplayTemplates {
-		for (var count : list "1,2,3") {
-			JSONDocument.addFileWithUploadedFile(
-				dmDocumentTitle = "dm title ${count}",
+	test AddSearchWidgetsOnContentPageViaUI {
+		task ("Add a content page and navigate to the edit screen of said page") {
+			JSONLayout.addPublicLayout(
 				groupName = "Guest",
-				mimeType = "application/docx",
-				sourceFileName = "Document_${count}.docx");
+				layoutName = "Test Content Page",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page",
+				siteName = "Guest");
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "title");
+		task ("Add each search widget via the UI and assert no error is present for each") {
+			SearchPage.addWidgetsOnContentPageViaUI(searchPortletList = "Blueprints Options,Category Facet,Custom Facet,Custom Filter,Elasticsearch Monitoring,Folder Facet,Low Level Search Options,Modified Facet,Search Bar,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet");
+		}
+	}
 
-		SearchPortlets.addWidgets(searchPortletList = "Custom Facet");
+	test AddSearchWidgetsOnWidgetPageViaUI {
+		task ("Add a widget page and navigate to said page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Widget Page");
 
-		SearchFacetPortlet.configureCustomFacet(
-			aggregationField = "title_sortable",
-			customHeading = "Title");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Compact Layout",
-			portletName = "Custom Facet");
-
-		Refresh();
-
-		for (var Document : list "dm title 1,dm title 2,dm title 3") {
-			AssertElementPresent(
-				facetName = "Custom Facet",
-				facetValue = "${Document}",
-				locator1 = "Search#FACET_COMPACT_LAYOUT_ITEM");
+			Navigator.openSitePage(
+				pageName = "Test Widget Page",
+				siteName = "Guest");
 		}
 
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Label Layout",
-			portletName = "Custom Facet");
-
-		Refresh();
-
-		for (var Document : list "dm title 1,dm title 2,dm title 3") {
-			AssertElementPresent(
-				facetName = "Custom Facet",
-				facetValue = "${Document}",
-				locator1 = "Search#FACET_LABEL_LAYOUT_ITEM");
+		task ("Add each search widget via the UI and assert no error is present for each") {
+			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Blueprints Options,Category Facet,Custom Facet,Custom Filter,Elasticsearch Monitoring,Folder Facet,Low Level Search Options,Modified Facet,Search Bar,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet");
 		}
+	}
+
+	@description = "This is a use case for LPS-169035."
+	@priority = 4
+	test AssertCustomSearchResultsDisplayTemplate {
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+
+		WidgetTemplates.addCP(
+			adtFile = "custom_search_results_template.ftl",
+			adtType = "Search Results");
+
+		SearchPage.openSearchPage();
+
+		SearchResults.configureSearchResults(
+			customEmptyResultMessage = "true",
+			customPagination = "true",
+			displayTemplate = "Search Results Test ADT");
+
+		SearchPage.searchEmbedded(searchTerm = "test");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Pagination#APPROXIMATE_RESULTS",
+			value1 = "Page 1 of approximately");
+
+		SearchPage.searchEmbedded(searchTerm = "apple");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "Custom No Response for apple");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "My results came up empty!");
 	}
 
 	@description = "This is a use case for LPS-160922."
-	@priority = "4"
+	@priority = 4
 	test AssertDefaultSearchResultsDisplayTemplate {
-		property test.name.skip.portal.instance = "Search#AssertDefaultSearchResultsDisplayTemplate";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtType = "Search Results",
 			fieldNameList = "Search Results Display Context");
 
 		var key_ddlTemplateName = "Search Results Test ADT";
 		var templateID = selenium.getText("DDMSelectTemplate#TEMPLATE_TABLE_ID");
 
-		var templateKey = ApplicationDisplayTemplates.getWidgetTemplateKey(templateID = "${templateID}");
+		var templateKey = WidgetTemplates.getWidgetTemplateKey(templateID = ${templateID});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -298,7 +119,7 @@ definition {
 
 		FormFields.editText(
 			fieldName = "displayStyleGroupId",
-			fieldValue = "${siteId}");
+			fieldValue = ${siteId});
 
 		FormFields.editTextMultiline(
 			fieldName = "displayStyle",
@@ -310,11 +131,10 @@ definition {
 			groupName = "Guest",
 			layoutName = "New Search Page");
 
-		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
-			groupName = "Guest",
+		SearchPage.addWidgets(
+			column = 2,
 			layoutName = "New Search Page",
-			widgetName = "Search Results");
+			searchPortletList = "Search Results");
 
 		Navigator.openSitePage(
 			pageName = "New Search Page",
@@ -326,64 +146,13 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		AssertSelectedLabel(
+		AssertTextEquals(
 			locator1 = "Select#DISPLAY_TEMPLATE",
 			value1 = "Search Results Test ADT");
 	}
 
-	@description = "This is a use case for LPS-170111. When configuring the Folder Facet, facet terms are present with different display templates"
-	@priority = "3"
-	test AssertFolderFacetTermsWithDifferentDisplayTemplates {
-		task ("Add the folders and populate them with files") {
-			for (var folder : list "Product,Engineering,Company") {
-				JSONFolder.addFolder(
-					dmFolderName = "${folder}",
-					groupName = "Guest");
-			}
-
-			for (var folder : list "Product,Engineering,Company") {
-				JSONDocument.addFile(
-					dmDocumentTitle = "DM Document Title 1",
-					folderName = "${folder}",
-					groupName = "Guest");
-			}
-		}
-
-		SearchPortlets.searchEmbedded(searchTerm = "test");
-
-		task ("Assert that the three folders are present in Compact Layout Template") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				displayTemplate = "Compact Layout",
-				portletName = "Folder Facet");
-
-			Refresh();
-
-			for (var folders : list "Company,Engineering,Product") {
-				AssertElementPresent(
-					facetName = "Folder Facet",
-					facetValue = "${folders}",
-					locator1 = "Search#FACET_COMPACT_LAYOUT_ITEM");
-			}
-		}
-
-		task ("Assert that the three folders are present in Label Layout Template") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				displayTemplate = "Label Layout",
-				portletName = "Folder Facet");
-
-			Refresh();
-
-			for (var folders : list "Company,Engineering,Product") {
-				AssertElementPresent(
-					facetName = "Folder Facet",
-					facetValue = "${folders}",
-					locator1 = "Search#FACET_LABEL_LAYOUT_ITEM");
-			}
-		}
-	}
-
 	@description = "This is a use case for LPS-92008."
-	@priority = "3"
+	@priority = 3
 	test AssertGuestCannotSeeEmptySearchWidgets {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -393,16 +162,21 @@ definition {
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/guest/search-page");
 
-		SearchPortlets.addWidgets(searchPortletList = "Category Facet,Custom Facet,Custom Filter,Folder Facet,Low Level Search Options,Modified Facet,Search Insights,Search Options,Search Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet,Search Bar");
+		SearchPage.addWidgets(
+			layoutName = "Search Page",
+			searchPortletList = "Category Facet,Custom Facet,Custom Filter,Folder Facet,Low Level Search Options,Modified Facet,Search Insights,Search Options,Search Results,Site Facet,Suggestions,Tag Facet,Type Facet,User Facet,Search Bar");
+
+		SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 
 		var testRunEnvironment = PropsUtil.get("test.run.environment");
 
-		if ("${testRunEnvironment}" == "EE") {
-			Portlet._clickAddPortlet(portletName = "Similar Results");
+		if (${testRunEnvironment} == "EE") {
+			SearchPage.addWidgets(
+				column = 2,
+				layoutName = "Search Page",
+				searchPortletList = "Similar Results");
 
-			AssertElementPresent(
-				key_portletName = "Similar Results",
-				locator1 = "Portlet#LOADED");
+			Refresh();
 
 			AssertElementPresent(
 				key_portletName = "Similar Results",
@@ -411,121 +185,37 @@ definition {
 
 		User.logoutPG();
 
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
 		for (var portletName : list "Category Facet,Custom Facet,Custom Filter,Folder Facet,Low Level Search Options,Modified Facet,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet") {
-			Portlet.viewNoSpecificPG(portletName = "${portletName}");
+			Portlet.viewNoSpecificPG(portletName = ${portletName});
 		}
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/guest/search-page");
 
 		for (var portletName : list "Category Facet,Custom Facet,Custom Filter,Folder Facet,Low Level Search Options,Modified Facet,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet") {
-			Portlet.viewNoSpecificPG(portletName = "${portletName}");
+			Portlet.viewNoSpecificPG(portletName = ${portletName});
 		}
 	}
 
-	@description = "This is a use case for LPS-147397."
-	@priority = "4"
-	test AssertModifiedFacetNoXSS {
-		Search.openSearchPage();
+	@description = "This is a use case for LPS-195388"
+	@ignore = "true"
+	@priority = 3
+	test AssertHighlightedSearchResultsWhenAdvancedSearchSyntaxIsEnabled {
+		SearchPage.configureEmbeddedSearchBar(useAdvancedSearchSyntax = "true");
 
-		Portlet.gotoPortletOptions(
-			portletName = "Modified Facet",
-			portletOption = "Configuration");
+		SearchPage.searchEmbedded(searchTerm = "home");
 
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
-
-		var script = '''test"><script>alert(123);</script>''';
-
-		Type(
-			fieldValue = "past-hour",
-			locator1 = "Search#MODIFIED_FACET_CONFIG_SPECIFIC_FIELD",
-			value1 = "${script}");
-
-		PortletEntry.save();
-
-		IFrame.closeFrame();
-
-		SearchPortlets.searchEmbedded(searchTerm = "test");
-
-		AssertAlertNotPresent();
+		AssertCssValue(
+			key_searchAssetTitle = "Home",
+			locator1 = "SearchPage#RESULT_TITLE_SPECIFIC_HIGHLIGHT",
+			locator2 = "background-color",
+			value1 = "rgba(252, 248, 227, 1)");
 	}
 
-	@priority = "3"
-	test AssertModifiedFacetTermsWithDifferentDisplayTemplates {
-		task ("Create the Web Contents") {
-			for (var count : list "1,2,3") {
-				JSONWebcontent.addWebContent(
-					content = "Content",
-					groupName = "Guest",
-					title = "Web Content ${count}");
-			}
-		}
-
-		SearchPortlets.searchEmbedded(searchTerm = "Web Content");
-
-		task ("Change Display Template to 'Radio Layout' and assert the Web Contents are present") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				displayTemplate = "Radio Layout",
-				portletName = "Modified Facet");
-
-			Refresh();
-
-			for (var count : list "1,2,3") {
-				SearchResultPortlet.viewSearchResults(
-					searchAssetTitle = "Web Content ${count}",
-					searchAssetType = "Content");
-			}
-		}
-
-		task ("Click on 'Past Hour' radio and assert the Web Contents are present") {
-			Click(
-				locator1 = "Search#MODIFIED_FACET_SELECTION",
-				range = "Past Hour");
-
-			for (var count : list "1,2,3") {
-				SearchResultPortlet.viewSearchResults(
-					searchAssetTitle = "Web Content ${count}",
-					searchAssetType = "Content");
-			}
-		}
-
-		task ("Add and enable a new modified facet label and assert there are no web contents present") {
-			Portlet.gotoPortletOptions(
-				portletName = "Modified Facet",
-				portletOption = "Configuration");
-
-			SelectFrame(locator1 = "IFrame#CONFIGURATION");
-
-			Click(locator1 = "Button#ADD_ROW");
-
-			Type(
-				key_fieldLabel = "Label",
-				locator1 = "Search#MODIFIED_FACET_CONFIG_EMPTY_FIELD",
-				value1 = "Past 23 Hours");
-
-			Type(
-				key_fieldLabel = "Range",
-				locator1 = "Search#MODIFIED_FACET_CONFIG_EMPTY_FIELD",
-				value1 = "[past-24-hours TO past-hour]");
-
-			PortletEntry.save();
-
-			IFrame.closeFrame();
-
-			Refresh();
-
-			Click(
-				locator1 = "Search#MODIFIED_FACET_SELECTION",
-				range = "Past 23 Hours");
-
-			SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "Web Content 1/Web Content Article,Web Content 2/Web Content Article,Web Content 3/Web Content Article");
-		}
-	}
-
-	@priority = "4"
+	@priority = 4
 	test AssertNonAdminsCannotAddCertainWidgets {
-		property app.server.types = "tomcat";
+		property custom.properties = "layout.user.access.via.plid.enabled=true";
 
 		JSONRole.addRegularRole(
 			roleKey = "Can Add Widgets",
@@ -559,64 +249,18 @@ definition {
 		Portlet.viewCannotAddPG(portletName = "Search Insights");
 	}
 
-	@description = "This is a use case for LPS-117767."
-	@priority = "3"
-	test AssertPaginationResetsAfterSelectingNewFacet {
-		var categoryId1 = JSONCategory.addCategory(
-			groupName = "Global",
-			title = "Category Name 1",
-			vocabularyName = "Topic");
-		var categoryId2 = JSONCategory.addCategory(
-			groupName = "Global",
-			title = "Category Name 2",
-			vocabularyName = "Topic");
-
-		for (var count : list "1,2") {
-			JSONDocument.addFileWithUploadedFile(
-				assetCategoryIds = "${categoryId1}",
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentTitle = "DM Document Title 1_${count}",
-				groupName = "Guest",
-				mimeType = "image/jpg",
-				sourceFileName = "Document_${count}.jpg");
-		}
-
-		for (var count : list "1,2,3") {
-			JSONDocument.addFileWithUploadedFile(
-				assetCategoryIds = "${categoryId2}",
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentTitle = "DM Document Title 2_${count}",
-				groupName = "Guest",
-				mimeType = "text/plain",
-				sourceFileName = "Document_${count}.txt");
-		}
-
-		SearchPortlets.searchEmbedded(searchTerm = "Category Name");
-
-		SearchResultPortlet.configureSearchResults(paginationDelta = "2");
-
-		Refresh();
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 2");
-
-		Click(locator1 = "Pagination#NEXT_LINK");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 1");
-
-		Pagination.viewResults(results = "Showing 1 to 2 of 5 entries.");
-	}
-
 	@description = "This is a use case for LPS-130227."
-	@priority = "4"
+	@priority = 4
 	test AssertPaginationURLforHTTPS {
-		property custom.properties = "web.server.host=localhost${line.separator}redirect.url.security.mode=domain${line.separator}redirect.url.domains.allowed=${line.separator}web.server.https.port=8443${line.separator}web.server.protocol=https";
+		property custom.properties = "redirect.url.domains.allowed=${line.separator}redirect.url.security.mode=domain${line.separator}web.server.host=localhost${line.separator}web.server.https.port=8443${line.separator}web.server.protocol=https";
 		property portal.ssl.enabled = "true";
 		property search.environment.suite.exclude = "true";
-		property test.name.skip.portal.instance = "Search#AssertPaginationURLforHTTPS";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -627,7 +271,7 @@ definition {
 
 		PageEditor.addWidget(portletName = "Search Options");
 
-		SearchPortlets.configureSearchOptions(allowEmptySearches = "true");
+		SearchPage.configureSearchOptions(allowEmptySearches = "true");
 
 		PageEditor.addWidget(
 			collectionName = "Search",
@@ -645,7 +289,7 @@ definition {
 
 		Navigator.openSpecificURL(url = "https://localhost:8443/web/test-site-name/test-page-name");
 
-		Pagination.changePagination(itemsPerPage = "4");
+		Pagination.changePagination(itemsPerPage = 4);
 
 		Click(locator1 = "Pagination#NEXT_LINK");
 
@@ -655,23 +299,13 @@ definition {
 
 		echo("Current URL: ${currentURL} ");
 
-		if (!(contains("${currentURL}", "https://")) || !(contains("${currentURL}", "start=2"))) {
+		if (!(contains(${currentURL}, "https://")) || !(contains(${currentURL}, "start=2"))) {
 			fail("URL of second search results page should contain HTTPS.");
 		}
 	}
 
-	@description = "This is a use case for LPS-135288."
-	@priority = "4"
-	test AssertSearchTagURLNoXSS {
-		var portalURL = PropsUtil.get("portal.url");
-
-		Navigator.openSpecificURL(url = "${portalURL}/web/guest/search?tag=test%22%3E%3Csvg/onload=alert(document.domain)%3E");
-
-		AssertAlertNotPresent();
-	}
-
 	@description = "This is a use case for LPS-89561."
-	@priority = "4"
+	@priority = 4
 	test AssertSearchURLWhenModifyingPagination {
 		property custom.properties = "search.container.page.default.delta=10";
 
@@ -682,20 +316,20 @@ definition {
 				title = "WC Title ${count}");
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
-		SearchResultPortlet.paginateAndViewSearchResults(
+		SearchResults.paginateAndViewSearchResults(
 			searchAssetTitle = "WC Title 11",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
 
-		Pagination.changePagination(itemsPerPage = "4");
+		Pagination.changePagination(itemsPerPage = 4);
 
 		var currentURL = selenium.getCurrentUrl();
 
 		echo("Current URL: ${currentURL} ");
 
-		if (!(contains("${currentURL}", "delta=4")) || contains("${currentURL}", "start")) {
+		if (!(contains(${currentURL}, "delta=4")) || contains(${currentURL}, "start")) {
 			fail("URL should preserve delta, but not contain start.");
 		}
 
@@ -707,7 +341,7 @@ definition {
 
 		echo("Current URL: ${currentURL} ");
 
-		if (!(contains("${currentURL}", "delta=4")) || !(contains("${currentURL}", "start=2"))) {
+		if (!(contains(${currentURL}, "delta=4")) || !(contains(${currentURL}, "start=2"))) {
 			fail("URL should preserve delta and add start.");
 		}
 
@@ -719,17 +353,17 @@ definition {
 
 		echo("Current URL: ${currentURL} ");
 
-		if (!(contains("${currentURL}", "delta=4")) && !(contains("${currentURL}", "start=3"))) {
+		if (!(contains(${currentURL}, "delta=4")) && !(contains(${currentURL}, "start=3"))) {
 			fail("URL should preserve delta and modify start.");
 		}
 
-		Pagination.changePagination(itemsPerPage = "8");
+		Pagination.changePagination(itemsPerPage = 8);
 
 		var currentURL = selenium.getCurrentUrl();
 
 		echo("Current URL: ${currentURL} ");
 
-		if (!(contains("${currentURL}", "delta")) && !(contains("${currentURL}", "start"))) {
+		if (!(contains(${currentURL}, "delta")) && !(contains(${currentURL}, "start"))) {
 			fail("Delta and start should be removed from URL.");
 		}
 
@@ -741,7 +375,7 @@ definition {
 
 		echo("Current URL: ${currentURL} ");
 
-		if (!(contains("${currentURL}", "delta")) && contains("${currentURL}", "start=2")) {
+		if (!(contains(${currentURL}, "delta")) && contains(${currentURL}, "start=2")) {
 			fail("URL should preserve abscence of delta and start should be added.");
 		}
 
@@ -753,59 +387,17 @@ definition {
 
 		echo("Current URL: ${currentURL} ");
 
-		if (!(contains("${currentURL}", "delta")) && contains("${currentURL}", "start=1")) {
+		if (!(contains(${currentURL}, "delta")) && contains(${currentURL}, "start=1")) {
 			fail("URL should preserve abscence of delta and modify start.");
 		}
 	}
 
-	@priority = "3"
-	test AssertSiteFacetTermsWithDifferentDisplayTemplates {
-		for (var siteName : list "Community,Engineering,Product") {
-			JSONGroup.addGroup(groupName = "${siteName}");
-
-			JSONWebcontent.addWebContent(
-				content = "Web Content",
-				groupName = "${siteName}",
-				title = "Web Content");
-		}
-
-		SearchPortlets.configureEmbeddedSearchBar(searchScope = "Everything");
-
-		SearchPortlets.searchEmbedded(searchTerm = "Web Content");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Compact Layout",
-			portletName = "Site Facet");
-
-		Refresh();
-
-		for (var siteName : list "Community,Engineering,Product") {
-			AssertElementPresent(
-				facetName = "Site Facet",
-				facetValue = "${siteName}",
-				locator1 = "Search#FACET_COMPACT_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Label Layout",
-			portletName = "Site Facet");
-
-		Refresh();
-
-		for (var siteName : list "Community,Engineering,Product") {
-			AssertElementPresent(
-				facetName = "Site Facet",
-				facetValue = "${siteName}",
-				locator1 = "Search#FACET_LABEL_LAYOUT_ITEM");
-		}
-	}
-
 	@description = "This is a use case for LPS-152993."
-	@priority = "4"
+	@priority = 4
 	test AssertSortWidgetNoXSS {
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
-		SearchPortlets.addWidgets(searchPortletList = "Sort");
+		SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 
 		Portlet.gotoPortletOptions(
 			portletName = "Sort",
@@ -818,7 +410,7 @@ definition {
 		Type(
 			key_fieldLabel = "Label",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${script}");
+			value1 = ${script});
 
 		PortletEntry.save();
 
@@ -830,23 +422,26 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-95670."
-	@priority = "4"
+	@priority = 4
 	test AssertSuggestionsCannotOfferInvalidWordsAsSuggestion {
 		property custom.properties = "locales.enabled=de_DE,en_US${line.separator}locales=de_DE,en_US${line.separator}index.search.spell.checker.dictionary[de_DE]=spellchecker/dictionary_de_DE.txt${line.separator}index.search.spell.checker.supported.locales=en_US,es_ES,de_DE";
 		property index.search.spell.checker.enabled = "true";
 		property search.environment.suite.exclude = "true";
-		property test.name.skip.portal.instance = "Search#AssertSuggestionsCannotOfferInvalidWordsAsSuggestion";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addBasicWebContentLocalized(
 			contentMap = "en_US:WC Content,de_DE:ächten angreifen anmarschieren",
 			groupName = "Guest",
 			titleMap = "en_US:WC Title,de_DE:WC Titel");
 
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
-		SearchPortlets.addWidgets(searchPortletList = "Suggestions");
+		SearchPage.addWidgets(searchPortletList = "Suggestions");
 
-		SearchPortlets.gotoConfigureSuggestionsOptions();
+		Refresh();
+
+		SearchPage.gotoConfigureSuggestionsOptions(portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -856,183 +451,28 @@ definition {
 
 		IFrame.closeFrame();
 
-		SearchAdministration.executeReindex(action = "Reindex spell-check dictionaries.");
+		SearchAdministration.executeReindex(action = "All Spell Check Dictionaries");
 
 		AssertConsoleTextPresent(value1 = "Finished indexing dictionary spellchecker/dictionary_de_DE.txt");
 
 		Navigator.openURL();
 
-		ContentPages.gotoPageEditor();
-
-		PageEditor.addWidget(
-			portletName = "Language Selector",
-			targetFragmentName = "Container");
-
-		PageEditor.publish();
-
-		LanguagePortlet.selectLanguagePG(
-			locale = "de-DE",
-			textIcon = "deutsch-Deutschland");
+		SearchPage.openSearchPage(locale = "de-DE");
 
 		for (var searchTerm : list "ächten,angreifen,anmarschieren") {
-			SearchPortlets.searchEmbedded(searchTerm = "${searchTerm}");
+			SearchPage.searchEmbedded(searchTerm = ${searchTerm});
 
-			SearchResultPortlet.viewSearchResults(
+			SearchResults.viewSearchResults(
 				searchAssetTitle = "WC Titel",
 				searchAssetType = "Webcontent, Artikel",
-				searchTerm = "${searchTerm}");
+				searchTerm = ${searchTerm});
 
 			AssertElementNotPresent(locator1 = "Search#SEARCH_SUGGESTED_SPELLING");
 		}
 	}
 
-	@priority = "3"
-	test AssertTagFacetTermsWithDifferentDisplayTemplates {
-		for (var tagName : list "engineering,product,2021,2022") {
-			JSONAssettag.addTag(
-				groupName = "Guest",
-				tagName = "${tagName}");
-		}
-
-		JSONWebcontent.addWebContent(
-			assetTagNames = "engineering,product,2021,2022",
-			content = "WC Content 1",
-			groupName = "Guest",
-			title = "WC WebContent Title 1");
-
-		SearchPortlets.searchEmbedded(searchTerm = "test");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Cloud Layout",
-			portletName = "Tag Facet");
-
-		Refresh();
-
-		for (var tagName : list "engineering,product,2021,2022") {
-			AssertElementPresent(
-				facetName = "Tag Facet",
-				facetValue = "${tagName}",
-				locator1 = "Search#FACET_CLOUD_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Compact Layout",
-			portletName = "Tag Facet");
-
-		Refresh();
-
-		for (var tagName : list "engineering,product,2021,2022") {
-			AssertElementPresent(
-				facetName = "Tag Facet",
-				facetValue = "${tagName}",
-				locator1 = "Search#FACET_COMPACT_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Label Layout",
-			portletName = "Tag Facet");
-
-		Refresh();
-
-		for (var tagName : list "engineering,product,2021,2022") {
-			AssertElementPresent(
-				facetName = "Tag Facet",
-				facetValue = "${tagName}",
-				locator1 = "Search#FACET_LABEL_LAYOUT_ITEM");
-		}
-	}
-
-	@priority = "3"
-	test AssertTypeFacetTermsWithDifferentDisplayTemplates {
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content",
-			groupName = "Guest",
-			title = "WC WebContent Title 1");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "DM Title",
-			groupName = "Guest",
-			mimeType = "application/docx",
-			sourceFileName = "Document_1.docx");
-
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title");
-
-		SearchPortlets.searchEmbedded(searchTerm = "title");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Compact Layout",
-			portletName = "Type Facet");
-
-		Refresh();
-
-		for (var Document : list "Web Content Article,Document,Blogs Entry") {
-			AssertElementPresent(
-				facetName = "Type Facet",
-				facetValue = "${Document}",
-				locator1 = "Search#FACET_COMPACT_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Label Layout",
-			portletName = "Type Facet");
-
-		Refresh();
-
-		for (var Document : list "Web Content Article,Document,Blogs Entry") {
-			AssertElementPresent(
-				facetName = "Type Facet",
-				facetValue = "${Document}",
-				locator1 = "Search#FACET_LABEL_LAYOUT_ITEM");
-		}
-	}
-
-	@priority = "3"
-	test AssertUserFacetTermsWithDifferentDisplayTemplates {
-		for (var count : list "1,2,3") {
-			JSONUser.addUser(
-				userEmailAddress = "userea${count}@liferay.com",
-				userFirstName = "userfn${count}",
-				userLastName = "userln${count}",
-				userScreenName = "usersn${count}");
-
-			JSONUser.addUserToSite(
-				groupName = "Guest",
-				userEmailAddress = "userea${count}@liferay.com");
-		}
-
-		SearchPortlets.searchEmbedded(searchTerm = "user");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Compact Layout",
-			portletName = "User Facet");
-
-		Refresh();
-
-		for (var users : list "userfn1 userln1,userfn2 userln2,userfn3 userln3") {
-			AssertElementPresent(
-				facetName = "User Facet",
-				facetValue = "${users}",
-				locator1 = "Search#FACET_COMPACT_LAYOUT_ITEM");
-		}
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayTemplate = "Label Layout",
-			portletName = "User Facet");
-
-		Refresh();
-
-		for (var users : list "userfn1 userln1,userfn2 userln2,userfn3 userln3") {
-			AssertElementPresent(
-				facetName = "User Facet",
-				facetValue = "${users}",
-				locator1 = "Search#FACET_LABEL_LAYOUT_ITEM");
-		}
-	}
-
 	@description = "This is a use case for LPS-165397."
-	@priority = "3"
+	@priority = 3
 	test CanDisableDisplaySelectedResultWithContentPages {
 		task ("Add a New Page") {
 			JSONLayout.addPublicLayout(
@@ -1045,13 +485,13 @@ definition {
 				layoutName = "Example Page");
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "Example Page");
+		SearchPage.searchEmbedded(searchTerm = "Example Page");
 
-		SearchResultPortlet.configureSearchResults(disableDisplaySelectedResultInContext = "true");
+		SearchResults.configureSearchResults(disableDisplaySelectedResultInContext = "true");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Example Page");
+		SearchPage.searchEmbedded(searchTerm = "Example Page");
 
-		Search.gotoResultAssetViaTitle(searchAssetTitle = "Example Page");
+		SearchPage.gotoResultDetails(searchAssetTitle = "Example Page");
 
 		AssertElementNotPresent(locator1 = "Portlet#ERROR");
 
@@ -1059,7 +499,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-131302."
-	@priority = "3"
+	@priority = 3
 	test CanDownloadDocumentsThroughSearchResultsPreview {
 		task ("Upload a PDF and a DOCX file") {
 			JSONDocument.addFileWithUploadedFile(
@@ -1075,42 +515,46 @@ definition {
 				sourceFileName = "Document_1.pdf");
 		}
 
-		task ("Search for the DOCX and PDF files and Assert 'Download' Button is Present") {
-			SearchPortlets.searchEmbedded(searchTerm = "DOCX File");
+		task ("Search for the DOCX and PDF files and assert 'Download' Button is Present") {
+			SearchPage.searchEmbedded(searchTerm = "File");
 
-			Search.gotoResultAssetViaTitle(searchAssetTitle = "DOCX File");
+			SearchPage.gotoResultDetails(searchAssetTitle = "DOCX File");
 
 			Click(locator1 = "Icon#INFO_DM");
 
 			Button.viewPresent(button = "Download");
 
 			Button.click(button = "Download");
+
+			DownloadTempFile();
 
 			DMDocument.assertFileNameFromTempFolder(fileName = "Document_1.docx");
 
-			SearchPortlets.searchEmbedded(searchTerm = "PDF File");
+			Click(locator1 = "SearchPage#PREVIEW_BACK_BUTTON");
 
-			Search.gotoResultAssetViaTitle(searchAssetTitle = "PDF File");
+			SearchPage.gotoResultDetails(searchAssetTitle = "PDF File");
 
 			Click(locator1 = "Icon#INFO_DM");
 
 			Button.viewPresent(button = "Download");
 
 			Button.click(button = "Download");
+
+			DownloadTempFile();
 
 			DMDocument.assertFileNameFromTempFolder(fileName = "Document_1.pdf");
 		}
 	}
 
 	@description = "This is a use case for LPS-151026."
-	@priority = "3"
+	@priority = 3
 	test CanHighlightResultsAndDisableHighlighting {
 		JSONWebcontent.addWebContent(
 			content = "",
 			groupName = "Guest",
 			title = "WC Title");
 
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
 		Portlet.gotoPortletOptions(
 			portletName = "Search Results",
@@ -1124,34 +568,34 @@ definition {
 
 		IFrame.closeFrame();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
 		AssertCssValue(
 			key_searchAssetTitle = "WC",
-			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC_HIGHLIGHT",
+			locator1 = "SearchPage#RESULT_TITLE_SPECIFIC_HIGHLIGHT",
 			locator2 = "background-color",
 			value1 = "rgba(252, 248, 227, 1)");
 
 		AssertCssValue(
 			key_searchAssetTitle = "Title",
-			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC_HIGHLIGHT",
+			locator1 = "SearchPage#RESULT_TITLE_SPECIFIC_HIGHLIGHT",
 			locator2 = "background-color",
 			value1 = "rgba(252, 248, 227, 1)");
 
-		SearchResultPortlet.configureSearchResults(disableHighlighting = "true");
+		SearchResults.configureSearchResults(disableHighlighting = "true");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
 		AssertElementNotPresent(
 			key_searchAssetTitle = "WC",
-			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC_HIGHLIGHT");
+			locator1 = "SearchPage#RESULT_TITLE_SPECIFIC_HIGHLIGHT");
 
 		AssertElementNotPresent(
 			key_searchAssetTitle = "Title",
-			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC_HIGHLIGHT");
+			locator1 = "SearchPage#RESULT_TITLE_SPECIFIC_HIGHLIGHT");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CannotViewTermsOfUseWhenEnterpriseSearchIsDisabled {
 		property custom.properties = "enterprise.product.enterprise.search.enabled=false${line.separator}enterprise.product.notification.enabled=true";
 		property test.run.environment = "EE";
@@ -1165,371 +609,76 @@ definition {
 		AssertElementNotPresent(locator1 = "Modal#MODAL");
 	}
 
-	@priority = "3"
-	test CanOrderCategoryFacetTerms {
-		JSONCategory.addVocabulary(
-			groupName = "Guest",
-			title = "Vocabulary");
+	@description = "This is a use case for LPS-172622 - Cannot perform empty searches after a non-empty search"
+	@priority = 3
+	test CanPerformEmptySearches {
+		SearchPage.searchEmbedded(searchTerm = "test");
 
-		var categoryId1 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Engineering",
-			vocabularyName = "Vocabulary");
-		var categoryId2 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Product",
-			vocabularyName = "Vocabulary");
-		var categoryId3 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "2021",
-			vocabularyName = "Vocabulary");
-		var categoryId4 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "2022",
-			vocabularyName = "Vocabulary");
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "tree.png,stars.png,satellite.png,moon.png,earth.png,Home,Test Test",
+			searchTerm = "test");
 
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId1},${categoryId2},${categoryId3},${categoryId4}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC WebContent Title 1");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId1},${categoryId3},${categoryId4}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC WebContent Title 2");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId3},${categoryId4}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC WebContent Title 3");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId4}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC WebContent Title 4");
-
-		SearchPortlets.searchEmbedded(searchTerm = "test");
-
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "2022,2021,Engineering,Product");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			portletName = "Category Facet",
-			sortOption = "Term Frequency Ascending");
+		SearchPage.configureSearchOptions(allowEmptySearches = "true");
 
 		Refresh();
 
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Product,Engineering,2021,2022");
+		SearchPage.searchEmbedded(searchTerm = "");
 
-		SearchFacetPortlet.updateFacetConfiguration(
-			portletName = "Category Facet",
-			sortOption = "Term Value Ascending");
-
-		Refresh();
-
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "2021,2022,Engineering,Product");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			portletName = "Category Facet",
-			sortOption = "Term Value Descending");
-
-		Refresh();
-
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Product,Engineering,2022,2021");
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "tree.png,stars.png,satellite.png,moon.png,earth.png,Search,Home,Test Test",
+			searchTerm = "");
 	}
 
-	@priority = "3"
-	test CanOrderCustomFacetTerms {
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "Commerce_Black",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "Commerce_Black.jpg");
+	@description = "This is a use case for LPS-179990"
+	@priority = 3
+	test CanRemoveSortFieldsAndDeactivateRelevanceInSortWidget {
+		task ("Add a new Sort Widget to the default Search page") {
+			SearchPage.openSearchPage();
 
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "Document_1",
-			groupName = "Guest",
-			mimeType = "application/msword",
-			sourceFileName = "Document_1.doc");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "Document_3",
-			groupName = "Guest",
-			mimeType = "audio/mp3",
-			sourceFileName = "Document_3.mp3");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "Document_1.png",
-			groupName = "Guest",
-			mimeType = "image/png",
-			sourceFileName = "Document_1.png");
-
-		SearchPortlets.searchEmbedded(searchTerm = "test");
-
-		SearchPortlets.addWidgets(searchPortletList = "Custom Facet");
-
-		SearchFacetPortlet.configureCustomFacet(aggregationField = "extension");
-
-		Refresh();
-
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "png,doc,jpg,mp3");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			portletName = "Custom Facet",
-			sortOption = "Term Frequency Ascending");
-
-		Refresh();
-
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "doc,jpg,mp3,png");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			portletName = "Custom Facet",
-			sortOption = "Term Value Ascending");
-
-		Refresh();
-
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "doc,jpg,mp3,png");
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			portletName = "Custom Facet",
-			sortOption = "Term Value Descending");
-
-		Refresh();
-
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "png,mp3,jpg,doc");
-	}
-
-	@priority = "3"
-	test CanOrderFolderFacetTerms {
-		for (var folder : list "Product,Engineering,2021,2022") {
-			JSONFolder.addFolder(
-				dmFolderName = "${folder}",
-				groupName = "Guest");
+			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 		}
 
-		task ("Populate the folders with files") {
-			JSONDocument.addFile(
-				dmDocumentTitle = "DM Document Title 1",
-				folderName = "Product",
-				groupName = "Guest");
+		task ("Delete all indexed field names and disable relevance for the Sort portlet") {
+			Portlet.gotoPortletOptions(
+				portletName = "Sort",
+				portletOption = "Configuration");
 
-			for (var count : list "1,2") {
-				JSONDocument.addFile(
-					dmDocumentTitle = "DM Document Title ${count}",
-					folderName = "Engineering",
-					groupName = "Guest");
+			SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+			while ((IsElementPresent(locator1 = "Button#TRASH_ENABLED")) && (maxIterations = "20")) {
+				Click(locator1 = "Button#TRASH_ENABLED");
 			}
 
-			for (var count : list "1,2,3") {
-				JSONDocument.addFile(
-					dmDocumentTitle = "DM Document Title ${count}",
-					folderName = "2021",
-					groupName = "Guest");
-			}
+			Uncheck.uncheckToggleSwitchNoErrorNoAssert(
+				key_toggleSwitchLabel = "On",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
-			for (var count : list "1,2,3,4") {
-				JSONDocument.addFile(
-					dmDocumentTitle = "DM Document Title ${count}",
-					folderName = "2022",
-					groupName = "Guest");
-			}
+			PortletEntry.save();
+
+			Alert.viewSuccessMessage();
+
+			IFrame.closeFrame();
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "test");
+		task ("Assert that the Search portlets are still available by performing a search") {
+			SearchPage.searchWidget(searchTerm = "test");
 
-		task ("Assert that the Folder facet sorts by term frequency descending by default") {
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "2022,2021,Engineering,Product");
-		}
-
-		task ("Assert that the Folder facet values are correct when sorted by term frequency ascending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Folder Facet",
-				sortOption = "Term Frequency Ascending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Product,Engineering,2021,2022");
-		}
-
-		task ("Assert that the Folder facet values are correct when sorted by term value ascending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Folder Facet",
-				sortOption = "Term Value Ascending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "2021,2022,Engineering,Product");
-		}
-
-		task ("Assert that the Folder facet values are correct when sorted by term value descending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Folder Facet",
-				sortOption = "Term Value Descending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Product,Engineering,2022,2021");
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "Test Test",
+				searchAssetType = "User");
 		}
 	}
 
-	@priority = "3"
-	test CanOrderSiteFacetTerms {
-		task ("Add Sites") {
-			for (var siteName : list "Sales,Community,Product,Engineering") {
-				JSONGroup.addGroup(groupName = "${siteName}");
-			}
-		}
-
-		task ("Add the Web Contents into the Sites") {
-			JSONWebcontent.addWebContent(
-				content = "Some content about sales",
-				groupName = "Sales",
-				title = "Sales Web Content 1");
-
-			for (var count : list "1,2,3") {
-				JSONWebcontent.addWebContent(
-					content = "Some content about community",
-					groupName = "Community",
-					title = "Community Web Content ${count}");
-			}
-
-			for (var count : list "1,2") {
-				JSONWebcontent.addWebContent(
-					content = "Some content about product",
-					groupName = "Product",
-					title = "Product Web Content ${count}");
-			}
-
-			for (var count : list "1,2,3,4") {
-				JSONWebcontent.addWebContent(
-					content = "Some content about engineering",
-					groupName = "Engineering",
-					title = "Engineering Web Content ${count}");
-			}
-		}
-
-		Search.openSearchPage();
-
-		SearchPortlets.configureEmbeddedSearchBar(searchScope = "Everything");
-
-		SearchPortlets.searchEmbedded(searchTerm = "web content");
-
-		task ("Assert the order of site facet by term frequency descending by default") {
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Engineering,Community,Product,Sales");
-		}
-
-		task ("Assert the order of site facet by Frequency term ascending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Site Facet",
-				sortOption = "Term Frequency Ascending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Sales,Product,Community,Engineering");
-		}
-
-		task ("Assert the order of site facet by Term value ascending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Site Facet",
-				sortOption = "Term Value Ascending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Community,Engineering,Product,Sales");
-		}
-
-		task ("Assert the order of site facet by Term value descending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Site Facet",
-				sortOption = "Term Value Descending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "Sales,Product,Engineering,Community");
-		}
-	}
-
-	test CanOrderTagFacetTerms {
-		task ("Create the tags and the Web Contents") {
-			for (var tagList : list "engineering,product,2021,2022") {
-				JSONAssettag.addTag(
-					groupName = "Guest",
-					tagName = "${tagList}");
-			}
-
-			JSONWebcontent.addWebContent(
-				assetTagNames = "engineering,product,2021,2022",
-				content = "WC Content 1",
-				groupName = "Guest",
-				title = "WC WebContent Title 1");
-
-			JSONWebcontent.addWebContent(
-				assetTagNames = "engineering,2021,2022",
-				content = "WC Content 2",
-				groupName = "Guest",
-				title = "WC WebContent Title 2");
-
-			JSONWebcontent.addWebContent(
-				assetTagNames = "2021,2022",
-				content = "WC Content 3",
-				groupName = "Guest",
-				title = "WC WebContent Title 3");
-
-			JSONWebcontent.addWebContent(
-				assetTagNames = "2022",
-				content = "WC Content 4",
-				groupName = "Guest",
-				title = "WC WebContent Title 4");
-		}
-
-		SearchPortlets.searchEmbedded(searchTerm = "test");
-
-		task ("Assert the order of tag facet by term frequency descending by default") {
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "2022,2021,engineering,product");
-		}
-
-		task ("Assert the order of tag facet by Frequency term ascending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Tag Facet",
-				sortOption = "Term Frequency Ascending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "product,engineering,2021,2022");
-		}
-
-		task ("Assert the order of tag facet by Term value ascending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Tag Facet",
-				sortOption = "Term Value Ascending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "2021,2022,engineering,product");
-		}
-
-		task ("Assert the order of tag facet by Term value descending") {
-			SearchFacetPortlet.updateFacetConfiguration(
-				portletName = "Tag Facet",
-				sortOption = "Term Value Descending");
-
-			Refresh();
-
-			SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "product,engineering,2022,2021");
-		}
-	}
-
-	@priority = "4"
+	@priority = 4
 	test CanViewTermsOfUseWhenEnterpriseSearchIsEnabled {
 		property custom.properties = "enterprise.product.notification.enabled=true";
+		property test.liferay.virtual.instance = "false";
 		property test.run.environment = "EE";
+		property test.run.type = "single";
 
 		SelectFrame(value1 = "relative=top");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Modal#HEADER",
 			value1 = "Terms of Use");
 
@@ -1541,6 +690,12 @@ definition {
 
 		AssertElementNotPresent(locator1 = "Modal#MODAL");
 
+		SearchPage.searchEmbedded(searchTerm = "test");
+
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "tree.png,stars.png,satellite.png,moon.png,earth.png,Home,Test Test",
+			searchTerm = "test");
+
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
@@ -1548,49 +703,48 @@ definition {
 		AssertElementNotPresent(locator1 = "Modal#MODAL");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CopySearchInsightsJSON {
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
-		SearchPortlets.addWidgets(searchPortletList = "Search Insights");
+		SearchPage.addWidgets(searchPortletList = "Search Insights");
 
-		SearchPortlets.searchEmbedded(searchTerm = "test");
+		SearchPage.searchEmbedded(searchTerm = "test");
 
-		Click(locator1 = "SearchResults#SEARCH_INSIGHTS_WIDGET_REQUEST_COPY_BUTTON");
+		Click(locator1 = "SearchPage#SEARCH_INSIGHTS_WIDGET_REQUEST_COPY_BUTTON");
 
-		SearchPortlets.viewCopiedContent(text = "explain");
+		WebContent.viewClipboardContent(text = "\"explain\": true, \"highlight\":");
 
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
-		SearchPortlets.searchEmbedded(searchTerm = "test");
+		SearchPage.searchEmbedded(searchTerm = "test");
 
-		Click(locator1 = "SearchResults#SEARCH_INSIGHTS_WIDGET_RESPONSE_COPY_BUTTON");
+		Click(locator1 = "SearchPage#SEARCH_INSIGHTS_WIDGET_RESPONSE_COPY_BUTTON");
 
-		SearchPortlets.viewCopiedContent(text = "_shards");
+		WebContent.viewClipboardContent(text = "\"_shards\": { \"total\":");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test DisableEnterpriseSearch {
 		property license.required = "true";
 		property portal.suite.search.engine = "disable";
 		property portal.upstream = "false";
-		property test.name.skip.portal.instance = "Search#DisableEnterpriseSearch";
+		property test.liferay.virtual.instance = "false";
 		property test.run.environment = "EE";
+		property test.run.type = "single";
 
 		SystemSettings.openToConfigInSystemSettings(portletId = "com.liferay.portal.search.configuration.DefaultKeywordQueryConfiguration");
 
 		for (var configurationName : list "Cross-Cluster Replication,Elasticsearch Monitoring,Learning to Rank") {
 			AssertElementPresent(
-				key_configurationName = "${configurationName}",
+				key_configurationName = ${configurationName},
 				key_configurationScope = "System Scope",
 				locator1 = "SystemSettings#SCOPED_CONFIGURATION_NAME");
 		}
 
 		Portlet.shutdownServer();
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "portal-ext-properties-update -Dadd.new.properties=true -Dupdate.properties=enterprise.product.enterprise.search.enabled=false");
+		AntCommands.runCommand("build-test.xml", "portal-ext-properties-update -Dadd.new.properties=true -Dupdate.properties=enterprise.product.enterprise.search.enabled=false");
 
 		Portlet.startServer(deleteLiferayHome = "false");
 
@@ -1598,163 +752,14 @@ definition {
 
 		for (var configurationName : list "Cross-Cluster Replication,Elasticsearch Monitoring,Learning to Rank") {
 			AssertElementNotPresent(
-				key_configurationName = "${configurationName}",
+				key_configurationName = ${configurationName},
 				key_configurationScope = "System Scope",
 				locator1 = "SystemSettings#SCOPED_CONFIGURATION_NAME");
 		}
 	}
 
-	@priority = "4"
-	test EmptyDDMFieldNotDisplayedWithCustomFacet {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "Test Structure Description",
-			structureName = "Test Structure");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Text",
-			fieldName = "Text");
-
-		WebContentStructures.saveCP(structureName = "Test Structure");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
-
-		WebContentNavigator.gotoAddWithStructureCP(structureName = "Test Structure");
-
-		WebContent.addWithStructureCP(
-			structureName = "Test Structure",
-			webContentTitle = "WC Title");
-
-		PortletEntry.publish();
-
-		Search.openSearchPage();
-
-		SearchResultPortlet.configureSearchResults(displayDocumentForm = "true");
-
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WC Title",
-			searchAssetType = "Web Content Article");
-
-		SearchPortlets.addWidgets(searchPortletList = "Custom Facet");
-
-		var port = Elasticsearch.getServerPort();
-		var portalHostname = PropsUtil.get("portal.hostname");
-
-		var curl = "http://${portalHostname}:${port}/_search?q=entryClassName:com.liferay.journal.model.JournalArticle";
-
-		var journalArticleDocumentType = JSONCurlUtil.get("${curl}");
-
-		var aggregationField = RegexUtil.replace("${journalArticleDocumentType}", "ddmFieldName\":\"(.*)\",\"ddmValueFieldName\"", "1");
-
-		SearchFacetPortlet.configureCustomFacet(aggregationField = "${aggregationField}");
-
-		AssertElementNotPresent(
-			facetValueName = "Custom Facet",
-			locator1 = "Search#FACET_DISPLAY_FREQUENCIES");
-	}
-
-	@description = "This is a use case for LPS-167195. Facet selection and search results should match after using browser back button"
-	@priority = "3"
-	test FacetSelectionAndSearchResultsMatchWhenUsingBrowserBackButton {
-		task ("Create two Categories and two Tags") {
-			var categoryId1 = JSONCategory.addCategory(
-				groupName = "Global",
-				title = "cat1",
-				vocabularyName = "Topic");
-			var categoryId2 = JSONCategory.addCategory(
-				groupName = "Global",
-				title = "cat2",
-				vocabularyName = "Topic");
-
-			for (var tagList : list "tag1,tag2") {
-				JSONAssettag.addTag(
-					groupName = "Guest",
-					tagName = "${tagList}");
-			}
-		}
-
-		task ("Create six Web Contents") {
-			JSONWebcontent.addWebContent(
-				content = "WC Content",
-				groupName = "Guest",
-				title = "wc1");
-
-			JSONWebcontent.addWebContent(
-				assetTagNames = "tag1",
-				content = "WC Content",
-				groupName = "Guest",
-				title = "wc2");
-
-			JSONWebcontent.addWebContent(
-				assetTagNames = "tag2",
-				content = "WC Content",
-				groupName = "Guest",
-				title = "wc3");
-
-			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${categoryId1}",
-				assetTagNames = "tag1",
-				content = "WC Content",
-				groupName = "Guest",
-				title = "wc4");
-
-			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${categoryId2}",
-				assetTagNames = "tag2",
-				content = "WC Content",
-				groupName = "Guest",
-				title = "wc5");
-
-			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${categoryId1},${categoryId2}",
-				assetTagNames = "tag1",
-				content = "WC Content",
-				groupName = "Guest",
-				title = "wc6");
-		}
-
-		SearchPortlets.searchEmbedded(searchTerm = "wc");
-
-		task ("Assert the search results after 'wc' search and after applying any search filter") {
-			SearchResultPortlet.viewMultipleSearchResults(
-				resultsList = "wc1/Web Content Article,wc2/Web Content Article,wc3/Web Content Article,wc4/Web Content Article,wc5/Web Content Article,wc6/Web Content Article",
-				searchTerm = "wc");
-
-			SearchFacetPortlet.checkFacet(facetValueName = "tag1");
-
-			SearchResultPortlet.viewMultipleSearchResults(
-				resultsList = "wc2/Web Content Article,wc4/Web Content Article,wc6/Web Content Article",
-				searchTerm = "wc");
-
-			SearchFacetPortlet.checkFacet(facetValueName = "cat1");
-
-			SearchResultPortlet.viewMultipleSearchResults(
-				resultsList = "wc4/Web Content Article,wc6/Web Content Article",
-				searchTerm = "wc");
-
-			GoBack();
-
-			FormFields.viewCheckboxChecked(fieldName = "tag1");
-
-			FormFields.viewCheckboxNotChecked(fieldName = "cat1");
-
-			SearchResultPortlet.viewMultipleSearchResults(
-				resultsList = "wc2/Web Content Article,wc4/Web Content Article,wc6/Web Content Article",
-				searchTerm = "wc");
-		}
-	}
-
 	@description = "This is a use case for LPS-140643."
-	@priority = "4"
+	@priority = 4
 	test FederatedSearchPopulatesWidgetsWithRespectiveKey {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1765,34 +770,32 @@ definition {
 		Navigator.openSpecificURL(url = "${portalURL}/web/guest/federated-search-page");
 
 		for (var column : list "1,2") {
-			JSONLayout.addWidgetToPublicLayout(
-				column = "${column}",
-				groupName = "Guest",
+			SearchPage.addWidgets(
+				column = ${column},
 				layoutName = "Federated Search Page",
-				widgetName = "Search Bar");
+				searchPortletList = "Search Bar");
 
-			JSONLayout.addWidgetToPublicLayout(
-				column = "${column}",
-				groupName = "Guest",
+			SearchPage.addWidgets(
+				column = ${column},
 				layoutName = "Federated Search Page",
-				widgetName = "Search Results");
+				searchPortletList = "Search Results");
 
 			Refresh();
 
-			SearchPortlets.configureSearchBarWidget(
+			SearchPage.configureSearchBarWidget(
 				federatedSearchKey = "federatedSearchKey${column}",
-				index = "${column}",
+				index = ${column},
 				keywordsParameterName = "keywordParameter${column}");
 
-			SearchResultPortlet.configureSearchResults(
+			SearchResults.configureSearchResults(
 				federatedSearchKey = "federatedSearchKey${column}",
-				index = "${column}");
+				index = ${column});
 		}
 
 		for (var count : list "1,2,3,4,5") {
-			SearchPortlets.searchWidget(searchTerm = "test");
+			SearchPage.searchWidget(searchTerm = "test");
 
-			SearchResultPortlet.viewSearchResults(
+			SearchResults.viewSearchResults(
 				searchAssetTitle = "Test Test",
 				searchAssetType = "User");
 
@@ -1800,9 +803,295 @@ definition {
 		}
 	}
 
-	@priority = "3"
+	@description = "LPS-172376 - The Custom Filter widget supports filtering by custom Object fields."
+	@priority = 3
+	test FilterByCustomObjectFields {
+		task ("Create a site scoped object and add the field 'title' as a keyword") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object",
+				objectName = "CustomObject",
+				panelCategoryKey = "site_administration.content",
+				pluralLabelName = "Custom Objects",
+				scope = "site");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Title",
+				fieldName = "title",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject");
+
+			JSONObject.updateObject(
+				configKey = "titleObjectFieldName",
+				configValue = "title",
+				objectName = "CustomObject");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
+		}
+
+		task ("Create two object entries") {
+			JSONObject.addObjectEntryViaJSONAPI(
+				fieldName = "title",
+				fieldValue = "Apple Fruit",
+				objectName = "CustomObject",
+				scope = "site");
+
+			JSONObject.addObjectEntryViaJSONAPI(
+				fieldName = "title",
+				fieldValue = "Banana Fruit",
+				objectName = "CustomObject",
+				scope = "site");
+		}
+
+		task ("Create a Web Content article") {
+			JSONWebcontent.addWebContent(
+				content = "Coconut Fruit",
+				groupName = "Guest",
+				title = "Coconut Fruit");
+		}
+
+		task ("Add a Custom Filter widget to the search page and perform a search that returns the object entries and web content article") {
+			SearchPage.addWidgets(searchPortletList = "Custom Filter");
+
+			SearchPage.openSearchPage(searchTerm = "fruit");
+		}
+
+		task ("Configure the Custom Filter widget as a parent nested query for the custom object") {
+			SearchPage.configureCustomFilter(
+				filterField = "nestedFieldArray",
+				filterQueryType = "Nested",
+				occur = "Filter",
+				queryName = "parent_query");
+
+			Refresh();
+		}
+
+		task ("Assert that only the object entries are returned in the search results and not the web content article") {
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "Apple Fruit",
+				searchAssetType = "Custom Object");
+
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "Banana Fruit",
+				searchAssetType = "Custom Object");
+
+			SearchResults.viewSearchResultNotPresent(
+				searchAssetTitle = "Coconut Fruit",
+				searchAssetType = "Web Content Article");
+		}
+
+		task ("Add a second Custom Filter widget and configure it as a child query matching the 'title' field name of the object nested field") {
+			SearchPage.addWidgets(searchPortletList = "Custom Filter");
+
+			Refresh();
+
+			SearchPage.configureCustomFilter(
+				filterField = "nestedFieldArray.fieldName",
+				filterQueryType = "Term",
+				filterValue = "title",
+				occur = "Filter",
+				parentQueryName = "parent_query",
+				portletIndex = 2);
+		}
+
+		task ("Add a third Custom Filter widget and configure it as a child query matching the value field name") {
+			SearchPage.addWidgets(searchPortletList = "Custom Filter");
+
+			Refresh();
+
+			SearchPage.configureCustomFilter(
+				filterField = "nestedFieldArray.value_keyword",
+				filterQueryType = "Term",
+				occur = "Filter",
+				parentQueryName = "parent_query",
+				portletIndex = 3);
+
+			Refresh();
+		}
+
+		task ("Assert that only the object entries are returned in the search results and not the web content article") {
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "Apple Fruit",
+				searchAssetType = "Custom Object");
+
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "Banana Fruit",
+				searchAssetType = "Custom Object");
+
+			SearchResults.viewSearchResultNotPresent(
+				searchAssetTitle = "Coconut Fruit",
+				searchAssetType = "Web Content Article");
+		}
+
+		task ("Use the value field name Custom Filter widget to filter for the title of one of the object entries") {
+			Type(
+				key_name = "nestedFieldArray.value_keyword",
+				locator1 = "Search#CUSTOM_FILTER_WIDGET_VALUE_INPUT",
+				value1 = "apple fruit");
+
+			Click(
+				key_text = "Apply",
+				locator1 = "Button#ANY_LAST");
+		}
+
+		task ("Assert only the object entry that matches the filter is returned in the search results") {
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "Apple Fruit",
+				searchAssetType = "Custom Object");
+
+			SearchResults.viewSearchResultNotPresent(
+				searchAssetTitle = "Banana Fruit",
+				searchAssetType = "Custom Object");
+
+			SearchResults.viewSearchResultNotPresent(
+				searchAssetTitle = "Coconut Fruit",
+				searchAssetType = "Web Content Article");
+		}
+	}
+
+	@description = "LPS-182287 - A user can configure Custom Filter widgets with DDM fields"
+	@priority = 4
+	test FilterByDDMFields {
+		task ("Add a web content structure with a text field") {
+			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "guest");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "Test Structure");
+
+			FormViewBuilder.addFieldByDoubleClick(fieldType = "Text");
+
+			Button.clickSave();
+		}
+
+		task ("Add two web content articles with the structure") {
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "Test Structure");
+
+			WebContent.addWithStructureCP(
+				structureName = "Test Structure",
+				webContentText = "Apple",
+				webContentTitle = "Fruit 1");
+
+			PortletEntry.publish();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "Test Structure");
+
+			WebContent.addWithStructureCP(
+				structureName = "Test Structure",
+				webContentText = "Banana",
+				webContentTitle = "Fruit 2");
+
+			PortletEntry.publish();
+		}
+
+		task ("Add a basic web content article") {
+			JSONWebcontent.addWebContent(
+				content = "Coconut",
+				groupName = "Guest",
+				title = "Fruit 3");
+		}
+
+		task ("Add the Custom Filter widget to the default search page") {
+			SearchPage.addWidgets(searchPortletList = "Custom Filter");
+		}
+
+		task ("Go to the search page and execute a search for the web content articles") {
+			SearchPage.openSearchPage(searchTerm = "Fruit");
+		}
+
+		task ("Configure the Custom Filter widget as a parent nested query") {
+			SearchPage.configureCustomFilter(
+				filterField = "ddmFieldArray",
+				filterQueryType = "Nested",
+				occur = "Filter",
+				queryName = "parent_query");
+		}
+
+		task ("Add a second Custom Filter widget and configure it as a child query matching the DDM field name") {
+			SearchPage.addWidgets(searchPortletList = "Custom Filter");
+
+			Refresh();
+
+			task ("Curl the Elasticsearch index to retrieve the DDM field name of the text field for the web content structure") {
+				var port = Elasticsearch.getServerPort();
+				var portalHostname = PropsUtil.get("portal.hostname");
+
+				var curl = "http://${portalHostname}:${port}/_search?q=entryClassName:com.liferay.journal.model.JournalArticle";
+
+				var ddmFieldName = JSONCurlUtil.get(${curl}, "$.hits.hits[?(@._source.title_en_US=='Fruit 1')]._source.ddmFieldArray[0].ddmFieldName");
+			}
+
+			SearchPage.configureCustomFilter(
+				filterField = "ddmFieldArray.ddmFieldName",
+				filterQueryType = "Term",
+				filterValue = ${ddmFieldName},
+				occur = "Filter",
+				parentQueryName = "parent_query",
+				portletIndex = 2);
+
+			Refresh();
+		}
+
+		task ("Assert the web content structure articles still appear in the search results and the basic web content article does not") {
+			SearchResults.viewMultipleSearchResults(
+				resultsList = "Fruit 1,Fruit 2",
+				searchTerm = "Fruit");
+
+			SearchResults.viewSearchResultNotPresent(
+				searchAssetTitle = "Fruit 3",
+				searchAssetType = "Web Content Article");
+		}
+
+		task ("Add a third Custom Filter widget and configure it as a child query matching the DDM field value") {
+			SearchPage.addWidgets(searchPortletList = "Custom Filter");
+
+			Refresh();
+
+			SearchPage.configureCustomFilter(
+				filterField = "ddmFieldArray.ddmFieldValueKeyword_en_US",
+				filterQueryType = "Term",
+				occur = "Filter",
+				parentQueryName = "parent_query",
+				portletIndex = 3);
+
+			Refresh();
+		}
+
+		task ("Assert the web content structure articles still appear in the search results") {
+			SearchResults.viewMultipleSearchResults(
+				resultsList = "Fruit 1,Fruit 2",
+				searchTerm = "Fruit");
+		}
+
+		task ("Use the third Custom Filter widget to filter by the DDM field value of the first web content structure article") {
+			Type(
+				key_name = "ddmFieldArray.ddmFieldValueKeyword_en_US",
+				locator1 = "Search#CUSTOM_FILTER_WIDGET_VALUE_INPUT",
+				value1 = "Apple");
+
+			Click(
+				key_text = "Apply",
+				locator1 = "Button#ANY_LAST");
+		}
+
+		task ("Assert the first web content structure article appears in the search results and the second one does not") {
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "Fruit 1",
+				searchAssetType = "Web Content Article");
+
+			SearchResults.viewSearchResultNotPresent(
+				searchAssetTitle = "Fruit 2",
+				searchAssetType = "Web Content Article");
+		}
+	}
+
+	@priority = 3
 	test IsLocalizedInSearchAdmin {
-		property test.name.skip.portal.instance = "Search#IsLocalizedInSearchAdmin";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		User.openUsersAdmin();
 
@@ -1837,8 +1126,80 @@ definition {
 			value1 = "Nombre");
 	}
 
+	@priority = 3
+	test MasterPageTemplateSearchBarConfigurationIsPropagated {
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page Name");
+
+		JSONLayoutpagetemplate.addMasterPageTemplateEntry(
+			groupName = "Guest",
+			masterPageTemplateEntryName = "Custom Master Page Template");
+
+		MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "guest");
+
+		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Master Page Template");
+
+		PageEditor.addWidget(
+			dropTarget = "Header",
+			portletName = "Search Bar",
+			scope = "Master");
+
+		SearchPage.configureSearchBarWidget(destinationPage = "search");
+
+		MastersPageTemplates.publishMaster();
+
+		ContentPages.addPage(
+			masterLayoutName = "Master Page Template",
+			pageName = "Test Content Page Name");
+
+		PageEditor.publish();
+
+		ContentPagesNavigator.openViewContentPage(
+			pageName = "Test Content Page Name",
+			siteName = "Guest");
+
+		SearchPage.searchWidget(
+			clickMagnifyingGlassIcon = "true",
+			searchTerm = "test");
+
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "tree.png,stars.png,satellite.png,moon.png,earth.png",
+			searchTerm = "test");
+
+		var currentURL = selenium.getCurrentUrl();
+
+		if (!(contains(${currentURL}, "/search"))) {
+			fail("URL should contain /search");
+		}
+
+		MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "guest");
+
+		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Master Page Template");
+
+		SearchPage.configureSearchBarWidget(destinationPage = "Test Page Name");
+
+		MastersPageTemplates.propagateChange();
+
+		ContentPagesNavigator.openViewContentPage(
+			pageName = "Test Content Page Name",
+			siteName = "Guest");
+
+		SearchPage.searchWidget(
+			clickMagnifyingGlassIcon = "true",
+			searchTerm = "test");
+
+		AssertElementNotPresent(locator1 = "SearchPage#RESULTS_PORTLET_SEARCH_QUERY");
+
+		var currentURL = selenium.getCurrentUrl();
+
+		if (!(contains(${currentURL}, "/test-page-name"))) {
+			fail("URL should contain /test-page-name");
+		}
+	}
+
 	@description = "This is a use case for LPS-115435."
-	@priority = "3"
+	@priority = 3
 	test ModifyPaginationConfigurationProperties {
 		for (var count : list "1,2,3,4,5") {
 			JSONWebcontent.addWebContent(
@@ -1847,70 +1208,68 @@ definition {
 				title = "Apple ${count}");
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchPortlets.addWidgets(searchPortletList = "Sort");
+		SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 
 		Refresh();
 
-		SearchPortlets.chooseSortOption(sortOption = "Title");
+		SearchPage.chooseSortOption(sortOption = "Title");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article,Apple 5/Web Content Article,",
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "Apple 1,Apple 2,Apple 3,Apple 4,Apple 5",
 			searchTerm = "Apple");
 
-		SearchResultPortlet.configureSearchResults(paginationDelta = "3");
+		SearchResults.configureSearchResults(paginationDelta = 3);
 
 		Refresh();
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "Apple 4",
 			searchAssetType = "Web Content Article");
 
-		Pagination.changePagination(itemsPerPage = "20");
+		Pagination.changePagination(itemsPerPage = 20);
 
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article,Apple 5/Web Content Article,",
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "Apple 1,Apple 2,Apple 3,Apple 4,Apple 5",
 			searchTerm = "Apple");
 
-		Pagination.changePagination(itemsPerPage = "4");
+		Pagination.changePagination(itemsPerPage = 4);
 
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article",
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "Apple 1,Apple 2,Apple 3,Apple 4",
 			searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "Apple 5",
 			searchAssetType = "Web Content Article");
 
-		Pagination.changePagination(itemsPerPage = "20");
+		Pagination.changePagination(itemsPerPage = 20);
 
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article,Apple 5/Web Content Article",
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "Apple 1,Apple 2,Apple 3,Apple 4,Apple 5",
 			searchTerm = "Apple");
 	}
 
 	@description = "This is a use case for LPS-90078."
-	@priority = "4"
+	@priority = 4
 	test ModifyPaginationPortalProperties {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property custom.properties = "search.container.page.default.delta=1";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Search Result Widget Page");
 
-		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
-			groupName = "Guest",
+		SearchPage.addWidgets(
 			layoutName = "Search Result Widget Page",
-			widgetName = "Search Results");
+			searchPortletList = "Search Results");
 
 		for (var count : list "1,2,3") {
 			JSONWebcontent.addWebContent(
@@ -1930,12 +1289,12 @@ definition {
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		AssertTextEquals(
-			locator1 = "SearchResults#RESULTS_PORTLET_PAGINATION_CONFIG",
-			value1 = "1");
+			locator1 = "SearchPage#RESULTS_PORTLET_PAGINATION_CONFIG",
+			value1 = 1);
 
 		IFrame.closeFrame();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
 		Portlet.gotoPortletOptions(
 			portletName = "Search Results",
@@ -1944,43 +1303,43 @@ definition {
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		AssertTextEquals(
-			locator1 = "SearchResults#RESULTS_PORTLET_PAGINATION_CONFIG",
-			value1 = "1");
+			locator1 = "SearchPage#RESULTS_PORTLET_PAGINATION_CONFIG",
+			value1 = 1);
 
 		IFrame.closeFrame();
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article");
 
 		Click(locator1 = "Pagination#NEXT_LINK");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article");
 
 		Click(locator1 = "Pagination#NEXT_LINK");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article");
 	}
 
 	@description = "This is a use case for LPS-112599."
-	@priority = "3"
+	@priority = 3
 	test NavigateToAssetEditPageViaSearchResults {
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",
 			title = "WC Title");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC");
+		SearchPage.searchEmbedded(searchTerm = "WC");
 
-		SearchPortlets.gotoResultDetails(searchAssetTitle = "WC Title");
+		SearchPage.gotoResultDetails(searchAssetTitle = "WC Title");
 
-		SearchPortlets.viewResultDetails(searchAssetTitle = "WC Title");
+		SearchPage.viewResultDetails(searchAssetTitle = "WC Title");
 
-		Click(locator1 = "SearchResults#ASSET_DETAILS_EDIT_BUTTON");
+		Click(locator1 = "SearchPage#ASSET_DETAILS_EDIT_BUTTON");
 
 		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
 
@@ -1989,39 +1348,37 @@ definition {
 			value1 = "WC Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test NavigateToSearchResultsViaURL {
 		property portal.acceptance = "true";
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "This is a blog about Potatoes",
 			entryTitle = "Potato Blog");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Search Page");
 
-		PagesAdmin.addPage(pageName = "Search Page");
+		SearchPage.addWidgets(
+			layoutName = "Search Page",
+			searchPortletList = "Type Facet,Search Results,Search Bar");
 
 		Navigator.gotoPage(pageName = "Search Page");
 
-		SearchPortlets.addWidgets(searchPortletList = "Type Facet,Search Results,Search Bar");
-
-		SearchPortlets.configureSearchBarWidget(
+		SearchPage.configureSearchBarWidget(
 			keywordsParameterName = "keywordparameter",
 			scopeParameterName = "scopeparameter");
 
-		SearchPortlets.configureSearchBarWidget(searchScope = "Let the User Choose");
+		SearchPage.configureSearchBarWidget(searchScope = "Let the User Choose");
 
-		SearchPortlets.chooseWidgetScope(searchScope = "Everything");
+		SearchPage.chooseWidgetScope(searchScope = "Everything");
 
-		SearchPortlets.searchWidget(searchTerm = "Potato");
+		SearchPage.searchWidget(searchTerm = "Potato");
 
-		SearchFacetPortlet.checkFacet(facetValueName = "Blogs Entry");
+		SearchFacets.checkFacetTerm(
+			facetName = "Type Facet",
+			facetTerm = "Blogs Entry");
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -2031,13 +1388,13 @@ definition {
 
 		Navigator.openURL();
 
-		Navigator.openSpecificURL(url = "${searchURL}");
+		Navigator.openSpecificURL(url = ${searchURL});
 
 		AssertTextEquals(
 			locator1 = "Search#SEARCH_BAR_WIDGET",
 			value1 = "Potato");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Potato Blog",
 			searchAssetType = "Blogs Entry");
 
@@ -2045,7 +1402,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-95798."
-	@priority = "3"
+	@priority = 3
 	test SearchAfterViewingResultDetails {
 		JSONWebcontent.addWebContent(
 			content = "Web Content",
@@ -2057,444 +1414,411 @@ definition {
 			groupName = "Guest",
 			title = "Second WC");
 
-		SearchPortlets.searchEmbedded(searchTerm = "First");
+		SearchPage.searchEmbedded(searchTerm = "First");
 
-		SearchPortlets.gotoResultDetails(searchAssetTitle = "First WC");
+		SearchPage.gotoResultDetails(searchAssetTitle = "First WC");
 
-		SearchPortlets.viewResultDetails(searchAssetTitle = "First WC");
+		SearchPage.viewResultDetails(searchAssetTitle = "First WC");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Second");
+		SearchPage.searchEmbedded(searchTerm = "Second");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Second WC",
 			searchAssetType = "Web Content Article",
 			searchTerm = "Second");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchBlogsEntry {
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs Entry Title");
+		SearchPage.searchEmbedded(searchTerm = "Blogs Entry Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs Entry Content");
+		SearchPage.searchEmbedded(searchTerm = "Blogs Entry Content");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs Title");
+		SearchPage.searchEmbedded(searchTerm = "Blogs Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs Content");
+		SearchPage.searchEmbedded(searchTerm = "Blogs Content");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs");
+		SearchPage.searchEmbedded(searchTerm = "Blogs");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Entry");
+		SearchPage.searchEmbedded(searchTerm = "Entry");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Content");
+		SearchPage.searchEmbedded(searchTerm = "Content");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Title");
+		SearchPage.searchEmbedded(searchTerm = "Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchBlogsEntryCategory {
-		property test.name.skip.portal.instance = "Search#SearchBlogsEntryCategory";
+		JSONCategory.addVocabulary(
+			groupName = "Guest",
+			title = "Vocabulary Name");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Categorization",
-			portlet = "Categories");
-
-		Vocabulary.addCP(vocabularyName = "Vocabulary Name");
-
-		Category.addCP(
-			categoryName = "Category Name",
+		var categoryId = JSONCategory.addCategory(
+			groupName = "Guest",
+			title = "Category Name",
 			vocabularyName = "Vocabulary Name");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntryWithCategory(
-			categoryName = "Category Name",
+		JSONBlog.addEntry(
+			assetCategoryIds = ${categoryId},
 			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			vocabularyName = "Vocabulary Name");
+			entryTitle = "Blogs Entry Title");
 
-		Navigator.openURL();
+		SearchPage.searchEmbedded(searchTerm = "Category Name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Category Name");
-
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchFacetPortlet.updateFacetConfiguration(
+		SearchFacets.updateFacetConfiguration(
 			displayTemplate = "Cloud Layout",
 			portletName = "Category Facet");
 
 		Refresh();
 
-		AssertElementPresent(
+		SearchFacets.viewFacetTermsSpecificOrder(
 			facetName = "Category Facet",
-			facetValue = "Category Name",
+			termList = "Category Name");
+
+		Click(
+			key_facetName = "Category Facet",
+			key_termValue = "Category Name",
 			locator1 = "Search#FACET_CLOUD_LAYOUT_ITEM");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Category");
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
 
-		SearchResultPortlet.viewSearchResults(
+		AssertElementPresent(
+			key_facetName = "Category Facet",
+			key_termValue = "Category Name",
+			locator1 = "Search#FACET_CLOUD_LAYOUT_ITEM");
+
+		SearchPage.searchEmbedded(searchTerm = "Category");
+
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Name");
+		SearchPage.searchEmbedded(searchTerm = "Name");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Category1");
+		SearchPage.searchEmbedded(searchTerm = "Category1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "Category1");
+		SearchResults.viewNoSearchResults(searchTerm = "Category1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Name1");
+		SearchPage.searchEmbedded(searchTerm = "Name1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "Name1");
+		SearchResults.viewNoSearchResults(searchTerm = "Name1");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchBlogsEntryCategoryQuotes {
-		Navigator.openURL();
+		JSONCategory.addVocabulary(
+			groupName = "Guest",
+			title = "Vocabulary Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Categorization",
-			portlet = "Categories");
-
-		Vocabulary.addCP(vocabularyName = "Vocabulary Name");
-
-		Category.addCP(
-			categoryName = "Category Name",
+		var categoryId = JSONCategory.addCategory(
+			groupName = "Guest",
+			title = "Category Name",
 			vocabularyName = "Vocabulary Name");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntryWithCategory(
-			categoryName = "Category Name",
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			vocabularyName = "Vocabulary Name");
-
-		Navigator.openURL();
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Category Name\"");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Category\"");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Name\"");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Category Name1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Category Name1\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Category1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Category1\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Name1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Name1\"");
-	}
-
-	@priority = "4"
-	test SearchBlogsEntryQuotes {
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
+		JSONBlog.addEntry(
+			assetCategoryIds = ${categoryId},
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		Navigator.openURL();
+		SearchPage.searchEmbedded(searchTerm = "\"Category Name\"");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs Entry Title\"");
-
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"Entry Title\"");
+		SearchPage.searchEmbedded(searchTerm = "\"Category\"");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"Title\"");
+		SearchPage.searchEmbedded(searchTerm = "\"Name\"");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs Entry Content\"");
+		SearchPage.searchEmbedded(searchTerm = "\"Category Name1\"");
 
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
+		SearchResults.viewNoSearchResults(searchTerm = "\"Category Name1\"");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs Entry\"");
+		SearchPage.searchEmbedded(searchTerm = "\"Category1\"");
 
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
+		SearchResults.viewNoSearchResults(searchTerm = "\"Category1\"");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs\"");
+		SearchPage.searchEmbedded(searchTerm = "\"Name1\"");
 
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Entry Content\"");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Entry\"");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Content\"");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetSummary = "Blogs Entry Content",
-			searchAssetTitle = "Blogs Entry Title",
-			searchAssetType = "Blogs Entry");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs Content\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Blogs Content\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Blogs1\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Entry1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Entry1\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Title1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Title1\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Content1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Content1\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs Entry Title1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Blogs Entry Title1\"");
-
-		SearchPortlets.searchEmbedded(searchTerm = "\"Blogs Entry Content1\"");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"Blogs Entry Content1\"");
+		SearchResults.viewNoSearchResults(searchTerm = "\"Name1\"");
 	}
 
-	@priority = "4"
-	test SearchBlogsEntryTag {
-		property test.name.skip.portal.instance = "Search#SearchBlogsEntryTag";
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntryWithTag(
+	@priority = 4
+	test SearchBlogsEntryQuotes {
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			tagName = "tag name");
+			entryTitle = "Blogs Entry Title");
 
-		Navigator.openURL();
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs Entry Title\"");
 
-		SearchPortlets.searchEmbedded(searchTerm = "tag name");
-
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchFacetPortlet.updateFacetConfiguration(
+		SearchPage.searchEmbedded(searchTerm = "\"Entry Title\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Title\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs Entry Content\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs Entry\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Entry Content\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Entry\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Content\"");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs Content\"");
+
+		SearchResults.viewNoSearchResults(searchTerm = "\"Blogs Content\"");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs1\"");
+
+		SearchResults.viewNoSearchResults(searchTerm = "\"Blogs1\"");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Entry1\"");
+
+		SearchResults.viewNoSearchResults(searchTerm = "\"Entry1\"");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Title1\"");
+
+		SearchResults.viewNoSearchResults(searchTerm = "\"Title1\"");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Content1\"");
+
+		SearchResults.viewNoSearchResults(searchTerm = "\"Content1\"");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs Entry Title1\"");
+
+		SearchResults.viewNoSearchResults(searchTerm = "\"Blogs Entry Title1\"");
+
+		SearchPage.searchEmbedded(searchTerm = "\"Blogs Entry Content1\"");
+
+		SearchResults.viewNoSearchResults(searchTerm = "\"Blogs Entry Content1\"");
+	}
+
+	@priority = 4
+	test SearchBlogsEntryTag {
+		JSONBlog.addEntry(
+			assetTagNames = "tag name",
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title");
+
+		SearchPage.searchEmbedded(searchTerm = "tag name");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Blogs Entry Content",
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
+		SearchFacets.updateFacetConfiguration(
 			displayTemplate = "Cloud Layout",
 			portletName = "Tag Facet");
 
 		Refresh();
 
+		SearchFacets.viewFacetTermsSpecificOrder(
+			facetName = "Tag Facet",
+			termList = "tag name");
+
+		Click(
+			locator1 = "Search#TAG_FACET_CLOUD_LAYOUT",
+			tagName = "tag name");
+
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
+
 		AssertElementPresent(
 			locator1 = "Search#TAG_FACET_CLOUD_LAYOUT",
 			tagName = "tag name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "tag");
+		SearchPage.searchEmbedded(searchTerm = "tag");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "name");
+		SearchPage.searchEmbedded(searchTerm = "name");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "tag1");
+		SearchPage.searchEmbedded(searchTerm = "tag1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "tag1");
+		SearchResults.viewNoSearchResults(searchTerm = "tag1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "name1");
+		SearchPage.searchEmbedded(searchTerm = "name1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "name1");
+		SearchResults.viewNoSearchResults(searchTerm = "name1");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchBlogsEntryTagQuotes {
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntryWithTag(
+		JSONBlog.addEntry(
+			assetTagNames = "tag name",
 			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			tagName = "tag name");
+			entryTitle = "Blogs Entry Title");
 
-		Navigator.openURL();
+		SearchPage.searchEmbedded(searchTerm = "\"tag name\"");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"tag name\"");
-
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"tag\"");
+		SearchPage.searchEmbedded(searchTerm = "\"tag\"");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"name\"");
+		SearchPage.searchEmbedded(searchTerm = "\"name\"");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"tag name1\"");
+		SearchPage.searchEmbedded(searchTerm = "\"tag name1\"");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"tag name1\"");
+		SearchResults.viewNoSearchResults(searchTerm = "\"tag name1\"");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"tag1\"");
+		SearchPage.searchEmbedded(searchTerm = "\"tag1\"");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"tag1\"");
+		SearchResults.viewNoSearchResults(searchTerm = "\"tag1\"");
 
-		SearchPortlets.searchEmbedded(searchTerm = "\"name1\"");
+		SearchPage.searchEmbedded(searchTerm = "\"name1\"");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "\"name1\"");
+		SearchResults.viewNoSearchResults(searchTerm = "\"name1\"");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchBlogsScopedToPage {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -2509,39 +1833,37 @@ definition {
 			entryContent = "Entry Content",
 			entryTitle = "Entry Title");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Entry Title");
+		SearchPage.searchEmbedded(searchTerm = "Entry Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Entry Title",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Entry Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchByClickingMagnifyingGlassIcon {
 		property test.assert.warning.exceptions = "true";
 
-		SearchPortlets.searchEmbedded(
+		SearchPage.searchEmbedded(
 			clickMagnifyingGlassIcon = "true",
 			searchTerm = "test");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Test Test",
 			searchAssetType = "User");
 
-		SearchPortlets.searchWidget(
+		SearchPage.searchWidget(
 			clickMagnifyingGlassIcon = "true",
 			searchTerm = "test");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Test Test",
 			searchAssetType = "User");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchCompanyScopedObject {
-		property search.environment.suite.exclude = "true";
-
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 500",
 			objectName = "CustomObject500",
@@ -2563,19 +1885,19 @@ definition {
 			objectName = "CustomObject500",
 			value = "apple");
 
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
-		SearchPortlets.configureEmbeddedSearchBar(searchScope = "Everything");
+		SearchPage.configureEmbeddedSearchBar(searchScope = "Everything");
 
-		SearchPortlets.searchEmbedded(searchTerm = "apple");
+		SearchPage.searchEmbedded(searchTerm = "apple");
 
 		var objectEntryId = JSONObject.getObjectEntryId(
 			entryValue = "apple",
 			fieldName = "title",
 			objectName = "CustomObject500");
 
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "${objectEntryId}",
+		SearchResults.viewSearchResults(
+			searchAssetTitle = ${objectEntryId},
 			searchAssetType = "Custom Object 500");
 
 		Portlet.gotoPortletOptions(
@@ -2590,16 +1912,18 @@ definition {
 
 		IFrame.closeFrame();
 
-		SearchFacetPortlet.checkFacet(facetValueName = "Custom Object 500");
+		SearchFacets.checkFacetTerm(
+			facetName = "Type Facet",
+			facetTerm = "Custom Object 500");
 
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "${objectEntryId}",
+		SearchResults.viewSearchResults(
+			searchAssetTitle = ${objectEntryId},
 			searchAssetType = "Custom Object 500");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchContentPagesSmoke {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
 
@@ -2625,15 +1949,15 @@ definition {
 			pageName = "Test Content Page Name",
 			siteName = "Site Name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchWidget(searchTerm = "WC Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchDeletedWebContent {
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
@@ -2650,7 +1974,7 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
@@ -2658,56 +1982,36 @@ definition {
 	}
 
 	@description = "This test will set up a search page and search on a newly added site. It will also use different scopes to assert search results for assets from multiple sites"
-	@priority = "4"
+	@priority = 4
 	test SearchDifferentScopesViaNewSite {
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
-
-		Site.addBlankCP(siteName = "Site Name 1");
+		HeadlessSite.addSite(siteName = "Site Name 1");
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
 			groupName = "Guest",
 			title = "Apple");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		HeadlessSite.addSite(siteName = "Site Name 2");
 
-		Site.addBlankCP(siteName = "Site Name 2");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.doc",
-			dmDocumentTitle = "Apple");
+			dmDocumentTitle = "Apple",
+			groupName = "Site Name 2",
+			mimeType = "application/docx",
+			sourceFileName = "Document_1.docx");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		HeadlessSite.addSite(siteName = "Site Name 3");
 
-		Site.addBlankCP(siteName = "Site Name 3");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
-			entryTitle = "Apple");
+			entryTitle = "Apple",
+			groupName = "Site Name 3");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name 3",
+			layoutName = "Site 3 Home Page");
 
-		PagesAdmin.addPage(pageName = "Site 3 Home Page");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-3");
 
 		PagesAdmin.addPage(
 			inheritChanges = "disable",
@@ -2724,20 +2028,20 @@ definition {
 			pageName = "Site 3 Home Page",
 			siteName = "Site Name 3");
 
-		SearchPortlets.configureEmbeddedSearchBar(destinationPage = "Search Page");
+		SearchPage.configureEmbeddedSearchBar(destinationPage = "Search Page");
 
-		SearchPortlets.configureEmbeddedSearchBar(searchScope = "Let the User Choose");
+		SearchPage.configureEmbeddedSearchBar(searchScope = "Let the User Choose");
 
-		SearchPortlets.chooseEmbeddedScope(searchScope = "Everything");
+		SearchPage.chooseEmbeddedScope(searchScope = "Everything");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewMultipleSearchResults(
+		SearchResults.viewMultipleSearchResults(
 			resultsList = "Apple/Web Content Article,Apple/Document,Apple/Blogs Entry",
 			searchTerm = "Apple");
 
-		SearchFacetPortlet.updateFacetConfiguration(
-			maxTerms = "2",
+		SearchFacets.updateFacetConfiguration(
+			maxTerms = 2,
 			portletName = "Site Facet");
 
 		Refresh();
@@ -2754,20 +2058,20 @@ definition {
 			key_fieldName = "Site Name 3",
 			locator1 = "FormFields#CHECKBOX_LABEL");
 
-		SearchPortlets.chooseEmbeddedScope(searchScope = "This Site");
+		SearchPage.chooseEmbeddedScope(searchScope = "This Site");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Apple",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Apple");
 
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "Apple/Web Content Article,Apple/Document");
+		SearchResults.viewMultipleSearchResultsNotPresent(noResultsList = "Apple/Web Content Article,Apple/Document");
 	}
 
 	@description = "This test will assert that configurations set within the Embedded search bar will be used when searching via the Widget search bar"
-	@priority = "4"
+	@priority = 4
 	test SearchDifferentScopesViaSearchWidget {
 		property custom.properties = "company.default.time.zone=America/Los_Angeles";
 		property portal.acceptance = "true";
@@ -2778,168 +2082,151 @@ definition {
 			mimeType = "application/msword",
 			sourceFileName = "Document_1.doc");
 
-		JSONGroup.addGroup(groupName = "Test Site");
+		HeadlessSite.addSite(siteName = "Test Site");
 
 		JSONBlog.addEntry(
 			entryContent = "This is a blog about Potatoes",
 			entryTitle = "Potato Blog",
 			groupName = "Test Site");
 
-		var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yyyy");
+		var currentDate = DateUtil.getCurrentYear();
 
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
-		SearchPortlets.configureEmbeddedSearchBar(searchScope = "Everything");
+		SearchPage.configureEmbeddedSearchBar(searchScope = "Everything");
 
-		SearchPortlets.searchWidget(searchTerm = "Potato");
+		SearchPage.searchWidget(searchTerm = "Potato");
 
-		SearchResultPortlet.viewSearchResults(
-			entryDate = "${currentDate}",
+		SearchResults.viewSearchResults(
+			entryDate = ${currentDate},
 			searchAssetSummary = "This is a blog about Potatoes",
 			searchAssetTitle = "Potato Blog",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Potato");
 
-		SearchResultPortlet.viewSearchResults(
-			entryDate = "${currentDate}",
+		SearchResults.viewSearchResults(
+			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
 
-		SearchPortlets.configureEmbeddedSearchBar(searchScope = "This Site");
+		SearchPage.configureEmbeddedSearchBar(searchScope = "This Site");
 
-		SearchPortlets.searchWidget(searchTerm = "Potato");
+		SearchPage.searchWidget(searchTerm = "Potato");
 
-		SearchResultPortlet.viewSearchResults(
-			entryDate = "${currentDate}",
+		SearchResults.viewSearchResults(
+			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "Potato Blog",
 			searchAssetType = "Blogs Entry");
 
-		SearchPortlets.gotoSearchBarWidgetOptions(portletOption = "Configuration");
+		SearchPage.gotoSearchBarWidgetOptions(portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Alert.viewInfoMessageSpecific(infoMessage = "For disabled fields, the page header Search Bar configuration takes precedence.");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test SearchDocumentsAndMediaDocument {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property testray.component.names = "Training";
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
+			assetTagNames = "moon rocks",
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentSize = "0k",
 			dmDocumentTitle = "DM Document Title",
-			tagNameList = "moon rocks");
+			groupName = "Guest",
+			mimeType = "text/txt",
+			sourceFileName = "Document_1.txt");
 
-		Navigator.openURL();
+		SearchPage.searchEmbedded(searchTerm = "DM Document Title");
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM Document Title");
-
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM");
+		SearchPage.searchEmbedded(searchTerm = "DM");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Document");
+		SearchPage.searchEmbedded(searchTerm = "Document");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Title");
+		SearchPage.searchEmbedded(searchTerm = "Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM Document");
+		SearchPage.searchEmbedded(searchTerm = "DM Document");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM Title");
+		SearchPage.searchEmbedded(searchTerm = "DM Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Document Title");
+		SearchPage.searchEmbedded(searchTerm = "Document Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "moon rocks");
+		SearchPage.searchEmbedded(searchTerm = "moon rocks");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchFacetPortlet.checkFacet(facetValueName = "moon rocks");
+		SearchFacets.checkFacetTerm(
+			facetName = "Tag Facet",
+			facetTerm = "moon rocks");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM1");
+		SearchPage.searchEmbedded(searchTerm = "DM1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "DM1");
+		SearchResults.viewNoSearchResults(searchTerm = "DM1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Document1");
+		SearchPage.searchEmbedded(searchTerm = "Document1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "Document1");
+		SearchResults.viewNoSearchResults(searchTerm = "Document1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Title1");
+		SearchPage.searchEmbedded(searchTerm = "Title1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "Title1");
+		SearchResults.viewNoSearchResults(searchTerm = "Title1");
 	}
 
 	@description = "This is a use case for LPS-81931"
-	@priority = "5"
+	@priority = 5
 	test SearchGlobalTemplateSmoke {
 		property portal.acceptance = "true";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		HeadlessSite.addSite(siteName = "Site Name");
 
-		Site.addBlankCP(siteName = "Site Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry 1 Content",
-			entryTitle = "Blogs Entry 1 Title");
+			entryTitle = "Blogs Entry 1 Title",
+			groupName = "Site Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Home");
 
-		PagesAdmin.addPage(pageName = "Home");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
 
 		PagesAdmin.addPage(
 			inheritChanges = "disable",
@@ -2950,11 +2237,11 @@ definition {
 			pageName = "Search Global Template Page",
 			siteName = "Site Name");
 
-		SearchPortlets.configureEmbeddedSearchBar(destinationPage = "Search Global Template Page");
+		SearchPage.configureEmbeddedSearchBar(destinationPage = "Search Global Template Page");
 
 		for (var portlet : list "Category Facet,Folder Facet,Modified Facet,Search Bar,Search Options,Search Results,Tag Facet,Type Facet,User Facet") {
 			AssertElementPresent(
-				key_portletName = "${portlet}",
+				key_portletName = ${portlet},
 				locator1 = "Portlet#BODY");
 		}
 
@@ -2962,7 +2249,7 @@ definition {
 
 		for (var portlet : list "Category Facet,Folder Facet,Modified Facet,Search Bar,Search Results,Tag Facet,Type Facet,User Facet") {
 			AssertElementPresent(
-				key_portletName = "${portlet}",
+				key_portletName = ${portlet},
 				locator1 = "Portlet#BODY");
 		}
 
@@ -2970,22 +2257,45 @@ definition {
 			pageName = "Home",
 			siteName = "Site Name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs");
+		SearchPage.searchEmbedded(searchTerm = "Blogs");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Blogs Entry 1 Title",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Blogs");
 	}
 
+	@description = "This is a use case for LPS-186456 - SearchBar Instance Setting is not updating."
+	@priority = 3
+	test SearchInstanceSettingsAreUpdatedWhenSaved {
+		PortalSettings.openInstanceSettingsAdmin();
+
+		SystemSettings.gotoConfiguration(
+			configurationCategory = "Search",
+			configurationName = "Search Bar",
+			configurationScope = "Widget Scope");
+
+		FormFields.editText(
+			fieldName = "InstanceSettingsPortlet_suggestionsDisplayThreshold",
+			fieldValue = 3);
+
+		PortletEntry.save();
+
+		AssertElementPresent(
+			key_fieldName = "InstanceSettingsPortlet_suggestionsDisplayThreshold",
+			locator1 = "FormFields#TEXT_FIELD",
+			value1 = 3);
+	}
+
 	@description = "Runs a basic search test on a non-root portal context."
-	@priority = "4"
+	@priority = 4
 	test SearchNonRootContext {
 		property portal.context = "liferay";
 		property search.environment.suite.exclude = "true";
 		property skip.clean-app-server-deploy-dir = "true";
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "Search#SearchNonRootContext";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SearchAdministration.openSearchAdmin();
 
@@ -2998,40 +2308,34 @@ definition {
 			groupName = "Guest",
 			title = "WC Title");
 
-		Search.openSearchPage();
+		SearchPage.openSearchPage();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchUser {
-		property test.name.skip.portal.instance = "Search#SearchUser";
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
-			siteName = "${siteName}",
+			siteName = ${siteName},
 			userScreenName = "usersn");
 
 		Navigator.gotoBack();
@@ -3052,244 +2356,96 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "userfn userln");
+		SearchPage.searchEmbedded(searchTerm = "userfn userln");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "userfn userln",
 			searchAssetType = "User");
 
-		SearchFacetPortlet.updateFacetConfiguration(
+		SearchFacets.updateFacetConfiguration(
 			parameterName = "username",
 			portletName = "User Facet");
 
 		Refresh();
 
-		SearchFacetPortlet.checkFacet(facetValueName = "userfn userln");
+		SearchFacets.checkFacetTerm(
+			facetName = "User Facet",
+			facetTerm = "userfn userln");
 
 		var currentURL = selenium.getLocation();
 
-		if (!(contains("${currentURL}", "username"))) {
+		if (!(contains(${currentURL}, "username"))) {
 			fail("User parameter name failed to change.");
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "userfn");
+		SearchPage.searchEmbedded(searchTerm = "userfn");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "userfn userln",
 			searchAssetType = "User");
 
-		SearchPortlets.searchEmbedded(searchTerm = "userln");
+		SearchPage.searchEmbedded(searchTerm = "userln");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "userfn userln",
 			searchAssetType = "User");
 
-		SearchPortlets.searchEmbedded(searchTerm = "usersn");
+		SearchPage.searchEmbedded(searchTerm = "usersn");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "userfn userln",
 			searchAssetType = "User");
 
-		SearchPortlets.searchEmbedded(searchTerm = "userfn1");
+		SearchPage.searchEmbedded(searchTerm = "userfn1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "userfn1");
+		SearchResults.viewNoSearchResults(searchTerm = "userfn1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "userln1");
+		SearchPage.searchEmbedded(searchTerm = "userln1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "userln1");
+		SearchResults.viewNoSearchResults(searchTerm = "userln1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "usersn1");
+		SearchPage.searchEmbedded(searchTerm = "usersn1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "usersn1");
+		SearchResults.viewNoSearchResults(searchTerm = "usersn1");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchUserWildcard {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
-			siteName = "${siteName}",
+			siteName = ${siteName},
 			userScreenName = "usersn");
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "users*");
+		SearchPage.searchEmbedded(searchTerm = "users*");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "userfn userln",
 			searchAssetType = "User");
 
-		SearchPortlets.searchEmbedded(searchTerm = "userf*");
+		SearchPage.searchEmbedded(searchTerm = "userf*");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "userfn userln",
 			searchAssetType = "User");
 	}
 
-	@priority = "4"
-	test SearchUsingCustomFacet {
-		property portal.acceptance = "true";
-
-		JSONWebcontent.addWebContent(
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WebContent Title 1");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
-
-		WebContent.viewVersion(
-			version = "1.0",
-			webContentTitle = "WebContent Title 1");
-
-		Search.openSearchPage();
-
-		SearchPortlets.addWidgets(searchPortletList = "Custom Facet");
-
-		SearchFacetPortlet.configureCustomFacet(aggregationField = "version");
-
-		SearchPortlets.searchEmbedded(searchTerm = "WebContent");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WebContent Title 1",
-			searchAssetType = "Web Content Article",
-			searchTerm = "WebContent");
-
-		AssertElementPresent(
-			key_checkboxName = "1.0",
-			key_facetClass = "Custom Facet",
-			locator1 = "SearchResults#FACET_PORTLET_CHECKBOX_LABEL_SPECIFIC");
-
-		Click(
-			key_checkboxName = "1.0",
-			key_facetClass = "Custom Facet",
-			locator1 = "SearchResults#FACET_PORTLET_CHECKBOX_LABEL_SPECIFIC");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WebContent Title 1",
-			searchAssetType = "Web Content Article",
-			searchTerm = "WebContent");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
-
-		WebContentNavigator.gotoEditCP(webContentTitle = "WebContent Title 1");
-
-		WebContent.addCP(webContentTitle = "WebContent Title 1.1");
-
-		PortletEntry.publish();
-
-		WebContent.viewVersion(
-			version = "1.1",
-			webContentTitle = "WebContent Title 1.1");
-
-		Navigator.openURL();
-
-		SearchPortlets.searchEmbedded(searchTerm = "WebContent");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WebContent Title 1.1",
-			searchAssetType = "Web Content Article",
-			searchTerm = "WebContent");
-
-		AssertElementPresent(
-			key_checkboxName = "1.1",
-			key_facetClass = "Custom Facet",
-			locator1 = "SearchResults#FACET_PORTLET_CHECKBOX_LABEL_SPECIFIC");
-
-		Click(
-			key_checkboxName = "1.1",
-			key_facetClass = "Custom Facet",
-			locator1 = "SearchResults#FACET_PORTLET_CHECKBOX_LABEL_SPECIFIC");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WebContent Title 1.1",
-			searchAssetType = "Web Content Article",
-			searchTerm = "WebContent");
-	}
-
-	@priority = "4"
-	test SearchUsingCustomFacetWithUnlocalizedDDMField {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "Test Structure Description",
-			structureName = "Test Structure");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Text",
-			fieldName = "Text");
-
-		DataEngine.editFieldLocalizable(fieldFieldLabel = "Text");
-
-		WebContentStructures.saveCP(structureName = "Test Structure");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
-
-		WebContentNavigator.gotoAddWithStructureCP(structureName = "Test Structure");
-
-		WebContent.addWithStructureCP(
-			structureName = "Test Structure",
-			webContentText = "Unlocalized text field",
-			webContentTitle = "WC Title");
-
-		PortletEntry.publish();
-
-		WebContent.viewWithStructureCP(
-			webContentText = "Unlocalized text field",
-			webContentTitle = "WC Title");
-
-		var port = Elasticsearch.getServerPort();
-		var portalHostname = PropsUtil.get("portal.hostname");
-
-		var curl = "http://${portalHostname}:${port}/_search?q=entryClassName:com.liferay.journal.model.JournalArticle";
-
-		var journalArticleDocumentType = JSONCurlUtil.get("${curl}");
-
-		var aggregationField = RegexUtil.replace("${journalArticleDocumentType}", "ddmFieldName\":\"(.*)\",\"ddmFieldValueKeyword\"", "1");
-
-		Search.openSearchPage();
-
-		SearchPortlets.addWidgets(searchPortletList = "Custom Facet");
-
-		SearchFacetPortlet.configureCustomFacet(aggregationField = "${aggregationField}");
-
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
-
-		AssertElementPresent(
-			key_checkboxName = "Unlocalized text field",
-			key_facetClass = "Custom Facet",
-			locator1 = "SearchResults#FACET_PORTLET_CHECKBOX_LABEL_SPECIFIC");
-	}
-
-	@priority = "4"
+	@priority = 4
 	test SearchWebContent {
-		property test.name.skip.portal.instance = "Search#SearchWebContent";
-
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
 			groupName = "Guest",
@@ -3303,66 +2459,66 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC WebContent Title");
+		SearchPage.searchEmbedded(searchTerm = "WC WebContent Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "WC WebContent Content",
 			searchAssetTitle = "WC WebContent Title",
 			searchAssetType = "Web Content Article");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC WebContent Content");
+		SearchPage.searchEmbedded(searchTerm = "WC WebContent Content");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "WC WebContent Content",
 			searchAssetTitle = "WC WebContent Title",
 			searchAssetType = "Web Content Article");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC");
+		SearchPage.searchEmbedded(searchTerm = "WC");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "WC WebContent Content",
 			searchAssetTitle = "WC WebContent Title",
 			searchAssetType = "Web Content Article");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WebContent");
+		SearchPage.searchEmbedded(searchTerm = "WebContent");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "WC WebContent Content",
 			searchAssetTitle = "WC WebContent Title",
 			searchAssetType = "Web Content Article");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Title");
+		SearchPage.searchEmbedded(searchTerm = "Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "WC WebContent Content",
 			searchAssetTitle = "WC WebContent Title",
 			searchAssetType = "Web Content Article");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Content");
+		SearchPage.searchEmbedded(searchTerm = "Content");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "WC WebContent Content",
 			searchAssetTitle = "WC WebContent Title",
 			searchAssetType = "Web Content Article");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC1");
+		SearchPage.searchEmbedded(searchTerm = "WC1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "WC1");
+		SearchResults.viewNoSearchResults(searchTerm = "WC1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WebContent1");
+		SearchPage.searchEmbedded(searchTerm = "WebContent1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "WebContent1");
+		SearchResults.viewNoSearchResults(searchTerm = "WebContent1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Title1");
+		SearchPage.searchEmbedded(searchTerm = "Title1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "Title1");
+		SearchResults.viewNoSearchResults(searchTerm = "Title1");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Content1");
+		SearchPage.searchEmbedded(searchTerm = "Content1");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "Content1");
+		SearchResults.viewNoSearchResults(searchTerm = "Content1");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchWikiPage {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
@@ -3385,521 +2541,154 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "Wiki Page Title");
+		SearchPage.searchEmbedded(searchTerm = "Wiki Page Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Wiki Page Content",
 			searchAssetTitle = "Wiki Page Title",
 			searchAssetType = "Wiki Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Wiki Page Content");
+		SearchPage.searchEmbedded(searchTerm = "Wiki Page Content");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Wiki Page Content",
 			searchAssetTitle = "Wiki Page Title",
 			searchAssetType = "Wiki Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Wiki");
+		SearchPage.searchEmbedded(searchTerm = "Wiki");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Wiki Page Content",
 			searchAssetTitle = "Wiki Page Title",
 			searchAssetType = "Wiki Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Page");
+		SearchPage.searchEmbedded(searchTerm = "Page");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Wiki Page Content",
 			searchAssetTitle = "Wiki Page Title",
 			searchAssetType = "Wiki Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Title");
+		SearchPage.searchEmbedded(searchTerm = "Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Wiki Page Content",
 			searchAssetTitle = "Wiki Page Title",
 			searchAssetType = "Wiki Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Content");
+		SearchPage.searchEmbedded(searchTerm = "Content");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = "Wiki Page Content",
 			searchAssetTitle = "Wiki Page Title",
 			searchAssetType = "Wiki Page");
 	}
 
-	@description = "This is a use case for LPS-156862."
-	@priority = "4"
-	test SearchWithCategoryFacetAndAllVocabularies {
-		property osgi.module.configuration.file.names = "com.liferay.portal.search.configuration.CategoryFacetFieldConfiguration.config";
-		property osgi.module.configurations = "categoryFacetField=\"assetVocabularyCategoryIds\"";
-
-		for (var count : list "1,2") {
-			JSONCategory.addVocabulary(
+	@priority = 3
+	test SearchWithCustomSortOption {
+		task ("Create 3 Web Content Articles. Add more words to some article's content fields to get them to show up lower in search results") {
+			JSONWebcontent.addWebContent(
+				content = "Fruit Test Test Test Test Test",
 				groupName = "Guest",
-				title = "Vocabulary Name ${count}");
-		}
+				title = "Apple");
 
-		var categoryId1 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 1",
-			vocabularyName = "Vocabulary Name 1");
-		var categoryId2 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 2",
-			vocabularyName = "Vocabulary Name 2");
-		var categoryId3 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 3",
-			vocabularyName = "Vocabulary Name 1");
-		var categoryId4 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 4",
-			vocabularyName = "Vocabulary Name 2");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId1},${categoryId2}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC Title 1");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId2},${categoryId3}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC Title 2");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId3},${categoryId4}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC Title 3");
-
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Search Page");
-
-		Navigator.gotoPage(pageName = "Search Page");
-
-		SearchPortlets.addWidgets(searchPortletList = "Search Bar,Search Results,Category Facet");
-
-		SearchPortlets.configureCategoryFacet(
-			groupName = "Guest",
-			vocabularyScope = "All Vocabularies");
-
-		SearchPortlets.searchWidget(searchTerm = "WC Title");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "WC Title 1/Web Content Article,WC Title 2/Web Content Article,WC Title 3/Web Content Article",
-			searchTerm = "WC Title");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 2");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "WC Title 1/Web Content Article,WC Title 2/Web Content Article",
-			searchTerm = "WC Title");
-
-		SearchFacetPortlet.clearFacet();
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 3");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "WC Title 2/Web Content Article,WC Title 3/Web Content Article",
-			searchTerm = "WC Title");
-
-		SearchFacetPortlet.clearFacet();
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 2");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 3");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "WC Title 1/Web Content Article,WC Title 2/Web Content Article,WC Title 3/Web Content Article",
-			searchTerm = "WC Title");
-	}
-
-	@description = "This is a use case for LPS-156862."
-	@priority = "4"
-	test SearchWithCategoryFacetAndSelectVocabularies {
-		property osgi.module.configuration.file.names = "com.liferay.portal.search.configuration.CategoryFacetFieldConfiguration.config";
-		property osgi.module.configurations = "categoryFacetField=\"assetVocabularyCategoryIds\"";
-
-		for (var count : list "1,2") {
-			JSONCategory.addVocabulary(
+			JSONWebcontent.addWebContent(
+				content = "Fruit Test Test Test",
 				groupName = "Guest",
-				title = "Vocabulary Name ${count}");
+				title = "Banana");
+
+			JSONWebcontent.addWebContent(
+				content = "Fruit",
+				groupName = "Guest",
+				title = "Cantaloupe");
 		}
 
-		var categoryId1 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 1",
-			vocabularyName = "Vocabulary Name 1");
-		var categoryId2 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 2",
-			vocabularyName = "Vocabulary Name 2");
-		var categoryId3 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 3",
-			vocabularyName = "Vocabulary Name 1");
-		var categoryId4 = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Category Name 4",
-			vocabularyName = "Vocabulary Name 2");
+		task ("Search for the created articles, add the Sort widget to the search page, and navigate to the Sort widget configuration") {
+			SearchPage.searchEmbedded(searchTerm = "Fruit");
 
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId1},${categoryId2}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC Title 1");
+			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId2},${categoryId3}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC Title 2");
-
-		JSONWebcontent.addWebContent(
-			assetCategoryIds = "${categoryId3},${categoryId4}",
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC Title 3");
-
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Search Page");
-
-		Navigator.gotoPage(pageName = "Search Page");
-
-		SearchPortlets.addWidgets(searchPortletList = "Search Bar,Search Results,Category Facet,Category Facet");
-
-		SearchPortlets.configureCategoryFacet(
-			groupName = "Guest",
-			index = "1",
-			vocabularyName = "Vocabulary Name 1",
-			vocabularyScope = "Select Vocabularies");
-
-		SearchPortlets.configureCategoryFacet(
-			groupName = "Guest",
-			index = "2",
-			vocabularyName = "Vocabulary Name 2",
-			vocabularyScope = "Select Vocabularies");
-
-		SearchPortlets.searchWidget(searchTerm = "WC Title");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "WC Title 1/Web Content Article,WC Title 2/Web Content Article,WC Title 3/Web Content Article",
-			searchTerm = "WC Title");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 2");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "WC Title 1/Web Content Article,WC Title 2/Web Content Article",
-			searchTerm = "WC Title");
-
-		SearchFacetPortlet.clearFacet();
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 3");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "WC Title 2/Web Content Article,WC Title 3/Web Content Article",
-			searchTerm = "WC Title");
-
-		SearchFacetPortlet.clearFacet();
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 2");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "Category Name 3");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WC Title 2",
-			searchAssetType = "Web Content Article");
-	}
-
-	@priority = "4"
-	test SearchWithFolderFacet {
-		for (var count : list "1,2") {
-			JSONFolder.addFolder(
-				dmFolderDescription = "DM Folder Description ${count}",
-				dmFolderName = "DM Folder Name ${count}",
-				groupName = "Guest");
+			Portlet.gotoPortletOptions(
+				portletName = "Sort",
+				portletOption = "Configuration");
 		}
 
-		for (var count : list "1,2") {
-			JSONDocument.addFile(
-				dmDocumentDescription = "DM Document Description ${count}",
-				dmDocumentTitle = "DM Document Title ${count}",
-				folderName = "DM Folder Name ${count}",
-				groupName = "Guest");
-		}
+		task ("Click the 'Add Option' button to add empty sort option fields") {
+			SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
-		Navigator.openURL();
-
-		SearchPortlets.searchEmbedded(searchTerm = "DM");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "DM Document Title 1/Document,DM Document Title 2/Document",
-			searchTerm = "DM");
-
-		SearchFacetPortlet.checkFacet(facetValueName = "DM Folder Name 1");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "DM Document Title 1",
-			searchAssetType = "Document");
-
-		SearchResultPortlet.viewSearchResultNotPresent(
-			searchAssetTitle = "DM Document Title 2",
-			searchAssetType = "Document");
-
-		SearchFacetPortlet.clearFacet();
-
-		SearchFacetPortlet.checkFacet(facetValueName = "DM Folder Name 2");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "DM Document Title 2",
-			searchAssetType = "Document");
-
-		SearchResultPortlet.viewSearchResultNotPresent(
-			searchAssetTitle = "DM Document Title 1",
-			searchAssetType = "Document");
-
-		SearchFacetPortlet.clearFacet();
-
-		SearchFacetPortlet.updateFacetConfiguration(
-			displayFrequencies = "disable",
-			portletName = "Folder Facet");
-
-		Refresh();
-
-		AssertElementNotPresent(
-			facetValueName = "DM Folder Name 1",
-			locator1 = "Search#FACET_DISPLAY_FREQUENCIES");
-	}
-
-	@priority = "4"
-	test SearchWithModifiedFacet {
-		JSONWebcontent.addWebContent(
-			content = "WC Content",
-			groupName = "Guest",
-			title = "WC Title");
-
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
-
-		Portlet.gotoPortletOptions(
-			portletName = "Modified Facet",
-			portletOption = "Configuration");
-
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
-
-		Click(locator1 = "Button#ADD_ROW");
-
-		Type(
-			key_fieldLabel = "Label",
-			locator1 = "Search#MODIFIED_FACET_CONFIG_EMPTY_FIELD",
-			value1 = "Past 23 Hours");
-
-		Type(
-			key_fieldLabel = "Range",
-			locator1 = "Search#MODIFIED_FACET_CONFIG_EMPTY_FIELD",
-			value1 = "[past-24-hours TO past-hour]");
-
-		PortletEntry.save();
-
-		IFrame.closeFrame();
-
-		// Workaround for LPS-97383
-
-		Refresh();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Search#MODIFIED_FACET_SELECTION",
-			range = "Past 23 Hours",
-			value1 = "Past 23 Hours");
-
-		Click(
-			locator1 = "Search#MODIFIED_FACET_SELECTION",
-			range = "Past 23 Hours");
-
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "WC Title");
-
-		Portlet.gotoPortletOptions(
-			portletName = "Modified Facet",
-			portletOption = "Configuration");
-
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
-
-		Click(
-			key_rowIndexNumber = "2",
-			locator1 = "Button#DELETE_ROW_N");
-
-		PortletEntry.save();
-
-		IFrame.closeFrame();
-
-		// Workaround for LPS-97383
-
-		Refresh();
-
-		AssertElementNotPresent(
-			locator1 = "Search#MODIFIED_FACET_SELECTION",
-			range = "Past 23 Hours");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WC Title",
-			searchAssetType = "Web Content Article",
-			searchTerm = "WC Title");
-
-		Click(
-			locator1 = "Search#MODIFIED_FACET_SELECTION",
-			range = "Custom Range");
-
-		Click(locator1 = "Search#CUSTOM_RANGE_FROM");
-
-		Click(locator1 = "YUICalendarWidget#NEXT_MONTH_ARROW");
-
-		Click(locator1 = "YUICalendarWidget#NEXT_MONTH_ARROW");
-
-		Click(
-			key_day = "1",
-			locator1 = "YUICalendarWidget#DATEPICKER_SPECIFIC_DAY");
-
-		AssertElementPresent(locator1 = "Message#ERROR_SELECT_VALID_DATE_RANGE");
-
-		AssertVisible(locator1 = "Button#SEARCH_DISABLED");
-
-		Click(locator1 = "Search#CUSTOM_RANGE_FROM");
-
-		Click(locator1 = "YUICalendarWidget#PREVIOUS_MONTH_ARROW");
-
-		Click(locator1 = "YUICalendarWidget#PREVIOUS_MONTH_ARROW");
-
-		Click(
-			key_day = "1",
-			locator1 = "YUICalendarWidget#DATEPICKER_SPECIFIC_DAY");
-
-		Click(locator1 = "Button#SEARCH");
-
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "WC Title",
-			searchAssetType = "Web Content Article",
-			searchTerm = "WC Title");
-
-		task ("Use case for LPS-157511, assert user is able to manually input a date") {
 			Click(
-				locator1 = "Search#MODIFIED_FACET_SELECTION",
-				range = "Custom Range");
+				key_text = "Add Option",
+				locator1 = "Button#ANY");
+		}
 
-			Click(locator1 = "Search#CUSTOM_RANGE_FROM");
+		task ("Fill out the empty sort option fields sorting by the 'title' indexed field and using the default 'Ascending' order") {
+			Type.type(
+				locator1 = "Search#SORT_WIDGET_CONFIGURATION_EMPTY_INDEXED_FIELD",
+				value1 = "title");
 
-			Type(
-				locator1 = "Search#CUSTOM_RANGE_FROM",
-				value1 = "01/01/2020");
+			Type.type(
+				locator1 = "Search#SORT_WIDGET_CONFIGURATION_EMPTY_DISPLAY_LABEL",
+				value1 = "Test Title");
+		}
 
-			Click(locator1 = "Button#SEARCH");
+		task ("Save the changes made to the Sort widget configuration and refresh the page so the configurations take effect and the search is executed again") {
+			PortletEntry.save();
 
-			AssertTextEquals(
-				locator1 = "Search#CUSTOM_RANGE_FROM",
-				value1 = "01/01/2020");
+			Refresh();
+		}
+
+		task ("Choose the custom sort option created earlier") {
+			SearchPage.chooseSortOption(sortOption = "Test Title");
+		}
+
+		task ("Assert the search results are being ordered by title even though the extra words in the articles's content fields would have produced the opposite order") {
+			SearchResults.viewSearchResultsSpecificOrder(resultsList = "Apple,Banana,Cantaloupe");
 		}
 	}
 
-	@priority = "4"
-	test SearchWithTypeFacet {
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content",
-			groupName = "Guest",
-			title = "Apple");
-
-		JSONDocument.addFile(
-			dmDocumentDescription = "DM Document Description ${count}",
-			dmDocumentTitle = "Apple",
-			groupName = "Guest");
-
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Apple");
-
-		Navigator.openURL();
-
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "Apple/Web Content Article,Apple/Document,Apple/Blogs Entry",
-			searchTerm = "Apple");
-
-		SearchFacetPortlet.moveAssetTypesToAvailable(assetType = "Document");
-
-		Refresh();
-
-		AssertElementPresent(
-			key_fieldName = "Web Content Article",
-			locator1 = "FormFields#CHECKBOX_LABEL");
-
-		AssertElementPresent(
-			key_fieldName = "Blogs Entry",
-			locator1 = "FormFields#CHECKBOX_LABEL");
-
-		AssertElementNotPresent(
-			key_fieldName = "Document",
-			locator1 = "FormFields#CHECKBOX_LABEL");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "Apple/Web Content Article,Apple/Blogs Entry",
-			searchTerm = "Apple");
-
-		SearchResultPortlet.viewSearchResultNotPresent(
-			searchAssetTitle = "Apple",
-			searchAssetType = "Document");
-	}
-
-	@priority = "4"
+	@priority = 4
 	test SearchXSSAsset {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Message Boards");
+		JSONWiki.addWikiPage(
+			groupName = "Guest",
+			wikiNodeName = "Main",
+			wikiPageContent = "<script>alert(123);</script>",
+			wikiPageName = "Wiki Title");
 
-		MessageboardsThread.addCP(
-			threadBody = '''<script>alert(123);</script>''',
-			threadSubject = "Thread Subject");
-
-		Navigator.openURL();
-
-		SearchPortlets.searchEmbedded(searchTerm = "Subject");
+		SearchPage.searchEmbedded(searchTerm = "Title");
 
 		AssertAlertNotPresent();
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetSummary = '''<script>alert(123);</script>''',
-			searchAssetTitle = "Thread Subject",
-			searchAssetType = "Message Boards Message");
+			searchAssetTitle = "Wiki Title",
+			searchAssetType = "Wiki Page");
 
 		var actualScript = '''<script>alert(123);</script>''';
 		var escapedScript = '''&lt;script&gt;alert(123);&lt;/script&gt;''';
 
-		AssertHTMLSourceTextNotPresent(value1 = "${actualScript}");
+		AssertHTMLSourceTextNotPresent(value1 = ${actualScript});
 
-		AssertHTMLSourceTextPresent(value1 = "${escapedScript}");
+		AssertHTMLSourceTextPresent(value1 = ${escapedScript});
 
-		SearchResultPortlet.configureSearchResults(disableHighlighting = "true");
+		SearchResults.configureSearchResults(disableHighlighting = "true");
 
 		Refresh();
 
 		AssertAlertNotPresent();
 
-		AssertHTMLSourceTextNotPresent(value1 = "${actualScript}");
+		AssertHTMLSourceTextNotPresent(value1 = ${actualScript});
 
-		AssertHTMLSourceTextPresent(value1 = "${escapedScript}");
+		AssertHTMLSourceTextPresent(value1 = ${escapedScript});
 	}
 
 	@description = "This is a use case for LPS-152937."
+	@priority = 3
 	test SortAccentedWords {
-		property app.server.types = "tomcat,weblogic";
-
-		var digit = "1";
+		var digit = 1;
 
 		for (var content : list "Alicante,Barcelona,Álava,Alava") {
 			JSONWebcontent.addWebContent(
-				content = "${content}",
+				content = ${content},
 				groupName = "Guest",
 				title = "WC-${digit}");
 
@@ -3911,7 +2700,7 @@ definition {
 			layoutName = "Test Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Test Page",
 			widgetName = "Asset Publisher");
@@ -3930,19 +2719,152 @@ definition {
 
 		IFrame.closeFrame();
 
-		var resultOrder = "1";
+		var resultOrder = 1;
 
 		for (var title : list "WC-4,WC-3,WC-1,WC-2") {
 			AssetPublisherPortlet.viewDisplayOrderPG(
-				assetTitle = "${title}",
-				rowNumber = "${resultOrder}");
+				assetTitle = ${title},
+				rowNumber = ${resultOrder});
 
 			var resultOrder = ${resultOrder} + 1;
 		}
 	}
 
+	@description = "LPS-172131 - The Sort Widget supports sorting on custom object fields"
+	@priority = 3
+	test SortByCustomObjectFields {
+		task ("Create a site scoped object and add the following custom fields to it: 'title' as a keyword, 'siteID' as an integer, and 'date' as a date") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object",
+				objectName = "CustomObject",
+				panelCategoryKey = "site_administration.content",
+				pluralLabelName = "Custom Objects",
+				scope = "site");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Title",
+				fieldName = "title",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Date",
+				fieldLabelName = "Date",
+				fieldName = "date",
+				fieldType = "Date",
+				indexedAsKeyword = "false",
+				isRequired = "false",
+				objectName = "CustomObject");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Integer",
+				fieldLabelName = "Site ID",
+				fieldName = "siteID",
+				fieldType = "Integer",
+				indexedAsKeyword = "false",
+				isRequired = "false",
+				objectName = "CustomObject");
+
+			JSONObject.updateObject(
+				configKey = "titleObjectFieldName",
+				configValue = "title",
+				objectName = "CustomObject");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
+		}
+
+		task ("Create three object entries that configure the title, siteID, and date fields") {
+			JSONObject.addObjectEntryViaJSONAPI(
+				fieldList = "title/Apple Fruit,siteID/3,date/2023-04-02",
+				objectName = "CustomObject",
+				scope = "site");
+
+			JSONObject.addObjectEntryViaJSONAPI(
+				fieldList = "title/Banana Fruit,siteID/2,date/2023-04-01",
+				objectName = "CustomObject",
+				scope = "site");
+
+			JSONObject.addObjectEntryViaJSONAPI(
+				fieldList = "title/Coconut Fruit,siteID/1,date/2023-04-03",
+				objectName = "CustomObject",
+				scope = "site");
+		}
+
+		task ("Go to the search page and execute a search for the object entries") {
+			SearchPage.openSearchPage(searchTerm = "fruit");
+		}
+
+		task ("Add the Sort Widget to the search page") {
+			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
+		}
+
+		task ("Within the Sort Widget configuration, add a sort option to sort by the custom object's 'title' field in ascending order") {
+			Portlet.gotoPortletOptions(
+				portletName = "Sort",
+				portletOption = "Configuration");
+
+			SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+			SearchPage.addSortOption(
+				displayLabel = "Object Title Asc",
+				indexedField = "nestedFieldArray.title.value_keyword",
+				order = "Ascending");
+		}
+
+		task ("Add another sort option to sort by the custom object's 'title' field in descending order") {
+			SearchPage.addSortOption(
+				displayLabel = "Object Title Desc",
+				indexedField = "nestedFieldArray.title.value_keyword",
+				order = "Descending");
+		}
+
+		task ("Add another sort option to sort by the custom object's 'siteID' field in ascending order") {
+			SearchPage.addSortOption(
+				displayLabel = "Object Site ID",
+				indexedField = "nestedFieldArray.siteID.value_integer",
+				order = "Ascending");
+		}
+
+		task ("Add another sort option to sort by the custom object's 'date' field in ascending order") {
+			SearchPage.addSortOption(
+				displayLabel = "Object Date",
+				indexedField = "nestedFieldArray.date.value_date",
+				order = "Ascending");
+
+			PortletEntry.save();
+
+			Refresh();
+		}
+
+		task ("Assert the search results are ordered correctly when sorting by the 'title' custom object field in ascending order") {
+			SearchPage.chooseSortOption(sortOption = "Object Title Asc");
+
+			SearchResults.viewSearchResultsSpecificOrder(resultsList = "Apple Fruit,Banana Fruit,Coconut Fruit");
+		}
+
+		task ("Assert the search results are ordered correctly when sorting by the 'title' custom object field in descending order") {
+			SearchPage.chooseSortOption(sortOption = "Object Title Desc");
+
+			SearchResults.viewSearchResultsSpecificOrder(resultsList = "Coconut Fruit,Banana Fruit,Apple Fruit");
+		}
+
+		task ("Assert the search results are ordered correctly when sorting by the 'date' custom object field") {
+			SearchPage.chooseSortOption(sortOption = "Object Date");
+
+			SearchResults.viewSearchResultsSpecificOrder(resultsList = "Banana Fruit,Apple Fruit,Coconut Fruit");
+		}
+
+		task ("Assert the search results are ordered correctly when sorting by the 'siteID' custom object field") {
+			SearchPage.chooseSortOption(sortOption = "Object Site ID");
+
+			SearchResults.viewSearchResultsSpecificOrder(resultsList = "Coconut Fruit,Banana Fruit,Apple Fruit");
+		}
+	}
+
 	@description = "This is a use case for LPS-84035."
-	@priority = "5"
+	@priority = 5
 	test ViewCreatedSearchPagePermissions {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -3963,12 +2885,16 @@ definition {
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",
-			serviceContext = "${webContentServiceContext}",
+			serviceContext = ${webContentServiceContext},
 			title = "WC Title");
+
+		SearchPage.addWidgets(
+			layoutName = "Search Page",
+			searchPortletList = "Custom Filter,Suggestions,Search Results,Search Bar");
 
 		Navigator.gotoPage(pageName = "Search Page");
 
-		SearchPortlets.addWidgets(searchPortletList = "Custom Filter,Sort,Suggestions,Search Results,Search Bar");
+		SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 
 		PermissionsInline.gotoConfigurationPG(portletName = "Search Results");
 
@@ -3982,13 +2908,13 @@ definition {
 
 		IFrame.closeFrame();
 
-		SearchPortlets.configureEmbeddedSearchBar(destinationPage = "Search Page");
+		SearchPage.configureEmbeddedSearchBar(destinationPage = "Search Page");
 
 		User.logoutPG();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
@@ -3997,15 +2923,15 @@ definition {
 
 		for (var portlet : list "Custom Filter,Sort,Search Results,Search Bar") {
 			AssertElementPresent(
-				key_portletName = "${portlet}",
+				key_portletName = ${portlet},
 				locator1 = "Portlet#BODY");
 		}
 
 		User.loginPG(userEmailAddress = "userea@liferay.com");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
@@ -4014,13 +2940,13 @@ definition {
 
 		for (var portlet : list "Custom Filter,Sort,Search Results,Search Bar") {
 			AssertElementPresent(
-				key_portletName = "${portlet}",
+				key_portletName = ${portlet},
 				locator1 = "Portlet#BODY");
 		}
 	}
 
 	@description = "This is a use case for LPS-84035."
-	@priority = "5"
+	@priority = 5
 	test ViewDefaultSearchPagePermissions {
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -4037,10 +2963,10 @@ definition {
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",
-			serviceContext = "${webContentServiceContext}",
+			serviceContext = ${webContentServiceContext},
 			title = "WC Title");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
 		PermissionsInline.gotoConfigurationPG(portletName = "Search Results");
 
@@ -4056,7 +2982,7 @@ definition {
 
 		User.logoutPG();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
 		AssertElementNotPresent(locator1 = "Portlet#ERROR");
 
@@ -4064,18 +2990,18 @@ definition {
 
 		for (var portlet : list "Last Modified,Tag,Type,User") {
 			AssertElementPresent(
-				key_portletName = "${portlet}",
+				key_portletName = ${portlet},
 				locator1 = "Portlet#BODY");
 		}
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
 
 		User.loginPG(userEmailAddress = "userea@liferay.com");
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
 		AssertElementNotPresent(locator1 = "Portlet#ERROR");
 
@@ -4083,474 +3009,221 @@ definition {
 
 		for (var portlet : list "Last Modified,Tag,Type,User") {
 			AssertElementPresent(
-				key_portletName = "${portlet}",
+				key_portletName = ${portlet},
 				locator1 = "Portlet#BODY");
 		}
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
 	}
 
-	@description = "This is a use case for LPS-74299."
-	@priority = "3"
-	test ViewFacetPersistence {
-		property test.name.skip.portal.instance = "Search#ViewFacetPersistence";
+	@description = "This is a use case for LPS-141138."
+	@priority = 4
+	test ViewObjectsSearchResultDetailsDisplayPageTemplate {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			panelCategoryKey = "site_administration.content",
+			pluralLabelName = "Custom Objects",
+			scope = "site");
 
-		// Workaround for LPS-89026
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "title",
+			fieldName = "title",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject");
 
-		SearchAdministration.executeReindex();
+		JSONObject.updateObject(
+			configKey = "titleObjectFieldName",
+			configValue = "title",
+			objectName = "CustomObject");
 
-		Navigator.openURL();
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONObject.addObjectEntryViaJSONAPI(
+			fieldName = "title",
+			fieldValue = "apple",
+			objectName = "CustomObject",
+			scope = "site");
 
-		PagesAdmin.addPage(pageName = "Search Page");
+		SearchPage.openSearchPage();
 
-		Navigator.gotoPage(pageName = "Search Page");
+		SearchPage.searchEmbedded(searchTerm = "apple");
 
-		SearchPortlets.addWidgets(searchPortletList = "Site Facet,Search Results,Search Bar");
+		SearchPage.gotoResultDetails(searchAssetTitle = "apple");
 
-		SearchPortlets.configureSearchBarWidget(searchScope = "Everything");
+		AssertElementPresent(
+			locator1 = "ObjectAdmin#ENTRY_STRING_VALUE_FIELD",
+			value1 = "apple");
 
-		SearchPortlets.searchWidget(searchTerm = "*");
+		GoBack();
 
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "Test Test",
-			searchAssetType = "User");
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "apple",
+			searchAssetType = "Custom Object");
 
-		var siteName = TestCase.getSiteName();
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "guest");
 
-		SearchFacetPortlet.checkFacet(facetValueName = "${siteName}");
+		LexiconEntry.gotoAdd();
 
-		SearchPortlets.searchWidget(searchTerm = "test");
+		LexiconCard.clickCard(card = "Blank");
 
-		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "Test Test",
-			searchAssetType = "User");
+		PortletEntry.inputName(name = "Custom Object Display Template");
 
-		FormFields.viewCheckboxChecked(fieldName = "${siteName}");
+		Select(
+			key_fieldLabel = "Content Type",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "Custom Object");
+
+		Button.clickSave();
+
+		PageEditor.addFragment(
+			collectionName = "Featured Content",
+			composition = "true",
+			fragmentName = "Banner Center");
+
+		PageEditorMapping.mapEditableTextToField(
+			field = "Title",
+			fragmentName = "Heading",
+			id = "element-text");
+
+		PageEditor.publish();
+
+		DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Custom Object Display Template");
+
+		SearchPage.openSearchPage();
+
+		SearchPage.searchEmbedded(searchTerm = "apple");
+
+		SearchPage.gotoResultDetails(searchAssetTitle = "apple");
+
+		ContentPages.viewFragmentText(
+			fragmentName = "heading",
+			id = "element-text",
+			text = "apple");
+
+		GoBack();
+
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "apple",
+			searchAssetType = "Custom Object");
 	}
 
-	@priority = "5"
-	test ViewMultipleFacetURLs {
-		property test.name.skip.portal.instance = "Search#ViewMultipleFacetURLs";
+	@description = "This is a use case for LPS-193198."
+	@priority = 3
+	test ViewSearchBarVisibility {
+		task ("Configure the embedded search bar to be invisible") {
+			SearchPage.openSearchPage();
 
-		var searchPage = "Search Page";
+			SearchPage.configureEmbeddedSearchBar(invisible = "true");
+		}
 
-		JSONCategory.addVocabulary(
-			groupName = "Guest",
-			title = "Fruit Vocabulary");
+		task ("Assert that the search bar is visible on the search page") {
+			AssertVisible(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+		}
 
-		JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "organic",
-			vocabularyName = "Fruit Vocabulary");
+		task ("Assert that the search bar is not present on the view mode of a content page") {
+			Navigator.openURL();
 
-		var webContentFolderName1 = "WC Folder Name 1";
+			AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+		}
 
-		JSONWebcontent.addFolder(
-			folderName = "${webContentFolderName1}",
-			groupName = "Guest");
+		task ("Assert that the search bar is visible in the edit mode of a content page") {
+			Click(locator1 = "Icon#CUSTOM_EDIT");
 
-		var organicCategoryId = JSONCategory.getCategoryId(
-			categoryName = "organic",
-			groupName = "Guest",
-			vocabularyName = "Fruit Vocabulary");
+			AssertVisible(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+		}
 
-		var webContentserviceContext1 = '''{"assetTagNames": ["ripe"], "assetCategoryIds": ["${organicCategoryId}"]}''';
+		task ("Sign out and assert that the search bar is not present on the home page as a guest") {
+			SignOut.signOut();
 
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content 1",
-			folderName = "${webContentFolderName1}",
-			groupName = "Guest",
-			serviceContext = "${webContentserviceContext1}",
-			title = "apple");
+			Navigator.openURL();
 
-		var webContentFolderName2 = "WC Folder Name 2";
+			AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+		}
 
-		JSONWebcontent.addFolder(
-			folderName = "${webContentFolderName2}",
-			groupName = "Guest");
+		task ("Assert that the search bar is not present on the search page as a guest") {
+			SearchPage.openSearchPage();
 
-		var webContentserviceContext1 = '''{"assetTagNames": ["fresh"]}''';
+			AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+		}
 
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content 2",
-			folderName = "${webContentFolderName2}",
-			groupName = "Guest",
-			serviceContext = "${webContentserviceContext1}",
-			title = "orange");
+		task ("Sign in and configure the search bar to be visible with the destination page set as '/nowhere'") {
+			SignIn.signIn();
 
-		JSONGroup.addGroup(groupName = "New Site");
+			SearchPage.openSearchPage();
 
-		PagesAdmin.openPagesAdmin(siteURLKey = "New Site");
+			SearchPage.configureEmbeddedSearchBar(
+				destinationPage = "/nowhere",
+				invisible = "false");
+		}
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
+		task ("Assert that the search bar is replaced with an alert message on the search page") {
+			AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
 
-		Blogs.addEntryWithTag(
-			entryContent = "Apple Blog Entry Content",
-			entryTitle = "apple",
-			tagName = "sweet");
+			AssertVisible(
+				key_infoMessage = "This search bar is not visible to users yet.",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
 
-		Navigator.openURL();
+		task ("Assert that both the search bar and the alert message are not present on the home page") {
+			Navigator.openURL();
 
-		JSONUser.addUser(
-			userEmailAddress = "userea@liferay.com",
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn");
+			AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
 
-		JSONRole.assignRoleToUser(
-			roleTitle = "Administrator",
-			userEmailAddress = "userea@liferay.com");
+			AssertElementNotPresent(
+				key_infoMessage = "This search bar is not visible to users yet.",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		task ("Assert that the search bar is replaced with an alert message on the edit mode of a content page") {
+			Click(locator1 = "Icon#CUSTOM_EDIT");
 
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
+			AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
 
-		User.logoutPG();
+			AssertVisible(
+				key_infoMessage = "This search bar is not visible to users yet.",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
 
-		User.loginPG(
-			password = "test",
-			userEmailAddress = "userea@liferay.com");
+		task ("Sign out and assert that both the search bar and alert message are not present on the search page as a guest") {
+			SignOut.signOut();
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
+			SearchPage.openSearchPage();
 
-		DMDocument.addCP(
-			categoryNameList = "organic",
-			dmDocumentFile = "Document_1.jpg",
-			dmDocumentTitle = "banana",
-			tagNameList = "fresh,ripe,test",
-			vocabularyName = "Fruit Vocabulary");
+			AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
 
-		User.logoutPG();
-
-		User.loginPG(
-			password = "test",
-			userEmailAddress = "test@liferay.com");
-
-		SearchAdministration.executeReindex();
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		PagesAdmin.addPage(pageName = "${searchPage}");
-
-		Navigator.gotoPage(pageName = "${searchPage}");
-
-		SearchPortlets.addWidgets(searchPortletList = "Category Facet,Folder Facet,Site Facet,Tag Facet,Type Facet,User Facet");
-
-		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
-			groupName = "Guest",
-			layoutName = "Search Page",
-			widgetName = "Search Bar");
-
-		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
-			groupName = "Guest",
-			layoutName = "Search Page",
-			widgetName = "Search Options");
-
-		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
-			groupName = "Guest",
-			layoutName = "Search Page",
-			widgetName = "Search Results");
-
-		Refresh();
-
-		SearchPortlets.configureSearchBarWidget(searchScope = "Everything");
-
-		SearchPortlets.configureSearchOptions(
-			allowEmptySearches = "true",
-			basicFacetSelection = "true");
-
-		SearchPortlets.searchWidget(searchTerm = "apple");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Blogs Entry,apple/Web Content Article",
-			searchTerm = "apple");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "banana/Document,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "type",
-			facetValueName = "Web Content Article",
-			searchPage = "${searchPage}",
-			searchTerm = "apple");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Web Content Article",
-			searchTerm = "apple");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,banana/Document,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "type",
-			facetValueName = "Blogs Entry",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Blogs Entry,apple/Web Content Article",
-			searchTerm = "apple");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "banana/Document,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.uncheckFacetAndViewURL(
-			facetClass = "type",
-			facetValueName = "Web Content Article",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Blogs Entry",
-			searchTerm = "apple");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Web Content Article,banana/Document,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.clearAllFacetsAndViewURL(searchURL = "${testSearchURL}");
-
-		SearchPortlets.searchWidget(searchTerm = "test");
-
-		var testSearchURL = SearchPortlets.getSearchTermURL(
-			searchPage = "${searchPage}",
-			searchTerm = "test");
-
-		AssertLocation(value1 = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Blogs Entry,apple/Web Content Article,banana/Document,orange/Web Content Article",
-			searchTerm = "test");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "category",
-			facetValue = "${organicCategoryId}",
-			facetValueName = "organic",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Web Content Article,banana/Document",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "user",
-			facetValueName = "userfn userln",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "banana/Document",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,apple/Web Content Article,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.uncheckFacetAndViewURL(
-			facetClass = "user",
-			facetValueName = "userfn userln",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Web Content Article,banana/Document",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.clearAllFacetsAndViewURL(searchURL = "${testSearchURL}");
-
-		SearchPortlets.searchWidget(searchTerm = "test");
-
-		var testSearchURL = SearchPortlets.getSearchTermURL(
-			searchPage = "${searchPage}",
-			searchTerm = "test");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "tag",
-			facetValueName = "sweet",
-			searchURL = "${testSearchURL}");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "tag",
-			facetValueName = "fresh",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Blogs Entry,banana/Document,orange/Web Content Article",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Web Content Article");
-
-		var liferaySiteId = JSONGroupAPI._getGroupIdByName(
-			groupName = "Guest",
-			site = "true");
-		var siteName = TestCase.getSiteName();
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "site",
-			facetValue = "${liferaySiteId}",
-			facetValueName = "${siteName}",
-			searchURL = "${testSearchURL}");
-		var newSiteId = JSONGroupAPI._getGroupIdByName(
-			groupName = "New Site",
-			site = "true");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "site",
-			facetValue = "${newSiteId}",
-			facetValueName = "New Site",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Blogs Entry,banana/Document,orange/Web Content Article",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.uncheckFacetAndViewURL(
-			facetClass = "site",
-			facetValue = "${newSiteId}",
-			facetValueName = "New Site",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "banana/Document,orange/Web Content Article",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,apple/Web Content Article");
-
-		var webContentFolderId2 = JSONWebcontent.getFolderIdByFolderName(
-			folderName = "${webContentFolderName2}",
-			groupName = "Guest");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "folder",
-			facetValue = "${webContentFolderId2}",
-			facetValueName = "${webContentFolderName2}",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "orange/Web Content Article",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,apple/Web Content Article,banana/Document");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "tag",
-			facetValueName = "ripe",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "orange/Web Content Article",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,apple/Web Content Article,banana/Document");
-
-		var testSearchURL = SearchFacetPortlet.uncheckFacetAndViewURL(
-			facetClass = "folder",
-			facetValue = "${webContentFolderId2}",
-			facetValueName = "${webContentFolderName2}",
-			searchURL = "${testSearchURL}");
-
-		var testSearchURL = SearchFacetPortlet.uncheckFacetAndViewURL(
-			facetClass = "tag",
-			facetValueName = "fresh",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Web Content Article,banana/Document",
-			searchTerm = "test");
-
-		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "apple/Blogs Entry,orange/Web Content Article");
-
-		var testSearchURL = SearchFacetPortlet.clearAllFacetsAndViewURL(searchURL = "${testSearchURL}");
-
-		SearchPortlets.searchWidget(searchTerm = "organic");
-
-		var testSearchURL = SearchPortlets.getSearchTermURL(
-			searchPage = "${searchPage}",
-			searchTerm = "organic");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "category",
-			facetValue = "${organicCategoryId}",
-			facetValueName = "organic",
-			searchURL = "${testSearchURL}");
-		var webContentFolderId1 = JSONWebcontent.getFolderIdByFolderName(
-			folderName = "${webContentFolderName1}",
-			groupName = "Guest");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "folder",
-			facetValue = "${webContentFolderId1}",
-			facetValueName = "${webContentFolderName1}",
-			searchURL = "${testSearchURL}");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "site",
-			facetValue = "${liferaySiteId}",
-			facetValueName = "${siteName}",
-			searchURL = "${testSearchURL}");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "tag",
-			facetValueName = "ripe",
-			searchURL = "${testSearchURL}");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "type",
-			facetValueName = "Web Content Article",
-			searchURL = "${testSearchURL}");
-
-		var testSearchURL = SearchFacetPortlet.checkFacetAndViewURL(
-			facetClass = "user",
-			facetValueName = "test test",
-			searchURL = "${testSearchURL}");
-
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "apple/Web Content Article",
-			searchTerm = "organic");
+			AssertElementNotPresent(
+				key_infoMessage = "This search bar is not visible to users yet.",
+				locator1 = "Message#INFO_SPECIFIC");
+		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewSearchResultDetails {
 		property app.server.types = "tomcat";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Search#ViewSearchResultDetails";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		SearchAdministration.executeReindex();
+		SearchPage.searchEmbedded(searchTerm = "Test Test");
 
-		Navigator.openURL();
-
-		SearchPortlets.searchEmbedded(searchTerm = "Test Test");
-
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Test Test",
 			searchAssetType = "User");
 
-		SearchPortlets.gotoResultDetails(searchAssetTitle = "Test Test");
+		SearchPage.gotoResultDetails(searchAssetTitle = "Test Test");
 
-		SearchPortlets.viewUserResultDetails(
+		SearchPage.viewUserResultDetails(
 			pageName = "My Profile",
 			userName = "Test Test");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewSortedSearchResults {
 		JSONWebcontent.addWebContent(
 			content = "Fruit",
@@ -4567,94 +3240,153 @@ definition {
 			groupName = "Guest",
 			title = "Cantaloupe");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Fruit");
+		SearchPage.searchEmbedded(searchTerm = "Fruit");
 
-		SearchPortlets.addWidgets(searchPortletList = "Sort");
+		SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 
 		Refresh();
 
-		SearchPortlets.chooseSortOption(sortOption = "Title");
+		SearchPage.chooseSortOption(sortOption = "Title");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Apple,Banana,Cantaloupe");
+		SearchResults.viewSearchResultsSpecificOrder(resultsList = "Apple,Banana,Cantaloupe");
 
-		SearchPortlets.chooseSortOption(sortOption = "Created");
+		SearchPage.chooseSortOption(sortOption = "Created");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Cantaloupe,Banana,Apple");
+		SearchResults.viewSearchResultsSpecificOrder(resultsList = "Cantaloupe,Banana,Apple");
 
-		SearchPortlets.chooseSortOption(sortOption = "Created (oldest first)");
+		SearchPage.chooseSortOption(sortOption = "Created (oldest first)");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Apple,Banana,Cantaloupe");
+		SearchResults.viewSearchResultsSpecificOrder(resultsList = "Apple,Banana,Cantaloupe");
 	}
 
+	@description = "This is a use case for LPS-134052."
+	@priority = 3
 	test ViewSortWidgetConfigurationNewUI {
-		for (var title : list "Banana,Apple,Cherry") {
-			JSONWebcontent.addWebContent(
-				content = "Content ",
-				groupName = "Guest",
-				title = "${title}");
+		task ("Execute a search to populate the search widgets and add the Sort widget") {
+			SearchPage.openSearchPage(searchTerm = "test");
+
+			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Sort");
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "Content");
+		task ("Confirm the Sort configuration uses the new view by default") {
+			Portlet.gotoPortletOptions(
+				portletName = "Sort",
+				portletOption = "Configuration");
 
-		SearchPortlets.addWidgets(searchPortletList = "Sort");
+			SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
-		Refresh();
+			AssertElementPresent(locator1 = "Button#TRASH_ENABLED");
 
-		Portlet.gotoPortletOptions(
-			portletName = "Sort",
-			portletOption = "Configuration");
-
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
-
-		AssertElementPresent(locator1 = "Button#TRASH_ENABLED");
-
-		AssertElementNotPresent(locator1 = "Button#ADD_ROW");
-
-		IFrame.closeFrame();
-
-		SearchPortlets.chooseSortOption(sortOption = "Title");
-
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Apple,Banana,Cherry");
-	}
-
-	test ViewSortWidgetConfigurationOldUI {
-		for (var title : list "Banana,Apple,Cherry") {
-			JSONWebcontent.addWebContent(
-				content = "Content ",
-				groupName = "Guest",
-				title = "${title}");
+			AssertElementNotPresent(locator1 = "Button#ADD_ROW");
 		}
 
-		SearchPortlets.searchEmbedded(searchTerm = "Content");
+		task ("Click the 'Switch to Classic View' button and assert the modal switches to the classic view") {
+			Click(
+				key_text = "Switch to Classic View",
+				locator1 = "Button#ANY");
 
-		SearchPortlets.addWidgets(searchPortletList = "Sort");
+			AssertElementPresent(locator1 = "Button#ADD_ROW");
 
-		Refresh();
+			AssertElementNotPresent(locator1 = "Button#TRASH_ENABLED");
+		}
 
-		Portlet.gotoPortletOptions(
-			portletName = "Sort",
-			portletOption = "Configuration");
+		task ("Click the 'Switch to New View' button and assert the modal switches back to the new view") {
+			Click(
+				key_text = "Switch to New View",
+				locator1 = "Button#ANY");
 
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+			AssertElementPresent(locator1 = "Button#TRASH_ENABLED");
 
-		Click(
-			key_text = "Switch to Classic View",
-			locator1 = "Button#ANY");
+			AssertElementNotPresent(locator1 = "Button#ADD_ROW");
+		}
 
-		AssertElementPresent(locator1 = "Button#ADD_ROW");
+		task ("Delete the row that contains the 'title' display label and assert that it is removed") {
+			Click(
+				key_displayLabel = "title",
+				locator1 = "Search#SORT_WIDGET_CONFIGURATION_TRASH_BUTTON");
 
-		AssertElementNotPresent(locator1 = "Button#TRASH_ENABLED");
+			AssertElementNotPresent(
+				key_value = "title",
+				locator1 = "Search#SORT_WIDGET_CONFIGURATION_DISPLAY_LABEL_WITH_VALUE");
+		}
 
-		IFrame.closeFrame();
+		task ("Reposition the row with the 'user' display label from the bottom to the top using the drag and drop functionality") {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_displayLabel = "user",
+				key_targetPosition = 1,
+				locator1 = "Search#SORT_WIDGET_CONFIGURATION_OPTION_DRAG_HANDLE",
+				locator2 = "Search#SORT_WIDGET_CONFIGURATION_DRAG_AND_DROP_TARGET");
 
-		SearchPortlets.chooseSortOption(sortOption = "Title");
+			AssertValue(
+				key_position = 1,
+				locator1 = "Search#SORT_WIDGET_CONFIGURATION_DISPLAY_LABEL_AT_POSITION",
+				value1 = "user");
+		}
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Apple,Banana,Cherry");
+		task ("Disable the 'Relevance' toggle so that it is not available as a sort option") {
+			Uncheck.uncheckToggleSwitch(locator1 = "Search#SORT_WIDGET_CONFIGURATION_RELEVANCE_TOGGLE");
+		}
+
+		task ("Save the configuration modal and refresh the page so the changes take effect") {
+			PortletEntry.save();
+
+			Refresh();
+		}
+
+		task ("Assert that 'Title' is not available as a sort option since it was deleted earlier") {
+			AssertElementNotPresent(
+				locator1 = "Search#SORT_WIDGET_SORT_OPTION",
+				sortOption = "Title");
+		}
+
+		task ("Assert that 'Relevance' is not available as a sort option since it was disabled earlier") {
+			AssertElementNotPresent(
+				locator1 = "Search#SORT_WIDGET_SORT_OPTION",
+				sortOption = "Relevance");
+		}
+
+		task ("Assert that 'User' shows up at the top of the dropdown list since it was repositioned earlier") {
+			AssertTextEquals(
+				key_position = 1,
+				locator1 = "Search#SORT_WIDGET_SORT_OPTION_POSITION",
+				value1 = "User");
+		}
+
+		task ("In the Sort configuration, enable the 'Relevance' toggle and change its display label") {
+			Portlet.gotoPortletOptions(
+				portletName = "Sort",
+				portletOption = "Configuration");
+
+			SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+			Check.checkToggleSwitch(locator1 = "Search#SORT_WIDGET_CONFIGURATION_RELEVANCE_TOGGLE");
+
+			Type(
+				locator1 = "Search#SORT_WIDGET_CONFIGURATION_RELEVANCE_DISPLAY_LABEL",
+				value1 = "Relevant Test");
+		}
+
+		task ("Save the configuration modal and refresh the page") {
+			PortletEntry.save();
+
+			Refresh();
+		}
+
+		task ("Assert that the renamed 'Relevance' sort option appears and is at the top of the Sort dropdown list ") {
+			AssertElementPresent(
+				locator1 = "Search#SORT_WIDGET_SORT_OPTION",
+				sortOption = "Relevant Test");
+
+			AssertTextEquals(
+				key_position = 1,
+				locator1 = "Search#SORT_WIDGET_SORT_OPTION_POSITION",
+				value1 = "Relevant Test");
+		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewStagedAndLiveContentInSearchResults {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
@@ -4665,7 +3397,7 @@ definition {
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
-		SearchPortlets.configureEmbeddedSearchBar(searchScope = "Let the User Choose");
+		SearchPage.configureEmbeddedSearchBar(searchScope = "Let the User Choose");
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
@@ -4677,25 +3409,25 @@ definition {
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Apple",
 			searchAssetType = "Web Content Article");
 
 		ProductMenu.gotoLiveSite(site = "Site Name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "Apple",
 			searchAssetType = "Web Content Article");
 
-		SearchPortlets.chooseEmbeddedScope(searchScope = "Everything");
+		SearchPage.chooseEmbeddedScope(searchScope = "Everything");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "Apple",
 			searchAssetType = "Web Content Article");
 
@@ -4713,17 +3445,17 @@ definition {
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "Apple",
 			searchAssetType = "Web Content Article");
 
 		ProductMenu.gotoLiveSite(site = "Site Name");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Apple",
 			searchAssetType = "Web Content Article");
 	}

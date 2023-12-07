@@ -1,46 +1,52 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.events;
 
+import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.io.Deserializer;
+import com.liferay.petra.io.Serializer;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.exception.ResourceActionsException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogContextRegistryUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.patcher.PatcherUtil;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.patcher.PatcherValues;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.version.Version;
+import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
+import com.liferay.portal.upgrade.log.UpgradeLogContext;
 import com.liferay.portal.util.PropsValues;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+
+import java.nio.ByteBuffer;
 
 import java.sql.Connection;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.osgi.framework.BundleContext;
 
 /**
  * @author Brian Wing Shun Chan
@@ -50,7 +56,12 @@ import java.util.List;
 public class StartupHelperUtil {
 
 	public static void initResourceActions() {
-		ResourceActionLocalServiceUtil.checkResourceActions();
+		try {
+			ResourceActionLocalServiceUtil.checkResourceActions();
+		}
+		catch (Exception exception) {
+			ReflectionUtil.throwException(exception);
+		}
 
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			ResourceActionsUtil.populateModelResources(
@@ -66,8 +77,9 @@ public class StartupHelperUtil {
 		return _dbNew;
 	}
 
-	public static boolean isStartupFinished() {
-		return _startupFinished;
+	public static boolean isDBWarmed() {
+		return _dbWarmedSCLSingleton.getSingleton(
+			StartupHelperUtil::_isDBWarmed);
 	}
 
 	public static boolean isUpgrading() {
@@ -77,7 +89,8 @@ public class StartupHelperUtil {
 	public static void printPatchLevel() {
 		if (_log.isInfoEnabled()) {
 			String installedPatches = StringUtil.merge(
-				PatcherUtil.getInstalledPatches(), StringPool.COMMA_AND_SPACE);
+				PatcherValues.INSTALLED_PATCH_NAMES,
+				StringPool.COMMA_AND_SPACE);
 
 			if (Validator.isNull(installedPatches)) {
 				_log.info("There are no patches installed");
@@ -89,22 +102,41 @@ public class StartupHelperUtil {
 		}
 	}
 
-	public static void setDbNew(boolean dbNew) {
-		_dbNew = dbNew;
-	}
+	public static void setDBNew(boolean dbNew) {
+		if (dbNew != _dbNew) {
+			_dbWarmedSCLSingleton.destroy(null);
 
-	public static void setStartupFinished(boolean startupFinished) {
-		_startupFinished = startupFinished;
+			_dbNew = dbNew;
+		}
 	}
 
 	public static void setUpgrading(boolean upgrading) {
-		_upgrading = upgrading;
+		if (upgrading != _upgrading) {
+			_dbWarmedSCLSingleton.destroy(null);
+
+			_upgrading = upgrading;
+		}
+
+		if (upgrading) {
+			if (PropsValues.UPGRADE_LOG_CONTEXT_ENABLED) {
+				LogContextRegistryUtil.registerLogContext(
+					UpgradeLogContext.getInstance());
+			}
+
+			DBUpgrader.startUpgradeLogAppender();
+		}
+		else {
+			DBUpgrader.stopUpgradeLogAppender();
+
+			LogContextRegistryUtil.unregisterLogContext(
+				UpgradeLogContext.getInstance());
+		}
 	}
 
 	public static void upgradeProcess(int buildNumber) throws UpgradeException {
 		List<String> upgradeProcessClassNames = new ArrayList<>();
 
-		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-157670"))) {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-157670")) {
 			Collections.addAll(
 				upgradeProcessClassNames,
 				"com.liferay.portal.upgrade.UpgradeProcess_6_1_1",
@@ -125,8 +157,7 @@ public class StartupHelperUtil {
 				PortalClassLoaderUtil.getClassLoader(),
 				upgradeProcessClassNames.toArray(new String[0]));
 
-		_upgraded = UpgradeProcessUtil.upgradeProcess(
-			buildNumber, upgradeProcesses);
+		UpgradeProcessUtil.upgradeProcess(buildNumber, upgradeProcesses);
 	}
 
 	public static void verifyRequiredSchemaVersion() throws Exception {
@@ -165,12 +196,57 @@ public class StartupHelperUtil {
 		}
 	}
 
+	private static boolean _isDBWarmed() {
+		boolean dbWarmed = true;
+
+		if (_dbNew || _upgrading ||
+			DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
+
+			dbWarmed = false;
+		}
+
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		File dataFile = bundleContext.getDataFile("dbWarmed.data");
+
+		if (dbWarmed && dataFile.exists()) {
+			try {
+				Deserializer deserializer = new Deserializer(
+					ByteBuffer.wrap(FileUtil.getBytes(dataFile)));
+
+				if (deserializer.readBoolean()) {
+					dbWarmed = false;
+				}
+			}
+			catch (Exception exception) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("Unable to read DB warmed state", exception);
+				}
+			}
+		}
+
+		Serializer serializer = new Serializer();
+
+		serializer.writeBoolean(_upgrading);
+
+		try (OutputStream outputStream = new FileOutputStream(dataFile)) {
+			serializer.writeTo(outputStream);
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Unable to write DB warmed state", exception);
+			}
+		}
+
+		return dbWarmed;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		StartupHelperUtil.class);
 
-	private static boolean _dbNew;
-	private static boolean _startupFinished;
-	private static boolean _upgraded;
-	private static boolean _upgrading;
+	private static volatile boolean _dbNew;
+	private static final DCLSingleton<Boolean> _dbWarmedSCLSingleton =
+		new DCLSingleton<>();
+	private static volatile boolean _upgrading;
 
 }

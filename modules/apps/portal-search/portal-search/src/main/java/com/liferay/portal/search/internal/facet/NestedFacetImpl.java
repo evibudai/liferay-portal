@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.facet;
@@ -27,15 +18,27 @@ import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.NestedQuery;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.aggregation.Aggregation;
 import com.liferay.portal.search.facet.nested.NestedFacet;
 
 /**
  * @author Jorge Díaz
+ * @author Petteri Karttunen
  */
 public class NestedFacetImpl extends FacetImpl implements NestedFacet {
 
 	public NestedFacetImpl(String fieldName, SearchContext searchContext) {
 		super(fieldName, searchContext);
+	}
+
+	@Override
+	public Aggregation getChildAggregation() {
+		return _childAggregation;
+	}
+
+	@Override
+	public Filter getChildAggregationValuesFilter() {
+		return _childAggregationValuesFilter;
 	}
 
 	@Override
@@ -51,6 +54,16 @@ public class NestedFacetImpl extends FacetImpl implements NestedFacet {
 	@Override
 	public String getPath() {
 		return _path;
+	}
+
+	public void setChildAggregation(Aggregation childAggregation) {
+		_childAggregation = childAggregation;
+	}
+
+	public void setChildAggregationValuesFilter(
+		Filter childAggregationValuesFilter) {
+
+		_childAggregationValuesFilter = childAggregationValuesFilter;
 	}
 
 	public void setFilterField(String filterField) {
@@ -83,13 +96,19 @@ public class NestedFacetImpl extends FacetImpl implements NestedFacet {
 			booleanFilter.add(nestedTermsFilter, BooleanClauseOccur.MUST);
 		}
 
-		TermsFilter nestedAggregationTermsFilter = new TermsFilter(
-			getFieldName());
+		if (_childAggregationValuesFilter != null) {
+			booleanFilter.add(
+				_childAggregationValuesFilter, BooleanClauseOccur.MUST);
+		}
+		else {
+			TermsFilter nestedAggregationTermsFilter = new TermsFilter(
+				getFieldName());
 
-		nestedAggregationTermsFilter.addValues(selections);
+			nestedAggregationTermsFilter.addValues(selections);
 
-		booleanFilter.add(
-			nestedAggregationTermsFilter, BooleanClauseOccur.MUST);
+			booleanFilter.add(
+				nestedAggregationTermsFilter, BooleanClauseOccur.MUST);
+		}
 
 		BooleanQuery booleanQuery = new BooleanQueryImpl();
 
@@ -102,6 +121,8 @@ public class NestedFacetImpl extends FacetImpl implements NestedFacet {
 		return new BooleanClauseImpl<>(queryFilter, BooleanClauseOccur.MUST);
 	}
 
+	private Aggregation _childAggregation;
+	private Filter _childAggregationValuesFilter;
 	private String _filterField;
 	private String _filterValue;
 	private String _path;

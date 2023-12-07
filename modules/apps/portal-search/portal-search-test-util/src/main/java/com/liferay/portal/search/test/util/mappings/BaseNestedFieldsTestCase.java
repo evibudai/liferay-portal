@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.mappings;
@@ -19,6 +10,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.FieldArray;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.index.GetFieldMappingIndexRequest;
@@ -37,8 +29,6 @@ import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -110,7 +100,7 @@ public abstract class BaseNestedFieldsTestCase extends BaseIndexingTestCase {
 
 		GetFieldMappingIndexRequest getFieldMappingIndexRequest =
 			new GetFieldMappingIndexRequest(
-				new String[] {String.valueOf(getCompanyId())}, getMappingName(),
+				new String[] {String.valueOf(getCompanyId())},
 				new String[] {
 					"ddmFieldArray.ddmFieldValueText_en_US",
 					"ddmFieldArray.ddmFieldValueKeyword"
@@ -266,19 +256,18 @@ public abstract class BaseNestedFieldsTestCase extends BaseIndexingTestCase {
 					searchResponse -> {
 						assertOneResult(searchResponse);
 
-						Document document = searchResponse.getDocumentsStream(
-						).findAny(
-						).get();
+						List<Document> documents =
+							searchResponse.getDocuments();
+
+						Document document = documents.get(
+							RandomTestUtil.randomInt(0, documents.size() - 1));
 
 						List<?> values = document.getValues("ddmFieldArray");
 
-						Optional<Object> optional =
-							NestedDDMFieldArrayUtil.getFieldValue(
-								fieldName,
-								(Stream<Map<String, Object>>)values.stream());
-
 						Assert.assertEquals(
-							expectedValue, optional.orElse(null));
+							expectedValue,
+							NestedDDMFieldArrayUtil.getFieldValue(
+								fieldName, (List<Map<String, Object>>)values));
 					});
 			});
 	}
@@ -289,8 +278,6 @@ public abstract class BaseNestedFieldsTestCase extends BaseIndexingTestCase {
 		searchRequestBuilder.fetchSourceIncludes(
 			new String[] {"ddmFieldArray.*", Field.GROUP_ID});
 	}
-
-	protected abstract String getMappingName();
 
 	protected Query getQuery(
 		BooleanQuery booleanQuery, boolean mappedAsNested) {

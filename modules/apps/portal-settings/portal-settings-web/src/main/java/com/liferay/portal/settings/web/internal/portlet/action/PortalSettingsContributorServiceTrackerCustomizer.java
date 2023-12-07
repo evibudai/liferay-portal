@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.settings.web.internal.portlet.action;
@@ -23,7 +14,6 @@ import com.liferay.portal.settings.portlet.action.PortalSettingsFormContributor;
 
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Optional;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -54,41 +44,29 @@ public class PortalSettingsContributorServiceTrackerCustomizer
 			mvcActionCommandServiceRegistrationHolder =
 				new MVCActionCommandServiceRegistrationHolder();
 
-		Optional<String> deleteMVCActionCommandNameOptional =
-			portalSettingsFormContributor.
-				getDeleteMVCActionCommandNameOptional();
+		DeletePortalSettingsFormMVCActionCommand
+			deletePortalSettingsFormMVCActionCommand =
+				new DeletePortalSettingsFormMVCActionCommand(
+					_portletPreferencesLocalService,
+					portalSettingsFormContributor);
 
-		deleteMVCActionCommandNameOptional.ifPresent(
-			mvcActionName -> {
-				DeletePortalSettingsFormMVCActionCommand
-					deletePortalSettingsFormMVCActionCommand =
-						new DeletePortalSettingsFormMVCActionCommand(
-							_portletPreferencesLocalService,
-							portalSettingsFormContributor);
+		mvcActionCommandServiceRegistrationHolder.
+			_deleteMVCActionCommandServiceRegistration =
+				_registerMVCActionCommand(
+					portalSettingsFormContributor.
+						getDeleteMVCActionCommandName(),
+					deletePortalSettingsFormMVCActionCommand);
 
-				mvcActionCommandServiceRegistrationHolder.
-					_deleteMVCActionCommandServiceReference =
-						_registerMVCActionCommand(
-							mvcActionName,
-							deletePortalSettingsFormMVCActionCommand);
-			});
+		SavePortalSettingsFormMVCActionCommand
+			savePortalSettingsFormMVCActionCommand =
+				new SavePortalSettingsFormMVCActionCommand(
+					portalSettingsFormContributor);
 
-		Optional<String> saveMVCActionCommandNameOptional =
-			portalSettingsFormContributor.getSaveMVCActionCommandNameOptional();
-
-		saveMVCActionCommandNameOptional.ifPresent(
-			mvcActionName -> {
-				SavePortalSettingsFormMVCActionCommand
-					savePortalSettingsFormMVCActionCommand =
-						new SavePortalSettingsFormMVCActionCommand(
-							portalSettingsFormContributor);
-
-				mvcActionCommandServiceRegistrationHolder.
-					_saveMVCActionCommandServiceReference =
-						_registerMVCActionCommand(
-							mvcActionName,
-							savePortalSettingsFormMVCActionCommand);
-			});
+		mvcActionCommandServiceRegistrationHolder.
+			_saveMVCActionCommandServiceRegistration =
+				_registerMVCActionCommand(
+					portalSettingsFormContributor.getSaveMVCActionCommandName(),
+					savePortalSettingsFormMVCActionCommand);
 
 		_serviceRegistrationHolders.put(
 			portalSettingsFormContributor.getSettingsId(),
@@ -156,17 +134,17 @@ public class PortalSettingsContributorServiceTrackerCustomizer
 		}
 
 		if (mvcActionCommandServiceRegistrationHolder.
-				_deleteMVCActionCommandServiceReference != null) {
+				_deleteMVCActionCommandServiceRegistration != null) {
 
 			mvcActionCommandServiceRegistrationHolder.
-				_deleteMVCActionCommandServiceReference.unregister();
+				_deleteMVCActionCommandServiceRegistration.unregister();
 		}
 
 		if (mvcActionCommandServiceRegistrationHolder.
-				_saveMVCActionCommandServiceReference != null) {
+				_saveMVCActionCommandServiceRegistration != null) {
 
 			mvcActionCommandServiceRegistrationHolder.
-				_saveMVCActionCommandServiceReference.unregister();
+				_saveMVCActionCommandServiceRegistration.unregister();
 		}
 	}
 
@@ -184,9 +162,9 @@ public class PortalSettingsContributorServiceTrackerCustomizer
 	private class MVCActionCommandServiceRegistrationHolder {
 
 		private ServiceRegistration<MVCActionCommand>
-			_deleteMVCActionCommandServiceReference;
+			_deleteMVCActionCommandServiceRegistration;
 		private ServiceRegistration<MVCActionCommand>
-			_saveMVCActionCommandServiceReference;
+			_saveMVCActionCommandServiceRegistration;
 
 	}
 

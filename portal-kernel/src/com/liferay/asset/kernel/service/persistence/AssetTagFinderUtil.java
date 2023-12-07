@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.kernel.service.persistence;
@@ -21,10 +12,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
  * @generated
  */
 public class AssetTagFinderUtil {
-
-	public static int countByG_N(long groupId, String name) {
-		return getFinder().countByG_N(groupId, name);
-	}
 
 	public static int countByG_C_N(
 		long groupId, long classNameId, String name) {
@@ -40,15 +27,6 @@ public class AssetTagFinderUtil {
 
 		return getFinder().findByG_C_N(
 			groupId, classNameId, name, start, end, orderByComparator);
-	}
-
-	public static java.util.List<com.liferay.asset.kernel.model.AssetTag>
-		findByG_N_S_E(
-			long groupId, String name, int startPeriod, int endPeriod,
-			int periodLength) {
-
-		return getFinder().findByG_N_S_E(
-			groupId, name, startPeriod, endPeriod, periodLength);
 	}
 
 	public static AssetTagFinder getFinder() {

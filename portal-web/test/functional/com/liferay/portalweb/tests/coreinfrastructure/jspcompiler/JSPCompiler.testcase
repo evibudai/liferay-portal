@@ -1,6 +1,7 @@
 @component-name = "portal-jsp-compiler"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "JSP Compiler";
@@ -12,17 +13,18 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "Verify custom code in a deployed OSGI fragments is executed"
-	@priority = "3"
+	@priority = 3
 	test OSGIFragmentsAreDetectedAsOutdated {
-		property test.name.skip.portal.instance = "JSPCompiler#OSGIFragmentsAreDetectedAsOutdated";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given an OSGI fragment with custom code is deployed") {
 			var customCode = '''<p style="color: red">changed</p>''';
@@ -30,11 +32,9 @@ definition {
 			var moduleBaseDir = "modules/apps/adaptive-media/adaptive-media-blogs-web-fragment";
 			var projectDir = PropsUtil.get("project.dir");
 
-			FileUtil.write("${projectDir}/${moduleBaseDir}/src/main/resources/META-INF/resources/init-ext.jsp", "${customCode}");
+			FileUtil.write("${projectDir}/${moduleBaseDir}/src/main/resources/META-INF/resources/init-ext.jsp", ${customCode});
 
-			AntCommand(
-				locator1 = "build-test.xml",
-				value1 = "deploy-osgi-module-to-specific-bundle -Dmodule.base.dir=${moduleBaseDir} -DliferayHome=${liferayHome}");
+			AntCommands.runCommand("build-test.xml", "deploy-osgi-module-to-specific-bundle -DliferayHome=${liferayHome} -Dmodule.base.dir=${moduleBaseDir}");
 
 			WaitForConsoleTextPresent(value1 = "STOPPED com.liferay.blogs.web_");
 		}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.timebased.otp.model.impl;
@@ -78,7 +69,7 @@ public class MFATimeBasedOTPEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(29);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -104,6 +95,8 @@ public class MFATimeBasedOTPEntryCacheModel
 		sb.append(lastSuccessDate);
 		sb.append(", lastSuccessIP=");
 		sb.append(lastSuccessIP);
+		sb.append(", lastValidTOTP=");
+		sb.append(lastValidTOTP);
 		sb.append(", sharedSecret=");
 		sb.append(sharedSecret);
 		sb.append("}");
@@ -174,6 +167,13 @@ public class MFATimeBasedOTPEntryCacheModel
 			mfaTimeBasedOTPEntryImpl.setLastSuccessIP(lastSuccessIP);
 		}
 
+		if (lastValidTOTP == null) {
+			mfaTimeBasedOTPEntryImpl.setLastValidTOTP("");
+		}
+		else {
+			mfaTimeBasedOTPEntryImpl.setLastValidTOTP(lastValidTOTP);
+		}
+
 		if (sharedSecret == null) {
 			mfaTimeBasedOTPEntryImpl.setSharedSecret("");
 		}
@@ -204,6 +204,7 @@ public class MFATimeBasedOTPEntryCacheModel
 		lastFailIP = objectInput.readUTF();
 		lastSuccessDate = objectInput.readLong();
 		lastSuccessIP = objectInput.readUTF();
+		lastValidTOTP = objectInput.readUTF();
 		sharedSecret = objectInput.readUTF();
 	}
 
@@ -246,6 +247,13 @@ public class MFATimeBasedOTPEntryCacheModel
 			objectOutput.writeUTF(lastSuccessIP);
 		}
 
+		if (lastValidTOTP == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(lastValidTOTP);
+		}
+
 		if (sharedSecret == null) {
 			objectOutput.writeUTF("");
 		}
@@ -266,6 +274,7 @@ public class MFATimeBasedOTPEntryCacheModel
 	public String lastFailIP;
 	public long lastSuccessDate;
 	public String lastSuccessIP;
+	public String lastValidTOTP;
 	public String sharedSecret;
 
 }

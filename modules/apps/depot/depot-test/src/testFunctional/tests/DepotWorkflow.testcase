@@ -1,6 +1,7 @@
 @component-name = "portal-document-management"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Depot";
@@ -14,7 +15,7 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",
@@ -22,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +42,7 @@ definition {
 	}
 
 	@description = "This ensures that the approved image from a depot is available to use in its connected site."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveImage {
 		property portal.acceptance = "true";
@@ -114,15 +115,14 @@ definition {
 	}
 
 	@description = "This ensures that the approved WC article from a depot is available to use in its connected site."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveWCArticle {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Workflow.openWorkflowListView();
 
 		Navigator.gotoNavItem(navItem = "Configuration");
 
@@ -206,11 +206,11 @@ definition {
 			webContentSelectWcFile = "Depot WebContent Title",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 	}
 
 	@description = "This test covers LPS-113392. It ensures that an asset library WC article can be approved by the content reviewer."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveWCArticleByContentReviewer {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -301,7 +301,7 @@ definition {
 	}
 
 	@description = "This ensures that a single approver workflow of web content can be defined for the asset library."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveWCArticleWithinDepot {
 		DepotNavigator.openDepotWorkflowAdmin(depotName = "Test Depot Name");
@@ -346,9 +346,12 @@ definition {
 	}
 
 	@description = "This ensures that the approved WC article in folder from a depot is available to use in its connected site."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveWCInFolder {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONWebcontent.addFolder(
 			folderName = "WC Folder Name",
 			groupName = "Test Depot Name",
@@ -449,9 +452,12 @@ definition {
 	}
 
 	@description = "This ensures that the resubmitted image from a depot is available to use in its connected site."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRejectAndResubmitImage {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
@@ -495,11 +501,19 @@ definition {
 
 		Workflow.gotoPreviewEdit();
 
+		Button.clickCheckOut();
+
+		Workflow.gotoPreviewEdit();
+
 		DMDocument.editDocument(
 			dmDocumentFile = "Document_2.jpg",
 			dmDocumentTitle = "Document_2.jpg");
 
-		Button.clickSubmitForPublication();
+		AssertClick(
+			locator1 = "Button#SAVE_AND_CHECKIN",
+			value1 = "Save and Check In");
+
+		PortletEntry.save();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -565,15 +579,13 @@ definition {
 	}
 
 	@description = "This ensures that the resubmitted WC article from a depot is available to use in its connected site."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRejectAndResubmitWC {
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		Navigator.gotoNavItem(navItem = "Configuration");
+		Workflow.openWorkflowProcessBuilderConfiguration();
 
 		Workflow.configureWorkflow(
 			workflowDefinition = "Single Approver",
@@ -676,11 +688,11 @@ definition {
 			webContentSelectWcFile = "Depot WebContent Title Edit",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 	}
 
 	@description = "This ensures that the resubmitted web content can be approved in an asset library."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRejectAndResubmitWCArticleWithinDepot {
 		DepotNavigator.openDepotWorkflowAdmin(depotName = "Test Depot Name");
@@ -758,7 +770,7 @@ definition {
 	}
 
 	@description = "This ensures that an asset library WC article can be rejected by the content reviewer."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRejectWCArticleByContentReviewer {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -833,7 +845,7 @@ definition {
 	}
 
 	@description = "This ensures that a DM folder workflow can be restored to default from other settings."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanRestoreDMFolderWorkflowToDefault {
 		JSONFolder.addFolder(
@@ -879,7 +891,7 @@ definition {
 	}
 
 	@description = "This ensures that a WC folder workflow can be restored to default from other settings."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanRestoreWCFolderWorkflowToDefault {
 		JSONWebcontent.addFolder(
@@ -922,7 +934,7 @@ definition {
 	}
 
 	@description = "This ensures that the workflow can be set in an asset library."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test WorkflowCanBeSetInDepot {
 		property portal.acceptance = "true";

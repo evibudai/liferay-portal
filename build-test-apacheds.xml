@@ -94,10 +94,10 @@
 	</macrodef>
 
 	<target name="get-apacheds-commands">
-		<install-apacheds-utils/>
+		<install-apacheds-utils />
 	</target>
 	<target name="search-apacheds">
-		<search-apacheds-data/>
+		<search-apacheds-data />
 	</target>
 	<target name="start-apacheds">
 		<unzip-apacheds />
@@ -108,23 +108,20 @@
 			<equals arg1="${apacheds.blank.user.password.enabled}" arg2="true" />
 			<then>
 				<unzip-apacheds-instance-custom
-                        apacheds.instance.custom.zip.name="${apacheds.instance.blank.user.password.custom.zip.name}"
-
+					apacheds.instance.custom.zip.name="${apacheds.instance.blank.user.password.custom.zip.name}"
 				/>
 			</then>
 			<elseif>
 				<equals arg1="${apacheds.multiple.users.enabled}" arg2="true" />
 				<then>
 					<unzip-apacheds-instance-custom
-                            apacheds.instance.custom.zip.name="${apacheds.instance.multiple.users.custom.zip.name}"
-
+						apacheds.instance.custom.zip.name="${apacheds.instance.multiple.users.custom.zip.name}"
 					/>
 				</then>
 			</elseif>
 			<else>
 				<unzip-apacheds-instance-custom
-                        apacheds.instance.custom.zip.name="${apacheds.instance.custom.zip.name}"
-
+					apacheds.instance.custom.zip.name="${apacheds.instance.custom.zip.name}"
 				/>
 			</else>
 		</if>
@@ -191,6 +188,6 @@
 		</if>
 	</target>
 	<target name="update-apacheds">
-		<update-apacheds-data/>
+		<update-apacheds-data />
 	</target>
 </project>

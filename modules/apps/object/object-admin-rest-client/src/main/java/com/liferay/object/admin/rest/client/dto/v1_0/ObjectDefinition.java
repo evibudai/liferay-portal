@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.client.dto.v1_0;
@@ -232,6 +223,49 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean enableComments;
 
+	public Boolean getEnableLocalization() {
+		return enableLocalization;
+	}
+
+	public void setEnableLocalization(Boolean enableLocalization) {
+		this.enableLocalization = enableLocalization;
+	}
+
+	public void setEnableLocalization(
+		UnsafeSupplier<Boolean, Exception> enableLocalizationUnsafeSupplier) {
+
+		try {
+			enableLocalization = enableLocalizationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableLocalization;
+
+	public Boolean getEnableObjectEntryDraft() {
+		return enableObjectEntryDraft;
+	}
+
+	public void setEnableObjectEntryDraft(Boolean enableObjectEntryDraft) {
+		this.enableObjectEntryDraft = enableObjectEntryDraft;
+	}
+
+	public void setEnableObjectEntryDraft(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryDraftUnsafeSupplier) {
+
+		try {
+			enableObjectEntryDraft = enableObjectEntryDraftUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableObjectEntryDraft;
+
 	public Boolean getEnableObjectEntryHistory() {
 		return enableObjectEntryHistory;
 	}
@@ -316,6 +350,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Map<String, String> label;
 
+	public Boolean getModifiable() {
+		return modifiable;
+	}
+
+	public void setModifiable(Boolean modifiable) {
+		this.modifiable = modifiable;
+	}
+
+	public void setModifiable(
+		UnsafeSupplier<Boolean, Exception> modifiableUnsafeSupplier) {
+
+		try {
+			modifiable = modifiableUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean modifiable;
+
 	public String getName() {
 		return name;
 	}
@@ -377,6 +432,32 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected ObjectField[] objectFields;
 
+	public String getObjectFolderExternalReferenceCode() {
+		return objectFolderExternalReferenceCode;
+	}
+
+	public void setObjectFolderExternalReferenceCode(
+		String objectFolderExternalReferenceCode) {
+
+		this.objectFolderExternalReferenceCode =
+			objectFolderExternalReferenceCode;
+	}
+
+	public void setObjectFolderExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			objectFolderExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			objectFolderExternalReferenceCode =
+				objectFolderExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String objectFolderExternalReferenceCode;
+
 	public ObjectLayout[] getObjectLayouts() {
 		return objectLayouts;
 	}
@@ -421,6 +502,30 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected ObjectRelationship[] objectRelationships;
+
+	public ObjectValidationRule[] getObjectValidationRules() {
+		return objectValidationRules;
+	}
+
+	public void setObjectValidationRules(
+		ObjectValidationRule[] objectValidationRules) {
+
+		this.objectValidationRules = objectValidationRules;
+	}
+
+	public void setObjectValidationRules(
+		UnsafeSupplier<ObjectValidationRule[], Exception>
+			objectValidationRulesUnsafeSupplier) {
+
+		try {
+			objectValidationRules = objectValidationRulesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ObjectValidationRule[] objectValidationRules;
 
 	public ObjectView[] getObjectViews() {
 		return objectViews;
@@ -569,6 +674,32 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected String restContextPath;
+
+	public String getRootObjectDefinitionExternalReferenceCode() {
+		return rootObjectDefinitionExternalReferenceCode;
+	}
+
+	public void setRootObjectDefinitionExternalReferenceCode(
+		String rootObjectDefinitionExternalReferenceCode) {
+
+		this.rootObjectDefinitionExternalReferenceCode =
+			rootObjectDefinitionExternalReferenceCode;
+	}
+
+	public void setRootObjectDefinitionExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			rootObjectDefinitionExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			rootObjectDefinitionExternalReferenceCode =
+				rootObjectDefinitionExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String rootObjectDefinitionExternalReferenceCode;
 
 	public String getScope() {
 		return scope;

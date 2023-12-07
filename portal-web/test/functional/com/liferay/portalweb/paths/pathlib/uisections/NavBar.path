@@ -27,7 +27,7 @@
 </tr>
 <tr>
 	<td>APPLICATION_SEARCH_FIELD</td>
-	<td>//div[contains(@class,'active')]//input[contains(@id,'sidebarAddPanelSearch')]</td>
+	<td>//div[contains(@class,'active')]//input[contains(@id,'SearchFormInput')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -57,7 +57,7 @@
 </tr>
 <tr>
 	<td>DETAILS</td>
-	<td>//ul[contains(@class,'navbar-nav')]/li/a[contains(@class,'dropdown-toggle')]/span[contains(.,'Details')]</td>
+	<td>//ul[contains(@class,'navbar-nav')]/li/a[contains(@class,'dropdown-toggle')]/span[contains(.,'Details')] | //button[contains(@class,'dropdown-toggle')]/span[contains(.,'Details')]</td>
 	<td></td>
 </tr>
 <tr>

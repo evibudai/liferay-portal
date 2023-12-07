@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model;
@@ -45,6 +36,7 @@ public class ObjectActionWrapper
 
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("objectActionId", getObjectActionId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("userId", getUserId());
@@ -61,6 +53,7 @@ public class ObjectActionWrapper
 		attributes.put("objectActionExecutorKey", getObjectActionExecutorKey());
 		attributes.put("objectActionTriggerKey", getObjectActionTriggerKey());
 		attributes.put("parameters", getParameters());
+		attributes.put("system", isSystem());
 		attributes.put("status", getStatus());
 
 		return attributes;
@@ -78,6 +71,13 @@ public class ObjectActionWrapper
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long objectActionId = (Long)attributes.get("objectActionId");
@@ -177,6 +177,12 @@ public class ObjectActionWrapper
 
 		if (parameters != null) {
 			setParameters(parameters);
+		}
+
+		Boolean system = (Boolean)attributes.get("system");
+
+		if (system != null) {
+			setSystem(system);
 		}
 
 		Integer status = (Integer)attributes.get("status");
@@ -325,6 +331,16 @@ public class ObjectActionWrapper
 	@Override
 	public Map<java.util.Locale, String> getErrorMessageMap() {
 		return model.getErrorMessageMap();
+	}
+
+	/**
+	 * Returns the external reference code of this object action.
+	 *
+	 * @return the external reference code of this object action
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -511,6 +527,16 @@ public class ObjectActionWrapper
 	}
 
 	/**
+	 * Returns the system of this object action.
+	 *
+	 * @return the system of this object action
+	 */
+	@Override
+	public boolean getSystem() {
+		return model.getSystem();
+	}
+
+	/**
 	 * Returns the user ID of this object action.
 	 *
 	 * @return the user ID of this object action
@@ -558,6 +584,16 @@ public class ObjectActionWrapper
 	@Override
 	public boolean isActive() {
 		return model.isActive();
+	}
+
+	/**
+	 * Returns <code>true</code> if this object action is system.
+	 *
+	 * @return <code>true</code> if this object action is system; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isSystem() {
+		return model.isSystem();
 	}
 
 	@Override
@@ -695,6 +731,16 @@ public class ObjectActionWrapper
 		java.util.Locale defaultLocale) {
 
 		model.setErrorMessageMap(errorMessageMap, defaultLocale);
+	}
+
+	/**
+	 * Sets the external reference code of this object action.
+	 *
+	 * @param externalReferenceCode the external reference code of this object action
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	/**
@@ -859,6 +905,16 @@ public class ObjectActionWrapper
 	@Override
 	public void setStatus(int status) {
 		model.setStatus(status);
+	}
+
+	/**
+	 * Sets whether this object action is system.
+	 *
+	 * @param system the system of this object action
+	 */
+	@Override
+	public void setSystem(boolean system) {
+		model.setSystem(system);
 	}
 
 	/**

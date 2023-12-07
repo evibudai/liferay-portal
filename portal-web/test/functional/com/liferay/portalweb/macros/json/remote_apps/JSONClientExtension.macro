@@ -1,0 +1,57 @@
+definition {
+
+	@summary = "Default summary"
+	macro addCustomElementRemoteAppEntry(customElementProperties = null, customElementName = null, customElementHtmlName = null, customElementURL = null, customElementCssurl = null, customElementUseESM = null) {
+		Variables.assertDefined(parameterList = "${customElementName},${customElementHtmlName},${customElementURL}");
+
+		JSONClientExtensionAPI._addCustomElementRemoteAppEntry(
+			customElementCssurl = ${customElementCssurl},
+			customElementHtmlName = ${customElementHtmlName},
+			customElementName = ${customElementName},
+			customElementProperties = ${customElementProperties},
+			customElementURL = ${customElementURL},
+			customElementUseESM = ${customElementUseESM});
+	}
+
+	@summary = "Default summary"
+	macro addIFrameRemoteAppEntry(iFrameURL = null, name = null) {
+		Variables.assertDefined(parameterList = "${iFrameURL},${name}");
+
+		JSONClientExtensionAPI._addIFrameRemoteAppEntry(
+			iFrameURL = ${iFrameURL},
+			name = ${name});
+	}
+
+	@summary = "Default summary"
+	macro addRemoteAppEntry(name = null, type = null, mainURL = null, url = null) {
+		Variables.assertDefined(parameterList = "${name},${type}");
+
+		if (!(isSet(description))) {
+			var description = "";
+		}
+
+		if (!(isSet(properties))) {
+			var properties = "";
+		}
+
+		var nameMap = JSONClientExtensionSetter.setNameMap(name = ${name});
+		var typeSettings = JSONClientExtensionSetter.setTypeSettings(
+			mainURL = ${mainURL},
+			url = ${url});
+
+		JSONClientExtensionAPI._addRemoteAppEntry(
+			description = ${description},
+			nameMap = ${nameMap},
+			properties = ${properties},
+			type = ${type},
+			typeSettings = ${typeSettings});
+	}
+
+	@summary = "Default summary"
+	macro deleteIFrameRemoteAppEntry(externalReferenceCode = null) {
+		Variables.assertDefined(parameterList = ${externalReferenceCode});
+
+		JSONClientExtensionAPI._deleteIFrameRemoteAppEntry(externalReferenceCode = ${externalReferenceCode});
+	}
+
+}

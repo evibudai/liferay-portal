@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import {useEffect, useState} from 'react';
 import {useNavigate, useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import useMutate from '~/hooks/useMutate';
 
 import useFormModal from '../../hooks/useFormModal';
 import i18n from '../../i18n';
@@ -55,11 +47,14 @@ const TaskHeaderActions = () => {
 		revalidate: {revalidateTaskUser},
 	} = useOutletContext<OutletContext>();
 
+	const {mutatePartial: mutateTaskPartial} = useMutate(mutateTask);
+
 	const subTaskAllCompleted = testraySubtasks?.totalCount === 0;
 
 	const [modalType, setModalType] = useState<TestflowAssigUserType>(
 		'select-users'
 	);
+
 	const [userIds, setUsersId] = useState<number[]>([]);
 	const {modal} = useFormModal<number[]>({
 		onBeforeSave: (newUserIds, act) => {
@@ -124,7 +119,9 @@ const TaskHeaderActions = () => {
 									testrayTask
 								);
 
-								mutateTask(response);
+								mutateTaskPartial({
+									dueStatus: response.dueStatus,
+								});
 
 								await testrayTaskUsersImpl.assign(
 									response.id,
@@ -179,7 +176,9 @@ const TaskHeaderActions = () => {
 								: (task: TestrayTask) =>
 										testrayTaskImpl.abandon(task);
 
-							fn(testrayTask).then(mutateTask);
+							fn(testrayTask).then(({dueStatus}) =>
+								mutateTaskPartial({dueStatus})
+							);
 						}}
 					>
 						{i18n.translate(

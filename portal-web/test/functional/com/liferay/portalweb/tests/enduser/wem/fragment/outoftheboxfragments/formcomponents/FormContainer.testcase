@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a company Object with a Text field") {
@@ -24,23 +25,8 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ObjectAdmin.deleteAllCustomObjectsViaAPI();
-
-			Picklist.deleteAllPicklistsViaAPI();
-		}
-	}
-
 	@description = "This is a test for LPS-149984. The page editor cannot add fragment into Form Container without mapping entity."
-	@priority = "4"
+	@priority = 4
 	test CannotAddFragmentToFormContainerWithoutMappingEntity {
 		task ("Given a page creator has a content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -73,13 +59,13 @@ definition {
 			AssertVisible(
 				key_fragmentName = "Form Container",
 				key_messageInfo = "Select a content type to start creating the form.",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#NO_FRAGMENTS_MESSAGE");
 		}
 
 		task ("When the page creator tries to add a Heading fragment into Form Container") {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				index = "1",
+				index = 1,
 				key_collectionName = "Basic Components",
 				key_fragmentName = "Heading",
 				key_targetFragmentName = "Form Container",
@@ -93,7 +79,7 @@ definition {
 			AssertVisible(
 				key_fragmentName = "Form Container",
 				key_messageInfo = "Select a content type to start creating the form.",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#NO_FRAGMENTS_MESSAGE");
 
 			PageEditor.viewFragmentNotPresent(fragmentName = "Heading");
@@ -105,13 +91,13 @@ definition {
 				panel = "General");
 
 			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.gotoTab(tabName = "Fragments and Widgets");
 
 			DragAndDrop.javaScriptDragAndDropToObject(
-				index = "1",
+				index = 1,
 				key_collectionName = "Basic Components",
 				key_fragmentName = "Heading",
 				key_targetFragmentName = "Form Container",
@@ -129,7 +115,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157740. The page creator can only drop Form fragments inside a mapped Form Container on content page."
-	@priority = "4"
+	@priority = 4
 	test CannotAddFragmentToOutsideFormContainerOnContentPage {
 		task ("Given a page creator has a content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -169,46 +155,84 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-164125. Form Components should not be available on Display Page Template."
-	@priority = "4"
-	test CannotViewFormComponentsOnDisplayPageTemplate {
-		task ("Given a site creator has a display page template") {
+	@description = "This is a test for LPS-190586 and LPS-182728. Even with the option to be redirected to a DPT, if there are validation errors on the object entry the page creator will remain on the same page and get a validation error message. The user should see the general error on the top of form."
+	@priority = 4
+	test CannotRedirectToAssociatedDisplayPageTemplateWhenValidationFailure {
+		task ("Given a page creator has a Form Container with redirection option to a DPT") {
 			ObjectAdmin.addObjectFieldViaAPI(
 				fieldBusinessType = "Text",
-				fieldLabelName = "Region",
-				fieldName = "region",
+				fieldLabelName = "Age",
+				fieldName = "age",
 				fieldType = "String",
 				isRequired = "false",
 				objectName = "PurchaseOrder");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
 
-			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
-				contentType = "Web Content Article",
-				displayPageTemplateEntryName = "Display Page Name",
-				groupName = "Test Site Name",
-				subType = "Basic Web Content");
-		}
+			JSONObject.addObjectValidation(
+				errorMessage = "The Age should be an integer.",
+				fieldName = "age",
+				labelName = "Form Validation",
+				objectName = "PurchaseOrder",
+				outputValidationType = "fullValidation",
+				script = "isInteger(age)",
+				validationType = "ddm");
 
-		task ("When the site creator searches for the Form Components on Fragments and Widgets sidebar of display page template") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
 
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+			DisplayPageTemplatesAdmin.addDisplayPage(
+				contentType = "Purchase Order",
+				displayPageName = "Display Page Name");
 
-			PageEditor.searchFragmentViaSidebar(fragmentName = "Form Components");
+			PageEditor.publish();
+
+			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				displayPageName = "Default",
+				panel = "General",
+				successMessage = "Go to Entry Display Page");
+
+			PageEditor.publish();
 		}
 
-		task ("Then the site creator should not see the Input fragments") {
-			for (var fragmentName : list "Form Container,CAPTCHA,Checkbox,Date,File Upload,Numeric Input,Select from List,Submit Button,Text Input") {
-				AssertElementNotPresent(
-					key_fragmentName = "${fragmentName}",
-					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
-			}
+		task ("When the page creator enters an invalid value") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			InputField.editText(
+				fieldLabel = "Age",
+				text = "age");
+
+			Button.clickSubmitButton();
+		}
+
+		task ("Then the page creator will not be redirected and will see a validation error message") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_FORM",
+				value1 = "The Age should be an integer.");
+
+			Page.viewCurrentPage(pageName = "Test Page Name");
 		}
 	}
 
 	@description = "This is a test for LPS-151867 and LPS-149984. The page editor could add Form Container fragment from Form Components set to page. The page editor could map entity to Form Container in content page."
-	@priority = "5"
+	@priority = 5
 	test MapEntityToFormContainerInContentPage {
 		property portal.acceptance = "true";
 
@@ -268,7 +292,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-164125. The user can map a Form Container on masters page template."
-	@priority = "4"
+	@priority = 4
 	test MapEntityToFormContainerInMastersPageTemplate {
 		task ("Given a site creator has a masters page template") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -321,7 +345,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157739. The page creator could map new field to new input fragment after mapping Form Container to object."
-	@priority = "4"
+	@priority = 4
 	test MapNewFieldToNewInputFragmentInMappedFormContainer {
 		task ("Given a page creator has a mapped Form Container on a content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -383,8 +407,70 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-188036. When the checkbox is active, success notification input and preview success notification appear, and disappear when it is unchecked."
+	@priority = 3
+	test PreviewSuccessNotification {
+		task ("Given a page creator has a mapped Form Container on a content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+		}
+
+		task ("When the page creator accesses to the General panel of Form Container") {
+			PageEditor.gotoConfiguration(fragmentName = "Form Container");
+		}
+
+		task ("Then the page creator cannot see the Success Notification Text and Preview Success Notification fields") {
+			AssertNotChecked.assertNotCheckedNotVisible(
+				checkboxName = "Show Notification when Form Is Submitted",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			AssertElementNotPresent(
+				key_text = "Success Notification Text",
+				locator1 = "TextInput#ANY");
+
+			AssertElementNotPresent(
+				checkboxName = "Preview Success Notification",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
+
+		task ("When the page creator enables the Show Notification when Form Is Submitted") {
+			PageEditor.editFormContainer(
+				panel = "General",
+				showNotificationWhenFormIsSubmitted = "true",
+				successNotificationText = "Your form was successfully submitted.");
+		}
+
+		task ("Then the page creator could preview the success notification") {
+			PageEditor.previewSuccessNotification();
+
+			Alert.viewSuccessMessageText(successMessage = "Your form was successfully submitted.");
+		}
+	}
+
 	@description = "This is a test for LPS-157739. The page creator could remove automatically added input fragments and change mapping fields."
-	@priority = "4"
+	@priority = 4
 	test RemoveAutomaticallyAddedInputFragmentsThenChangeMappingField {
 		task ("Given a page creator has a Form Container on a content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -427,11 +513,10 @@ definition {
 			PageEditor.viewInputStyle(
 				label = "Address",
 				showLabel = "true",
-				type = "text-input");
+				type = "textarea");
 
 			PageEditor.viewInputStyle(
 				label = "Region",
-				position = "2",
 				showLabel = "true",
 				type = "text-input");
 
@@ -443,18 +528,14 @@ definition {
 		}
 
 		task ("Then the page creator could remove automatically added input fragments") {
-			PageEditor.removeFragment(
-				fragmentName = "Text Input",
-				index = "2");
-
-			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+			for (var fragmentName : list "Text Input,Textarea,Submit Button") {
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			AssertVisible(
 				key_fragmentName = "Form Container",
 				key_messageInfo = "Place fragments here.",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#NO_FRAGMENTS_MESSAGE");
 		}
 
@@ -477,7 +558,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-155529. The page designer can submit a Form Container with embedded success message."
-	@priority = "5"
+	@priority = 5
 	test SubmitFormContainerWithEmbeddedSuccessMessage {
 		property portal.acceptance = "true";
 
@@ -512,7 +593,7 @@ definition {
 				panel = "General");
 
 			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 		}
 
@@ -520,31 +601,28 @@ definition {
 			PageEditor.gotoConfiguration(fragmentName = "Form Container");
 
 			AssertSelectedLabel(
-				key_fieldLabel = "Success Message",
+				key_fieldLabel = "Success Interaction",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "Embedded");
+				value1 = "Show Embedded Message");
 
 			AssertTextEquals(
-				key_text = "Success Text",
+				key_text = "Embedded Message",
 				locator1 = "TextInput#ANY",
 				value1 = "Thank you. Your information was successfully received.");
 
 			AssertNotChecked.assertNotCheckedNotVisible(
-				key_toggleSwitchLabel = "Preview Success State",
+				key_toggleSwitchLabel = "Preview Embedded Message",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
 			AssertVisible(
 				key_fragmentName = "Form Container",
 				key_messageInfo = "Place fragments here.",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#NO_FRAGMENTS_MESSAGE");
 		}
 
 		task ("When the page designer previews success state") {
-			PageEditor.editFormContainer(
-				panel = "General",
-				previewSuccessState = "true",
-				successMessage = "Embedded");
+			PageEditor.previewEmbeddedMessage();
 		}
 
 		task ("Then the page designer can see sucess text under Form Container") {
@@ -590,12 +668,13 @@ definition {
 
 			PageEditor.editFormContainer(
 				panel = "General",
-				previewSuccessState = "true",
-				successMessage = "Embedded",
+				successMessage = "Show Embedded Message",
 				successText = "We are glad to receive your Form!");
 		}
 
 		task ("Then the page designer can see custom sucess text under Form Container") {
+			PageEditor.previewEmbeddedMessage();
+
 			AssertTextPresent(value1 = "We are glad to receive your Form!");
 		}
 
@@ -619,8 +698,8 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-155529. The page designer can submit a Form Container with External URL success message."
-	@priority = "4"
+	@description = "This is a test for LPS-155529 and LPS-188036. The page designer can submit a Form Container with External URL success message."
+	@priority = 4
 	test SubmitFormContainerWithExternalURLSuccessMessage {
 		task ("Given a page designer has mapped Form Container with URL as success message") {
 			task ("Add a Text field to object") {
@@ -654,8 +733,12 @@ definition {
 				PageEditor.editFormContainer(
 					contentType = "Purchase Order",
 					panel = "General",
-					successMessage = "External URL",
+					successMessage = "Go to External URL",
 					url = "https://www.liferay.com");
+
+				AssertElementNotPresent(
+					checkboxName = "Show Notification when Form Is Submitted",
+					locator1 = "Checkbox#ANY_CHECKBOX");
 
 				PageEditor.publish();
 			}
@@ -684,7 +767,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-155529. The page designer can submit a Form Container with page success message."
-	@priority = "4"
+	@priority = 4
 	test SubmitFormContainerWithPageSuccessMessage {
 		task ("Given a page designer has mapped Form Container with Page as success message") {
 			task ("Add a Text field to object") {
@@ -703,12 +786,12 @@ definition {
 				for (var pageName : list "Test Page Name,Thank you page") {
 					JSONLayout.addPublicLayout(
 						groupName = "Test Site Name",
-						layoutName = "${pageName}",
+						layoutName = ${pageName},
 						type = "content");
 
 					JSONLayout.publishLayout(
 						groupName = "Test Site Name",
-						layoutName = "${pageName}");
+						layoutName = ${pageName});
 				}
 			}
 
@@ -727,7 +810,7 @@ definition {
 					contentType = "Purchase Order",
 					pageName = "Thank you page",
 					panel = "General",
-					successMessage = "Page");
+					successMessage = "Go to Page");
 
 				PageEditor.viewItemSelectorText(
 					fieldLabel = "Page",
@@ -794,8 +877,8 @@ definition {
 				changePage = "true",
 				pageName = "Home",
 				panel = "General",
-				siteName = "${siteName}",
-				successMessage = "Page");
+				siteName = ${siteName},
+				successMessage = "Go to Page");
 
 			PageEditor.viewItemSelectorText(
 				fieldLabel = "Page",
@@ -822,12 +905,12 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "Home#SITE_NAME",
-				value1 = "${siteName}");
+				value1 = ${siteName});
 		}
 	}
 
 	@description = "This is a test for LPS-155529. The pages designer can add custom translations on Thank you message."
-	@priority = "4"
+	@priority = 4
 	test SubmitFormContainerWithTranslatedSuccessText {
 		task ("Given a page designer has a mapped Form Container and Language Selector on content page") {
 			task ("Add a Text field to object") {
@@ -878,7 +961,7 @@ definition {
 
 			PageEditor.editFormContainer(
 				panel = "General",
-				successMessage = "Embedded",
+				successMessage = "Show Embedded Message",
 				successText = "Estamos muy agradecidos de recibir su formulario.");
 
 			PageEditor.changeLocale(
@@ -887,15 +970,12 @@ definition {
 
 			PageEditor.editFormContainer(
 				panel = "General",
-				successMessage = "Embedded",
+				successMessage = "Show Embedded Message",
 				successText = "Obrigado por nos enviar seu formulario!");
 		}
 
 		task ("Then the page designer can see Portuguese translation on preview success state") {
-			PageEditor.editFormContainer(
-				panel = "General",
-				previewSuccessState = "true",
-				successMessage = "Embedded");
+			PageEditor.previewEmbeddedMessage();
 
 			AssertTextPresent(value1 = "Obrigado por nos enviar seu formulario!");
 		}
@@ -975,7 +1055,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-149984. The Form Container has all capabilities of Container."
-	@priority = "4"
+	@priority = 4
 	test ViewCapabilitiesOfFormContainer {
 		task ("Given a page creator has a content page with a Form Container fragment") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -1009,7 +1089,7 @@ definition {
 		task ("Then the page creator could see common styles section on Styles panel") {
 			for (var fieldSetLabel : list "Spacing,Text,Background,Borders,Effects") {
 				AssertElementPresent(
-					key_fieldSetLabel = "${fieldSetLabel}",
+					key_fieldSetLabel = ${fieldSetLabel},
 					locator1 = "PageEditor#ITEM_CONFIGURATION_FIELDSET_LABEL");
 			}
 		}
@@ -1046,7 +1126,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157739. The page creator could receive an object entry after submitting form."
-	@priority = "5"
+	@priority = 5
 	test ViewCreatedObjectEntryAfterSubmitForm {
 		property portal.acceptance = "true";
 
@@ -1112,7 +1192,7 @@ definition {
 					ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 						fieldName = "foodPreferences",
 						objectName = "Preference",
-						value = "${entryName}");
+						value = ${entryName});
 				}
 			}
 
@@ -1228,24 +1308,23 @@ definition {
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
-			Type(
-				key_text = "Address",
-				locator1 = "TextInput#ANY",
-				value1 = "Dalian");
+			FormFields.editTextArea(
+				fieldName = "address",
+				fieldValue = "Dalian");
 
 			Type(
 				key_text = "Age",
 				locator1 = "TextInput#ANY",
-				value1 = "30");
+				value1 = 30);
 
 			Type(
 				key_text = "Amount",
 				locator1 = "TextInput#ANY",
-				value1 = "100");
+				value1 = 100);
 
 			UploadDependencyFile.uploadFile(fileName = "Document_1.jpg");
 
-			Click(locator1 = "xpath=(//label[contains(.,'Select File')])[2]");
+			Click(locator1 = "xpath=(//button[contains(.,'Select File')])[2]");
 
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -1258,22 +1337,22 @@ definition {
 			Button.clickAdd();
 
 			Check.checkNotVisible(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "checkbox");
 
 			Type(
 				key_text = "Price",
 				locator1 = "TextInput#ANY",
-				value1 = "3000");
+				value1 = 3000);
 
 			Type.sendKeys(
 				key_text = "Purchase Date",
 				locator1 = "TextInput#ANY",
-				value1 = "08082020");
+				value1 = 08082020);
 
 			Click(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_TOGGLE",
 				type = "select-from-list");
 
@@ -1287,10 +1366,10 @@ definition {
 			Type(
 				key_text = "Tax",
 				locator1 = "TextInput#ANY",
-				value1 = "3");
+				value1 = 3);
 
 			Click(
-				index = "2",
+				index = 2,
 				locator1 = "Fragment#INPUT_TOGGLE",
 				type = "select-from-list");
 
@@ -1305,14 +1384,14 @@ definition {
 			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
 				attribute = "address",
 				attributeValue = "Dalian",
-				expectedValue = "30",
+				expectedValue = 30,
 				fieldName = "age",
 				objectName = "PurchaseOrder");
 
 			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
 				attribute = "address",
 				attributeValue = "Dalian",
-				expectedValue = "100",
+				expectedValue = 100,
 				fieldName = "amount",
 				objectName = "PurchaseOrder");
 
@@ -1356,7 +1435,7 @@ definition {
 			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
 				attribute = "address",
 				attributeValue = "Dalian",
-				expectedValue = "${favoriteFoodPreferenceERC}",
+				expectedValue = ${favoriteFoodPreferenceERC},
 				fieldName = "r_favoriteFood_c_preferenceERC",
 				objectName = "PurchaseOrder");
 
@@ -1391,12 +1470,12 @@ definition {
 
 			var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = "Preference");
 
-			ObjectDefinitionAPI.deleteRelationship(objectDefinitionId = "${objectDefinitionId}");
+			ObjectDefinitionAPI.deleteRelationship(objectDefinitionId = ${objectDefinitionId});
 		}
 	}
 
 	@description = "This is a test for LPS-158143. The page creator could see error message after mapping the Form Container to object when multiple OOTB input fragments are unavailable. The page creator could see error message after mapping the Form Container to object when some OOTB input fragments are disabled from master page."
-	@priority = "4"
+	@priority = 4
 	test ViewErrorMessageAfterMappingFormContainerToEntityWhenMultipleInputFragmentsDisabledFromMasterPage {
 		task ("Given a page creator has a Form Container on a content page based on a master page") {
 			task ("Add Text, Date and Integer fields to the object") {
@@ -1438,7 +1517,23 @@ definition {
 
 				Click(locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS");
 
-				MastersPageTemplates.deselectAllowedFragments(fragmentNameList = "Date,Numeric Input,Submit Button,Text Input");
+				// Temp solution until LPS-174321 resolved
+
+				MastersPageTemplates.searchAllowedFragments(searchValue = "Form Components");
+
+				Uncheck.uncheckToggleSwitch(
+					key_fragmentName = "Form Components",
+					locator1 = "Checkbox#ALLOWED_FRAGMENT");
+
+				for (var fragmentName : list "Form Container,CAPTCHA,Checkbox,File Upload,Select from List") {
+					Check.checkToggleSwitch(
+						key_fragmentName = ${fragmentName},
+						locator1 = "Checkbox#ALLOWED_FRAGMENT");
+				}
+
+				Button.clickSave();
+
+				//MastersPageTemplates.deselectAllowedFragments(fragmentNameList = "Date,Numeric Input,Submit Button,Text Input");
 
 				MastersPageTemplates.publishMaster();
 			}
@@ -1468,7 +1563,7 @@ definition {
 			AssertVisible(
 				key_fragmentName = "Form Container",
 				key_messageInfo = "Place fragments here.",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#NO_FRAGMENTS_MESSAGE");
 
 			PageEditor.gotoConfiguration(fragmentName = "Form Container");
@@ -1481,7 +1576,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157998. No warning message shown when hide a layout element with whole form and required input fragments or when publish a content page where a hidden layout element contains a whole form with required input fragments."
-	@priority = "4"
+	@priority = 4
 	test ViewNoWarningMessageShownWhenHideFormOrPublishHiddenFormWithRequiredInputFragments {
 		task ("Given a page designer has a Form Container with an input fragment mapped to a required field inside a Container") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -1553,7 +1648,7 @@ definition {
 
 			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
-				columnNumber = "1",
+				columnNumber = 1,
 				fragmentName = "Form Container",
 				navTab = "Fragments");
 
@@ -1584,7 +1679,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157998. When publish a form content page with multiple warning messages, the page creator should see them in one modal."
-	@priority = "4"
+	@priority = 4
 	test ViewOnlyOneModalShownWhenPublishContentPageWithMultipleWarningMessages {
 		task ("Given a page designer has a Form Container with an unmapped Text Input fragment on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -1639,7 +1734,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-151402. The user could only see the first error message when multiple validation issues happen on submitting a form."
-	@priority = "4"
+	@priority = 4
 	test ViewOnlyTheFirstErrorMessageShownWhenMultipleValidationIssuesHappen {
 		task ("Given a user has a content page where a required Checkbox, Date, Text Input and Submit Button fragments are inside a Form Container") {
 			task ("Add a Text field to object") {
@@ -1668,7 +1763,7 @@ definition {
 				Type(
 					key_text = "Maximum Number of Characters",
 					locator1 = "TextInput#ANY",
-					value1 = "20");
+					value1 = 20);
 
 				ObjectField.save();
 			}
@@ -1727,7 +1822,7 @@ definition {
 			Type.sendKeys(
 				key_text = "Purchase Date",
 				locator1 = "TextInput#ANY",
-				value1 = "0101");
+				value1 = 0101);
 
 			Type(
 				key_text = "Region",
@@ -1739,25 +1834,25 @@ definition {
 
 		task ("Then the user should only see one error message") {
 			AssertAttributeValue(
-				attribute1 = "required",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "checkbox",
-				value1 = "true");
+				value1 = "required",
+				value2 = "true");
 
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "checkbox",
-				value1 = "Please check this box if you want to proceed.");
+				value1 = "validationMessage",
+				value2 = "Please check this box if you want to proceed.");
 
 			AssertElementNotPresent(locator1 = "Message#ERROR");
 		}
 
 		task ("When the user submits form with checked Checkbox, invalid Date and value exceeding the length of Text Input") {
 			Check.checkNotVisible(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "checkbox");
 
@@ -1766,17 +1861,17 @@ definition {
 
 		task ("Then the user should only see one error message") {
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "checkbox",
-				value1 = "");
+				value1 = "validationMessage",
+				value2 = "");
 
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
 				key_text = "Purchase Date",
 				locator1 = "TextInput#ANY",
-				value1 = "Please enter a valid value. The field is incomplete or has an invalid date.");
+				value1 = "validationMessage",
+				value2 = "Please enter a valid value. The field is incomplete or has an invalid date.");
 
 			AssertElementNotPresent(locator1 = "Message#ERROR");
 		}
@@ -1785,7 +1880,7 @@ definition {
 			Type.sendKeys(
 				key_text = "Purchase Date",
 				locator1 = "TextInput#ANY",
-				value1 = "2020");
+				value1 = 2020);
 
 			Button.clickSubmitButton();
 		}
@@ -1794,22 +1889,22 @@ definition {
 			Alert.viewErrorMessage(errorMessage = "Value exceeds maximum length of 20 for field Region.");
 
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "checkbox",
-				value1 = "");
+				value1 = "validationMessage",
+				value2 = "");
 
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
 				key_text = "Purchase Date",
 				locator1 = "TextInput#ANY",
-				value1 = "");
+				value1 = "validationMessage",
+				value2 = "");
 		}
 	}
 
 	@description = "This is a test for LPS-158143. The page creator could see success message after mapping the Form Container to object when all OOTB input fragments are available."
-	@priority = "4"
+	@priority = 4
 	test ViewSuccessMessageAfterMappingFormContainerToEntity {
 		task ("Given a page creator has a Form Container on a content page") {
 			task ("Add Text, Date and Integer fields to the object") {
@@ -1867,8 +1962,268 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-188036. Success notification with toast message must be compatible with Go to Entry Display Page redirect option."
+	@priority = 4
+	test ViewSuccessNotificationOfGoToEntryDisplayPage {
+		task ("Given a page creator has a mapped Form Container on a content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+			DisplayPageTemplatesAdmin.addDisplayPage(
+				contentType = "Purchase Order",
+				displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order (Default)");
+
+			PageEditor.publish();
+
+			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+		}
+
+		task ("When the page creator defines the success notification of Go to Entry Display Page") {
+			PageEditor.editFormContainer(
+				displayPageName = "Default",
+				panel = "General",
+				showNotificationWhenFormIsSubmitted = "true",
+				successMessage = "Go to Entry Display Page",
+				successNotificationText = "Your form was successfully submitted.");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page creator could see success notification on content page at view mode") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			InputField.editText(
+				fieldLabel = "Name",
+				text = "Jack");
+
+			Button.clickSubmitButton();
+
+			Alert.viewSuccessMessageText(successMessage = "Your form was successfully submitted.");
+
+			var objectEntryId = JSONObject.getObjectEntryId(
+				entryValue = "Jack",
+				fieldName = "name",
+				objectName = "PurchaseOrder");
+
+			ControlMenu.viewHeaderTitle(headerTitle = ${objectEntryId});
+
+			InputField.viewText(
+				fieldLabel = "Name",
+				text = "Jack");
+		}
+	}
+
+	@description = "This is a test for LPS-188036. Success notification with toast message must be compatible with Go to Page redirect option."
+	@priority = 4
+	test ViewSuccessNotificationOfGoToPage {
+		task ("Given a page creator has a mapped Form Container on a content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Thank you page");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+		}
+
+		task ("When the page creator defines the success notification of Go to Page") {
+			PageEditor.editFormContainer(
+				pageName = "Thank you page",
+				panel = "General",
+				showNotificationWhenFormIsSubmitted = "true",
+				successMessage = "Go to Page",
+				successNotificationText = "Your form was successfully submitted.");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page creator could see success notification on redirection page") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			InputField.editText(
+				fieldLabel = "Name",
+				text = "Jack");
+
+			Button.clickSubmitButton();
+
+			Alert.viewSuccessMessageText(successMessage = "Your form was successfully submitted.");
+
+			ControlMenu.viewHeaderTitle(headerTitle = "Thank you page");
+		}
+	}
+
+	@description = "This is a test for LPS-188036. Success notification with toast message must be compatible with Show Embedded Message redirect option."
+	@priority = 4
+	test ViewSuccessNotificationOfShowEmbeddedMessage {
+		task ("Given a page creator has a mapped Form Container on a content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+		}
+
+		task ("When the page creator defines the success notification of Show Embedded Message") {
+			PageEditor.editFormContainer(
+				panel = "General",
+				showNotificationWhenFormIsSubmitted = "true",
+				successNotificationText = "Your form was successfully submitted.");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page creator could see success notification on redirection page") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			InputField.editText(
+				fieldLabel = "Name",
+				text = "Jack");
+
+			Button.clickSubmitButton();
+
+			Alert.viewSuccessMessageText(successMessage = "Your form was successfully submitted.");
+
+			AssertTextPresent(value1 = "Thank you. Your information was successfully received.");
+		}
+	}
+
+	@description = "This is a test for LPS-188036. Success notification with toast message must be compatible with Stay in page redirect option."
+	@priority = 4
+	test ViewSuccessNotificationOfStayInPage {
+		task ("Given a page creator has a mapped Form Container on a content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+		}
+
+		task ("When the page creator defines the success notification of Stay in Page") {
+			PageEditor.editFormContainer(
+				panel = "General",
+				showNotificationWhenFormIsSubmitted = "true",
+				successMessage = "Stay in Page",
+				successNotificationText = "Your form was successfully submitted.");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the page creator could see success notification on content page at view mode") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			InputField.editText(
+				fieldLabel = "Name",
+				text = "Jack");
+
+			Button.clickSubmitButton();
+
+			Alert.viewSuccessMessageText(successMessage = "Your form was successfully submitted.");
+
+			AssertVisible(
+				key_text = "Name",
+				locator1 = "TextInput#ANY");
+		}
+	}
+
 	@description = "This is a test for LPS-157998. The page creator should see warning message when delete a required input fragment."
-	@priority = "4"
+	@priority = 4
 	test ViewWarningMessageWhenDeleteRequiredInputFragments {
 		task ("Given a page designer has a Form Container with required input fragments on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -1929,63 +2284,8 @@ definition {
 	}
 
 	@description = "This is a test for LPS-150278 and LPS-157998. The page creator should see warning message when hide a layout element that doesn't contain the whole form and with required input fragment."
-	@priority = "4"
-	test ViewWarningMessageWhenHideLayoutElementWithPartialFormAndRequiredInputFragments {
-		task ("Given a page designer has a Form Container with a Container containing a required input fragment on content page") {
-			ObjectAdmin.addObjectFieldViaAPI(
-				fieldBusinessType = "Text",
-				fieldLabelName = "Region",
-				fieldName = "region",
-				fieldType = "String",
-				isRequired = "false",
-				objectName = "PurchaseOrder");
-
-			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
-
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name 1",
-				type = "content");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 1",
-				siteName = "Test Site Name");
-
-			PageEditor.addFragment(
-				collectionName = "Form Components",
-				fragmentName = "Form Container");
-
-			PageEditor.editFormContainer(
-				contentType = "Purchase Order",
-				panel = "General");
-
-			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
-			}
-
-			PageEditor.addFragmentToFormContainer(
-				collectionName = "Layout Elements",
-				fragmentName = "Container");
-
-			PageEditor.addElementToContainer(
-				collectionName = "Form Components",
-				fragmentName = "Text Input",
-				navTab = "Fragments");
-
-			PageEditor.editInput(
-				field = "Region",
-				fragmentName = "Text Input",
-				markAsRequired = "true");
-		}
-
-		task ("When the page designer hides the Container") {
-			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
-		}
-
-		task ("Then the page designer could see a warning message") {
-			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
-		}
-
+	@priority = 4
+	test ViewWarningMessageWhenHideContainerWithPartialFormAndInputFragmentMappedToRequiredField {
 		task ("Given a page designer has a Form Container with a Container containing an input fragment mapped to a required field on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
 				fieldBusinessType = "Date",
@@ -1995,13 +2295,15 @@ definition {
 				isRequired = "true",
 				objectName = "PurchaseOrder");
 
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				layoutName = "Test Page Name 2",
+				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 2",
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			PageEditor.addFragment(
@@ -2012,8 +2314,8 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Date,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+			for (var fragmentName : list "Date,Submit Button") {
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.addFragmentToFormContainer(
@@ -2037,15 +2339,29 @@ definition {
 		task ("Then the page designer could see a warning message") {
 			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
 		}
+	}
 
-		task ("Given a page designer has a Form Container with a Grid containing a required input fragment on content page") {
+	@description = "This is a test for LPS-150278 and LPS-157998. The page creator should see warning message when hide a layout element that doesn't contain the whole form and with required input fragment."
+	@priority = 4
+	test ViewWarningMessageWhenHideContainerWithPartialFormAndRequiredInputFragment {
+		task ("Given a page designer has a Form Container with a Container containing a required input fragment on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Region",
+				fieldName = "region",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				layoutName = "Test Page Name 3",
+				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 3",
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			PageEditor.addFragment(
@@ -2056,17 +2372,16 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Date,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+			for (var fragmentName : list "Text Input,Submit Button") {
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Layout Elements",
-				fragmentName = "Grid");
+				fragmentName = "Container");
 
-			PageEditor.addElementToColumn(
+			PageEditor.addElementToContainer(
 				collectionName = "Form Components",
-				columnNumber = "1",
 				fragmentName = "Text Input",
 				navTab = "Fragments");
 
@@ -2076,22 +2391,36 @@ definition {
 				markAsRequired = "true");
 		}
 
-		task ("When the page designer hides the Grid") {
-			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
+		task ("When the page designer hides the Container") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
 		}
 
 		task ("Then the page designer could see a warning message") {
 			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
 		}
+	}
 
+	@description = "This is a test for LPS-150278 and LPS-157998. The page creator should see warning message when hide a layout element that doesn't contain the whole form and with required input fragment."
+	@priority = 4
+	test ViewWarningMessageWhenHideGridWithPartialFormAndInputFragmentMappedToRequiredField {
 		task ("Given a page designer has a Form Container with a Grid containing an input fragment mapped to a required field on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Date",
+				fieldLabelName = "Purchase Date",
+				fieldName = "purchaseDate",
+				fieldType = "Date",
+				isRequired = "true",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				layoutName = "Test Page Name 4",
+				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 4",
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			PageEditor.addFragment(
@@ -2102,8 +2431,8 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Date,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+			for (var fragmentName : list "Date,Submit Button") {
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.addFragmentToFormContainer(
@@ -2112,7 +2441,7 @@ definition {
 
 			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
-				columnNumber = "1",
+				columnNumber = 1,
 				fragmentName = "Date",
 				navTab = "Fragments");
 
@@ -2130,10 +2459,10 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with hidden required input fragment."
-	@priority = "4"
-	test ViewWarningMessageWhenPublishContentPageWithHiddenRequiredInputFragments {
-		task ("Given a page designer has a Form Container with a hidden Container containing a required input fragment on content page") {
+	@description = "This is a test for LPS-150278 and LPS-157998. The page creator should see warning message when hide a layout element that doesn't contain the whole form and with required input fragment."
+	@priority = 4
+	test ViewWarningMessageWhenHideGridWithPartialFormAndRequiredInputFragment {
+		task ("Given a page designer has a Form Container with a Grid containing a required input fragment on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
 				fieldBusinessType = "Text",
 				fieldLabelName = "Region",
@@ -2146,11 +2475,11 @@ definition {
 
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				layoutName = "Test Page Name 1",
+				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 1",
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			PageEditor.addFragment(
@@ -2162,21 +2491,16 @@ definition {
 				panel = "General");
 
 			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Layout Elements",
-				fragmentName = "Container");
+				fragmentName = "Grid");
 
-			PageEditor.addFragmentToFormContainer(
+			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
-				fragmentName = "Submit Button",
-				height = "Tall",
-				targetFragmentName = "Container");
-
-			PageEditor.addElementToContainer(
-				collectionName = "Form Components",
+				columnNumber = 1,
 				fragmentName = "Text Input",
 				navTab = "Fragments");
 
@@ -2184,22 +2508,20 @@ definition {
 				field = "Region",
 				fragmentName = "Text Input",
 				markAsRequired = "true");
-
-			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
 		}
 
-		task ("When the page designer publishes the content page") {
-			Button.click(button = "Publish");
+		task ("When the page designer hides the Grid") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
 		}
 
-		task ("Then the page designer could see Required Fields Hidden warning message") {
-			AssertTextEquals(
-				locator1 = "Modal#HEADER",
-				value1 = "Required Fields Hidden");
-
-			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
+		task ("Then the page designer could see a warning message") {
+			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
 		}
+	}
 
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with hidden required input fragment."
+	@priority = 4
+	test ViewWarningMessageWhenPublishContentPageWithHiddenInputFragmentMappedToRequiredFieldInsideContainer {
 		task ("Given a page designer has a Form Container with a hidden Container containing an input fragment mapped to a required field on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
 				fieldBusinessType = "Text",
@@ -2209,13 +2531,15 @@ definition {
 				isRequired = "true",
 				objectName = "PurchaseOrder");
 
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				layoutName = "Test Page Name 2",
+				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 2",
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			PageEditor.addFragment(
@@ -2226,12 +2550,8 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			PageEditor.removeFragment(
-				fragmentName = "Text Input",
-				index = "2");
-
 			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.addFragmentToFormContainer(
@@ -2267,15 +2587,29 @@ definition {
 
 			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
 		}
+	}
 
-		task ("Given a page designer has a Form Container with a hidden Grid containing a required input fragment on content page") {
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with hidden required input fragment."
+	@priority = 4
+	test ViewWarningMessageWhenPublishContentPageWithHiddenInputFragmentMappedToRequiredFieldInsideGrid {
+		task ("Given a page designer has a Form Container with a hidden Grid containing an input fragment mapped to a required field on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "true",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				layoutName = "Test Page Name 3",
+				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 3",
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			PageEditor.addFragment(
@@ -2286,12 +2620,8 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			PageEditor.removeFragment(
-				fragmentName = "Text Input",
-				index = "2");
-
 			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.addFragmentToFormContainer(
@@ -2300,29 +2630,19 @@ definition {
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Text Input",
+				fragmentName = "Submit Button",
 				height = "Tall",
 				targetFragmentName = "Grid");
 
-			PageEditor.editInput(
-				field = "Name*",
-				fragmentName = "Text Input");
-
-			PageEditor.addFragmentToFormContainer(
-				collectionName = "Form Components",
-				fragmentName = "Submit Button",
-				targetFragmentName = "Text Input");
-
 			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
-				columnNumber = "1",
+				columnNumber = 1,
 				fragmentName = "Text Input",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
-				field = "Region",
-				fragmentName = "Text Input",
-				markAsRequired = "true");
+				field = "Name*",
+				fragmentName = "Text Input");
 
 			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
 		}
@@ -2338,15 +2658,29 @@ definition {
 
 			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
 		}
+	}
 
-		task ("Given a page designer has a Form Container with a hidden Grid containing an input fragment mapped to a required field on content page") {
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with hidden required input fragment."
+	@priority = 4
+	test ViewWarningMessageWhenPublishContentPageWithHiddenRequiredInputFragmentInsideContainer {
+		task ("Given a page designer has a Form Container with a hidden Container containing a required input fragment on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Region",
+				fieldName = "region",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				layoutName = "Test Page Name 4",
+				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name 4",
+				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			PageEditor.addFragment(
@@ -2357,12 +2691,79 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			PageEditor.removeFragment(
+			for (var fragmentName : list "Text Input,Submit Button") {
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
+			}
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				height = "Tall",
+				targetFragmentName = "Container");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Form Components",
 				fragmentName = "Text Input",
-				index = "2");
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input",
+				markAsRequired = "true");
+
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer could see Required Fields Hidden warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Required Fields Hidden");
+
+			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
+		}
+	}
+
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with hidden required input fragment."
+	@priority = 4
+	test ViewWarningMessageWhenPublishContentPageWithHiddenRequiredInputFragmentInsideGrid {
+		task ("Given a page designer has a Form Container with a hidden Grid containing a required input fragment on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Region",
+				fieldName = "region",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
 
 			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
 			PageEditor.addFragmentToFormContainer(
@@ -2377,13 +2778,14 @@ definition {
 
 			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
-				columnNumber = "1",
+				columnNumber = 1,
 				fragmentName = "Text Input",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
-				field = "Name*",
-				fragmentName = "Text Input");
+				field = "Region",
+				fragmentName = "Text Input",
+				markAsRequired = "true");
 
 			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
 		}
@@ -2402,7 +2804,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page without the Submit Button fragment or with a hidden Submit Button fragment."
-	@priority = "4"
+	@priority = 4
 	test ViewWarningMessageWhenPublishContentPageWithoutSubmitButtonOrWithHiddenSubmitButton {
 		task ("Given a page creator has a Form Container without Submit Button on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -2477,7 +2879,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with unmapped input fragments."
-	@priority = "4"
+	@priority = 4
 	test ViewWarningMessageWhenPublishContentPageWithUnmappedInputFragments {
 		task ("Given a page creator has a Form Container with unmapped input fragment on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -2526,7 +2928,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with unmapped required fields."
-	@priority = "4"
+	@priority = 4
 	test ViewWarningMessageWhenPublishContentPageWithUnmappedRequiredFields {
 		task ("Given a page creator has a Form Container with unmapped required fields on content page") {
 			ObjectAdmin.addObjectFieldViaAPI(

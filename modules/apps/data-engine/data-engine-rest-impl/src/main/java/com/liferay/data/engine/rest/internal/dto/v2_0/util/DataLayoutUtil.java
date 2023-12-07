@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.dto.v2_0.util;
@@ -39,6 +30,7 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.spi.converter.SPIDDMFormRuleConverter;
 import com.liferay.dynamic.data.mapping.spi.converter.model.SPIDDMFormRule;
 import com.liferay.dynamic.data.mapping.util.SettingsDDMFormFieldsUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -49,14 +41,11 @@ import com.liferay.portal.kernel.util.MapUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Jeyvison Nascimento
@@ -199,15 +188,10 @@ public class DataLayoutUtil {
 			return new DataLayoutColumn[0];
 		}
 
-		Stream<DDMFormLayoutColumn> stream = ddmFormLayoutColumns.stream();
-
-		return stream.map(
-			DataLayoutUtil::_toDataLayoutColumn
-		).collect(
-			Collectors.toList()
-		).toArray(
-			new DataLayoutColumn[0]
-		);
+		return TransformUtil.transformToArray(
+			ddmFormLayoutColumns,
+			ddmFormLayoutColumn -> _toDataLayoutColumn(ddmFormLayoutColumn),
+			DataLayoutColumn.class);
 	}
 
 	private static Map<String, Object> _toDataLayoutFields(
@@ -275,15 +259,10 @@ public class DataLayoutUtil {
 			return new DataLayoutPage[0];
 		}
 
-		Stream<DDMFormLayoutPage> stream = ddmFormLayoutPages.stream();
-
-		return stream.map(
-			DataLayoutUtil::_toDataLayoutPage
-		).collect(
-			Collectors.toList()
-		).toArray(
-			new DataLayoutPage[0]
-		);
+		return TransformUtil.transformToArray(
+			ddmFormLayoutPages,
+			ddmFormLayoutPage -> _toDataLayoutPage(ddmFormLayoutPage),
+			DataLayoutPage.class);
 	}
 
 	private static DataLayoutRow _toDataLayoutRow(
@@ -300,15 +279,10 @@ public class DataLayoutUtil {
 	private static DataLayoutRow[] _toDataLayoutRows(
 		List<DDMFormLayoutRow> ddmFormLayoutRows) {
 
-		Stream<DDMFormLayoutRow> stream = ddmFormLayoutRows.stream();
-
-		return stream.map(
-			DataLayoutUtil::_toDataLayoutRow
-		).collect(
-			Collectors.toList()
-		).toArray(
-			new DataLayoutRow[0]
-		);
+		return TransformUtil.transformToArray(
+			ddmFormLayoutRows,
+			ddmFormLayoutRow -> _toDataLayoutRow(ddmFormLayoutRow),
+			DataLayoutRow.class);
 	}
 
 	private static DataRule[] _toDataRules(
@@ -325,31 +299,21 @@ public class DataLayoutUtil {
 			Gson gson = new Gson();
 
 			dataRule.setActions(
-				Stream.of(
-					spiDDMFormRule.getSPIDDMFormRuleActions()
-				).flatMap(
-					Collection::stream
-				).map(
+				TransformUtil.transformToArray(
+					spiDDMFormRule.getSPIDDMFormRuleActions(),
 					spiDDMFormRuleAction -> gson.fromJson(
 						JSONFactoryUtil.looseSerializeDeep(
 							spiDDMFormRuleAction),
-						Map.class)
-				).toArray(
-					Map[]::new
-				));
+						Map.class),
+					Map.class));
 			dataRule.setConditions(
-				Stream.of(
-					spiDDMFormRule.getSPIDDMFormRuleConditions()
-				).flatMap(
-					Collection::stream
-				).map(
+				TransformUtil.transformToArray(
+					spiDDMFormRule.getSPIDDMFormRuleConditions(),
 					spiDDMFormRuleCondition -> gson.fromJson(
 						JSONFactoryUtil.looseSerializeDeep(
 							spiDDMFormRuleCondition),
-						Map.class)
-				).toArray(
-					Map[]::new
-				));
+						Map.class),
+					Map.class));
 
 			dataRule.setLogicalOperator(spiDDMFormRule.getLogicalOperator());
 			dataRule.setName(
@@ -434,13 +398,9 @@ public class DataLayoutUtil {
 			return Collections.emptyList();
 		}
 
-		return Stream.of(
-			dataLayoutColumns
-		).map(
-			DataLayoutUtil::_toDDMFormLayoutColumn
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transformToList(
+			dataLayoutColumns,
+			dataLayoutColumn -> _toDDMFormLayoutColumn(dataLayoutColumn));
 	}
 
 	private static DDMFormLayoutPage _toDDMFormLayoutPage(
@@ -467,13 +427,9 @@ public class DataLayoutUtil {
 			return Collections.emptyList();
 		}
 
-		return Stream.of(
-			dataLayoutPages
-		).map(
-			dataLayoutPage -> _toDDMFormLayoutPage(dataLayoutPage, locale)
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transformToList(
+			dataLayoutPages,
+			dataLayoutPage -> _toDDMFormLayoutPage(dataLayoutPage, locale));
 	}
 
 	private static DDMFormLayoutRow _toDDMFormLayoutRow(
@@ -494,13 +450,9 @@ public class DataLayoutUtil {
 			return Collections.emptyList();
 		}
 
-		return Stream.of(
-			dataLayoutRows
-		).map(
-			DataLayoutUtil::_toDDMFormLayoutRow
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transformToList(
+			dataLayoutRows,
+			dataLayoutRow -> _toDDMFormLayoutRow(dataLayoutRow));
 	}
 
 }

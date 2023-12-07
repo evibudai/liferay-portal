@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -17,13 +8,18 @@ import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClaySticker from '@clayui/sticker';
-import {fetch, navigate, openSelectionModal} from 'frontend-js-web';
+import {fetch, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useRef, useState} from 'react';
 
 function mapItemsOnClick(items) {
 	return items.map((item) => {
-		const {items: nestedItems, jsOnClickConfig, ...otherKeys} = item;
+		const {
+			items: nestedItems,
+			jsOnClickConfig,
+			onClickJSModuleURL,
+			...otherKeys
+		} = item;
 
 		const newVal = {...otherKeys};
 
@@ -31,19 +27,17 @@ function mapItemsOnClick(items) {
 			newVal.items = mapItemsOnClick(nestedItems);
 		}
 
-		if (jsOnClickConfig) {
-			newVal.onClick = () => {
-				const {selectEventName, title, url} = jsOnClickConfig;
-
-				openSelectionModal({
-					id: selectEventName,
-					onSelect(selectedItem) {
-						navigate(selectedItem.url);
-					},
-					selectEventName,
-					title,
-					url,
+		if (onClickJSModuleURL) {
+			newVal.onClick = async () => {
+				const onClickFn = await new Promise((resolve, reject) => {
+					Liferay.Loader.require(
+						onClickJSModuleURL,
+						(jsModule) => resolve(jsModule.default),
+						(error) => reject(error)
+					);
 				});
+
+				onClickFn(jsOnClickConfig);
 			};
 		}
 
@@ -67,6 +61,7 @@ function PersonalMenu({
 	itemsURL,
 	label,
 	size,
+	userName,
 	userPortraitURL,
 }) {
 	const [items, setItems] = useState(defaultItems);
@@ -104,11 +99,15 @@ function PersonalMenu({
 					/>
 				) : (
 					<ClayButton
-						aria-label={Liferay.Language.get('personal-menu')}
+						aria-label={sub(
+							Liferay.Language.get('x-user-profile'),
+							userName
+						)}
 						className="rounded-circle"
 						displayType="unstyled"
 						onFocus={preloadItems}
 						onMouseOver={preloadItems}
+						title={Liferay.Language.get('user-profile-menu')}
 					>
 						<span
 							className={`sticker sticker-user-icon sticker-${size}`}

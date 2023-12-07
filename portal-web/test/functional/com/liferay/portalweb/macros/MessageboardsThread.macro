@@ -3,9 +3,10 @@ definition {
 	var assetType = "Message Boards Thread";
 	var userName = "Test Test";
 
-	macro addCP {
+	@summary = "Default summary"
+	macro addCP(displayText = null, dmDocumentTitle = null, threadSubject = null, mbAttachmentFile = null, siteURLKey = null, fieldLabel = null, threadBody = null, vocabularyName = null, pageName = null, categoryName = null) {
 		if (isSet(siteURLKey)) {
-			MessageboardsThread.openToAddThread(siteURLKey = "${siteURLKey}");
+			MessageboardsThread.openToAddThread(siteURLKey = ${siteURLKey});
 		}
 		else {
 			LexiconEntry.gotoAdd();
@@ -19,21 +20,21 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		if (isSet(displayTextWithLink)) {
 			CKEditor.addTextWithLink(
-				displayText = "${displayText}",
-				dmDocumentTitle = "${dmDocumentTitle}",
-				fieldLabel = "${fieldLabel}",
-				pageName = "${pageName}");
+				displayText = ${displayText},
+				dmDocumentTitle = ${dmDocumentTitle},
+				fieldLabel = ${fieldLabel},
+				pageName = ${pageName});
 		}
 		else {
 			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 			Type(
 				locator1 = "CKEditor#BODY",
-				value1 = "${threadBody}");
+				value1 = ${threadBody});
 
 			SelectFrame(value1 = "relative=top");
 		}
@@ -42,8 +43,8 @@ definition {
 			Panel.expandPanel(panel = "Categorization");
 
 			AssetCategorization.addCategory(
-				categoryName = "${categoryName}",
-				vocabularyName = "${vocabularyName}");
+				categoryName = ${categoryName},
+				vocabularyName = ${vocabularyName});
 		}
 
 		if (isSet(mbAttachmentFile)) {
@@ -51,15 +52,15 @@ definition {
 
 			AssertElementPresent(locator1 = "Button#SELECT_FILES");
 
-			var key_attachmentFileName = "${mbAttachmentFile}";
+			var key_attachmentFileName = ${mbAttachmentFile};
 
 			UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 				locator1 = "TextInput#FILE",
-				value1 = "${mbAttachmentFile}");
+				value1 = ${mbAttachmentFile});
 
-			if (IsNotChecked.isNotCheckedNotVisible(key_fileName = "${mbAttachmentFile}", locator1 = "Checkbox#UPLOAD_FILE_ENTRY")) {
+			if (IsNotChecked.isNotCheckedNotVisible(key_fileName = ${mbAttachmentFile}, locator1 = "Checkbox#UPLOAD_FILE_ENTRY")) {
 				Check.checkNotVisible(
-					key_fileName = "${mbAttachmentFile}",
+					key_fileName = ${mbAttachmentFile},
 					locator1 = "Checkbox#UPLOAD_FILE_ENTRY");
 			}
 		}
@@ -67,39 +68,41 @@ definition {
 		PortletEntry.publish();
 	}
 
-	macro addInvalidAttachmentPG {
+	@summary = "Default summary"
+	macro addInvalidAttachmentPG(threadSubject = null, maxAttachmentFileSize = null, invalidSize = null, mbThreadAttachment = null) {
 		AssertClick(
 			locator1 = "Button#NEW_THREAD",
 			value1 = "New Thread");
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		Panel.expandPanel(panel = "Attachments");
 
 		AssertElementPresent(locator1 = "Button#SELECT_FILES");
 
-		var key_attachmentFileName = "${mbThreadAttachment}";
+		var key_attachmentFileName = ${mbThreadAttachment};
 
 		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
-			value1 = "${mbThreadAttachment}");
+			value1 = ${mbThreadAttachment});
 
-		if ("${invalidSize}" == "true") {
+		if (${invalidSize} == "true") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#MESSAGE_ATTACHMENT_INVALID_SIZE_ERROR",
 				value1 = "Please enter a file with a valid file size no larger than ${maxAttachmentFileSize}KB.");
 		}
 	}
 
-	macro addPG {
+	@summary = "Default summary"
+	macro addPG(threadSubject = null, bold = null, tagName = null, priority = null, categoryName = null, invalidCharacters = null, layoutName = null, groupName = null, siteURLKey = null, threadBody = null, threadBodyImageName = null, mbAttachmentFileList = null) {
 		if (isSet(siteURLKey)) {
 			MessageboardsThread.openToAddThread(
-				categoryName = "${categoryName}",
-				groupName = "${groupName}",
-				layoutName = "${layoutName}",
-				siteURLKey = "${siteURLKey}");
+				categoryName = ${categoryName},
+				groupName = ${groupName},
+				layoutName = ${layoutName},
+				siteURLKey = ${siteURLKey});
 		}
 		else {
 			AssertClick(
@@ -115,7 +118,7 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		if (isSet(source)) {
 			Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
@@ -123,13 +126,13 @@ definition {
 			if (IsVisible(locator1 = "CKEditor#BODY_FIELD_SOURCE_ON_2")) {
 				Type(
 					locator1 = "CKEditor#BODY_FIELD_SOURCE_ON_2",
-					value1 = "${threadBody}");
+					value1 = ${threadBody});
 			}
 
 			if (IsElementPresent(locator1 = "CKEditor#BODY_FIELD_SOURCE_ON")) {
 				Type.typeCodeMirrorEditorNoError(
 					locator1 = "CKEditor#BODY_FIELD_SOURCE_ON",
-					value1 = "${threadBody}");
+					value1 = ${threadBody});
 			}
 		}
 		else {
@@ -137,9 +140,9 @@ definition {
 
 			Type(
 				locator1 = "CKEditor#BODY",
-				value1 = "${threadBody}");
+				value1 = ${threadBody});
 
-			if ("${bold}" == "true") {
+			if (${bold} == "true") {
 				SelectFrame();
 
 				FormFields.toggleCKEditorContentStyle(optionTool = "Bold");
@@ -149,7 +152,7 @@ definition {
 		SelectFrame(value1 = "relative=top");
 
 		if (isSet(threadBodyImageName)) {
-			var key_imageFileName = "${threadBodyImageName}";
+			var key_imageFileName = ${threadBodyImageName};
 
 			ItemSelector.gotoItemSelectorViaCKEditor();
 
@@ -166,10 +169,10 @@ definition {
 			if (isSet(selectTag)) {
 				AssetCategorization.selectTag(
 					skipSelectFrame = "true",
-					tagNameList = "${tagName}");
+					tagNameList = ${tagName});
 			}
 			else {
-				AssetCategorization.addTag(tagName = "${tagName}");
+				AssetCategorization.addTag(tagName = ${tagName});
 			}
 		}
 
@@ -178,12 +181,12 @@ definition {
 
 			Select(
 				locator1 = "MessageBoardsThread#THREAD_PRIORITY_SELECT",
-				value1 = "${priority}");
+				value1 = ${priority});
 
 			AssertSelectedLabel(
 				locator1 = "Select#SELECT_ID",
 				selectFieldId = "priority",
-				value1 = "${priority}");
+				value1 = ${priority});
 		}
 
 		if (isSet(mbAttachmentFileList)) {
@@ -191,16 +194,16 @@ definition {
 
 			AssertElementPresent(locator1 = "Button#SELECT_FILES");
 
-			for (var mbAttachmentFile : list "${mbAttachmentFileList}") {
+			for (var mbAttachmentFile : list ${mbAttachmentFileList}) {
 				UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 					locator1 = "TextInput#FILE",
-					value1 = "${mbAttachmentFile}");
+					value1 = ${mbAttachmentFile});
 			}
 		}
 
 		Button.clickPublish();
 
-		if ("${invalidCharacters}" == "true") {
+		if (${invalidCharacters} == "true") {
 			AssertTextEquals.assertPartialText(
 				key_alertMessage = "One or more tags contains invalid characters.",
 				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
@@ -211,7 +214,8 @@ definition {
 		}
 	}
 
-	macro addPGAsQuestion {
+	@summary = "Default summary"
+	macro addPGAsQuestion(breadcrumbName = null, replyCount = null, threadSubject = null, threadBody = null, lastPostUserName = null, pageName = null, categoryName = null) {
 		AssertClick(
 			locator1 = "Button#NEW_THREAD",
 			value1 = "New Thread");
@@ -220,13 +224,13 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -236,27 +240,28 @@ definition {
 
 		PortletEntry.publish();
 
-		Navigator.gotoPage(pageName = "${pageName}");
+		Navigator.gotoPage(pageName = ${pageName});
 
 		if (isSet(categoryName)) {
-			MessageboardsCategory.gotoPG(categoryName = "${categoryName}");
+			MessageboardsCategory.gotoPG(categoryName = ${categoryName});
 		}
 
 		MessageboardsThread.gotoPG(
-			lastPostUserName = "${lastPostUserName}",
-			replyCount = "${replyCount}",
-			threadBody = "${threadBody}",
-			threadSubject = "${threadSubject}");
+			lastPostUserName = ${lastPostUserName},
+			replyCount = ${replyCount},
+			threadBody = ${threadBody},
+			threadSubject = ${threadSubject});
 
 		AssertClick(
-			key_breadcrumbName = "${breadcrumbName}",
+			key_breadcrumbName = ${breadcrumbName},
 			locator1 = "Breadcrumb#BREADCRUMB_ENTRY_LINK",
-			value1 = "${breadcrumbName}");
+			value1 = ${breadcrumbName});
 
-		MessageboardsThread.viewMarkedAsQuestionPG(threadSubject = "${threadSubject}");
+		MessageboardsThread.viewMarkedAsQuestionPG(threadSubject = ${threadSubject});
 	}
 
-	macro addPGWithAttachment {
+	@summary = "Default summary"
+	macro addPGWithAttachment(threadSubject = null, threadBody = null, mbThreadAttachment = null) {
 		AssertClick(
 			locator1 = "Button#NEW_THREAD",
 			value1 = "New Thread");
@@ -267,13 +272,13 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -281,11 +286,11 @@ definition {
 
 		AssertElementPresent(locator1 = "Button#SELECT_FILES");
 
-		var key_attachmentFileName = "${mbThreadAttachment}";
+		var key_attachmentFileName = ${mbThreadAttachment};
 
 		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
-			value1 = "${mbThreadAttachment}");
+			value1 = ${mbThreadAttachment});
 
 		AssertElementPresent(locator1 = "MessageBoardsEditMessage#ATTACHMENTS_SAVED_STATUS");
 
@@ -294,7 +299,8 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro addPGWithPermissions {
+	@summary = "Default summary"
+	macro addPGWithPermissions(threadSubject = null, viewableBySelection = null, threadBody = null) {
 		if (!(isSet(skipNavigation))) {
 			AssertClick(
 				locator1 = "Button#NEW_THREAD",
@@ -303,13 +309,13 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -317,14 +323,15 @@ definition {
 
 		Select(
 			locator1 = "AssetPermissions#VIEWABLE_AS_SELECT",
-			value1 = "${viewableBySelection}");
+			value1 = ${viewableBySelection});
 
 		SelectFrameTop();
 
 		PortletEntry.publish();
 	}
 
-	macro addWithWorkflowCP {
+	@summary = "Default summary"
+	macro addWithWorkflowCP(threadSubject = null, threadBody = null) {
 		LexiconEntry.gotoAdd();
 
 		MenuItem.click(menuItem = "Thread");
@@ -333,48 +340,51 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrameTop();
 
-		Click(locator1 = "Button#SUBMIT_FOR_PUBLICATION");
+		Click(locator1 = "Button#SUBMIT_FOR_WORKFLOW");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro addWithWorkflowPG {
+	@summary = "Default summary"
+	macro addWithWorkflowPG(threadSubject = null, threadBody = null) {
 		AssertClick(
 			locator1 = "Button#NEW_THREAD",
 			value1 = "New Thread");
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrameTop();
 
-		Click(locator1 = "Button#SUBMIT_FOR_PUBLICATION");
+		Click(locator1 = "Button#SUBMIT_FOR_WORKFLOW");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro assertAlertNotPresent {
+	@summary = "Default summary"
+	macro assertAlertNotPresent() {
 		AssertAlertNotPresent();
 	}
 
-	macro assertDownloadedFileNameFromTempFolder {
+	@summary = "Default summary"
+	macro assertDownloadedFileNameFromTempFolder(attachmentFileName = null, exportedFileName = null) {
 		if (isSet(exportedFileName)) {
 			var downloadedFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "${exportedFileName}.lar");
 		}
@@ -384,10 +394,10 @@ definition {
 
 		echo("## downloadedFileName: ${downloadedFileName}");
 
-		if (contains("${downloadedFileName}", "${attachmentFileName}")) {
+		if (contains(${downloadedFileName}, ${attachmentFileName})) {
 			echo("This is a correct file.");
 		}
-		else if (contains("${downloadedFileName}", "${exportedFileName}")) {
+		else if (contains(${downloadedFileName}, ${exportedFileName})) {
 			echo("This is a downloaded lar file.");
 		}
 		else {
@@ -395,9 +405,10 @@ definition {
 		}
 	}
 
-	macro banUser {
+	@summary = "Default summary"
+	macro banUser(threadReplyBody = null) {
 		Click.waitForMenuToggleJSClick(
-			key_threadReplyBody = "${threadReplyBody}",
+			key_threadReplyBody = ${threadReplyBody},
 			locator1 = "MessageBoards#THREAD_REPLY_ACTIONS");
 
 		MenuItem.click(menuItem = "Ban This User");
@@ -405,20 +416,21 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro cancelAdd {
+	@summary = "Default summary"
+	macro cancelAdd(threadSubject = null, threadBody = null) {
 		AssertClick(
 			locator1 = "Button#NEW_THREAD",
 			value1 = "New Thread");
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrameTop();
 
@@ -427,22 +439,23 @@ definition {
 			value1 = "Cancel");
 	}
 
-	macro cancelEdit {
+	@summary = "Default summary"
+	macro cancelEdit(threadSubject = null, threadSubjectEdit = null, threadBodyEdit = null) {
 		Click(
-			key_threadSubject = "${threadSubject}",
+			key_threadSubject = ${threadSubject},
 			locator1 = "MessageBoards#VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Edit");
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubjectEdit}");
+			value1 = ${threadSubjectEdit});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBodyEdit}");
+			value1 = ${threadBodyEdit});
 
 		SelectFrameTop();
 
@@ -451,14 +464,15 @@ definition {
 			value1 = "Cancel");
 	}
 
-	macro deletePG {
-		var key_threadSubject = "${threadSubject}";
+	@summary = "Default summary"
+	macro deletePG(threadSubject = null) {
+		var key_threadSubject = ${threadSubject};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
-		LexiconEntry.openEntryMenu(rowEntry = "${threadSubject}");
+		LexiconEntry.openEntryMenu(rowEntry = ${threadSubject});
 
 		MenuItem.click(menuItem = "Delete");
 
@@ -467,18 +481,19 @@ definition {
 		AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_THREAD");
 	}
 
-	macro deleteReply {
+	@summary = "Default summary"
+	macro deleteReply(localizedMenuItem = null, localizedConfirmMessage = null) {
 		Click(locator1 = "MessageBoards#VERTICAL_ELLIPSIS_REPLY_CARD");
 
 		if (isSet(localizedMenuItem)) {
-			MenuItem.clickNoError(menuItem = "${localizedMenuItem}");
+			MenuItem.clickNoError(menuItem = ${localizedMenuItem});
 		}
 		else {
 			MenuItem.clickNoError(menuItem = "Delete");
 		}
 
 		if (isSet(localizedConfirmMessage)) {
-			AssertConfirm(value1 = "${localizedConfirmMessage}");
+			AssertConfirm(value1 = ${localizedConfirmMessage});
 		}
 		else {
 			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
@@ -487,10 +502,11 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro downloadAttachmentPG {
+	@summary = "Default summary"
+	macro downloadAttachmentPG(index = null) {
 		if (isSet(attachmentsList)) {
 			Click(
-				index = "${index}",
+				index = ${index},
 				locator1 = "MessageBoardsThread#MESSAGE_BODY_ATTACHMENT_LIST");
 		}
 		else {
@@ -500,10 +516,11 @@ definition {
 		DownloadTempFile();
 	}
 
-	macro editCP {
+	@summary = "Default summary"
+	macro editCP(depotName = null, threadSubject = null, threadBodyImageEdit = null, threadSubjectEdit = null, mbAttachmentFile = null, threadAttachmentRemove = null, threadBodyEdit = null, siteName = null, threadBody = null) {
 		if (!(isSet(skipNavigation))) {
 			Click(
-				key_listEntry = "${threadSubject}",
+				key_listEntry = ${threadSubject},
 				locator1 = "LexiconList#LIST_ENTRY_ELLIPSIS");
 
 			MenuItem.click(menuItem = "Edit");
@@ -514,31 +531,31 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CKEditor#BODY",
-				value1 = "${threadBody}");
+				value1 = ${threadBody});
 		}
 
-		if ("${threadAttachmentRemove}" == "true") {
+		if (${threadAttachmentRemove} == "true") {
 			Panel.expandPanel(panel = "Attachments");
 
 			AssertTextEquals.assertPartialText(
-				key_rowEntry = "${mbAttachmentFile}",
+				key_rowEntry = ${mbAttachmentFile},
 				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK",
-				value1 = "${mbAttachmentFile}");
+				value1 = ${mbAttachmentFile});
 
 			AssertClick(
-				key_attachmentName = "${mbAttachmentFile}",
+				key_attachmentName = ${mbAttachmentFile},
 				locator1 = "MessageBoardsEditMessage#ATTACHMENTS_REMOVE_LINK",
 				value1 = "Delete");
 
 			AssertElementNotPresent(
-				key_rowEntry = "${mbAttachmentFile}",
+				key_rowEntry = ${mbAttachmentFile},
 				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK");
 		}
 
 		if (isSet(threadSubjectEdit)) {
 			Type(
 				locator1 = "TextInput#SUBJECT",
-				value1 = "${threadSubjectEdit}");
+				value1 = ${threadSubjectEdit});
 		}
 
 		if (isSet(threadBodyEdit)) {
@@ -546,12 +563,12 @@ definition {
 
 			Type(
 				locator1 = "CKEditor#BODY",
-				value1 = "${threadBodyEdit}");
+				value1 = ${threadBodyEdit});
 
 			SelectFrameTop();
 
 			if (isSet(threadBodyImageEdit)) {
-				var key_imageFileName = "${threadBodyImageEdit}";
+				var key_imageFileName = ${threadBodyImageEdit};
 
 				ItemSelector.gotoItemSelectorViaCKEditor();
 
@@ -564,7 +581,7 @@ definition {
 						value1 = "Sites and Libraries");
 
 					if (isSet(siteName)) {
-						LexiconCard.clickCardTitleLink(card = "${siteName}");
+						LexiconCard.clickCardTitleLink(card = ${siteName});
 					}
 
 					if (isSet(depotName)) {
@@ -573,7 +590,7 @@ definition {
 							locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
 							value1 = "Asset Library");
 
-						LexiconCard.clickCard(card = "${depotName}");
+						LexiconCard.clickCard(card = ${depotName});
 					}
 				}
 
@@ -584,18 +601,19 @@ definition {
 		SelectFrameTop();
 	}
 
-	macro editPG {
+	@summary = "Default summary"
+	macro editPG(preview = null, groupName = null, threadSubject = null, threadSubjectEdit = null, saveAsDraft = null, siteURLKey = null, threadBodyEdit = null, userName = null, categoryName = null, layoutName = null) {
 		if (isSet(siteURLKey)) {
 			MessageboardsThread.openToEditThread(
-				categoryName = "${categoryName}",
-				groupName = "${groupName}",
-				layoutName = "${layoutName}",
-				siteURLKey = "${siteURLKey}",
-				threadSubject = "${threadSubject}");
+				categoryName = ${categoryName},
+				groupName = ${groupName},
+				layoutName = ${layoutName},
+				siteURLKey = ${siteURLKey},
+				threadSubject = ${threadSubject});
 		}
 		else {
 			Click(
-				key_threadSubject = "${threadSubject}",
+				key_threadSubject = ${threadSubject},
 				locator1 = "MessageBoards#VERTICAL_ELLIPSIS");
 
 			MenuItem.click(menuItem = "Edit");
@@ -604,7 +622,7 @@ definition {
 		if (isSet(threadSubjectEdit)) {
 			Type(
 				locator1 = "TextInput#SUBJECT",
-				value1 = "${threadSubjectEdit}");
+				value1 = ${threadSubjectEdit});
 		}
 
 		if (isSet(threadBodyEdit)) {
@@ -612,25 +630,25 @@ definition {
 
 			Type(
 				locator1 = "CKEditor#BODY",
-				value1 = "${threadBodyEdit}");
+				value1 = ${threadBodyEdit});
 
 			SelectFrameTop();
 		}
 
-		if ("${saveAsDraft}" == "true") {
+		if (${saveAsDraft} == "true") {
 			AssertClick(
 				locator1 = "Button#SAVE_AS_DRAFT",
 				value1 = "Save as Draft");
 		}
-		else if ("${preview}" == "true") {
+		else if (${preview} == "true") {
 			AssertClickNoError(
 				locator1 = "Button#PREVIEW",
 				value1 = "Preview");
 
 			AssertConfirm(value1 = "In order to preview your changes, the message will be saved as a draft and other users may not be able to see it. Are you sure you want to do this?");
 
-			var key_threadSubject = "${threadSubject}";
-			var key_userName = "${userName}";
+			var key_threadSubject = ${threadSubject};
+			var key_userName = ${userName};
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#TITLE_HEADER",
@@ -638,11 +656,11 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#THREAD_USERNAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#THREAD_USERNAME",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#MESSAGE_WORKFLOW_STATUS_1",
@@ -650,7 +668,7 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#MESSAGE_BODY_1",
-				value1 = "${threadBodyEdit}");
+				value1 = ${threadBodyEdit});
 		}
 		else {
 			AssertClick(
@@ -661,23 +679,24 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro editReplyViaAP {
+	@summary = "Default summary"
+	macro editReplyViaAP(threadReplySubject = null, threadSubject = null, mbAttachmentFile = null, threadBody = null) {
 		MouseOver(locator1 = "Portlet#PORTLET_CONTENT");
 
 		Click(
-			key_threadReplySubject = "${threadReplySubject}",
+			key_threadReplySubject = ${threadReplySubject},
 			locator1 = "MessageBoards#EDIT_THREAD_REPLY_VIA_AP",
-			value1 = "${threadReplySubject}");
+			value1 = ${threadReplySubject});
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -686,15 +705,15 @@ definition {
 
 			AssertElementPresent(locator1 = "Button#SELECT_FILES");
 
-			var key_attachmentFileName = "${mbAttachmentFile}";
+			var key_attachmentFileName = ${mbAttachmentFile};
 
 			UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 				locator1 = "TextInput#FILE",
-				value1 = "${mbAttachmentFile}");
+				value1 = ${mbAttachmentFile});
 
-			if (IsNotChecked.isNotCheckedNotVisible(key_fileName = "${mbAttachmentFile}", locator1 = "Checkbox#UPLOAD_FILE_ENTRY")) {
+			if (IsNotChecked.isNotCheckedNotVisible(key_fileName = ${mbAttachmentFile}, locator1 = "Checkbox#UPLOAD_FILE_ENTRY")) {
 				Check.checkNotVisible(
-					key_fileName = "${mbAttachmentFile}",
+					key_fileName = ${mbAttachmentFile},
 					locator1 = "Checkbox#UPLOAD_FILE_ENTRY");
 			}
 		}
@@ -702,20 +721,21 @@ definition {
 		PortletEntry.publish();
 	}
 
-	macro editViaMyPosts {
+	@summary = "Default summary"
+	macro editViaMyPosts(threadSubject = null, threadSubjectEdit = null) {
 		AssertClick(
 			locator1 = "MessageBoards#NAVIGATION_MY_POSTS",
 			value1 = "My Posts");
 
-		var key_threadSubject = "${threadSubject}";
+		var key_threadSubject = ${threadSubject};
 
 		if ("threadSubjectEdit" == "true") {
-			var key_threadSubject = "${threadSubjectEdit}";
+			var key_threadSubject = ${threadSubjectEdit};
 		}
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		Click(locator1 = "MessageBoards#VERTICAL_ELLIPSIS");
 
@@ -724,14 +744,15 @@ definition {
 		PortletEntry.publish();
 	}
 
-	macro flagThread {
+	@summary = "Default summary"
+	macro flagThread(flagReason = null, siteName = null) {
 		Click(locator1 = "ReportContent#FLAG_LINK");
 
 		AssertElementPresent.assertVisible(locator1 = "ReportContent#FLAG_MODAL");
 
 		Select(
 			locator1 = "ReportContent#REASON_SELECT",
-			value1 = "${flagReason}");
+			value1 = ${flagReason});
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_MODAL_FOOTER");
 
@@ -746,59 +767,63 @@ definition {
 		Click(locator1 = "Button#CLOSE");
 	}
 
-	macro gotoCP {
+	@summary = "Default summary"
+	macro gotoCP(threadSubject = null) {
 		AssertClick.assertPartialTextClickAt(
-			key_threadSubject = "${threadSubject}",
+			key_threadSubject = ${threadSubject},
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 	}
 
-	macro gotoPG {
-		var key_repliesCount = "${replyCount}";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${lastPostUserName}";
+	@summary = "Default summary"
+	macro gotoPG(replyCount = null, threadSubject = null, messageBoardsThreadURL = null, lastPostUserName = null) {
+		var key_repliesCount = ${replyCount};
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${lastPostUserName};
 
 		if (isSet(messageBoardsThreadURL)) {
-			AssertLocation(value1 = "${messageBoardsThreadURL}");
+			AssertLocation(value1 = ${messageBoardsThreadURL});
 		}
 		else {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoards#THREAD_LIST_LAST_POST",
-				value1 = "${lastPostUserName}");
+				value1 = ${lastPostUserName});
 
-			if ("${replyCount}" == "1") {
+			if (${replyCount} == 1) {
 				AssertTextEquals.assertPartialText(
 					locator1 = "MessageBoards#THREAD_LIST_REPLIES",
-					value1 = "${replyCount}");
+					value1 = ${replyCount});
 			}
 			else {
 				AssertTextEquals.assertPartialText(
 					locator1 = "MessageBoards#THREAD_LIST_REPLIES",
-					value1 = "${replyCount}");
+					value1 = ${replyCount});
 			}
 
 			AssertClick.assertPartialTextClickAt(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 		}
 	}
 
-	macro gotoViewInContext {
+	@summary = "Default summary"
+	macro gotoViewInContext() {
 		AssertClick(
 			locator1 = "Link#VIEW_IN_CONTEXT",
 			value1 = "View in Context »");
 	}
 
-	macro lockPG {
+	@summary = "Default summary"
+	macro lockPG(groupName = null, threadSubject = null, siteURLKey = null, layoutName = null) {
 		MessageboardsThread.openToThread(
-			groupName = "${groupName}",
-			layoutName = "${layoutName}",
-			siteURLKey = "${siteURLKey}",
-			threadSubject = "${threadSubject}");
+			groupName = ${groupName},
+			layoutName = ${layoutName},
+			siteURLKey = ${siteURLKey},
+			threadSubject = ${threadSubject});
 
 		Click(locator1 = "MessageBoards#CONTAINER_VERTICAL_ELLIPSIS");
 
@@ -807,8 +832,9 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro markAsAnswerCP {
-		LexiconEntry.openEntryMenu(rowEntry = "${threadReplyBody}");
+	@summary = "Default summary"
+	macro markAsAnswerCP(threadReplyBody = null) {
+		LexiconEntry.openEntryMenu(rowEntry = ${threadReplyBody});
 
 		MenuItem.click(menuItem = "Mark as an Answer");
 
@@ -817,9 +843,10 @@ definition {
 			value1 = "Answer");
 	}
 
-	macro markAsAnswerPG {
+	@summary = "Default summary"
+	macro markAsAnswerPG(threadReplyBody = null) {
 		Click.waitForMenuToggleJSClick(
-			key_threadReplyBody = "${threadReplyBody}",
+			key_threadReplyBody = ${threadReplyBody},
 			locator1 = "MessageBoards#THREAD_REPLY_ACTIONS");
 
 		MenuItem.click(menuItem = "Mark as an Answer");
@@ -829,13 +856,14 @@ definition {
 			value1 = "Answer");
 	}
 
-	macro movePG {
+	@summary = "Default summary"
+	macro movePG(categoryName1 = null, threadSubject = null, explanationSubject = null, explanationBody = null, explanationPost = null) {
 		AssertClick(
-			key_categoryName = "${categoryName1}",
+			key_categoryName = ${categoryName1},
 			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
-			value1 = "${categoryName1}");
+			value1 = ${categoryName1});
 
-		LexiconEntry.openEntryMenu(rowEntry = "${threadSubject}");
+		LexiconEntry.openEntryMenu(rowEntry = ${threadSubject});
 
 		MenuItem.click(menuItem = "Move");
 
@@ -849,7 +877,7 @@ definition {
 			locator1 = "MessageBoardsSelectCategory#CATEGORY_TABLE_SELECT_BUTTON_2",
 			value1 = "Select");
 
-		if ("${explanationPost}" == "true") {
+		if (${explanationPost} == "true") {
 			SelectFrame(value1 = "relative=top");
 
 			AssertElementPresent(locator1 = "MessageBoardsMoveThread#CATEGORY_FIELD");
@@ -858,13 +886,13 @@ definition {
 
 			Type(
 				locator1 = "TextInput#SUBJECT",
-				value1 = "${explanationSubject}");
+				value1 = ${explanationSubject});
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 			Type(
 				locator1 = "CKEditor#BODY",
-				value1 = "${explanationBody}");
+				value1 = ${explanationBody});
 		}
 
 		SelectFrame(value1 = "relative=top");
@@ -878,28 +906,30 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro moveToRecycleBinCP {
+	@summary = "Default summary"
+	macro moveToRecycleBinCP(threadSubject = null) {
 		AssertTextEquals.assertPartialText(
-			key_threadSubject = "${threadSubject}",
+			key_threadSubject = ${threadSubject},
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Delete");
 
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
-		AssertTextEquals.assertText(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no threads or categories.");
 	}
 
 	// You can use this navigation when you need to access the configuration quickly without checking the UI.
 
-	macro openToAddThread {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro openToAddThread(groupName = null, siteURLKey = null, categoryName = null, layoutName = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		// Threads accessed in site pages will be redirected back to the page after publishing. Those accessed in admin will stay in admin after publishing.
@@ -907,49 +937,52 @@ definition {
 		if (isSet(layoutName)) {
 			if (isSet(categoryName)) {
 				var categoryId = JSONMBMessage.getCategoryIdByName(
-					categoryName = "${categoryName}",
-					groupName = "${groupName}");
+					categoryName = ${categoryName},
+					groupName = ${groupName});
 
-				Open(locator1 = "${baseURL}/web/${siteURLKey}/${layoutName}?p_p_id=com_liferay_message_boards_web_portlet_MBPortlet&_com_liferay_message_boards_web_portlet_MBPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message&_com_liferay_message_boards_web_portlet_MBPortlet_redirect=http%3A%2F%2F${baseURL}%3A8080%2Fweb%2F${siteURLKey}%2F${layoutName}%2F-%2Fmessage_boards%2Fcategory%2F${categoryId}&_com_liferay_message_boards_web_portlet_MBPortlet_mbCategoryId=${categoryId}");
+				Open(value1 = "${baseURL}/web/${siteURLKey}/${layoutName}?p_p_id=com_liferay_message_boards_web_portlet_MBPortlet&_com_liferay_message_boards_web_portlet_MBPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message&_com_liferay_message_boards_web_portlet_MBPortlet_redirect=http%3A%2F%2F${baseURL}%3A8080%2Fweb%2F${siteURLKey}%2F${layoutName}%2F-%2Fmessage_boards%2Fcategory%2F${categoryId}&_com_liferay_message_boards_web_portlet_MBPortlet_mbCategoryId=${categoryId}");
 			}
 			else {
-				Open(locator1 = "${baseURL}/web/${siteURLKey}/${layoutName}?p_p_id=com_liferay_message_boards_web_portlet_MBPortlet&_com_liferay_message_boards_web_portlet_MBPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message&_com_liferay_message_boards_web_portlet_MBPortlet_redirect=http%3A%2F%2F${baseURL}%3A8080%2Fweb%2F${siteURLKey}%2F${layoutName}");
+				Open(value1 = "${baseURL}/web/${siteURLKey}/${layoutName}?p_p_id=com_liferay_message_boards_web_portlet_MBPortlet&_com_liferay_message_boards_web_portlet_MBPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message&_com_liferay_message_boards_web_portlet_MBPortlet_redirect=http%3A%2F%2F${baseURL}%3A8080%2Fweb%2F${siteURLKey}%2F${layoutName}");
 			}
 		}
 		else {
-			Open(locator1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_message_boards_web_portlet_MBAdminPortlet&_com_liferay_message_boards_web_portlet_MBAdminPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message");
+			Open(value1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_message_boards_web_portlet_MBAdminPortlet&_com_liferay_message_boards_web_portlet_MBAdminPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message");
 		}
 	}
 
-	macro openToEditThread {
+	@summary = "Default summary"
+	macro openToEditThread(groupName = null, threadSubject = null, siteURLKey = null, categoryName = null, layoutName = null) {
 		var messageId = JSONMBMessage.getMessageIdByName(
-			categoryName = "${categoryName}",
-			groupName = "${groupName}",
-			threadSubject = "${threadSubject}");
+			categoryName = ${categoryName},
+			groupName = ${groupName},
+			threadSubject = ${threadSubject});
 
 		if (isSet(layoutName)) {
-			var baseURL = "${baseURL}";
+			var baseURL = ${baseURL};
 
 			if (!(isSet(baseURL))) {
-				var baseURL = PropsUtil.get("portal.url");
+				var baseURL = JSONCompany.getPortalURL();
 			}
 
-			Open(locator1 = "${baseURL}/web/${siteURLKey}/${layoutName}?p_p_id=com_liferay_message_boards_web_portlet_MBPortlet&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_com_liferay_message_boards_web_portlet_MBPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message&_com_liferay_message_boards_web_portlet_MBPortlet_redirect=http%3A%2F%2F${baseURL}%3A8080%2Fweb%2F${siteURLKey}%2F${layoutName}%2F-%2Fmessage_boards%2Fmessage%2F${messageId}&_com_liferay_message_boards_web_portlet_MBPortlet_messageId=${messageId}");
+			Open(value1 = "${baseURL}/web/${siteURLKey}/${layoutName}?p_p_id=com_liferay_message_boards_web_portlet_MBPortlet&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_com_liferay_message_boards_web_portlet_MBPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message&_com_liferay_message_boards_web_portlet_MBPortlet_redirect=http%3A%2F%2F${baseURL}%3A8080%2Fweb%2F${siteURLKey}%2F${layoutName}%2F-%2Fmessage_boards%2Fmessage%2F${messageId}&_com_liferay_message_boards_web_portlet_MBPortlet_messageId=${messageId}");
 		}
 		else {
 			Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_message_boards_web_portlet_MBAdminPortlet&_com_liferay_message_boards_web_portlet_MBAdminPortlet_mvcRenderCommandName=%2Fmessage_boards%2Fedit_message&_com_liferay_message_boards_web_portlet_MBAdminPortlet_messageId=${messageId}");
 		}
 	}
 
-	macro openToStatistics {
+	@summary = "Default summary"
+	macro openToStatistics(siteURLKey = null, layoutName = null) {
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/${siteURLKey}/${layoutName}/-/message_boards/statistics");
 	}
 
-	macro openToThread {
+	@summary = "Default summary"
+	macro openToThread(groupName = null, threadSubject = null, siteURLKey = null, categoryName = null, layoutName = null) {
 		var messageId = JSONMBMessage.getMessageIdByName(
-			categoryName = "${categoryName}",
-			groupName = "${groupName}",
-			threadSubject = "${threadSubject}");
+			categoryName = ${categoryName},
+			groupName = ${groupName},
+			threadSubject = ${threadSubject});
 
 		if (isSet(layoutName)) {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/${siteURLKey}/${layoutName}/-/message_boards/message/${messageId}");
@@ -959,61 +992,64 @@ definition {
 		}
 	}
 
-	macro replyCP {
-		if ("${markAsQuestion}" == "true") {
+	@summary = "Default summary"
+	macro replyCP(markAsQuestion = null, threadSubject = null, threadReplyBody = null) {
+		if (${markAsQuestion} == "true") {
 			AssertClick(
-				key_threadSubject = "${threadSubject}",
+				key_threadSubject = ${threadSubject},
 				locator1 = "MessageBoards#THREAD_TABLE_STARTED_BY",
 				value1 = "Waiting for an Answer");
 		}
 
 		Click(
-			key_threadSubject = "${threadSubject}",
+			key_threadSubject = ${threadSubject},
 			locator1 = "MessageBoardsThread#THREAD_REPLY_BUTTON");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadReplyBody}");
+			value1 = ${threadReplyBody});
 
 		SelectFrame.selectFrameTop();
 	}
 
-	macro replyNotPresent {
+	@summary = "Default summary"
+	macro replyNotPresent() {
 		AssertElementNotPresent(locator1 = "Button#REPLY");
 	}
 
-	macro replyPG {
-		if ("${displayStyle}" == "Question") {
+	@summary = "Default summary"
+	macro replyPG(displayStyle = null, threadSubject = null, anonymous = null, threadBody = null, threadReplyBody = null, markAsAnswer = null) {
+		if (${displayStyle} == "Question") {
 			AssertClick.assertPartialTextClickAt(
-				key_threadSubject = "${threadSubject}",
+				key_threadSubject = ${threadSubject},
 				locator1 = "MessageBoards#QUESTION_CATEGORY_THREAD_TABLE_QUESTION",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 		}
 		else {
-			var key_threadSubject = "${threadSubject}";
+			var key_threadSubject = ${threadSubject};
 
 			if (!(isSet(skipNavigation))) {
 				AssertClick.assertPartialTextClickAt(
 					locator1 = "MessageBoards#THREAD_LIST_THREAD",
-					value1 = "${threadSubject}");
+					value1 = ${threadSubject});
 			}
 		}
 
 		if (isSet(threadReplySpecific)) {
 			AssertClick(
-				key_threadBody = "${threadBody}",
+				key_threadBody = ${threadBody},
 				locator1 = "MessageBoardsThread#MESSAGE_REPLY_SPECIFIC",
 				value1 = "Reply");
 		}
 		else {
 			AssertVisible(
-				key_threadSubject = "${threadSubject}",
+				key_threadSubject = ${threadSubject},
 				locator1 = "MessageBoardsThread#THREAD_REPLY_BUTTON");
 
 			AssertClick(
-				key_threadSubject = "${threadSubject}",
+				key_threadSubject = ${threadSubject},
 				locator1 = "MessageBoardsThread#THREAD_REPLY_BUTTON",
 				value1 = "Reply");
 		}
@@ -1024,29 +1060,42 @@ definition {
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadReplyBody}");
+			value1 = ${threadReplyBody});
 
 		SelectFrameTop();
 
-		if ("${anonymous}" == "true") {
+		if (${anonymous} == "true") {
 			Check(locator1 = "Checkbox#ANONYMOUS");
 		}
 
-		Click(locator1 = "MessageBoardsThread#THREAD_PUBLISH_BUTTON");
+		if (isSet(saveAsDraft)) {
+			AssertClick(
+				key_text = "Advanced Reply",
+				locator1 = "Button#ANY",
+				value1 = "Advanced Reply");
+
+			AssertClick(
+				locator1 = "Button#SAVE_AS_DRAFT",
+				value1 = "Save as Draft");
+		}
+		else {
+			Click(locator1 = "MessageBoardsThread#THREAD_PUBLISH_BUTTON");
+		}
 
 		Alert.viewSuccessMessage();
 
-		if ("${markAsAnswer}" == "true") {
-			MessageboardsThread.markAsAnswerPG(threadReplyBody = "${threadReplyBody}");
+		if (${markAsAnswer} == "true") {
+			MessageboardsThread.markAsAnswerPG(threadReplyBody = ${threadReplyBody});
 		}
 	}
 
-	macro replyWithAttachmentPG {
-		var key_threadSubject = "${threadSubject}";
+	@summary = "Default summary"
+	macro replyWithAttachmentPG(threadSubject = null, mbThreadAttachment = null, threadReplyBody = null) {
+		var key_threadSubject = ${threadSubject};
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertClick(
 			locator1 = "MessageBoardsThread#THREAD_REPLY_BUTTON",
@@ -1058,7 +1107,7 @@ definition {
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadReplyBody}");
+			value1 = ${threadReplyBody});
 
 		SelectFrameTop();
 
@@ -1074,11 +1123,11 @@ definition {
 
 		AssertElementPresent(locator1 = "Button#SELECT_FILES");
 
-		var key_attachmentFileName = "${mbThreadAttachment}";
+		var key_attachmentFileName = ${mbThreadAttachment};
 
 		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
-			value1 = "${mbThreadAttachment}");
+			value1 = ${mbThreadAttachment});
 
 		AssertClick(
 			locator1 = "Button#PUBLISH",
@@ -1087,22 +1136,23 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro restoreMBAttachmentCP {
+	@summary = "Default summary"
+	macro restoreMBAttachmentCP(mbAttachmentFile = null) {
 		Click(locator1 = "MessageBoardsEditMessage#ATTACHMENTS_RECENTLY_REMOVED");
 
 		IFrame.selectModalFrame();
 
 		AssertElementPresent(
-			key_mbAttachmentFile = "${mbAttachmentFile}",
+			key_mbAttachmentFile = ${mbAttachmentFile},
 			locator1 = "MessageBoardsRemovedAttachments#ATTACHMENT_FILE_NAME");
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Restore",
-			rowEntry = "${mbAttachmentFile}");
+			rowEntry = ${mbAttachmentFile});
 
 		Alert.viewSuccessMessage();
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "This message does not have file attachments in the Recycle Bin.");
 
@@ -1111,7 +1161,8 @@ definition {
 		SelectFrameTop();
 	}
 
-	macro saveNewThreadAsDraft {
+	@summary = "Default summary"
+	macro saveNewThreadAsDraft(threadSubject = null, threadBody = null) {
 		if (!(isSet(skipNavigation))) {
 			AssertClick(
 				locator1 = "Button#NEW_THREAD",
@@ -1120,13 +1171,13 @@ definition {
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		SelectFrameTop();
 
@@ -1141,7 +1192,8 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro splitThreadPG {
+	@summary = "Default summary"
+	macro splitThreadPG(threadSubject = null, threadSplitSubject = null, threadSplitReplyBody = null, threadSplitReplySubject = null, threadReplyBody = null) {
 		Click(locator1 = "MessageBoards#VERTICAL_ELLIPSIS_REPLY_CARD");
 
 		MenuItem.click(menuItem = "Split Thread");
@@ -1151,13 +1203,13 @@ definition {
 			value1 = "Click OK to create a new thread with the following messages.");
 
 		AssertTextEquals.assertPartialText(
-			key_threadSubject = "${threadSubject}",
+			key_threadSubject = ${threadSubject},
 			locator1 = "MessageBoardsSplitThread#THREAD_TABLE_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		Type(
 			locator1 = "TextInput#SUBJECT",
-			value1 = "${threadSplitSubject}");
+			value1 = ${threadSplitSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsSplitThread#ADD_EXPLANATION_POST_LABEL",
@@ -1171,13 +1223,13 @@ definition {
 
 		Type(
 			locator1 = "MessageBoardsSplitThread#ADD_EXPLANATION_SUBJECT_FIELD",
-			value1 = "${threadSplitReplySubject}");
+			value1 = ${threadSplitReplySubject});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${threadSplitReplyBody}");
+			value1 = ${threadSplitReplyBody});
 
 		SelectFrameTop();
 
@@ -1185,22 +1237,23 @@ definition {
 			locator1 = "Button#OK",
 			value1 = "OK");
 
-		var key_threadBody = "${threadReplyBody}";
+		var key_threadBody = ${threadReplyBody};
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#TITLE_HEADER",
-			value1 = "${threadSplitSubject}");
+			value1 = ${threadSplitSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadReplyBody}");
+			value1 = ${threadReplyBody});
 
-		var key_threadBody = "${threadSplitReplyBody}";
+		var key_threadBody = ${threadSplitReplyBody};
 
 		AssertElementNotPresent(locator1 = "MessageBoardsThread#THREAD_BODY_2");
 	}
 
-	macro tearDownCP {
+	@summary = "Default summary"
+	macro tearDownCP() {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -1220,26 +1273,28 @@ definition {
 		JSONRecycleBin.emptyRecycleBin();
 	}
 
-	macro unbanUser {
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "${siteURLKey}");
+	@summary = "Default summary"
+	macro unbanUser(siteURLKey = null, userScreenName = null) {
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = ${siteURLKey});
 
 		AssertClick(
 			locator1 = "MessageBoards#NAVIGATION_BANNED_USERS",
 			value1 = "Banned Users");
 
-		LexiconEntry.openEntryMenu(rowEntry = "${userScreenName}");
+		LexiconEntry.openEntryMenu(rowEntry = ${userScreenName});
 
 		MenuItem.click(menuItem = "Unban This User");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro unlockPG {
+	@summary = "Default summary"
+	macro unlockPG(groupName = null, threadSubject = null, siteURLKey = null, layoutName = null) {
 		MessageboardsThread.openToThread(
-			groupName = "${groupName}",
-			layoutName = "${layoutName}",
-			siteURLKey = "${siteURLKey}",
-			threadSubject = "${threadSubject}");
+			groupName = ${groupName},
+			layoutName = ${layoutName},
+			siteURLKey = ${siteURLKey},
+			threadSubject = ${threadSubject});
 
 		Click(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
@@ -1248,22 +1303,24 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro updateCheckInterval {
-		var baseURL = PropsUtil.get("portal.url");
+	@summary = "Default summary"
+	macro updateCheckInterval(fieldValue = null) {
+		var baseURL = JSONCompany.getPortalURL();
 
-		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=com.liferay.message.boards.configuration.MBConfiguration&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
+		Open(value1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=com.liferay.message.boards.configuration.MBConfiguration&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
 
 		Type(
 			key_text = "Expire Ban Job Interval",
 			locator1 = "TextInput#ANY",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 
 		SystemSettings.saveConfiguration();
 	}
 
-	macro viewAnonymousPostingCheckboxCP {
+	@summary = "Default summary"
+	macro viewAnonymousPostingCheckboxCP(siteURLKey = null) {
 		if (isSet(siteURLKey)) {
-			MessageboardsThread.openToAddThread(siteURLKey = "${siteURLKey}");
+			MessageboardsThread.openToAddThread(siteURLKey = ${siteURLKey});
 		}
 		else {
 			LexiconEntry.gotoAdd();
@@ -1274,9 +1331,10 @@ definition {
 		AssertElementPresent(locator1 = "Checkbox#ANONYMOUS");
 	}
 
-	macro viewAnswerPG {
-		var key_answerCount = "${answerCount}";
-		var key_threadSubject = "${threadSubject}";
+	@summary = "Default summary"
+	macro viewAnswerPG(answerCount = null, threadSubject = null) {
+		var key_answerCount = ${answerCount};
+		var key_threadSubject = ${threadSubject};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_ANSWER",
@@ -1284,7 +1342,7 @@ definition {
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#MESSAGE_ANSWER_1",
@@ -1295,65 +1353,69 @@ definition {
 			locator1 = "Breadcrumb#BREADCRUMB_ENTRY_LINK");
 	}
 
-	macro viewAsWorkflowAsset {
-		SiteAdmin.viewPortletTitle(portletTitle = "${threadSubject}");
+	@summary = "Default summary"
+	macro viewAsWorkflowAsset(threadSubject = null, threadBody = null) {
+		SiteAdmin.viewPortletTitle(portletTitle = ${threadSubject});
 
 		AssertTextEquals(
-			key_threadBody = "${threadBody}",
+			key_threadBody = ${threadBody},
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 	}
 
-	macro viewBannedUserAuthenticationMessage {
+	@summary = "Default summary"
+	macro viewBannedUserAuthenticationMessage() {
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#ERROR_DISMISSIBLE",
 			value1 = "You have been banned by the moderator.");
 	}
 
-	macro viewBBCodeNoXSS {
-		var key_threadBody = "${threadBody}";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewBBCodeNoXSS(threadSubject = null, threadBody = null, userName = null) {
+		var key_threadBody = ${threadBody};
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		MessageboardsThread.assertAlertNotPresent();
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_USERNAME",
-			value1 = "${userName}");
+			value1 = ${userName});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_REPLY_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 	}
 
-	macro viewCP {
-		var key_threadBody = "${threadBody}";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewCP(replyCount = null, threadSubject = null, mbAttachmentFile = null, threadBody = null, threadBodyImage = null, userName = null) {
+		var key_threadBody = ${threadBody};
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_LAST_POST",
-			value1 = "${userName}");
+			value1 = ${userName});
 
-		var key_repliesCount = "${replyCount}";
+		var key_repliesCount = ${replyCount};
 
-		if ("${replyCount}" == "1") {
+		if (${replyCount} == 1) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoards#THREAD_LIST_REPLIES",
-				value1 = "${replyCount}");
+				value1 = ${replyCount});
 		}
 		else {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoards#THREAD_LIST_REPLIES",
-				value1 = "${replyCount}");
+				value1 = ${replyCount});
 		}
 
 		AssertElementPresent(locator1 = "MessageBoards#THREAD_LIST_VIEWS");
@@ -1362,47 +1424,48 @@ definition {
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "Portlet#HEADER",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_USERNAME",
-			value1 = "${userName}");
+			value1 = ${userName});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
 		if (isSet(mbAttachmentFile)) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#MESSAGE_BODY_ATTACHMENT_1",
-				value1 = "${mbAttachmentFile}");
+				value1 = ${mbAttachmentFile});
 		}
 
 		if (isSet(threadBodyImage)) {
 			AssertVisible(
-				key_imageFileName = "${threadBodyImage}",
-				key_threadBody = "${threadBody}",
+				key_imageFileName = ${threadBodyImage},
+				key_threadBody = ${threadBody},
 				locator1 = "MessageBoardsThread#THREAD_BODY_IMAGE");
 		}
 	}
 
-	macro viewDefaultCP {
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewDefaultCP(threadSubject = null, userName = null) {
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
-		AssertTextEquals.assertText(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no threads or categories.");
 
-		AssertTextNotPresent(value1 = "${threadSubject}");
+		AssertTextNotPresent(value1 = ${threadSubject});
 
 		AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_CHECKBOX");
 
@@ -1417,10 +1480,11 @@ definition {
 		AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_ACTIONS");
 	}
 
-	macro viewDoNotHaveRequiredPermissionsPG {
-		var key_repliesCount = "0";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewDoNotHaveRequiredPermissionsPG(threadSubject = null, userName = null) {
+		var key_repliesCount = 0;
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		Alert.viewRequestFailedToComplete();
 
@@ -1428,7 +1492,7 @@ definition {
 			locator1 = "Message#ERROR",
 			value1 = "You do not have the required permissions.");
 
-		AssertTextNotPresent(value1 = "${threadSubject}");
+		AssertTextNotPresent(value1 = ${threadSubject});
 
 		AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_THREAD");
 
@@ -1439,13 +1503,14 @@ definition {
 		AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_LAST_POST");
 	}
 
-	macro viewDraftThread {
+	@summary = "Default summary"
+	macro viewDraftThread(threadSubject = null) {
 		var key_threadStatus = "Draft";
-		var key_threadSubject = "${threadSubject}";
+		var key_threadSubject = ${threadSubject};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoards#THREAD_LIST_WORKFLOW_STATUS",
@@ -1457,38 +1522,40 @@ definition {
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoards#THREAD_LIST_WORKFLOW_STATUS",
 			value1 = "Draft");
 	}
 
-	macro viewLinkedEntry {
+	@summary = "Default summary"
+	macro viewLinkedEntry(linkedEntry = null, imageFileName = null, pageName = null) {
 		Click(
-			key_text = "${linkedEntry}",
+			key_text = ${linkedEntry},
 			locator1 = "Link#ANY");
 
 		if (isSet(imageFileName)) {
 			AssertElementPresent(
-				key_imageSourceURL = "${imageFileName}",
+				key_imageSourceURL = ${imageFileName},
 				locator1 = "DocumentsAndMediaDocument#DOCUMENT_VIEWPORT_PREVIEW");
 		}
 
 		if (isSet(pageName)) {
 			AssertVisible(
-				key_pageName = "${pageName}",
+				key_pageName = ${pageName},
 				locator1 = "Home#PAGE_ACTIVE");
 		}
 	}
 
-	macro viewLockedPG {
+	@summary = "Default summary"
+	macro viewLockedPG(threadSubject = null) {
 		var key_threadStatus = "Locked";
-		var key_threadSubject = "${threadSubject}";
+		var key_threadSubject = ${threadSubject};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoards#THREAD_LIST_STATUS",
@@ -1496,7 +1563,7 @@ definition {
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertElementNotPresent(locator1 = "MessageBoardsThread#MESSAGE_REPLY_1");
 
@@ -1514,8 +1581,9 @@ definition {
 			value1 = "Unlock");
 	}
 
-	macro viewMarkAsQuestionChecked {
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "${siteURLKey}");
+	@summary = "Default summary"
+	macro viewMarkAsQuestionChecked(siteURLKey = null) {
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = ${siteURLKey});
 
 		LexiconEntry.gotoAdd();
 
@@ -1530,8 +1598,9 @@ definition {
 			value1 = "Cancel");
 	}
 
-	macro viewMarkAsQuestionNotChecked {
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "${siteURLKey}");
+	@summary = "Default summary"
+	macro viewMarkAsQuestionNotChecked(siteURLKey = null) {
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = ${siteURLKey});
 
 		LexiconEntry.gotoAdd();
 
@@ -1546,32 +1615,35 @@ definition {
 			value1 = "Cancel");
 	}
 
-	macro viewMarkedAsQuestionPG {
+	@summary = "Default summary"
+	macro viewMarkedAsQuestionPG(threadSubject = null) {
 		AssertElementPresent(
-			key_threadSubject = "${threadSubject}",
+			key_threadSubject = ${threadSubject},
 			locator1 = "MessageBoards#THREAD_LIST_QUESTION_MARK_ICON");
 	}
 
-	macro viewMBThreadVisualStatePG {
-		var key_threadSubject = "${threadSubject}";
+	@summary = "Default summary"
+	macro viewMBThreadVisualStatePG(threadSubject = null) {
+		var key_threadSubject = ${threadSubject};
 
 		if (isSet(unReadMBthread)) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD_UNREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
 			AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_THREAD_UNREAD");
 		}
 	}
 
-	macro viewNoAnonymousPostingCheckboxCP {
+	@summary = "Default summary"
+	macro viewNoAnonymousPostingCheckboxCP(siteURLKey = null) {
 		if (isSet(siteURLKey)) {
-			MessageboardsThread.openToAddThread(siteURLKey = "${siteURLKey}");
+			MessageboardsThread.openToAddThread(siteURLKey = ${siteURLKey});
 		}
 		else {
 			LexiconEntry.gotoAdd();
@@ -1582,21 +1654,23 @@ definition {
 		AssertElementNotPresent(locator1 = "Checkbox#ANONYMOUS");
 	}
 
-	macro viewNoBannedUsers {
-		AssertTextEquals.assertText(
+	@summary = "Default summary"
+	macro viewNoBannedUsers() {
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no banned users.");
 	}
 
-	macro viewNoPG {
-		var key_repliesCount = "0";
-		var key_threadSubject = "${threadSubject}";
+	@summary = "Default summary"
+	macro viewNoPG(threadSubject = null) {
+		var key_repliesCount = 0;
+		var key_threadSubject = ${threadSubject};
 
-		AssertTextEquals.assertText(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no threads or categories.");
 
-		AssertTextNotPresent(value1 = "${threadSubject}");
+		AssertTextNotPresent(value1 = ${threadSubject});
 
 		AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_THREAD");
 
@@ -1607,114 +1681,117 @@ definition {
 		AssertElementNotPresent(locator1 = "MessageBoards#THREAD_LIST_LAST_POST");
 	}
 
-	macro viewNoReplies {
+	@summary = "Default summary"
+	macro viewNoReplies(replyBody = null) {
 		AssertElementNotPresent(
-			key_threadBody = "${replyBody}",
+			key_threadBody = ${replyBody},
 			locator1 = "MessageBoardsThread#THREAD_BODY");
 	}
 
-	macro viewNoXSSPG {
-		var key_threadSubject = "${threadSubject}";
-		var key_title = "${threadBody}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewNoXSSPG(threadSubject = null, sourceContent = null, threadBody = null, userName = null) {
+		var key_threadSubject = ${threadSubject};
+		var key_title = ${threadBody};
+		var key_userName = ${userName};
 
 		AssertAlertNotPresent();
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#TITLE_HEADER",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_USERNAME",
-			value1 = "${userName}");
+			value1 = ${userName});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
-		if ("${sourceContent}" == "true") {
+		if (${sourceContent} == "true") {
 			AssertElementNotPresent(locator1 = "Header#H3_TITLE");
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "Header#H3_TITLE",
-				value1 = "${threadBody}");
+				value1 = ${threadBody});
 		}
 	}
 
-	macro viewPG {
-		var key_threadBody = "${threadBody}";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewPG(threadSubject = null, workflowTask = null, threadBody2 = null, threadBody = null, fontSize = null, threadSubject2 = null, position = null, bold = null, threadBodyImageName = null, userName = null, tagName = null) {
+		var key_threadBody = ${threadBody};
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		if (isSet(position)) {
 			LexiconList.viewListEntryTitleLinkSpecific(
-				listEntry = "${threadSubject}",
-				position = "${position}");
+				listEntry = ${threadSubject},
+				position = ${position});
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#TITLE_HEADER",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#THREAD_USERNAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
-			if ("${bold}" == "true") {
+			if (${bold} == "true") {
 				AssertTextEquals(
 					locator1 = "MessageBoardsThread#THREAD_BODY_BOLD",
-					value1 = "${threadBody}");
+					value1 = ${threadBody});
 			}
 			else {
 				AssertTextEquals(
 					locator1 = "MessageBoardsThread#THREAD_BODY",
-					value1 = "${threadBody}");
+					value1 = ${threadBody});
 			}
 
 			if (isSet(tagName)) {
 				AssertVisible(
-					key_tagName = "${tagName}",
+					key_tagName = ${tagName},
 					locator1 = "MessageBoardsThread#THREAD_TAG");
 			}
 
 			if (isSet(threadBodyImageName)) {
 				AssertVisible(
-					key_imageFileName = "${threadBodyImageName}",
-					key_threadBody = "${threadBody}",
+					key_imageFileName = ${threadBodyImageName},
+					key_threadBody = ${threadBody},
 					locator1 = "MessageBoardsThread#THREAD_BODY_IMAGE");
 			}
 
 			if (isSet(fontSize)) {
 				AssertTextEquals(
-					key_fontSize = "${fontSize}",
+					key_fontSize = ${fontSize},
 					locator1 = "MessageBoardsThread#MESSAGE_BODY_STYLE_1",
-					value1 = "${threadBody}");
+					value1 = ${threadBody});
 			}
 
 			if (isSet(threadSubject2)) {
-				var key_threadSubject = "${threadSubject2}";
+				var key_threadSubject = ${threadSubject2};
 
 				AssertTextEquals(
 					locator1 = "MessageBoardsThread#TITLE_HEADER",
-					value1 = "${threadSubject}");
+					value1 = ${threadSubject});
 
 				AssertTextEquals.assertPartialText(
 					locator1 = "MessageBoardsThread#THREAD_USERNAME",
-					value1 = "${userName}");
+					value1 = ${userName});
 
 				AssertTextEquals(
 					locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-					value1 = "${threadSubject2}");
+					value1 = ${threadSubject2});
 
 				AssertTextEquals.assertPartialText(
-					key_threadBody = "${threadBody2}",
+					key_threadBody = ${threadBody2},
 					locator1 = "MessageBoardsThread#THREAD_BODY",
-					value1 = "${threadBody2}");
+					value1 = ${threadBody2});
 			}
 
 			if (isSet(workflowTask)) {
@@ -1725,87 +1802,90 @@ definition {
 		}
 	}
 
-	macro viewPGViaAP {
-		var key_assetTitle = "${threadSubject}";
+	@summary = "Default summary"
+	macro viewPGViaAP(threadSubject = null, threadBody = null) {
+		var key_assetTitle = ${threadSubject};
 
 		AssertTextEquals(
 			locator1 = "AP#ASSET_ABSTRACT_TITLE",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
-		AssetPublisherPortlet.clickAssetTitle(assetTitle = "${threadSubject}");
+		AssetPublisherPortlet.clickAssetTitle(assetTitle = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AP#ASSET_ABSTRACT_TITLE",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "AssetRelatedAssets#MESSAGE_BOARDS_THREAD_TITLE",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "AssetRelatedAssets#MESSAGE_BOARDS_THREAD_CONTENT",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 	}
 
-	macro viewReplyCP {
-		var key_threadBody = "${threadBody}";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewReplyCP(threadSubject = null, mbAttachmentFile = null, threadBody = null, userName = null) {
+		var key_threadBody = ${threadBody};
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		if (isSet(mbAttachmentFile)) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#MESSAGE_BODY_ATTACHMENT_1",
-				value1 = "${mbAttachmentFile}");
+				value1 = ${mbAttachmentFile});
 		}
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_USERNAME_2",
-			value1 = "${userName}");
+			value1 = ${userName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 	}
 
-	macro viewReplyPG {
-		var key_repliesCount = "${replyCount}";
-		var key_threadBody = "${threadBody}";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewReplyPG(replyCount = null, threadSubject = null, loggedOut = null, guestReply = null, threadBody = null, mbThreadAttachment = null, threadReplyStatus = null, userName = null, threadReplyBody = null) {
+		var key_repliesCount = ${replyCount};
+		var key_threadBody = ${threadBody};
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_LAST_POST",
-			value1 = "${userName}");
+			value1 = ${userName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_REPLIES",
-			value1 = "${replyCount}");
+			value1 = ${replyCount});
 
-		if ("${guestReply}" == "true") {
+		if (${guestReply} == "true") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoards#THREAD_LIST_LAST_POST",
 				value1 = "Anonymous");
 
 			AssertClick.assertPartialTextClickAt(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 		}
 		else {
 			AssertClick.assertPartialTextClickAt(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 		}
 
-		if ("${loggedOut}" == "true") {
-			var key_threadBody = "${threadReplyBody}";
+		if (${loggedOut} == "true") {
+			var key_threadBody = ${threadReplyBody};
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#THREAD_SUBJECT_2",
@@ -1813,20 +1893,20 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#THREAD_BODY",
-				value1 = "${threadReplyBody}");
+				value1 = ${threadReplyBody});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#THREAD_USERNAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#THREAD_BODY",
-				value1 = "${threadBody}");
+				value1 = ${threadBody});
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#THREAD_SUBJECT_2",
@@ -1834,139 +1914,147 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#THREAD_USERNAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#MESSAGE_RATING_THUMBS_UP",
-				value1 = "0");
+				value1 = 0);
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#MESSAGE_RATING_THUMBS_DOWN",
-				value1 = "0");
+				value1 = 0);
 
-			var key_threadBody = "${threadReplyBody}";
+			var key_threadBody = ${threadReplyBody};
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#THREAD_BODY",
-				value1 = "${threadReplyBody}");
+				value1 = ${threadReplyBody});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "MessageBoardsThread#THREAD_USERNAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#MESSAGE_RATING_THUMBS_UP",
-				value1 = "0");
+				value1 = 0);
 
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#MESSAGE_RATING_THUMBS_DOWN",
-				value1 = "0");
+				value1 = 0);
+
+			if (isSet(threadReplyStatus)) {
+				AssertTextEquals(
+					locator1 = "MessageBoardsThread#MESSAGE_WORKFLOW_STATUS_1",
+					value1 = ${threadReplyStatus});
+			}
 		}
 
-		if ("${guestReply}" == "false") {
+		if (${guestReply} == "false") {
 			AssertTextEquals(
 				locator1 = "MessageBoardsThread#MESSAGE_USERNAME_2",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 
 		if (isSet(mbThreadAttachment)) {
 			AssertElementPresent(
-				key_mbThreadAttachment = "${mbThreadAttachment}",
+				key_mbThreadAttachment = ${mbThreadAttachment},
 				locator1 = "MessageBoardsThread#MESSAGE_ATTACHMENT_IMAGE");
 		}
 	}
 
-	macro viewSplitThreadPG {
-		var key_repliesCount = "1";
-		var key_threadBody = "${threadBody}";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+	@summary = "Default summary"
+	macro viewSplitThreadPG(threadSubject = null, threadSplitSubject = null, threadSplitReplyBody = null, siteName = null, threadBody = null, userName = null, pageName = null, threadReplyBody = null, threadSplitReplySubject = null) {
+		var key_repliesCount = 1;
+		var key_threadBody = ${threadBody};
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_REPLIES",
-			value1 = "1");
+			value1 = 1);
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#TITLE_HEADER",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 
-		var key_threadBody = "${threadSplitReplyBody}";
-		var key_threadSubject = "${threadSubject}";
+		var key_threadBody = ${threadSplitReplyBody};
+		var key_threadSubject = ${threadSubject};
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadSplitReplyBody}");
+			value1 = ${threadSplitReplyBody});
 
 		if (isSet(siteName)) {
 			Navigator.openSitePage(
-				pageName = "${pageName}",
-				siteName = "${siteName}");
+				pageName = ${pageName},
+				siteName = ${siteName});
 		}
 		else {
-			Navigator.gotoPage(pageName = "${pageName}");
+			Navigator.gotoPage(pageName = ${pageName});
 		}
 
-		var key_repliesCount = "0";
-		var key_threadBody = "${threadReplyBody}";
-		var key_threadSubject = "${threadSplitSubject}";
+		var key_repliesCount = 0;
+		var key_threadBody = ${threadReplyBody};
+		var key_threadSubject = ${threadSplitSubject};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSplitSubject}");
+			value1 = ${threadSplitSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_REPLIES",
-			value1 = "0");
+			value1 = 0);
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSplitSubject}");
+			value1 = ${threadSplitSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#TITLE_HEADER",
-			value1 = "${threadSplitSubject}");
+			value1 = ${threadSplitSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-			value1 = "${threadSplitSubject}");
+			value1 = ${threadSplitSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadReplyBody}");
+			value1 = ${threadReplyBody});
 
-		var key_threadBody = "${threadSplitReplyBody}";
-		var key_threadSubject = "${threadSplitReplySubject}";
+		var key_threadBody = ${threadSplitReplyBody};
+		var key_threadSubject = ${threadSplitReplySubject};
 
 		AssertElementNotPresent(locator1 = "MessageBoardsThread#THREAD_SUBJECT_2");
 
 		AssertElementNotPresent(locator1 = "MessageBoardsThread#THREAD_BODY_2");
 	}
 
-	macro viewStatisticsPostsCountDefaultPG {
+	@summary = "Default summary"
+	macro viewStatisticsPostsCountDefaultPG(siteURLKey = null, layoutName = null) {
 		if (isSet(siteURLKey)) {
 			MessageboardsThread.openToStatistics(
-				layoutName = "${layoutName}",
-				siteURLKey = "${siteURLKey}");
+				layoutName = ${layoutName},
+				siteURLKey = ${siteURLKey});
 		}
 		else {
 			AssertClick(
@@ -1982,24 +2070,25 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsStatistics#GENERAL_NUMBER_OF_CATEGORIES",
-			value1 = "0");
+			value1 = 0);
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsStatistics#GENERAL_NUMBER_OF_POSTS",
-			value1 = "0");
+			value1 = 0);
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsStatistics#GENERAL_NUMBER_OF_PARTICIPANTS",
-			value1 = "0");
+			value1 = 0);
 
 		PortletEntry.viewEmptyMessage(entity = "Top Posters");
 	}
 
-	macro viewStatisticsPostsCountPG {
+	@summary = "Default summary"
+	macro viewStatisticsPostsCountPG(siteURLKey = null, userMessageboardsRank = null, userName = null, threadPostNumber = null, layoutName = null) {
 		if (isSet(siteURLKey)) {
 			MessageboardsThread.openToStatistics(
-				layoutName = "${layoutName}",
-				siteURLKey = "${siteURLKey}");
+				layoutName = ${layoutName},
+				siteURLKey = ${siteURLKey});
 		}
 		else {
 			AssertClick(
@@ -2015,20 +2104,21 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsStatistics#GENERAL_NUMBER_OF_POSTS",
-			value1 = "${threadPostNumber}");
+			value1 = ${threadPostNumber});
 
 		if (isSet(userPostNumber)) {
 			MessageboardsThread.viewStatisticsTopPoster();
 		}
 		else {
 			MessageboardsThread.viewStatisticsTopPoster(
-				userMessageboardsRank = "${userMessageboardsRank}",
-				userName = "${userName}",
-				userPostNumber = "${threadPostNumber}");
+				userMessageboardsRank = ${userMessageboardsRank},
+				userName = ${userName},
+				userPostNumber = ${threadPostNumber});
 		}
 	}
 
-	macro viewStatisticsTopPoster {
+	@summary = "Default summary"
+	macro viewStatisticsTopPoster(userMessageboardsRank = null, userPostNumber = null, userName = null) {
 		AssertClick(
 			locator1 = "MessageBoards#NAVIGATION_STATISTICS",
 			value1 = "Statistics");
@@ -2039,11 +2129,11 @@ definition {
 				value1 = "Top Posters");
 		}
 
-		var key_userName = "${userName}";
+		var key_userName = ${userName};
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsStatistics#TOP_POSTERS_AUTHOR_NAME",
-			value1 = "${userName}");
+			value1 = ${userName});
 
 		if (isSet(userMessageboardsRank)) {
 			AssertTextEquals(
@@ -2056,9 +2146,9 @@ definition {
 				value1 = "Rank: Youngling");
 		}
 
-		var key_userPostNumber = "${userPostNumber}";
+		var key_userPostNumber = ${userPostNumber};
 
-		if ("${userPostNumber}" == "1") {
+		if (${userPostNumber} == 1) {
 			AssertTextEquals(
 				locator1 = "MessageBoardsStatistics#TOP_POSTERS_AUTHOR_POSTS",
 				value1 = "Post: ${userPostNumber}");
@@ -2074,35 +2164,38 @@ definition {
 		AssertElementPresent(locator1 = "MessageBoardsStatistics#TOP_POSTERS_AUTHOR_LAST_POST_DATE");
 	}
 
-	macro viewThreadAttachment {
-		for (var mbThreadAttachment : list "${mbAttachmentFileList}") {
+	@summary = "Default summary"
+	macro viewThreadAttachment(mbAttachmentFileList = null) {
+		for (var mbThreadAttachment : list ${mbAttachmentFileList}) {
 			AssertTextEquals.assertPartialText(
-				key_mbThreadAttachment = "${mbThreadAttachment}",
+				key_mbThreadAttachment = ${mbThreadAttachment},
 				locator1 = "MessageBoardsThread#MESSAGE_ATTACHMENT_IMAGE",
-				value1 = "${mbThreadAttachment}");
+				value1 = ${mbThreadAttachment});
 		}
 	}
 
-	macro viewThreadInRecycleBin {
-		LexiconEntry.gotoEntry(rowEntry = "${threadSubject}");
+	@summary = "Default summary"
+	macro viewThreadInRecycleBin(threadSubject = null, threadBody = null) {
+		LexiconEntry.gotoEntry(rowEntry = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "Message#WORKFLOW_STATUS",
 			value1 = "In Recycle Bin");
 
 		AssertTextEquals(
-			key_threadSubject = "${threadSubject}",
+			key_threadSubject = ${threadSubject},
 			locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
-			key_threadBody = "${threadBody}",
+			key_threadBody = ${threadBody},
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 	}
 
-	macro viewThreadSubscribeLink {
-		var key_threadSubject = "${threadSubject}";
+	@summary = "Default summary"
+	macro viewThreadSubscribeLink(threadSubject = null) {
+		var key_threadSubject = ${threadSubject};
 
 		if (isSet(disabledEmailConfiguration)) {
 			Click(locator1 = "MessageBoards#VERTICAL_ELLIPSIS");
@@ -2111,7 +2204,7 @@ definition {
 
 			AssertClick(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
 			Click(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
@@ -2124,7 +2217,7 @@ definition {
 
 			AssertClick(
 				locator1 = "MessageBoards#THREAD_LIST_THREAD",
-				value1 = "${threadSubject}");
+				value1 = ${threadSubject});
 
 			Click(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
@@ -2132,26 +2225,26 @@ definition {
 		}
 	}
 
-	macro viewWithWorkflowPG {
+	@summary = "Default summary"
+	macro viewWithWorkflowPG(threadSubject = null, threadBody = null, userName = null) {
 		var key_threadBody = "threadBody";
-		var key_threadSubject = "${threadSubject}";
-		var key_userName = "${userName}";
+		var key_threadSubject = ${threadSubject};
+		var key_userName = ${userName};
 
 		AssertElementPresent(
-			key_replyCount = "0",
+			key_replyCount = 0,
 			locator1 = "MessageBoards#THREAD_TABLE_REPLIES");
 
 		AssertElementPresent(locator1 = "MessageBoards#THREAD_LIST_LAST_POST");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
-
-		var key_threadStatus = "Pending (${workflowTask})";
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
+			key_threadStatus = "Pending",
 			locator1 = "MessageBoards#THREAD_LIST_WORKFLOW_STATUS",
-			value1 = "Pending (${workflowTask})");
+			value1 = "Pending");
 
 		AssertClick(
 			locator1 = "MessageBoards#NAVIGATION_MY_POSTS",
@@ -2159,41 +2252,42 @@ definition {
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#MESSAGE_WORKFLOW_STATUS_1",
-			value1 = "Pending (${workflowTask})");
+			value1 = "Pending");
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#TITLE_HEADER",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "MessageBoardsThread#THREAD_USERNAME",
-			value1 = "${userName}");
+			value1 = ${userName});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#THREAD_SUBJECT",
-			value1 = "${threadSubject}");
+			value1 = ${threadSubject});
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#MESSAGE_WORKFLOW_STATUS_1",
 			value1 = "Pending");
 
 		AssertTextEquals(
-			key_threadBody = "${threadBody}",
+			key_threadBody = ${threadBody},
 			locator1 = "MessageBoardsThread#THREAD_BODY",
-			value1 = "${threadBody}");
+			value1 = ${threadBody});
 	}
 
-	macro viewWithWorkflowPGViaAP {
+	@summary = "Default summary"
+	macro viewWithWorkflowPGViaAP(threadSubject = null) {
 		AssertElementNotPresent(
-			key_assetTitle = "${threadSubject}",
+			key_assetTitle = ${threadSubject},
 			locator1 = "AP#ASSET_ABSTRACT_TITLE");
 	}
 

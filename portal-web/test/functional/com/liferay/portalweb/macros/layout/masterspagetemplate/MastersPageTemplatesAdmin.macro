@@ -1,19 +1,21 @@
 definition {
 
-	macro addMasters {
+	@summary = "Default summary"
+	macro addMasters(masterLayoutName = null) {
 		LexiconEntry.gotoAdd();
 
-		PortletEntry.inputName(name = "${masterLayoutName}");
+		PortletEntry.inputName(name = ${masterLayoutName});
 
 		Button.clickSave();
 
 		PageEditor.assertFragmentSidebarLoaded();
 	}
 
-	macro deleteMasters {
+	@summary = "Default summary"
+	macro deleteMasters(masterLayoutName = null) {
 		MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
 			item = "Delete",
-			masterLayoutName = "${masterLayoutName}");
+			masterLayoutName = ${masterLayoutName});
 
 		AssertTextEquals(
 			locator1 = "Modal#BODY",
@@ -26,54 +28,74 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro gotoMasters {
-		LexiconCard.clickCardTitleLink(card = "${masterLayoutName}");
+	@summary = "Default summary"
+	macro gotoMasters(masterLayoutName = null) {
+		LexiconCard.clickCardTitleLink(card = ${masterLayoutName});
 
 		PageEditor.assertFragmentSidebarLoaded();
+
+		WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
 	}
 
-	macro gotoMastersEllipsisItem {
+	@summary = "Default summary"
+	macro gotoMastersEllipsisItem(item = null, masterLayoutName = null) {
 		Click.waitForMenuToggleJSClick(
-			key_card = "${masterLayoutName}",
+			key_card = ${masterLayoutName},
 			locator1 = "Card#CARD_ELLIPSIS");
 
-		MenuItem.click(menuItem = "${item}");
+		MenuItem.click(menuItem = ${item});
 	}
 
-	macro importMastersFromTempFolder {
+	@summary = "Default summary"
+	macro importMastersFromTempFolder(importOption = null) {
 		Click.waitForMenuToggleJSClick(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Import");
 
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		WaitForPageLoad();
 
 		var mastersZipFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "master-page-*.zip");
 
-		UploadTempFile(
+		UploadTempFile.uploadTempFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
-			value1 = "${mastersZipFileName}");
+			value1 = ${mastersZipFileName});
 
 		Button.clickImport();
 
-		Alert.viewSuccessMessage();
+		if (isSet(importOption)) {
+			WaitForVisible(locator1 = "Modal#HEADER");
 
-		IFrame.closeFrame();
+			Check.checkNotVisible(
+				locator1 = "Radio#ANY",
+				radioLabel = ${importOption});
+
+			Click(
+				key_text = "Import",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
+		}
+
+		AssertVisible(locator1 = "Message#SUCCESS_IMPORT");
+
+		Button.clickDone();
 	}
 
-	macro openMastersAdmin {
+	@summary = "Default summary"
+	macro openMastersAdmin(siteURLKey = null) {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=master-layouts");
 	}
 
-	macro selectMasters {
-		LexiconCard.viewCardTitle(card = "${masterLayoutName}");
+	@summary = "Default summary"
+	macro selectMasters(masterLayoutName = null) {
+		LexiconCard.viewCardTitle(card = ${masterLayoutName});
 
 		Check.checkNotVisible(
-			key_card = "${masterLayoutName}",
+			key_card = ${masterLayoutName},
 			locator1 = "Card#CARD_CHECKBOX");
 	}
 
-	macro viewMastersPresent {
-		LexiconCard.viewCardPresent(card = "${masterLayoutName}");
+	@summary = "Default summary"
+	macro viewMastersPresent(masterLayoutName = null) {
+		LexiconCard.viewCardPresent(card = ${masterLayoutName});
 	}
 
 }

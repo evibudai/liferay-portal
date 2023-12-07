@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Style Books";
@@ -13,14 +14,13 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Activate local live staging") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Test Site Name");
+			Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+			Staging.activateStagingCP(siteName = "Test Site Name");
 		}
 
 		task ("Add a style book") {
@@ -31,9 +31,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -42,7 +42,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-116106. Page Creator can change style book of content page via Look and Feel settings in Staging site."
-	@priority = "3"
+	@priority = 3
 	test ChangeStyleBookOfContentPageViaLookAndFeelInStagingSite {
 		task ("Edit the style book and Publish it") {
 			StyleBooks.selectForm(formName = "Buttons");
@@ -65,8 +65,8 @@ definition {
 
 			Type(
 				ariaLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "2");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 2);
 
 			StyleBooks.clickManagementBar();
 
@@ -99,20 +99,19 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Test Style Book Name");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
 			Button.clickSave();
 
@@ -123,7 +122,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "background-color",
 				value1 = "rgba(0, 255, 0, 1)");
@@ -131,7 +130,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-size",
 				value1 = "32px");
@@ -170,20 +169,19 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Styles from Theme");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
 			Button.clickSave();
 
@@ -194,7 +192,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "background-color",
 				value1 = "rgba(11, 95, 255, 1)");
@@ -202,7 +200,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-size",
 				value1 = "26px");
@@ -236,7 +234,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-116106. Page Creator can quickly change style book via Page Design Options panel in Staging site."
-	@priority = "4"
+	@priority = 4
 	test ChangeStyleBookOfContentPageViaPageDesignOptionsPanelInStagingSite {
 		task ("Edit the style book and Publish it") {
 			StyleBooks.selectForm(formName = "Buttons");
@@ -259,8 +257,8 @@ definition {
 
 			Type(
 				ariaLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "2");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 2);
 
 			StyleBooks.clickManagementBar();
 
@@ -300,7 +298,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "background-color",
 				value1 = "rgba(0, 255, 0, 1)");
@@ -308,7 +306,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-size",
 				value1 = "32px");
@@ -356,7 +354,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "background-color",
 				value1 = "rgba(11, 95, 255, 1)");
@@ -364,7 +362,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-size",
 				value1 = "26px");
@@ -398,7 +396,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-116106 and LPS-121004. Page Creator can change style book of widget page via Look and Feel settings in Staging site."
-	@priority = "3"
+	@priority = 3
 	test ChangeStyleBookOfWidgetPageViaLookAndFeelInStagingSite {
 		task ("Edit the style book and Publish it") {
 			StyleBooks.selectForm(formName = "Buttons");
@@ -464,22 +462,21 @@ definition {
 
 			Click(locator1 = "ControlMenu#EDIT_COG");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Test Style Book Name");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
 			Button.clickSave();
 
@@ -487,44 +484,40 @@ definition {
 
 			Navigator.gotoBack();
 
-			AssertCssValue(
-				key_text = "New Entry",
-				locator1 = "Button#ANY",
-				locator2 = "background-color",
-				value1 = "rgba(0, 255, 0, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "background-color",
+				element = "//a[contains(@class,'btn')][normalize-space()='New Entry']",
+				expected = "rgb(0, 255, 0)");
 
-			AssertCssValue(
-				key_text = "Subscribe",
-				locator1 = "Button#ANY",
-				locator2 = "color",
-				value1 = "rgba(255, 0, 0, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "color",
+				element = "//a[contains(@class,'btn')][normalize-space()='Subscribe']",
+				expected = "rgb(255, 0, 0)");
 
-			AssertCssValue(
-				key_text = "RSS",
-				locator1 = "Button#ANY",
-				locator2 = "color",
-				value1 = "rgba(0, 0, 255, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "color",
+				element = "//a[contains(@class,'btn')][normalize-space()='RSS']",
+				expected = "rgb(0, 0, 255)");
 		}
 
 		task ("Change to default style book via Look and Feel") {
 			Click(locator1 = "ControlMenu#EDIT_COG");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Styles from Theme");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
 			Button.clickSave();
 
@@ -532,28 +525,25 @@ definition {
 
 			Navigator.gotoBack();
 
-			AssertCssValue(
-				key_text = "New Entry",
-				locator1 = "Button#ANY",
-				locator2 = "background-color",
-				value1 = "rgba(11, 95, 255, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "background-color",
+				element = "//a[contains(@class,'btn')][normalize-space()='New Entry']",
+				expected = "rgb(11, 95, 255)");
 
-			AssertCssValue(
-				key_text = "Subscribe",
-				locator1 = "Button#ANY",
-				locator2 = "color",
-				value1 = "rgba(107, 108, 126, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "color",
+				element = "//a[contains(@class,'btn')][normalize-space()='Subscribe']",
+				expected = "rgb(107, 108, 126)");
 
-			AssertCssValue(
-				key_text = "RSS",
-				locator1 = "Button#ANY",
-				locator2 = "color",
-				value1 = "rgba(107, 108, 126, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "color",
+				element = "//a[contains(@class,'btn')][normalize-space()='RSS']",
+				expected = "rgb(107, 108, 126)");
 		}
 	}
 
 	@description = "This is a test for LPS-116078. Can preview the effect on page when edit the style book in Staging site."
-	@priority = "4"
+	@priority = 4
 	test PreviewTheEffectOnPageInStyleBookEditorInStagingSite {
 		task ("Edit the style book and Publish it") {
 			StyleBooks.selectForm(formName = "Buttons");
@@ -576,8 +566,8 @@ definition {
 
 			Type(
 				ariaLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "2");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 2);
 
 			StyleBooks.clickManagementBar();
 
@@ -639,7 +629,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-116077. The data of Style Books is immediately available to Live site when manage it in Staging site."
-	@priority = "5"
+	@priority = 5
 	test ViewDataChangesOfStyleBookAreImmediatelyAvailableToLiveSite {
 		property portal.acceptance = "true";
 
@@ -664,8 +654,8 @@ definition {
 
 			Type(
 				ariaLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "2");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 2);
 
 			StyleBooks.clickManagementBar();
 
@@ -679,7 +669,7 @@ definition {
 		}
 
 		task ("Assert specific warning message is shown in Style Books admin") {
-			Alert.viewWarningSpecific(warningMessage = "The data of this portlet is not staged. Any data changes are immediately available to the Local Live site.");
+			Staging.viewNotStagedAssetMessageOnStaging();
 		}
 
 		task ("Add a content page") {
@@ -715,7 +705,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "background-color",
 				value1 = "rgba(0, 255, 0, 1)");
@@ -723,7 +713,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-size",
 				value1 = "32px");
@@ -814,7 +804,7 @@ definition {
 
 			Type(
 				ariaLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 				value1 = "1.5");
 
 			StyleBooks.clickManagementBar();

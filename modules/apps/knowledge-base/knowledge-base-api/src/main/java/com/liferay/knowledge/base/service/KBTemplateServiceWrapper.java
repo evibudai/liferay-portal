@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service;
 
+import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -35,7 +27,7 @@ public class KBTemplateServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBTemplate addKBTemplate(
+	public KBTemplate addKBTemplate(
 			String portletId, String title, String content,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -45,8 +37,7 @@ public class KBTemplateServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBTemplate deleteKBTemplate(
-			long kbTemplateId)
+	public KBTemplate deleteKBTemplate(long kbTemplateId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbTemplateService.deleteKBTemplate(kbTemplateId);
@@ -60,12 +51,10 @@ public class KBTemplateServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.knowledge.base.model.KBTemplate>
-		getGroupKBTemplates(
-			long groupId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.knowledge.base.model.KBTemplate>
-					orderByComparator) {
+	public java.util.List<KBTemplate> getGroupKBTemplates(
+		long groupId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<KBTemplate>
+			orderByComparator) {
 
 		return _kbTemplateService.getGroupKBTemplates(
 			groupId, start, end, orderByComparator);
@@ -77,8 +66,7 @@ public class KBTemplateServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBTemplate getKBTemplate(
-			long kbTemplateId)
+	public KBTemplate getKBTemplate(long kbTemplateId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbTemplateService.getKBTemplate(kbTemplateId);
@@ -90,9 +78,8 @@ public class KBTemplateServiceWrapper
 				long groupId, String title, String content,
 				java.util.Date startDate, java.util.Date endDate,
 				boolean andOperator, int[] curStartValues, int cur, int delta,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.knowledge.base.model.KBTemplate>
-						orderByComparator)
+				com.liferay.portal.kernel.util.OrderByComparator<KBTemplate>
+					orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbTemplateService.getKBTemplateSearchDisplay(
@@ -111,7 +98,7 @@ public class KBTemplateServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBTemplate updateKBTemplate(
+	public KBTemplate updateKBTemplate(
 			long kbTemplateId, String title, String content,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {

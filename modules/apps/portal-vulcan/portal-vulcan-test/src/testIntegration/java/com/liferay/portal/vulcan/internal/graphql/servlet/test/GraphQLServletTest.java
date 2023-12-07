@@ -1,27 +1,28 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.graphql.servlet.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
+import com.liferay.portal.vulcan.internal.util.PaginationConfigurationTestUtil;
 
+import java.util.Collections;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +32,11 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 /**
  * @author Luis Miguel Barcos
@@ -43,35 +49,252 @@ public class GraphQLServletTest extends BaseGraphQLServlet {
 	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
 		new LiferayIntegrationTestRule();
 
-	@Test
-	public void test() throws Exception {
+	@Before
+	public void setUp() {
 		Bundle bundle = FrameworkUtil.getBundle(GraphQLServletTest.class);
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		TestServletData testServletData = new TestServletData();
+		_testDTO = new TestDTO();
 
-		ServiceRegistration<ServletData> serviceRegistration =
-			bundleContext.registerService(
-				ServletData.class, testServletData, null);
+		TestServletData testServletData = new TestServletData(_testDTO);
 
-		String testDTOSimpleClassName = StringUtil.lowerCaseFirstLetter(
-			TestDTO.class.getSimpleName());
+		_serviceRegistration = bundleContext.registerService(
+			ServletData.class, testServletData, null);
+	}
 
-		GraphQLField graphQLField = new GraphQLField(
-			testDTOSimpleClassName, new GraphQLField("field"),
-			new GraphQLField("_id"));
+	@After
+	public void tearDown() {
+		_serviceRegistration.unregister();
+	}
+
+	@Test
+	public void testMutation() throws Exception {
+		TestDTO testDTO = new TestDTO();
 
 		JSONObject jsonObject = JSONUtil.getValueAsJSONObject(
-			invoke(graphQLField), "JSONObject/data",
-			"JSONObject/" + testDTOSimpleClassName);
+			invoke(
+				new GraphQLField(
+					"createTestDTO",
+					Collections.singletonMap(
+						"testDTO", toGraphQLString(testDTO)),
+					new GraphQLField("id"), new GraphQLField("map"),
+					new GraphQLField("string")),
+				"mutation"),
+			"JSONObject/data", "JSONObject/createTestDTO");
 
-		TestQuery testQuery = testServletData.getQuery();
-
-		Assert.assertEquals(jsonObject.get("field"), testQuery.getField());
-		Assert.assertEquals(jsonObject.get("_id"), testQuery.getId());
-
-		serviceRegistration.unregister();
+		assertEquals(false, testDTO, jsonObject);
 	}
+
+	@Test
+	public void testQuery() throws Exception {
+		JSONObject jsonObject = JSONUtil.getValueAsJSONObject(
+			invoke(
+				new GraphQLField(
+					"testDTO", new GraphQLField("extendedString"),
+					new GraphQLField("id"), new GraphQLField("map"),
+					new GraphQLField("string")),
+				"query"),
+			"JSONObject/data", "JSONObject/testDTO");
+
+		assertEquals(true, _testDTO, jsonObject);
+	}
+
+	@Test
+	public void testQueryDepthLimit() throws Exception {
+		Configuration[] configurations = _configurationAdmin.listConfigurations(
+			StringBundler.concat(
+				"(&(companyId=", TestPropsValues.getCompanyId(),
+				")(service.factoryPid=com.liferay.portal.vulcan.internal.",
+				"configuration.HeadlessAPICompanyConfiguration.scoped))"));
+
+		Configuration factoryConfiguration =
+			_configurationAdmin.createFactoryConfiguration(
+				"com.liferay.portal.vulcan.internal.configuration." +
+					"HeadlessAPICompanyConfiguration.scoped",
+				StringPool.QUESTION);
+
+		try {
+			factoryConfiguration.update(
+				HashMapDictionaryBuilder.<String, Object>put(
+					"companyId", TestPropsValues.getCompanyId()
+				).put(
+					"queryDepthLimit", 1
+				).build());
+
+			JSONObject jsonObject = invoke(
+				new GraphQLField(
+					"testDTO", new GraphQLField("extendedString"),
+					new GraphQLField("id"), new GraphQLField("string")),
+				"query");
+
+			Assert.assertNull(
+				JSONUtil.getValueAsJSONObject(jsonObject, "JSONObject/data"));
+			JSONAssert.assertEquals(
+				JSONUtil.put(
+					"extensions",
+					JSONUtil.put(
+						"code", "Bad Request"
+					).put(
+						"exception", JSONUtil.put("errno", 400)
+					)
+				).put(
+					"message",
+					"Depth 2 is greater than the query depth limit of 1"
+				).toString(),
+				JSONUtil.getValueAsString(
+					jsonObject, "JSONArray/errors", "Object/0"),
+				JSONCompareMode.LENIENT);
+
+			factoryConfiguration.update(
+				HashMapDictionaryBuilder.<String, Object>put(
+					"companyId", TestPropsValues.getCompanyId()
+				).put(
+					"queryDepthLimit", 2
+				).build());
+
+			jsonObject = JSONUtil.getValueAsJSONObject(
+				invoke(
+					new GraphQLField(
+						"testDTO", new GraphQLField("extendedString"),
+						new GraphQLField("id"), new GraphQLField("map"),
+						new GraphQLField("string")),
+					"query"),
+				"JSONObject/data", "JSONObject/testDTO");
+
+			assertEquals(true, _testDTO, jsonObject);
+		}
+		finally {
+			if (configurations == null) {
+				factoryConfiguration.delete();
+			}
+			else {
+				Configuration configuration = configurations[0];
+
+				factoryConfiguration.update(configuration.getProperties());
+			}
+		}
+	}
+
+	@Test
+	public void testQueryPagination() throws Exception {
+
+		// Default limited page size and limited page size requested
+
+		_test(1, 20, null, null);
+		_test(1, 5, null, 5);
+		_test(1, 30, null, 30);
+		_test(1, 20, null, null);
+		_test(1, 15, null, 15);
+		_test(1, 30, null, 30);
+		_test(1, 40, null, 40);
+		_test(2, 20, 2, null);
+		_test(3, 20, 3, null);
+
+		// Default limited page size and unlimited page size requested
+
+		_test(1, 500, null, -1);
+		_test(1, 500, null, 0);
+		_test(1, 500, -1, null);
+		_test(1, 500, 0, null);
+
+		// Limited page size configured and limited page size requested
+
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			10, () -> _test(1, 10, null, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			10, () -> _test(1, 5, null, 5));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			10, () -> _test(1, 10, null, 30));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			30, () -> _test(1, 20, null, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			30, () -> _test(1, 15, null, 15));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			30, () -> _test(1, 30, null, 30));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			30, () -> _test(1, 30, null, 40));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			50, () -> _test(2, 20, 2, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			50, () -> _test(3, 20, 3, null));
+
+		// Limited page size configured and unlimited page size requested
+
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			50, () -> _test(1, 50, null, -1));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			50, () -> _test(1, 50, null, 0));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			50, () -> _test(1, 50, -1, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			50, () -> _test(1, 50, 0, null));
+
+		// Unlimited page size configured and limited page size requested
+
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(1, 20, null, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(1, 25, null, 25));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(2, 20, 2, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(2, 25, 2, 25));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(1, 20, null, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(1, 25, null, 25));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(2, 20, 2, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(2, 25, 2, 25));
+
+		// Unlimited page size configured and unlimited page size requested
+
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(-1, -1, -1, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(-1, -1, 0, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(-1, -1, null, -1));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			-1, () -> _test(-1, -1, null, 0));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(-1, -1, -1, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(-1, -1, 0, null));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(-1, -1, null, -1));
+		PaginationConfigurationTestUtil.withPageSizeLimit(
+			0, () -> _test(-1, -1, null, 0));
+	}
+
+	private void _test(
+			int expectedPage, int expectedPageSize, Integer requestPage,
+			Integer requestPageSize)
+		throws Exception {
+
+		JSONObject jsonObject = JSONUtil.getValueAsJSONObject(
+			invoke(
+				new GraphQLField(
+					"testDTOPage",
+					HashMapBuilder.put(
+						"page", (Object)requestPage
+					).put(
+						"pageSize", (Object)requestPageSize
+					).build(),
+					new GraphQLField("page"), new GraphQLField("pageSize")),
+				"query"),
+			"JSONObject/data", "JSONObject/testDTOPage");
+
+		Assert.assertEquals(expectedPage, jsonObject.getInt("page"));
+		Assert.assertEquals(expectedPageSize, jsonObject.getInt("pageSize"));
+	}
+
+	@Inject
+	private ConfigurationAdmin _configurationAdmin;
+
+	private ServiceRegistration<ServletData> _serviceRegistration;
+	private TestDTO _testDTO;
 
 }

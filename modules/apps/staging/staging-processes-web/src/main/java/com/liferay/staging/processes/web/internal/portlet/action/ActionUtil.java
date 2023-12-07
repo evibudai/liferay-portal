@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.staging.processes.web.internal.portlet.action;
@@ -127,13 +118,13 @@ public class ActionUtil {
 		HttpServletRequest httpServletRequest =
 			PortalUtil.getHttpServletRequest(renderRequest);
 
-		PortletPreferences portletSetup = getLayoutPortletSetup(
+		PortletPreferences portletPreferences = getLayoutPortletSetup(
 			renderRequest, portlet);
 
 		String title = PortletConfigurationUtil.getPortletTitle(
 			_getPortletSetup(
 				httpServletRequest, renderRequest.getPreferences(),
-				portletSetup),
+				portletPreferences),
 			themeDisplay.getLanguageId());
 
 		if (Validator.isNull(title)) {
@@ -215,19 +206,19 @@ public class ActionUtil {
 
 	private static PortletPreferences _getPortletSetup(
 			HttpServletRequest httpServletRequest,
-			PortletPreferences portletConfigPortletSetup,
-			PortletPreferences portletSetup)
+			PortletPreferences portletConfigPortletPreferences,
+			PortletPreferences portletPreferences)
 		throws Exception {
 
 		String portletResource = ParamUtil.getString(
 			httpServletRequest, "portletResource");
 
 		if (Validator.isNull(portletResource)) {
-			return portletConfigPortletSetup;
+			return portletConfigPortletPreferences;
 		}
 
-		if (portletSetup != null) {
-			return portletSetup;
+		if (portletPreferences != null) {
+			return portletPreferences;
 		}
 
 		return PortletPreferencesFactoryUtil.getPortletSetup(

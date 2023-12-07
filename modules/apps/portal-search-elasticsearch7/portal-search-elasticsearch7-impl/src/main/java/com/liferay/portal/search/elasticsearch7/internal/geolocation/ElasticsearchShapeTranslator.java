@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.geolocation;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.search.geolocation.CircleShape;
 import com.liferay.portal.search.geolocation.Coordinate;
 import com.liferay.portal.search.geolocation.EnvelopeShape;
@@ -30,8 +22,6 @@ import com.liferay.portal.search.geolocation.Shape;
 import com.liferay.portal.search.geolocation.ShapeTranslator;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.elasticsearch.legacygeo.builders.CircleBuilder;
 import org.elasticsearch.legacygeo.builders.EnvelopeBuilder;
@@ -85,15 +75,9 @@ public class ElasticsearchShapeTranslator
 		geometryCollectionBuilder.coordinates(
 			translate(geometryCollectionShape.getCoordinates()));
 
-		List<Shape> shapes = geometryCollectionShape.getShapes();
-
-		Stream<Shape> stream = shapes.stream();
-
-		stream.map(
-			this::translate
-		).forEach(
-			geometryCollectionBuilder::shape
-		);
+		for (Shape shape : geometryCollectionShape.getShapes()) {
+			geometryCollectionBuilder.shape(translate(shape));
+		}
 
 		return geometryCollectionBuilder;
 	}
@@ -114,16 +98,11 @@ public class ElasticsearchShapeTranslator
 		multiLineStringBuilder.coordinates(
 			translate(multiLineStringShape.getCoordinates()));
 
-		List<LineStringShape> lineStringShapes =
-			multiLineStringShape.getLineStringShapes();
+		for (LineStringShape lineStringShape :
+				multiLineStringShape.getLineStringShapes()) {
 
-		Stream<LineStringShape> stream = lineStringShapes.stream();
-
-		stream.map(
-			this::translate
-		).forEach(
-			multiLineStringBuilder::linestring
-		);
+			multiLineStringBuilder.linestring(translate(lineStringShape));
+		}
 
 		return multiLineStringBuilder;
 	}
@@ -142,32 +121,20 @@ public class ElasticsearchShapeTranslator
 		multiPolygonBuilder.coordinates(
 			translate(multiPolygonShape.getCoordinates()));
 
-		List<PolygonShape> polygonShapes = multiPolygonShape.getPolygonShapes();
-
-		Stream<PolygonShape> stream = polygonShapes.stream();
-
-		stream.map(
-			this::translate
-		).forEach(
-			multiPolygonBuilder::polygon
-		);
+		for (PolygonShape polygonShape : multiPolygonShape.getPolygonShapes()) {
+			multiPolygonBuilder.polygon(translate(polygonShape));
+		}
 
 		return multiPolygonBuilder;
 	}
 
 	@Override
 	public PointBuilder translate(PointShape pointShape) {
-		List<Coordinate> coordinates = pointShape.getCoordinates();
-
 		PointBuilder pointBuilder = new PointBuilder();
 
-		Stream<Coordinate> stream = coordinates.stream();
-
-		stream.map(
-			this::translate
-		).forEach(
-			pointBuilder::coordinate
-		);
+		for (Coordinate coordinate : pointShape.getCoordinates()) {
+			pointBuilder.coordinate(translate(coordinate));
+		}
 
 		return pointBuilder;
 	}
@@ -180,15 +147,9 @@ public class ElasticsearchShapeTranslator
 
 		polygonBuilder.coordinates(translate(polygonShape.getCoordinates()));
 
-		List<LineStringShape> holesLineStringShapes = polygonShape.getHoles();
-
-		Stream<LineStringShape> stream = holesLineStringShapes.stream();
-
-		stream.map(
-			this::translate
-		).forEach(
-			polygonBuilder::hole
-		);
+		for (LineStringShape holeLineStringShape : polygonShape.getHoles()) {
+			polygonBuilder.hole(translate(holeLineStringShape));
+		}
 
 		return polygonBuilder;
 	}
@@ -203,13 +164,7 @@ public class ElasticsearchShapeTranslator
 	protected List<org.locationtech.jts.geom.Coordinate> translate(
 		List<Coordinate> coordinates) {
 
-		Stream<Coordinate> stream = coordinates.stream();
-
-		return stream.map(
-			this::translate
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(coordinates, this::translate);
 	}
 
 	protected org.elasticsearch.common.geo.Orientation translate(

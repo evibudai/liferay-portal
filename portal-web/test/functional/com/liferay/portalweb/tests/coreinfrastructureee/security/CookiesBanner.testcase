@@ -2,8 +2,7 @@
 definition {
 
 	property ci.retries.disabled = "true";
-	property custom.properties = "feature.flag.LPS-142518=true";
-	property portal.release = "quarantine";
+	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Cookies";
 
@@ -18,10 +17,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-142518. TC-9 Verify that Accept All at the Cookie Banner could be set and cookies are stored with declined values."
-	@priority = "5"
+	@priority = 5
 	test CookiesBannerAcceptAllSelected {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CookiesBanner#CookieBannerAcceptAllSelected";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: User click on Accept all") {
 			CookieBanner.cookiesBannerAcceptAll();
@@ -33,10 +33,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-152844. Combined AC-1, AC-2, AC-3, AC-4. Verify that Cookie Banner could be enabled, and customized."
-	@priority = "5"
+	@priority = 5
 	test CookiesBannerCouldBeEnabledAndCustomized {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CookiesBanner#CookieBannerCouldBeEnabledAndCustomized";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: a site configured to show the Banner") {
 			CookieBannerAdmin.setCustomTextForAllFields(text = "INSTANCE_LEVEL");
@@ -56,10 +57,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-148320. Combined AC-1, AC-3. Verify that Cookie Banner could be enabled and customized via OSGI file."
-	@priority = "5"
+	@priority = 5
 	test CookiesBannerCouldBeEnabledAndCustomizedViaOSGIFile {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CookiesBanner#CookiesBannerCouldBeEnabledAndCustomizedViaOSGIFile";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: a site configured to show the Banner via OSGI file") {
 			OSGiConfig.copyOSGiConfigFile(
@@ -76,9 +78,7 @@ definition {
 
 			var companyId = JSONCompany.getCompanyId();
 
-			AntCommand(
-				locator1 = "build-test-cookies.xml",
-				value1 = "update-cookies-osgi-instance-configuration -DcompanyId=${companyId}");
+			AntCommands.runCommand("build-test-cookies.xml", "update-cookies-osgi-instance-configuration -DcompanyId=${companyId}");
 
 			User.logoutAndLoginPG();
 
@@ -101,10 +101,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-142518. TC-10 Verify that Decline All at the Cookie Banner could be set and cookies are stored with declined values."
-	@priority = "5"
+	@priority = 5
 	test CookiesBannerDeclineAllSelected {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CookiesBanner#CookieBannerDeclineAllSelected";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: User click on Decline all") {
 			CookieBanner.cookiesBannerDeclineAll();
@@ -116,10 +117,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-148320. Combined AC-1, AC-2, AC-4. Verify Privacy Policy Links can be configured from a local site similarly to an external page with giving its url."
-	@priority = "5"
+	@priority = 5
 	test PrivacyPolicyLinksCanBeConfiguredFromALocalSite {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CookiesBanner#PrivacyPolicyLinksCanBeConfiguredFromALocalSite";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: a site configured to show the Banner") {
 			JSONLayout.addPublicLayout(

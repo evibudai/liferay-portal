@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -88,7 +79,7 @@ public interface CPDisplayLayoutLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CPDisplayLayout addCPDisplayLayout(
 			long userId, long groupId, Class<?> clazz, long classPK,
-			String layoutUuid)
+			String layoutPageTemplateEntryUuid, String layoutUuid)
 		throws PortalException;
 
 	/**
@@ -226,14 +217,6 @@ public interface CPDisplayLayoutLocalService
 	public CPDisplayLayout fetchCPDisplayLayout(
 		long groupId, Class<?> clazz, long classPK);
 
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CPDisplayLayout> fetchCPDisplayLayoutByGroupIdAndLayoutUuid(
-		long groupId, String layoutUuid);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CPDisplayLayout> fetchCPDisplayLayoutByGroupIdAndLayoutUuid(
-		long groupId, String layoutUuid, int start, int end);
-
 	/**
 	 * Returns the cp display layout matching the UUID and group.
 	 *
@@ -285,6 +268,25 @@ public interface CPDisplayLayoutLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDisplayLayout> getCPDisplayLayouts(int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDisplayLayout>
+		getCPDisplayLayoutsByGroupIdAndLayoutPageTemplateEntryUuid(
+			long groupId, String layoutPageTemplateEntryUuid);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDisplayLayout>
+		getCPDisplayLayoutsByGroupIdAndLayoutPageTemplateEntryUuid(
+			long groupId, String layoutPageTemplateEntryUuid, int start,
+			int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDisplayLayout> getCPDisplayLayoutsByGroupIdAndLayoutUuid(
+		long groupId, String layoutUuid);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDisplayLayout> getCPDisplayLayoutsByGroupIdAndLayoutUuid(
+		long groupId, String layoutUuid, int start, int end);
 
 	/**
 	 * Returns all the cp display layouts matching the UUID and company.
@@ -344,8 +346,8 @@ public interface CPDisplayLayoutLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public BaseModelSearchResult<CPDisplayLayout> searchCPDisplayLayout(
-			long companyId, long groupId, String className, String keywords,
-			int start, int end, Sort sort)
+			long companyId, long groupId, String className, Integer type,
+			String keywords, int start, int end, Sort sort)
 		throws PortalException;
 
 	/**
@@ -364,7 +366,8 @@ public interface CPDisplayLayoutLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPDisplayLayout updateCPDisplayLayout(
-			long cpDisplayLayoutId, long classPK, String layoutUuid)
+			long cpDisplayLayoutId, long classPK,
+			String layoutPageTemplateEntryUuid, String layoutUuid)
 		throws PortalException;
 
 	@Override

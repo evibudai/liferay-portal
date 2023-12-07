@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
@@ -19,7 +10,10 @@ import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {PageTemplateModal} from '@liferay/layout-js-components-web';
 import classNames from 'classnames';
+import {fetch, sub} from 'frontend-js-web';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {useDrag, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
@@ -165,9 +159,12 @@ function filterEmptyGroups(items) {
 const noop = () => {};
 
 const MillerColumnsItem = ({
+	createPageTemplateURL,
+	getPageTemplateCollectionsURL,
+	getItemActionsURL,
+	isLayoutSetPrototype,
 	isPrivateLayoutsEnabled,
 	item: {
-		actions = [],
 		active,
 		bulkActions = [],
 		checked,
@@ -175,6 +172,7 @@ const MillerColumnsItem = ({
 		description,
 		draggable,
 		hasChild,
+		hasDuplicatedFriendlyURL = false,
 		id: itemId,
 		itemIndex,
 		parentId,
@@ -197,36 +195,88 @@ const MillerColumnsItem = ({
 	const ref = useRef();
 	const timeoutRef = useRef();
 
-	const [dropZone, setDropZone] = useState();
+	const onClose = () => {
+		setOpenModal(false);
+	};
 
-	const [dropdownActionsActive, setDropdownActionsActive] = useState(false);
+	const [openModal, setOpenModal] = useState(false);
+
+	const [dropZone, setDropZone] = useState();
 
 	const [layoutActionsActive, setLayoutActionsActive] = useState(false);
 
-	const dropdownActions = useMemo(() => {
-		const dropdownActions = actions.map((action) => {
-			return {
-				...action,
-				items: action.items?.map((child) => {
-					return {
-						...child,
-						onClick(event) {
-							const action = child.data?.action;
+	const [dropdownActions, setDropdownActions] = useState([]);
 
-							if (action) {
-								event.preventDefault();
+	const loadPromiseRef = useRef();
 
-								ACTIONS[action](child.data, namespace);
-							}
-						},
-						symbolLeft: child.icon,
+	const [loadMessage, setLoadMessage] = useState('');
+
+	function loadDropdownActions() {
+		if (!loadPromiseRef.current) {
+			let loadingMessageShown = false;
+			let optionsLoaded = false;
+			const url = new URL(getItemActionsURL);
+			url.searchParams.append(`${namespace}plid`, itemId);
+
+			setTimeout(() => {
+				if (!optionsLoaded) {
+					setLoadMessage(
+						sub(Liferay.Language.get('loading-x-options'), title)
+					);
+					loadingMessageShown = true;
+				}
+			}, 500);
+
+			loadPromiseRef.current = fetch(url, {
+				method: 'GET',
+			})
+				.then((response) => response.json())
+				.then(({actions}) => {
+					optionsLoaded = true;
+					if (loadingMessageShown) {
+						setLoadMessage(
+							sub(Liferay.Language.get('x-options-loaded'), title)
+						);
+					}
+
+					const updateItem = (item) => {
+						const newItem = {
+							...item,
+							onClick(event) {
+								const action = item.data?.action;
+
+								if (action === 'convertToPageTemplate') {
+									setOpenModal(true);
+								}
+								else if (action) {
+									event.preventDefault();
+
+									ACTIONS[action]?.(item.data);
+								}
+							},
+							symbolLeft: item.icon,
+						};
+
+						if (Array.isArray(item.items)) {
+							newItem.items = item.items.map(updateItem);
+						}
+
+						return newItem;
 					};
-				}),
-			};
-		});
 
-		return addSeparators(filterEmptyGroups(dropdownActions));
-	}, [actions, namespace]);
+					const dropdownActions = actions.map((action) => {
+						return {
+							...action,
+							items: action.items?.map(updateItem),
+						};
+					});
+
+					setDropdownActions(
+						addSeparators(filterEmptyGroups(dropdownActions))
+					);
+				});
+		}
+	}
 
 	const layoutActions = useMemo(() => {
 		return quickActions.filter(
@@ -342,6 +392,14 @@ const MillerColumnsItem = ({
 		}
 	}, [active, dropZone, isOver, itemId, onItemStayHover]);
 
+	const warningMessage = isLayoutSetPrototype
+		? Liferay.Language.get(
+				'there-is-a-page-with-the-same-friendly-url-in-a-site-using-this-site-template'
+		  )
+		: Liferay.Language.get(
+				'there-is-a-page-with-the-same-friendly-url-in-the-site-template'
+		  );
+
 	return (
 		<ClayLayout.ContentRow
 			className={classNames('list-group-item-flex miller-columns-item', {
@@ -356,14 +414,12 @@ const MillerColumnsItem = ({
 			ref={ref}
 			verticalAlign="center"
 		>
-			<a className="miller-columns-item-mask" href={url}>
-				<span className="c-inner sr-only">{`${Liferay.Language.get(
-					'select'
-				)} ${title}`}</span>
+			<a className="miller-columns-item-mask" href={url} role="button">
+				<span className="c-inner sr-only">{title}</span>
 			</a>
 
 			{draggable && (
-				<ClayLayout.ContentCol className="miller-columns-item-drag-handler pl-0">
+				<ClayLayout.ContentCol className="c-pl-0 miller-columns-item-drag-handler">
 					<ClayIcon symbol="drag" />
 				</ClayLayout.ContentCol>
 			)}
@@ -371,6 +427,11 @@ const MillerColumnsItem = ({
 			{selectable && (
 				<ClayLayout.ContentCol>
 					<ClayCheckbox
+						aria-label={sub(
+							Liferay.Language.get('select-x'),
+							title
+						)}
+						className="c-mb-0"
 						defaultChecked={checked}
 						name={`${namespace}rowIds`}
 						value={itemId}
@@ -378,10 +439,16 @@ const MillerColumnsItem = ({
 				</ClayLayout.ContentCol>
 			)}
 
-			<ClayLayout.ContentCol className="pl-1" expand>
-				<h4 className="list-group-title text-truncate-inline">
+			<ClayLayout.ContentCol className="c-pl-1" expand>
+				<div className="list-group-title text-truncate-inline">
 					{viewUrl ? (
 						<ClayLink
+							aria-label={
+								Liferay.FeatureFlags['LPS-174417'] &&
+								hasDuplicatedFriendlyURL
+									? `${title}. ${warningMessage}`
+									: title
+							}
 							className="text-truncate"
 							href={viewUrl}
 							target={target}
@@ -391,10 +458,19 @@ const MillerColumnsItem = ({
 					) : (
 						<span className="text-truncate">{title}</span>
 					)}
-				</h4>
+
+					{Liferay.FeatureFlags['LPS-174417'] &&
+					hasDuplicatedFriendlyURL ? (
+						<ClayIcon
+							className="align-self-center c-ml-2 flex-shrink-0 icon-warning lfr-portal-tooltip text-warning"
+							data-title={warningMessage}
+							symbol="warning-full"
+						/>
+					) : null}
+				</div>
 
 				{description && (
-					<h5 className="d-flex list-group-subtitle small">
+					<div className="d-flex h5 list-group-subtitle small">
 						<span className="text-truncate">{description}</span>
 
 						{states.map((state) => (
@@ -406,7 +482,7 @@ const MillerColumnsItem = ({
 								{state.label}
 							</ClayLabel>
 						))}
-					</h5>
+					</div>
 				)}
 			</ClayLayout.ContentCol>
 
@@ -460,17 +536,22 @@ const MillerColumnsItem = ({
 				</ClayLayout.ContentCol>
 			))}
 
-			{!!dropdownActions.length && (
+			{!!getItemActionsURL && (
 				<ClayLayout.ContentCol className="miller-columns-item-actions">
 					<ClayDropDownWithItems
-						active={dropdownActionsActive}
+						caption={
+							!loadPromiseRef.current ? (
+								<ClayLoadingIndicator />
+							) : (
+								''
+							)
+						}
 						items={dropdownActions}
-						onActiveChange={setDropdownActionsActive}
-						renderMenuOnClick
 						trigger={
 							<ClayButtonWithIcon
 								borderless
 								displayType="secondary"
+								onClick={loadDropdownActions}
 								size="sm"
 								symbol="ellipsis-v"
 								title={Liferay.Language.get(
@@ -479,11 +560,25 @@ const MillerColumnsItem = ({
 							/>
 						}
 					/>
+
+					<span aria-live="polite" className="sr-only">
+						{loadMessage}
+					</span>
+
+					{openModal && (
+						<PageTemplateModal
+							createTemplateURL={createPageTemplateURL}
+							getCollectionsURL={getPageTemplateCollectionsURL}
+							layoutId={itemId}
+							namespace={namespace}
+							onClose={onClose}
+						/>
+					)}
 				</ClayLayout.ContentCol>
 			)}
 
 			{hasChild && (
-				<ClayLayout.ContentCol className="miller-columns-item-child-indicator">
+				<ClayLayout.ContentCol className="miller-columns-item-child-indicator text-secondary">
 					<ClayIcon symbol={rtl ? 'caret-left' : 'caret-right'} />
 				</ClayLayout.ContentCol>
 			)}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.related.models;
@@ -24,7 +15,6 @@ import com.liferay.object.related.models.ObjectRelatedModelsProvider;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -53,12 +43,13 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 
 		_className = objectDefinition.getClassName();
+		_companyId = objectDefinition.getCompanyId();
 	}
 
 	@Override
 	public void deleteRelatedModel(
 			long userId, long groupId, long objectRelationshipId,
-			long primaryKey)
+			long primaryKey, String deletionType)
 		throws PortalException {
 
 		ObjectRelationship objectRelationship =
@@ -66,7 +57,7 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 				objectRelationshipId);
 
 		List<ObjectEntry> relatedModels = getRelatedModels(
-			groupId, objectRelationshipId, primaryKey, QueryUtil.ALL_POS,
+			groupId, objectRelationshipId, primaryKey, null, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS);
 
 		if (relatedModels.isEmpty()) {
@@ -74,7 +65,7 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 		}
 
 		if (Objects.equals(
-				objectRelationship.getDeletionType(),
+				deletionType,
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE)) {
 
 			for (ObjectEntry objectEntry : relatedModels) {
@@ -83,7 +74,7 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 			}
 		}
 		else if (Objects.equals(
-					objectRelationship.getDeletionType(),
+					deletionType,
 					ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE)) {
 
 			ObjectField objectField = _objectFieldLocalService.getObjectField(
@@ -99,14 +90,10 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 			}
 		}
 		else if (Objects.equals(
-					objectRelationship.getDeletionType(),
+					deletionType,
 					ObjectRelationshipConstants.DELETION_TYPE_PREVENT)) {
 
-			throw new RequiredObjectRelationshipException(
-				StringBundler.concat(
-					"Object relationship ",
-					objectRelationship.getObjectRelationshipId(),
-					" does not allow deletes"));
+			throw new RequiredObjectRelationshipException(objectRelationship);
 		}
 	}
 
@@ -136,8 +123,22 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 	}
 
 	@Override
+	public ObjectEntry fetchRelatedModel(
+			long groupId, long objectRelationshipId, long primaryKey)
+		throws PortalException {
+
+		return _objectEntryService.fetchManyToOneObjectEntry(
+			groupId, objectRelationshipId, primaryKey);
+	}
+
+	@Override
 	public String getClassName() {
 		return _className;
+	}
+
+	@Override
+	public long getCompanyId() {
+		return _companyId;
 	}
 
 	@Override
@@ -147,35 +148,48 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 
 	@Override
 	public List<ObjectEntry> getRelatedModels(
-			long groupId, long objectRelationshipId, long primaryKey, int start,
-			int end)
+			long groupId, long objectRelationshipId, long primaryKey,
+			String search, int start, int end)
 		throws PortalException {
 
 		return _objectEntryService.getOneToManyObjectEntries(
-			groupId, objectRelationshipId, primaryKey, true, start, end);
+			groupId, objectRelationshipId, primaryKey, true, search, start,
+			end);
 	}
 
 	@Override
 	public int getRelatedModelsCount(
-			long groupId, long objectRelationshipId, long primaryKey)
+			long groupId, long objectRelationshipId, long primaryKey,
+			String search)
 		throws PortalException {
 
 		return _objectEntryService.getOneToManyObjectEntriesCount(
-			groupId, objectRelationshipId, primaryKey, true);
+			groupId, objectRelationshipId, primaryKey, true, search);
 	}
 
 	@Override
 	public List<ObjectEntry> getUnrelatedModels(
 			long companyId, long groupId, ObjectDefinition objectDefinition,
-			long objectEntryId, long objectRelationshipId)
+			long objectEntryId, long objectRelationshipId, int start, int end)
 		throws PortalException {
 
 		return _objectEntryService.getOneToManyObjectEntries(
-			groupId, objectRelationshipId, objectEntryId, false,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			groupId, objectRelationshipId, objectEntryId, false, null, start,
+			end);
+	}
+
+	@Override
+	public int getUnrelatedModelsCount(
+			long companyId, long groupId, ObjectDefinition objectDefinition,
+			long objectEntryId, long objectRelationshipId)
+		throws PortalException {
+
+		return _objectEntryService.getOneToManyObjectEntriesCount(
+			groupId, objectRelationshipId, objectEntryId, false, null);
 	}
 
 	private final String _className;
+	private final long _companyId;
 	private final ObjectEntryService _objectEntryService;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectRelationshipLocalService

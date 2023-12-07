@@ -1,52 +1,56 @@
 definition {
 
-	macro assertDueDate {
+	@summary = "Default summary"
+	macro assertDueDate(date = null) {
 		AssertElementPresent(
-			key_date = "${date}",
+			key_date = ${date},
 			locator1 = "AssetWorkflow#DUE_DATE");
 	}
 
-	macro createNewBasicWebContent {
+	@summary = "Default summary"
+	macro createNewBasicWebContent(wcTitle = null) {
 		Portlet.clickPortletPlusIconPG(portletName = "Asset Publisher");
 
 		MenuItem.click(menuItem = "Basic Web Content");
 
-		WebContent.addCP(webContentTitle = "${wcTitle}");
+		WebContent.addCP(webContentTitle = ${wcTitle});
 	}
 
-	macro createNewUserAccount {
+	@summary = "Default summary"
+	macro createNewUserAccount(userLastName = null, userScreenName = null, userEmailAddress = null, newPassword = null, userFirstName = null) {
 		SignInNavigator.gotoCreateAccount();
 
 		Type(
 			locator1 = "TextInput#FIRST_NAME",
-			value1 = "${userFirstName}");
+			value1 = ${userFirstName});
 
 		Type(
 			locator1 = "TextInput#LAST_NAME",
-			value1 = "${userLastName}");
+			value1 = ${userLastName});
 
 		Type(
 			locator1 = "TextInput#SCREEN_NAME",
-			value1 = "${userScreenName}");
+			value1 = ${userScreenName});
 
 		Type(
 			locator1 = "TextInput#EMAIL_ADDRESS",
-			value1 = "${userEmailAddress}");
+			value1 = ${userEmailAddress});
 
 		Type(
 			locator1 = "TextInput#PASSWORD",
-			value1 = "${newPassword}");
+			value1 = ${newPassword});
 
 		Type(
-			locator1 = "TextInput#ENTER_AGAIN",
-			value1 = "${newPassword}");
+			locator1 = "TextInput#REENTER_PASSWORD",
+			value1 = ${newPassword});
 
 		Button.clickSave();
 
 		Alert.viewSuccessMessageText(successMessage = "Thank you for creating an account. You will be notified via email at ${userEmailAddress} when your account has been approved.");
 	}
 
-	macro gotoViaNotification {
+	@summary = "Default summary"
+	macro gotoViaNotification(user = null, assetType = null) {
 		Notifications.gotoNotifications();
 
 		if (isSet(user)) {
@@ -68,68 +72,73 @@ definition {
 		}
 	}
 
-	macro previewTranslationsBaseFields {
+	@summary = "Default summary"
+	macro previewTranslationsBaseFields(webContentDescription = null, currentBaseLocale = null, webContentTitle = null, webContentContent = null) {
 		AssertElementPresent(
-			key_localizationName = "${currentBaseLocale}",
+			key_localizationName = ${currentBaseLocale},
 			locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_LOCALIZATION");
 
 		AssertTextEquals(
-			key_titleValue = "${webContentTitle}",
+			key_titleValue = ${webContentTitle},
 			locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_TITLE",
-			value1 = "${webContentTitle}");
+			value1 = ${webContentTitle});
 
 		if (isSet(webContentDescription)) {
 			AssertTextEquals(
-				key_fieldValue = "${webContentDescription}",
+				key_fieldValue = ${webContentDescription},
 				locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_EDITOR",
-				value1 = "${webContentDescription}");
+				value1 = ${webContentDescription});
 		}
 
 		AssertTextEquals(
-			key_fieldValue = "${webContentContent}",
+			key_fieldValue = ${webContentContent},
 			locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_EDITOR",
-			value1 = "${webContentContent}");
+			value1 = ${webContentContent});
 	}
 
-	macro previewTranslationsTargetFields {
+	@summary = "Default summary"
+	macro previewTranslationsTargetFields(webContentDescription = null, webContentTitle = null, webContentContent = null, currentTargetLocale = null) {
 		AssertElementPresent(
-			key_localizationName = "${currentTargetLocale}",
+			key_localizationName = ${currentTargetLocale},
 			locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_LOCALIZATION");
 
 		AssertTextEquals(
-			key_titleValue = "${webContentTitle}",
+			key_titleValue = ${webContentTitle},
 			locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_TITLE",
-			value1 = "${webContentTitle}");
+			value1 = ${webContentTitle});
 
 		if (isSet(webContentDescription)) {
 			AssertTextEquals(
-				key_fieldValue = "${webContentDescription}",
+				key_fieldValue = ${webContentDescription},
 				locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_EDITOR",
-				value1 = "${webContentDescription}");
+				value1 = ${webContentDescription});
 		}
 
 		AssertTextEquals(
-			key_fieldValue = "${webContentContent}",
+			key_fieldValue = ${webContentContent},
 			locator1 = "AssetWorkflow#TRANSLATIONS_PREVIEW_EDITOR",
-			value1 = "${webContentContent}");
+			value1 = ${webContentContent});
 	}
 
-	macro previewViewContent {
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldValue = "${fieldValue}";
+	@summary = "Default summary"
+	macro previewViewContent(fieldLabel = null, fieldValue = null) {
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldValue = ${fieldValue};
 
 		AssertTextEquals(
 			locator1 = "AssetWorkflow#CONTENT_PREVIEW_VIEW",
 			value1 = "${fieldLabel} ${fieldValue}");
 	}
 
-	macro previewViewContentFieldNotPresent {
-		var key_fieldLabel = "${fieldLabel}";
+	@summary = "Default summary"
+	macro previewViewContentFieldNotPresent(fieldLabel = null) {
+		var key_fieldLabel = ${fieldLabel};
 
 		AssertElementNotPresent(locator1 = "AssetWorkflow#CONTENT_FIELD_PREVIEW_VIEW");
 	}
 
-	macro viewDetails {
+	@summary = "Default summary"
+	macro viewDetails(workflowStatus = null, userName = null) {
 		Click(locator1 = "Icon#INFO");
 
 		AssertTextEquals(
@@ -138,43 +147,47 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "AssetWorkflow#DETAILS_WORKFLOW_STATUS",
-			value1 = "${workflowStatus}");
+			value1 = ${workflowStatus});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AssetWorkflow#DETAILS_WORKFLOW_CREATED_BY",
-			value1 = "${userName}");
+			value1 = ${userName});
 	}
 
-	macro viewFormEntryTable {
+	@summary = "Default summary"
+	macro viewFormEntryTable(workflowStatus = null, fieldLabel = null, fieldValue = null) {
 		FormsAdmin.viewFormTableEntry(
-			fieldLabel = "${fieldLabel}",
-			fieldValue = "${fieldValue}");
+			fieldLabel = ${fieldLabel},
+			fieldValue = ${fieldValue});
 
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldValue = "${fieldValue}";
-		var key_workflowStatus = "${workflowStatus}";
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldValue = ${fieldValue};
+		var key_workflowStatus = ${workflowStatus};
 
 		AssertTextEquals(
 			locator1 = "FormsAdmin#FORM_ENTRY_WORKFLOW_STATUS",
-			value1 = "${workflowStatus}");
+			value1 = ${workflowStatus});
 	}
 
-	macro viewFormTemplateLabel {
+	@summary = "Default summary"
+	macro viewFormTemplateLabel(workflowFormsTemplateLabel = null) {
 		AssertTextEquals.assertPartialText(
 			locator1 = "MyWorkflowTasksTask#PREVIEW_CONTENT",
-			value1 = "${workflowFormsTemplateLabel}");
+			value1 = ${workflowFormsTemplateLabel});
 	}
 
-	macro viewNotification {
+	@summary = "Default summary"
+	macro viewNotification(contentBody = null) {
 		AssertTextEquals(
 			locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
-			value1 = "${contentBody}");
+			value1 = ${contentBody});
 	}
 
-	macro viewUserDetails {
+	@summary = "Default summary"
+	macro viewUserDetails(userEmailAddress = null) {
 		AssertTextEquals.assertPartialText(
 			locator1 = "WorkflowSubmissionsTask#PREVIEW_USER",
-			value1 = "${userEmailAddress}");
+			value1 = ${userEmailAddress});
 	}
 
 }

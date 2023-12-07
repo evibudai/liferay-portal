@@ -13,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -24,7 +24,7 @@ definition {
 	}
 
 	@description = "This ensures that the reviewer can view the translation in the side by side interface and approve it individually."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveEntry {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -75,7 +75,7 @@ definition {
 			webContentDescription = "WC WebContent Descripción",
 			webContentTitle = "WC WebContent Título");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		Alert.viewSuccessMessage();
 
@@ -130,7 +130,7 @@ definition {
 	}
 
 	@description = "This ensures that only the valid translation files can be uploaded and approved from a zip file when enabling Workflow."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanApproveEntryFromPartiallyImportedZip {
 		JSONWebcontent.addWebContent(
@@ -206,7 +206,7 @@ definition {
 
 		Notifications.viewBadgeCount(
 			activePanel = "Notifications",
-			notificationCount = "1");
+			notificationCount = 1);
 
 		WorkflowAsset.gotoViaNotification(
 			assetType = "Translation",
@@ -248,17 +248,19 @@ definition {
 
 		AssertTextEquals(
 			key_localizedLanguage = "es-ES",
+			key_portlet = "JournalPortlet",
 			locator1 = "Translation#TRANSLATION_STATUS_TITLE",
 			value1 = "Translated");
 
 		AssertTextEquals(
 			key_localizedLanguage = "de-DE",
+			key_portlet = "JournalPortlet",
 			locator1 = "Translation#TRANSLATION_STATUS_TITLE",
 			value1 = "Not Translated");
 	}
 
 	@description = "This ensures that an imported translation can be approved through the workflow."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveImportToWebContent {
 		JSONWebcontent.addWebContent(
@@ -345,7 +347,7 @@ definition {
 	}
 
 	@description = "This ensures that a new version of a published WC can be created and submitted for publication once a new translation is approved. Also covers LPS-120491, it ensures that no errors occur when viewing a completed translations task."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanApproveNewTranslationForPublishedWC {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -395,8 +397,8 @@ definition {
 			webContentTitle = "WC WebContent Título");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -447,7 +449,7 @@ definition {
 	}
 
 	@description = "This ensures that the translation in the web content will not be retained after deleting the translation in pending status from the app."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDeletePendingTranslation {
 		JSONWebcontent.addWebContent(
@@ -480,8 +482,8 @@ definition {
 			webContentTitle = "WC WebContent Título");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -508,7 +510,7 @@ definition {
 	}
 
 	@description = "This ensures that an imported translation can be Rejected and Resubmited through the workflow."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRejectandResubmitImportToDraftWebContent {
 		JSONWebcontent.addWebContent(
@@ -630,7 +632,7 @@ definition {
 	}
 
 	@description = "This ensures that a rejected translation does not appear in a WC."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRejectTranslationsForDraftAndApprovedWC {
 		for (var resourceValue : list "Translation,Web Content Article") {
@@ -638,7 +640,7 @@ definition {
 
 			Workflow.configureWorkflow(
 				workflowDefinition = "Single Approver",
-				workflowResourceValue = "${resourceValue}");
+				workflowResourceValue = ${resourceValue});
 		}
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
@@ -662,8 +664,8 @@ definition {
 			webContentTitle = "WC WebContent Título");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -701,14 +703,14 @@ definition {
 
 		Workflow.assignToMeTaskByActions(
 			multipleTasks = "true",
-			taskPosition = "3",
+			taskPosition = 3,
 			workflowAssetTitle = "WC WebContent Title",
 			workflowAssetType = "Web Content Article",
 			workflowTask = "Review");
 
 		Workflow.approveTaskByActions(
 			multipleTasks = "true",
-			taskPosition = "3",
+			taskPosition = 3,
 			workflowAssetTitle = "WC WebContent Title",
 			workflowAssetType = "Web Content Article",
 			workflowTask = "Review");
@@ -726,8 +728,8 @@ definition {
 			webContentTitle = "wc webcontentタイトル");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -737,7 +739,7 @@ definition {
 
 		Workflow.assignToMeTaskByActions(
 			multipleTasks = "true",
-			taskPosition = "3",
+			taskPosition = 3,
 			workflowAssetTitle = "Translation of WC WebContent Title to ja-JP",
 			workflowAssetType = "Translation",
 			workflowTask = "Review");
@@ -762,10 +764,13 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@description = "This ensures that only the valid translation files can be uploaded and resubmitted from a zip file when enabling Workflow."
-	@priority = "4"
+	@description = "This ensures that only the valid translation files can be uploaded and resubmitted from a zip file when enabling Workflow. Skip the instance for performance improvement."
+	@priority = 4
 	@refactordone
 	test CanResubmitImportedEntryFromZipFile {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONWebcontent.addWebContent(
 			content = "WebContent",
 			description = "Description",
@@ -822,7 +827,7 @@ definition {
 
 		for (var language : list "de-DE,es-ES") {
 			Translations.viewTranslationEntry(
-				language = "${language}",
+				language = ${language},
 				status = "Pending",
 				title = "Translation of WebContentTitle to ${language}");
 		}
@@ -866,16 +871,14 @@ definition {
 
 		for (var language : list "de-DE,es-ES") {
 			Translations.viewTranslationEntry(
-				language = "${language}",
+				language = ${language},
 				status = "Approved",
 				title = "Translation of WebContentTitle to ${language}");
 		}
 
-		WebContentNavigator.openToEditWCInSite(
-			groupName = "Guest",
-			siteURLKey = "guest",
-			version = "1.1",
-			webContentTitle = "WebContentTitle");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WebContentTitle");
 
 		PortletEntry.changeLocale(locale = "de-DE");
 
@@ -901,7 +904,7 @@ definition {
 	}
 
 	@description = "This ensures that the reviewer can receive different translations notifications and reject them individually."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanResubmitRejectedEntries {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -953,8 +956,8 @@ definition {
 			webContentTitle = "WC WebContent Título");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -972,8 +975,8 @@ definition {
 			webContentTitle = "WC WebContent 名称");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -1102,7 +1105,7 @@ definition {
 	}
 
 	@description = "This ensures that a user cannot submit a translation with the same language that is pending review."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanUpdateSameTranslationAsAnotherUser {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -1131,8 +1134,8 @@ definition {
 			webContentTitle = "WC WebContent Título");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -1170,8 +1173,8 @@ definition {
 			webContentTitle = "WC WebContent 名称");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 
@@ -1183,11 +1186,11 @@ definition {
 			currentTargetLocale = "ar-SA",
 			newTargetLocale = "es-ES");
 
-		AssertElementPresent(locator1 = "Button#SUBMIT_FOR_PUBLICATION_DISABLED");
+		AssertElementPresent(locator1 = "Button#SUBMIT_FOR_WORKFLOW_DISABLED");
 	}
 
 	@description = "This ensures that a pending WC can be updated with a newly added translation once the translation is approved."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanViewUpdatedWCSubmissionAfterApprovedTranslation {
 		for (var resourceValue : list "Translation,Web Content Article") {
@@ -1195,7 +1198,7 @@ definition {
 
 			Workflow.configureWorkflow(
 				workflowDefinition = "Single Approver",
-				workflowResourceValue = "${resourceValue}");
+				workflowResourceValue = ${resourceValue});
 		}
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
@@ -1219,8 +1222,8 @@ definition {
 			webContentTitle = "WC WebContent Título");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Alert.viewSuccessMessage();
 

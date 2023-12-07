@@ -1,6 +1,7 @@
 definition {
 
-	macro addField {
+	@summary = "Default summary"
+	macro addField(fieldName = null, fieldLabel = null) {
 		Navigator.gotoSidebarTab(tabName = "Builder");
 
 		Navigator.gotoNavTab(navTab = "Fields");
@@ -10,42 +11,43 @@ definition {
 		}
 
 		DragAndDrop.javaScriptDragAndDropToObject(
-			key_fieldLocation = "${fieldLocation}",
-			key_fieldName = "${fieldName}",
+			key_fieldLocation = ${fieldLocation},
+			key_fieldName = ${fieldName},
 			locator1 = "Sidebar#ADD_FIELD_NAME",
 			locator2 = "Sidebar#ADD_FIELD_POSITION",
-			value1 = "${fieldName}");
+			value1 = ${fieldName});
 
 		WaitForVisible(locator1 = "Sidebar#BACK");
 
 		Type(
 			key_fieldLabel = "Label",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro addFieldNested {
+	@summary = "Default summary"
+	macro addFieldNested(fieldName = null, targetFieldsGroupLabel = null, targetFieldLabel = null, fieldLabel = null) {
 		Navigator.gotoSidebarTab(tabName = "Builder");
 
 		Navigator.gotoNavTab(navTab = "Fields");
 
 		if (isSet(targetFieldsGroupLabel)) {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				key_fieldFieldGroupLabel = "${targetFieldsGroupLabel}",
-				key_fieldName = "${fieldName}",
+				key_fieldFieldGroupLabel = ${targetFieldsGroupLabel},
+				key_fieldName = ${fieldName},
 				locator1 = "Sidebar#ADD_FIELD_NAME",
 				locator2 = "DDMEditStructure#FORM_FIELD_GROUP_TARGET",
-				value1 = "${fieldName}");
+				value1 = ${fieldName});
 		}
 		else {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				key_fieldFieldLabel = "${targetFieldLabel}",
-				key_fieldName = "${fieldName}",
+				key_fieldFieldLabel = ${targetFieldLabel},
+				key_fieldName = ${fieldName},
 				locator1 = "Sidebar#ADD_FIELD_NAME",
 				locator2 = "DDMEditStructure#FORM_FIELD_CONTAINER",
-				value1 = "${fieldName}");
+				value1 = ${fieldName});
 		}
 
 		WaitForVisible(locator1 = "Sidebar#BACK");
@@ -53,35 +55,36 @@ definition {
 		Type(
 			key_fieldLabel = "Label",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro addFieldOptions {
+	@summary = "Default summary"
+	macro addFieldOptions(optionValueList = null, fieldLabel = null, optionFieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		DEBuilder.openField(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
-		var optionIndex = "1";
+		var optionIndex = 1;
 
-		for (var optionValue : list "${optionValueList}") {
+		for (var optionValue : list ${optionValueList}) {
 			if (isSet(optionFieldLabel)) {
 				Type(
-					index = "${optionIndex}",
-					key_optionFieldLabel = "${optionFieldLabel}",
+					index = ${optionIndex},
+					key_optionFieldLabel = ${optionFieldLabel},
 					locator1 = "Sidebar#OPTION_INPUT",
-					value1 = "${optionValue}");
+					value1 = ${optionValue});
 			}
 			else {
 				Type(
-					index = "${optionIndex}",
+					index = ${optionIndex},
 					locator1 = "Sidebar#OPTION_INPUT_WITHOUT_LABEL",
-					value1 = "${optionValue}");
+					value1 = ${optionValue});
 			}
 
 			var optionIndex = ${optionIndex} + 1;
@@ -90,147 +93,154 @@ definition {
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro addFieldsetNestedToBuilder {
+	@summary = "Default summary"
+	macro addFieldsetNestedToBuilder(fieldsetName = null, targetFieldsGroupLabel = null, targetFieldLabel = null) {
 		Navigator.gotoSidebarTab(tabName = "Builder");
 
 		Navigator.gotoNavTab(navTab = "Fieldsets");
 
 		if (isSet(targetFieldsGroupLabel)) {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				key_fieldFieldGroupLabel = "${targetFieldsGroupLabel}",
-				key_fieldName = "${fieldsetName}",
+				key_fieldFieldGroupLabel = ${targetFieldsGroupLabel},
+				key_fieldName = ${fieldsetName},
 				locator1 = "Sidebar#ADD_FIELD_NAME",
 				locator2 = "DDMEditStructure#FORM_FIELD_GROUP_TARGET",
-				value1 = "${fieldsetName}");
+				value1 = ${fieldsetName});
 		}
 		else {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				key_fieldFieldLabel = "${targetFieldLabel}",
-				key_fieldName = "${fieldsetName}",
+				key_fieldFieldLabel = ${targetFieldLabel},
+				key_fieldName = ${fieldsetName},
 				locator1 = "Sidebar#ADD_FIELD_NAME",
 				locator2 = "DDMEditStructure#FORM_FIELD_CONTAINER",
-				value1 = "${fieldsetName}");
+				value1 = ${fieldsetName});
 		}
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro assertBooleanFieldReference {
+	@summary = "Default summary"
+	macro assertBooleanFieldReference(fieldReference = null) {
 		Click(locator1 = "DataEngineBuilder#FIELD_BODY");
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 
 		AssertTextEquals.assertValue(
 			locator1 = "Sidebar#DDM_FIELD_REFERENCE",
-			value1 = "${fieldReference}");
+			value1 = ${fieldReference});
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro assertDeleteIsDisabled {
+	@summary = "Default summary"
+	macro assertDeleteIsDisabled() {
 		AssertElementPresent(
 			key_text = "Delete",
 			locator1 = "Button#ANY_DISABLED");
 	}
 
-	macro assertFieldActionsIsNotPresent {
+	@summary = "Default summary"
+	macro assertFieldActionsIsNotPresent(fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertElementNotPresent(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineBuilder#FIELD_ACTIONS_CONTAINER_INDEXED");
 	}
 
-	macro assertFieldNotPresent {
+	@summary = "Default summary"
+	macro assertFieldNotPresent(fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		if (IsElementPresent(locator1 = "Modal#MODAL")) {
 			AssertElementNotPresent(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineBuilder#FIELD_LABEL_IN_MODAL_INDEXED");
 		}
 		else {
 			AssertElementNotPresent(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineBuilder#FIELD_LABEL_INDEXED");
 		}
 	}
 
-	macro assertFieldOptionLabels {
+	@summary = "Default summary"
+	macro assertFieldOptionLabels(fieldFieldLabel = null, optionLabelList = null, optionFieldLabel = null) {
 		Navigator.gotoSidebarTab(tabName = "Builder");
 
 		AssertClick.assertPartialTextClickAt(
-			key_fieldFieldLabel = "${fieldFieldLabel}",
+			key_fieldFieldLabel = ${fieldFieldLabel},
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
-			value1 = "${fieldFieldLabel}");
+			value1 = ${fieldFieldLabel});
 
 		if (IsTextEqual(locator1 = "Sidebar#TITLE", value1 = "Grid")) {
-			var index = "1";
+			var index = 1;
 
-			for (var optionLabel : list "${optionLabelList}") {
+			for (var optionLabel : list ${optionLabelList}) {
 				AssertTextEquals(
-					index = "${index}",
-					key_optionFieldLabel = "${optionFieldLabel}",
+					index = ${index},
+					key_optionFieldLabel = ${optionFieldLabel},
 					locator1 = "Sidebar#OPTION_INPUT",
-					value1 = "${optionLabel}");
+					value1 = ${optionLabel});
 
 				var index = ${index} + 1;
 			}
 		}
 		else if (IsTextEqual(locator1 = "Sidebar#TITLE", value1 = "Select from List")) {
-			var index = "1";
+			var index = 1;
 
-			for (var optionLabel : list "${optionLabelList}") {
+			for (var optionLabel : list ${optionLabelList}) {
 				AssertTextEquals(
-					index = "${index}",
+					index = ${index},
 					locator1 = "Sidebar#OPTION_INPUT_WITHOUT_LABEL",
-					value1 = "${optionLabel}");
+					value1 = ${optionLabel});
 
 				var index = ${index} + 1;
 			}
 		}
 		else {
-			var index = "1";
+			var index = 1;
 
-			for (var optionLabel : list "${optionLabelList}") {
+			for (var optionLabel : list ${optionLabelList}) {
 				AssertTextEquals(
-					index = "${index}",
+					index = ${index},
 					key_optionFieldLabel = "Options",
 					locator1 = "Sidebar#OPTION_INPUT",
-					value1 = "${optionLabel}");
+					value1 = ${optionLabel});
 
 				var index = ${index} + 1;
 			}
 		}
 	}
 
-	macro assertFieldOptionLabelsNotPresent {
+	@summary = "Default summary"
+	macro assertFieldOptionLabelsNotPresent(fieldFieldLabel = null, optionLabelList = null, optionFieldLabel = null) {
 		if (isSet(fieldFieldLabel)) {
 			AssertClick.assertPartialTextClickAt(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
+				key_fieldFieldLabel = ${fieldFieldLabel},
 				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
-				value1 = "${fieldFieldLabel}");
+				value1 = ${fieldFieldLabel});
 		}
 
 		if (isSet(optionFieldLabel)) {
-			for (var optionLabel : list "${optionLabelList}") {
+			for (var optionLabel : list ${optionLabelList}) {
 				AssertElementNotPresent(
-					key_optionFieldLabel = "${optionFieldLabel}",
-					key_optionValue = "${optionLabel}",
+					key_optionFieldLabel = ${optionFieldLabel},
+					key_optionValue = ${optionLabel},
 					locator1 = "DataEngineBuilder#OPTION_VALUE_INPUT_WITH_LABEL");
 			}
 		}
 		else {
-			for (var optionLabel : list "${optionLabelList}") {
+			for (var optionLabel : list ${optionLabelList}) {
 				AssertElementNotPresent(
-					key_optionValue = "${optionLabel}",
+					key_optionValue = ${optionLabel},
 					locator1 = "DataEngineBuilder#OPTION_VALUE_INPUT");
 			}
 		}
@@ -240,74 +250,79 @@ definition {
 		}
 	}
 
-	macro assertFieldReference {
+	@summary = "Default summary"
+	macro assertFieldReference(fieldLabel = null, fieldReference = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		DEBuilder.openField(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 
 		AssertTextEquals.assertValue(
 			locator1 = "Sidebar#DDM_FIELD_REFERENCE",
-			value1 = "${fieldReference}");
+			value1 = ${fieldReference});
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro assertFieldsetNotPresentInSidebar {
+	@summary = "Default summary"
+	macro assertFieldsetNotPresentInSidebar(fieldsetName = null) {
 		Navigator.gotoSidebarTab(tabName = "Builder");
 
 		Navigator.gotoNavTab(navTab = "Fieldsets");
 
 		AssertElementNotPresent(
-			key_fieldName = "${fieldsetName}",
+			key_fieldName = ${fieldsetName},
 			locator1 = "Sidebar#ADD_FIELD_NAME");
 	}
 
-	macro assertFieldsGroup {
-		for (var fieldFieldLabel : list "${fieldsLabelList}") {
+	@summary = "Default summary"
+	macro assertFieldsGroup(fieldGroupDepth = null, fieldGroupLabel = null, fieldsLabelList = null) {
+		for (var fieldFieldLabel : list ${fieldsLabelList}) {
 			AssertElementPresent(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldGroupDepth = "${fieldGroupDepth}",
-				key_fieldGroupLabel = "${fieldGroupLabel}",
+				key_fieldFieldLabel = ${fieldFieldLabel},
+				key_fieldGroupDepth = ${fieldGroupDepth},
+				key_fieldGroupLabel = ${fieldGroupLabel},
 				locator1 = "DataEngineBuilder#FIELDS_GROUP_FIELD_WITH_DEPTH");
 		}
 	}
 
-	macro assertFieldType {
+	@summary = "Default summary"
+	macro assertFieldType(fieldType = null) {
 		AssertTextEquals(
 			locator1 = "Sidebar#TITLE",
-			value1 = "${fieldType}");
+			value1 = ${fieldType});
 	}
 
-	macro assertOptionReferences {
+	@summary = "Default summary"
+	macro assertOptionReferences(optionReferenceList = null, fieldLabel = null, optionFieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		DEBuilder.openField(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
-		var optionIndex = "1";
+		var optionIndex = 1;
 
-		for (var optionReference : list "${optionReferenceList}") {
+		for (var optionReference : list ${optionReferenceList}) {
 			if (isSet(optionFieldLabel)) {
 				AssertTextEquals.assertValue(
-					index = "${optionIndex}",
-					key_optionFieldLabel = "${optionFieldLabel}",
+					index = ${optionIndex},
+					key_optionFieldLabel = ${optionFieldLabel},
 					locator1 = "Sidebar#OPTION_FIELD_REFERENCE_INPUT",
-					value1 = "${optionReference}");
+					value1 = ${optionReference});
 			}
 			else {
 				AssertTextEquals.assertValue(
-					index = "${optionIndex}",
+					index = ${optionIndex},
 					locator1 = "Sidebar#OPTION_WITHOUT_LABEL_FIELD_REFERENCE_INPUT",
-					value1 = "${optionReference}");
+					value1 = ${optionReference});
 			}
 
 			var optionIndex = ${optionIndex} + 1;
@@ -316,33 +331,37 @@ definition {
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro assertPropagateChangesModalIsOpened {
+	@summary = "Default summary"
+	macro assertPropagateChangesModalIsOpened() {
 		AssertTextEquals(
 			locator1 = "DataEngineModal#MODAL_TITLE",
 			value1 = "Propagate Changes");
 	}
 
-	macro collapsibleFieldsGroup {
+	@summary = "Default summary"
+	macro collapsibleFieldsGroup(fieldsGroup = null) {
 		Click(
-			key_fieldLabel = "${fieldsGroup}",
+			key_fieldLabel = ${fieldsGroup},
 			locator1 = "FormFields#LABEL");
 
 		FormFields.enableSwitch(fieldName = "Collapsible");
 	}
 
-	macro deleteFieldsetFromSideBar {
+	@summary = "Default summary"
+	macro deleteFieldsetFromSideBar(fieldsetName = null) {
 		Navigator.gotoSidebarTab(tabName = "Builder");
 
 		Navigator.gotoNavTab(navTab = "Fieldsets");
 
-		DataEngine.gotoFieldsetItemEllipsis(fieldsetName = "${fieldsetName}");
+		DataEngine.gotoFieldsetItemEllipsis(fieldsetName = ${fieldsetName});
 
 		MenuItem.click(menuItem = "Delete");
 
 		Button.clickDelete();
 	}
 
-	macro editBooleanFieldReference {
+	@summary = "Default summary"
+	macro editBooleanFieldReference(fieldReference = null) {
 		Click(locator1 = "DataEngineBuilder#FIELD_BODY");
 
 		Navigator.gotoNavTab(navTab = "Advanced");
@@ -350,85 +369,88 @@ definition {
 		Type(
 			key_fieldLabel = "Field Reference",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldReference}");
+			value1 = ${fieldReference});
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro editFieldReference {
+	@summary = "Default summary"
+	macro editFieldReference(fieldLabel = null, assertErrorMessage = null, fieldReference = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		DEBuilder.openField(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 
 		Type(
 			key_fieldLabel = "Field Reference",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldReference}");
+			value1 = ${fieldReference});
 
 		if (isSet(assertErrorMessage)) {
 			AssertTextEquals(
 				locator1 = "DataEngineBuilder#FIELD_REFERENCE_ERROR",
-				value1 = "${assertErrorMessage}");
+				value1 = ${assertErrorMessage});
 		}
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro editHelpTextField {
+	@summary = "Default summary"
+	macro editHelpTextField(fieldHelpText = null, fieldLabel = null) {
 		Click(locator1 = "DataEngineBuilder#FIELD_BODY");
 
 		Type(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldHelpText}");
+			value1 = ${fieldHelpText});
 
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro editOptionReferences {
+	@summary = "Default summary"
+	macro editOptionReferences(optionReferenceList = null, fieldLabel = null, assertOptionIndex = null, assertErrorMessage = null, optionFieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		DEBuilder.openField(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
-		var optionIndex = "1";
+		var optionIndex = 1;
 
-		for (var optionReference : list "${optionReferenceList}") {
+		for (var optionReference : list ${optionReferenceList}) {
 			if (isSet(optionFieldLabel)) {
 				Type(
-					index = "${optionIndex}",
-					key_optionFieldLabel = "${optionFieldLabel}",
+					index = ${optionIndex},
+					key_optionFieldLabel = ${optionFieldLabel},
 					locator1 = "Sidebar#OPTION_FIELD_REFERENCE_INPUT",
-					value1 = "${optionReference}");
+					value1 = ${optionReference});
 
-				if (isSet(assertErrorMessage) && ("${optionIndex}" == "${assertOptionIndex}")) {
+				if (isSet(assertErrorMessage) && (${optionIndex} == ${assertOptionIndex})) {
 					AssertTextEquals(
-						index = "${assertOptionIndex}",
-						key_optionFieldLabel = "${optionFieldLabel}",
+						index = ${assertOptionIndex},
+						key_optionFieldLabel = ${optionFieldLabel},
 						locator1 = "DataEngineBuilder#OPTION_REFERENCE_ERROR_WITH_LABEL",
-						value1 = "${assertErrorMessage}");
+						value1 = ${assertErrorMessage});
 				}
 			}
 			else {
 				Type(
-					index = "${optionIndex}",
+					index = ${optionIndex},
 					locator1 = "Sidebar#OPTION_WITHOUT_LABEL_FIELD_REFERENCE_INPUT",
-					value1 = "${optionReference}");
+					value1 = ${optionReference});
 
-				if (isSet(assertErrorMessage) && ("${optionIndex}" == "${assertOptionIndex}")) {
+				if (isSet(assertErrorMessage) && (${optionIndex} == ${assertOptionIndex})) {
 					AssertTextEquals(
-						index = "${assertOptionIndex}",
+						index = ${assertOptionIndex},
 						locator1 = "DataEngineBuilder#OPTION_REFERENCE_ERROR",
-						value1 = "${assertErrorMessage}");
+						value1 = ${assertErrorMessage});
 				}
 			}
 
@@ -438,14 +460,15 @@ definition {
 		Click(locator1 = "Sidebar#BACK");
 	}
 
-	macro getFieldReference {
+	@summary = "Default summary"
+	macro getFieldReference(fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		DEBuilder.openField(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 
@@ -453,74 +476,78 @@ definition {
 
 		Click(locator1 = "Sidebar#BACK");
 
-		return "${fieldReference}";
+		return ${fieldReference};
 	}
 
-	macro getOptionReference {
+	@summary = "Default summary"
+	macro getOptionReference(optionIndex = null, fieldLabel = null, optionFieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		DEBuilder.openField(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
 		if (isSet(optionFieldLabel)) {
-			var index = "${optionIndex}";
-			var key_optionFieldLabel = "${optionFieldLabel}";
+			var index = ${optionIndex};
+			var key_optionFieldLabel = ${optionFieldLabel};
 			var optionReference = selenium.getElementValue("Sidebar#OPTION_FIELD_REFERENCE_INPUT");
 		}
 		else {
-			var index = "${optionIndex}";
+			var index = ${optionIndex};
 			var optionReference = selenium.getElementValue("Sidebar#OPTION_WITHOUT_LABEL_FIELD_REFERENCE_INPUT");
 		}
 
 		Click(locator1 = "Sidebar#BACK");
 
-		return "${optionReference}";
+		return ${optionReference};
 	}
 
-	macro nestCreatedFields {
+	@summary = "Default summary"
+	macro nestCreatedFields(targetFieldGroupLabel = null, targetFieldLabel = null, fieldLabel = null) {
 		if (isSet(targetFieldGroupLabel)) {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				key_fieldFieldGroupLabel = "${targetFieldGroupLabel}",
-				key_fieldFieldLabel = "${fieldLabel}",
+				key_fieldFieldGroupLabel = ${targetFieldGroupLabel},
+				key_fieldFieldLabel = ${fieldLabel},
 				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
 				locator2 = "DDMEditStructure#FORM_FIELD_GROUP_TARGET");
 		}
 		else {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				key_fieldFieldLabel = "${fieldLabel}",
-				key_targetFieldLabel = "${targetFieldLabel}",
+				key_fieldFieldLabel = ${fieldLabel},
+				key_targetFieldLabel = ${targetFieldLabel},
 				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_TARGET",
 				locator2 = "DDMEditStructure#FORM_FIELD_CONTAINER");
 		}
 	}
 
-	macro openField {
+	@summary = "Default summary"
+	macro openField(fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		if (IsElementPresent(locator1 = "Modal#MODAL")) {
 			AssertClick.assertPartialTextClickAt(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineBuilder#FIELD_LABEL_IN_MODAL_INDEXED",
-				value1 = "${fieldLabel}");
+				value1 = ${fieldLabel});
 		}
 		else {
 			AssertClick.assertPartialTextClickAt(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineBuilder#FIELD_LABEL_INDEXED",
-				value1 = "${fieldLabel}");
+				value1 = ${fieldLabel});
 		}
 	}
 
-	macro viewToggleSwitchNotChecked {
+	@summary = "Default summary"
+	macro viewToggleSwitchNotChecked(portalSetting = null) {
 		AssertNotChecked.assertNotCheckedNotVisible(
-			key_toggleSwitchLabel = "${portalSetting}",
+			key_toggleSwitchLabel = ${portalSetting},
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 	}
 

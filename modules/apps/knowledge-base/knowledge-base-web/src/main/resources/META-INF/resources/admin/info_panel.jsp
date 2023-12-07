@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -69,7 +60,7 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 						<li class="autofit-col">
 
 							<%
-							KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
+							KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse, trashHelper);
 							%>
 
 							<clay:dropdown-actions
@@ -84,7 +75,7 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 		</div>
 
 		<%
-		KBAdminNavigationDisplayContext kbAdminNavigationDisplayContext = new KBAdminNavigationDisplayContext(request, renderRequest, renderResponse);
+		KBAdminNavigationDisplayContext kbAdminNavigationDisplayContext = new KBAdminNavigationDisplayContext(request, renderRequest, renderResponse, trashHelper);
 		%>
 
 		<clay:navigation-bar
@@ -186,7 +177,7 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 							<li class="autofit-col">
 
 								<%
-								KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
+								KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse, trashHelper);
 								%>
 
 								<clay:dropdown-actions
@@ -231,44 +222,40 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 							<liferay-ui:message key="create-date" />
 						</dt>
 						<dd class="sidebar-dd">
-							<%= dateFormatDateTime.format(kbArticle.getCreateDate()) %>
+							<%= dateTimeFormat.format(kbArticle.getCreateDate()) %>
 						</dd>
 						<dt class="sidebar-dt">
 							<liferay-ui:message key="modified-date" />
 						</dt>
 						<dd class="sidebar-dd">
-							<%= dateFormatDateTime.format(kbArticle.getModifiedDate()) %>
+							<%= dateTimeFormat.format(kbArticle.getModifiedDate()) %>
 						</dd>
-
-						<c:if test='<%= GetterUtil.getBoolean(com.liferay.portal.kernel.util.PropsUtil.get("feature.flag.LPS-165476")) %>'>
-							<dt class="sidebar-dt">
-								<liferay-ui:message key="expiration-date" />
-							</dt>
-							<dd class="sidebar-dd">
-								<c:choose>
-									<c:when test="<%= kbArticle.getExpirationDate() != null %>">
-										<liferay-ui:message arguments="<%= new Object[] {dateFormatDateTime.format(kbArticle.getExpirationDate()), HtmlUtil.escape(kbArticle.getUserName())} %>" key="x-by-x" translateArguments="<%= false %>" />
-									</c:when>
-									<c:otherwise>
-										<liferay-ui:message key="never-expire" />
-									</c:otherwise>
-								</c:choose>
-							</dd>
-							<dt class="sidebar-dt">
-								<liferay-ui:message key="review-date" />
-							</dt>
-							<dd class="sidebar-dd">
-								<c:choose>
-									<c:when test="<%= kbArticle.getReviewDate() != null %>">
-										<liferay-ui:message arguments="<%= new Object[] {dateFormatDateTime.format(kbArticle.getReviewDate()), HtmlUtil.escape(kbArticle.getUserName())} %>" key="x-by-x" translateArguments="<%= false %>" />
-									</c:when>
-									<c:otherwise>
-										<liferay-ui:message key="never-review" />
-									</c:otherwise>
-								</c:choose>
-							</dd>
-						</c:if>
-
+						<dt class="sidebar-dt">
+							<liferay-ui:message key="expiration-date" />
+						</dt>
+						<dd class="sidebar-dd">
+							<c:choose>
+								<c:when test="<%= kbArticle.getExpirationDate() != null %>">
+									<liferay-ui:message arguments="<%= new Object[] {dateTimeFormat.format(kbArticle.getExpirationDate()), HtmlUtil.escape(kbArticle.getUserName())} %>" key="x-by-x" translateArguments="<%= false %>" />
+								</c:when>
+								<c:otherwise>
+									<liferay-ui:message key="never-expire" />
+								</c:otherwise>
+							</c:choose>
+						</dd>
+						<dt class="sidebar-dt">
+							<liferay-ui:message key="review-date" />
+						</dt>
+						<dd class="sidebar-dd">
+							<c:choose>
+								<c:when test="<%= kbArticle.getReviewDate() != null %>">
+									<liferay-ui:message arguments="<%= new Object[] {dateTimeFormat.format(kbArticle.getReviewDate()), HtmlUtil.escape(kbArticle.getUserName())} %>" key="x-by-x" translateArguments="<%= false %>" />
+								</c:when>
+								<c:otherwise>
+									<liferay-ui:message key="never-review" />
+								</c:otherwise>
+							</c:choose>
+						</dd>
 						<dt class="sidebar-dt">
 							<liferay-ui:message key="views" />
 						</dt>
@@ -307,7 +294,7 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 		</div>
 
 		<%
-		KBAdminNavigationDisplayContext kbAdminNavigationDisplayContext = new KBAdminNavigationDisplayContext(request, renderRequest, renderResponse);
+		KBAdminNavigationDisplayContext kbAdminNavigationDisplayContext = new KBAdminNavigationDisplayContext(request, renderRequest, renderResponse, trashHelper);
 		%>
 
 		<clay:navigation-bar

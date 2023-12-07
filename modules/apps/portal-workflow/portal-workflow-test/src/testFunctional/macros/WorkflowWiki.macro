@@ -1,30 +1,34 @@
 definition {
 
-	macro viewWikiPageNotPresent {
+	@summary = "Default summary"
+	macro viewWikiPageNotPresent(workflowInstanceName = null) {
 		AssertElementNotPresent(
-			key_workflowInstanceName = "${workflowInstanceName}",
+			key_workflowInstanceName = ${workflowInstanceName},
 			locator1 = "AssetWorkflow#DETAILS_WORKFLOW_TITLE",
-			value1 = "${workflowInstanceName}");
+			value1 = ${workflowInstanceName});
 	}
 
-	macro viewWikiPagePresent {
+	@summary = "Default summary"
+	macro viewWikiPagePresent(workflowInstanceName = null) {
 		AssertElementPresent(
-			key_workflowInstanceName = "${workflowInstanceName}",
+			key_workflowInstanceName = ${workflowInstanceName},
 			locator1 = "AssetWorkflow#DETAILS_WORKFLOW_TITLE",
-			value1 = "${workflowInstanceName}");
+			value1 = ${workflowInstanceName});
 	}
 
-	macro viewWikiPageStatus {
+	@summary = "Default summary"
+	macro viewWikiPageStatus(workflowStatus = null) {
 		AssertTextEquals(
 			locator1 = "AssetWorkflow#WORKFLOW_STATUS",
-			value1 = "${workflowStatus}");
+			value1 = ${workflowStatus});
 	}
 
-	macro viewWikiPageStatusViaDetails {
+	@summary = "Default summary"
+	macro viewWikiPageStatusViaDetails(workflowStatus = null) {
 		AssertTextEquals(
-			kfStatus = "${workflowStatus}",
+			kfStatus = ${workflowStatus},
 			locator1 = "AssetWorkflow#WORKFLOW_STATUS",
-			value1 = "${workflowStatus}");
+			value1 = ${workflowStatus});
 	}
 
 }

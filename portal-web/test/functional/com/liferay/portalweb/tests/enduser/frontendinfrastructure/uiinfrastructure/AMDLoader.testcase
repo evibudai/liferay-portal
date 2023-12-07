@@ -14,16 +14,18 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "LPS-165439. I'm able to see references to import map by default on DOM"
-	@priority = "5"
+	@description = "LPS-144267. I'm able to see references to import map by default on DOM"
+	@priority = 5
 	test CanGenerateTheAMDToESMBridge {
+		property portal.acceptance = "true";
+
 		task ("When navigate to home page") {
 			Navigator.gotoPage(pageName = "Home");
 		}
@@ -35,11 +37,13 @@ definition {
 		}
 	}
 
-	@description = "Verify user can configure AMD loader log level"
-	@priority = "5"
+	@description = "IFI-847. Verify user can configure AMD loader log level"
+	@priority = 5
 	@refactordone
 	test LogLevelCanBeConfigured {
-		property test.name.skip.portal.instance = "AMDLoader#LogLevelCanBeConfigured";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -56,11 +60,11 @@ definition {
 			selectOption = "Warn");
 
 		for (var logLevelOptionName : list "Off,Error,Info,Debug,Warn") {
-			var logLevelOption = "${logLevelOptionName}";
+			var logLevelOption = ${logLevelOptionName};
 
-			AMDLoader.setLogLevelOption(selectOption = "${logLevelOption}");
+			AMDLoader.setLogLevelOption(selectOption = ${logLevelOption});
 
-			AMDLoader.confirmLogLevelOptionSetCorrectly(selectOption = "${logLevelOption}");
+			AMDLoader.confirmLogLevelOptionSetCorrectly(selectOption = ${logLevelOption});
 		}
 	}
 

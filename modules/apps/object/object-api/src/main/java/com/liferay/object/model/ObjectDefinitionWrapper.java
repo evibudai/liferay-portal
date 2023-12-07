@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model;
@@ -57,6 +48,8 @@ public class ObjectDefinitionWrapper
 			getAccountEntryRestrictedObjectFieldId());
 		attributes.put(
 			"descriptionObjectFieldId", getDescriptionObjectFieldId());
+		attributes.put("objectFolderId", getObjectFolderId());
+		attributes.put("rootObjectDefinitionId", getRootObjectDefinitionId());
 		attributes.put("titleObjectFieldId", getTitleObjectFieldId());
 		attributes.put("accountEntryRestricted", isAccountEntryRestricted());
 		attributes.put("active", isActive());
@@ -65,8 +58,11 @@ public class ObjectDefinitionWrapper
 		attributes.put("className", getClassName());
 		attributes.put("enableCategorization", isEnableCategorization());
 		attributes.put("enableComments", isEnableComments());
+		attributes.put("enableLocalization", isEnableLocalization());
+		attributes.put("enableObjectEntryDraft", isEnableObjectEntryDraft());
 		attributes.put(
 			"enableObjectEntryHistory", isEnableObjectEntryHistory());
+		attributes.put("modifiable", isModifiable());
 		attributes.put("name", getName());
 		attributes.put("panelAppOrder", getPanelAppOrder());
 		attributes.put("panelCategoryKey", getPanelCategoryKey());
@@ -156,6 +152,19 @@ public class ObjectDefinitionWrapper
 			setDescriptionObjectFieldId(descriptionObjectFieldId);
 		}
 
+		Long objectFolderId = (Long)attributes.get("objectFolderId");
+
+		if (objectFolderId != null) {
+			setObjectFolderId(objectFolderId);
+		}
+
+		Long rootObjectDefinitionId = (Long)attributes.get(
+			"rootObjectDefinitionId");
+
+		if (rootObjectDefinitionId != null) {
+			setRootObjectDefinitionId(rootObjectDefinitionId);
+		}
+
 		Long titleObjectFieldId = (Long)attributes.get("titleObjectFieldId");
 
 		if (titleObjectFieldId != null) {
@@ -206,11 +215,31 @@ public class ObjectDefinitionWrapper
 			setEnableComments(enableComments);
 		}
 
+		Boolean enableLocalization = (Boolean)attributes.get(
+			"enableLocalization");
+
+		if (enableLocalization != null) {
+			setEnableLocalization(enableLocalization);
+		}
+
+		Boolean enableObjectEntryDraft = (Boolean)attributes.get(
+			"enableObjectEntryDraft");
+
+		if (enableObjectEntryDraft != null) {
+			setEnableObjectEntryDraft(enableObjectEntryDraft);
+		}
+
 		Boolean enableObjectEntryHistory = (Boolean)attributes.get(
 			"enableObjectEntryHistory");
 
 		if (enableObjectEntryHistory != null) {
 			setEnableObjectEntryHistory(enableObjectEntryHistory);
+		}
+
+		Boolean modifiable = (Boolean)attributes.get("modifiable");
+
+		if (modifiable != null) {
+			setModifiable(modifiable);
 		}
 
 		String name = (String)attributes.get("name");
@@ -408,6 +437,26 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns the enable localization of this object definition.
+	 *
+	 * @return the enable localization of this object definition
+	 */
+	@Override
+	public boolean getEnableLocalization() {
+		return model.getEnableLocalization();
+	}
+
+	/**
+	 * Returns the enable object entry draft of this object definition.
+	 *
+	 * @return the enable object entry draft of this object definition
+	 */
+	@Override
+	public boolean getEnableObjectEntryDraft() {
+		return model.getEnableObjectEntryDraft();
+	}
+
+	/**
 	 * Returns the enable object entry history of this object definition.
 	 *
 	 * @return the enable object entry history of this object definition
@@ -508,6 +557,21 @@ public class ObjectDefinitionWrapper
 		return model.getLabelMap();
 	}
 
+	@Override
+	public String getLocalizationDBTableName() {
+		return model.getLocalizationDBTableName();
+	}
+
+	/**
+	 * Returns the modifiable of this object definition.
+	 *
+	 * @return the modifiable of this object definition
+	 */
+	@Override
+	public boolean getModifiable() {
+		return model.getModifiable();
+	}
+
 	/**
 	 * Returns the modified date of this object definition.
 	 *
@@ -546,6 +610,21 @@ public class ObjectDefinitionWrapper
 	@Override
 	public long getObjectDefinitionId() {
 		return model.getObjectDefinitionId();
+	}
+
+	@Override
+	public String getObjectFolderExternalReferenceCode() {
+		return model.getObjectFolderExternalReferenceCode();
+	}
+
+	/**
+	 * Returns the object folder ID of this object definition.
+	 *
+	 * @return the object folder ID of this object definition
+	 */
+	@Override
+	public long getObjectFolderId() {
+		return model.getObjectFolderId();
 	}
 
 	@Override
@@ -710,6 +789,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns the root object definition ID of this object definition.
+	 *
+	 * @return the root object definition ID of this object definition
+	 */
+	@Override
+	public long getRootObjectDefinitionId() {
+		return model.getRootObjectDefinitionId();
+	}
+
+	/**
 	 * Returns the scope of this object definition.
 	 *
 	 * @return the scope of this object definition
@@ -865,6 +954,26 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this object definition is enable localization.
+	 *
+	 * @return <code>true</code> if this object definition is enable localization; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableLocalization() {
+		return model.isEnableLocalization();
+	}
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable object entry draft.
+	 *
+	 * @return <code>true</code> if this object definition is enable object entry draft; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableObjectEntryDraft() {
+		return model.isEnableObjectEntryDraft();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object definition is enable object entry history.
 	 *
 	 * @return <code>true</code> if this object definition is enable object entry history; <code>false</code> otherwise
@@ -872,6 +981,26 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean isEnableObjectEntryHistory() {
 		return model.isEnableObjectEntryHistory();
+	}
+
+	@Override
+	public boolean isLinkedToObjectFolder(long objectFolderId) {
+		return model.isLinkedToObjectFolder(objectFolderId);
+	}
+
+	/**
+	 * Returns <code>true</code> if this object definition is modifiable.
+	 *
+	 * @return <code>true</code> if this object definition is modifiable; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isModifiable() {
+		return model.isModifiable();
+	}
+
+	@Override
+	public boolean isNodeCandidate() {
+		return model.isNodeCandidate();
 	}
 
 	/**
@@ -884,6 +1013,16 @@ public class ObjectDefinitionWrapper
 		return model.isPortlet();
 	}
 
+	@Override
+	public boolean isRootDescendantNode() {
+		return model.isRootDescendantNode();
+	}
+
+	@Override
+	public boolean isRootNode() {
+		return model.isRootNode();
+	}
+
 	/**
 	 * Returns <code>true</code> if this object definition is system.
 	 *
@@ -892,6 +1031,11 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean isSystem() {
 		return model.isSystem();
+	}
+
+	@Override
+	public boolean isUnmodifiableSystemObject() {
+		return model.isUnmodifiableSystemObject();
 	}
 
 	@Override
@@ -1018,6 +1162,26 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Sets whether this object definition is enable localization.
+	 *
+	 * @param enableLocalization the enable localization of this object definition
+	 */
+	@Override
+	public void setEnableLocalization(boolean enableLocalization) {
+		model.setEnableLocalization(enableLocalization);
+	}
+
+	/**
+	 * Sets whether this object definition is enable object entry draft.
+	 *
+	 * @param enableObjectEntryDraft the enable object entry draft of this object definition
+	 */
+	@Override
+	public void setEnableObjectEntryDraft(boolean enableObjectEntryDraft) {
+		model.setEnableObjectEntryDraft(enableObjectEntryDraft);
+	}
+
+	/**
 	 * Sets whether this object definition is enable object entry history.
 	 *
 	 * @param enableObjectEntryHistory the enable object entry history of this object definition
@@ -1102,6 +1266,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Sets whether this object definition is modifiable.
+	 *
+	 * @param modifiable the modifiable of this object definition
+	 */
+	@Override
+	public void setModifiable(boolean modifiable) {
+		model.setModifiable(modifiable);
+	}
+
+	/**
 	 * Sets the modified date of this object definition.
 	 *
 	 * @param modifiedDate the modified date of this object definition
@@ -1139,6 +1313,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setObjectDefinitionId(long objectDefinitionId) {
 		model.setObjectDefinitionId(objectDefinitionId);
+	}
+
+	/**
+	 * Sets the object folder ID of this object definition.
+	 *
+	 * @param objectFolderId the object folder ID of this object definition
+	 */
+	@Override
+	public void setObjectFolderId(long objectFolderId) {
+		model.setObjectFolderId(objectFolderId);
 	}
 
 	/**
@@ -1266,6 +1450,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the root object definition ID of this object definition.
+	 *
+	 * @param rootObjectDefinitionId the root object definition ID of this object definition
+	 */
+	@Override
+	public void setRootObjectDefinitionId(long rootObjectDefinitionId) {
+		model.setRootObjectDefinitionId(rootObjectDefinitionId);
 	}
 
 	/**

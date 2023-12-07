@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.digital.signature.rest.resource.v1_0.test;
@@ -28,6 +19,7 @@ import com.liferay.digital.signature.rest.client.pagination.Page;
 import com.liferay.digital.signature.rest.client.pagination.Pagination;
 import com.liferay.digital.signature.rest.client.resource.v1_0.DSEnvelopeResource;
 import com.liferay.digital.signature.rest.client.serdes.v1_0.DSEnvelopeSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONDeserializer;
@@ -42,6 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -56,6 +49,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -212,7 +204,7 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		Page<DSEnvelope> page = dsEnvelopeResource.getSiteDSEnvelopesPage(
 			siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantSiteId != null) {
 			DSEnvelope irrelevantDSEnvelope =
@@ -220,14 +212,16 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 					irrelevantSiteId, randomIrrelevantDSEnvelope());
 
 			page = dsEnvelopeResource.getSiteDSEnvelopesPage(
-				irrelevantSiteId, Pagination.of(1, 2));
+				irrelevantSiteId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDSEnvelope),
-				(List<DSEnvelope>)page.getItems());
-			assertValid(page);
+			assertContains(
+				irrelevantDSEnvelope, (List<DSEnvelope>)page.getItems());
+			assertValid(
+				page,
+				testGetSiteDSEnvelopesPage_getExpectedActions(
+					irrelevantSiteId));
 		}
 
 		DSEnvelope dsEnvelope1 = testGetSiteDSEnvelopesPage_addDSEnvelope(
@@ -239,17 +233,40 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		page = dsEnvelopeResource.getSiteDSEnvelopesPage(
 			siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dsEnvelope1, dsEnvelope2),
-			(List<DSEnvelope>)page.getItems());
-		assertValid(page);
+		assertContains(dsEnvelope1, (List<DSEnvelope>)page.getItems());
+		assertContains(dsEnvelope2, (List<DSEnvelope>)page.getItems());
+		assertValid(
+			page, testGetSiteDSEnvelopesPage_getExpectedActions(siteId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteDSEnvelopesPage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/digital-signature-rest/v1.0/sites/{siteId}/ds-envelopes/batch".
+				replace("{siteId}", String.valueOf(siteId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
 	public void testGetSiteDSEnvelopesPageWithPagination() throws Exception {
 		Long siteId = testGetSiteDSEnvelopesPage_getSiteId();
+
+		Page<DSEnvelope> dsEnvelopePage =
+			dsEnvelopeResource.getSiteDSEnvelopesPage(siteId, null);
+
+		int totalCount = GetterUtil.getInteger(dsEnvelopePage.getTotalCount());
 
 		DSEnvelope dsEnvelope1 = testGetSiteDSEnvelopesPage_addDSEnvelope(
 			siteId, randomDSEnvelope());
@@ -261,27 +278,28 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 			siteId, randomDSEnvelope());
 
 		Page<DSEnvelope> page1 = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(1, 2));
+			siteId, Pagination.of(1, totalCount + 2));
 
 		List<DSEnvelope> dsEnvelopes1 = (List<DSEnvelope>)page1.getItems();
 
-		Assert.assertEquals(dsEnvelopes1.toString(), 2, dsEnvelopes1.size());
+		Assert.assertEquals(
+			dsEnvelopes1.toString(), totalCount + 2, dsEnvelopes1.size());
 
 		Page<DSEnvelope> page2 = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(2, 2));
+			siteId, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DSEnvelope> dsEnvelopes2 = (List<DSEnvelope>)page2.getItems();
 
 		Assert.assertEquals(dsEnvelopes2.toString(), 1, dsEnvelopes2.size());
 
 		Page<DSEnvelope> page3 = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(1, 3));
+			siteId, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dsEnvelope1, dsEnvelope2, dsEnvelope3),
-			(List<DSEnvelope>)page3.getItems());
+		assertContains(dsEnvelope1, (List<DSEnvelope>)page3.getItems());
+		assertContains(dsEnvelope2, (List<DSEnvelope>)page3.getItems());
+		assertContains(dsEnvelope3, (List<DSEnvelope>)page3.getItems());
 	}
 
 	protected DSEnvelope testGetSiteDSEnvelopesPage_addDSEnvelope(
@@ -335,10 +353,17 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		DSEnvelope postDSEnvelope = testGetSiteDSEnvelope_addDSEnvelope();
 
 		DSEnvelope getDSEnvelope = dsEnvelopeResource.getSiteDSEnvelope(
-			postDSEnvelope.getSiteId(), postDSEnvelope.getId());
+			testGetSiteDSEnvelope_getSiteId(postDSEnvelope),
+			postDSEnvelope.getId());
 
 		assertEquals(postDSEnvelope, getDSEnvelope);
 		assertValid(getDSEnvelope);
+	}
+
+	protected Long testGetSiteDSEnvelope_getSiteId(DSEnvelope dsEnvelope)
+		throws Exception {
+
+		return dsEnvelope.getSiteId();
 	}
 
 	protected DSEnvelope testGetSiteDSEnvelope_addDSEnvelope()
@@ -364,8 +389,10 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 									{
 										put(
 											"siteKey",
-											"\"" + dsEnvelope.getSiteId() +
-												"\"");
+											"\"" +
+												testGraphQLGetSiteDSEnvelope_getSiteId(
+													dsEnvelope) + "\"");
+
 										put(
 											"dsEnvelopeId",
 											"\"" + dsEnvelope.getId() + "\"");
@@ -373,6 +400,12 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/dSEnvelope"))));
+	}
+
+	protected Long testGraphQLGetSiteDSEnvelope_getSiteId(DSEnvelope dsEnvelope)
+		throws Exception {
+
+		return dsEnvelope.getSiteId();
 	}
 
 	@Test
@@ -664,6 +697,13 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	}
 
 	protected void assertValid(Page<DSEnvelope> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<DSEnvelope> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<DSEnvelope> dsEnvelopes = page.getItems();
@@ -678,6 +718,25 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -898,14 +957,16 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -922,6 +983,10 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -931,18 +996,18 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1032,41 +1097,231 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		}
 
 		if (entityFieldName.equals("emailBlurb")) {
-			sb.append("'");
-			sb.append(String.valueOf(dsEnvelope.getEmailBlurb()));
-			sb.append("'");
+			Object object = dsEnvelope.getEmailBlurb();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("emailSubject")) {
-			sb.append("'");
-			sb.append(String.valueOf(dsEnvelope.getEmailSubject()));
-			sb.append("'");
+			Object object = dsEnvelope.getEmailSubject();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("id")) {
-			sb.append("'");
-			sb.append(String.valueOf(dsEnvelope.getId()));
-			sb.append("'");
+			Object object = dsEnvelope.getId();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(dsEnvelope.getName()));
-			sb.append("'");
+			Object object = dsEnvelope.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("senderEmailAddress")) {
-			sb.append("'");
-			sb.append(String.valueOf(dsEnvelope.getSenderEmailAddress()));
-			sb.append("'");
+			Object object = dsEnvelope.getSenderEmailAddress();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1077,9 +1332,47 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		}
 
 		if (entityFieldName.equals("status")) {
-			sb.append("'");
-			sb.append(String.valueOf(dsEnvelope.getStatus()));
-			sb.append("'");
+			Object object = dsEnvelope.getStatus();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

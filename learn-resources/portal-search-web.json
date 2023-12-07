@@ -1,8 +1,25 @@
 {
+	"custom-facet": {
+		"en_US": {
+			"message": "Learn more.",
+			"url": "https://learn.liferay.com/dxp/latest/en/using-search/search-pages-and-widgets/search-facets/custom-facet.html"
+		}
+	},
 	"search-bar-suggestions": {
 		"en_US": {
 			"message": "Learn more.",
 			"url": "https://learn.liferay.com/dxp/latest/en/using-search/search-pages-and-widgets/search-bar-suggestions.html"
+		}
+	},
+	"search-bar-suggestions-blueprints": {
+		"en_US": {
+			"message": "Learn more.",
+			"url": "https://learn.liferay.com/dxp/latest/en/using-search/search-pages-and-widgets/search-bar-suggestions/search-bar-suggestions-blueprints.html"
+		}
+	},
+	"search-bar-suggestions-site-activities": {
+		"en_US": {
+			"message": "Learn more."
 		}
 	},
 	"sorting-search-results": {

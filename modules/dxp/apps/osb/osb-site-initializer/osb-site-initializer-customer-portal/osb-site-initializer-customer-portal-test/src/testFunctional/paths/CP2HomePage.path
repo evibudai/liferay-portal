@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>CP2HomePage</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead>
+<tr><td rowspan="1" colspan="3">CP2HomePage</td></tr>
+</thead>
+
+<tbody>
+<tr>
+	<td>COOKIE_LINK</td>
+	<td>//h6[contains(@class, 'cp_footer_text')]//a[contains(@href, 'cookie-policy')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COOKIE_POLICY_MEGA_MENU</td>
+	<td>//span[contains(.,'Cookie Policy')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DROPDOWN_LANGUAGE_OPTIONS</td>
+	<td>//div[contains(@class, 'dropdown-menu')]/div[contains(@class,language-dropdown)]/ul/li/a[contains(.,'${key_option}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LANGUAGE_BUTTON</td>
+	<td>//div[contains(@class,'language-selector-text')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ONBOARDING_MODAL</td>
+	<td>//*[contains(@class, 'onboarding')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WELCOME_PAGE</td>
+	<td>//*[contains(@class,'customer-portal')]//div/div[contains(.,'${key_title}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GUIDE_VIDEOS_BUTTON</td>
+	<td>//div[contains(@class,"text-container")]//*[normalize-space()= 'Watch Tutorial Videos']</td>
+	<td></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

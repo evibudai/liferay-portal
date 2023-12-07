@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.rest.resource.v1_0.test;
@@ -55,8 +46,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.time.DateUtils;
 
@@ -101,25 +92,25 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 	@Override
 	@Test
 	public void testGetProcessInstance() throws Exception {
+		SLAResult[] slaResults = {
+			_toSLAResult(true, SLAResult.Status.NEW),
+			_toSLAResult(true, SLAResult.Status.NEW),
+			_toSLAResult(true, SLAResult.Status.PAUSED),
+			_toSLAResult(true, SLAResult.Status.PAUSED),
+			_toSLAResult(true, SLAResult.Status.RUNNING),
+			_toSLAResult(true, SLAResult.Status.RUNNING),
+			_toSLAResult(true, SLAResult.Status.RUNNING),
+			_toSLAResult(true, SLAResult.Status.STOPPED),
+			_toSLAResult(true, SLAResult.Status.STOPPED),
+			_toSLAResult(true, SLAResult.Status.STOPPED)
+		};
+
+		Arrays.sort(
+			slaResults, Comparator.comparing(SLAResult::getRemainingTime));
+
 		Instance instance = randomInstance();
 
-		instance.setSlaResults(
-			Stream.of(
-				_toSLAResult(true, SLAResult.Status.NEW),
-				_toSLAResult(true, SLAResult.Status.NEW),
-				_toSLAResult(true, SLAResult.Status.PAUSED),
-				_toSLAResult(true, SLAResult.Status.PAUSED),
-				_toSLAResult(true, SLAResult.Status.RUNNING),
-				_toSLAResult(true, SLAResult.Status.RUNNING),
-				_toSLAResult(true, SLAResult.Status.RUNNING),
-				_toSLAResult(true, SLAResult.Status.STOPPED),
-				_toSLAResult(true, SLAResult.Status.STOPPED),
-				_toSLAResult(true, SLAResult.Status.STOPPED)
-			).sorted(
-				Comparator.comparing(SLAResult::getRemainingTime)
-			).toArray(
-				SLAResult[]::new
-			));
+		instance.setSlaResults(slaResults);
 
 		testGetProcessInstancesPage_addInstance(_process.getId(), instance);
 
@@ -279,19 +270,15 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 			EntityField.Type.DATE_TIME,
 			(entityField, instance1, instance2) -> {
 				if (Objects.equals(entityField.getName(), "dateOverdue")) {
-					Stream.of(
-						instance1.getSlaResults()
-					).forEach(
-						slaResult -> slaResult.setDateOverdue(
-							DateUtils.addDays(slaResult.getDateOverdue(), -2))
-					);
+					for (SLAResult slaResult : instance1.getSlaResults()) {
+						slaResult.setDateOverdue(
+							DateUtils.addDays(slaResult.getDateOverdue(), -2));
+					}
 
-					Stream.of(
-						instance2.getSlaResults()
-					).forEach(
-						slaResult -> slaResult.setDateOverdue(
-							DateUtils.addDays(slaResult.getDateOverdue(), -1))
-					);
+					for (SLAResult slaResult : instance2.getSlaResults()) {
+						slaResult.setDateOverdue(
+							DateUtils.addDays(slaResult.getDateOverdue(), -1));
+					}
 				}
 				else {
 					BeanTestUtil.setProperty(
@@ -427,7 +414,6 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 			HashMapBuilder.put(
 				LocaleUtil.US.toLanguageTag(), instance.getAssetType()
 			).build());
-
 		instance.setAssignees(new Assignee[0]);
 
 		User adminUser = UserTestUtil.getAdminUser(testGroup.getCompanyId());
@@ -475,6 +461,14 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 
 		return _testGetProcessInstancesPage_addInstance(
 			Collections.emptyList(), instance, processId);
+	}
+
+	@Override
+	protected Map<String, Map<String, String>>
+			testGetProcessInstancesPage_getExpectedActions(Long processId)
+		throws Exception {
+
+		return Collections.emptyMap();
 	}
 
 	@Override

@@ -1,24 +1,21 @@
 /* eslint-disable no-case-declarations */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ReactNode, createContext, useEffect, useMemo, useReducer} from 'react';
 import {KeyedMutator} from 'swr';
+import {STORAGE_KEYS} from '~/core/Storage';
 
 import {useFetch} from '../hooks/useFetch';
 import useStorage from '../hooks/useStorage';
-import {UserAccount} from '../services/rest';
+import {
+	APIResponse,
+	TestrayDispatchTrigger,
+	UserAccount,
+} from '../services/rest';
+import {testrayDispatchTriggerImpl} from '../services/rest/TestrayDispatchTrigger';
 import {ActionMap} from '../types';
 
 export type RunId = number | null;
@@ -32,22 +29,30 @@ export type CompareRuns = {
 type InitialState = {
 	compareRuns: CompareRuns;
 	myUserAccount?: UserAccount;
+	testrayDispatchTriggers: APIResponse<TestrayDispatchTrigger>;
 };
 
 const initialState: InitialState = {
 	compareRuns: {
 		runA: null,
 		runB: null,
-		runId: null,
 	},
 	myUserAccount: undefined,
+	testrayDispatchTriggers: {
+		actions: {},
+		facets: [],
+		items: [],
+		lastPage: 1,
+		page: 1,
+		pageSize: 1,
+		totalCount: 1,
+	},
 };
 
 export const enum TestrayTypes {
 	SET_MY_USER_ACCOUNT = 'SET_MY_USER_ACCOUNT',
 	SET_RUN_A = 'SET_RUN_A',
 	SET_RUN_B = 'SET_RUN_B',
-	SET_RUN_ID = 'SET_RUN_ID',
 }
 
 type TestrayPayload = {
@@ -56,7 +61,6 @@ type TestrayPayload = {
 	};
 	[TestrayTypes.SET_RUN_A]: RunId;
 	[TestrayTypes.SET_RUN_B]: RunId;
-	[TestrayTypes.SET_RUN_ID]: RunId;
 };
 
 type AppActions = ActionMap<TestrayPayload>[keyof ActionMap<TestrayPayload>];
@@ -91,12 +95,6 @@ const reducer = (state: InitialState, action: AppActions) => {
 				compareRuns: {...state.compareRuns, runB: action.payload},
 			};
 
-		case TestrayTypes.SET_RUN_ID:
-			return {
-				...state,
-				compareRuns: {...state.compareRuns, runId: action.payload},
-			};
-
 		default:
 			return state;
 	}
@@ -107,16 +105,29 @@ const TestrayContextProvider: React.FC<{
 }> = ({children}) => {
 	const [storageValue, setStorageValue] = useStorage<{
 		compareRuns: CompareRuns;
-	}>('compareRuns', initialState, sessionStorage);
+	}>(STORAGE_KEYS.COMPARE_RUNS, {
+		initialValue: initialState,
+		storageType: 'temporary',
+	});
 
 	const [state, dispatch] = useReducer(reducer, {
 		...initialState,
 		compareRuns: storageValue?.compareRuns,
 	});
 
-	const {data: myUserAccount, mutate} = useFetch(
-		'/my-user-account',
-		(user: UserAccount) => ({
+	const {data: testrayDispatchTriggers} = useFetch<
+		APIResponse<TestrayDispatchTrigger>
+	>(testrayDispatchTriggerImpl.resource, {
+		params: {
+			aggregationTerms: 'dueStatus',
+			pageSize: 10,
+			sort: 'dateCreated:asc',
+		},
+	});
+
+	const {data: myUserAccount, mutate} = useFetch('/my-user-account', {
+		transformData: (user: UserAccount) => ({
+			actions: user?.actions,
 			additionalName: user?.additionalName,
 			alternateName: user?.alternateName,
 			emailAddress: user?.emailAddress,
@@ -124,11 +135,13 @@ const TestrayContextProvider: React.FC<{
 			givenName: user?.givenName,
 			id: user?.id,
 			image: user.image,
+			jiraAuthorization: user?.jiraAuthorization,
+			name: user.name,
 			roleBriefs: user?.roleBriefs,
 			userGroupBriefs: user?.userGroupBriefs,
 			uuid: user?.uuid,
-		})
-	);
+		}),
+	});
 
 	const compareRuns = useMemo(() => state.compareRuns, [state.compareRuns]);
 
@@ -150,7 +163,18 @@ const TestrayContextProvider: React.FC<{
 	}, [myUserAccount]);
 
 	return (
-		<TestrayContext.Provider value={[state, dispatch, mutate]}>
+		<TestrayContext.Provider
+			value={[
+				{
+					...state,
+					testrayDispatchTriggers: testrayDispatchTriggers as APIResponse<
+						TestrayDispatchTrigger
+					>,
+				},
+				dispatch,
+				mutate,
+			]}
+		>
 			{children}
 		</TestrayContext.Provider>
 	);

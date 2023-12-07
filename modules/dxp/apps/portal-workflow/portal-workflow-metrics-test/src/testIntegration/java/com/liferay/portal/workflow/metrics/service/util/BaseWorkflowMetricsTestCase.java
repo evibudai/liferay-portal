@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.metrics.service.util;
@@ -23,7 +14,6 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.CountSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.CountSearchResponse;
@@ -41,12 +31,11 @@ import com.liferay.portal.workflow.kaleo.model.KaleoTask;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService;
+import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -112,8 +101,6 @@ public abstract class BaseWorkflowMetricsTestCase {
 		countSearchRequest.setQuery(
 			booleanQuery.addFilterQueryClauses(filterQuery));
 
-		countSearchRequest.setTypes(indexType);
-
 		CountSearchResponse countSearchResponse = searchEngineAdapter.execute(
 			countSearchRequest);
 
@@ -150,8 +137,6 @@ public abstract class BaseWorkflowMetricsTestCase {
 		}
 
 		countSearchRequest.setQuery(booleanQuery);
-
-		countSearchRequest.setTypes(indexType);
 
 		CountSearchResponse countSearchResponse = searchEngineAdapter.execute(
 			countSearchRequest);
@@ -198,38 +183,34 @@ public abstract class BaseWorkflowMetricsTestCase {
 				workflowDefinition.getCompanyId(),
 				workflowDefinition.getName());
 
-		List<KaleoNode> kaleoNodes =
-			_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
-				latestKaleoDefinitionVersion.getKaleoDefinitionVersionId());
+		for (KaleoNode kaleoNode :
+				_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
+					latestKaleoDefinitionVersion.
+						getKaleoDefinitionVersionId())) {
 
-		Stream<KaleoNode> stream = kaleoNodes.stream();
-
-		return stream.filter(
-			kaleoNode -> Objects.equals(kaleoNode.getName(), taskName)
-		).map(
-			kaleoNode -> {
-				try {
-					return _kaleoTaskLocalService.getKaleoNodeKaleoTask(
-						kaleoNode.getKaleoNodeId());
-				}
-				catch (PortalException portalException) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(portalException);
-					}
-				}
-
-				return null;
+			if (!Objects.equals(kaleoNode.getName(), taskName)) {
+				continue;
 			}
-		).filter(
-			Objects::nonNull
-		).findFirst(
-		).map(
-			KaleoTask::getKaleoTaskId
-		).map(
-			String::valueOf
-		).orElseGet(
-			() -> StringPool.BLANK
-		);
+
+			try {
+				KaleoTask kaleoTask =
+					_kaleoTaskLocalService.getKaleoNodeKaleoTask(
+						kaleoNode.getKaleoNodeId());
+
+				if (kaleoTask == null) {
+					continue;
+				}
+
+				return String.valueOf(kaleoTask.getKaleoTaskId());
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
+			}
+		}
+
+		return StringPool.BLANK;
 	}
 
 	protected String getTerminalNodeKey(WorkflowDefinition workflowDefinition)
@@ -314,44 +295,32 @@ public abstract class BaseWorkflowMetricsTestCase {
 			KaleoDefinitionVersion kaleoDefinitionVersion)
 		throws Exception {
 
-		List<KaleoNode> kaleoNodes =
-			_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
-				kaleoDefinitionVersion.getKaleoDefinitionVersionId());
+		for (KaleoNode kaleoNode :
+				_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
+					kaleoDefinitionVersion.getKaleoDefinitionVersionId())) {
 
-		Stream<KaleoNode> stream = kaleoNodes.stream();
+			if (kaleoNode.isInitial()) {
+				return String.valueOf(kaleoNode.getKaleoNodeId());
+			}
+		}
 
-		return stream.filter(
-			KaleoNode::isInitial
-		).findFirst(
-		).map(
-			KaleoNode::getKaleoNodeId
-		).map(
-			String::valueOf
-		).orElseGet(
-			() -> StringPool.BLANK
-		);
+		return StringPool.BLANK;
 	}
 
 	private String _getTerminalNodeKey(
 			KaleoDefinitionVersion kaleoDefinitionVersion)
 		throws PortalException {
 
-		List<KaleoNode> kaleoNodes =
-			_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
-				kaleoDefinitionVersion.getKaleoDefinitionVersionId());
+		for (KaleoNode kaleoNode :
+				_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
+					kaleoDefinitionVersion.getKaleoDefinitionVersionId())) {
 
-		Stream<KaleoNode> stream = kaleoNodes.stream();
+			if (kaleoNode.isTerminal()) {
+				return String.valueOf(kaleoNode.getKaleoNodeId());
+			}
+		}
 
-		return stream.filter(
-			KaleoNode::isTerminal
-		).findFirst(
-		).map(
-			KaleoNode::getKaleoNodeId
-		).map(
-			String::valueOf
-		).orElseGet(
-			() -> StringPool.BLANK
-		);
+		return StringPool.BLANK;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

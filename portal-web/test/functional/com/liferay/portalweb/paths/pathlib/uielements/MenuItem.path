@@ -52,7 +52,7 @@
 </tr>
 <tr>
 	<td>DROPDOWN_MENU_ITEM_SPECIFIC</td>
-	<td>xpath=(//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//li[@role='presentation' and ancestor::*[@role='group']] | //ul[contains(@class,'dropdown-menu') and contains(@class,'show')]//p[contains(@class,'list-group-title')] | //div[contains(@class,'dropdown-menu') and contains(@class,'show')]//li[@role='option'])[${index}]</td>
+	<td>xpath=(//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//li[@role='presentation' and ancestor::*[@role='group']] | //ul[contains(@class,'dropdown-menu') and contains(@class,'show')]//p[contains(@class,'list-group-title')] | //div[contains(@class,'dropdown-menu') and contains(@class,'show')]//*[self::li or self::button][@role='option'])[${index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -61,8 +61,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>GROUPED_DROPDOWN_MENU_ITEM_BY_INDEX</td>
+	<td>xpath=(//div[contains(@class,'show') and contains(@class,'dropdown')]//li[contains(@class,'dropdown-subheader')][normalize-space()='${key_subheader}']//following-sibling::li//*[self::a or self::button])[${index}][normalize-space()='${key_menuItem}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MENU_ITEM_BY_INDEX</td>
 	<td>xpath=(//div[contains(@class,'dropdown-menu')][contains(@class,'show')]//li)[${index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MENU_ITEM_SPECIFIC</td>
+	<td>//ul[contains(@class,'list-unstyled')]//li//*[normalize-space(text())="${key_menuItem}"]</td>
 	<td></td>
 </tr>
 <tr>
@@ -72,7 +82,7 @@
 </tr>
 <tr>
 	<td>SPACING_VALUE</td>
-	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//button[span[normalize-space(text())='${key_tokenName}']]//strong[contains(@class,'text-truncate')]</td>
+	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//button[.//span[normalize-space(text())='${key_tokenName}']]//span[contains(@class,'semi-bold')][contains(@class,'text-truncate')]</td>
 	<td></td>
 </tr>
 </tbody>

@@ -1,23 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.suggestions.display.context.builder;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.web.internal.search.suggest.KeywordsSuggestionHolder;
@@ -26,17 +18,11 @@ import com.liferay.portal.search.web.internal.suggestions.display.context.Sugges
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Adam Brandizzi
  */
 public class SuggestionsPortletDisplayContextBuilder {
-
-	public SuggestionsPortletDisplayContextBuilder(Html html) {
-		_html = html;
-	}
 
 	public SuggestionsPortletDisplayContext build() {
 		SuggestionsPortletDisplayContext suggestionsPortletDisplayContext =
@@ -128,26 +114,26 @@ public class SuggestionsPortletDisplayContextBuilder {
 		List<String> suggestedKeywords =
 			keywordsSuggestionHolder.getSuggestedKeywords();
 
-		Stream<String> stream = suggestedKeywords.stream();
+		StringBundler sb = new StringBundler(suggestedKeywords.size() * 2);
 
-		return stream.map(
-			keyword -> _formatSuggestedKeyword(
-				keyword, keywordsSuggestionHolder.hasChanged(keyword))
-		).collect(
-			Collectors.joining(StringPool.SPACE)
-		);
+		for (String suggestedKeyword : suggestedKeywords) {
+			sb.append(
+				_formatSuggestedKeyword(
+					suggestedKeyword,
+					keywordsSuggestionHolder.hasChanged(suggestedKeyword)));
+			sb.append(StringPool.SPACE);
+		}
+
+		if (sb.index() > 0) {
+			sb.setIndex(sb.index() - 1);
+		}
+
+		return sb.toString();
 	}
 
 	private List<SuggestionDisplayContext> _buildRelatedQueriesSuggestions() {
-		Stream<String> stream = _relatedQueriesSuggestions.stream();
-
-		return stream.map(
-			this::_buildSuggestionDisplayContext
-		).filter(
-			Objects::nonNull
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			_relatedQueriesSuggestions, this::_buildSuggestionDisplayContext);
 	}
 
 	private String _buildSearchURL(
@@ -175,7 +161,6 @@ public class SuggestionsPortletDisplayContextBuilder {
 
 		suggestionDisplayContext.setSuggestedKeywordsFormatted(
 			_buildFormattedKeywords(keywordsSuggestionHolder));
-
 		suggestionDisplayContext.setURL(
 			_buildSearchURL(keywordsSuggestionHolder));
 
@@ -187,16 +172,16 @@ public class SuggestionsPortletDisplayContextBuilder {
 
 		sb.append("<span class=\"");
 
-		String keywordCssClass = "unchanged-keyword";
-
 		if (changed) {
-			keywordCssClass = "changed-keyword";
+			sb.append("changed-keyword\"><strong>");
+			sb.append(HtmlUtil.escape(keyword));
+			sb.append("</strong>");
+		}
+		else {
+			sb.append("unchanged-keyword\">");
+			sb.append(HtmlUtil.escape(keyword));
 		}
 
-		sb.append(keywordCssClass);
-
-		sb.append("\">");
-		sb.append(_html.escape(keyword));
 		sb.append("</span>");
 
 		return sb.toString();
@@ -212,7 +197,6 @@ public class SuggestionsPortletDisplayContextBuilder {
 		return true;
 	}
 
-	private final Html _html;
 	private String _keywords;
 	private String _keywordsParameterName;
 	private List<String> _relatedQueriesSuggestions;

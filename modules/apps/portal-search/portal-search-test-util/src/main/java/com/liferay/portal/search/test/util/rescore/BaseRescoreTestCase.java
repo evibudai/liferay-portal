@@ -1,25 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.rescore;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.Field;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
-import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.query.Query;
 import com.liferay.portal.search.rescore.Rescore;
@@ -29,8 +20,6 @@ import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,7 +34,7 @@ public abstract class BaseRescoreTestCase extends BaseIndexingTestCase {
 	public void testRescore() {
 		addDocuments(
 			value -> DocumentCreationHelpers.singleText(_TITLE, value),
-			Arrays.asList("alpha zeta", "alpha alpha", "alpha beta beta"));
+			"alpha zeta", "alpha alpha", "alpha beta beta");
 
 		Query query = queries.string(_TITLE.concat(":alpha"));
 
@@ -62,8 +51,7 @@ public abstract class BaseRescoreTestCase extends BaseIndexingTestCase {
 	public void testRescoreQuery() {
 		addDocuments(
 			value -> DocumentCreationHelpers.singleText(_TITLE, value),
-			Arrays.asList(
-				"alpha alpha", "alpha gamma gamma", "alpha beta beta"));
+			"alpha alpha", "alpha gamma gamma", "alpha beta beta");
 
 		Query query = queries.string(_TITLE.concat(":alpha"));
 
@@ -82,8 +70,7 @@ public abstract class BaseRescoreTestCase extends BaseIndexingTestCase {
 	public void testRescores() {
 		addDocuments(
 			value -> DocumentCreationHelpers.singleText(_TITLE, value),
-			Arrays.asList(
-				"alpha alpha", "alpha gamma gamma", "alpha beta beta beta"));
+			"alpha alpha", "alpha gamma gamma", "alpha beta beta beta");
 
 		Query query = queries.string(_TITLE.concat(":alpha"));
 
@@ -124,26 +111,21 @@ public abstract class BaseRescoreTestCase extends BaseIndexingTestCase {
 
 				SearchHits searchHits = searchSearchResponse.getSearchHits();
 
-				List<SearchHit> searchHitsList = searchHits.getSearchHits();
-
-				Stream<SearchHit> stream = searchHitsList.stream();
-
-				List<String> actualValues = stream.map(
-					searchHit -> {
-						Document document = searchHit.getDocument();
-
-						Map<String, Field> fields = document.getFields();
-
-						Field field = fields.get(fieldName);
-
-						return (String)field.getValue();
-					}
-				).collect(
-					Collectors.toList()
-				);
-
 				Assert.assertEquals(
-					expectedValues.toString(), actualValues.toString());
+					expectedValues.toString(),
+					String.valueOf(
+						TransformUtil.transform(
+							searchHits.getSearchHits(),
+							searchHit -> {
+								Document document = searchHit.getDocument();
+
+								Map<String, Field> fields =
+									document.getFields();
+
+								Field field = fields.get(fieldName);
+
+								return (String)field.getValue();
+							})));
 			});
 	}
 

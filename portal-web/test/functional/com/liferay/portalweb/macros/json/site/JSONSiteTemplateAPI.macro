@@ -1,13 +1,15 @@
 definition {
 
-	macro _addSiteTemplateByName {
+	@summary = "Default summary"
+	macro _addSiteTemplateByName(readyForPropagation = null, layoutsUpdateable = null, description = null, active = null, siteTemplateName = null) {
 		Variables.assertDefined(parameterList = "${description},${active},${layoutsUpdateable},${readyForPropagation},${siteTemplateName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutsetprototype/add-layout-set-prototype \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d name=${siteTemplateName} \
 				-d description=${description} \
 				-d active=${active} \
@@ -15,113 +17,131 @@ definition {
 				-d readyForPropagation=${readyForPropagation}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _applyTemplateToSite {
+	@summary = "Default summary"
+	macro _applyTemplateToSite(groupId = null, privateLayout = null, layoutSetPrototypeUuid = null) {
 		Variables.assertDefined(parameterList = "${groupId},${privateLayout},${layoutSetPrototypeUuid}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutset/update-layout-set-prototype-link-enabled \
-                           -u test@liferay.com:test \
-                           -d groupId=${groupId}  \
-                           -d privateLayout=${privateLayout} \
-                           -d layoutSetPrototypeLinkEnabled=true \
-                           -d layoutSetPrototypeUuid=${layoutSetPrototypeUuid}
+				-u ${userLoginInfo} \
+				-d groupId=${groupId}  \
+				-d privateLayout=${privateLayout} \
+				-d layoutSetPrototypeLinkEnabled=true \
+				-d layoutSetPrototypeUuid=${layoutSetPrototypeUuid}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _deleteNonDefaultSiteTemplates {
-		Variables.assertDefined(parameterList = "${companyId}");
+	@summary = "Default summary"
+	macro _deleteNonDefaultSiteTemplates(companyId = null) {
+		Variables.assertDefined(parameterList = ${companyId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutsetprototype/delete-nondefault-layout-set-prototypes \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d companyId=${companyId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _deleteSiteTemplateById {
-		Variables.assertDefined(parameterList = "${layoutSetPrototypeId}");
+	@summary = "Default summary"
+	macro _deleteSiteTemplateById(layoutSetPrototypeId = null) {
+		Variables.assertDefined(parameterList = ${layoutSetPrototypeId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutsetprototype/delete-layout-set-prototype \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d layoutSetPrototypeId=${layoutSetPrototypeId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _getAllNonDefaultSiteTemplateId {
+	@summary = "Default summary"
+	macro _getAllNonDefaultSiteTemplateId() {
 		var companyId = JSONCompany.getCompanyId();
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutsetprototype/get-layout-set-prototypes \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d companyId=${companyId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 
-		var siteTemplateIds = JSONCurlUtil.post("${curl}", "$..['layoutSetPrototypeId']");
+		var siteTemplateIds = JSONCurlUtil.post(${curl}, "$..['layoutSetPrototypeId']");
 
-		return "${siteTemplateIds}";
+		return ${siteTemplateIds};
 	}
 
-	macro _getSiteTemplateIdByName {
-		Variables.assertDefined(parameterList = "${siteTemplateName}");
+	@summary = "Default summary"
+	macro _getSiteTemplateIdByName(siteTemplateName = null) {
+		Variables.assertDefined(parameterList = ${siteTemplateName});
 
-		var portalURL = JSONCompany.getPortalURL();
-		var companyId = JSONCompany.getCompanyId();
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+			var companyId = JSONCompany.getCompanyId();
+		}
+		else {
+			var companyId = JSONCompany.getCompanyId(portalURL = ${portalURL});
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutsetprototype/get-layout-set-prototypes \
-                          -u test@liferay.com:test \
-                          -d companyId=${companyId}
+				-u ${userLoginInfo} \
+				-d companyId=${companyId}
 		''';
 
-		var layoutSetPrototypeId = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${siteTemplateName}')]['layoutSetPrototypeId']");
+		var layoutSetPrototypeId = JSONCurlUtil.post(${curl}, "$.[?(@['nameCurrentValue'] == '${siteTemplateName}')]['layoutSetPrototypeId']");
 
-		if ("${layoutSetPrototypeId}" == "") {
+		if (${layoutSetPrototypeId} == "") {
 			fail("FAIL. Cannot find layout.");
 		}
 
-		return "${layoutSetPrototypeId}";
+		return ${layoutSetPrototypeId};
 	}
 
-	macro _getSiteTemplateUuidByName {
-		Variables.assertDefined(parameterList = "${siteTemplateName}");
+	@summary = "Default summary"
+	macro _getSiteTemplateUuidByName(siteTemplateName = null) {
+		Variables.assertDefined(parameterList = ${siteTemplateName});
 
 		var portalURL = JSONCompany.getPortalURL();
 		var companyId = JSONCompany.getCompanyId();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/layoutsetprototype/get-layout-set-prototypes \
-				 -u test@liferay.com:test \
-				 -d companyId=${companyId}
+				-u ${userLoginInfo} \
+				-d companyId=${companyId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 
-		var uuid = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${siteTemplateName}')]['uuid']");
+		var uuid = JSONCurlUtil.post(${curl}, "$.[?(@['nameCurrentValue'] == '${siteTemplateName}')]['uuid']");
 
-		if ("${uuid}" == "") {
+		if (${uuid} == "") {
 			fail("FAIL. Cannot find layout.");
 		}
 
-		return "${uuid}";
+		return ${uuid};
 	}
 
 }

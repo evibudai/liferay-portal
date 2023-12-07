@@ -1,15 +1,7 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR
+ * LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.portlet.action;
@@ -21,17 +13,18 @@ import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
+import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.display.BasePersistenceRegistry;
-import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.display.DisplayContextImpl;
 import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
 import com.liferay.diff.DiffHtml;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -42,6 +35,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
@@ -56,8 +50,19 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.model.SegmentsEntry;
+import com.liferay.segments.model.SegmentsExperience;
+import com.liferay.segments.model.SegmentsExperienceModel;
+import com.liferay.segments.model.SegmentsExperienceTable;
+import com.liferay.segments.service.SegmentsEntryLocalService;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ResourceRequest;
@@ -166,7 +171,7 @@ public class GetEntryRenderDataMVCResourceCommand
 		String rightTitle = null;
 
 		if (ctEntry.getChangeType() != CTConstants.CT_CHANGE_TYPE_DELETION) {
-			rightTitle = _language.get(httpServletRequest, "publication");
+			rightTitle = ctCollection.getName();
 
 			long ctCollectionId = ctCollection.getCtCollectionId();
 
@@ -321,8 +326,7 @@ public class GetEntryRenderDataMVCResourceCommand
 
 					rightTitle = StringBundler.concat(
 						_language.get(httpServletRequest, "version"), ": ",
-						rightVersionName, " (",
-						_language.get(httpServletRequest, "publication"), ")");
+						rightVersionName, " (", ctCollection.getName(), ")");
 
 					if (ArrayUtil.isNotEmpty(availableLanguageIds)) {
 						leftLocalizedPreviewJSONObject =
@@ -470,14 +474,12 @@ public class GetEntryRenderDataMVCResourceCommand
 						rightModel);
 
 					if (Validator.isNull(rightVersionName)) {
-						rightTitle = _language.get(
-							httpServletRequest, "publication");
+						rightTitle = ctCollection.getName();
 					}
 					else {
 						rightTitle = StringBundler.concat(
 							_language.get(httpServletRequest, "version"), ": ",
-							rightVersionName, " (",
-							_language.get(httpServletRequest, "publication"),
+							rightVersionName, " (", ctCollection.getName(),
 							")");
 					}
 
@@ -649,17 +651,28 @@ public class GetEntryRenderDataMVCResourceCommand
 		}
 
 		if (ArrayUtil.isNotEmpty(availableLanguageIds)) {
-			JSONArray localesJSONArray = _jsonFactory.createJSONArray();
+			JSONArray jsonArray = _jsonFactory.createJSONArray();
 
 			for (String languageId : availableLanguageIds) {
-				localesJSONArray.put(_getLocaleJSONObject(languageId));
+				jsonArray.put(_getLocaleJSONObject(languageId));
 			}
 
 			jsonObject.put(
-				"locales", localesJSONArray
+				"locales", jsonArray
 			).put(
 				"localizedTitles", localizedTitlesJSONObject
 			);
+		}
+
+		if (ctEntry.getModelClassNameId() ==
+				_classNameLocalService.getClassNameId(Layout.class)) {
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctEntry.getCtCollectionId())) {
+
+				_getSegmentExperiences(ctEntry, httpServletRequest, jsonObject);
+			}
 		}
 
 		return jsonObject;
@@ -891,6 +904,88 @@ public class GetEntryRenderDataMVCResourceCommand
 		}
 	}
 
+	private void _getSegmentExperiences(
+		CTEntry ctEntry, HttpServletRequest httpServletRequest,
+		JSONObject jsonObject) {
+
+		JSONArray jsonArray = _jsonFactory.createJSONArray();
+
+		List<SegmentsExperience> segmentsExperiences = new ArrayList<>(
+			_segmentsExperienceLocalService.dslQuery(
+				DSLQueryFactoryUtil.select(
+					SegmentsExperienceTable.INSTANCE
+				).from(
+					SegmentsExperienceTable.INSTANCE
+				).where(
+					SegmentsExperienceTable.INSTANCE.plid.eq(
+						ctEntry.getModelClassPK())
+				)));
+
+		if (segmentsExperiences.isEmpty()) {
+			return;
+		}
+
+		segmentsExperiences.sort(
+			Comparator.comparingInt(SegmentsExperienceModel::getPriority));
+
+		SegmentsExperience highestPrioritySegmentsExperience =
+			segmentsExperiences.get(segmentsExperiences.size() - 1);
+
+		long highestPrioritySegmentsExperienceId =
+			highestPrioritySegmentsExperience.getSegmentsExperienceId();
+
+		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
+			jsonArray.put(
+				JSONUtil.put(
+					"active",
+					() -> {
+						if (segmentsExperience.getSegmentsExperienceId() ==
+								highestPrioritySegmentsExperienceId) {
+
+							return true;
+						}
+
+						return false;
+					}
+				).put(
+					"id", segmentsExperience.getSegmentsExperienceId()
+				).put(
+					"isDefault",
+					Objects.equals(
+						segmentsExperience.getSegmentsExperienceKey(),
+						SegmentsExperienceConstants.KEY_DEFAULT) &&
+					(segmentsExperience.getSegmentsEntryId() == 0)
+				).put(
+					"name",
+					segmentsExperience.getName(httpServletRequest.getLocale())
+				).put(
+					"segmentName",
+					() -> {
+						if (segmentsExperience.getSegmentsEntryId() == 0) {
+							return _language.get(httpServletRequest, "anyone");
+						}
+
+						SegmentsEntry segmentsEntry =
+							_segmentsEntryLocalService.getSegmentsEntry(
+								segmentsExperience.getSegmentsEntryId());
+
+						return segmentsEntry.getName(
+							httpServletRequest.getLocale());
+					}
+				));
+
+			if (segmentsExperience.getSegmentsExperienceId() ==
+					highestPrioritySegmentsExperienceId) {
+
+				jsonObject.put(
+					"activeSegmentsExperience",
+					jsonArray.get(jsonArray.length() - 1));
+			}
+		}
+
+		jsonObject.put("segmentsExperiences", jsonArray);
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		GetEntryRenderDataMVCResourceCommand.class);
 
@@ -920,5 +1015,11 @@ public class GetEntryRenderDataMVCResourceCommand
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SegmentsEntryLocalService _segmentsEntryLocalService;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 }

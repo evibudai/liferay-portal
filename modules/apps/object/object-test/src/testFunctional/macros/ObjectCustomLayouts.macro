@@ -1,6 +1,7 @@
 definition {
 
-	macro addEntryOnRelationshipTab {
+	@summary = "Default summary"
+	macro addEntryOnRelationshipTab(selectEntry = null, newEntry = null) {
 		LexiconEntry.gotoAdd();
 
 		if (isSet(newEntry)) {
@@ -10,7 +11,7 @@ definition {
 
 			Type.type(
 				locator1 = "ObjectPortlet#ADD_OBJECT_ENTRY",
-				value1 = "${newEntry}");
+				value1 = ${newEntry});
 
 			PortletEntry.save();
 		}
@@ -25,8 +26,12 @@ definition {
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			ClickNoError(
-				key_titleFieldName = "${selectEntry}",
+				key_titleFieldName = ${selectEntry},
 				locator1 = "CreateObject#SELECT_ENTRY_IN_RELATIONSHIP_TAB");
+
+			WaitForSPARefresh();
+
+			Refresh();
 		}
 
 		WaitForSPARefresh();

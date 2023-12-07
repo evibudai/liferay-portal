@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.web.internal.portlet.tab;
 
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,16 +17,18 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
+import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
+import com.liferay.portal.workflow.manager.WorkflowLogManager;
 import com.liferay.portal.workflow.portlet.tab.BaseWorkflowPortletTab;
 import com.liferay.portal.workflow.portlet.tab.WorkflowPortletTab;
-import com.liferay.portal.workflow.web.internal.configuration.WorkflowInstanceWebConfiguration;
+import com.liferay.portal.workflow.web.internal.display.context.MyWorkflowInstanceEditDisplayContext;
 import com.liferay.portal.workflow.web.internal.display.context.MyWorkflowInstanceViewDisplayContext;
+import com.liferay.portal.workflow.web.internal.display.context.WorkflowInstanceEditDisplayContext;
 import com.liferay.portal.workflow.web.internal.display.context.WorkflowInstanceViewDisplayContext;
 import com.liferay.portal.workflow.web.internal.request.preprocessor.helper.WorkflowPreprocessorHelper;
 
-import java.util.Map;
 import java.util.Objects;
 
 import javax.portlet.ActionRequest;
@@ -47,18 +39,13 @@ import javax.portlet.RenderResponse;
 
 import javax.servlet.ServletContext;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adam Brandizzi
  */
 @Component(
-	configurationPid = "com.liferay.portal.workflow.web.internal.configuration.WorkflowInstanceWebConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = "portal.workflow.tabs.name=" + WorkflowWebKeys.WORKFLOW_TAB_INSTANCE,
 	service = WorkflowPortletTab.class
 )
@@ -70,23 +57,8 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 	}
 
 	@Override
-	public String getSearchJspPath() {
-		return "/instance/workflow_instance_search.jsp";
-	}
-
-	@Override
 	public ServletContext getServletContext() {
 		return servletContext;
-	}
-
-	@Override
-	public void prepareDispatch(
-			RenderRequest renderRequest, RenderResponse renderResponse)
-		throws PortletException {
-
-		renderRequest.setAttribute(
-			WorkflowInstanceWebConfiguration.class.getName(),
-			workflowInstanceWebConfiguration);
 	}
 
 	@Override
@@ -129,13 +101,6 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 		}
 	}
 
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		workflowInstanceWebConfiguration = ConfigurableUtil.createConfigurable(
-			WorkflowInstanceWebConfiguration.class, properties);
-	}
-
 	@Override
 	protected String getJspPath() {
 		return "/instance/view.jsp";
@@ -149,8 +114,11 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 	)
 	protected ServletContext servletContext;
 
-	protected volatile WorkflowInstanceWebConfiguration
-		workflowInstanceWebConfiguration;
+	@Reference
+	protected WorkflowComparatorFactory workflowComparatorFactory;
+
+	@Reference
+	protected WorkflowLogManager workflowLogManager;
 
 	@Reference
 	protected WorkflowPreprocessorHelper workflowPreprocessorHelper;
@@ -172,14 +140,28 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 				WebKeys.PORTLET_DISPLAY_CONTEXT,
 				new MyWorkflowInstanceViewDisplayContext(
 					portal.getLiferayPortletRequest(renderRequest),
-					portal.getLiferayPortletResponse(renderResponse)));
+					portal.getLiferayPortletResponse(renderResponse),
+					workflowComparatorFactory, workflowLogManager));
+			renderRequest.setAttribute(
+				WorkflowWebKeys.WORKFLOW_INSTANCE_EDIT_DISPLAY_CONTEXT,
+				new MyWorkflowInstanceEditDisplayContext(
+					portal.getLiferayPortletRequest(renderRequest),
+					portal.getLiferayPortletResponse(renderResponse),
+					workflowComparatorFactory, workflowLogManager));
 		}
 		else {
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT,
 				new WorkflowInstanceViewDisplayContext(
 					portal.getLiferayPortletRequest(renderRequest),
-					portal.getLiferayPortletResponse(renderResponse)));
+					portal.getLiferayPortletResponse(renderResponse),
+					workflowComparatorFactory, workflowLogManager));
+			renderRequest.setAttribute(
+				WorkflowWebKeys.WORKFLOW_INSTANCE_EDIT_DISPLAY_CONTEXT,
+				new WorkflowInstanceEditDisplayContext(
+					portal.getLiferayPortletRequest(renderRequest),
+					portal.getLiferayPortletResponse(renderResponse),
+					workflowComparatorFactory, workflowLogManager));
 		}
 	}
 

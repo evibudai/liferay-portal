@@ -16,7 +16,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -25,9 +25,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,14 +38,15 @@ definition {
 	}
 
 	@description = "This checks that users can configure the cache control as private."
-	@priority = "4"
+	@priority = 4
 	test CanConfigureCacheControlAsPrivate {
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "DMCache#CanConfigureCacheControlAsPrivate";
+		property portal.acceptance = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.configureCacheControl(
 			cacheControl = "Private",
-			maxAge = "30",
+			maxAge = 30,
 			systemSettingsInstanceScope = "true");
 
 		JSONDocument.addFileWithUploadedFile(
@@ -66,19 +67,20 @@ definition {
 
 		DMDocument.viewCacheControlConfigurationInConsole(
 			cacheControl = "private",
-			maxAge = "30",
-			responseHeader = "${responseHeader}");
+			maxAge = 30,
+			responseHeader = ${responseHeader});
 	}
 
 	@description = "This checks that users can configure the cache control as public."
-	@priority = "4"
+	@priority = 4
 	test CanConfigureCacheControlAsPublic {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "DMCache#CanConfigureCacheControlAsPublic";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.configureCacheControl(
 			cacheControl = "Public",
-			maxAge = "30");
+			maxAge = 30);
 
 		JSONDocument.addFileWithUploadedFile(
 			assetTagNames = "Tag Name",
@@ -96,14 +98,15 @@ definition {
 
 		DMDocument.viewCacheControlConfigurationInConsole(
 			cacheControl = "public",
-			maxAge = "30",
-			responseHeader = "${responseHeader}");
+			maxAge = 30,
+			responseHeader = ${responseHeader});
 	}
 
 	@description = "This checks that users can configure uncacheable mime type in the cache control."
-	@priority = "3"
+	@priority = 3
 	test CanConfigureUncacheableMimeTypeInCacheControl {
-		property test.name.skip.portal.instance = "DMCache#CanConfigureUncacheableMimeTypeInCacheControl";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.configureCacheControl(uncacheableMimeTypes = "image/jpeg");
 
@@ -122,18 +125,19 @@ definition {
 		var responseHeader = DMDocument.getFileResponseHeader(dmDocumentFileName = "Commerce_Blue.jpg");
 
 		DMDocument.viewCacheControlConfigurationInConsole(
-			responseHeader = "${responseHeader}",
+			responseHeader = ${responseHeader},
 			uncacheableMimeType = "true");
 	}
 
 	@description = "This checks that the cache control configured in an instance will not affect other instance settings."
-	@priority = "4"
+	@priority = 4
 	test ConfiguredCacheControlOnlyWorksOnCurrentInstance {
-		property test.name.skip.portal.instance = "DMCache#ConfiguredCacheControlOnlyWorksOnCurrentInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.configureCacheControl(
 			cacheControl = "Public",
-			maxAge = "30");
+			maxAge = 30);
 
 		HeadlessPortalInstanceAPI.addPortalInstance(
 			domain = "www.able.com",
@@ -160,7 +164,7 @@ definition {
 
 		DMDocument.viewNoCacheControlConfigurationInConsole(
 			cacheControlAttribute = "Cache-Control: public, max-age: 30",
-			responseHeader = "${responseHeader}");
+			responseHeader = ${responseHeader});
 	}
 
 }

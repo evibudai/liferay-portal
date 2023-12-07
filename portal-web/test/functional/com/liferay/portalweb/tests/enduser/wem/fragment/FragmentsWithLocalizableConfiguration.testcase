@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a content page") {
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,8 +36,121 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-147897. The page designer could localize date format on date fragment."
+	@priority = 4
+	test LocalizeDateFormatToMappedDate {
+		task ("Given a page designer has a fragment with mapped date") {
+			JSONFragment.addFragmentCollection(
+				groupName = "Test Site Name",
+				name = "Collection Name");
+
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+
+			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
+
+			FragmentsAdmin.addFragment(fragmentName = "Fragment Name");
+
+			var htmlSnippet = '''
+<div class="fragment-name">
+	<div data-lfr-editable-type="date-time" data-lfr-editable-id="date-time">
+	</div>
+</div>''';
+
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
+
+			FragmentsEditor.waitForAutoSave();
+
+			FragmentsEditor.publish();
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Date",
+				fieldName = "Date");
+
+			WebContentStructures.saveCP();
+
+			NavItem.click(navItem = "Web Content");
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(
+				webContentDate = "01/01/2023",
+				webContentTitle = "Web Content Title");
+
+			PortletEntry.publish();
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Collection Name",
+				fragmentName = "Fragment Name");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Fragment Name",
+				id = "date-time");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Web Content Title",
+				navItem = "Web Content");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Date");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("When the page designer localizes the date format") {
+			Select(
+				key_fieldLabel = "Date Format",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "MM/DD/YY");
+
+			PageEditor.waitForAutoSave();
+
+			PageEditor.changeLocale(
+				currentLocale = "en-US",
+				locale = "es-ES");
+
+			Select(
+				key_fieldLabel = "Date Format",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "YY/MM/DD");
+
+			PageEditor.waitForAutoSave();
+
+			PortletEntry.publish();
+		}
+
+		task ("Then the page designer sees the localized date format") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "fragment-name",
+				id = "date-time",
+				text = "01/01/23");
+
+			Navigator.ensureLocaleURL(locale = "es");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "fragment-name",
+				id = "date-time",
+				text = "23/01/01");
+		}
+	}
+
 	@description = "This is a test for LPS-118100. 	Validate if the user can configure other languages to the contributed fragments."
-	@priority = "4"
+	@priority = 4
 	test ViewContributedFragmentLocalization {
 		task ("Add a Heading fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
@@ -52,9 +166,9 @@ definition {
 			var baseURL = PropsUtil.get("portal.url");
 			var currentURL = Navigator.getCurrentURL();
 
-			var localizedURL = StringUtil.replace("${currentURL}", "${baseURL}", "${baseURL}/es");
+			var localizedURL = StringUtil.replace(${currentURL}, ${baseURL}, "${baseURL}/es");
 
-			Navigator.openSpecificURL(url = "${localizedURL}");
+			Navigator.openSpecificURL(url = ${localizedURL});
 		}
 
 		task ("Assert the fragment name is localized") {
@@ -88,7 +202,7 @@ definition {
 
 			for (var fieldSetLabel : list "Espaciado,Texto,Fondo,Bordes,Efectos") {
 				AssertVisible(
-					key_fieldSetLabel = "${fieldSetLabel}",
+					key_fieldSetLabel = ${fieldSetLabel},
 					locator1 = "PageEditor#ITEM_CONFIGURATION_FIELDSET_LABEL");
 			}
 
@@ -96,13 +210,13 @@ definition {
 				AssertTextEquals(
 					ariaLabel = "${fieldLabel} superior",
 					locator1 = "Button#ANY_WITH_ARIA_LABEL",
-					value1 = "0");
+					value1 = 0);
 			}
 
 			AssertTextEquals(
 				key_text = "bold",
 				locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON_TEXT",
-				value1 = "400");
+				value1 = 400);
 
 			AssertSelectedLabel(
 				key_fieldLabel = "Origen de la imagen",
@@ -111,18 +225,18 @@ definition {
 
 			AssertTextEquals(
 				ariaLabel = "Radio del borde",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "0");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 0);
 
 			AssertTextEquals(
 				ariaLabel = "Sombra",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 				value1 = "none");
 		}
 	}
 
 	@description = "This is a test for LPS-118100. View localizable fragment configuration field value in translated languages."
-	@priority = "4"
+	@priority = 4
 	test ViewLocalizableConfigurationFieldValueInTranslatedLanguages {
 		task ("Add a fragment collection via JSON") {
 			JSONFragment.addFragmentCollection(
@@ -149,7 +263,7 @@ definition {
 </div>
 			''';
 
-			FragmentsEditor.typeHtmlEditor(content = "${htmlSnippet}");
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 		}
@@ -160,7 +274,7 @@ definition {
 }
 		''';
 
-			FragmentsEditor.typeCssEditor(content = "${cssSnippet}");
+			FragmentsEditor.typeCssEditor(content = ${cssSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 		}
@@ -190,7 +304,7 @@ definition {
 }
 			''';
 
-			FragmentsEditor.typeConfigurationEditor(content = "${jsonSnippet}");
+			FragmentsEditor.typeConfigurationEditor(content = ${jsonSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 

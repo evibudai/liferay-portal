@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.list.type.service;
@@ -61,12 +52,13 @@ public class ListTypeEntryLocalServiceUtil {
 	}
 
 	public static ListTypeEntry addListTypeEntry(
-			long userId, long listTypeDefinitionId, String key,
+			String externalReferenceCode, long userId,
+			long listTypeDefinitionId, String key,
 			Map<java.util.Locale, String> nameMap)
 		throws PortalException {
 
 		return getService().addListTypeEntry(
-			userId, listTypeDefinitionId, key, nameMap);
+			externalReferenceCode, userId, listTypeDefinitionId, key, nameMap);
 	}
 
 	/**
@@ -98,9 +90,10 @@ public class ListTypeEntryLocalServiceUtil {
 	 *
 	 * @param listTypeEntry the list type entry
 	 * @return the list type entry that was removed
+	 * @throws PortalException
 	 */
-	public static ListTypeEntry deleteListTypeEntry(
-		ListTypeEntry listTypeEntry) {
+	public static ListTypeEntry deleteListTypeEntry(ListTypeEntry listTypeEntry)
+		throws PortalException {
 
 		return getService().deleteListTypeEntry(listTypeEntry);
 	}
@@ -120,6 +113,14 @@ public class ListTypeEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deleteListTypeEntry(listTypeEntryId);
+	}
+
+	public static void deleteListTypeEntryByListTypeDefinitionId(
+			long listTypeDefinitionId)
+		throws PortalException {
+
+		getService().deleteListTypeEntryByListTypeDefinitionId(
+			listTypeDefinitionId);
 	}
 
 	/**
@@ -227,6 +228,14 @@ public class ListTypeEntryLocalServiceUtil {
 		return getService().fetchListTypeEntry(listTypeDefinitionId, key);
 	}
 
+	public static ListTypeEntry fetchListTypeEntryByExternalReferenceCode(
+		String externalReferenceCode, long companyId,
+		long listTypeDefinitionId) {
+
+		return getService().fetchListTypeEntryByExternalReferenceCode(
+			externalReferenceCode, companyId, listTypeDefinitionId);
+	}
+
 	/**
 	 * Returns the list type entry with the matching UUID and company.
 	 *
@@ -290,6 +299,14 @@ public class ListTypeEntryLocalServiceUtil {
 			listTypeDefinitionId, start, end);
 	}
 
+	public static List<ListTypeEntry> getListTypeEntries(
+		long listTypeDefinitionId, int start, int end,
+		OrderByComparator<ListTypeEntry> orderByComparator) {
+
+		return getService().getListTypeEntries(
+			listTypeDefinitionId, start, end, orderByComparator);
+	}
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -321,6 +338,15 @@ public class ListTypeEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getListTypeEntry(listTypeDefinitionId, key);
+	}
+
+	public static ListTypeEntry getListTypeEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId,
+			long listTypeDefinitionId)
+		throws PortalException {
+
+		return getService().getListTypeEntryByExternalReferenceCode(
+			externalReferenceCode, companyId, listTypeDefinitionId);
 	}
 
 	/**
@@ -373,14 +399,20 @@ public class ListTypeEntryLocalServiceUtil {
 	}
 
 	public static ListTypeEntry updateListTypeEntry(
-			long listTypeEntryId, Map<java.util.Locale, String> nameMap)
+			String externalReferenceCode, long listTypeEntryId,
+			Map<java.util.Locale, String> nameMap)
 		throws PortalException {
 
-		return getService().updateListTypeEntry(listTypeEntryId, nameMap);
+		return getService().updateListTypeEntry(
+			externalReferenceCode, listTypeEntryId, nameMap);
 	}
 
 	public static ListTypeEntryLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(ListTypeEntryLocalService service) {
+		_service = service;
 	}
 
 	private static volatile ListTypeEntryLocalService _service;

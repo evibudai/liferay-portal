@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.testray;
@@ -72,8 +63,10 @@ public class TestrayAttachmentRecorder {
 			}
 			else {
 				_recordFailureMessages();
+				_recordGradlePluginsFiles();
 				_recordLiferayLogs();
 				_recordLiferayOSGiLogs();
+				_recordPlaywrightReportFile();
 				_recordPoshiReportFiles();
 				_recordWarnings();
 			}
@@ -95,10 +88,9 @@ public class TestrayAttachmentRecorder {
 
 		_build = build;
 
-		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(
-			_build);
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(build);
 
-		String jobVariant = _build.getParameterValue("JOB_VARIANT");
+		String jobVariant = build.getParameterValue("JOB_VARIANT");
 
 		if (jobVariant == null) {
 			jobVariant = "";
@@ -491,6 +483,28 @@ public class TestrayAttachmentRecorder {
 		}
 	}
 
+	private void _recordGradlePluginsFiles() {
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			_getPortalGitWorkingDirectory();
+
+		File gradlePluginsFile = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(),
+			"tmp/gradle_plugins.tar");
+
+		if (!gradlePluginsFile.exists()) {
+			return;
+		}
+
+		try {
+			JenkinsResultsParserUtil.copy(
+				gradlePluginsFile,
+				new File(_getRecordedFilesBuildDir(), "gradle_plugins.tar"));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
 	private void _recordJenkinsConsole() {
 		File jenkinsConsoleFile = new File(
 			_getRecordedFilesBuildDir(), "jenkins-console.txt");
@@ -664,6 +678,33 @@ public class TestrayAttachmentRecorder {
 		}
 	}
 
+	private void _recordPlaywrightReportFile() {
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			_getPortalGitWorkingDirectory();
+
+		if (portalGitWorkingDirectory != null) {
+			File playwrightReportFile = new File(
+				portalGitWorkingDirectory.getWorkingDirectory(),
+				"modules/test/playwright/playwright-report/index.html");
+
+			if (playwrightReportFile.exists()) {
+				File sourceReportDir = playwrightReportFile.getParentFile();
+
+				File recordedFilesBuildDir = _getRecordedFilesBuildDir();
+
+				try {
+					JenkinsResultsParserUtil.copy(
+						sourceReportDir,
+						new File(
+							recordedFilesBuildDir, sourceReportDir.getName()));
+				}
+				catch (IOException ioException) {
+					throw new RuntimeException(ioException);
+				}
+			}
+		}
+	}
+
 	private void _recordPoshiReportFiles() {
 		PortalGitWorkingDirectory portalGitWorkingDirectory =
 			_getPortalGitWorkingDirectory();
@@ -677,6 +718,16 @@ public class TestrayAttachmentRecorder {
 
 			if (testResultsDir.exists()) {
 				testResultsDirs.add(testResultsDir);
+			}
+
+			File workspaceTestResultsDir = new File(
+				portalGitWorkingDirectory.getWorkingDirectory(),
+				JenkinsResultsParserUtil.combine(
+					"workspaces/", System.getenv("TEST_WORKSPACE_NAME"),
+					"/poshi/test-results"));
+
+			if (workspaceTestResultsDir.exists()) {
+				testResultsDirs.add(workspaceTestResultsDir);
 			}
 		}
 

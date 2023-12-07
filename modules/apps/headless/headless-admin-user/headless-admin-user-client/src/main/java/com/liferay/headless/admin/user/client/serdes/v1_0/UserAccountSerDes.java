@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.client.serdes.v1_0;
@@ -31,7 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -327,6 +317,16 @@ public class UserAccountSerDes {
 			sb.append("\"");
 		}
 
+		if (userAccount.getImageId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"imageId\": ");
+
+			sb.append(userAccount.getImageId());
+		}
+
 		if (userAccount.getJobTitle() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -363,6 +363,34 @@ public class UserAccountSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (userAccount.getLanguageDisplayName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"languageDisplayName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(userAccount.getLanguageDisplayName()));
+
+			sb.append("\"");
+		}
+
+		if (userAccount.getLanguageId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"languageId\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(userAccount.getLanguageId()));
+
+			sb.append("\"");
 		}
 
 		if (userAccount.getLastLoginDate() != null) {
@@ -483,6 +511,20 @@ public class UserAccountSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (userAccount.getStatus() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append("\"");
+
+			sb.append(userAccount.getStatus());
+
+			sb.append("\"");
 		}
 
 		if (userAccount.getUserAccountContactInformation() != null) {
@@ -687,6 +729,13 @@ public class UserAccountSerDes {
 			map.put("image", String.valueOf(userAccount.getImage()));
 		}
 
+		if (userAccount.getImageId() == null) {
+			map.put("imageId", null);
+		}
+		else {
+			map.put("imageId", String.valueOf(userAccount.getImageId()));
+		}
+
 		if (userAccount.getJobTitle() == null) {
 			map.put("jobTitle", null);
 		}
@@ -699,6 +748,22 @@ public class UserAccountSerDes {
 		}
 		else {
 			map.put("keywords", String.valueOf(userAccount.getKeywords()));
+		}
+
+		if (userAccount.getLanguageDisplayName() == null) {
+			map.put("languageDisplayName", null);
+		}
+		else {
+			map.put(
+				"languageDisplayName",
+				String.valueOf(userAccount.getLanguageDisplayName()));
+		}
+
+		if (userAccount.getLanguageId() == null) {
+			map.put("languageId", null);
+		}
+		else {
+			map.put("languageId", String.valueOf(userAccount.getLanguageId()));
 		}
 
 		if (userAccount.getLastLoginDate() == null) {
@@ -754,6 +819,13 @@ public class UserAccountSerDes {
 			map.put("siteBriefs", String.valueOf(userAccount.getSiteBriefs()));
 		}
 
+		if (userAccount.getStatus() == null) {
+			map.put("status", null);
+		}
+		else {
+			map.put("status", String.valueOf(userAccount.getStatus()));
+		}
+
 		if (userAccount.getUserAccountContactInformation() == null) {
 			map.put("userAccountContactInformation", null);
 		}
@@ -795,14 +867,18 @@ public class UserAccountSerDes {
 
 			if (Objects.equals(jsonParserFieldName, "accountBriefs")) {
 				if (jsonParserFieldValue != null) {
-					userAccount.setAccountBriefs(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> AccountBriefSerDes.toDTO((String)object)
-						).toArray(
-							size -> new AccountBrief[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					AccountBrief[] accountBriefsArray =
+						new AccountBrief[jsonParserFieldValues.length];
+
+					for (int i = 0; i < accountBriefsArray.length; i++) {
+						accountBriefsArray[i] = AccountBriefSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					userAccount.setAccountBriefs(accountBriefsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "actions")) {
@@ -836,14 +912,18 @@ public class UserAccountSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
-					userAccount.setCustomFields(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> CustomFieldSerDes.toDTO((String)object)
-						).toArray(
-							size -> new CustomField[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					CustomField[] customFieldsArray =
+						new CustomField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < customFieldsArray.length; i++) {
+						customFieldsArray[i] = CustomFieldSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					userAccount.setCustomFields(customFieldsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dashboardURL")) {
@@ -909,6 +989,12 @@ public class UserAccountSerDes {
 					userAccount.setImage((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "imageId")) {
+				if (jsonParserFieldValue != null) {
+					userAccount.setImageId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "jobTitle")) {
 				if (jsonParserFieldValue != null) {
 					userAccount.setJobTitle((String)jsonParserFieldValue);
@@ -918,6 +1004,19 @@ public class UserAccountSerDes {
 				if (jsonParserFieldValue != null) {
 					userAccount.setKeywords(
 						toStrings((Object[])jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "languageDisplayName")) {
+
+				if (jsonParserFieldValue != null) {
+					userAccount.setLanguageDisplayName(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "languageId")) {
+				if (jsonParserFieldValue != null) {
+					userAccount.setLanguageId((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "lastLoginDate")) {
@@ -935,15 +1034,19 @@ public class UserAccountSerDes {
 						jsonParserFieldName, "organizationBriefs")) {
 
 				if (jsonParserFieldValue != null) {
-					userAccount.setOrganizationBriefs(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> OrganizationBriefSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new OrganizationBrief[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					OrganizationBrief[] organizationBriefsArray =
+						new OrganizationBrief[jsonParserFieldValues.length];
+
+					for (int i = 0; i < organizationBriefsArray.length; i++) {
+						organizationBriefsArray[i] =
+							OrganizationBriefSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
+					userAccount.setOrganizationBriefs(organizationBriefsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "password")) {
@@ -958,26 +1061,41 @@ public class UserAccountSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "roleBriefs")) {
 				if (jsonParserFieldValue != null) {
-					userAccount.setRoleBriefs(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> RoleBriefSerDes.toDTO((String)object)
-						).toArray(
-							size -> new RoleBrief[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					RoleBrief[] roleBriefsArray =
+						new RoleBrief[jsonParserFieldValues.length];
+
+					for (int i = 0; i < roleBriefsArray.length; i++) {
+						roleBriefsArray[i] = RoleBriefSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					userAccount.setRoleBriefs(roleBriefsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "siteBriefs")) {
 				if (jsonParserFieldValue != null) {
-					userAccount.setSiteBriefs(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> SiteBriefSerDes.toDTO((String)object)
-						).toArray(
-							size -> new SiteBrief[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					SiteBrief[] siteBriefsArray =
+						new SiteBrief[jsonParserFieldValues.length];
+
+					for (int i = 0; i < siteBriefsArray.length; i++) {
+						siteBriefsArray[i] = SiteBriefSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					userAccount.setSiteBriefs(siteBriefsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				if (jsonParserFieldValue != null) {
+					userAccount.setStatus(
+						UserAccount.Status.create(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -991,14 +1109,18 @@ public class UserAccountSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "userGroupBriefs")) {
 				if (jsonParserFieldValue != null) {
-					userAccount.setUserGroupBriefs(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> UserGroupBriefSerDes.toDTO((String)object)
-						).toArray(
-							size -> new UserGroupBrief[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					UserGroupBrief[] userGroupBriefsArray =
+						new UserGroupBrief[jsonParserFieldValues.length];
+
+					for (int i = 0; i < userGroupBriefsArray.length; i++) {
+						userGroupBriefsArray[i] = UserGroupBriefSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					userAccount.setUserGroupBriefs(userGroupBriefsArray);
 				}
 			}
 		}

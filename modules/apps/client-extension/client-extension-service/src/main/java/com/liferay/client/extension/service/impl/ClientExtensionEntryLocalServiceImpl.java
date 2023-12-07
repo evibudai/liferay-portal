@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.service.impl;
 
+import com.liferay.client.extension.exception.ClientExtensionEntryNameException;
 import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.client.extension.service.base.ClientExtensionEntryLocalServiceBaseImpl;
@@ -46,6 +38,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -84,22 +77,21 @@ public class ClientExtensionEntryLocalServiceImpl
 			String sourceCodeURL, String type, String typeSettings)
 		throws PortalException {
 
+		_validateName(nameMap);
+		_validateTypeSettings(typeSettings, null, type);
+
 		ClientExtensionEntry clientExtensionEntry =
 			clientExtensionEntryPersistence.create(
 				counterLocalService.increment());
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = clientExtensionEntry.getUuid();
-		}
+		clientExtensionEntry.setExternalReferenceCode(externalReferenceCode);
 
 		User user = _userLocalService.getUser(userId);
 
-		_validateTypeSettings(typeSettings, null, type);
-
-		clientExtensionEntry.setExternalReferenceCode(externalReferenceCode);
 		clientExtensionEntry.setCompanyId(user.getCompanyId());
 		clientExtensionEntry.setUserId(user.getUserId());
 		clientExtensionEntry.setUserName(user.getFullName());
+
 		clientExtensionEntry.setDescription(description);
 		clientExtensionEntry.setNameMap(nameMap);
 		clientExtensionEntry.setProperties(properties);
@@ -188,9 +180,10 @@ public class ClientExtensionEntryLocalServiceImpl
 
 		undeployClientExtensionEntry(clientExtensionEntry);
 
-		_serviceRegistrationsMaps.put(
+		_serviceRegistrationsMap.put(
 			clientExtensionEntry.getClientExtensionEntryId(),
-			_cetDeployer.deploy(_cetFactory.create(clientExtensionEntry)));
+			_cetDeployer.deploy(
+				_cetFactory.create(clientExtensionEntry, true)));
 	}
 
 	@Override
@@ -287,7 +280,7 @@ public class ClientExtensionEntryLocalServiceImpl
 		ClientExtensionEntry clientExtensionEntry) {
 
 		List<ServiceRegistration<?>> serviceRegistrations =
-			_serviceRegistrationsMaps.remove(
+			_serviceRegistrationsMap.remove(
 				clientExtensionEntry.getClientExtensionEntryId());
 
 		if (serviceRegistrations != null) {
@@ -343,19 +336,10 @@ public class ClientExtensionEntryLocalServiceImpl
 			clientExtensionEntryPersistence.findByPrimaryKey(
 				clientExtensionEntryId);
 
-		if (status == clientExtensionEntry.getStatus()) {
+		int oldStatus = clientExtensionEntry.getStatus();
+
+		if (status == oldStatus) {
 			return clientExtensionEntry;
-		}
-
-		if (status == WorkflowConstants.STATUS_APPROVED) {
-			clientExtensionEntryLocalService.deployClientExtensionEntry(
-				clientExtensionEntry);
-		}
-		else if (clientExtensionEntry.getStatus() ==
-					WorkflowConstants.STATUS_APPROVED) {
-
-			clientExtensionEntryLocalService.undeployClientExtensionEntry(
-				clientExtensionEntry);
 		}
 
 		User user = _userLocalService.getUser(userId);
@@ -365,7 +349,19 @@ public class ClientExtensionEntryLocalServiceImpl
 		clientExtensionEntry.setStatusByUserName(user.getFullName());
 		clientExtensionEntry.setStatusDate(new Date());
 
-		return clientExtensionEntryPersistence.update(clientExtensionEntry);
+		clientExtensionEntry = clientExtensionEntryPersistence.update(
+			clientExtensionEntry);
+
+		if (status == WorkflowConstants.STATUS_APPROVED) {
+			clientExtensionEntryLocalService.deployClientExtensionEntry(
+				clientExtensionEntry);
+		}
+		else if (oldStatus == WorkflowConstants.STATUS_APPROVED) {
+			clientExtensionEntryLocalService.undeployClientExtensionEntry(
+				clientExtensionEntry);
+		}
+
+		return clientExtensionEntry;
 	}
 
 	private void _addResources(ClientExtensionEntry clientExtensionEntry)
@@ -462,6 +458,14 @@ public class ClientExtensionEntryLocalServiceImpl
 			clientExtensionEntry, serviceContext, new HashMap<>());
 	}
 
+	private void _validateName(Map<Locale, String> nameMap)
+		throws PortalException {
+
+		if (Validator.isBlank(nameMap.get(LocaleUtil.getDefault()))) {
+			throw new ClientExtensionEntryNameException();
+		}
+	}
+
 	private void _validateTypeSettings(
 			String newTypeSettings, String oldTypeSettings, String type)
 		throws PortalException {
@@ -505,7 +509,7 @@ public class ClientExtensionEntryLocalServiceImpl
 	private ResourceLocalService _resourceLocalService;
 
 	private final Map<Long, List<ServiceRegistration<?>>>
-		_serviceRegistrationsMaps = new ConcurrentHashMap<>();
+		_serviceRegistrationsMap = new ConcurrentHashMap<>();
 
 	@Reference
 	private UserLocalService _userLocalService;

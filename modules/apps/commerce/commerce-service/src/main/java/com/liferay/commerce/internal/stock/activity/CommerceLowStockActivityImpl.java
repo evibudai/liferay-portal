@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.stock.activity;
@@ -19,8 +10,11 @@ import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.stock.activity.CommerceLowStockActivity;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.language.LanguageUtil;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -59,10 +53,24 @@ public class CommerceLowStockActivityImpl implements CommerceLowStockActivity {
 		return _language.get(locale, "set-as-unpublished");
 	}
 
+	@Override
+	public Map<Locale, String> getLabelMap() {
+		Map<Locale, String> labelMap = new HashMap<>();
+
+		for (Locale locale : _languageUtil.getAvailableLocales()) {
+			labelMap.put(locale, getLabel(locale));
+		}
+
+		return labelMap;
+	}
+
 	@Reference
 	private CPInstanceLocalService _cpInstanceLocalService;
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private LanguageUtil _languageUtil;
 
 }

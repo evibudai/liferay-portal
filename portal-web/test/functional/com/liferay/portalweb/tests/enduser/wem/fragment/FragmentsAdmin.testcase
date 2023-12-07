@@ -1,45 +1,41 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	var siteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 	}
 
 	@description = "This is a test for LPS-90063. Images can be uploaded and deleted in the resources folder in a fragment collection."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test AddAndDeleteResource {
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
 		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -53,23 +49,25 @@ definition {
 		}
 
 		task ("View resource") {
-			FragmentsAdmin.viewEntryPresent(entry = "Document_1.png");
+			FragmentsAdmin.viewEntryPresent(entry = "Document_1");
 		}
 
 		task ("Delete resource") {
-			FragmentsAdmin.deleteResource(entry = "Document_1.png");
+			FragmentsAdmin.deleteResource(entry = "Document_1");
 		}
 
 		task ("View no resource") {
-			FragmentsAdmin.viewEntryNotPresent(entry = "Document_1.png");
+			FragmentsAdmin.viewEntryNotPresent(entry = "Document_1");
 		}
 	}
 
 	@description = "This is a test for LPS-166203. The site designer could add fragment set during copy OOTB fragment when the site doesn't have fragment set."
-	@priority = "5"
+	@priority = 5
 	test AddFirstFragmentSetWhenCopyContributedFragment {
+		property portal.acceptance = "true";
+
 		task ("Given a site designer navigates to the Fragments admin of a new site") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 		}
 
 		task ("When the site designer copies the Button fragment from Basic Components fragment set") {
@@ -92,7 +90,7 @@ definition {
 
 			Modal.save();
 
-			Alert.viewSuccessMessageText(successMessage = "The fragment has been copied successfully.");
+			Alert.viewSuccessMessageText(successMessage = "The fragment was copied successfully.");
 
 			MenuBar.viewActive(menuBar = "Untitled Set");
 
@@ -101,19 +99,17 @@ definition {
 	}
 
 	@description = "This is a test for LPS-159235. Add folders to fragment resource and check hints."
-	@priority = "4"
+	@priority = 4
 	test AddFoldersToResourceAndCheckHints {
-		property custom.properties = "feature.flag.LPS-158675=true";
-
 		task ("When user is in resources tab") {
 			task ("Add a fragment collection") {
 				JSONFragment.addFragmentCollection(
-					groupName = "Test Site Name",
+					groupName = ${randomSiteName},
 					name = "Collection Name");
 			}
 
 			task ("Navigate to the fragment collection") {
-				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 				FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 			}
@@ -169,7 +165,7 @@ definition {
 
 				Type.sendKeysAceEditor(
 					locator1 = "FragmentEditor#HTML_EDITOR_CONTENT",
-					value1 = "${htmlSnippet}");
+					value1 = ${htmlSnippet});
 			}
 
 			task ("Assert there is a hint for resources with path") {
@@ -179,7 +175,7 @@ definition {
 			}
 
 			task ("Add a resource to sub folder") {
-				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 				FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
@@ -201,7 +197,7 @@ definition {
 
 				Type.sendKeysAceEditor(
 					locator1 = "FragmentEditor#HTML_EDITOR_CONTENT",
-					value1 = "${htmlSnippet}");
+					value1 = ${htmlSnippet});
 			}
 
 			task ("Assert there is a hint for resources with path") {
@@ -213,17 +209,17 @@ definition {
 	}
 
 	@description = "This is a test for LPS-97184. The user could add a fragment via UI."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test AddFragment {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		task ("Navigate to fragments admin") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 		}
 
 		task ("Add a fragment collection") {
@@ -260,14 +256,16 @@ definition {
 	}
 
 	@description = "This is a test for LPS-166203. The site designer could save in new set during copy OOTB fragment when the site has fragment sets."
-	@priority = "5"
+	@priority = 5
 	test AddNewFragmentSetWhenCopyContributedFragment {
+		property portal.acceptance = "true";
+
 		task ("Given a site designer has a fragment set") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Set Name");
 
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 		}
 
 		task ("When the site designer copies the Button fragment from Basic Components fragment set") {
@@ -298,7 +296,7 @@ definition {
 
 			Modal.save();
 
-			Alert.viewSuccessMessageText(successMessage = "The fragment has been copied successfully.");
+			Alert.viewSuccessMessageText(successMessage = "The fragment was copied successfully.");
 
 			MenuBar.viewActive(menuBar = "Untitled Set");
 
@@ -307,14 +305,14 @@ definition {
 	}
 
 	@description = "Fragments that are being used cannot be deleted."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test CannotDeleteFragmentInUse {
 		property portal.acceptance = "true";
 
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
@@ -322,12 +320,12 @@ definition {
 			JSONFragment.addSection(
 				collectionName = "Collection Name",
 				fragmentStatus = "Approved",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Name");
 		}
 
 		task ("Add a page template collection") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			PageTemplatesAdmin.addCollection(collectionName = "Page Template Collection");
 		}
@@ -345,7 +343,7 @@ definition {
 		}
 
 		task ("Navigate to fragments admin") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 		}
 
 		task ("Navigate to the fragment collection") {
@@ -362,19 +360,19 @@ definition {
 	}
 
 	@description = "This is a test for LPS-101354, LPS-89115 and LPS-166203. The contributed fragments can be copied."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test CopyContributedFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Set Name");
 		}
 
 		task ("Navigate to the Fragments admin") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 		}
 
 		task ("Copy the Button fragment to new fragment collection") {
@@ -395,26 +393,26 @@ definition {
 	}
 
 	@description = "This is a test for LPS-90064 and is a supplementary frontend test to the integration tests in LPS-90307. Fragments can be copied."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test CopyFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
 		task ("Add a fragment") {
 			JSONFragment.addSection(
 				collectionName = "Collection Name",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Name");
 		}
 
 		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -426,7 +424,7 @@ definition {
 		}
 
 		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -437,26 +435,26 @@ definition {
 	}
 
 	@description = "Fragments can be deleted."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test DeleteFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
 		task ("Add a fragment") {
 			JSONFragment.addSection(
 				collectionName = "Collection Name",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Name");
 		}
 
 		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -466,7 +464,7 @@ definition {
 		}
 
 		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -477,19 +475,19 @@ definition {
 	}
 
 	@description = "Fragment collections can be deleted."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test DeleteFragmentCollection {
 		property portal.acceptance = "true";
 
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
 		task ("Navigate to the fragments admin") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 		}
 
 		task ("Delete the fragment collection") {
@@ -497,7 +495,7 @@ definition {
 		}
 
 		task ("Navigate to fragments admin") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 		}
 
 		task ("Assert the fragment collection is not present") {
@@ -506,19 +504,19 @@ definition {
 	}
 
 	@description = "Edit a fragment and assert the edits persist."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test EditFragment {
 		property portal.acceptance = "true";
 
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
 		task ("Add a fragment with the Button fragment codes") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
@@ -540,7 +538,7 @@ definition {
 		}
 
 		task ("Edit the fragment with the Title fragment codes") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
@@ -570,12 +568,70 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-177286. Able to enable and disable the propagation of Contributed Fragments on the instance startup."
+	@priority = 4
+	test ManuallyPropagateChanges {
+		task ("Given a site administrator accesses to the Page Fragments configuration of Instance Settings") {
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "Page Fragments",
+				configurationName = "Page Fragments",
+				configurationScope = "Virtual Instance Scope");
+		}
+
+		task ("When the site administrater unchecks the Propagate Default Fragments Changes During Deploy Process Automatically") {
+			FormFields.disableCheckbox(fieldName = "Propagate Default Fragments Changes During Deploy Process Automatically");
+
+			PortletEntry.save();
+		}
+
+		task ("Then the site administrater could cancel manually propagate changes") {
+			Button.click(button = "Propagate Changes");
+
+			Click(
+				key_text = "Cancel",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
+		}
+
+		task ("When the site administrater manually propagate changes") {
+			Button.click(button = "Propagate Changes");
+
+			Click(
+				key_text = "Continue",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then the Propagate changes button is disabled") {
+			AssertNotEditable(
+				key_text = "Propagate Changes",
+				locator1 = "Button#ANY");
+		}
+
+		task ("When restart the portal") {
+			Portlet.shutdownServer();
+
+			Portlet.startServer(deleteLiferayHome = "false");
+		}
+
+		task ("Then the Propagate changes button is enabled") {
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "Page Fragments",
+				configurationName = "Page Fragments",
+				configurationScope = "Virtual Instance Scope");
+
+			AssertEditable(
+				key_text = "Propagate Changes",
+				locator1 = "Button#ANY");
+		}
+	}
+
 	@description = "This is a test for LPS-118241. The user could propagate the changes of fragment to content page."
-	@priority = "4"
+	@priority = 4
 	test PropagateChangesOfFragmentToContentPage {
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
@@ -585,14 +641,14 @@ definition {
 			JSONFragment.addSection(
 				collectionName = "Collection Name",
 				fragmentStatus = "Approved",
-				groupName = "Test Site Name",
-				html = "${htmlSnippet}",
+				groupName = ${randomSiteName},
+				html = ${htmlSnippet},
 				name = "Test Fragment Name");
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Content Page Name",
 				type = "content");
 		}
@@ -600,7 +656,7 @@ definition {
 		task ("Add a new fragment to the page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
@@ -619,7 +675,7 @@ definition {
 		task ("View the inline text of new fragment at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			ContentPages.viewFragmentText(
 				fragmentName = "test-fragment-name",
@@ -628,7 +684,7 @@ definition {
 		}
 
 		task ("Edit the new fragment") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
@@ -642,7 +698,7 @@ definition {
 	<h2 data-lfr-editable-id="title2" data-lfr-editable-type="rich-text"></h2>
 </div>		''';
 
-			FragmentsEditor.typeHtmlEditor(content = "${htmlSnippet}");
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 
@@ -660,7 +716,7 @@ definition {
 		task ("View the changes of fragment at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			for (var n : list "1,2") {
 				ContentPages.viewFragmentText(
@@ -673,7 +729,7 @@ definition {
 		task ("View the changes of fragment at edit mode") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			for (var n : list "1,2") {
 				PageEditor.viewFragmentEditableText(
@@ -685,11 +741,11 @@ definition {
 	}
 
 	@description = "LPS-79349 - User can propagate the changes of fragment to page templates."
-	@priority = "3"
+	@priority = 3
 	test PropagateChangesOfFragmentToPageTemplates {
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
@@ -699,20 +755,20 @@ definition {
 			JSONFragment.addSection(
 				collectionName = "Collection Name",
 				fragmentStatus = "Approved",
-				groupName = "Test Site Name",
-				html = "${htmlSnippet}",
+				groupName = ${randomSiteName},
+				html = ${htmlSnippet},
 				name = "Test Fragment Name");
 		}
 
 		task ("Add a page template collection") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection");
 		}
 
 		task ("Add a new content page template") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutPageTemplateCollectionName = "Page Template Collection",
 				layoutPageTemplateEntryName = "Page Template Name",
 				layoutPageTemplateStatus = "Draft",
@@ -720,7 +776,7 @@ definition {
 		}
 
 		task ("Add the new fragment to content page template") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -735,7 +791,7 @@ definition {
 
 		task ("View the inline text of new fragment at edit mode") {
 			AssertTextEquals(
-				index = "1",
+				index = 1,
 				key_fragmentName = "Test Fragment Name",
 				locator1 = "Fragment#FRAGMENT_CONTENT",
 				value1 = "TEST");
@@ -744,7 +800,7 @@ definition {
 		}
 
 		task ("Edit the new fragment") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
@@ -754,7 +810,7 @@ definition {
 
 			var htmlSnippet = '''<div>EDITED</div>''';
 
-			FragmentsEditor.typeHtmlEditor(content = "${htmlSnippet}");
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 
@@ -770,7 +826,7 @@ definition {
 		}
 
 		task ("View the edited inline text of new fragment at edit mode") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
@@ -779,7 +835,7 @@ definition {
 			PageEditor.assertFragmentSidebarLoaded();
 
 			AssertTextEquals(
-				index = "1",
+				index = 1,
 				key_fragmentName = "Test Fragment Name",
 				locator1 = "Fragment#FRAGMENT_CONTENT",
 				value1 = "EDITED");
@@ -787,12 +843,12 @@ definition {
 	}
 
 	@description = "Fragments can be renamed."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test RenameFragment {
 		task ("Add a fragment collection") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Collection Name");
 		}
 
@@ -800,12 +856,12 @@ definition {
 			JSONFragment.addSection(
 				collectionName = "Collection Name",
 				fragmentStatus = "Approved",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Name");
 		}
 
 		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -821,7 +877,7 @@ definition {
 		}
 
 		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -832,13 +888,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-89115. Can see contributed fragment collections in fragment administration"
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test ViewContributedFragmentCollections {
 		property portal.acceptance = "true";
 
 		task ("View the Button fragment of Basic Components collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Basic Components");
 
@@ -852,23 +908,213 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-180331. The new site should inherit form fragment displayed by default per field type from the global site."
+	@priority = 4
+	test ViewDefaultFormFragmentOfTextFieldAddedInGlobalSiteInheritesInNewSite {
+		task ("Given a Text Input fragment copied from Form Components in global site") {
+			task ("Add a fragment set") {
+				JSONFragment.addFragmentCollection(
+					groupName = "Global",
+					name = "Fragment Set Name");
+			}
+
+			task ("Navigate to the fragments admin") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "Global");
+			}
+
+			task ("Copy the Text Input fragment from Form Components to new fragment set") {
+				FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
+
+				FragmentsAdminNavigator.gotoEntryEllipsisItem(
+					entry = "Text Input",
+					item = "Copy To",
+					specificFormFragment = "true");
+
+				FragmentsAdmin.selectCollection(collectionName = "Fragment Set Name");
+			}
+		}
+
+		task ("When configure default form fragment by default for Text field type") {
+			task ("Navigate to the configuration page via ellipsis button on control menu") {
+				LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
+			}
+
+			task ("Open the Select Fragment modal for Text field type") {
+				Click(
+					key_tableEntry = "Text",
+					key_text = "Select",
+					locator1 = "LexiconTable#TABLE_ENTRY_BUTTON");
+			}
+
+			task ("View two tabs shown on modal, Default, Global") {
+				SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+				for (var navItem : list "Default,Global") {
+					AssertVisible(
+						key_navItem = ${navItem},
+						locator1 = "NavBar#NAV_ITEM_LINK");
+				}
+			}
+
+			task ("Select the copy of fragment from global site") {
+				Click(
+					key_navItem = "Global",
+					locator1 = "NavBar#NAV_ITEM_LINK");
+
+				LexiconCard.clickCardTitle(card = "Fragment Set Name");
+
+				LexiconCard.clickCard(card = "Text Input (Copy)");
+			}
+		}
+
+		task ("Then assert the copy of fragment is shown in Form Fragment selector for Text field type") {
+			task ("View the copy of fragment is shown in Form Fragment selector for Text field type") {
+				SelectFrameTop();
+
+				FragmentsAdmin.viewFormFragementForEachFieldType(
+					fieldType = "Text",
+					formFragmentName = "Text Input (Copy)");
+			}
+
+			task ("Save and back to fragment admin configuration") {
+				Button.clickSave();
+
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+
+				LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
+			}
+
+			task ("View the copy of fragment is shown in Form Fragment selector for Text field type") {
+				FragmentsAdmin.viewFormFragementForEachFieldType(
+					fieldType = "Text",
+					formFragmentName = "Text Input (Copy)");
+			}
+		}
+	}
+
+	@description = "This is a test for LPS-180331. The site administrator could select the form fragment displayed by default per field type in normal site."
+	@priority = 4
+	test ViewDefaultFormFragmentOfTextFieldChangedInNormalSite {
+		task ("Given a Text Input fragment copied from Form Components in normal site") {
+			task ("Add a fragment set") {
+				JSONFragment.addFragmentCollection(
+					groupName = ${randomSiteName},
+					name = "Fragment Set Name");
+			}
+
+			task ("Navigate to the fragments admin") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+			}
+
+			task ("Copy the Text Input fragment from Form Components to new fragment set") {
+				FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
+
+				FragmentsAdminNavigator.gotoEntryEllipsisItem(
+					entry = "Text Input",
+					item = "Copy To",
+					specificFormFragment = "true");
+
+				FragmentsAdmin.selectCollection(collectionName = "Fragment Set Name");
+			}
+		}
+
+		task ("When configure default form fragment by default for Text field type") {
+			task ("Navigate to the configuration page via ellipsis button on control menu") {
+				LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
+			}
+
+			task ("View the default form fragment displayed by default for each field type") {
+				var fieldTypeList = "Boolean,Date,File,HTML,Long Text,Multiselect,Number,Relationship,Select,Text,Submit Button";
+				var formFragmentNameList = "Checkbox,Date,File Upload,Rich Text Input,Textarea,Multiselect List,Numeric Input,Select from List,Select from List,Text Input,Submit Button";
+				var i = 0;
+				var list1 = ListUtil.newListFromString(${fieldTypeList});
+				var list2 = ListUtil.newListFromString(${formFragmentNameList});
+				var size = ListUtil.size(${list1});
+
+				while (${i} != ${size}) {
+					var fieldType = ListUtil.get(${list1}, ${i});
+					var formFragmentName = ListUtil.get(${list2}, ${i});
+
+					FragmentsAdmin.viewFormFragementForEachFieldType(
+						fieldType = ${fieldType},
+						formFragmentName = ${formFragmentName});
+
+					var i = ${i} + 1;
+
+					var i = StringUtil.valueOf(${i});
+				}
+			}
+
+			task ("Open the Select Fragment modal for Text field type") {
+				Click(
+					key_tableEntry = "Text",
+					key_text = "Select",
+					locator1 = "LexiconTable#TABLE_ENTRY_BUTTON");
+			}
+
+			task ("View three tabs shown on modal, Default, Global and current site") {
+				SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+				for (var navItem : list "Default,Global,${randomSiteName}") {
+					AssertVisible(
+						key_navItem = ${navItem},
+						locator1 = "NavBar#NAV_ITEM_LINK");
+				}
+			}
+
+			task ("Select the copy of fragment from current site") {
+				Click(
+					key_navItem = ${randomSiteName},
+					locator1 = "NavBar#NAV_ITEM_LINK");
+
+				LexiconCard.clickCardTitle(card = "Fragment Set Name");
+
+				LexiconCard.clickCard(card = "Text Input (Copy)");
+			}
+		}
+
+		task ("Then assert the copy of fragment is shown in Form Fragment selector for Text field type") {
+			task ("View the copy of fragment is shown in Form Fragment selector for Text field type") {
+				SelectFrameTop();
+
+				FragmentsAdmin.viewFormFragementForEachFieldType(
+					fieldType = "Text",
+					formFragmentName = "Text Input (Copy)");
+			}
+
+			task ("Save and back to fragment admin configuration") {
+				Button.clickSave();
+
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+
+				LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
+			}
+
+			task ("View the copy of fragment is shown in Form Fragment selector for Text field type") {
+				FragmentsAdmin.viewFormFragementForEachFieldType(
+					fieldType = "Text",
+					formFragmentName = "Text Input (Copy)");
+			}
+		}
+	}
+
 	@description = "This is a test for LPS-145292. The user could view new icons on dropdown menu of fragment."
-	@priority = "4"
+	@priority = 4
 	test ViewDropdownMenuIconsInFragmentsAdmin {
 		task ("Given a Fragments creator has a new Fragment Set and custom fragment") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "New Fragment Set Name");
 
 			JSONFragment.addSection(
 				collectionName = "New Fragment Set Name",
 				fragmentStatus = "Approved",
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Name");
 		}
 
 		task ("When the Fragments creator opens the dropdown menu of custom fragment") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			Click.waitForMenuToggleJSClick(
 				key_card = "Fragment Name",
@@ -876,7 +1122,7 @@ definition {
 		}
 
 		task ("Then the Fragments creator can see the new icons on the dropdown menu of custom fragment") {
-			DropdownMenuItem.viewIcon(iconList = "pencil,change,upload,copy,move-folder,trash");
+			DropdownMenuItem.viewIcon(iconList = "pencil,change,export,copy,move-folder,trash");
 		}
 
 		task ("When the Fragments creator opens the dropdown menu of custom fragment set") {
@@ -886,7 +1132,7 @@ definition {
 		}
 
 		task ("Then the Fragments creator can see the new icons on the dropdown menu of custom fragment set") {
-			DropdownMenuItem.viewIcon(iconList = "pencil,upload,import,trash");
+			DropdownMenuItem.viewIcon(iconList = "pencil,export,import,trash");
 		}
 
 		task ("When the Fragments creator opens the dropdown menu on the Fragment Sets") {
@@ -894,7 +1140,7 @@ definition {
 		}
 
 		task ("Then the Fragments creator can see the new icons on the dropdown menu of Framents Sets") {
-			DropdownMenuItem.viewIcon(iconList = "upload,import,trash");
+			DropdownMenuItem.viewIcon(iconList = "export,import,trash");
 		}
 
 		task ("When the Fragments creator opens the dropdown menu of management toolbar after selecting the new fragment") {
@@ -904,21 +1150,293 @@ definition {
 		}
 
 		task ("Then the Fragments creator can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "upload,copy,move-folder,trash");
+			DropdownMenuItem.viewIcon(iconList = "export,copy,move-folder,trash");
+		}
+	}
+
+	@description = "This is a test for LPS-177286. View error alert and feedback message when failing to Propagate Contributed Fragments Changes During Deploy Process Automatically."
+	@priority = 3
+	test ViewErrorMessageWhenFailToPropagateChanges {
+		task ("Given a site administrator unchecks the Propagate Default Fragments Changes During Deploy Process Automatically") {
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "Page Fragments",
+				configurationName = "Page Fragments",
+				configurationScope = "Virtual Instance Scope");
+
+			FormFields.disableCheckbox(fieldName = "Propagate Default Fragments Changes During Deploy Process Automatically");
+
+			PortletEntry.save();
+		}
+
+		// Intercept request wait for POSHI-464 implemented
+
+		//task ("When the site administrater fails to manually propagate changes") {
+		//	Button.click(button = "Propagate Changes");
+		//	Click(
+		//		key_text = "Continue",
+		//		locator1 = "Modal#MODAL_FOOTER_BUTTON");
+		//}
+		//task ("Then the site administrater should see error message") {
+		//	Alert.viewErrorMessage();
+		//}
+
+		task ("When the site administrater manually propagates changes") {
+			Button.click(button = "Propagate Changes");
+
+			Click(
+				key_text = "Continue",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
+		}
+
+		task ("Then the site administrater should see success message") {
+			Alert.viewSuccessMessage();
+
+			AssertNotEditable(
+				key_text = "Propagate Changes",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "This is a test for LPS-180331. The site administrator should see the link for configuration of the form fragments when configure a published form fragment."
+	@priority = 4
+	test ViewLinkForConfigurationWhenConfigureFormFragment {
+		task ("Given a Text Input fragment from Form Components in normal site") {
+			task ("Add a fragment set") {
+				JSONFragment.addFragmentCollection(
+					groupName = ${randomSiteName},
+					name = "Fragment Set Name");
+			}
+
+			task ("Navigate to the fragments admin") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+			}
+
+			task ("Copy the Text Input fragment from Form Components to new fragment set") {
+				FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
+
+				FragmentsAdminNavigator.gotoEntryEllipsisItem(
+					entry = "Text Input",
+					item = "Copy To",
+					specificFormFragment = "true");
+
+				FragmentsAdmin.selectCollection(collectionName = "Fragment Set Name");
+			}
+		}
+
+		task ("When go to edit the copy of fragment's configuration") {
+			FragmentsAdminNavigator.gotoEntryEllipsisItem(
+				entry = "Text Input (Copy)",
+				item = "Edit");
+
+			FragmentsEditor.gotoConfigurationTab();
+		}
+
+		task ("Then view the link for configuration of the form fragments") {
+			task ("Click the link Define the default form fragments for this site") {
+				Click(
+					key_text = "Define the default form fragments for this site.",
+					locator1 = "Link#ANY");
+			}
+
+			task ("View the configuration page of form fragments shown in a new tab") {
+				SelectWindow.selectPopUp(value1 = "null");
+
+				ControlMenu.viewHeaderTitle(headerTitle = "Fragment Configuration");
+
+				Close.closeWindow();
+			}
+
+			task ("Add a draft form fragment for Text field type") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+
+				FragmentsAdmin.addFragment(
+					fragmentName = "Draft Form Fragment Name",
+					fragmentType = "Form Fragment",
+					supportedFieldTypes = "Text");
+			}
+
+			task ("Navigate to the configuration page via ellipsis button on control menu") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+
+				FragmentsAdminNavigator.gotoCollection(collectionName = "Fragment Set Name");
+
+				FragmentsAdminNavigator.gotoEntryEllipsisItem(
+					entry = "Draft Form Fragment Name",
+					item = "Edit");
+
+				FragmentsEditor.gotoConfigurationTab();
+			}
+
+			task ("View the link Define the default form fragments for this site not shown") {
+				AssertElementNotPresent(
+					key_text = "Define the default form fragments for this site.",
+					locator1 = "Link#ANY");
+			}
+		}
+	}
+
+	@description = "This is a test for LPS-180331. The site administrator should only see published form fragments in form fragment selector."
+	@priority = 4
+	test ViewOnlyPublishedFormFragmentdDisplayInFromFragmentSelector {
+		task ("Given a Text Input fragment copied from Form Components in normal site") {
+			task ("Add a fragment set") {
+				JSONFragment.addFragmentCollection(
+					groupName = ${randomSiteName},
+					name = "Fragment Set Name");
+			}
+
+			task ("Navigate to the fragments admin") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+			}
+
+			task ("Copy the Text Input fragment from Form Components to new fragment set") {
+				FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
+
+				FragmentsAdminNavigator.gotoEntryEllipsisItem(
+					entry = "Text Input",
+					item = "Copy To",
+					specificFormFragment = "true");
+
+				FragmentsAdmin.selectCollection(collectionName = "Fragment Set Name");
+			}
+		}
+
+		task ("When add a draft form fragment and a published basic fragment") {
+			task ("Add a draft form fragment for Text field type") {
+				FragmentsAdmin.addFragment(
+					fragmentName = "Draft Form Fragment Name",
+					fragmentType = "Form Fragment",
+					supportedFieldTypes = "Text");
+			}
+
+			task ("Add a fragment collection") {
+				JSONFragment.addFragmentCollection(
+					groupName = ${randomSiteName},
+					name = "Collection Name");
+			}
+
+			task ("Add a published basic fragment") {
+				JSONFragment.addSection(
+					collectionName = "Collection Name",
+					fragmentStatus = "Approved",
+					groupName = ${randomSiteName},
+					name = "Basic Fragment Name");
+			}
+		}
+
+		task ("Then only the copy of fragment is available in form fragment selector") {
+			task ("Navigate to the fragments admin") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+			}
+
+			task ("Navigate to the configuration page via ellipsis button on control menu") {
+				LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
+			}
+
+			task ("Open the Select Fragment modal for Text field type") {
+				Click(
+					key_tableEntry = "Text",
+					key_text = "Select",
+					locator1 = "LexiconTable#TABLE_ENTRY_BUTTON");
+			}
+
+			task ("View only the copy of fragment is available in form fragment selector") {
+				SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+				Click(
+					key_navItem = ${randomSiteName},
+					locator1 = "NavBar#NAV_ITEM_LINK");
+
+				LexiconCard.clickCardTitle(card = "Fragment Set Name");
+
+				LexiconCard.viewCardPresent(card = "Text Input (Copy)");
+
+				LexiconCard.viewCardNotPresent(card = "Draft Form Fragment Name");
+
+				Click(
+					key_navItem = ${randomSiteName},
+					locator1 = "NavBar#NAV_ITEM_LINK");
+
+				LexiconCard.viewCardNotPresent(card = "Collection Name");
+			}
+		}
+	}
+
+	@description = "This is a test for LPS-180331. The site administrator should only see same type form fragments in form fragment selector."
+	@priority = 4
+	test ViewOnlySameTypeFormFragmentdDisplayInFromFragmentSelector {
+		task ("Given a Text Input fragment and a Checkbox fragment copied from Form Components in normal site") {
+			task ("Add a fragment set") {
+				JSONFragment.addFragmentCollection(
+					groupName = ${randomSiteName},
+					name = "Fragment Set Name");
+			}
+
+			task ("Navigate to the fragments admin") {
+				FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
+			}
+
+			task ("Copy the Text Input fragment from Form Components to new fragment set") {
+				FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
+
+				FragmentsAdminNavigator.gotoEntryEllipsisItem(
+					entry = "Text Input",
+					item = "Copy To",
+					specificFormFragment = "true");
+
+				FragmentsAdmin.selectCollection(collectionName = "Fragment Set Name");
+
+				FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
+
+				FragmentsAdminNavigator.gotoEntryEllipsisItem(
+					entry = "Checkbox",
+					item = "Copy To");
+
+				FragmentsAdmin.selectCollection(collectionName = "Fragment Set Name");
+			}
+		}
+
+		task ("When navigate to the configuration page via ellipsis button on control menu") {
+			LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
+		}
+
+		task ("Then view only same type form fragments display in form fragment selector") {
+			task ("Open the Select Fragment modal for Text field type") {
+				Click(
+					key_tableEntry = "Text",
+					key_text = "Select",
+					locator1 = "LexiconTable#TABLE_ENTRY_BUTTON");
+			}
+
+			task ("Select the copy of fragment from current site") {
+				SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+				Click(
+					key_navItem = ${randomSiteName},
+					locator1 = "NavBar#NAV_ITEM_LINK");
+
+				LexiconCard.clickCardTitle(card = "Fragment Set Name");
+
+				LexiconCard.viewCardPresent(card = "Text Input (Copy)");
+
+				LexiconCard.viewCardNotPresent(card = "Checkbox (Copy)");
+			}
 		}
 	}
 
 	@description = "This is a test for LPS-168163. The fragment developer could see the usages of basic fragment."
-	@priority = "5"
+	@priority = 5
 	test ViewUsagesOfBasicFragment {
+		property portal.acceptance = "true";
+
 		task ("Given a fragment developer has a fragment set") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Set Name");
 		}
 
 		task ("When the fragment developer adds a new basic fragment") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Fragment Set Name");
 
@@ -929,7 +1447,7 @@ definition {
     Fragment Example
 </div>''';
 
-			FragmentsEditor.typeHtmlEditor(content = "${htmlSnippet}");
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 
@@ -937,7 +1455,7 @@ definition {
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 0") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -952,13 +1470,13 @@ definition {
 
 		task ("When the fragment developer adds a new fragment into page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Fragment Set Name",
@@ -966,7 +1484,7 @@ definition {
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 1") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -978,20 +1496,20 @@ definition {
 
 			AssertElementPresent(
 				locator1 = "AssetLists#ASSET_LIST_USAGES",
-				usageAmount = "1",
+				usageAmount = 1,
 				usageType = "All");
 		}
 
 		task ("When the fragment developer publishes the page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.publish();
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 2") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -1000,8 +1518,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-168163. The fragment developer could see the usages of form fragment."
-	@priority = "5"
+	@priority = 5
 	test ViewUsagesOfFormFragment {
+		property portal.acceptance = "true";
+
 		task ("Given a fragment developer has a custom object with Text field") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Purchase Order",
@@ -1021,10 +1541,10 @@ definition {
 
 		task ("When the fragment developer adds a new form fragment with Text field") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Set Name");
 
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Fragment Set Name");
 
@@ -1046,7 +1566,7 @@ definition {
 	</div>
 </div>''';
 
-			FragmentsEditor.typeHtmlEditor(content = "${htmlSnippet}");
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 
@@ -1059,7 +1579,7 @@ if (layoutMode === 'edit') {
 	}
 }''';
 
-			FragmentsEditor.typeJsEditor(content = "${jsSnippet}");
+			FragmentsEditor.typeJsEditor(content = ${jsSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 
@@ -1083,7 +1603,7 @@ if (layoutMode === 'edit') {
 	]
 }''';
 
-			FragmentsEditor.typeConfigurationEditor(content = "${jsonSnippet}");
+			FragmentsEditor.typeConfigurationEditor(content = ${jsonSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 
@@ -1091,7 +1611,7 @@ if (layoutMode === 'edit') {
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 0") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -1106,13 +1626,13 @@ if (layoutMode === 'edit') {
 
 		task ("When the fragment developer adds a new fragment into a Form Container") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Form Components",
@@ -1135,7 +1655,7 @@ if (layoutMode === 'edit') {
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 1") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -1147,20 +1667,20 @@ if (layoutMode === 'edit') {
 
 			AssertElementPresent(
 				locator1 = "AssetLists#ASSET_LIST_USAGES",
-				usageAmount = "1",
+				usageAmount = 1,
 				usageType = "All");
 		}
 
 		task ("When the fragment developer publishes the page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.publish();
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 2") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -1171,14 +1691,14 @@ if (layoutMode === 'edit') {
 	}
 
 	@description = "This is a test for LPS-168163. The fragment developer could see the usages of fragment used in fragment composition."
-	@priority = "4"
+	@priority = 4
 	test ViewUsagesOfFragmentUsedInFragmentComposition {
 		task ("Given a fragment developer has a fragment composition with a new fragment") {
 			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				name = "Fragment Set Name");
 
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Fragment Set Name");
 
@@ -1189,20 +1709,20 @@ if (layoutMode === 'edit') {
     Fragment Example
 </div>''';
 
-			FragmentsEditor.typeHtmlEditor(content = "${htmlSnippet}");
+			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
 
 			FragmentsEditor.waitForAutoSave();
 
 			FragmentsEditor.publish();
 
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name 1",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 1",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
@@ -1222,13 +1742,13 @@ if (layoutMode === 'edit') {
 
 		task ("When the fragment developer add a fragment composition to a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name 2",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 2",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Fragment Set Name",
@@ -1237,7 +1757,7 @@ if (layoutMode === 'edit') {
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 2") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -1247,7 +1767,7 @@ if (layoutMode === 'edit') {
 		task ("When the fragment developer adds the second fragment composition to the same page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 2",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Fragment Set Name",
@@ -1257,7 +1777,7 @@ if (layoutMode === 'edit') {
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 3") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",
@@ -1267,13 +1787,13 @@ if (layoutMode === 'edit') {
 		task ("When the fragment developer publishes the page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name 2",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.publish();
 		}
 
 		task ("Then the fragment developer sees the usages of new fragment is 5") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = ${siteURLKey});
 
 			LexiconCard.viewCardSubtitle(
 				card = "Fragment Name",

@@ -1,36 +1,17 @@
 @default = "selectFrame"
 definition {
 
-	function selectFrame {
-		if (contains("${locator1}", "/iframe")) {
+	function selectFrame(locator1) {
+		if (contains(${locator1}, "/iframe")) {
 			WaitForFrameLoad();
 
-			selenium.waitForVisible();
+			selenium.waitForVisible(${locator1}, "false");
 
-			selenium.mouseOver();
+			selenium.mouseOver(${locator1});
 
-			selenium.selectFrame();
+			selenium.selectFrame(${locator1});
 
-			selenium.assertJavaScriptErrors();
-
-			selenium.assertLiferayErrors();
-		}
-		else {
-			SelectFrame.selectFrameTop();
-		}
-
-		WaitForSPARefresh();
-	}
-
-	function selectFrameNoLoading {
-		if (contains("${locator1}", "/iframe")) {
-			selenium.waitForVisible();
-
-			selenium.mouseOver();
-
-			selenium.selectFrame();
-
-			selenium.assertJavaScriptErrors();
+			selenium.assertJavaScriptErrors("true");
 
 			selenium.assertLiferayErrors();
 		}
@@ -41,25 +22,44 @@ definition {
 		WaitForSPARefresh();
 	}
 
-	function selectFrameTop {
+	function selectFrameNoLoading(locator1) {
+		if (contains(${locator1}, "/iframe")) {
+			selenium.waitForVisible(${locator1}, "false");
+
+			selenium.mouseOver(${locator1});
+
+			selenium.selectFrame(${locator1});
+
+			selenium.assertJavaScriptErrors("true");
+
+			selenium.assertLiferayErrors();
+		}
+		else {
+			SelectFrame.selectFrameTop();
+		}
+
+		WaitForSPARefresh();
+	}
+
+	function selectFrameTop() {
 		selenium.selectFrame("relative=top");
 
-		selenium.assertJavaScriptErrors();
+		selenium.assertJavaScriptErrors("true");
 
 		selenium.assertLiferayErrors();
 
 		WaitForSPARefresh();
 	}
 
-	function selectSecondFrame {
-		if (contains("${locator1}", "/iframe")) {
-			selenium.waitForVisible();
+	function selectSecondFrame(locator1) {
+		if (contains(${locator1}, "/iframe")) {
+			selenium.waitForVisible(${locator1}, "false");
 
-			selenium.mouseOver();
+			selenium.mouseOver(${locator1});
 
-			selenium.selectFrame();
+			selenium.selectFrame(${locator1});
 
-			selenium.assertJavaScriptErrors();
+			selenium.assertJavaScriptErrors("true");
 
 			selenium.assertLiferayErrors();
 		}

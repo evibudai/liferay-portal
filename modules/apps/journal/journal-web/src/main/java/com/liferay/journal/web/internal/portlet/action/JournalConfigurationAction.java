@@ -1,25 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.portlet.action;
 
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.journal.configuration.JournalGroupServiceConfiguration;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.display.context.helper.JournalWebRequestHelper;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
@@ -33,13 +26,11 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletRequest;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -49,7 +40,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.journal.web.internal.configuration.JournalWebConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = ConfigurationAction.class
 )
@@ -58,6 +48,16 @@ public class JournalConfigurationAction
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-197692")) {
+			httpServletRequest.setAttribute(
+				ItemSelector.class.getName(), _itemSelector);
+			httpServletRequest.setAttribute(
+				JournalWebConfiguration.class.getName(),
+				_journalWebConfiguration);
+
+			return "/configuration_browse.jsp";
+		}
+
 		return "/configuration.jsp";
 	}
 
@@ -163,19 +163,17 @@ public class JournalConfigurationAction
 		validateEmail(actionRequest, "emailArticleApprovalDenied");
 		validateEmail(actionRequest, "emailArticleApprovalGranted");
 		validateEmail(actionRequest, "emailArticleApprovalRequested");
+		validateEmail(actionRequest, "emailArticleExpired");
+		validateEmail(actionRequest, "emailArticleMovedFromFolder");
+		validateEmail(actionRequest, "emailArticleMovedToFolder");
 		validateEmail(actionRequest, "emailArticleReview");
 		validateEmail(actionRequest, "emailArticleUpdated");
-		validateEmailFrom(actionRequest);
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-197692")) {
+			validateEmailFrom(actionRequest);
+		}
 
 		super.processAction(portletConfig, actionRequest, actionResponse);
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.journal.web)", unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
 	}
 
 	@Activate
@@ -184,6 +182,9 @@ public class JournalConfigurationAction
 		_journalWebConfiguration = ConfigurableUtil.createConfigurable(
 			JournalWebConfiguration.class, properties);
 	}
+
+	@Reference
+	private ItemSelector _itemSelector;
 
 	private volatile JournalWebConfiguration _journalWebConfiguration;
 

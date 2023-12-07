@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.web.internal.portlet.action;
@@ -17,7 +8,6 @@ package com.liferay.users.admin.web.internal.portlet.action;
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.DataLimitExceededException;
 import com.liferay.portal.kernel.exception.DuplicateOrganizationException;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
@@ -29,7 +19,7 @@ import com.liferay.portal.kernel.exception.RequiredOrganizationException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
-import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -38,7 +28,6 @@ import com.liferay.portal.kernel.service.OrganizationService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
-import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
@@ -53,7 +42,6 @@ import java.util.Collections;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -69,19 +57,10 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + UsersAdminPortletKeys.USERS_ADMIN,
 		"mvc.command.name=/users_admin/edit_organization"
 	},
-	service = AopService.class
+	service = MVCActionCommand.class
 )
 public class EditOrganizationMVCActionCommand
-	extends BaseMVCActionCommand implements AopService, MVCActionCommand {
-
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public boolean processAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws PortletException {
-
-		return super.processAction(actionRequest, actionResponse);
-	}
+	extends BaseTransactionalMVCActionCommand {
 
 	protected void deleteOrganizations(ActionRequest actionRequest)
 		throws Exception {
@@ -95,7 +74,7 @@ public class EditOrganizationMVCActionCommand
 	}
 
 	@Override
-	protected void doProcessAction(
+	protected void doTransactionalCommand(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -199,7 +178,7 @@ public class EditOrganizationMVCActionCommand
 			actionRequest, "organizationId");
 
 		long parentOrganizationId = ParamUtil.getLong(
-			actionRequest, "parentOrganizationSearchContainerPrimaryKeys",
+			actionRequest, "parentOrganizationId",
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID);
 		String name = ParamUtil.getString(actionRequest, "name");
 		long statusId = ParamUtil.getLong(actionRequest, "statusId");
@@ -228,8 +207,8 @@ public class EditOrganizationMVCActionCommand
 			// Add organization
 
 			organization = _organizationService.addOrganization(
-				parentOrganizationId, name, type, regionId, countryId, statusId,
-				comments, false, Collections.emptyList(),
+				null, parentOrganizationId, name, type, regionId, countryId,
+				statusId, comments, false, Collections.emptyList(),
 				Collections.emptyList(), Collections.emptyList(),
 				Collections.emptyList(), Collections.emptyList(),
 				serviceContext);
@@ -251,10 +230,10 @@ public class EditOrganizationMVCActionCommand
 			Group organizationGroup = organization.getGroup();
 
 			organization = _organizationService.updateOrganization(
-				organizationId, parentOrganizationId, name, type, regionId,
-				countryId, statusId, comments, !deleteLogo, logoBytes,
-				organizationGroup.isSite(), null, null, null, null, null,
-				serviceContext);
+				organization.getExternalReferenceCode(), organizationId,
+				parentOrganizationId, name, type, regionId, countryId, statusId,
+				comments, !deleteLogo, logoBytes, organizationGroup.isSite(),
+				null, null, null, null, null, serviceContext);
 		}
 
 		return organization;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.solr8.internal.facet;
@@ -41,7 +32,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Tibor Lipusz
  */
 @Component(
-	property = "class.name=com.liferay.portal.kernel.search.facet.RangeFacet",
+	property = {
+		"class.name=com.liferay.portal.kernel.search.facet.RangeFacet",
+		"class.name=com.liferay.portal.search.internal.facet.ModifiedFacetImpl",
+		"class.name=com.liferay.portal.search.internal.facet.RangeFacetImpl"
+	},
 	service = FacetProcessor.class
 )
 public class RangeFacetProcessor implements FacetProcessor<SolrQuery> {
@@ -86,9 +81,10 @@ public class RangeFacetProcessor implements FacetProcessor<SolrQuery> {
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject rangeJSONObject = jsonArray.getJSONObject(i);
 
+			String label = rangeJSONObject.getString("label");
 			String range = rangeJSONObject.getString("range");
 
-			putFacetParameters(map, facet, range);
+			putFacetParameters(map, facet, label, range);
 		}
 	}
 
@@ -102,7 +98,7 @@ public class RangeFacetProcessor implements FacetProcessor<SolrQuery> {
 			return;
 		}
 
-		putFacetParameters(map, facet, range);
+		putFacetParameters(map, facet, "custom-range", range);
 	}
 
 	protected JSONObject getFacetParametersJSONObject(
@@ -120,10 +116,10 @@ public class RangeFacetProcessor implements FacetProcessor<SolrQuery> {
 	}
 
 	protected void putFacetParameters(
-		Map<String, JSONObject> map, Facet facet, String range) {
+		Map<String, JSONObject> map, Facet facet, String label, String range) {
 
 		String name =
-			FacetUtil.getAggregationName(facet) + StringPool.UNDERLINE + range;
+			FacetUtil.getAggregationName(facet) + StringPool.UNDERLINE + label;
 
 		JSONObject jsonObject = getFacetParametersJSONObject(facet, range);
 

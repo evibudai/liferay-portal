@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.entry.processor.editable.internal.parser;
 
+import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.fragment.entry.processor.editable.parser.EditableElementParser;
 import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.fragment.exception.FragmentEntryContentException;
@@ -29,8 +22,12 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -41,7 +38,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +65,7 @@ public class ImageEditableElementParser implements EditableElementParser {
 
 			alt = fieldValueJSONObject.getString("alt");
 
-			if (Validator.isNotNull(alt) && JSONUtil.isValid(alt)) {
+			if (Validator.isNotNull(alt) && JSONUtil.isJSONObject(alt)) {
 				JSONObject altJSONObject = fieldValueJSONObject.getJSONObject(
 					"alt");
 
@@ -90,13 +86,10 @@ public class ImageEditableElementParser implements EditableElementParser {
 		else if (fieldValue instanceof WebImage) {
 			WebImage webImage = (WebImage)fieldValue;
 
-			Optional<InfoLocalizedValue<String>> altInfoLocalizedValueOptional =
-				webImage.getAltInfoLocalizedValueOptional();
+			InfoLocalizedValue<String> infoLocalizedValue =
+				webImage.getAltInfoLocalizedValue();
 
-			if (altInfoLocalizedValueOptional.isPresent()) {
-				InfoLocalizedValue<String> infoLocalizedValue =
-					altInfoLocalizedValueOptional.get();
-
+			if (infoLocalizedValue != null) {
 				alt = infoLocalizedValue.getValue(locale);
 			}
 
@@ -149,7 +142,7 @@ public class ImageEditableElementParser implements EditableElementParser {
 		else if (fieldValue instanceof WebImage) {
 			WebImage webImage = (WebImage)fieldValue;
 
-			return GetterUtil.getString(webImage.getUrl());
+			return GetterUtil.getString(webImage.getURL());
 		}
 
 		return StringPool.BLANK;
@@ -174,7 +167,7 @@ public class ImageEditableElementParser implements EditableElementParser {
 
 		long fileEntryId = 0;
 
-		if (JSONUtil.isValid(value)) {
+		if (JSONUtil.isJSONObject(value)) {
 			try {
 				JSONObject jsonObject = _jsonFactory.createJSONObject(value);
 
@@ -195,6 +188,12 @@ public class ImageEditableElementParser implements EditableElementParser {
 		value = value.trim();
 
 		if (fileEntryId > 0) {
+			String previewURL = _getPreviewURL(fileEntryId);
+
+			if (Validator.isNotNull(previewURL)) {
+				value = previewURL;
+			}
+
 			replaceableElement.attr(
 				"data-fileentryid", String.valueOf(fileEntryId));
 
@@ -210,7 +209,7 @@ public class ImageEditableElementParser implements EditableElementParser {
 		Matcher matcher = _pattern.matcher(replaceableElement.attr("src"));
 
 		if (Validator.isNotNull(value) && !matcher.matches()) {
-			replaceableElement.attr("src", _html.unescape(value));
+			replaceableElement.attr("src", HtmlUtil.unescape(value));
 		}
 
 		if (configJSONObject == null) {
@@ -219,7 +218,7 @@ public class ImageEditableElementParser implements EditableElementParser {
 
 		String alt = configJSONObject.getString("alt");
 
-		if (Validator.isNotNull(alt) && JSONUtil.isValid(alt)) {
+		if (Validator.isNotNull(alt) && JSONUtil.isJSONObject(alt)) {
 			JSONObject altJSONObject = configJSONObject.getJSONObject("alt");
 
 			Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
@@ -229,7 +228,7 @@ public class ImageEditableElementParser implements EditableElementParser {
 
 		if (Validator.isNotNull(alt)) {
 			replaceableElement.attr(
-				"alt", StringUtil.trim(_html.unescape(alt)));
+				"alt", StringUtil.trim(HtmlUtil.unescape(alt)));
 		}
 
 		if (configJSONObject.getBoolean("lazyLoading")) {
@@ -279,6 +278,36 @@ public class ImageEditableElementParser implements EditableElementParser {
 		}
 	}
 
+	private String _getPreviewURL(long fileEntryId) {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			return StringPool.BLANK;
+		}
+
+		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+		if (themeDisplay == null) {
+			return StringPool.BLANK;
+		}
+
+		try {
+			FileEntry fileEntry = _dlAppLocalService.getFileEntry(fileEntryId);
+
+			return _dlURLHelper.getPreviewURL(
+				fileEntry, fileEntry.getFileVersion(), themeDisplay,
+				StringPool.BLANK, false, false);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return StringPool.BLANK;
+	}
+
 	private void _setImageConfiguration(
 		Element element, JSONObject imageConfigurationJSONObject) {
 
@@ -306,10 +335,13 @@ public class ImageEditableElementParser implements EditableElementParser {
 	private static final ViewportSize[] _viewportSizes = ViewportSize.values();
 
 	@Reference
-	private FragmentEntryProcessorHelper _fragmentEntryProcessorHelper;
+	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
-	private Html _html;
+	private DLURLHelper _dlURLHelper;
+
+	@Reference
+	private FragmentEntryProcessorHelper _fragmentEntryProcessorHelper;
 
 	@Reference
 	private JSONFactory _jsonFactory;

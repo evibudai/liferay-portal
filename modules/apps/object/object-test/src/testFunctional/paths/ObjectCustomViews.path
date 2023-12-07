@@ -131,11 +131,6 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>SELECT_AUTO_COMPLETE</td>
-		<td>//div[@class = 'custom-select__content form-control']//span[contains(text(),'Choose an Option')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>SELECT_AUTO_COMPLETE_OPTION</td>
 		<td>//button[(@class='dropdown-item') and contains(.,'${key_columnOption}')]</td>
 		<td></td>
@@ -157,7 +152,7 @@
 	</tr>
 	<tr>
 		<td>SORT_OPTION</td>
-		<td>//button[(@class='dropdown-item') and contains(.,'${key_sortOption}')]</td>
+		<td>//button[contains(@class,'dropdown-item') and contains(.,'${key_sortOption}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -191,6 +186,16 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>CUSTOM_FIELD_VALUE_ONE</td>
+		<td>//div[contains(@class,'dnd-tbody')]/div[1]/div[1]/span</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CUSTOM_FIELD_VALUE_TWO</td>
+		<td>//div[contains(@class,'dnd-tbody')]/div[2]/div[1]/span</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>CHANGE_POSITION_DEFAULT_SORT_SEARCH_RESULT</td>
 		<td>//h3[(@class='lfr-objects__card-title') and text()='Default Sort']/../..//p[contains(@class,'list-group-title') and contains(text(),'${key_columnName1}')]</td>
 		<td></td>
@@ -207,7 +212,7 @@
 	</tr>
 	<tr>
 		<td>VIEW_DROPDOWN_MENU_ON_MODAL_DEFAULT_SORT</td>
-		<td>//div[contains(@class,'dropdown-menu show')]</td>
+		<td>//div[@class='dropdown-menu autocomplete-expand show']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -228,11 +233,6 @@
 	<tr>
 		<td>ADD_BUTTON_FILTERS</td>
 		<td>//h3[(@class='lfr-objects__card-title') and text()='Filters']/../..//button[contains(@class,'nav-btn nav-btn-monospaced btn btn-monospaced btn-primary')]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>SELECT_FILTER_GENERIC</td>
-		<td>//label[contains(.,'${key_filterLabel}')]//..//input[@placeholder='Choose an Option']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -273,6 +273,16 @@
 	<tr>
 		<td>TOGGLE_SWITCH_EXCLUDE_STATUS</td>
 		<td>//div[contains(@id,'clay-dropdown-menu')]//input[contains(@class,'toggle-switch-check')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>FIELD_VIEW_FILTER_DROPDOWN_OPTION</td>
+		<td>//div[(@id='clay-dropdown-menu-4')]/../..//button[contains(., '${key_picklistOption}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>FIELD_VIEW_FILTER_DATE_INPUT</td>
+		<td>//div[@class='col-lg-6'][${key_dateIndex}]//div[contains(@class, 'input-group-item')]/input[contains(@placeholder,'__/__/____')]</td>
 		<td></td>
 	</tr>
 </tbody>

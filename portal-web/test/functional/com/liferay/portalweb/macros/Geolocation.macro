@@ -1,23 +1,25 @@
 definition {
 
-	macro assertMarkerPosition {
+	@summary = "Default summary"
+	macro assertMarkerPosition(lng = null, lat = null) {
 		WaitForVisible(locator1 = "DDMField#GEOLOCATION_MAP");
 
 		if (IsElementPresent(locator1 = "//div[contains(@class,'ddm-geolocation')]")) {
 			AssertAttributeValue(
-				attribute1 = "value",
 				locator1 = "DDMField#GEOLOCATION_MAP_INPUT",
-				value1 = "{\"lat\":${lat},\"lng\":${lng}}");
+				value1 = "value",
+				value2 = "{\"lat\":${lat},\"lng\":${lng}}");
 		}
 		else if (IsElementPresent(locator1 = "//div[contains(@id,'Location')]")) {
 			AssertAttributeValue(
-				attribute1 = "value",
 				locator1 = "DDMField#GEOLOCATION_MAP_INPUT",
-				value1 = "{\"latitude\":${lat},\"longitude\":${lng}}");
+				value1 = "value",
+				value2 = "{\"latitude\":${lat},\"longitude\":${lng}}");
 		}
 	}
 
-	macro setMarkerPosition {
+	@summary = "Default summary"
+	macro setMarkerPosition(lng = null, lat = null) {
 		WaitForVisible(locator1 = "DDMField#GEOLOCATION_MAP");
 
 		if (IsElementPresent(locator1 = "//div[contains(@class,'ddm-geolocation')]")) {
@@ -25,14 +27,14 @@ definition {
 Liferay.MapBase.get(document.evaluate("//div[contains(@class,'form-group')][*//div[contains(@class,'lfr-map')]]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.dataset.fieldName.replace('$$en_US', '').replace('ddm', 'map'), (map) => map.position = {location: {lat: ${lat}, lng: ${lng}}})
 			''';
 
-			var result = selenium.getEval("${javascript}");
+			var result = selenium.getEval(${javascript});
 		}
 		else if (IsElementPresent(locator1 = "//div[contains(@id,'Location')]")) {
 			var javascript = '''
 Liferay.MapBase.get(document.evaluate("//div[contains(@class,'lfr-map')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.id.replace('Map', ''), (map) => map.position = {location: {lat: ${lat}, lng: ${lng}}})
 			''';
 
-			var result = selenium.getEval("${javascript}");
+			var result = selenium.getEval(${javascript});
 		}
 	}
 

@@ -1,7 +1,6 @@
 {
 	"description_i18n": {
-		"en_US": "Boost contents with longer content in the user's current language.",
-		"ja_JP": "ユーザーの現在使用中の言語で、より長いコンテンツをブースト。"
+		"en_US": "boost-longer-contents-description"
 	},
 	"elementDefinition": {
 		"category": "boost",
@@ -38,7 +37,7 @@
 					"fields": [
 						{
 							"defaultValue": 30,
-							"label": "Boost",
+							"label": "boost",
 							"name": "boost",
 							"type": "number",
 							"typeOptions": {
@@ -47,7 +46,7 @@
 						},
 						{
 							"defaultValue": 1.5,
-							"label": "Factor",
+							"label": "factor",
 							"name": "factor",
 							"type": "number",
 							"typeOptions": {
@@ -56,7 +55,7 @@
 						},
 						{
 							"defaultValue": "ln",
-							"label": "Modifier",
+							"label": "modifier",
 							"name": "modifier",
 							"type": "select",
 							"typeOptions": {
@@ -111,7 +110,6 @@
 	},
 	"externalReferenceCode": "BOOST_LONGER_CONTENTS",
 	"title_i18n": {
-		"en_US": "Boost Longer Contents",
-		"ja_JP": "長いコンテンツをブースト"
+		"en_US": "boost-longer-contents"
 	}
 }

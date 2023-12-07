@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.price;
@@ -28,8 +19,9 @@ import com.liferay.commerce.price.CommerceOrderPriceImpl;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.util.CommerceBigDecimalUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -117,7 +109,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 
 		BigDecimal total = commerceOrder.getTotal();
 
-		if (CommerceBigDecimalUtil.gte(total, commerceOrder.getTaxAmount())) {
+		if (BigDecimalUtil.gte(total, commerceOrder.getTaxAmount())) {
 			total = total.subtract(commerceOrder.getTaxAmount());
 		}
 
@@ -327,7 +319,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 		BigDecimal level3, BigDecimal level4) {
 
 		if ((discountAmount == null) || (amount == null) ||
-			CommerceBigDecimalUtil.lte(amount, BigDecimal.ZERO)) {
+			BigDecimalUtil.lte(amount, BigDecimal.ZERO)) {
 
 			return new CommerceDiscountValue(
 				0,
@@ -355,7 +347,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 	}
 
 	private boolean _equalsZero(BigDecimal value) {
-		if ((value != null) && CommerceBigDecimalUtil.isZero(value)) {
+		if ((value != null) && BigDecimalUtil.isZero(value)) {
 			return true;
 		}
 
@@ -367,7 +359,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 			CommerceOrderItem commerceOrderItem, boolean unit)
 		throws PortalException {
 
-		int parentQuantity = commerceOrderItem.getQuantity();
+		BigDecimal parentQuantity = commerceOrderItem.getQuantity();
 
 		CommerceMoney unitPriceCommerceMoney =
 			commerceOrderItem.getUnitPriceMoney();
@@ -419,10 +411,26 @@ public abstract class BaseCommerceOrderPriceCalculation
 				commerceOrderItem.getFinalPriceWithTaxAmountMoney();
 		}
 
-		BigDecimal unitPrice = unitPriceCommerceMoney.getPrice();
-		BigDecimal promoPrice = promoPriceCommerceMoney.getPrice();
-		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
-		BigDecimal discountAmount = discountAmountCommerceMoney.getPrice();
+		BigDecimal unitPrice = BigDecimal.ZERO;
+		BigDecimal promoPrice = BigDecimal.ZERO;
+		BigDecimal finalPrice = BigDecimal.ZERO;
+		BigDecimal discountAmount = BigDecimal.ZERO;
+
+		if (!unitPriceCommerceMoney.isEmpty()) {
+			unitPrice = unitPriceCommerceMoney.getPrice();
+		}
+
+		if (!promoPriceCommerceMoney.isEmpty()) {
+			promoPrice = promoPriceCommerceMoney.getPrice();
+		}
+
+		if (!finalPriceCommerceMoney.isEmpty()) {
+			finalPrice = finalPriceCommerceMoney.getPrice();
+		}
+
+		if (!discountAmountCommerceMoney.isEmpty()) {
+			discountAmount = discountAmountCommerceMoney.getPrice();
+		}
 
 		List<CommerceOrderItem> childCommerceOrderItems =
 			commerceOrderItem.getChildCommerceOrderItems();
@@ -449,6 +457,20 @@ public abstract class BaseCommerceOrderPriceCalculation
 					childCommerceOrderItem.getFinalPriceWithTaxAmount();
 			}
 
+			BigDecimal incrementalOrderQuantity = BigDecimal.ONE;
+
+			if (Validator.isNotNull(
+					childCommerceOrderItem.getUnitOfMeasureKey()) &&
+				BigDecimalUtil.gt(
+					childCommerceOrderItem.
+						getUnitOfMeasureIncrementalOrderQuantity(),
+					BigDecimal.ZERO)) {
+
+				incrementalOrderQuantity =
+					childCommerceOrderItem.
+						getUnitOfMeasureIncrementalOrderQuantity();
+			}
+
 			if (_equalsZero(promoPrice) && _greaterThanZero(childPromoPrice)) {
 				promoPrice = promoPrice.add(unitPrice);
 			}
@@ -457,18 +479,19 @@ public abstract class BaseCommerceOrderPriceCalculation
 
 				promoPrice = promoPrice.add(
 					_getPricePerUnit(
-						commerceCurrency, childUnitPrice,
-						childCommerceOrderItem.getQuantity(), parentQuantity));
+						commerceCurrency, incrementalOrderQuantity,
+						childUnitPrice, childCommerceOrderItem.getQuantity(),
+						parentQuantity));
 			}
 
 			unitPrice = unitPrice.add(
 				_getPricePerUnit(
-					commerceCurrency, childUnitPrice,
+					commerceCurrency, incrementalOrderQuantity, childUnitPrice,
 					childCommerceOrderItem.getQuantity(), parentQuantity));
 
 			promoPrice = promoPrice.add(
 				_getPricePerUnit(
-					commerceCurrency, childPromoPrice,
+					commerceCurrency, incrementalOrderQuantity, childPromoPrice,
 					childCommerceOrderItem.getQuantity(), parentQuantity));
 
 			discountAmount = discountAmount.add(childDiscountAmount);
@@ -478,13 +501,16 @@ public abstract class BaseCommerceOrderPriceCalculation
 
 		if (unit) {
 			finalPrice = finalPrice.divide(
-				BigDecimal.valueOf(parentQuantity),
+				parentQuantity,
 				RoundingMode.valueOf(commerceCurrency.getRoundingMode()));
 		}
 
 		CommerceOrderItemPrice commerceOrderItemPrice =
 			new CommerceOrderItemPrice(
 				commerceMoneyFactory.create(commerceCurrency, unitPrice));
+
+		commerceOrderItemPrice.setPriceOnApplication(
+			commerceOrderItem.isPriceOnApplication());
 
 		_updatePromoPrice(commerceCurrency, commerceOrderItemPrice, promoPrice);
 
@@ -502,7 +528,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 	private BigDecimal _getDiscountPercentage(
 		BigDecimal amount, BigDecimal discount, RoundingMode roundingMode) {
 
-		if ((amount == null) || CommerceBigDecimalUtil.isZero(amount)) {
+		if ((amount == null) || BigDecimalUtil.isZero(amount)) {
 			return BigDecimal.ZERO;
 		}
 
@@ -522,20 +548,23 @@ public abstract class BaseCommerceOrderPriceCalculation
 	}
 
 	private BigDecimal _getPricePerUnit(
-		CommerceCurrency commerceCurrency, BigDecimal price, int quantity,
-		int parentQuantity) {
+		CommerceCurrency commerceCurrency, BigDecimal incrementalOrderQuantity,
+		BigDecimal price, BigDecimal quantity, BigDecimal parentQuantity) {
 
-		BigDecimal pricePerUnit = price.multiply(BigDecimal.valueOf(quantity));
+		BigDecimal pricePerUnit = price.multiply(quantity);
 
-		return pricePerUnit.divide(
-			BigDecimal.valueOf(parentQuantity),
-			RoundingMode.valueOf(commerceCurrency.getRoundingMode()));
+		RoundingMode roundingMode = RoundingMode.valueOf(
+			commerceCurrency.getRoundingMode());
+
+		pricePerUnit = pricePerUnit.divide(
+			incrementalOrderQuantity, commerceCurrency.getMaxFractionDigits(),
+			roundingMode);
+
+		return pricePerUnit.divide(parentQuantity, roundingMode);
 	}
 
 	private boolean _greaterThanZero(BigDecimal value) {
-		if ((value == null) ||
-			CommerceBigDecimalUtil.lte(value, BigDecimal.ZERO)) {
-
+		if ((value == null) || BigDecimalUtil.lte(value, BigDecimal.ZERO)) {
 			return false;
 		}
 
@@ -548,7 +577,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 		BigDecimal discountAmount, BigDecimal discountPercentageLevel1,
 		BigDecimal discountPercentageLevel2,
 		BigDecimal discountPercentageLevel3,
-		BigDecimal discountPercentageLevel4, int quantity,
+		BigDecimal discountPercentageLevel4, BigDecimal quantity,
 		BigDecimal unitPrice) {
 
 		BigDecimal activePrice = unitPrice;
@@ -558,10 +587,9 @@ public abstract class BaseCommerceOrderPriceCalculation
 
 		if ((promoPriceCommerceMoney != null) &&
 			!promoPriceCommerceMoney.isEmpty() &&
-			CommerceBigDecimalUtil.gt(
+			BigDecimalUtil.gt(
 				promoPriceCommerceMoney.getPrice(), BigDecimal.ZERO) &&
-			CommerceBigDecimalUtil.gt(
-				unitPrice, promoPriceCommerceMoney.getPrice())) {
+			BigDecimalUtil.gt(unitPrice, promoPriceCommerceMoney.getPrice())) {
 
 			activePrice = promoPriceCommerceMoney.getPrice();
 		}
@@ -570,8 +598,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 			commerceMoneyFactory.create(commerceCurrency, discountAmount));
 		commerceOrderItemPrice.setDiscountPercentage(
 			_getDiscountPercentage(
-				activePrice.multiply(BigDecimal.valueOf(quantity)),
-				discountAmount,
+				activePrice.multiply(quantity), discountAmount,
 				RoundingMode.valueOf(commerceCurrency.getRoundingMode())));
 		commerceOrderItemPrice.setDiscountPercentageLevel1(
 			discountPercentageLevel1);
@@ -599,8 +626,9 @@ public abstract class BaseCommerceOrderPriceCalculation
 			commerceOrderItemPrice.getUnitPrice();
 
 		if (!_greaterThanZero(promoPrice) ||
-			CommerceBigDecimalUtil.gt(
-				promoPrice, unitPriceCommerceMoney.getPrice())) {
+			(BigDecimalUtil.gte(
+				promoPrice, unitPriceCommerceMoney.getPrice()) &&
+			 _greaterThanZero(unitPriceCommerceMoney.getPrice()))) {
 
 			return;
 		}

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -87,59 +78,60 @@ if (portletTitleBasedNavigation) {
 	</c:choose>
 
 	<div class="<%= portletTitleBasedNavigation ? "contextual-sidebar-content" : "sidenav-content" %>">
-		<clay:container-fluid>
-			<div class="alert alert-danger hide" id="<portlet:namespace />openMSOfficeError"></div>
+		<div class="alert alert-danger hide" id="<portlet:namespace />openMSOfficeError"></div>
 
-			<c:if test="<%= !portletTitleBasedNavigation %>">
-				<div class="file-entry-actions management-bar management-bar-light navbar navbar-expand-md">
-					<ul class="navbar-nav navbar-nav-expand">
-						<li class="nav-item nav-item-expand">
-							<clay:link
-								aria-label='<%= LanguageUtil.get(request, "back") %>'
-								borderless="<%= true %>"
-								displayType="secondary"
-								href="<%= dlViewFileEntryDisplayContext.getRedirect() %>"
-								icon="angle-left"
-								monospaced="<%= true %>"
-								type="button"
-							/>
+		<c:if test="<%= !portletTitleBasedNavigation %>">
+			<div class="file-entry-actions management-bar management-bar-light navbar navbar-expand-md">
+				<ul class="navbar-nav navbar-nav-expand">
+					<li class="nav-item nav-item-expand">
+						<clay:link
+							aria-label='<%= LanguageUtil.get(request, "back") %>'
+							borderless="<%= true %>"
+							displayType="secondary"
+							href="<%= dlViewFileEntryDisplayContext.getRedirect() %>"
+							icon="angle-left"
+							monospaced="<%= true %>"
+							type="button"
+						/>
 
-							<h3 class="mb-1 text-secondary"><%= dlViewFileEntryDisplayContext.getDocumentTitle() %></h3>
-						</li>
-						<li class="nav-item">
-							<liferay-frontend:sidebar-toggler-button
-								cssClass="btn btn-monospaced btn-secondary btn-sm btn-unstyled"
-								icon="info-circle-open"
-								sidenavId='<%= liferayPortletResponse.getNamespace() + "infoPanelId_" + fileEntry.getFileEntryId() %>'
-							/>
-						</li>
-						<li class="nav-item">
-							<clay:dropdown-actions
-								aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
-								dropdownItems="<%= dlViewFileEntryDisplayContext.getActionDropdownItems() %>"
-								propsTransformer="document_library/js/DLFileEntryDropdownPropsTransformer"
-							/>
-						</li>
-					</ul>
-				</div>
+						<h3 class="mb-1 text-secondary"><%= HtmlUtil.escape(dlViewFileEntryDisplayContext.getDocumentTitle()) %></h3>
+					</li>
+					<li class="nav-item">
+						<liferay-frontend:sidebar-toggler-button
+							cssClass="btn btn-monospaced btn-secondary btn-sm btn-unstyled"
+							icon="info-circle-open"
+							sidenavId='<%= liferayPortletResponse.getNamespace() + "infoPanelId_" + fileEntry.getFileEntryId() %>'
+						/>
+					</li>
+					<li class="nav-item">
+						<clay:dropdown-actions
+							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
+							dropdownItems="<%= dlViewFileEntryDisplayContext.getActionDropdownItems() %>"
+							propsTransformer="document_library/js/DLFileEntryDropdownPropsTransformer"
+						/>
+					</li>
+				</ul>
+			</div>
+		</c:if>
+
+		<c:if test="<%= dlViewFileEntryDisplayContext.isShowLockInfo() %>">
+			<clay:stripe
+				displayType="<%= dlViewFileEntryDisplayContext.getLockInfoDisplayType() %>"
+				message="<%= dlViewFileEntryDisplayContext.getLockInfoMessage(locale) %>"
+			/>
+		</c:if>
+
+		<div class="body-row">
+			<c:if test="<%= PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED %>">
+
+				<%
+				dlViewFileEntryDisplayContext.renderPreview(pageContext);
+				%>
+
 			</c:if>
 
-			<c:if test="<%= dlViewFileEntryDisplayContext.isShowLockInfo() %>">
-				<div class="alert <%= dlViewFileEntryDisplayContext.getLockInfoCssClass() %>">
-					<%= dlViewFileEntryDisplayContext.getLockInfoMessage(locale) %>
-				</div>
-			</c:if>
-
-			<div class="body-row">
-				<c:if test="<%= PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED %>">
-
-					<%
-					dlViewFileEntryDisplayContext.renderPreview(pageContext);
-					%>
-
-				</c:if>
-
-				<c:if test="<%= dlViewFileEntryDisplayContext.isShowComments() %>">
+			<c:if test="<%= dlViewFileEntryDisplayContext.isShowComments() %>">
+				<clay:container-fluid>
 					<liferay-comment:discussion
 						className="<%= dlViewFileEntryDisplayContext.getDiscussionClassName() %>"
 						classPK="<%= dlViewFileEntryDisplayContext.getDiscussionClassPK() %>"
@@ -148,9 +140,9 @@ if (portletTitleBasedNavigation) {
 						redirect="<%= currentURL %>"
 						userId="<%= dlViewFileEntryDisplayContext.getDiscussionUserId() %>"
 					/>
-				</c:if>
-			</div>
-		</clay:container-fluid>
+				</clay:container-fluid>
+			</c:if>
+		</div>
 	</div>
 </div>
 

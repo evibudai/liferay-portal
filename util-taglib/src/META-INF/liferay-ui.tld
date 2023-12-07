@@ -12,138 +12,7 @@
 	<short-name>liferay-ui</short-name>
 	<uri>http://liferay.com/tld/ui</uri>
 	<tag>
-		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-asset:asset-categories-selector</code>]]> tag.</description>
-		<name>asset-categories-selector</name>
-		<tag-class>com.liferay.taglib.ui.AssetCategoriesSelectorTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>className</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>classPK</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>classTypePK</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>curCategoryIds</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>groupIds</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>hiddenInput</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>ignoreRequestValue</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>showRequiredLabel</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
-		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-asset:asset-tags-selector</code>]]> tag.</description>
-		<description>Creates a <![CDATA[<code>Liferay.AssetTagsSelector</code>]]> component to create and select tags to add to an asset, such as a blog entry, bookmark, or wiki page.</description>
-		<name>asset-tags-selector</name>
-		<tag-class>com.liferay.taglib.ui.AssetTagsSelectorTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<description>A function to be called when a tag is added.</description>
-			<name>addCallback</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Whether to allow adding new tags to the list of tags. The default value is <![CDATA[<code>true</code>]]>.</description>
-			<name>allowAddEntry</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>boolean</type>
-		</attribute>
-		<attribute>
-			<description>Whether to automatically focus the tag input field. The default value is <![CDATA[<code>false</code>]]>.</description>
-			<name>autoFocus</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>boolean</type>
-		</attribute>
-		<attribute>
-			<description>The Java class of the asset.</description>
-			<name>className</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>The Java class primary key of an asset to associate with the tags. This is a Java <![CDATA[<code>long</code>]]>.</description>
-			<name>classPK</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>The current selected tags.</description>
-			<name>curTags</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>The group IDs of the asset tags.</description>
-			<name>groupIds</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>The name of the hidden input for passing in the asset's current tags.</description>
-			<name>hiddenInput</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>An ID for the component instance.</description>
-			<name>id</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Whether to ignore the request value of the hidden input. The default value is <![CDATA[<code>false</code>]]>.</description>
-			<name>ignoreRequestValue</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>boolean</type>
-		</attribute>
-		<attribute>
-			<description>A function to be called when a tag is removed.</description>
-			<name>removeCallback</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
-		<name>drop-here-info</name>
-		<tag-class>com.liferay.taglib.ui.DropHereInfoTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>message</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-frontend:logo-selector</code>]]> tag.</description>
 		<name>empty-result-message</name>
 		<tag-class>com.liferay.taglib.ui.EmptyResultMessageTag</tag-class>
 		<body-content>JSP</body-content>
@@ -687,6 +556,11 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
+			<name>triggerAriaLabel</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<description>A CSS class for styling the trigger for the icon menu. The default value is <![CDATA[<code>btn btn-secondary</code>]]>.</description>
 			<name>triggerCssClass</name>
 			<required>false</required>
@@ -817,7 +691,7 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description>Whether to disable the namespace for the component. The default value is <![CDATA[<code>false</code>]]>.</description>
+			<description>Deprecated as of 7.4.0, replaced by the attribute <![CDATA[<code>useNamespace</code>]]>.</description>
 			<name>disableNamespace</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -891,6 +765,13 @@
 			<name>showDisableCheckbox</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Whether to use a namespace in the tag. The default value is <![CDATA[<code>true</code>]]>.</description>
+			<name>useNamespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
 		</attribute>
 		<attribute>
 			<description>A variable name to refer to the year of the component.</description>
@@ -1434,18 +1315,6 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Creates a component allowing users to make an event repeat over a given interval.</description>
-		<name>input-repeat</name>
-		<tag-class>com.liferay.taglib.ui.InputRepeatTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<description>A CSS class for styling the component.</description>
-			<name>cssClass</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
 		<description>Creates an input field for selecting resources such as folders.</description>
 		<name>input-resource</name>
 		<tag-class>com.liferay.taglib.ui.InputResourceTag</tag-class>
@@ -1607,7 +1476,7 @@
 			<type>int</type>
 		</attribute>
 		<attribute>
-			<description>A minute interval displayed in the input. The default value is <![CDATA[<code>30</code>]]>.</description>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>minuteInterval</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1637,6 +1506,13 @@
 			<name>timeFormat</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Whether to use a namespace in the tag. The default value is <![CDATA[<code>true</code>]]>.</description>
+			<name>useNamespace</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
 		</attribute>
 	</tag>
 	<tag>
@@ -1751,100 +1627,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<name>layout-common</name>
-		<tag-class>com.liferay.taglib.ui.LayoutCommonTag</tag-class>
-		<body-content>JSP</body-content>
-	</tag>
-	<tag>
-		<name>layout-templates-list</name>
-		<tag-class>com.liferay.taglib.ui.LayoutTemplatesListTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>layoutTemplateId</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>layoutTemplateIdPrefix</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>layoutTemplates</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
-		<name>logo-selector</name>
-		<tag-class>com.liferay.taglib.ui.LogoSelectorTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>aspectRatio</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>int</type>
-		</attribute>
-		<attribute>
-			<name>currentLogoURL</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>defaultLogo</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>defaultLogoURL</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>editLogoFn</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>logoDisplaySelector</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
-			<name>maxFileSize</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>preserveRatio</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>boolean</type>
-		</attribute>
-		<attribute>
-			<name>showBackground</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>showButtons</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>boolean</type>
-		</attribute>
-		<attribute>
-			<name>tempImageFileName</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
-		<name>membership-policy-error</name>
-		<tag-class>com.liferay.taglib.ui.MembershipPolicyErrorTag</tag-class>
-		<body-content>JSP</body-content>
-	</tag>
-	<tag>
+		<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 		<name>menu</name>
 		<tag-class>com.liferay.taglib.ui.MenuTag</tag-class>
 		<body-content>JSP</body-content>
@@ -1855,6 +1638,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 		<name>menu-item</name>
 		<tag-class>com.liferay.taglib.ui.MenuItemTag</tag-class>
 		<body-content>JSP</body-content>
@@ -2016,7 +1800,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Creates a collapsible panel for housing content.</description>
+		<description>Creates a collapsible panel for housing content. Deprecated as of 7.4.0, replaced by the <![CDATA[<code>clay:panel</code>]]> tag.</description>
 		<name>panel</name>
 		<tag-class>com.liferay.taglib.ui.PanelTag</tag-class>
 		<body-content>JSP</body-content>
@@ -2097,7 +1881,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Creates a collapsible container to house <![CDATA[<code>liferay-ui:panel</code>]]> components.</description>
+		<description>Creates a collapsible container to house <![CDATA[<code>liferay-ui:panel</code>]]> components. Deprecated as of 7.4.0, replaced by the <![CDATA[<code>clay:panel-group</code>]]> tag.</description>
 		<name>panel-container</name>
 		<tag-class>com.liferay.taglib.ui.PanelContainerTag</tag-class>
 		<body-content>JSP</body-content>
@@ -3119,6 +2903,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>clay:tabs-panel</code>]]> tag.</description>
 		<name>section</name>
 		<tag-class>com.liferay.taglib.ui.SectionTag</tag-class>
 		<tei-class>com.liferay.taglib.ui.SectionTei</tei-class>
@@ -3171,7 +2956,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Creates a tabbed UI of section dividers that each house their own content.<![CDATA[<br /><br />Example:<br /><img src="../images/liferay-ui/tabs.png"/>]]>.</description>
+		<description>Creates a tabbed UI of section dividers that each house their own content.<![CDATA[<br /><br />Example:<br /><img src="../images/liferay-ui/tabs.png"/>]]>. Deprecated as of 7.4.0, replaced by the <![CDATA[<code>clay:tabs</code>]]> tag.</description>
 		<name>tabs</name>
 		<tag-class>com.liferay.taglib.ui.TabsTag</tag-class>
 		<body-content>JSP</body-content>
@@ -3264,54 +3049,7 @@
 		</attribute>
 	</tag>
 	<tag>
-		<description>Deprecated as of 7.4.0, with no direct replacement.</description>
-		<name>toggle-value</name>
-		<tag-class>com.liferay.taglib.ui.ToggleValueTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>defaultValue</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>id</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
-		<description>Creates a progress bar for items being uploaded.</description>
-		<name>upload-progress</name>
-		<tag-class>com.liferay.taglib.ui.UploadProgressTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<description>The height of the component in pixels. The default value is <![CDATA[<code>25px</code>]]>.</description>
-			<name>height</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>int</type>
-		</attribute>
-		<attribute>
-			<description>An ID for the component instance.</description>
-			<name>id</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>A message to label the component.</description>
-			<name>message</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>An interval in milliseconds on how often to update the progress bar. The default value is <![CDATA[<code>1000</code>]]> milliseconds.</description>
-			<name>updatePeriod</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>int</type>
-		</attribute>
-	</tag>
-	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-user:user-display</code>]]> tag.</description>
 		<name>user-display</name>
 		<tag-class>com.liferay.taglib.ui.UserDisplayTag</tag-class>
 		<tei-class>com.liferay.taglib.ui.UserDisplayTei</tei-class>
@@ -3374,6 +3112,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-user:user-name-fields</code>]]> tag.</description>
 		<name>user-name-fields</name>
 		<tag-class>com.liferay.taglib.ui.UserNameFieldsTag</tag-class>
 		<body-content>JSP</body-content>
@@ -3394,6 +3133,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, replaced by the <![CDATA[<code>liferay-user:user-portrait</code>]]> tag.</description>
 		<name>user-portrait</name>
 		<tag-class>com.liferay.taglib.ui.UserPortraitTag</tag-class>
 		<body-content>JSP</body-content>

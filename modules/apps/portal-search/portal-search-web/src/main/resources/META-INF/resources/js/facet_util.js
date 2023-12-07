@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 AUI.add(
 	'liferay-search-facet-util',
 	(A) => {
+		const CUSTOM_DATE_RANGE_BUCKET_TEXT = 'custom-range';
+
 		const FACET_TERM_CLASS = 'facet-term';
 
 		const FACET_TERM_SELECTED_CLASS = 'facet-term-selected';
@@ -62,6 +55,19 @@ AUI.add(
 				if (!form) {
 					return;
 				}
+
+				// Disable checkboxes across all facets to avoid multiple
+				// selections. Only the most recent selection will be added
+				// since the page needs to be reloaded before another selection
+				// can be made.
+
+				const allFacetTerms = document.querySelectorAll(
+					`.${FACET_TERM_CLASS}`
+				);
+
+				allFacetTerms.forEach((term) => {
+					Liferay.Util.toggleDisabled(term, true);
+				});
 
 				const currentSelectedTermId = _getTermId(event.currentTarget);
 
@@ -209,11 +215,36 @@ AUI.add(
 				);
 
 				selections.forEach((item) => {
-					newParameters = FacetUtil.addURLParameter(
-						key,
-						item,
-						newParameters
-					);
+					if (item === CUSTOM_DATE_RANGE_BUCKET_TEXT) {
+
+						// For the special case of a date range facet, the
+						// termId is 'custom-range' and the parameters are
+						// prefixed with 'from' and 'to'.
+
+						const endDate = new Date();
+						const startDate = new Date(
+							endDate - 1000 * 60 * 60 * 24 // 24 hours
+						);
+
+						newParameters = FacetUtil.addURLParameter(
+							key + 'From',
+							startDate.toISOString().split('T')[0],
+							newParameters
+						);
+
+						newParameters = FacetUtil.addURLParameter(
+							key + 'To',
+							endDate.toISOString().split('T')[0],
+							newParameters
+						);
+					}
+					else {
+						newParameters = FacetUtil.addURLParameter(
+							key,
+							item,
+							newParameters
+						);
+					}
 				});
 
 				return newParameters;

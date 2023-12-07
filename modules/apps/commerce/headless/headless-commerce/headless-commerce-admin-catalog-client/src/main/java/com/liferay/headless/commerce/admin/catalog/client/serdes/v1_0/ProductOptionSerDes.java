@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 
+import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductOption;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductOptionValue;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
@@ -23,7 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -65,6 +56,36 @@ public class ProductOptionSerDes {
 			sb.append("\"catalogId\": ");
 
 			sb.append(productOption.getCatalogId());
+		}
+
+		if (productOption.getCustomFields() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < productOption.getCustomFields().length; i++) {
+				sb.append(String.valueOf(productOption.getCustomFields()[i]));
+
+				if ((i + 1) < productOption.getCustomFields().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (productOption.getDefinedExternally() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"definedExternally\": ");
+
+			sb.append(productOption.getDefinedExternally());
 		}
 
 		if (productOption.getDescription() != null) {
@@ -111,6 +132,20 @@ public class ProductOptionSerDes {
 			sb.append(productOption.getId());
 		}
 
+		if (productOption.getInfoItemServiceKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"infoItemServiceKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productOption.getInfoItemServiceKey()));
+
+			sb.append("\"");
+		}
+
 		if (productOption.getKey() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -143,6 +178,20 @@ public class ProductOptionSerDes {
 			sb.append("\"optionId\": ");
 
 			sb.append(productOption.getOptionId());
+		}
+
+		if (productOption.getPriceType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productOption.getPriceType()));
+
+			sb.append("\"");
 		}
 
 		if (productOption.getPriority() != null) {
@@ -198,6 +247,20 @@ public class ProductOptionSerDes {
 			sb.append(productOption.getSkuContributor());
 		}
 
+		if (productOption.getTypeSettings() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"typeSettings\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productOption.getTypeSettings()));
+
+			sb.append("\"");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -222,6 +285,24 @@ public class ProductOptionSerDes {
 		}
 		else {
 			map.put("catalogId", String.valueOf(productOption.getCatalogId()));
+		}
+
+		if (productOption.getCustomFields() == null) {
+			map.put("customFields", null);
+		}
+		else {
+			map.put(
+				"customFields",
+				String.valueOf(productOption.getCustomFields()));
+		}
+
+		if (productOption.getDefinedExternally() == null) {
+			map.put("definedExternally", null);
+		}
+		else {
+			map.put(
+				"definedExternally",
+				String.valueOf(productOption.getDefinedExternally()));
 		}
 
 		if (productOption.getDescription() == null) {
@@ -253,6 +334,15 @@ public class ProductOptionSerDes {
 			map.put("id", String.valueOf(productOption.getId()));
 		}
 
+		if (productOption.getInfoItemServiceKey() == null) {
+			map.put("infoItemServiceKey", null);
+		}
+		else {
+			map.put(
+				"infoItemServiceKey",
+				String.valueOf(productOption.getInfoItemServiceKey()));
+		}
+
 		if (productOption.getKey() == null) {
 			map.put("key", null);
 		}
@@ -272,6 +362,13 @@ public class ProductOptionSerDes {
 		}
 		else {
 			map.put("optionId", String.valueOf(productOption.getOptionId()));
+		}
+
+		if (productOption.getPriceType() == null) {
+			map.put("priceType", null);
+		}
+		else {
+			map.put("priceType", String.valueOf(productOption.getPriceType()));
 		}
 
 		if (productOption.getPriority() == null) {
@@ -306,6 +403,15 @@ public class ProductOptionSerDes {
 				String.valueOf(productOption.getSkuContributor()));
 		}
 
+		if (productOption.getTypeSettings() == null) {
+			map.put("typeSettings", null);
+		}
+		else {
+			map.put(
+				"typeSettings",
+				String.valueOf(productOption.getTypeSettings()));
+		}
+
 		return map;
 	}
 
@@ -333,6 +439,28 @@ public class ProductOptionSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					CustomField[] customFieldsArray =
+						new CustomField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < customFieldsArray.length; i++) {
+						customFieldsArray[i] = CustomFieldSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					productOption.setCustomFields(customFieldsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "definedExternally")) {
+				if (jsonParserFieldValue != null) {
+					productOption.setDefinedExternally(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "description")) {
 				if (jsonParserFieldValue != null) {
 					productOption.setDescription(
@@ -356,6 +484,14 @@ public class ProductOptionSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "infoItemServiceKey")) {
+
+				if (jsonParserFieldValue != null) {
+					productOption.setInfoItemServiceKey(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "key")) {
 				if (jsonParserFieldValue != null) {
 					productOption.setKey((String)jsonParserFieldValue);
@@ -374,6 +510,11 @@ public class ProductOptionSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "priceType")) {
+				if (jsonParserFieldValue != null) {
+					productOption.setPriceType((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "priority")) {
 				if (jsonParserFieldValue != null) {
 					productOption.setPriority(
@@ -384,15 +525,20 @@ public class ProductOptionSerDes {
 						jsonParserFieldName, "productOptionValues")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ProductOptionValue[] productOptionValuesArray =
+						new ProductOptionValue[jsonParserFieldValues.length];
+
+					for (int i = 0; i < productOptionValuesArray.length; i++) {
+						productOptionValuesArray[i] =
+							ProductOptionValueSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					productOption.setProductOptionValues(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ProductOptionValueSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new ProductOptionValue[size]
-						));
+						productOptionValuesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "required")) {
@@ -404,6 +550,11 @@ public class ProductOptionSerDes {
 				if (jsonParserFieldValue != null) {
 					productOption.setSkuContributor(
 						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "typeSettings")) {
+				if (jsonParserFieldValue != null) {
+					productOption.setTypeSettings((String)jsonParserFieldValue);
 				}
 			}
 		}

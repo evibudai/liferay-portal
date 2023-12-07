@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.importer;
 
+import com.liferay.headless.delivery.dto.v1_0.PageElement;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Layout;
 
 /**
@@ -23,13 +16,22 @@ public class LayoutStructureItemImporterContext {
 
 	public LayoutStructureItemImporterContext(
 		Layout layout, double pageDefinitionVersion, String parentItemId,
-		int position, long segmentsExperienceId) {
+		int position, boolean preserveItemIds, long segmentsExperienceId) {
 
 		_layout = layout;
 		_pageDefinitionVersion = pageDefinitionVersion;
 		_parentItemId = parentItemId;
 		_position = position;
+		_preserveItemIds = preserveItemIds;
 		_segmentsExperienceId = segmentsExperienceId;
+	}
+
+	public String getItemId(PageElement pageElement) {
+		if (isPreserveItemIds()) {
+			return pageElement.getId();
+		}
+
+		return StringPool.BLANK;
 	}
 
 	public Layout getLayout() {
@@ -52,10 +54,15 @@ public class LayoutStructureItemImporterContext {
 		return _segmentsExperienceId;
 	}
 
+	public boolean isPreserveItemIds() {
+		return _preserveItemIds;
+	}
+
 	private final Layout _layout;
 	private final double _pageDefinitionVersion;
 	private final String _parentItemId;
 	private final int _position;
+	private final boolean _preserveItemIds;
 	private final long _segmentsExperienceId;
 
 }

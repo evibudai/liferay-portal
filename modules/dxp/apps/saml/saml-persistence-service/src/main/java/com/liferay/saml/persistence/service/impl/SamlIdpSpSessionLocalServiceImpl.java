@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.persistence.service.impl;
@@ -26,12 +17,10 @@ import com.liferay.saml.persistence.model.SamlIdpSpSession;
 import com.liferay.saml.persistence.model.SamlPeerBinding;
 import com.liferay.saml.persistence.service.SamlPeerBindingLocalService;
 import com.liferay.saml.persistence.service.base.SamlIdpSpSessionLocalServiceBaseImpl;
-import com.liferay.saml.persistence.service.persistence.SamlPeerBindingPersistence;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -136,28 +125,27 @@ public class SamlIdpSpSessionLocalServiceImpl
 			samlIdpSpSessionPersistence.findBySamlIdpSsoSessionId(
 				samlIdpSsoSessionId);
 
-		Stream<SamlIdpSpSession> stream = samlIdpSsoSessions.stream();
+		if (samlIdpSsoSessions.isEmpty()) {
+			return null;
+		}
 
-		return stream.filter(
-			samlIdpSsoSession -> {
-				SamlPeerBinding samlPeerBinding =
-					_samlPeerBindingLocalService.fetchSamlPeerBinding(
-						samlIdpSsoSession.getSamlPeerBindingId());
+		for (SamlIdpSpSession samlIdpSsoSession : samlIdpSsoSessions) {
+			SamlPeerBinding samlPeerBinding =
+				_samlPeerBindingLocalService.fetchSamlPeerBinding(
+					samlIdpSsoSession.getSamlPeerBindingId());
 
-				return Objects.equals(
-					samlSpEntityId, samlPeerBinding.getSamlPeerEntityId());
+			if (Objects.equals(
+					samlSpEntityId, samlPeerBinding.getSamlPeerEntityId())) {
+
+				return samlIdpSsoSession;
 			}
-		).findFirst(
-		).orElse(
-			null
-		);
+		}
+
+		return null;
 	}
 
 	@Reference
 	private SamlPeerBindingLocalService _samlPeerBindingLocalService;
-
-	@Reference
-	private SamlPeerBindingPersistence _samlPeerBindingPersistence;
 
 	@Reference
 	private UserLocalService _userLocalService;

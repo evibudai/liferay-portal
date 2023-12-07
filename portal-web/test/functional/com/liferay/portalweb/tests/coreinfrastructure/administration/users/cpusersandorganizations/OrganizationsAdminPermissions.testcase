@@ -1,4 +1,4 @@
-@component-name = "portal-user-management-and-portal-configuration"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -32,7 +32,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddOrganizationRegRole {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -45,7 +45,7 @@ definition {
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_CONTROL_PANEL",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "Regrole Name");
 
 		Permissions.definePermissionViaJSONAPI(
@@ -66,10 +66,7 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
@@ -81,7 +78,7 @@ definition {
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ADD_ORGANIZATION",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "Regrole Name");
 
 		User.logoutAndLoginPG(
@@ -92,17 +89,14 @@ definition {
 
 		Permissions.removePermissionViaAPI(
 			resourceAction = "ADD_ORGANIZATION",
-			resourceName = "90",
+			resourceName = 90,
 			roleTitle = "Regrole Name");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
@@ -114,7 +108,7 @@ definition {
 	}
 
 	@description = "This test asserts that an Organization Administrator of an organization can manage suborganizations associated to it."
-	@priority = "4"
+	@priority = 4
 	test OrganizationAdminCanManageSuborganizations {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 

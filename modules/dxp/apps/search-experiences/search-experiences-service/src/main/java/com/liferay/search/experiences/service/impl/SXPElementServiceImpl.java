@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.service.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -47,8 +39,9 @@ public class SXPElementServiceImpl extends SXPElementServiceBaseImpl {
 
 	@Override
 	public SXPElement addSXPElement(
-			Map<Locale, String> descriptionMap, String elementDefinitionJSON,
-			boolean readOnly, String schemaVersion,
+			String externalReferenceCode, Map<Locale, String> descriptionMap,
+			String elementDefinitionJSON, String fallbackDescription,
+			String fallbackTitle, boolean readOnly, String schemaVersion,
 			Map<Locale, String> titleMap, int type,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -57,7 +50,8 @@ public class SXPElementServiceImpl extends SXPElementServiceBaseImpl {
 			getPermissionChecker(), null, SXPActionKeys.ADD_SXP_ELEMENT);
 
 		return sxpElementLocalService.addSXPElement(
-			null, getUserId(), descriptionMap, elementDefinitionJSON, readOnly,
+			externalReferenceCode, getUserId(), descriptionMap,
+			elementDefinitionJSON, fallbackDescription, fallbackTitle, readOnly,
 			schemaVersion, titleMap, type, serviceContext);
 	}
 
@@ -72,10 +66,45 @@ public class SXPElementServiceImpl extends SXPElementServiceBaseImpl {
 			sxpElementId);
 
 		if (sxpElement.isReadOnly()) {
-			throw new SXPElementReadOnlyException();
+			throw new SXPElementReadOnlyException(
+				StringBundler.concat(
+					"Search experiences element ", sxpElementId,
+					" is read-only"));
 		}
 
 		return sxpElementLocalService.deleteSXPElement(sxpElement);
+	}
+
+	@Override
+	public SXPElement fetchSXPElement(long sxpElementId)
+		throws PortalException {
+
+		SXPElement sxpElement = sxpElementLocalService.fetchSXPElement(
+			sxpElementId);
+
+		if (sxpElement != null) {
+			_sxpElementModelResourcePermission.check(
+				getPermissionChecker(), sxpElement, ActionKeys.VIEW);
+		}
+
+		return sxpElement;
+	}
+
+	@Override
+	public SXPElement fetchSXPElementByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		SXPElement sxpElement =
+			sxpElementLocalService.fetchSXPElementByExternalReferenceCode(
+				externalReferenceCode, companyId);
+
+		if (sxpElement != null) {
+			_sxpElementModelResourcePermission.check(
+				getPermissionChecker(), sxpElement, ActionKeys.VIEW);
+		}
+
+		return sxpElement;
 	}
 
 	@Override
@@ -90,18 +119,45 @@ public class SXPElementServiceImpl extends SXPElementServiceBaseImpl {
 	}
 
 	@Override
-	public SXPElement updateSXPElement(
-			long sxpElementId, Map<Locale, String> descriptionMap,
-			String elementDefinitionJSON, String schemaVersion, boolean hidden,
-			Map<Locale, String> titleMap, ServiceContext serviceContext)
+	public SXPElement getSXPElementByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException {
+
+		SXPElement sxpElement =
+			sxpElementLocalService.getSXPElementByExternalReferenceCode(
+				externalReferenceCode, companyId);
+
+		_sxpElementModelResourcePermission.check(
+			getPermissionChecker(), sxpElement, ActionKeys.VIEW);
+
+		return sxpElement;
+	}
+
+	@Override
+	public SXPElement updateSXPElement(
+			String externalReferenceCode, long sxpElementId,
+			Map<Locale, String> descriptionMap, String elementDefinitionJSON,
+			String schemaVersion, boolean hidden, Map<Locale, String> titleMap,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		SXPElement sxpElement = sxpElementPersistence.findByPrimaryKey(
+			sxpElementId);
+
+		if (sxpElement.isReadOnly()) {
+			throw new SXPElementReadOnlyException(
+				StringBundler.concat(
+					"Search experiences element ", sxpElementId,
+					" is read-only"));
+		}
 
 		_sxpElementModelResourcePermission.check(
 			getPermissionChecker(), sxpElementId, ActionKeys.UPDATE);
 
 		return sxpElementLocalService.updateSXPElement(
-			getUserId(), sxpElementId, descriptionMap, elementDefinitionJSON,
-			hidden, schemaVersion, titleMap, serviceContext);
+			externalReferenceCode, getUserId(), sxpElementId, descriptionMap,
+			elementDefinitionJSON, hidden, schemaVersion, titleMap,
+			serviceContext);
 	}
 
 	@Reference(target = "(resource.name=" + SXPConstants.RESOURCE_NAME + ")")

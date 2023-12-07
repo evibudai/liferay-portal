@@ -1,29 +1,38 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-/// <reference types="react" />
-
-import {CustomItem, SelectProps} from './BaseSelect';
-import './index.scss';
-interface IProps<T extends CustomItem<number | string> = CustomItem>
-	extends SelectProps {
-	options: T[];
+import {FocusEvent} from 'react';
+interface MultipleSelectProps {
+	className?: string;
+	disabled?: boolean;
+	error?: string;
+	feedbackMessage?: string;
+	id?: string;
+	label?: string;
+	onBlur?: (event: FocusEvent<HTMLInputElement>) => void;
+	options: MultiSelectItem[];
+	placeholder?: string;
+	required?: boolean;
 	selectAllOption?: boolean;
-	setOptions: (options: T[]) => void;
-	setSelectAllChecked?: Function;
+	setOptions: (options: MultiSelectItem[]) => void;
 }
-export declare function MultipleSelect<
-	T extends CustomItem<number | string> = CustomItem
->({options, selectAllOption, setOptions, ...restProps}: IProps<T>): JSX.Element;
+export interface MultiSelectItem extends LabelValueObject {
+	checked?: boolean;
+}
+export declare function MultipleSelect({
+	className,
+	disabled,
+	error,
+	feedbackMessage,
+	id,
+	label,
+	onBlur,
+	options,
+	placeholder,
+	required,
+	selectAllOption,
+	setOptions,
+}: MultipleSelectProps): JSX.Element;
 export {};

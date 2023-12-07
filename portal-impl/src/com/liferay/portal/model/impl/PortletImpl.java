@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
 
-import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.expando.kernel.model.CustomAttributesDisplay;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
@@ -33,6 +23,7 @@ import com.liferay.portal.kernel.model.PortletFilter;
 import com.liferay.portal.kernel.model.PortletInfo;
 import com.liferay.portal.kernel.model.PublicRenderParameter;
 import com.liferay.portal.kernel.model.portlet.PortletDependency;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
 import com.liferay.portal.kernel.plugin.PluginPackage;
@@ -66,7 +57,6 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webdav.WebDAVStorage;
@@ -406,7 +396,7 @@ public class PortletImpl extends PortletBaseImpl {
 			getPortletName(), getDisplayName(), getPortletClass(),
 			getConfigurationActionClass(), getIndexerClasses(),
 			getOpenSearchClass(), getSchedulerEntries(), getPortletURLClass(),
-			getFriendlyURLMapperClass(), getFriendlyURLMapping(),
+			getFriendlyURLMapperClass(), _friendlyURLMapping,
 			getFriendlyURLRoutes(), getURLEncoderClass(),
 			getPortletDataHandlerClass(), getStagedModelDataHandlerClasses(),
 			getTemplateHandlerClass(), getPortletConfigurationListenerClass(),
@@ -603,22 +593,6 @@ public class PortletImpl extends PortletBaseImpl {
 	}
 
 	/**
-	 * Returns the asset type instances of the portlet.
-	 *
-	 * @return the asset type instances of the portlet
-	 */
-	@Override
-	public List<AssetRendererFactory<?>> getAssetRendererFactoryInstances() {
-		if (_assetRendererFactoryClasses.isEmpty()) {
-			return null;
-		}
-
-		PortletBag portletBag = PortletBagPool.get(getRootPortletId());
-
-		return portletBag.getAssetRendererFactoryInstances();
-	}
-
-	/**
 	 * Returns the names of the parameters that will be automatically propagated
 	 * through the portlet.
 	 *
@@ -737,15 +711,17 @@ public class PortletImpl extends PortletBaseImpl {
 	public ControlPanelEntry getControlPanelEntryInstance() {
 		PortletBag portletBag = PortletBagPool.get(getRootPortletId());
 
+		ControlPanelEntry controlPanelEntry = _controlPanelEntrySnapshot.get();
+
 		if (portletBag == null) {
-			return _controlPanelEntry;
+			return controlPanelEntry;
 		}
 
 		List<ControlPanelEntry> controlPanelEntryInstances =
 			portletBag.getControlPanelEntryInstances();
 
 		if (controlPanelEntryInstances.isEmpty()) {
-			return _controlPanelEntry;
+			return controlPanelEntry;
 		}
 
 		return controlPanelEntryInstances.get(0);
@@ -927,18 +903,27 @@ public class PortletImpl extends PortletBaseImpl {
 	 */
 	@Override
 	public String getFriendlyURLMapping() {
+		return getFriendlyURLMapping(true);
+	}
+
+	@Override
+	public String getFriendlyURLMapping(boolean lookUpFriendlyURLMapper) {
 		if (Validator.isNotNull(_friendlyURLMapping)) {
 			return _friendlyURLMapping;
 		}
 
-		FriendlyURLMapper friendlyURLMapperInstance =
-			getFriendlyURLMapperInstance();
+		if (lookUpFriendlyURLMapper) {
+			FriendlyURLMapper friendlyURLMapperInstance =
+				getFriendlyURLMapperInstance();
 
-		if (friendlyURLMapperInstance == null) {
-			return null;
+			if (friendlyURLMapperInstance == null) {
+				return null;
+			}
+
+			return friendlyURLMapperInstance.getMapping();
 		}
 
-		return friendlyURLMapperInstance.getMapping();
+		return null;
 	}
 
 	/**
@@ -4240,12 +4225,12 @@ public class PortletImpl extends PortletBaseImpl {
 	 */
 	private static final Log _log = LogFactoryUtil.getLog(PortletImpl.class);
 
-	private static volatile ControlPanelEntry _controlPanelEntry =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			ControlPanelEntry.class, PortletImpl.class, "_controlPanelEntry",
+	private static final Snapshot<ControlPanelEntry>
+		_controlPanelEntrySnapshot = new Snapshot<>(
+			PortletImpl.class, ControlPanelEntry.class,
 			"(&(!(javax.portlet.name=*))(objectClass=" +
 				ControlPanelEntry.class.getName() + "))",
-			false);
+			true);
 
 	/**
 	 * Map of the ready states of all portlets keyed by their root portlet ID.

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -41,10 +32,22 @@ String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 
 		<aui:script>
 			<c:if test="<%= fileEntry != null %>">
-				Liferay.Util.getOpener().<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo(
-					'<%= previewURL %>',
-					'<%= fileEntry.getFileEntryId() %>'
-				);
+				const onChangeLogo = Liferay.Util.getOpener()
+					.<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo;
+
+				if (onChangeLogo) {
+					Liferay.Util.getOpener().<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo(
+						'<%= previewURL %>',
+						'<%= fileEntry.getFileEntryId() %>'
+					);
+				}
+				else {
+					Liferay.Util.getOpener().Liferay.fire('changeLogo', {
+						previewURL: '<%= previewURL %>',
+						fileEntryId: '<%= fileEntry.getFileEntryId() %>',
+						tempImageFileName: '<%= HtmlUtil.escape(tempImageFileName) %>',
+					});
+				}
 			</c:if>
 
 			Liferay.Util.getWindow().hide();
@@ -88,35 +91,37 @@ String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 
 					<div class="sheet">
 						<div class="panel-group panel-group-flush">
-							<aui:fieldset cssClass="lfr-portrait-editor">
-								<h4 class="text-default">
-									<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(maxFileSize, locale) %>" key="upload-images-no-larger-than-x" />
-								</h4>
+							<div class="h4 text-default" id="<portlet:namespace />sizeDescription">
+								<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(maxFileSize, locale) %>" key="upload-images-no-larger-than-x" />
+							</div>
 
-								<div class="lfr-change-logo lfr-portrait-preview" id="<portlet:namespace />portraitPreview">
-									<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="image-preview" />" class="img-fluid lfr-portrait-preview-img" id="<portlet:namespace />portraitPreviewImg" src="<%= HtmlUtil.escape(currentImageURL) %>" />
-								</div>
+							<div class="lfr-change-logo lfr-portrait-preview" id="<portlet:namespace />portraitPreview">
+								<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="image-preview" />" class="img-fluid lfr-portrait-preview-img" id="<portlet:namespace />portraitPreviewImg" src="<%= HtmlUtil.escape(currentImageURL) %>" />
+							</div>
 
-								<c:if test='<%= Validator.isNull(currentImageURL) || currentImageURL.contains("/spacer.png") %>'>
-									<p class="text-muted" id="<portlet:namespace />emptyResultMessage">
-										<%= StringUtil.toLowerCase(LanguageUtil.get(request, "none")) %>
-									</p>
-								</c:if>
+							<c:if test='<%= Validator.isNull(currentImageURL) || currentImageURL.contains("/spacer.png") %>'>
+								<p class="text-muted" id="<portlet:namespace />emptyResultMessage">
+									<%= StringUtil.toLowerCase(LanguageUtil.get(request, "none")) %>
+								</p>
+							</c:if>
 
-								<div class="button-holder">
-									<label class="btn btn-secondary mt-2" for="<portlet:namespace />fileName" id="<portlet:namespace />uploadImage" tabindex="0"><liferay-ui:message key="select" /></label>
+							<div class="button-holder">
+								<label for="<portlet:namespace />fileName" id="<portlet:namespace />uploadImage">
+									<span aria-describedby="<portlet:namespace />sizeDescription" aria-label="<%= LanguageUtil.format(request, "select-x", "image") %>" class="btn btn-secondary mt-2" role="button" tabindex="0">
+										<liferay-ui:message key="select" />
+									<span>
+								</label>
 
-									<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) || windowState.equals(LiferayWindowState.POP_UP) %>" cssClass="hide" label="" name="fileName" type="file">
-										<aui:validator name="acceptFiles">
-											'<%= StringUtil.merge(dlConfiguration.fileExtensions()) %>'
-										</aui:validator>
+								<aui:input cssClass="hide" label="" name="fileName" type="file">
+									<aui:validator name="acceptFiles">
+										'<%= StringUtil.merge(dlConfiguration.fileExtensions()) %>'
+									</aui:validator>
 
-										<aui:validator errorMessage='<%= LanguageUtil.format(locale, "please-enter-a-file-with-a-valid-file-size-no-larger-than-x", LanguageUtil.formatStorageSize(maxFileSize, locale)) %>' name="maxFileSize">
-											'<%= String.valueOf(maxFileSize) %>'
-										</aui:validator>
-									</aui:input>
-								</div>
-							</aui:fieldset>
+									<aui:validator errorMessage='<%= LanguageUtil.format(locale, "please-enter-a-file-with-a-valid-file-size-no-larger-than-x", LanguageUtil.formatStorageSize(maxFileSize, locale)) %>' name="maxFileSize">
+										'<%= String.valueOf(maxFileSize) %>'
+									</aui:validator>
+								</aui:input>
+							</div>
 						</div>
 					</div>
 				</clay:container-fluid>

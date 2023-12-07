@@ -1,25 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayManagementToolbar from '@clayui/management-toolbar';
-import {ReactNode, useState} from 'react';
+import ClayPopover from '@clayui/popover';
+import {ReactNode, useCallback, useContext, useState} from 'react';
+import {ListViewContext, ListViewTypes} from '~/context/ListViewContext';
+import {Liferay} from '~/services/liferay';
 
 import i18n from '../../i18n';
-import {RendererFields} from '../Form/Renderer';
+import {FilterSchema} from '../../schema/filter';
+import {Column} from '../Table';
+import ManagementToolbarColumns from './ManagementToolbarColumns';
 import ManagementToolbarFilter from './ManagementToolbarFilter';
 
 export type IItem = {
@@ -37,24 +32,24 @@ export type IItem = {
 	type?:
 		| 'checkbox'
 		| 'contextual'
+		| 'divider'
 		| 'group'
 		| 'item'
 		| 'radio'
-		| 'radiogroup'
-		| 'divider';
+		| 'radiogroup';
 	value?: string;
 };
 
 type ManagementToolbarRightProps = {
 	actions: any;
 	addButton?: () => void;
-	buttons?: ReactNode;
-	columns: IItem[];
+	buttons?: ReactNode | ((actions: any) => ReactNode);
+	columns: Column[];
 	disabled: boolean;
 	display?: {
 		columns?: boolean;
 	};
-	filterFields?: RendererFields[];
+	filterSchema?: FilterSchema;
 };
 
 const ManagementToolbarRight: React.FC<ManagementToolbarRightProps> = ({
@@ -63,49 +58,71 @@ const ManagementToolbarRight: React.FC<ManagementToolbarRightProps> = ({
 	buttons,
 	display = {columns: true},
 	columns,
-	disabled,
-	filterFields,
+	filterSchema,
 }) => {
-	const [pinned, setPinned] = useState(false);
+	const [{filters, pin}, dispatch] = useContext(ListViewContext);
+	const [columnsDropdownVisible, setColumnsDropdownVisible] = useState(false);
+
+	const hasAppliedFilters = !!filters.entries.length;
+
+	const onPin = useCallback(() => {
+		if (hasAppliedFilters) {
+			dispatch({type: ListViewTypes.SET_PIN});
+
+			return Liferay.Util.openToast({
+				message: i18n.translate(
+					pin
+						? 'filters-unpinned-successfully'
+						: 'filters-pinned-successfully'
+				),
+				type: 'success',
+			});
+		}
+
+		Liferay.Util.openToast({
+			message: i18n.translate(
+				'you-must-select-one-or-more-filters-before-pinning'
+			),
+			type: 'danger',
+		});
+	}, [dispatch, hasAppliedFilters, pin]);
 
 	return (
 		<ClayManagementToolbar.ItemList>
-			{filterFields?.length && (
+			{filterSchema?.fields?.length && (
 				<>
 					<ClayManagementToolbar.Item>
 						<ClayButtonWithIcon
 							aria-label={i18n.translate('add-pin')}
 							className="nav-btn nav-btn-monospaced"
 							displayType="unstyled"
-							onClick={() => setPinned(!pinned)}
-							symbol={pinned ? 'unpin' : 'pin'}
-							title={pinned ? 'Unpin' : 'Pin'}
+							onClick={onPin}
+							symbol={i18n.translate(pin ? 'unpin' : 'pin')}
+							title={i18n.translate(pin ? 'unpin' : 'pin')}
 						/>
 					</ClayManagementToolbar.Item>
 
-					<ManagementToolbarFilter filterFields={filterFields} />
+					<ManagementToolbarFilter filterSchema={filterSchema} />
 				</>
 			)}
 
 			{display.columns && (
-				<ClayDropDownWithItems
-					items={columns}
+				<ClayPopover
+					alignPosition="bottom-right"
+					className="body-columns popover-management-toolbar"
+					closeOnClickOutside
+					onShowChange={setColumnsDropdownVisible}
+					show={columnsDropdownVisible}
 					trigger={
 						<ClayButton
-							className="nav-link"
-							disabled={disabled}
+							className="d-flex management-toolbar-buttons nav-link"
 							displayType="unstyled"
 						>
 							<span className="navbar-breakpoint-down-d-none">
-								<span
-									className="navbar-text-truncate"
-									title={i18n.translate('columns')}
-								>
-									<ClayIcon
-										className="inline-item inline-item-after"
-										symbol="columns"
-									/>
-								</span>
+								<ClayIcon
+									className="inline-item inline-item-after"
+									symbol="columns"
+								/>
 							</span>
 
 							<span className="navbar-breakpoint-d-none">
@@ -113,10 +130,15 @@ const ManagementToolbarRight: React.FC<ManagementToolbarRightProps> = ({
 							</span>
 						</ClayButton>
 					}
-				/>
+				>
+					<ManagementToolbarColumns
+						columns={columns}
+						onClose={() => setColumnsDropdownVisible(false)}
+					/>
+				</ClayPopover>
 			)}
 
-			{buttons}
+			{typeof buttons === 'function' ? buttons(actions) : buttons}
 
 			{actions?.create && addButton && (
 				<ClayManagementToolbar.Item

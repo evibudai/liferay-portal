@@ -1,35 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
-import com.liferay.commerce.account.exception.NoSuchAccountException;
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.model.CommerceAccountOrganizationRel;
-import com.liferay.commerce.account.service.CommerceAccountOrganizationRelService;
-import com.liferay.commerce.account.service.CommerceAccountService;
-import com.liferay.commerce.account.service.persistence.CommerceAccountOrganizationRelPK;
+import com.liferay.account.exception.NoSuchEntryException;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountEntryOrganizationRel;
+import com.liferay.account.service.AccountEntryOrganizationRelService;
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountOrganization;
-import com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountOrganizationDTOConverter;
 import com.liferay.headless.commerce.admin.account.internal.util.v1_0.AccountOrganizationUtil;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AccountOrganizationResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -47,30 +35,29 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-organization.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {AccountOrganizationResource.class, NestedFieldSupport.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = AccountOrganizationResource.class
 )
 public class AccountOrganizationResourceImpl
-	extends BaseAccountOrganizationResourceImpl implements NestedFieldSupport {
+	extends BaseAccountOrganizationResourceImpl {
 
 	@Override
 	public Response deleteAccountByExternalReferenceCodeAccountOrganization(
 			String externalReferenceCode, Long organizationId)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
-			throw new NoSuchAccountException(
+		if (accountEntry == null) {
+			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
-		_commerceAccountOrganizationRelService.
-			deleteCommerceAccountOrganizationRel(
-				commerceAccount.getCommerceAccountId(), organizationId);
+		_accountEntryOrganizationRelService.deleteAccountEntryOrganizationRel(
+			accountEntry.getAccountEntryId(), organizationId);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -82,8 +69,8 @@ public class AccountOrganizationResourceImpl
 			Long id, Long organizationId)
 		throws Exception {
 
-		_commerceAccountOrganizationRelService.
-			deleteCommerceAccountOrganizationRel(id, organizationId);
+		_accountEntryOrganizationRelService.deleteAccountEntryOrganizationRel(
+			id, organizationId);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -96,26 +83,23 @@ public class AccountOrganizationResourceImpl
 				String externalReferenceCode, Long organizationId)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
-			throw new NoSuchAccountException(
+		if (accountEntry == null) {
+			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
-		CommerceAccountOrganizationRel commerceAccountOrganizationRel =
-			_commerceAccountOrganizationRelService.
-				getCommerceAccountOrganizationRel(
-					new CommerceAccountOrganizationRelPK(
-						commerceAccount.getCommerceAccountId(),
-						organizationId));
+		AccountEntryOrganizationRel accountEntryOrganizationRel =
+			_accountEntryOrganizationRelService.getAccountEntryOrganizationRel(
+				accountEntry.getAccountEntryId(), organizationId);
 
 		return _accountOrganizationDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				commerceAccountOrganizationRel.getPrimaryKey(),
+				accountEntryOrganizationRel.getPrimaryKey(),
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
@@ -125,30 +109,29 @@ public class AccountOrganizationResourceImpl
 				String externalReferenceCode, Pagination pagination)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
-			throw new NoSuchAccountException(
+		if (accountEntry == null) {
+			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
-		List<CommerceAccountOrganizationRel> commerceAccountOrganizationRels =
-			_commerceAccountOrganizationRelService.
-				getCommerceAccountOrganizationRels(
-					commerceAccount.getCommerceAccountId(),
-					pagination.getStartPosition(), pagination.getEndPosition());
+		List<AccountEntryOrganizationRel> accountEntryOrganizationRels =
+			_accountEntryOrganizationRelService.getAccountEntryOrganizationRels(
+				accountEntry.getAccountEntryId(), pagination.getStartPosition(),
+				pagination.getEndPosition());
 
-		int totalItems =
-			_commerceAccountOrganizationRelService.
-				getCommerceAccountOrganizationRelsCount(
-					commerceAccount.getCommerceAccountId());
+		long totalItems =
+			_accountEntryOrganizationRelService.
+				getAccountEntryOrganizationRelsCount(
+					accountEntry.getAccountEntryId());
 
 		return Page.of(
-			_toAccountOrganizations(commerceAccountOrganizationRels),
-			pagination, totalItems);
+			_toAccountOrganizations(accountEntryOrganizationRels), pagination,
+			totalItems);
 	}
 
 	@Override
@@ -156,9 +139,13 @@ public class AccountOrganizationResourceImpl
 			Long id, Long organizationId)
 		throws Exception {
 
+		AccountEntryOrganizationRel accountEntryOrganizationRel =
+			_accountEntryOrganizationRelService.getAccountEntryOrganizationRel(
+				id, organizationId);
+
 		return _accountOrganizationDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				new CommerceAccountOrganizationRelPK(id, organizationId),
+				accountEntryOrganizationRel.getPrimaryKey(),
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
@@ -168,19 +155,17 @@ public class AccountOrganizationResourceImpl
 			Long id, Pagination pagination)
 		throws Exception {
 
-		List<CommerceAccountOrganizationRel> commerceAccountOrganizationRels =
-			_commerceAccountOrganizationRelService.
-				getCommerceAccountOrganizationRels(
-					id, pagination.getStartPosition(),
-					pagination.getEndPosition());
+		List<AccountEntryOrganizationRel> accountEntryOrganizationRels =
+			_accountEntryOrganizationRelService.getAccountEntryOrganizationRels(
+				id, pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
-			_commerceAccountOrganizationRelService.
-				getCommerceAccountOrganizationRelsCount(id);
+		long totalItems =
+			_accountEntryOrganizationRelService.
+				getAccountEntryOrganizationRelsCount(id);
 
 		return Page.of(
-			_toAccountOrganizations(commerceAccountOrganizationRels),
-			pagination, totalItems);
+			_toAccountOrganizations(accountEntryOrganizationRels), pagination,
+			totalItems);
 	}
 
 	@Override
@@ -190,28 +175,26 @@ public class AccountOrganizationResourceImpl
 				AccountOrganization accountOrganization)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
-			throw new NoSuchAccountException(
+		if (accountEntry == null) {
+			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
-		CommerceAccountOrganizationRel commerceAccountOrganizationRel =
-			_commerceAccountOrganizationRelService.
-				addCommerceAccountOrganizationRel(
-					commerceAccount.getCommerceAccountId(),
-					AccountOrganizationUtil.getOrganizationId(
-						_organizationLocalService, accountOrganization,
-						contextCompany.getCompanyId()),
-					_serviceContextHelper.getServiceContext());
+		AccountEntryOrganizationRel accountOrganizationRel =
+			_accountEntryOrganizationRelService.addAccountEntryOrganizationRel(
+				accountEntry.getAccountEntryId(),
+				AccountOrganizationUtil.getOrganizationId(
+					_organizationLocalService, accountOrganization,
+					contextCompany.getCompanyId()));
 
 		return _accountOrganizationDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				commerceAccountOrganizationRel.getPrimaryKey(),
+				accountOrganizationRel.getPrimaryKey(),
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
@@ -220,35 +203,32 @@ public class AccountOrganizationResourceImpl
 			Long id, AccountOrganization accountOrganization)
 		throws Exception {
 
-		CommerceAccountOrganizationRel commerceAccountOrganizationRel =
-			_commerceAccountOrganizationRelService.
-				addCommerceAccountOrganizationRel(
-					id,
-					AccountOrganizationUtil.getOrganizationId(
-						_organizationLocalService, accountOrganization,
-						contextCompany.getCompanyId()),
-					_serviceContextHelper.getServiceContext());
+		AccountEntryOrganizationRel accountOrganizationRel =
+			_accountEntryOrganizationRelService.addAccountEntryOrganizationRel(
+				id,
+				AccountOrganizationUtil.getOrganizationId(
+					_organizationLocalService, accountOrganization,
+					contextCompany.getCompanyId()));
 
 		return _accountOrganizationDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				commerceAccountOrganizationRel.getPrimaryKey(),
+				accountOrganizationRel.getPrimaryKey(),
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
 	private List<AccountOrganization> _toAccountOrganizations(
-			List<CommerceAccountOrganizationRel>
-				commerceAccountOrganizationRels)
+			List<AccountEntryOrganizationRel> accountEntryOrganizationRels)
 		throws Exception {
 
 		List<AccountOrganization> accountOrganizations = new ArrayList<>();
 
-		for (CommerceAccountOrganizationRel commerceAccountOrganizationRel :
-				commerceAccountOrganizationRels) {
+		for (AccountEntryOrganizationRel accountEntryOrganizationRel :
+				accountEntryOrganizationRels) {
 
 			accountOrganizations.add(
 				_accountOrganizationDTOConverter.toDTO(
 					new DefaultDTOConverterContext(
-						commerceAccountOrganizationRel.getPrimaryKey(),
+						accountEntryOrganizationRel.getPrimaryKey(),
 						contextAcceptLanguage.getPreferredLocale())));
 		}
 
@@ -256,19 +236,19 @@ public class AccountOrganizationResourceImpl
 	}
 
 	@Reference
-	private AccountOrganizationDTOConverter _accountOrganizationDTOConverter;
+	private AccountEntryOrganizationRelService
+		_accountEntryOrganizationRelService;
 
 	@Reference
-	private CommerceAccountOrganizationRelService
-		_commerceAccountOrganizationRelService;
+	private AccountEntryService _accountEntryService;
 
-	@Reference
-	private CommerceAccountService _commerceAccountService;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountOrganizationDTOConverter)"
+	)
+	private DTOConverter<AccountEntryOrganizationRel, AccountOrganization>
+		_accountOrganizationDTOConverter;
 
 	@Reference
 	private OrganizationLocalService _organizationLocalService;
-
-	@Reference
-	private ServiceContextHelper _serviceContextHelper;
 
 }

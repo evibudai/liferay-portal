@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner;
@@ -17,15 +8,13 @@ package com.liferay.poshi.runner;
 import com.liferay.poshi.core.PoshiContext;
 import com.liferay.poshi.core.PoshiValidation;
 import com.liferay.poshi.core.util.PropsUtil;
-import com.liferay.poshi.runner.selenium.SeleniumUtil;
+import com.liferay.poshi.runner.selenium.WebDriverUtil;
 
 import java.io.File;
 
 import java.util.Properties;
 
 import junit.framework.TestCase;
-
-import org.junit.After;
 
 /**
  * @author Kenji Heigel
@@ -38,6 +27,9 @@ public abstract class PoshiRunnerTestCase extends TestCase {
 		poshiRunner.setUp();
 
 		poshiRunner.test();
+
+		WebDriverUtil.stopWebDriver(
+			PoshiContext.getDefaultNamespace() + "." + testName);
 	}
 
 	public void setUpPoshiRunner(String testBaseDirName) throws Exception {
@@ -59,12 +51,6 @@ public abstract class PoshiRunnerTestCase extends TestCase {
 		PoshiContext.readFiles();
 
 		PoshiValidation.validate();
-	}
-
-	@After
-	@Override
-	public void tearDown() {
-		SeleniumUtil.stopSelenium();
 	}
 
 }

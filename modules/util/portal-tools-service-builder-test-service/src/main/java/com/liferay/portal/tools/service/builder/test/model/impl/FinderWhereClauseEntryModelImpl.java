@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
@@ -211,53 +202,70 @@ public class FinderWhereClauseEntryModelImpl
 	public Map<String, Function<FinderWhereClauseEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<FinderWhereClauseEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<FinderWhereClauseEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<FinderWhereClauseEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<FinderWhereClauseEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<FinderWhereClauseEntry, Object>>();
-		Map<String, BiConsumer<FinderWhereClauseEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<FinderWhereClauseEntry, ?>>();
+		private static final Map
+			<String, Function<FinderWhereClauseEntry, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"finderWhereClauseEntryId",
-			FinderWhereClauseEntry::getFinderWhereClauseEntryId);
-		attributeSetterBiConsumers.put(
-			"finderWhereClauseEntryId",
-			(BiConsumer<FinderWhereClauseEntry, Long>)
-				FinderWhereClauseEntry::setFinderWhereClauseEntryId);
-		attributeGetterFunctions.put("name", FinderWhereClauseEntry::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<FinderWhereClauseEntry, String>)
-				FinderWhereClauseEntry::setName);
-		attributeGetterFunctions.put(
-			"nickname", FinderWhereClauseEntry::getNickname);
-		attributeSetterBiConsumers.put(
-			"nickname",
-			(BiConsumer<FinderWhereClauseEntry, String>)
-				FinderWhereClauseEntry::setNickname);
+		static {
+			Map<String, Function<FinderWhereClauseEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<FinderWhereClauseEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"finderWhereClauseEntryId",
+				FinderWhereClauseEntry::getFinderWhereClauseEntryId);
+			attributeGetterFunctions.put(
+				"name", FinderWhereClauseEntry::getName);
+			attributeGetterFunctions.put(
+				"nickname", FinderWhereClauseEntry::getNickname);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<FinderWhereClauseEntry, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<FinderWhereClauseEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<FinderWhereClauseEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"finderWhereClauseEntryId",
+				(BiConsumer<FinderWhereClauseEntry, Long>)
+					FinderWhereClauseEntry::setFinderWhereClauseEntryId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<FinderWhereClauseEntry, String>)
+					FinderWhereClauseEntry::setName);
+			attributeSetterBiConsumers.put(
+				"nickname",
+				(BiConsumer<FinderWhereClauseEntry, String>)
+					FinderWhereClauseEntry::setNickname);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -563,7 +571,8 @@ public class FinderWhereClauseEntryModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<FinderWhereClauseEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

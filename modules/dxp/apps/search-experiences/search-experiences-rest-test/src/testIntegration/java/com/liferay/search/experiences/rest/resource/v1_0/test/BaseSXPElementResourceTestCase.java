@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.resource.v1_0.test;
@@ -23,6 +14,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -68,8 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -189,6 +179,8 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		sxpElement.setDescription(regex);
 		sxpElement.setExternalReferenceCode(regex);
+		sxpElement.setFallbackDescription(regex);
+		sxpElement.setFallbackTitle(regex);
 		sxpElement.setSchemaVersion(regex);
 		sxpElement.setTitle(regex);
 		sxpElement.setUserName(regex);
@@ -202,6 +194,8 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		Assert.assertEquals(regex, sxpElement.getDescription());
 		Assert.assertEquals(regex, sxpElement.getExternalReferenceCode());
+		Assert.assertEquals(regex, sxpElement.getFallbackDescription());
+		Assert.assertEquals(regex, sxpElement.getFallbackTitle());
 		Assert.assertEquals(regex, sxpElement.getSchemaVersion());
 		Assert.assertEquals(regex, sxpElement.getTitle());
 		Assert.assertEquals(regex, sxpElement.getUserName());
@@ -228,11 +222,20 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		assertContains(sxpElement1, (List<SXPElement>)page.getItems());
 		assertContains(sxpElement2, (List<SXPElement>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetSXPElementsPage_getExpectedActions());
 
 		sxpElementResource.deleteSXPElement(sxpElement1.getId());
 
 		sxpElementResource.deleteSXPElement(sxpElement2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSXPElementsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -265,37 +268,35 @@ public abstract class BaseSXPElementResourceTestCase {
 	public void testGetSXPElementsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetSXPElementsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetSXPElementsPageWithFilterStringContains()
+		throws Exception {
 
-		SXPElement sxpElement1 = testGetSXPElementsPage_addSXPElement(
-			randomSXPElement());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		SXPElement sxpElement2 = testGetSXPElementsPage_addSXPElement(
-			randomSXPElement());
-
-		for (EntityField entityField : entityFields) {
-			Page<SXPElement> page = sxpElementResource.getSXPElementsPage(
-				null, getFilterString(entityField, "eq", sxpElement1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(sxpElement1),
-				(List<SXPElement>)page.getItems());
-		}
+		testGetSXPElementsPageWithFilter("contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetSXPElementsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetSXPElementsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSXPElementsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetSXPElementsPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSXPElementsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -310,7 +311,7 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<SXPElement> page = sxpElementResource.getSXPElementsPage(
-				null, getFilterString(entityField, "eq", sxpElement1),
+				null, getFilterString(entityField, operator, sxpElement1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -321,10 +322,10 @@ public abstract class BaseSXPElementResourceTestCase {
 
 	@Test
 	public void testGetSXPElementsPageWithPagination() throws Exception {
-		Page<SXPElement> totalPage = sxpElementResource.getSXPElementsPage(
+		Page<SXPElement> sxpElementPage = sxpElementResource.getSXPElementsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(sxpElementPage.getTotalCount());
 
 		SXPElement sxpElement1 = testGetSXPElementsPage_addSXPElement(
 			randomSXPElement());
@@ -353,7 +354,7 @@ public abstract class BaseSXPElementResourceTestCase {
 		Assert.assertEquals(sxpElements2.toString(), 1, sxpElements2.size());
 
 		Page<SXPElement> page3 = sxpElementResource.getSXPElementsPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 		assertContains(sxpElement1, (List<SXPElement>)page3.getItems());
 		assertContains(sxpElement2, (List<SXPElement>)page3.getItems());
@@ -467,22 +468,23 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		sxpElement2 = testGetSXPElementsPage_addSXPElement(sxpElement2);
 
+		Page<SXPElement> page = sxpElementResource.getSXPElementsPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<SXPElement> ascPage = sxpElementResource.getSXPElementsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(sxpElement1, sxpElement2),
-				(List<SXPElement>)ascPage.getItems());
+			assertContains(sxpElement1, (List<SXPElement>)ascPage.getItems());
+			assertContains(sxpElement2, (List<SXPElement>)ascPage.getItems());
 
 			Page<SXPElement> descPage = sxpElementResource.getSXPElementsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(sxpElement2, sxpElement1),
-				(List<SXPElement>)descPage.getItems());
+			assertContains(sxpElement2, (List<SXPElement>)descPage.getItems());
+			assertContains(sxpElement1, (List<SXPElement>)descPage.getItems());
 		}
 	}
 
@@ -506,6 +508,163 @@ public abstract class BaseSXPElementResourceTestCase {
 	}
 
 	protected SXPElement testPostSXPElement_addSXPElement(SXPElement sxpElement)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetSXPElementByExternalReferenceCode() throws Exception {
+		SXPElement postSXPElement =
+			testGetSXPElementByExternalReferenceCode_addSXPElement();
+
+		SXPElement getSXPElement =
+			sxpElementResource.getSXPElementByExternalReferenceCode(
+				postSXPElement.getExternalReferenceCode());
+
+		assertEquals(postSXPElement, getSXPElement);
+		assertValid(getSXPElement);
+	}
+
+	protected SXPElement
+			testGetSXPElementByExternalReferenceCode_addSXPElement()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSXPElementByExternalReferenceCode()
+		throws Exception {
+
+		SXPElement sxpElement =
+			testGraphQLGetSXPElementByExternalReferenceCode_addSXPElement();
+
+		Assert.assertTrue(
+			equals(
+				sxpElement,
+				SXPElementSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"sXPElementByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												sxpElement.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/sXPElementByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetSXPElementByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"sXPElementByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected SXPElement
+			testGraphQLGetSXPElementByExternalReferenceCode_addSXPElement()
+		throws Exception {
+
+		return testGraphQLSXPElement_addSXPElement();
+	}
+
+	@Test
+	public void testPutSXPElementByExternalReferenceCode() throws Exception {
+		SXPElement postSXPElement =
+			testPutSXPElementByExternalReferenceCode_addSXPElement();
+
+		SXPElement randomSXPElement = randomSXPElement();
+
+		SXPElement putSXPElement =
+			sxpElementResource.putSXPElementByExternalReferenceCode(
+				postSXPElement.getExternalReferenceCode(), randomSXPElement);
+
+		assertEquals(randomSXPElement, putSXPElement);
+		assertValid(putSXPElement);
+
+		SXPElement getSXPElement =
+			sxpElementResource.getSXPElementByExternalReferenceCode(
+				putSXPElement.getExternalReferenceCode());
+
+		assertEquals(randomSXPElement, getSXPElement);
+		assertValid(getSXPElement);
+
+		SXPElement newSXPElement =
+			testPutSXPElementByExternalReferenceCode_createSXPElement();
+
+		putSXPElement = sxpElementResource.putSXPElementByExternalReferenceCode(
+			newSXPElement.getExternalReferenceCode(), newSXPElement);
+
+		assertEquals(newSXPElement, putSXPElement);
+		assertValid(putSXPElement);
+
+		getSXPElement = sxpElementResource.getSXPElementByExternalReferenceCode(
+			putSXPElement.getExternalReferenceCode());
+
+		assertEquals(newSXPElement, getSXPElement);
+
+		Assert.assertEquals(
+			newSXPElement.getExternalReferenceCode(),
+			putSXPElement.getExternalReferenceCode());
+	}
+
+	protected SXPElement
+			testPutSXPElementByExternalReferenceCode_createSXPElement()
+		throws Exception {
+
+		return randomSXPElement();
+	}
+
+	protected SXPElement
+			testPutSXPElementByExternalReferenceCode_addSXPElement()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostSXPElementPreview() throws Exception {
+		SXPElement randomSXPElement = randomSXPElement();
+
+		SXPElement postSXPElement = testPostSXPElementPreview_addSXPElement(
+			randomSXPElement);
+
+		assertEquals(randomSXPElement, postSXPElement);
+		assertValid(postSXPElement);
+	}
+
+	protected SXPElement testPostSXPElementPreview_addSXPElement(
+			SXPElement sxpElement)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -681,6 +840,30 @@ public abstract class BaseSXPElementResourceTestCase {
 	}
 
 	@Test
+	public void testPutSXPElement() throws Exception {
+		SXPElement postSXPElement = testPutSXPElement_addSXPElement();
+
+		SXPElement randomSXPElement = randomSXPElement();
+
+		SXPElement putSXPElement = sxpElementResource.putSXPElement(
+			postSXPElement.getId(), randomSXPElement);
+
+		assertEquals(randomSXPElement, putSXPElement);
+		assertValid(putSXPElement);
+
+		SXPElement getSXPElement = sxpElementResource.getSXPElement(
+			putSXPElement.getId());
+
+		assertEquals(randomSXPElement, getSXPElement);
+		assertValid(getSXPElement);
+	}
+
+	protected SXPElement testPutSXPElement_addSXPElement() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostSXPElementCopy() throws Exception {
 		SXPElement randomSXPElement = randomSXPElement();
 
@@ -843,6 +1026,24 @@ public abstract class BaseSXPElementResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"fallbackDescription", additionalAssertFieldName)) {
+
+				if (sxpElement.getFallbackDescription() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("fallbackTitle", additionalAssertFieldName)) {
+				if (sxpElement.getFallbackTitle() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("hidden", additionalAssertFieldName)) {
 				if (sxpElement.getHidden() == null) {
 					valid = false;
@@ -924,6 +1125,13 @@ public abstract class BaseSXPElementResourceTestCase {
 	}
 
 	protected void assertValid(Page<SXPElement> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<SXPElement> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<SXPElement> sxpElements = page.getItems();
@@ -938,6 +1146,25 @@ public abstract class BaseSXPElementResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1069,6 +1296,30 @@ public abstract class BaseSXPElementResourceTestCase {
 				if (!Objects.deepEquals(
 						sxpElement1.getExternalReferenceCode(),
 						sxpElement2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"fallbackDescription", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						sxpElement1.getFallbackDescription(),
+						sxpElement2.getFallbackDescription())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("fallbackTitle", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						sxpElement1.getFallbackTitle(),
+						sxpElement2.getFallbackTitle())) {
 
 					return false;
 				}
@@ -1216,14 +1467,16 @@ public abstract class BaseSXPElementResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1240,6 +1493,10 @@ public abstract class BaseSXPElementResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1249,18 +1506,18 @@ public abstract class BaseSXPElementResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1313,9 +1570,47 @@ public abstract class BaseSXPElementResourceTestCase {
 		}
 
 		if (entityFieldName.equals("description")) {
-			sb.append("'");
-			sb.append(String.valueOf(sxpElement.getDescription()));
-			sb.append("'");
+			Object object = sxpElement.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1331,9 +1626,139 @@ public abstract class BaseSXPElementResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(sxpElement.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = sxpElement.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("fallbackDescription")) {
+			Object object = sxpElement.getFallbackDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("fallbackTitle")) {
+			Object object = sxpElement.getFallbackTitle();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1386,17 +1811,93 @@ public abstract class BaseSXPElementResourceTestCase {
 		}
 
 		if (entityFieldName.equals("schemaVersion")) {
-			sb.append("'");
-			sb.append(String.valueOf(sxpElement.getSchemaVersion()));
-			sb.append("'");
+			Object object = sxpElement.getSchemaVersion();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("title")) {
-			sb.append("'");
-			sb.append(String.valueOf(sxpElement.getTitle()));
-			sb.append("'");
+			Object object = sxpElement.getTitle();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1413,17 +1914,93 @@ public abstract class BaseSXPElementResourceTestCase {
 		}
 
 		if (entityFieldName.equals("userName")) {
-			sb.append("'");
-			sb.append(String.valueOf(sxpElement.getUserName()));
-			sb.append("'");
+			Object object = sxpElement.getUserName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("version")) {
-			sb.append("'");
-			sb.append(String.valueOf(sxpElement.getVersion()));
-			sb.append("'");
+			Object object = sxpElement.getVersion();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1476,6 +2053,10 @@ public abstract class BaseSXPElementResourceTestCase {
 				description = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				fallbackDescription = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				fallbackTitle = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				hidden = RandomTestUtil.randomBoolean();
 				id = RandomTestUtil.randomLong();

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -19,7 +10,7 @@
 <%
 FeatureFlagsDisplayContext featureFlagsDisplayContext = (FeatureFlagsDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-String displayStyle = featureFlagsDisplayContext.getDisplayStyle();
+SearchContainer<FeatureFlagDisplay> searchContainer = featureFlagsDisplayContext.getSearchContainer();
 %>
 
 <clay:container-fluid>
@@ -33,63 +24,21 @@ String displayStyle = featureFlagsDisplayContext.getDisplayStyle();
 		<clay:sheet-section><clay:management-toolbar
 			managementToolbarDisplayContext="<%= featureFlagsDisplayContext.getManagementToolbarDisplayContext() %>"
 		/>
-
-			<liferay-ui:search-container
-				cssClass="table-valign-top"
-				searchContainer="<%= featureFlagsDisplayContext.getSearchContainer() %>"
-			>
-				<liferay-ui:search-container-row
-					className="com.liferay.feature.flag.web.internal.model.FeatureFlagDisplay"
-					keyProperty="key"
-				>
-
-					<%
-					FeatureFlagDisplay featureFlagDisplay = (FeatureFlagDisplay)model;
-					%>
-
-					<c:choose>
-						<c:when test='<%= Objects.equals("list", displayStyle) %>'>
-							<liferay-ui:search-container-column-text
-								cssClass="table-cell-expand table-cell-expand-smallest"
-								name="name"
-								property="title"
-							/>
-
-							<liferay-ui:search-container-column-text
-								cssClass="table-cell-expand"
-								name="description"
-								property="description"
-							/>
-						</c:when>
-						<c:otherwise>
-							<liferay-ui:search-container-column-text
-								colspan="<%= 11 %>"
-							>
-								<h5>
-									<strong><%= featureFlagDisplay.getTitle() %>
-									</strong>
-								</h5>
-
-								<h6 class="text-default">
-									<%= featureFlagDisplay.getDescription() %>
-								</h6>
-							</liferay-ui:search-container-column-text>
-						</c:otherwise>
-					</c:choose>
-
-					<liferay-ui:search-container-column-text
-						colspan="<%= 1 %>"
-						name="action"
-					>
-						<%@ include file="/toggle_switch.jspf" %>
-					</liferay-ui:search-container-column-text>
-				</liferay-ui:search-container-row>
-
-				<liferay-ui:search-iterator
-					displayStyle="<%= displayStyle %>"
-					markupView="lexicon"
-					searchResultCssClass="<%= featureFlagsDisplayContext.getSearchResultCssClass() %>"
+			<div class="my-4">
+				<react:component
+					module="js/FeatureFlagList"
+					props='<%=
+						HashMapBuilder.<String, Object>put(
+							"featureFlags", searchContainer.getResults()
+						).build()
+					%>'
 				/>
-			</liferay-ui:search-container></clay:sheet-section>
+			</div>
+
+			<liferay-ui:search-paginator
+				markupView="lexicon"
+				searchContainer="<%= searchContainer %>"
+			/>
+		</clay:sheet-section>
 	</clay:sheet>
 </clay:container-fluid>

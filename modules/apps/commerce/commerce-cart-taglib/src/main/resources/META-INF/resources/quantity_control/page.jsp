@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,11 +19,15 @@ String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_commerce_
 
 <liferay-portlet:actionURL name="/commerce_cart_content/edit_commerce_order_item" portletName="<%= CommercePortletKeys.COMMERCE_CART_CONTENT %>" var="editCommerceOrderItemURL" />
 
+<%
+BigDecimal quantity = commerceOrderItem.getQuantity();
+%>
+
 <aui:form action="<%= editCommerceOrderItemURL %>" method="post" name='<%= randomNamespace + "Fm" %>' portletNamespace="<%= portletNamespace %>">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= PortalUtil.getCurrentURL(request) %>" />
 	<aui:input name="commerceOrderItemId" type="hidden" value="<%= commerceOrderItem.getCommerceOrderItemId() %>" />
-	<aui:input name="quantity" type="hidden" value="<%= commerceOrderItem.getQuantity() %>" />
+	<aui:input name="quantity" type="hidden" value="<%= quantity.intValue() %>" />
 
 	<aui:model-context bean="<%= commerceOrderItem %>" model="<%= CommerceOrderItem.class %>" />
 
@@ -47,7 +42,7 @@ String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_commerce_
 						name='<%= randomNamespace + "Quantity" %>'
 						showLabel="<%= showInputLabel %>"
 						useSelect="<%= useSelect %>"
-						value="<%= commerceOrderItem.getQuantity() %>"
+						value="<%= quantity.intValue() %>"
 					/>
 
 	<c:if test="<%= !updateOnChange %>">
@@ -66,17 +61,18 @@ String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_commerce_
 		window,
 		'<%= portletNamespace + randomNamespace %>updateQuantity',
 		() => {
-			var A = AUI();
+			const form = document.getElementById(
+				'<%= portletNamespace + randomNamespace %>Fm'
+			);
 
-			var form = A.one('#<%= portletNamespace + randomNamespace %>Fm');
-
-			var quantity = form.one(
+			const quantity = form.querySelector(
 				'#<%= portletNamespace + randomNamespace %>Quantity'
 			);
 
-			form.one('#<%= portletNamespace %>quantity').val(quantity.val());
+			form.querySelector('#<%= portletNamespace %>quantity').value =
+				quantity.value;
 
-			submitForm(document.<%= portletNamespace + randomNamespace %>Fm);
+			submitForm(form);
 		},
 		['aui-base']
 	);
@@ -84,7 +80,9 @@ String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_commerce_
 
 <c:if test="<%= updateOnChange %>">
 	<aui:script use="aui-base">
-		var form = A.one('#<%= portletNamespace + randomNamespace %>Fm');
+		const form = document.getElementById(
+			'<%= portletNamespace + randomNamespace %>Fm'
+		);
 
 		form.delegate(
 			'change',

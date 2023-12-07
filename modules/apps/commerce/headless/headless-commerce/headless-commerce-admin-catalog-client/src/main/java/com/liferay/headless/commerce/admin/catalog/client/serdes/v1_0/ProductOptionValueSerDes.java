@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.ProductOptionValue;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
+
+import java.math.BigDecimal;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -55,6 +48,16 @@ public class ProductOptionValueSerDes {
 
 		sb.append("{");
 
+		if (productOptionValue.getDeltaPrice() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"deltaPrice\": ");
+
+			sb.append(productOptionValue.getDeltaPrice());
+		}
+
 		if (productOptionValue.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -89,6 +92,16 @@ public class ProductOptionValueSerDes {
 			sb.append(_toJSON(productOptionValue.getName()));
 		}
 
+		if (productOptionValue.getPreselected() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"preselected\": ");
+
+			sb.append(productOptionValue.getPreselected());
+		}
+
 		if (productOptionValue.getPriority() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -97,6 +110,40 @@ public class ProductOptionValueSerDes {
 			sb.append("\"priority\": ");
 
 			sb.append(productOptionValue.getPriority());
+		}
+
+		if (productOptionValue.getQuantity() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"quantity\": ");
+
+			sb.append(productOptionValue.getQuantity());
+		}
+
+		if (productOptionValue.getSkuId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuId\": ");
+
+			sb.append(productOptionValue.getSkuId());
+		}
+
+		if (productOptionValue.getUnitOfMeasureKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"unitOfMeasureKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productOptionValue.getUnitOfMeasureKey()));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -120,6 +167,15 @@ public class ProductOptionValueSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (productOptionValue.getDeltaPrice() == null) {
+			map.put("deltaPrice", null);
+		}
+		else {
+			map.put(
+				"deltaPrice",
+				String.valueOf(productOptionValue.getDeltaPrice()));
+		}
+
 		if (productOptionValue.getId() == null) {
 			map.put("id", null);
 		}
@@ -141,12 +197,45 @@ public class ProductOptionValueSerDes {
 			map.put("name", String.valueOf(productOptionValue.getName()));
 		}
 
+		if (productOptionValue.getPreselected() == null) {
+			map.put("preselected", null);
+		}
+		else {
+			map.put(
+				"preselected",
+				String.valueOf(productOptionValue.getPreselected()));
+		}
+
 		if (productOptionValue.getPriority() == null) {
 			map.put("priority", null);
 		}
 		else {
 			map.put(
 				"priority", String.valueOf(productOptionValue.getPriority()));
+		}
+
+		if (productOptionValue.getQuantity() == null) {
+			map.put("quantity", null);
+		}
+		else {
+			map.put(
+				"quantity", String.valueOf(productOptionValue.getQuantity()));
+		}
+
+		if (productOptionValue.getSkuId() == null) {
+			map.put("skuId", null);
+		}
+		else {
+			map.put("skuId", String.valueOf(productOptionValue.getSkuId()));
+		}
+
+		if (productOptionValue.getUnitOfMeasureKey() == null) {
+			map.put("unitOfMeasureKey", null);
+		}
+		else {
+			map.put(
+				"unitOfMeasureKey",
+				String.valueOf(productOptionValue.getUnitOfMeasureKey()));
 		}
 
 		return map;
@@ -170,7 +259,13 @@ public class ProductOptionValueSerDes {
 			ProductOptionValue productOptionValue, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "deltaPrice")) {
+				if (jsonParserFieldValue != null) {
+					productOptionValue.setDeltaPrice(
+						new BigDecimal((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					productOptionValue.setId(
 						Long.valueOf((String)jsonParserFieldValue));
@@ -188,10 +283,34 @@ public class ProductOptionValueSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "preselected")) {
+				if (jsonParserFieldValue != null) {
+					productOptionValue.setPreselected(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "priority")) {
 				if (jsonParserFieldValue != null) {
 					productOptionValue.setPriority(
 						Double.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "quantity")) {
+				if (jsonParserFieldValue != null) {
+					productOptionValue.setQuantity(
+						new BigDecimal((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuId")) {
+				if (jsonParserFieldValue != null) {
+					productOptionValue.setSkuId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitOfMeasureKey")) {
+				if (jsonParserFieldValue != null) {
+					productOptionValue.setUnitOfMeasureKey(
+						(String)jsonParserFieldValue);
 				}
 			}
 		}

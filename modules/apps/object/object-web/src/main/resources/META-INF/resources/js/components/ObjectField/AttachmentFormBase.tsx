@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
@@ -23,9 +14,11 @@ import './ObjectFieldFormBase.scss';
 interface IAttachmentFormBaseProps {
 	disabled?: boolean;
 	error?: string;
+	objectDefinitionName: string;
 	objectFieldSettings: ObjectFieldSetting[];
-	objectName: string;
+	onSubmit?: (values?: Partial<ObjectField>) => void;
 	setValues: (values: Partial<ObjectField>) => void;
+	values: Partial<ObjectField>;
 }
 
 const attachmentSources = [
@@ -50,9 +43,11 @@ const attachmentSources = [
 export function AttachmentFormBase({
 	disabled,
 	error,
+	objectDefinitionName,
 	objectFieldSettings,
-	objectName,
+	onSubmit,
 	setValues,
+	values,
 }: IAttachmentFormBaseProps) {
 	const settings = normalizeFieldSettings(objectFieldSettings);
 
@@ -60,7 +55,7 @@ export function AttachmentFormBase({
 		({value}) => value === settings.fileSource
 	);
 
-	const handleAttachmentSourceChange = ({value}: {value: string}) => {
+	const handleAttachmentSourceChange = (value: string) => {
 		const fileSource: ObjectFieldSetting = {name: 'fileSource', value};
 
 		const updatedSettings = objectFieldSettings.filter(
@@ -80,6 +75,13 @@ export function AttachmentFormBase({
 		}
 
 		setValues({objectFieldSettings: updatedSettings});
+
+		if (onSubmit) {
+			onSubmit({
+				...values,
+				objectFieldSettings: updatedSettings,
+			});
+		}
 	};
 
 	const toggleShowFiles = (value: boolean) => {
@@ -97,7 +99,7 @@ export function AttachmentFormBase({
 		if (value) {
 			updatedSettings.push({
 				name: 'storageDLFolderPath',
-				value: `/${objectName}`,
+				value: `/${objectDefinitionName}`,
 			});
 		}
 
@@ -109,11 +111,13 @@ export function AttachmentFormBase({
 			<SingleSelect
 				disabled={disabled}
 				error={error}
+				items={attachmentSources}
 				label={Liferay.Language.get('request-files')}
-				onChange={handleAttachmentSourceChange}
-				options={attachmentSources}
+				onSelectionChange={(value) =>
+					handleAttachmentSourceChange(value as string)
+				}
 				required
-				value={attachmentSource?.label}
+				selectedKey={attachmentSource?.value}
 			/>
 
 			{settings.fileSource === 'userComputer' && (
@@ -124,6 +128,13 @@ export function AttachmentFormBase({
 							'show-files-in-documents-and-media'
 						)}
 						name="showFilesInDocumentsAndMedia"
+						onBlur={(event) => {
+							event.stopPropagation();
+
+							if (onSubmit) {
+								onSubmit();
+							}
+						}}
 						onToggle={toggleShowFiles}
 						toggled={!!settings.showFilesInDocumentsAndMedia}
 						tooltip={Liferay.Language.get(

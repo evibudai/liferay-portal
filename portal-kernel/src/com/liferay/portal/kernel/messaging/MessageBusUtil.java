@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.messaging;
 
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 /**
  * @author Michael C. Han
@@ -23,35 +14,32 @@ import com.liferay.portal.kernel.util.ServiceProxyFactory;
 public class MessageBusUtil {
 
 	public static Destination getDestination(String destinationName) {
-		return _messageBus.getDestination(destinationName);
+		MessageBus messageBus = _messageBusSnapshot.get();
+
+		return messageBus.getDestination(destinationName);
 	}
 
 	public static MessageBus getMessageBus() {
-		return _messageBus;
+		return _messageBusSnapshot.get();
 	}
 
 	public static void sendMessage(String destinationName, Message message) {
-		_messageBus.sendMessage(destinationName, message);
+		MessageBus messageBus = _messageBusSnapshot.get();
+
+		messageBus.sendMessage(destinationName, message);
 	}
 
 	public static void sendMessage(String destinationName, Object payload) {
+		MessageBus messageBus = _messageBusSnapshot.get();
+
 		Message message = new Message();
 
 		message.setPayload(payload);
 
-		_messageBus.sendMessage(destinationName, message);
+		messageBus.sendMessage(destinationName, message);
 	}
 
-	public static void shutdown() {
-		_messageBus.shutdown();
-	}
-
-	public static void shutdown(boolean force) {
-		_messageBus.shutdown(force);
-	}
-
-	private static volatile MessageBus _messageBus =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			MessageBus.class, MessageBusUtil.class, "_messageBus", true);
+	private static final Snapshot<MessageBus> _messageBusSnapshot =
+		new Snapshot<>(MessageBusUtil.class, MessageBus.class);
 
 }

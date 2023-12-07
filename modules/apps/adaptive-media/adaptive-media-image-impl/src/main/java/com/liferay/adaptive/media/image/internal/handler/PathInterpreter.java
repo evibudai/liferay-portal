@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.handler;
@@ -26,20 +17,23 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
  */
-@Component(service = PathInterpreter.class)
 public class PathInterpreter {
 
-	public Optional<Tuple<FileVersion, Map<String, String>>> interpretPath(
+	public PathInterpreter(
+		AMImageConfigurationHelper amImageConfigurationHelper,
+		DLAppService dlAppService) {
+
+		_amImageConfigurationHelper = amImageConfigurationHelper;
+		_dlAppService = dlAppService;
+	}
+
+	public Tuple<FileVersion, Map<String, String>> interpretPath(
 		String pathInfo) {
 
 		try {
@@ -50,7 +44,7 @@ public class PathInterpreter {
 			Matcher matcher = _pattern.matcher(pathInfo);
 
 			if (!matcher.matches()) {
-				return Optional.empty();
+				return null;
 			}
 
 			long fileEntryId = Long.valueOf(matcher.group(1));
@@ -59,34 +53,26 @@ public class PathInterpreter {
 				_dlAppService.getFileEntry(fileEntryId),
 				_getFileVersionId(matcher));
 
-			Optional<AMImageConfigurationEntry>
-				amImageConfigurationEntryOptional =
-					_amImageConfigurationHelper.getAMImageConfigurationEntry(
-						fileVersion.getCompanyId(),
-						_getConfigurationEntryUUID(matcher));
+			AMImageConfigurationEntry amImageConfigurationEntry =
+				_amImageConfigurationHelper.getAMImageConfigurationEntry(
+					fileVersion.getCompanyId(),
+					_getConfigurationEntryUUID(matcher));
 
-			return Optional.of(
-				Tuple.of(
-					fileVersion,
-					amImageConfigurationEntryOptional.map(
-						amImageConfigurationEntry -> {
-							Map<String, String> curProperties =
-								amImageConfigurationEntry.getProperties();
+			if (amImageConfigurationEntry == null) {
+				return Tuple.of(fileVersion, new HashMap<>());
+			}
 
-							AMAttribute<?, String>
-								configurationUuidAMAttribute =
-									AMAttribute.
-										getConfigurationUuidAMAttribute();
+			Map<String, String> curProperties =
+				amImageConfigurationEntry.getProperties();
 
-							curProperties.put(
-								configurationUuidAMAttribute.getName(),
-								amImageConfigurationEntry.getUUID());
+			AMAttribute<?, String> configurationUuidAMAttribute =
+				AMAttribute.getConfigurationUuidAMAttribute();
 
-							return curProperties;
-						}
-					).orElse(
-						new HashMap<>()
-					)));
+			curProperties.put(
+				configurationUuidAMAttribute.getName(),
+				amImageConfigurationEntry.getUUID());
+
+			return Tuple.of(fileVersion, curProperties);
 		}
 		catch (PortalException portalException) {
 			throw new AMRuntimeException(portalException);
@@ -118,10 +104,7 @@ public class PathInterpreter {
 	private static final Pattern _pattern = Pattern.compile(
 		"/image/(\\d+)(?:/(\\d+))?/([^/]+)/(?:[^/]+)");
 
-	@Reference
-	private AMImageConfigurationHelper _amImageConfigurationHelper;
-
-	@Reference
-	private DLAppService _dlAppService;
+	private final AMImageConfigurationHelper _amImageConfigurationHelper;
+	private final DLAppService _dlAppService;
 
 }

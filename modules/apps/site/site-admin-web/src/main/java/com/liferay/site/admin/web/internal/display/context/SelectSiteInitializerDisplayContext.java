@@ -1,22 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.admin.web.internal.display.context;
 
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.VerticalNavItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.VerticalNavItemListBuilder;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.LayoutSetPrototype;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -26,11 +20,10 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.admin.web.internal.display.context.comparator.SiteInitializerNameComparator;
 import com.liferay.site.admin.web.internal.util.SiteInitializerItem;
 import com.liferay.site.constants.SiteWebKeys;
-import com.liferay.site.initializer.SiteInitializer;
 import com.liferay.site.initializer.SiteInitializerRegistry;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -94,6 +87,40 @@ public class SelectSiteInitializerDisplayContext {
 		return siteInitializerItemSearchContainer;
 	}
 
+	public String getTitle() {
+		return LanguageUtil.get(_httpServletRequest, _getTabs1());
+	}
+
+	public VerticalNavItemList getVerticalNavItemList() {
+		return VerticalNavItemListBuilder.add(
+			verticalNavItem -> {
+				verticalNavItem.setActive(
+					Objects.equals(_getTabs1(), "provided-by-liferay"));
+				verticalNavItem.setHref(
+					_getPortletURL(), "tabs1", "provided-by-liferay");
+
+				String name = LanguageUtil.get(
+					_httpServletRequest, "provided-by-liferay");
+
+				verticalNavItem.setId(name);
+				verticalNavItem.setLabel(name);
+			}
+		).add(
+			verticalNavItem -> {
+				verticalNavItem.setActive(
+					Objects.equals(_getTabs1(), "custom-site-templates"));
+				verticalNavItem.setHref(
+					_getPortletURL(), "tabs1", "custom-site-templates");
+
+				String name = LanguageUtil.get(
+					_httpServletRequest, "custom-site-templates");
+
+				verticalNavItem.setId(name);
+				verticalNavItem.setLabel(name);
+			}
+		).build();
+	}
+
 	private PortletURL _getPortletURL() {
 		return PortletURLBuilder.createRenderURL(
 			_renderResponse
@@ -101,42 +128,55 @@ public class SelectSiteInitializerDisplayContext {
 			"/site_admin/select_site_initializer"
 		).setRedirect(
 			getBackURL()
+		).setParameter(
+			"backURLTitle",
+			ParamUtil.getString(_httpServletRequest, "backURLTitle")
+		).setParameter(
+			"parentGroupId", getParentGroupId()
 		).buildPortletURL();
 	}
 
 	private List<SiteInitializerItem> _getSiteInitializerItems()
 		throws PortalException {
 
-		List<SiteInitializerItem> siteInitializerItems = new ArrayList<>();
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)_httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		List<LayoutSetPrototype> layoutSetPrototypes =
-			LayoutSetPrototypeServiceUtil.search(
-				themeDisplay.getCompanyId(), Boolean.TRUE, null);
-
-		for (LayoutSetPrototype layoutSetPrototype : layoutSetPrototypes) {
-			siteInitializerItems.add(
-				new SiteInitializerItem(
-					layoutSetPrototype, themeDisplay.getLocale()));
-		}
-
-		List<SiteInitializer> siteInitializers =
-			_siteInitializerRegistry.getSiteInitializers(
-				themeDisplay.getCompanyId(), true);
-
-		for (SiteInitializer siteInitializer : siteInitializers) {
-			if (siteInitializer.isActive(themeDisplay.getCompanyId())) {
-				siteInitializerItems.add(
-					new SiteInitializerItem(
-						siteInitializer, themeDisplay.getLocale()));
-			}
+		if (Objects.equals(_getTabs1(), "custom-site-templates")) {
+			return ListUtil.sort(
+				TransformUtil.transform(
+					LayoutSetPrototypeServiceUtil.search(
+						themeDisplay.getCompanyId(), Boolean.TRUE, null),
+					layoutSetPrototype -> new SiteInitializerItem(
+						layoutSetPrototype, themeDisplay.getLocale())),
+				new SiteInitializerNameComparator(true));
 		}
 
 		return ListUtil.sort(
-			siteInitializerItems, new SiteInitializerNameComparator(true));
+			TransformUtil.transform(
+				_siteInitializerRegistry.getSiteInitializers(
+					themeDisplay.getCompanyId(), true),
+				siteInitializer -> {
+					if (siteInitializer.isActive(themeDisplay.getCompanyId())) {
+						return new SiteInitializerItem(
+							siteInitializer, themeDisplay.getLocale());
+					}
+
+					return null;
+				}),
+			new SiteInitializerNameComparator(true));
+	}
+
+	private String _getTabs1() {
+		if (_tabs1 != null) {
+			return _tabs1;
+		}
+
+		_tabs1 = ParamUtil.getString(
+			_httpServletRequest, "tabs1", "provided-by-liferay");
+
+		return _tabs1;
 	}
 
 	private String _backURL;
@@ -145,5 +185,6 @@ public class SelectSiteInitializerDisplayContext {
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
 	private final SiteInitializerRegistry _siteInitializerRegistry;
+	private String _tabs1;
 
 }

@@ -1,7 +1,7 @@
 definition {
 
-	@summary = "Add a basic announcement"
-	macro addAnnouncement {
+	@summary = "Default summary"
+	macro addAnnouncement(announcementTitle = null, announcementContent = null) {
 		Variables.assertDefined(parameterList = "${announcementTitle},${announcementContent}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -23,10 +23,10 @@ definition {
 		}
 
 		if (!(isSet(priority))) {
-			var priority = "0";
+			var priority = 0;
 		}
 		else {
-			var priority = "1";
+			var priority = 1;
 		}
 
 		if (!(isSet(displayDate))) {
@@ -42,7 +42,7 @@ definition {
 			var displayDateYear = DateUtil.getCurrentYear();
 			var expirationMonth = ${displayDateMonth} + 1;
 
-			if ("${expirationMonth}" == "13") {
+			if (${expirationMonth} == 13) {
 				var expirationMonth = ${expirationMonth} - 12;
 				var displayDateYear = ${displayDateYear} + 1;
 			}
@@ -51,31 +51,32 @@ definition {
 		}
 
 		JSONAnnouncementAPI._addAnnouncement(
-			announcementContent = "${announcementContent}",
-			announcementTitle = "${announcementTitle}",
-			announcementType = "${announcementType}",
-			announcementURL = "${announcementURL}",
-			displayDate = "${displayDate}",
-			expirationDate = "${expirationDate}",
-			priority = "${priority}",
-			userEmailAddress = "${userEmailAddress}",
-			userPassword = "${userPassword}");
+			announcementContent = ${announcementContent},
+			announcementTitle = ${announcementTitle},
+			announcementType = ${announcementType},
+			announcementURL = ${announcementURL},
+			displayDate = ${displayDate},
+			expirationDate = ${expirationDate},
+			priority = ${priority},
+			userEmailAddress = ${userEmailAddress},
+			userPassword = ${userPassword});
 	}
 
-	@summary = "Delete a basic announcement"
-	macro deleteAnnouncement {
+	@summary = "Default summary"
+	macro deleteAnnouncement(groupName = null, siteURLKey = null) {
 		var entryId = JSONAnnouncementAPI._getEntryId(
-			groupName = "${groupName}",
-			siteURLKey = "${siteURLKey}");
+			groupName = ${groupName},
+			siteURLKey = ${siteURLKey});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/announcementsentry/delete-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d entryId=${entryId} \
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

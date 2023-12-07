@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.rule.model.impl;
@@ -229,73 +220,93 @@ public class COREntryRelModelImpl
 	public Map<String, Function<COREntryRel, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<COREntryRel, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<COREntryRel, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<COREntryRel, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<COREntryRel, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<COREntryRel, Object>>();
-		Map<String, BiConsumer<COREntryRel, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<COREntryRel, ?>>();
+		private static final Map<String, Function<COREntryRel, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", COREntryRel::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<COREntryRel, Long>)COREntryRel::setMvccVersion);
-		attributeGetterFunctions.put(
-			"COREntryRelId", COREntryRel::getCOREntryRelId);
-		attributeSetterBiConsumers.put(
-			"COREntryRelId",
-			(BiConsumer<COREntryRel, Long>)COREntryRel::setCOREntryRelId);
-		attributeGetterFunctions.put("companyId", COREntryRel::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<COREntryRel, Long>)COREntryRel::setCompanyId);
-		attributeGetterFunctions.put("userId", COREntryRel::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<COREntryRel, Long>)COREntryRel::setUserId);
-		attributeGetterFunctions.put("userName", COREntryRel::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<COREntryRel, String>)COREntryRel::setUserName);
-		attributeGetterFunctions.put("createDate", COREntryRel::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<COREntryRel, Date>)COREntryRel::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", COREntryRel::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<COREntryRel, Date>)COREntryRel::setModifiedDate);
-		attributeGetterFunctions.put(
-			"classNameId", COREntryRel::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<COREntryRel, Long>)COREntryRel::setClassNameId);
-		attributeGetterFunctions.put("classPK", COREntryRel::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK", (BiConsumer<COREntryRel, Long>)COREntryRel::setClassPK);
-		attributeGetterFunctions.put("COREntryId", COREntryRel::getCOREntryId);
-		attributeSetterBiConsumers.put(
-			"COREntryId",
-			(BiConsumer<COREntryRel, Long>)COREntryRel::setCOREntryId);
+		static {
+			Map<String, Function<COREntryRel, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap<String, Function<COREntryRel, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", COREntryRel::getMvccVersion);
+			attributeGetterFunctions.put(
+				"COREntryRelId", COREntryRel::getCOREntryRelId);
+			attributeGetterFunctions.put(
+				"companyId", COREntryRel::getCompanyId);
+			attributeGetterFunctions.put("userId", COREntryRel::getUserId);
+			attributeGetterFunctions.put("userName", COREntryRel::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", COREntryRel::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", COREntryRel::getModifiedDate);
+			attributeGetterFunctions.put(
+				"classNameId", COREntryRel::getClassNameId);
+			attributeGetterFunctions.put("classPK", COREntryRel::getClassPK);
+			attributeGetterFunctions.put(
+				"COREntryId", COREntryRel::getCOREntryId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<COREntryRel, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<COREntryRel, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<COREntryRel, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<COREntryRel, Long>)COREntryRel::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"COREntryRelId",
+				(BiConsumer<COREntryRel, Long>)COREntryRel::setCOREntryRelId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<COREntryRel, Long>)COREntryRel::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<COREntryRel, Long>)COREntryRel::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<COREntryRel, String>)COREntryRel::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<COREntryRel, Date>)COREntryRel::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<COREntryRel, Date>)COREntryRel::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<COREntryRel, Long>)COREntryRel::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<COREntryRel, Long>)COREntryRel::setClassPK);
+			attributeSetterBiConsumers.put(
+				"COREntryId",
+				(BiConsumer<COREntryRel, Long>)COREntryRel::setCOREntryId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -812,8 +823,9 @@ public class COREntryRelModelImpl
 	private long _COREntryId;
 
 	public <T> T getColumnValue(String columnName) {
-		Function<COREntryRel, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<COREntryRel, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

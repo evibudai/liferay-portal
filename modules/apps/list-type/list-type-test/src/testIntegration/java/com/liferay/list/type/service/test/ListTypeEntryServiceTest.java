@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.list.type.service.test;
@@ -58,13 +49,14 @@ public class ListTypeEntryServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_defaultUser = _userLocalService.getDefaultUser(
+		_guestUser = _userLocalService.getGuestUser(
 			TestPropsValues.getCompanyId());
 		_listTypeDefinition =
 			_listTypeDefinitionLocalService.addListTypeDefinition(
 				null, TestPropsValues.getUserId(),
 				Collections.singletonMap(
-					LocaleUtil.getDefault(), RandomTestUtil.randomString()));
+					LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+				false, Collections.emptyList());
 		_originalName = PrincipalThreadLocal.getName();
 		_originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
@@ -81,7 +73,7 @@ public class ListTypeEntryServiceTest {
 	@Test
 	public void testAddListTypeEntry() throws Exception {
 		try {
-			_testAddListTypeEntry(_defaultUser);
+			_testAddListTypeEntry(_guestUser);
 
 			Assert.fail();
 		}
@@ -90,7 +82,7 @@ public class ListTypeEntryServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -100,7 +92,7 @@ public class ListTypeEntryServiceTest {
 	@Test
 	public void testDeleteListTypeEntry() throws Exception {
 		try {
-			_testDeleteListTypeEntry(_defaultUser);
+			_testDeleteListTypeEntry(_guestUser);
 
 			Assert.fail();
 		}
@@ -109,7 +101,7 @@ public class ListTypeEntryServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -119,14 +111,14 @@ public class ListTypeEntryServiceTest {
 	@Test
 	public void testGetListTypeEntry() throws Exception {
 		try {
-			_testGetListTypeEntry(_defaultUser);
+			_testGetListTypeEntry(_guestUser);
 		}
 		catch (PrincipalException.MustHavePermission principalException) {
 			String message = principalException.getMessage();
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have VIEW permission for"));
 		}
 
@@ -134,9 +126,26 @@ public class ListTypeEntryServiceTest {
 	}
 
 	@Test
+	public void testGetListTypeEntryByExternalReferenceCode() throws Exception {
+		try {
+			_testGetListTypeEntryByExternalReferenceCode(_guestUser);
+		}
+		catch (PrincipalException.MustHavePermission principalException) {
+			String message = principalException.getMessage();
+
+			Assert.assertTrue(
+				message.contains(
+					"User " + _guestUser.getUserId() +
+						" must have VIEW permission for"));
+		}
+
+		_testGetListTypeEntryByExternalReferenceCode(_user);
+	}
+
+	@Test
 	public void testUpdateListTypeEntry() throws Exception {
 		try {
-			_testUpdateListTypeEntry(_defaultUser);
+			_testUpdateListTypeEntry(_guestUser);
 
 			Assert.fail();
 		}
@@ -145,7 +154,7 @@ public class ListTypeEntryServiceTest {
 
 			Assert.assertTrue(
 				message.contains(
-					"User " + _defaultUser.getUserId() +
+					"User " + _guestUser.getUserId() +
 						" must have UPDATE permission for"));
 		}
 
@@ -154,7 +163,8 @@ public class ListTypeEntryServiceTest {
 
 	private ListTypeEntry _addListTypeEntry(User user) throws Exception {
 		return _listTypeEntryLocalService.addListTypeEntry(
-			user.getUserId(), _listTypeDefinition.getListTypeDefinitionId(),
+			null, user.getUserId(),
+			_listTypeDefinition.getListTypeDefinitionId(),
 			RandomTestUtil.randomString(),
 			Collections.singletonMap(
 				LocaleUtil.US, RandomTestUtil.randomString()));
@@ -174,7 +184,7 @@ public class ListTypeEntryServiceTest {
 			_setUser(user);
 
 			listTypeEntry = _listTypeEntryService.addListTypeEntry(
-				_listTypeDefinition.getListTypeDefinitionId(),
+				null, _listTypeDefinition.getListTypeDefinitionId(),
 				RandomTestUtil.randomString(),
 				Collections.singletonMap(
 					LocaleUtil.US, RandomTestUtil.randomString()));
@@ -223,7 +233,9 @@ public class ListTypeEntryServiceTest {
 		}
 	}
 
-	private void _testUpdateListTypeEntry(User user) throws Exception {
+	private void _testGetListTypeEntryByExternalReferenceCode(User user)
+		throws Exception {
+
 		ListTypeEntry listTypeEntry = null;
 
 		try {
@@ -231,10 +243,10 @@ public class ListTypeEntryServiceTest {
 
 			listTypeEntry = _addListTypeEntry(user);
 
-			listTypeEntry = _listTypeEntryService.updateListTypeEntry(
-				listTypeEntry.getListTypeEntryId(),
-				Collections.singletonMap(
-					LocaleUtil.US, RandomTestUtil.randomString()));
+			_listTypeEntryService.getListTypeEntryByExternalReferenceCode(
+				listTypeEntry.getExternalReferenceCode(),
+				listTypeEntry.getCompanyId(),
+				_listTypeDefinition.getListTypeDefinitionId());
 		}
 		finally {
 			if (listTypeEntry != null) {
@@ -243,7 +255,33 @@ public class ListTypeEntryServiceTest {
 		}
 	}
 
-	private User _defaultUser;
+	private void _testUpdateListTypeEntry(User user) throws Exception {
+		ListTypeEntry listTypeEntry = null;
+
+		try {
+			_setUser(user);
+
+			listTypeEntry = _addListTypeEntry(user);
+
+			String externalReferenceCode = RandomTestUtil.randomString();
+
+			listTypeEntry = _listTypeEntryService.updateListTypeEntry(
+				externalReferenceCode, listTypeEntry.getListTypeEntryId(),
+				Collections.singletonMap(
+					LocaleUtil.US, RandomTestUtil.randomString()));
+
+			Assert.assertEquals(
+				externalReferenceCode,
+				listTypeEntry.getExternalReferenceCode());
+		}
+		finally {
+			if (listTypeEntry != null) {
+				_listTypeEntryLocalService.deleteListTypeEntry(listTypeEntry);
+			}
+		}
+	}
+
+	private User _guestUser;
 
 	@DeleteAfterTestRun
 	private ListTypeDefinition _listTypeDefinition;

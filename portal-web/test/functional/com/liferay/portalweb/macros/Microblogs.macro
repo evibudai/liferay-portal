@@ -1,8 +1,9 @@
 definition {
 
-	macro deleteStatus {
+	@summary = "Default summary"
+	macro deleteStatus(entryContent = null) {
 		var key_actionType = "Delete";
-		var key_entryContent = "${entryContent}";
+		var key_entryContent = ${entryContent};
 
 		MouseOver(locator1 = "Microblogs#FOOTER");
 
@@ -15,9 +16,10 @@ definition {
 		AssertElementNotPresent(locator1 = "Microblogs#TIMELINE_ENTRY_CONTENT");
 	}
 
-	macro editStatus {
+	@summary = "Default summary"
+	macro editStatus(entryContentEdit = null, entryContent = null) {
 		var key_actionType = "Edit";
-		var key_entryContent = "${entryContent}";
+		var key_entryContent = ${entryContent};
 
 		MouseOver(locator1 = "Microblogs#FOOTER");
 
@@ -29,14 +31,15 @@ definition {
 
 		Type.clickAtType(
 			locator1 = "TextArea#FIELD_INPUT",
-			value1 = "${entryContentEdit}");
+			value1 = ${entryContentEdit});
 
 		AssertClick(
 			locator1 = "Button#POST",
 			value1 = "Post");
 	}
 
-	macro gotoTimelineTab {
+	@summary = "Default summary"
+	macro gotoTimelineTab() {
 		Navigator.gotoNavTab(navTab = "Timeline");
 
 		AssertTextEquals(
@@ -44,10 +47,11 @@ definition {
 			value1 = "Timeline");
 	}
 
-	macro updateStatus {
+	@summary = "Default summary"
+	macro updateStatus(entryContent = null) {
 		AssertTextEquals(
 			locator1 = "Microblogs#COUNTDOWN_HOLDER",
-			value1 = "150");
+			value1 = 150);
 
 		var key_status = "Update your status";
 
@@ -55,11 +59,11 @@ definition {
 			locator1 = "Microblogs#STATUS_FIELD",
 			value1 = "Update your status...");
 
-		var key_entryContent = "${entryContent}";
+		var key_entryContent = ${entryContent};
 
 		Type.clickAtType(
 			locator1 = "TextArea#FIELD_INPUT",
-			value1 = "${entryContent}");
+			value1 = ${entryContent});
 
 		AssertElementPresent(locator1 = "Button#POST");
 
@@ -70,16 +74,17 @@ definition {
 		AssertElementNotPresent(locator1 = "Button#POST");
 	}
 
-	macro viewEntry {
-		var key_entryContent = "${entryContent}";
+	@summary = "Default summary"
+	macro viewEntry(userName = null, entryContent = null) {
+		var key_entryContent = ${entryContent};
 
 		AssertTextEquals(
 			locator1 = "Microblogs#TIMELINE_ENTRY_CONTENT",
-			value1 = "${entryContent}");
+			value1 = ${entryContent});
 
 		AssertTextEquals(
 			locator1 = "Microblogs#TIMELINE_ENTRY_USER_NAME",
-			value1 = "${userName}");
+			value1 = ${userName});
 	}
 
 }

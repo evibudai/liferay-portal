@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.sso.openid.connect.internal.session.manager;
@@ -17,6 +8,7 @@ package com.liferay.portal.security.sso.openid.connect.internal.session.manager;
 import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.oauth.client.persistence.model.OAuthClientEntry;
 import com.liferay.oauth.client.persistence.service.OAuthClientEntryLocalService;
+import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.cluster.ClusterMasterExecutor;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -26,22 +18,18 @@ import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationConfiguration;
 import com.liferay.portal.kernel.messaging.DestinationFactory;
-import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
-import com.liferay.portal.kernel.scheduler.SchedulerEntry;
-import com.liferay.portal.kernel.scheduler.SchedulerEntryImpl;
+import com.liferay.portal.kernel.scheduler.SchedulerJobConfiguration;
 import com.liferay.portal.kernel.scheduler.TimeUnit;
-import com.liferay.portal.kernel.scheduler.TriggerFactory;
+import com.liferay.portal.kernel.scheduler.TriggerConfiguration;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration;
-import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectConstants;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
 import com.liferay.portal.security.sso.openid.connect.internal.AuthorizationServerMetadataResolver;
 import com.liferay.portal.security.sso.openid.connect.internal.constants.OpenIdConnectDestinationNames;
@@ -66,7 +54,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
@@ -75,7 +62,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	service = OfflineOpenIdConnectSessionManager.class
 )
 public class OfflineOpenIdConnectSessionManager {
@@ -164,43 +150,41 @@ public class OfflineOpenIdConnectSessionManager {
 
 	@Activate
 	protected void activate(
-			BundleContext bundleContext, Map<String, Object> properties)
-		throws Exception {
+		BundleContext bundleContext, Map<String, Object> properties) {
 
-		OpenIdConnectConfiguration openIdConnectConfiguration =
-			ConfigurableUtil.createConfigurable(
-				OpenIdConnectConfiguration.class, properties);
+		_openIdConnectConfiguration = ConfigurableUtil.createConfigurable(
+			OpenIdConnectConfiguration.class, properties);
 
-		if (openIdConnectConfiguration.tokenRefreshOffset() < 30) {
+		if (_openIdConnectConfiguration.tokenRefreshOffset() < 30) {
 			throw new IllegalArgumentException(
 				"Token refresh offset needs to be at least 30 seconds");
 		}
 
 		_tokenRefreshOffsetMillis =
-			openIdConnectConfiguration.tokenRefreshOffset() * Time.SECOND;
+			_openIdConnectConfiguration.tokenRefreshOffset() * Time.SECOND;
 
-		_tokenRefreshScheduledInterval =
-			openIdConnectConfiguration.tokenRefreshScheduledInterval();
-
-		if (!openIdConnectConfiguration.enabled()) {
-			deactivate();
-
+		if (!_openIdConnectConfiguration.enabled()) {
 			return;
 		}
 
 		_registerServices(bundleContext);
 
-		if (_tokenRefreshScheduledInterval < 30) {
-			_unscheduleJob();
-		}
-		else {
-			_scheduleJob();
+		int tokenRefreshScheduledInterval =
+			_openIdConnectConfiguration.tokenRefreshScheduledInterval();
+
+		if (tokenRefreshScheduledInterval >= 30) {
+			_schedulerJobConfigurationServiceRegistration =
+				bundleContext.registerService(
+					SchedulerJobConfiguration.class,
+					new TokensRefreshSchedulerJobConfiguration(), null);
 		}
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_unscheduleJob();
+		if (_schedulerJobConfigurationServiceRegistration != null) {
+			_schedulerJobConfigurationServiceRegistration.unregister();
+		}
 
 		_unregisterServices();
 	}
@@ -299,21 +283,6 @@ public class OfflineOpenIdConnectSessionManager {
 			dictionary);
 	}
 
-	private void _scheduleJob() {
-		SchedulerEntry schedulerEntry = new SchedulerEntryImpl(
-			TokensRefreshMessageListener.class.getName(),
-			_triggerFactory.createTrigger(
-				TokensRefreshMessageListener.class.getName(),
-				OpenIdConnectConstants.SERVICE_NAME, null, null,
-				_tokenRefreshScheduledInterval, TimeUnit.SECOND));
-
-		_tokensRefreshMessageListener = new TokensRefreshMessageListener();
-
-		_schedulerEngineHelper.register(
-			_tokensRefreshMessageListener, schedulerEntry,
-			DestinationNames.SCHEDULER_DISPATCH);
-	}
-
 	private void _unregisterServices() {
 		if (_messageListenerServiceRegistration != null) {
 			_messageListenerServiceRegistration.unregister();
@@ -325,14 +294,6 @@ public class OfflineOpenIdConnectSessionManager {
 			_destinationServiceRegistration.unregister();
 
 			_destinationServiceRegistration = null;
-		}
-	}
-
-	private void _unscheduleJob() {
-		if (_tokensRefreshMessageListener != null) {
-			_schedulerEngineHelper.unregister(_tokensRefreshMessageListener);
-
-			_tokensRefreshMessageListener = null;
 		}
 	}
 
@@ -405,18 +366,14 @@ public class OfflineOpenIdConnectSessionManager {
 	@Reference
 	private OAuthClientEntryLocalService _oAuthClientEntryLocalService;
 
+	private OpenIdConnectConfiguration _openIdConnectConfiguration;
+
 	@Reference
 	private OpenIdConnectSessionLocalService _openIdConnectSessionLocalService;
 
-	@Reference
-	private SchedulerEngineHelper _schedulerEngineHelper;
-
+	private ServiceRegistration<SchedulerJobConfiguration>
+		_schedulerJobConfigurationServiceRegistration;
 	private long _tokenRefreshOffsetMillis = 60 * Time.SECOND;
-	private int _tokenRefreshScheduledInterval = 480;
-	private TokensRefreshMessageListener _tokensRefreshMessageListener;
-
-	@Reference
-	private TriggerFactory _triggerFactory;
 
 	private class TokenRefreshMessageListener extends BaseMessageListener {
 
@@ -452,23 +409,33 @@ public class OfflineOpenIdConnectSessionManager {
 
 	}
 
-	private class TokensRefreshMessageListener extends BaseMessageListener {
+	private class TokensRefreshSchedulerJobConfiguration
+		implements SchedulerJobConfiguration {
 
 		@Override
-		protected void doReceive(Message message) throws Exception {
-			List<OpenIdConnectSession> openIdConnectSessions =
-				_openIdConnectSessionLocalService.
-					getAccessTokenExpirationDateOpenIdConnectSessions(
-						new Date(
-							System.currentTimeMillis() +
-								_tokenRefreshOffsetMillis),
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		public UnsafeRunnable<Exception> getJobExecutorUnsafeRunnable() {
+			return () -> {
+				List<OpenIdConnectSession> openIdConnectSessions =
+					_openIdConnectSessionLocalService.
+						getAccessTokenExpirationDateOpenIdConnectSessions(
+							new Date(
+								System.currentTimeMillis() +
+									_tokenRefreshOffsetMillis),
+							QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
-			for (OpenIdConnectSession openIdConnectSession :
-					openIdConnectSessions) {
+				for (OpenIdConnectSession openIdConnectSession :
+						openIdConnectSessions) {
 
-				_extendOpenIdConnectSession(openIdConnectSession);
-			}
+					_extendOpenIdConnectSession(openIdConnectSession);
+				}
+			};
+		}
+
+		@Override
+		public TriggerConfiguration getTriggerConfiguration() {
+			return TriggerConfiguration.createTriggerConfiguration(
+				_openIdConnectConfiguration.tokenRefreshScheduledInterval(),
+				TimeUnit.SECOND);
 		}
 
 	}

@@ -1,18 +1,20 @@
 definition {
 
-	macro addTeam {
+	@summary = "Default summary"
+	macro addTeam(teamName = null, siteName = null, teamDescription = null) {
 		if (!(isSet(portalURL))) {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
-		var groupId = JSONLayoutSetter.setGroupId(groupName = "${siteName}");
+		var groupId = JSONLayoutSetter.setGroupId(groupName = ${siteName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/team/add-team \
-			-u test@liferay.com:test \
-			-d groupId=${groupId} \
-			-d name=${teamName} \
-			-d description=${teamDescription} \
+				-u ${userLoginInfo} \
+				-d groupId=${groupId} \
+				-d name=${teamName} \
+				-d description=${teamDescription} \
 		''';
 
 		echo("## Adding a 'Team' with the following info using JSONWS:");
@@ -21,45 +23,49 @@ definition {
 
 		echo("## * Description: ${teamDescription}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	macro addUserToTeam {
+	@summary = "Default summary"
+	macro addUserToTeam(teamName = null, userEmailAddress = null, siteName = null) {
 		Variables.assertDefined(parameterList = "${teamName},${userEmailAddress}");
 
 		var portalURL = JSONCompany.getPortalURL();
-		var userId = JSONRoleSetter.setUserId(userEmailAddress = "${userEmailAddress}");
+		var userId = JSONRoleSetter.setUserId(userEmailAddress = ${userEmailAddress});
 		var teamId = JSONTeam.getTeamId(
-			siteName = "${siteName}",
-			teamName = "${teamName}");
+			siteName = ${siteName},
+			teamName = ${teamName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/user/add-team-users \
-			-u test@liferay.com:test \
-			-d teamId=${teamId} \
-			-d userIds=[${userId}]
+				-u ${userLoginInfo} \
+				-d teamId=${teamId} \
+				-d userIds=[${userId}]
 		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 	}
 
-	macro getTeamId {
-		Variables.assertDefined(parameterList = "${teamName}");
+	@summary = "Default summary"
+	macro getTeamId(teamName = null, siteName = null) {
+		Variables.assertDefined(parameterList = ${teamName});
 
 		var portalURL = JSONCompany.getPortalURL();
-		var key_teamName = StringUtil.replace("${teamName}", " ", "%20");
-		var groupId = JSONLayoutSetter.setGroupId(groupName = "${siteName}");
+		var key_teamName = StringUtil.replace(${teamName}, " ", "%20");
+		var groupId = JSONLayoutSetter.setGroupId(groupName = ${siteName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/team/get-team \
-			-u test@liferay.com:test \
-			-d groupId=${groupId} \
-			-d name=${key_teamName}
+				-u ${userLoginInfo} \
+				-d groupId=${groupId} \
+				-d name=${key_teamName}
 		''';
 
-		var teamId = JSONCurlUtil.post("${curl}", "$.teamId");
+		var teamId = JSONCurlUtil.post(${curl}, "$.teamId");
 
-		return "${teamId}";
+		return ${teamId};
 	}
 
 }

@@ -1,21 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.impl;
 
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.dynamic.data.mapping.constants.DDMFormConstants;
 import com.liferay.dynamic.data.mapping.exception.FormInstanceRecordGroupIdException;
 import com.liferay.dynamic.data.mapping.exception.NoSuchFormInstanceRecordException;
 import com.liferay.dynamic.data.mapping.exception.StorageException;
@@ -29,15 +23,16 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
+import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.base.DDMFormInstanceRecordLocalServiceBaseImpl;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstancePersistence;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceRecordVersionPersistence;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapter;
-import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterDeleteRequest;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterGetRequest;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterGetResponse;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterRegistry;
@@ -50,6 +45,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -68,7 +66,6 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -163,6 +160,52 @@ public class DDMFormInstanceRecordLocalServiceImpl
 				user, ddmFormInstanceRecord, ddmStorageId, status,
 				_VERSION_DEFAULT);
 
+		for (DDMFormFieldValue ddmFormFieldValue :
+				ddmFormValues.getDDMFormFieldValues()) {
+
+			Value value = ddmFormFieldValue.getValue();
+
+			if (value == null) {
+				continue;
+			}
+
+			String valueString = value.getString(
+				ddmFormValues.getDefaultLocale());
+
+			if (!JSONUtil.isJSONObject(valueString)) {
+				continue;
+			}
+
+			JSONObject valueJSONObject = _jsonFactory.createJSONObject(
+				valueString);
+
+			if (!valueJSONObject.has("uuid")) {
+				continue;
+			}
+
+			DLFileEntry dlFileEntry = _dlFileEntryLocalService.fetchFileEntry(
+				valueJSONObject.getString("uuid"), groupId);
+
+			if (dlFileEntry == null) {
+				continue;
+			}
+
+			User ddmFormDefaultUser = _userLocalService.fetchUserByScreenName(
+				user.getCompanyId(),
+				DDMFormConstants.DDM_FORM_DEFAULT_USER_SCREEN_NAME);
+
+			if ((ddmFormDefaultUser == null) ||
+				(ddmFormDefaultUser.getUserId() != dlFileEntry.getUserId())) {
+
+				continue;
+			}
+
+			dlFileEntry.setClassName(DDMFormInstanceRecord.class.getName());
+			dlFileEntry.setClassPK(recordId);
+
+			_dlFileEntryLocalService.updateDLFileEntry(dlFileEntry);
+		}
+
 		// Asset
 
 		_updateAsset(
@@ -205,26 +248,12 @@ public class DDMFormInstanceRecordLocalServiceImpl
 			_ddmFormInstanceRecordVersionPersistence.findByFormInstanceRecordId(
 				ddmFormInstanceRecord.getFormInstanceRecordId());
 
-		String storageType = ddmFormInstanceRecord.getStorageType();
-
 		for (DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion :
 				ddmFormInstanceRecordVersions) {
 
-			_ddmFormInstanceRecordVersionPersistence.remove(
-				ddmFormInstanceRecordVersion);
-
-			long storageId = ddmFormInstanceRecordVersion.getStorageId();
-
-			if (!StringUtil.equals(storageType, "object")) {
-				_deleteStorage(storageId, storageType);
-			}
-
-			_ddmStorageLinkLocalService.deleteClassStorageLink(storageId);
-
-			_deleteWorkflowInstanceLink(
-				ddmFormInstanceRecord.getCompanyId(),
-				ddmFormInstanceRecord.getGroupId(),
-				ddmFormInstanceRecordVersion.getPrimaryKey());
+			_ddmFormInstanceRecordVersionLocalService.
+				deleteDDMFormInstanceRecordVersion(
+					ddmFormInstanceRecordVersion);
 		}
 
 		_assetEntryLocalService.deleteEntry(
@@ -489,12 +518,9 @@ public class DDMFormInstanceRecordLocalServiceImpl
 				ddmFormInstanceRecord.getFormInstanceRecordVersion(),
 				ddmFormInstanceRecordVersion, serviceContext)) {
 
-			_ddmFormInstanceRecordVersionPersistence.remove(
-				ddmFormInstanceRecordVersion);
-
-			_deleteStorage(
-				ddmFormInstanceRecordVersion.getStorageId(),
-				ddmFormInstance.getStorageType());
+			_ddmFormInstanceRecordVersionLocalService.
+				deleteDDMFormInstanceRecordVersion(
+					ddmFormInstanceRecordVersion);
 
 			return ddmFormInstanceRecord;
 		}
@@ -722,27 +748,6 @@ public class DDMFormInstanceRecordLocalServiceImpl
 			ddmStructureVersion.getStructureVersionId(), serviceContext);
 
 		return primaryKey;
-	}
-
-	private void _deleteStorage(long storageId, String storageType)
-		throws StorageException {
-
-		DDMStorageAdapter ddmStorageAdapter = _getDDMStorageAdapter(
-			storageType);
-
-		ddmStorageAdapter.delete(
-			DDMStorageAdapterDeleteRequest.Builder.newBuilder(
-				storageId
-			).build());
-	}
-
-	private void _deleteWorkflowInstanceLink(
-			long companyId, long groupId, long ddmFormInstanceRecordVersionId)
-		throws PortalException {
-
-		_workflowInstanceLinkLocalService.deleteWorkflowInstanceLinks(
-			companyId, groupId, DDMFormInstanceRecord.class.getName(),
-			ddmFormInstanceRecordVersionId);
 	}
 
 	private Indexer<DDMFormInstanceRecord> _getDDMFormInstanceRecordIndexer() {
@@ -1054,7 +1059,13 @@ public class DDMFormInstanceRecordLocalServiceImpl
 	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Reference
+	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Reference
 	private IndexerRegistry _indexerRegistry;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;
@@ -1064,8 +1075,5 @@ public class DDMFormInstanceRecordLocalServiceImpl
 
 	@Reference
 	private UserLocalService _userLocalService;
-
-	@Reference
-	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;
 
 }

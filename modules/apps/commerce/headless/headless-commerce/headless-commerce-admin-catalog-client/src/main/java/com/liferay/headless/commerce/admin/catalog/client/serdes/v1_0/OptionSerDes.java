@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 
+import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Option;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.OptionValue;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
@@ -23,7 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -73,6 +64,26 @@ public class OptionSerDes {
 			sb.append("\"catalogId\": ");
 
 			sb.append(option.getCatalogId());
+		}
+
+		if (option.getCustomFields() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < option.getCustomFields().length; i++) {
+				sb.append(String.valueOf(option.getCustomFields()[i]));
+
+				if ((i + 1) < option.getCustomFields().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (option.getDescription() != null) {
@@ -239,6 +250,13 @@ public class OptionSerDes {
 			map.put("catalogId", String.valueOf(option.getCatalogId()));
 		}
 
+		if (option.getCustomFields() == null) {
+			map.put("customFields", null);
+		}
+		else {
+			map.put("customFields", String.valueOf(option.getCustomFields()));
+		}
+
 		if (option.getDescription() == null) {
 			map.put("description", null);
 		}
@@ -351,6 +369,22 @@ public class OptionSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					CustomField[] customFieldsArray =
+						new CustomField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < customFieldsArray.length; i++) {
+						customFieldsArray[i] = CustomFieldSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					option.setCustomFields(customFieldsArray);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "description")) {
 				if (jsonParserFieldValue != null) {
 					option.setDescription(
@@ -394,14 +428,18 @@ public class OptionSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "optionValues")) {
 				if (jsonParserFieldValue != null) {
-					option.setOptionValues(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> OptionValueSerDes.toDTO((String)object)
-						).toArray(
-							size -> new OptionValue[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					OptionValue[] optionValuesArray =
+						new OptionValue[jsonParserFieldValues.length];
+
+					for (int i = 0; i < optionValuesArray.length; i++) {
+						optionValuesArray[i] = OptionValueSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					option.setOptionValues(optionValuesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "priority")) {

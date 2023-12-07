@@ -1,25 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.web.internal.portlet;
 
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.PortletDisplay;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.users.admin.constants.UsersAdminPortletKeys;
 
 import java.io.IOException;
@@ -30,6 +30,7 @@ import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
+import javax.portlet.PortletRequest;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -80,6 +81,13 @@ public class MyAccountPortlet extends MVCPortlet {
 			return;
 		}
 
+		try {
+			_populatePortletDisplay(renderRequest);
+		}
+		catch (PortalException portalException) {
+			throw new PortletException(portalException);
+		}
+
 		super.render(renderRequest, renderResponse);
 	}
 
@@ -94,6 +102,37 @@ public class MyAccountPortlet extends MVCPortlet {
 			return super.callActionMethod(actionRequest, actionResponse);
 		}
 	}
+
+	private void _populatePortletDisplay(RenderRequest renderRequest)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		PermissionChecker permissionChecker =
+			themeDisplay.getPermissionChecker();
+
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+		if (PortletPermissionUtil.contains(
+				permissionChecker, UsersAdminPortletKeys.USERS_ADMIN,
+				ActionKeys.ACCESS_IN_CONTROL_PANEL)) {
+
+			portletDisplay.setShowBackIcon(true);
+			portletDisplay.setURLBack(
+				PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						renderRequest, UsersAdminPortletKeys.USERS_ADMIN,
+						PortletRequest.RENDER_PHASE)
+				).buildString());
+		}
+		else {
+			portletDisplay.setShowBackIcon(false);
+		}
+	}
+
+	@Reference
+	private Portal _portal;
 
 	@Reference(
 		target = "(&(release.bundle.symbolic.name=com.liferay.users.admin.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"

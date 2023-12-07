@@ -1,30 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.item.selector.web.internal.util;
 
-import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.model.CPDefinition;
-import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.util.comparator.CPDefinitionDisplayDateComparator;
 import com.liferay.commerce.product.util.comparator.CPDefinitionModifiedDateComparator;
 import com.liferay.commerce.product.util.comparator.CPDefinitionNameComparator;
-import com.liferay.commerce.product.util.comparator.CPInstanceCreateDateComparator;
-import com.liferay.commerce.product.util.comparator.CPInstanceDisplayDateComparator;
-import com.liferay.commerce.product.util.comparator.CPInstanceSkuComparator;
 import com.liferay.commerce.product.util.comparator.CPOptionModifiedDateComparator;
 import com.liferay.commerce.product.util.comparator.CPSpecificationOptionModifiedDateComparator;
 import com.liferay.commerce.product.util.comparator.CPSpecificationOptionTitleComparator;
@@ -89,57 +75,6 @@ public class CPItemSelectorViewUtil {
 		else if (orderByCol.equals("name")) {
 			sort = SortFactoryUtil.create(
 				Field.NAME, Sort.STRING_TYPE, reverse);
-		}
-
-		return sort;
-	}
-
-	public static OrderByComparator<CPInstance> getCPInstanceOrderByComparator(
-		String orderByCol, String orderByType) {
-
-		boolean orderByAsc = false;
-
-		if (orderByType.equals("asc")) {
-			orderByAsc = true;
-		}
-
-		OrderByComparator<CPInstance> orderByComparator = null;
-
-		if (orderByCol.equals("create-date")) {
-			orderByComparator = new CPInstanceCreateDateComparator(orderByAsc);
-		}
-		else if (orderByCol.equals("display-date")) {
-			orderByComparator = new CPInstanceDisplayDateComparator(orderByAsc);
-		}
-		else if (orderByCol.equals("sku")) {
-			orderByComparator = new CPInstanceSkuComparator(orderByAsc);
-		}
-
-		return orderByComparator;
-	}
-
-	public static Sort getCPInstanceSort(
-		String orderByCol, String orderByType) {
-
-		boolean reverse = true;
-
-		if (orderByType.equals("asc")) {
-			reverse = false;
-		}
-
-		Sort sort = null;
-
-		if (orderByCol.equals("create-date")) {
-			sort = SortFactoryUtil.create(
-				Field.CREATE_DATE + "_sortable", reverse);
-		}
-		else if (orderByCol.equals("display-date")) {
-			sort = SortFactoryUtil.create(
-				CPField.DISPLAY_DATE + "_Number_sortable", reverse);
-		}
-		else if (orderByCol.equals("sku")) {
-			sort = SortFactoryUtil.create(
-				CPField.SKU + "_String_sortable", reverse);
 		}
 
 		return sort;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import './index.scss';
@@ -18,7 +9,7 @@ const Summary = ({application}: any) => {
 	const {data} = application;
 
 	return (
-		<div className="bg-neutral-0 rounded summary-container">
+		<div className="bg-neutral-0 rounded summary-container w-100">
 			<div className="pt-3 px-5 summary-title">
 				<h5 className="m-0">Summary</h5>
 			</div>
@@ -27,52 +18,44 @@ const Summary = ({application}: any) => {
 
 			<div className="d-flex flex-column pb-5 px-5 summary-content">
 				<div className="d-flex flex-column mb-3">
-					<label>Submitted on</label>
+					<div className="mb-2 text-neutral-7">Submitted on</div>
 
-					<span className="font-weight-bold">
-						{data?.applicationCreateDate}
-					</span>
+					<div>{data?.applicationCreateDate}</div>
 
 					{!data?.applicationCreateDate && <i>No data</i>}
 				</div>
 
 				<div className="d-flex flex-column mb-3">
-					<label>Address</label>
+					<div className="mb-2 text-neutral-7">Address</div>
 
-					<span className="font-weight-bold">
-						{data?.address && data.address}
-					</span>
+					<div>{data?.address && data.address}</div>
 
 					{!data?.address && <i>No data</i>}
 				</div>
 
 				<div className="d-flex flex-column mb-3">
-					<label>Name</label>
+					<div className="mb-2 text-neutral-7">Name</div>
 
-					<span className="font-weight-bold">
+					<div>
 						{data?.firstName &&
 							`${data?.firstName} ${data?.lastName}`}
-					</span>
+					</div>
 
 					{!data?.firstName && <i>No data</i>}
 				</div>
 
 				<div className="d-flex flex-column mb-3">
-					<label>Email</label>
+					<div className="mb-2 text-neutral-7">Email</div>
 
-					<span className="font-weight-bold">
-						{data?.email && data.email}
-					</span>
+					<div>{data?.email && data.email}</div>
 
 					{!data?.email && <i>No data</i>}
 				</div>
 
 				<div className="d-flex flex-column">
-					<label>Phone</label>
+					<div className="mb-2 text-neutral-7">Phone</div>
 
-					<span className="font-weight-bold">
-						{data?.phone && data.phone}
-					</span>
+					<div>{data?.phone && data.phone}</div>
 
 					{!data?.phone && <i>No data</i>}
 				</div>

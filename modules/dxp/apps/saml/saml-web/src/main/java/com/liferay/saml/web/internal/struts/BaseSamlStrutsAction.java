@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.web.internal.struts;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
@@ -45,14 +38,10 @@ public abstract class BaseSamlStrutsAction implements StrutsAction {
 			WebKeys.RESOURCE_BUNDLE_LOADER,
 			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 
-		Thread currentThread = Thread.currentThread();
+		Class<? extends BaseSamlStrutsAction> clazz = getClass();
 
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		try {
-			Class<? extends BaseSamlStrutsAction> clazz = getClass();
-
-			currentThread.setContextClassLoader(clazz.getClassLoader());
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				clazz.getClassLoader())) {
 
 			return doExecute(httpServletRequest, httpServletResponse);
 		}
@@ -64,9 +53,9 @@ public abstract class BaseSamlStrutsAction implements StrutsAction {
 				_log.error(exception);
 			}
 
-			Class<?> clazz = exception.getClass();
+			Class<?> exceptionClass = exception.getClass();
 
-			SessionErrors.add(httpServletRequest, clazz.getName());
+			SessionErrors.add(httpServletRequest, exceptionClass.getName());
 
 			if (exception instanceof StatusException) {
 				StatusException statusException = (StatusException)exception;
@@ -79,9 +68,6 @@ public abstract class BaseSamlStrutsAction implements StrutsAction {
 			JspUtil.dispatch(
 				httpServletRequest, httpServletResponse,
 				JspUtil.PATH_PORTAL_SAML_ERROR, "status");
-		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
 		}
 
 		return null;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.theme;
@@ -19,8 +10,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIconMenu;
 import com.liferay.portal.kernel.portlet.toolbar.PortletToolbar;
 import com.liferay.portal.kernel.util.Constants;
@@ -88,15 +78,12 @@ public class PortletDisplay implements Cloneable, Serializable {
 		_modePrint = master.isModePrint();
 		_modeView = master.isModeView();
 		_namespace = master.getNamespace();
-		_portletConfigurationIconMenu =
-			master.getPortletConfigurationIconMenu();
 		_portletDecorate = master.isPortletDecorate();
 		_portletDecoratorId = master.getPortletDecoratorId();
 		_portletDisplayName = master.getPortletDisplayName();
 		_portletName = master.getPortletName();
 		_portletResource = master.getPortletResource();
-		_portletSetup = master.getPortletSetup();
-		_portletToolbar = master.getPortletToolbar();
+		_portletPreferences = master.getPortletPreferences();
 		_resourcePK = master.getResourcePK();
 		_restoreCurrentView = master.isRestoreCurrentView();
 		_rootPortletId = master.getRootPortletId();
@@ -160,14 +147,12 @@ public class PortletDisplay implements Cloneable, Serializable {
 		slave.setModePrint(_modePrint);
 		slave.setModeView(_modeView);
 		slave.setNamespace(_namespace);
-		slave.setPortletConfigurationIconMenu(_portletConfigurationIconMenu);
 		slave.setPortletDecorate(_portletDecorate);
 		slave.setPortletDecoratorId(_portletDecoratorId);
 		slave.setPortletDisplayName(_portletDisplayName);
 		slave.setPortletName(_portletName);
 		slave.setPortletResource(_portletResource);
-		slave.setPortletSetup(_portletSetup);
-		slave.setPortletToolbar(_portletToolbar);
+		slave.setPortletPreferences(_portletPreferences);
 		slave.setResourcePK(_resourcePK);
 		slave.setRestoreCurrentView(_restoreCurrentView);
 		slave.setRootPortletId(_rootPortletId);
@@ -249,7 +234,7 @@ public class PortletDisplay implements Cloneable, Serializable {
 	}
 
 	public PortletConfigurationIconMenu getPortletConfigurationIconMenu() {
-		return _portletConfigurationIconMenu;
+		return PortletConfigurationIconMenu.INSTANCE;
 	}
 
 	public String getPortletDecoratorId() {
@@ -264,32 +249,20 @@ public class PortletDisplay implements Cloneable, Serializable {
 		return _portletDisplayName;
 	}
 
-	public <T> T getPortletInstanceConfiguration(Class<T> clazz)
-		throws ConfigurationException {
-
-		if (Validator.isNull(_portletResource)) {
-			return ConfigurationProviderUtil.getPortletInstanceConfiguration(
-				clazz, _themeDisplay.getLayout(), _id);
-		}
-
-		return ConfigurationProviderUtil.getPortletInstanceConfiguration(
-			clazz, _themeDisplay.getLayout(), _portletResource);
-	}
-
 	public String getPortletName() {
 		return _portletName;
+	}
+
+	public PortletPreferences getPortletPreferences() {
+		return _portletPreferences;
 	}
 
 	public String getPortletResource() {
 		return _portletResource;
 	}
 
-	public PortletPreferences getPortletSetup() {
-		return _portletSetup;
-	}
-
 	public PortletToolbar getPortletToolbar() {
-		return _portletToolbar;
+		return PortletToolbar.INSTANCE;
 	}
 
 	public String getResourcePK() {
@@ -310,6 +283,10 @@ public class PortletDisplay implements Cloneable, Serializable {
 
 	public String getURLBack() {
 		return _urlBack;
+	}
+
+	public String getURLBackTitle() {
+		return _urlBackTitle;
 	}
 
 	public String getURLClose() {
@@ -374,6 +351,10 @@ public class PortletDisplay implements Cloneable, Serializable {
 
 	public boolean isActive() {
 		return _active;
+	}
+
+	public boolean isBeta() {
+		return _beta;
 	}
 
 	public boolean isFocused() {
@@ -475,14 +456,22 @@ public class PortletDisplay implements Cloneable, Serializable {
 			return false;
 		}
 
-		PortletPreferences portletSetup = getPortletSetup();
+		PortletPreferences portletPreferences = getPortletPreferences();
 
-		String portletSetupPortletDecoratorId = portletSetup.getValue(
+		String portletSetupPortletDecoratorId = portletPreferences.getValue(
 			"portletSetupPortletDecoratorId", StringPool.BLANK);
 
 		Layout layout = _themeDisplay.getLayout();
 
-		if (Validator.isNull(portletSetupPortletDecoratorId) &&
+		LayoutTypePortlet layoutTypePortlet =
+			_themeDisplay.getLayoutTypePortlet();
+
+		HttpServletRequest httpServletRequest = _themeDisplay.getRequest();
+
+		String ppid = ParamUtil.getString(httpServletRequest, "p_p_id");
+
+		if ((!layoutTypePortlet.hasStateMax() || Validator.isNull(ppid)) &&
+			Validator.isNull(portletSetupPortletDecoratorId) &&
 			(layout.isTypeAssetDisplay() || layout.isTypeContent())) {
 
 			return false;
@@ -500,11 +489,11 @@ public class PortletDisplay implements Cloneable, Serializable {
 		Layout layout = _themeDisplay.getLayout();
 
 		boolean showPortletTopper = GetterUtil.getBoolean(
-			httpServletRequest.getAttribute(WebKeys.SHOW_PORTLET_TOPPER));
+			httpServletRequest.getAttribute(WebKeys.SHOW_PORTLET_TOPPER), true);
 
 		if (layoutMode.equals(Constants.VIEW) &&
 			(layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
-			showPortletTopper) {
+			!showPortletTopper) {
 
 			return false;
 		}
@@ -578,7 +567,7 @@ public class PortletDisplay implements Cloneable, Serializable {
 		_namespace = StringPool.BLANK;
 		_portletDisplayName = StringPool.BLANK;
 		_portletName = StringPool.BLANK;
-		_portletSetup = null;
+		_portletPreferences = null;
 		_resourcePK = StringPool.BLANK;
 		_restoreCurrentView = false;
 		_rootPortletId = StringPool.BLANK;
@@ -621,6 +610,10 @@ public class PortletDisplay implements Cloneable, Serializable {
 
 	public void setActive(boolean active) {
 		_active = active;
+	}
+
+	public void setBeta(boolean beta) {
+		_beta = beta;
 	}
 
 	public void setColumnCount(int columnCount) {
@@ -700,12 +693,6 @@ public class PortletDisplay implements Cloneable, Serializable {
 		_namespace = namespace;
 	}
 
-	public void setPortletConfigurationIconMenu(
-		PortletConfigurationIconMenu portletConfigurationIconMenu) {
-
-		_portletConfigurationIconMenu = portletConfigurationIconMenu;
-	}
-
 	public void setPortletDecorate(boolean portletDecorate) {
 		_portletDecorate = portletDecorate;
 	}
@@ -722,16 +709,12 @@ public class PortletDisplay implements Cloneable, Serializable {
 		_portletName = portletName;
 	}
 
+	public void setPortletPreferences(PortletPreferences portletPreferences) {
+		_portletPreferences = portletPreferences;
+	}
+
 	public void setPortletResource(String portletResource) {
 		_portletResource = portletResource;
-	}
-
-	public void setPortletSetup(PortletPreferences portletSetup) {
-		_portletSetup = portletSetup;
-	}
-
-	public void setPortletToolbar(PortletToolbar portletToolbar) {
-		_portletToolbar = portletToolbar;
 	}
 
 	public void setResourcePK(String resourcePK) {
@@ -851,6 +834,10 @@ public class PortletDisplay implements Cloneable, Serializable {
 		}
 	}
 
+	public void setURLBackTitle(String urlBackTitle) {
+		_urlBackTitle = urlBackTitle;
+	}
+
 	public void setURLClose(String urlClose) {
 		_urlClose = urlClose;
 	}
@@ -925,6 +912,7 @@ public class PortletDisplay implements Cloneable, Serializable {
 		StringPool.BLANK);
 
 	private boolean _active;
+	private boolean _beta;
 	private int _columnCount;
 	private String _columnId = StringPool.BLANK;
 	private int _columnPos;
@@ -943,14 +931,12 @@ public class PortletDisplay implements Cloneable, Serializable {
 	private boolean _modePrint;
 	private boolean _modeView;
 	private String _namespace = StringPool.BLANK;
-	private PortletConfigurationIconMenu _portletConfigurationIconMenu;
 	private boolean _portletDecorate;
 	private String _portletDecoratorId = StringPool.BLANK;
 	private String _portletDisplayName = StringPool.BLANK;
 	private String _portletName = StringPool.BLANK;
+	private PortletPreferences _portletPreferences;
 	private String _portletResource = StringPool.BLANK;
-	private PortletPreferences _portletSetup;
-	private PortletToolbar _portletToolbar;
 	private String _resourcePK = StringPool.BLANK;
 	private boolean _restoreCurrentView;
 	private String _rootPortletId = StringPool.BLANK;
@@ -976,6 +962,7 @@ public class PortletDisplay implements Cloneable, Serializable {
 	private ThemeDisplay _themeDisplay;
 	private String _title = StringPool.BLANK;
 	private String _urlBack = StringPool.BLANK;
+	private String _urlBackTitle = StringPool.BLANK;
 	private String _urlClose = StringPool.BLANK;
 	private String _urlConfiguration = StringPool.BLANK;
 	private String _urlConfigurationJS = StringPool.BLANK;

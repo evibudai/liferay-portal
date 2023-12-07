@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.internal.blueprint.test;
@@ -29,6 +20,7 @@ import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
 import com.liferay.expando.kernel.service.ExpandoTableLocalServiceUtil;
+import com.liferay.expando.test.util.ExpandoTestUtil;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactoryUtil;
 import com.liferay.exportimport.kernel.service.StagingLocalServiceUtil;
 import com.liferay.journal.model.JournalArticle;
@@ -84,7 +76,6 @@ import com.liferay.portal.search.test.util.DocumentsAssert;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
 import com.liferay.search.experiences.blueprint.search.request.enhancer.SXPBlueprintSearchRequestEnhancer;
 import com.liferay.search.experiences.model.SXPBlueprint;
 import com.liferay.search.experiences.model.SXPElement;
@@ -216,14 +207,15 @@ public class SXPBlueprintSearchResultTest {
 
 	@Test
 	public void testBoostContentsForTheCurrentLanguage() throws Exception {
+		LocaleThreadLocal.setDefaultLocale(LocaleUtil.GERMANY);
 		_journalArticleBuilder.setTitle(
-			"cola cola en_US"
+			"cola cola de_DE"
 		).setContent(
 			"cola"
 		).build();
 
 		_journalArticleBuilder.setTitle(
-			"fanta cola en_US"
+			"fanta cola de_DE"
 		).build();
 
 		LocaleThreadLocal.setDefaultLocale(LocaleUtil.SPAIN);
@@ -249,14 +241,16 @@ public class SXPBlueprintSearchResultTest {
 		_keywords = "cola";
 
 		_assertSearch(
-			"[coca cola es_ES, pepsi cola es_ES, cola cola en_US, fanta cola " +
-				"en_US]");
+			"[coca cola es_ES, pepsi cola es_ES, cola cola de_DE, fanta cola " +
+				"de_DE]");
 
-		LocaleThreadLocal.setDefaultLocale(LocaleUtil.US);
+		LocaleThreadLocal.setDefaultLocale(LocaleUtil.GERMANY);
 
 		_assertSearch(
-			"[cola cola en_US, fanta cola en_US, coca cola es_ES, pepsi cola " +
+			"[cola cola de_DE, fanta cola de_DE, coca cola es_ES, pepsi cola " +
 				"es_ES]");
+
+		LocaleThreadLocal.setDefaultLocale(LocaleUtil.US);
 	}
 
 	@Test
@@ -448,10 +442,7 @@ public class SXPBlueprintSearchResultTest {
 			_addAssetCategory("Promoted", _user)
 		).build();
 
-		User guestUser = _userLocalService.getDefaultUser(
-			_group.getCompanyId());
-
-		_setCurrentUser(guestUser);
+		_setCurrentUser(_userLocalService.getGuestUser(_group.getCompanyId()));
 
 		_updateElementInstancesJSON(
 			new Object[] {
@@ -522,7 +513,7 @@ public class SXPBlueprintSearchResultTest {
 
 		user.setCreateDate(date);
 
-		_userLocalService.updateUser(user);
+		user = _userLocalService.updateUser(user);
 
 		_setCurrentUser(user);
 
@@ -1185,10 +1176,7 @@ public class SXPBlueprintSearchResultTest {
 
 		_assertSearchIgnoreRelevance("[Guest Users, Non-Guest Users]");
 
-		User guestUser = _userLocalService.getDefaultUser(
-			_group.getCompanyId());
-
-		_setCurrentUser(guestUser);
+		_setCurrentUser(_userLocalService.getGuestUser(_group.getCompanyId()));
 
 		_assertSearchIgnoreRelevance("[Guest Users]");
 
@@ -2231,10 +2219,9 @@ public class SXPBlueprintSearchResultTest {
 			_getScore(searchResponse) + searchResponse.getRequestString();
 
 		DocumentsAssert.assertValues(
-			message, searchResponse.getDocumentsStream(), "title_en_US",
-			expected);
+			message, searchResponse.getDocuments(), "title_en_US", expected);
 
-		if (!Objects.equals("{}", _sxpBlueprint.getElementInstancesJSON())) {
+		if (!Objects.equals(_sxpBlueprint.getElementInstancesJSON(), "{}")) {
 			searchResponse = _getSearchResponsePreview(
 				searchRequestBuilderConsumer);
 
@@ -2242,7 +2229,7 @@ public class SXPBlueprintSearchResultTest {
 				_getScore(searchResponse) + searchResponse.getRequestString();
 
 			DocumentsAssert.assertValues(
-				message, searchResponse.getDocumentsStream(), "title_en_US",
+				message, searchResponse.getDocuments(), "title_en_US",
 				expected);
 		}
 	}
@@ -2256,16 +2243,16 @@ public class SXPBlueprintSearchResultTest {
 			searchRequestBuilderConsumer);
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
-			searchResponse.getRequestString(),
-			searchResponse.getDocumentsStream(), "title_en_US", expected);
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			"title_en_US", expected);
 
-		if (!Objects.equals("{}", _sxpBlueprint.getElementInstancesJSON())) {
+		if (!Objects.equals(_sxpBlueprint.getElementInstancesJSON(), "{}")) {
 			searchResponse = _getSearchResponsePreview(
 				searchRequestBuilderConsumer);
 
 			DocumentsAssert.assertValuesIgnoreRelevance(
 				searchResponse.getRequestString(),
-				searchResponse.getDocumentsStream(), "title_en_US", expected);
+				searchResponse.getDocuments(), "title_en_US", expected);
 		}
 	}
 
@@ -2337,6 +2324,8 @@ public class SXPBlueprintSearchResultTest {
 			_searchRequestBuilderFactory.builder(
 			).companyId(
 				TestPropsValues.getCompanyId()
+			).emptySearchEnabled(
+				true
 			).queryString(
 				_keywords
 			).withSearchContext(
@@ -2368,13 +2357,15 @@ public class SXPBlueprintSearchResultTest {
 			_searchRequestBuilderFactory.builder(
 			).companyId(
 				TestPropsValues.getCompanyId()
+			).emptySearchEnabled(
+				true
 			).queryString(
 				_keywords
 			).withSearchContext(
 				_searchContext -> {
 					_searchContext.setAttribute(
-						"search.experiences.blueprint.id",
-						String.valueOf(_sxpBlueprint.getSXPBlueprintId()));
+						"search.experiences.blueprint.external.reference.code",
+						_sxpBlueprint.getExternalReferenceCode());
 					_searchContext.setAttribute(
 						"search.experiences.scope.group.id",
 						_group.getGroupId());
@@ -2470,7 +2461,8 @@ public class SXPBlueprintSearchResultTest {
 
 	private void _updateSXPBlueprint() throws Exception {
 		_sxpBlueprintLocalService.updateSXPBlueprint(
-			_sxpBlueprint.getUserId(), _sxpBlueprint.getSXPBlueprintId(),
+			_sxpBlueprint.getExternalReferenceCode(), _sxpBlueprint.getUserId(),
+			_sxpBlueprint.getSXPBlueprintId(),
 			_sxpBlueprint.getConfigurationJSON(),
 			_sxpBlueprint.getDescriptionMap(),
 			_sxpBlueprint.getElementInstancesJSON(),

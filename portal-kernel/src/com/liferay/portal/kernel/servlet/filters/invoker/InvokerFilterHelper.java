@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.servlet.filters.invoker;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
@@ -294,12 +287,10 @@ public class InvokerFilterHelper {
 			(ClassLoader)servletContext.getAttribute(
 				PluginContextListener.PLUGIN_CLASS_LOADER);
 
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
 		if (pluginClassLoader == null) {
-			pluginClassLoader = contextClassLoader;
+			Thread currentThread = Thread.currentThread();
+
+			pluginClassLoader = currentThread.getContextClassLoader();
 		}
 
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
@@ -309,11 +300,9 @@ public class InvokerFilterHelper {
 				portalClassLoader, pluginClassLoader);
 		}
 
-		if (contextClassLoader != pluginClassLoader) {
-			currentThread.setContextClassLoader(pluginClassLoader);
-		}
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				pluginClassLoader)) {
 
-		try {
 			Filter filter = (Filter)InstanceFactory.newInstance(
 				pluginClassLoader, filterClassName);
 
@@ -326,11 +315,6 @@ public class InvokerFilterHelper {
 				"Unable to initialize filter " + filterClassName, exception);
 
 			return null;
-		}
-		finally {
-			if (contextClassLoader != pluginClassLoader) {
-				currentThread.setContextClassLoader(contextClassLoader);
-			}
 		}
 	}
 

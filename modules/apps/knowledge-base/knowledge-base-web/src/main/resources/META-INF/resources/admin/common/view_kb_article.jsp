@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -39,6 +30,8 @@ if (enableKBArticleRatings && kbArticle.isDraft()) {
 	}
 }
 
+ViewKBArticleDisplayContext viewKBArticleDisplayContext = new ViewKBArticleDisplayContext(liferayPortletRequest, liferayPortletResponse);
+
 if (Validator.isNotNull(backURL)) {
 	portletDisplay.setURLBack(backURL);
 }
@@ -48,6 +41,8 @@ boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getIni
 if (portletTitleBasedNavigation) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(redirect);
+	portletDisplay.setURLBackTitle(portletDisplay.getTitle());
+
 	renderResponse.setTitle(kbArticle.getTitle());
 }
 %>
@@ -55,33 +50,21 @@ if (portletTitleBasedNavigation) {
 <c:if test="<%= portletTitleBasedNavigation %>">
 
 	<%
-	KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
-
-	ViewKBArticleDisplayContext viewKBArticleDisplayContext = new ViewKBArticleDisplayContext(liferayPortletRequest, liferayPortletResponse);
+	KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse, trashHelper);
 	%>
 
 	<div class="management-bar management-bar-light navbar navbar-expand-md">
 		<clay:container-fluid>
-			<ul class="<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166643")) ? "justify-content-end" : "" %> navbar-nav navbar-nav-expand">
-				<c:choose>
-					<c:when test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166643")) %>'>
-						<li class="nav-item">
-							<clay:link
-								aria-label='<%= LanguageUtil.get(request, "edit") %>'
-								cssClass="btn-monospaced btn-secondary btn-sm"
-								href="<%= viewKBArticleDisplayContext.getEditArticleURL(kbArticle) %>"
-								icon="pencil"
-								title='<%= LanguageUtil.get(request, "edit") %>'
-							/>
-						</li>
-					</c:when>
-					<c:otherwise>
-						<li class="m-auto nav-item">
-							<aui:workflow-status markupView="lexicon" showHelpMessage="<%= false %>" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= kbArticle.getStatus() %>" version="<%= String.valueOf(kbArticle.getVersion()) %>" />
-						</li>
-					</c:otherwise>
-				</c:choose>
-
+			<ul class="justify-content-end navbar-nav navbar-nav-expand">
+				<li class="nav-item">
+					<clay:link
+						aria-label='<%= LanguageUtil.get(request, "edit") %>'
+						cssClass="btn-monospaced btn-secondary btn-sm"
+						href="<%= viewKBArticleDisplayContext.getEditArticleURL(kbArticle) %>"
+						icon="pencil"
+						title='<%= LanguageUtil.get(request, "edit") %>'
+					/>
+				</li>
 				<li class="nav-item">
 					<liferay-frontend:sidebar-toggler-button
 						cssClass="btn btn-monospaced btn-secondary btn-sm btn-unstyled"
@@ -89,7 +72,7 @@ if (portletTitleBasedNavigation) {
 					/>
 				</li>
 
-				<c:if test='<%= viewKBArticleDisplayContext.isSubscriptionEnabled(kbArticle) && GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166643")) %>'>
+				<c:if test="<%= viewKBArticleDisplayContext.isSubscriptionEnabled(kbArticle) %>">
 					<li class="nav-item">
 						<clay:link
 							aria-label="<%= viewKBArticleDisplayContext.getSubscriptionLabel(kbArticle) %>"
@@ -135,7 +118,7 @@ if (portletTitleBasedNavigation) {
 					<div class="autofit-col">
 
 						<%
-						KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(kbGroupServiceConfiguration, liferayPortletRequest, liferayPortletResponse);
+						KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(kbGroupServiceConfiguration, liferayPortletRequest, liferayPortletResponse, trashHelper);
 						%>
 
 						<clay:dropdown-actions
@@ -153,16 +136,26 @@ if (portletTitleBasedNavigation) {
 		</div>
 
 		<div <%= portletTitleBasedNavigation ? "class=\"sheet\"" : StringPool.BLANK %>>
-			<div class="kb-entity-body">
+			<div class="kb-entity-body mb-5">
 				<c:if test="<%= portletTitleBasedNavigation %>">
 					<div class="kb-article-title">
 						<%= HtmlUtil.escape(kbArticle.getTitle()) %>
 					</div>
 				</c:if>
 
-				<div id="<portlet:namespace /><%= kbArticle.getResourcePrimKey() %>">
+				<div class="mb-4" id="<portlet:namespace /><%= kbArticle.getResourcePrimKey() %>">
 					<%= kbArticle.getContent() %>
 				</div>
+
+				<c:if test="<%= viewKBArticleDisplayContext.isKBArticleDescriptionEnabled() && Validator.isNotNull(kbArticle.getDescription()) %>">
+					<div class="sheet-subtitle">
+						<liferay-ui:message key="description" />
+					</div>
+
+					<div class="lfr-asset-description">
+						<%= HtmlUtil.escape(kbArticle.getDescription()) %>
+					</div>
+				</c:if>
 
 				<clay:content-row>
 					<clay:content-col>
@@ -236,38 +229,25 @@ if (portletTitleBasedNavigation) {
 			<c:if test="<%= enableKBArticleSuggestions || !childKBArticles.isEmpty() %>">
 				<c:choose>
 					<c:when test="<%= portletTitleBasedNavigation %>">
-						<liferay-ui:panel-container
-							cssClass="mt-5 panel-group-flush panel-group-sm"
-							extended="<%= true %>"
-							markupView="lexicon"
-							persistState="<%= true %>"
-						>
+						<clay:panel-group>
 							<c:if test="<%= enableKBArticleSuggestions %>">
-								<liferay-ui:panel
-									collapsible="<%= true %>"
-									cssClass="panel-unstyled"
-									extended="<%= true %>"
-									markupView="lexicon"
-									persistState="<%= true %>"
-									title="suggestions"
+								<clay:panel
+									displayTitle='<%= LanguageUtil.get(request, "suggestions") %>'
+									expanded="<%= true %>"
 								>
 									<liferay-util:include page="/admin/common/kb_article_suggestions.jsp" servletContext="<%= application %>" />
-								</liferay-ui:panel>
+								</clay:panel>
 							</c:if>
 
 							<c:if test="<%= !childKBArticles.isEmpty() %>">
-								<liferay-ui:panel
-									collapsible="<%= true %>"
-									cssClass="panel-unstyled"
-									extended="<%= true %>"
-									markupView="lexicon"
-									persistState="<%= true %>"
-									title='<%= LanguageUtil.format(request, "child-articles-x", childKBArticles.size(), false) %>'
+								<clay:panel
+									displayTitle='<%= LanguageUtil.format(request, "child-articles-x", childKBArticles.size(), false) %>'
+									expanded="<%= true %>"
 								>
 									<liferay-util:include page="/admin/common/kb_article_child.jsp" servletContext="<%= application %>" />
-								</liferay-ui:panel>
+								</clay:panel>
 							</c:if>
-						</liferay-ui:panel-container>
+						</clay:panel-group>
 					</c:when>
 					<c:otherwise>
 						<c:if test="<%= enableKBArticleSuggestions %>">
@@ -283,6 +263,23 @@ if (portletTitleBasedNavigation) {
 		</div>
 	</div>
 </div>
+
+<%
+String kbArticleSuccessMessage = GetterUtil.getString(MultiSessionMessages.get(renderRequest, "kbArticleSuccessMessage"));
+%>
+
+<c:if test="<%= Validator.isNotNull(kbArticleSuccessMessage) %>">
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"autoClose", 20000
+			).put(
+				"message", kbArticleSuccessMessage
+			).build()
+		%>'
+		module="admin/js/utils/openToast"
+	/>
+</c:if>
 
 <%
 List<AssetTag> assetTags = AssetTagLocalServiceUtil.getTags(KBArticle.class.getName(), kbArticle.getClassPK());

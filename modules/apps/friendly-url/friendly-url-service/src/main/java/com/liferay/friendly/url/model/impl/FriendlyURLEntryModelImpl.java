@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.friendly.url.model.impl;
@@ -242,92 +233,114 @@ public class FriendlyURLEntryModelImpl
 	public Map<String, Function<FriendlyURLEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<FriendlyURLEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<FriendlyURLEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<FriendlyURLEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<FriendlyURLEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<FriendlyURLEntry, Object>>();
-		Map<String, BiConsumer<FriendlyURLEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<FriendlyURLEntry, ?>>();
+		private static final Map<String, Function<FriendlyURLEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", FriendlyURLEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<FriendlyURLEntry, Long>)
-				FriendlyURLEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", FriendlyURLEntry::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<FriendlyURLEntry, Long>)
-				FriendlyURLEntry::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", FriendlyURLEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<FriendlyURLEntry, String>)FriendlyURLEntry::setUuid);
-		attributeGetterFunctions.put(
-			"defaultLanguageId", FriendlyURLEntry::getDefaultLanguageId);
-		attributeSetterBiConsumers.put(
-			"defaultLanguageId",
-			(BiConsumer<FriendlyURLEntry, String>)
-				FriendlyURLEntry::setDefaultLanguageId);
-		attributeGetterFunctions.put(
-			"friendlyURLEntryId", FriendlyURLEntry::getFriendlyURLEntryId);
-		attributeSetterBiConsumers.put(
-			"friendlyURLEntryId",
-			(BiConsumer<FriendlyURLEntry, Long>)
-				FriendlyURLEntry::setFriendlyURLEntryId);
-		attributeGetterFunctions.put("groupId", FriendlyURLEntry::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<FriendlyURLEntry, Long>)FriendlyURLEntry::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", FriendlyURLEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<FriendlyURLEntry, Long>)FriendlyURLEntry::setCompanyId);
-		attributeGetterFunctions.put(
-			"createDate", FriendlyURLEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<FriendlyURLEntry, Date>)
-				FriendlyURLEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", FriendlyURLEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<FriendlyURLEntry, Date>)
-				FriendlyURLEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"classNameId", FriendlyURLEntry::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<FriendlyURLEntry, Long>)
-				FriendlyURLEntry::setClassNameId);
-		attributeGetterFunctions.put("classPK", FriendlyURLEntry::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<FriendlyURLEntry, Long>)FriendlyURLEntry::setClassPK);
+		static {
+			Map<String, Function<FriendlyURLEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<FriendlyURLEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", FriendlyURLEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", FriendlyURLEntry::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", FriendlyURLEntry::getUuid);
+			attributeGetterFunctions.put(
+				"defaultLanguageId", FriendlyURLEntry::getDefaultLanguageId);
+			attributeGetterFunctions.put(
+				"friendlyURLEntryId", FriendlyURLEntry::getFriendlyURLEntryId);
+			attributeGetterFunctions.put(
+				"groupId", FriendlyURLEntry::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", FriendlyURLEntry::getCompanyId);
+			attributeGetterFunctions.put(
+				"createDate", FriendlyURLEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", FriendlyURLEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"classNameId", FriendlyURLEntry::getClassNameId);
+			attributeGetterFunctions.put(
+				"classPK", FriendlyURLEntry::getClassPK);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<FriendlyURLEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<FriendlyURLEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<FriendlyURLEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<FriendlyURLEntry, Long>)
+					FriendlyURLEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<FriendlyURLEntry, Long>)
+					FriendlyURLEntry::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<FriendlyURLEntry, String>)
+					FriendlyURLEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"defaultLanguageId",
+				(BiConsumer<FriendlyURLEntry, String>)
+					FriendlyURLEntry::setDefaultLanguageId);
+			attributeSetterBiConsumers.put(
+				"friendlyURLEntryId",
+				(BiConsumer<FriendlyURLEntry, Long>)
+					FriendlyURLEntry::setFriendlyURLEntryId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<FriendlyURLEntry, Long>)
+					FriendlyURLEntry::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<FriendlyURLEntry, Long>)
+					FriendlyURLEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<FriendlyURLEntry, Date>)
+					FriendlyURLEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<FriendlyURLEntry, Date>)
+					FriendlyURLEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<FriendlyURLEntry, Long>)
+					FriendlyURLEntry::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<FriendlyURLEntry, Long>)
+					FriendlyURLEntry::setClassPK);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -964,7 +977,8 @@ public class FriendlyURLEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<FriendlyURLEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

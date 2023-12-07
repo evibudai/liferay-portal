@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6118. ActiveAllTaxCalculations"
-	@priority = "3"
+	@priority = 3
 	test ActiveAllTaxCalculations {
 		property portal.acceptance = "false";
 		property portal.release = "false";
@@ -23,9 +23,7 @@ definition {
 		// TODO Review
 		// TODO Fix Commerce tests that are skipping portal instances - COMMERCE-6586; COMMERCE-6588
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -152,22 +150,19 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test AddANewDefaultPaymentMethod {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8534 AddANewDefaultPaymentMethod pending implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6116. AddShippingOptionFedEx"
-	@priority = "3"
+	@priority = 3
 	test AddShippingOptionFedEx {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -189,16 +184,20 @@ definition {
 			locator1 = "CommerceEntry#PAYMENT_METHODS_SIDE_PANEL_NAV_ITEMS",
 			navItem = "Configuration");
 
-		for (var labels : list "URL,Key,Password,Account Number,Meter Number") {
+		for (var labels : list "URL,Key,Account Number,Meter Number") {
 			Type(
-				key_fieldLabel = "${labels}",
+				key_fieldLabel = ${labels},
 				locator1 = "TextInput#GENERIC_TEXT_INPUT",
 				value1 = "Test");
 		}
 
+		Type(
+			locator1 = "TextInput#PASSWORD_TYPE",
+			value1 = "Test");
+
 		for (var key_value : list "FedEx Europe First International Priority,FedEx 1Day Freight,FedEx 2Day,FedEx 2Day AM,FedEx 2Day Freight,FedEx 3Day Freight,FedEx Distance Deferred,FedEx Express Saver,FedEx First Freight,FedEx Freight Economy,FedEx Freight Priority,FedEx Ground,FedEx Next Day Afternoon,FedEx Next Day Early Morning,FedEx Next Day End of Day,FedEx Next Day Freight,FedEx Next Day Mid-Morning,FedEx First Overnight,FedEx Ground Home Delivery,FedEx International Economy,FedEx International Economy Freight,FedEx International First,FedEx International Priority,FedEx International Priority Express,FedEx International Priority Freight,FedEx Priority Overnight,FedEx Same Day,FedEx Same Day City,FedEx SmartPost,FedEx Standard Overnight") {
 			Check.checkToggleSwitch(
-				checkboxName = "${key_value}",
+				checkboxName = ${key_value},
 				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
@@ -225,13 +224,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6111. AddShippingOptionFlatRate"
-	@priority = "3"
+	@priority = 3
 	test AddShippingOptionFlatRate {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -276,12 +273,12 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "1");
+			value1 = 1);
 
 		Type(
 			key_fieldLabel = "Priority",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -289,13 +286,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6113. AddShippingOptionSettingVariableRate"
-	@priority = "3"
+	@priority = 3
 	test AddShippingOptionSettingVariableRate {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -332,27 +327,25 @@ definition {
 
 		CommerceEntry.addShippingOptionSettingsVariableRate(
 			country = "Italy",
-			fixedPrice = "1",
-			priceUnitWeight = "1",
+			fixedPrice = 1,
+			priceUnitWeight = 1,
 			region = "Roma",
 			shippingOption = "Standard",
-			subtotal = "1",
+			subtotal = 1,
 			warehouse = "Italy",
-			weightFrom = "1",
-			weightTo = "1",
-			zip = "0100");
+			weightFrom = 1,
+			weightTo = 1,
+			zip = 0100);
 
 		Alert.viewSuccessMessage();
 	}
 
 	@description = "This is a test for COMMERCE-6110. AddShippingOptionVariableRate"
-	@priority = "3"
+	@priority = 3
 	test AddShippingOptionVariableRate {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -392,13 +385,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6120. AddTaxRateSettingsByAddressTaxCalculation"
-	@priority = "3"
+	@priority = 5
 	test AddTaxRateSettingsByAddressTaxCalculation {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -439,7 +430,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "20");
+			value1 = 20);
 
 		Select(
 			key_fieldLabel = "Country",
@@ -454,7 +445,7 @@ definition {
 		Type(
 			key_fieldLabel = "Zip",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "0100");
+			value1 = 0100);
 
 		Button.click(button = "Submit");
 
@@ -468,15 +459,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6123. AddTaxRateSettingsFixedTaxRateTaxCalculation"
-	@priority = "3"
+	@priority = 5
 	test AddTaxRateSettingsFixedTaxRateTaxCalculation {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -518,7 +507,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSubmitButton();
 
@@ -530,7 +519,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6413. Commerce Channel API unable to define Type"
-	@priority = "3"
+	@priority = 3
 	test CanCreateChannelViaAPIAndCheckTabs {
 		property portal.acceptance = "false";
 
@@ -539,45 +528,91 @@ definition {
 		var channelTabsList = "General,Type,Notification Queue,Notification Templates,Payment Restrictions,Shipping Restrictions";
 		var createChannelResponseWithError = CommerceJSONChannelsAPI._addChannel(
 			channelName = "Test Channel New",
-			channelType = "${wrongChannelType}",
+			channelType = ${wrongChannelType},
 			currencyCode = "US",
-			externalReferenceCode = "101");
+			externalReferenceCode = 101);
 
-		var createChannelErrorMessage = JSONUtil.getWithJSONPath("${createChannelResponseWithError}", "$");
+		var createChannelErrorMessage = JSONUtil.getWithJSONPath(${createChannelResponseWithError}, "$");
 
 		TestUtils.assertEquals(
-			actual = "${createChannelErrorMessage}",
+			actual = ${createChannelErrorMessage},
 			expected = "{errorDescription=Invalid channel type, message=null, status=400}");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		IsElementPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER");
 
 		CommerceJSONChannelsAPI._addChannel(
 			channelName = "Test Channel New",
-			channelType = "${correctChannelType}",
+			channelType = ${correctChannelType},
 			currencyCode = "US",
-			externalReferenceCode = "101");
+			externalReferenceCode = 101);
 
 		Refresh();
 
 		CommerceNavigator.gotoEntry(entryName = "Test Channel New");
 
-		for (var channelTab : list "${channelTabsList}") {
-			CommerceEntry.gotoMenuTab(menuTab = "${channelTab}");
+		for (var channelTab : list ${channelTabsList}) {
+			CommerceEntry.gotoMenuTab(menuTab = ${channelTab});
+		}
+	}
+
+	@description = "COMMERCE-12919. Can Edit PayPal payment method in a channel's Details page"
+	@priority = 3
+	test CanEditPayPalPaymentMethod {
+		property portal.acceptance = "false";
+
+		task ("When the user navigates to Minium Channel details") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+		}
+
+		task ("Then the user can edit PayPal details") {
+			CommerceChannels.editPaymentMethod(
+				active = "true",
+				description = "PayPal Description",
+				name = "PayPal New Name",
+				paymentMethod = "PayPal",
+				priority = "3.0");
+		}
+
+		task ("And can see PayPal is now enabled and changes are saved") {
+			AssertElementPresent(
+				key_entryName = "PayPal New Name",
+				locator1 = "CommerceEntry#CHANNELS_GENERAL_ACTIVE_STATUS");
+
+			CommerceChannels.assertPaymentMethodDetails(
+				active = "true",
+				description = "PayPal Description",
+				paymentMethodName = "PayPal New Name",
+				priority = "3.0");
+		}
+
+		task ("When the user edits PayPal configuration") {
+			CommerceChannels.configurationPaypal(
+				entryName = "PayPal New Name",
+				merchantId = "MerchantID",
+				mode = "Sandbox");
+
+			SelectFrame.selectFrameTop();
+		}
+
+		task ("Then the fields successfully updated") {
+			CommerceChannels.assertPayPalConfiguration(
+				clientId = "PayPal Client ID",
+				entryName = "PayPal New Name",
+				merchantId = "MerchantID",
+				mode = "Sandbox");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-9459. CanEditShippingMethodTrackingURL"
-	@priority = "2"
+	@priority = 2
 	test CanEditShippingMethodTrackingURL {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -659,9 +694,9 @@ definition {
 	}
 
 	@description = "Verify users without edit permission cannot change the currency of a channel."
-	@priority = "3"
+	@priority = 5
 	test CanNotEditChannelCurrencyAsUserWithoutEditPermission {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a Commerce account with a buyer user") {
@@ -682,8 +717,13 @@ definition {
 		task ("And given the buyer has permission to view a channel's configuration") {
 			CommercePermissions.defineChannelPermissionsViaJSONAPI(
 				roleTitle = "User",
-				update = "true",
+				update = "false",
 				view = "true");
+
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "MANAGE_COMMERCE_PRODUCT_CHANNEL_VISIBILITY",
+				resourceName = "com.liferay.commerce.product",
+				roleTitle = "User");
 		}
 
 		task ("When the buyer logs in and goes to the Minium channel") {
@@ -696,20 +736,129 @@ definition {
 
 			CommerceChannels.openChannelsAdmin();
 
-			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+			AssertTextEquals(
+				key_columnIndex = 1,
+				key_rowIndex = 1,
+				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
+				value1 = "Minium Portal");
 		}
 
 		task ("Then the buyer is unable to change the channel currency code") {
 			AssertElementNotPresent(
-				key_title = "Currency",
-				locator1 = "CommerceEntry#CATALOGS_FORM");
+				key_entryName = "Minium Portal",
+				locator1 = "CommerceNavigation#ENTRY_NAME",
+				value1 = "Minium Portal");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10053. An error message shows up when the eligibility element is already linked"
+	@priority = 3
+	test CannotSelectPaymentMethodEligibilitiesTwice {
+		property portal.acceptance = "false";
+
+		task ("Given an active payment term is created") {
+			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(termsType = "Payment");
+		}
+
+		task ("And an order type is created") {
+			CommerceJSONOrdersAPI._addOrderType(
+				active = "true",
+				orderTypeName = "Order Type Test");
+		}
+
+		task ("And Money Order payment method is set as active") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
+		}
+
+		task ("And Money Order's eligibility is set specifically to Payment Term 1 and Order Type Test") {
+			CommerceEntry.setEntryEligibility(
+				orderTypesEligibility = "Order Type Test",
+				paymentMethod = "Money Order",
+				paymentTermsEligibility = "Payment Term 1");
+		}
+
+		task ("When the admin selects the same order type eligibility once again") {
+			CommerceEntry.setEntryEligibility(
+				orderTypesEligibility = "Order Type Test",
+				unpublish = "true");
+		}
+
+		task ("Then an error message is shown") {
+			Alert.viewErrorMessage(errorMessage = "The qualifier is already linked.");
+		}
+
+		task ("When the admin selects the same term eligibility once again") {
+			CommerceEntry.setEntryEligibility(
+				paymentTermsEligibility = "Payment Term 1",
+				unpublish = "true");
+		}
+
+		task ("Then an error message is shown") {
+			Alert.viewErrorMessage(errorMessage = "The qualifier is already linked.");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10053. An error message shows up when the eligibility element is already linked"
+	@priority = 3
+	test CannotSelectShippingMethodEligibilitiesTwice {
+		property portal.acceptance = "false";
+
+		task ("Given an active delivery term is created") {
+			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(termsType = "Delivery");
+		}
+
+		task ("And an order type is created") {
+			CommerceJSONOrdersAPI._addOrderType(
+				active = "true",
+				orderTypeName = "Order Type Test");
+		}
+
+		task ("And the admin navigates to Minium Portal channel entry") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+		}
+
+		task ("And Flat Rate's eligibility is set specifically to Delivery Term 1 and Order Type Test") {
+			CommerceEntry.setEntryEligibility(
+				deliveryTermsEligibility = "Delivery Term 1",
+				orderTypesEligibility = "Order Type Test",
+				shippingMethod = "Flat Rate",
+				shippingOption = "Standard Delivery");
+		}
+
+		task ("When the admin selects the same order type eligibility once again") {
+			CommerceEntry.setEntryEligibility(
+				orderTypesEligibility = "Order Type Test",
+				shippingOption = "Standard Delivery",
+				unpublish = "true");
+		}
+
+		task ("Then an error message is shown") {
+			Alert.viewErrorMessage(errorMessage = "The qualifier is already linked.");
+		}
+
+		task ("When the admin selects the same term eligibility once again") {
+			CommerceEntry.setEntryEligibility(
+				deliveryTermsEligibility = "Delivery Term 1",
+				unpublish = "true");
+		}
+
+		task ("Then an error message is shown") {
+			Alert.viewErrorMessage(errorMessage = "The qualifier is already linked.");
 		}
 	}
 
 	@description = "Test for COMMERCE-9432 | Can paginate Payment and Shipping Restrictions pages"
-	@priority = "3"
+	@priority = 3
 	test CanPaginatePaymentAndShippingRestrictions {
-		property test.name.skip.portal.instance = "CPCommerceChannels#CanPaginatePaymentAndShippingRestrictions";
+		property portal.acceptance = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given the admin navigates to 'Minium Portal' channel") {
 			CommerceChannels.openChannelsAdmin();
@@ -722,53 +871,53 @@ definition {
 				CommerceEntry.gotoMenuTab(menuTab = "${tab} Restrictions");
 
 				task ("Then the admin can use pagination to change the list of countries shown on the page") {
-					Pagination.changePagination(itemsPerPage = "4 items");
+					Pagination.changePagination(itemsPerPage = "4 Items");
 
-					CommerceEntry.viewPaginationResults(results = "Showing 1 to 4 of 247");
+					CommerceEntry.viewPaginationResults(results = "Showing 1 to 4 of 247 entries.");
 
 					AssertElementNotPresent(
-						key_rowNumber = "5",
+						key_rowNumber = 5,
 						locator1 = "CommerceEntry#ENTRY_CONTENT_ROW_NUMBER");
 
 					for (var country : list "Afghanistan,Aland Islands,Albania,Algeria") {
 						AssertElementPresent(
-							key_tableEntry = "${country}",
+							key_tableEntry = ${country},
 							locator1 = "LexiconTable#TABLE_ENTRY");
 					}
 
 					Click(locator1 = "ACUtils#NEXT_PAGES");
 
-					CommerceEntry.viewPaginationResults(results = "Showing 5 to 8 of 247");
+					CommerceEntry.viewPaginationResults(results = "Showing 5 to 8 of 247 entries.");
 
 					AssertElementNotPresent(
-						key_rowNumber = "5",
+						key_rowNumber = 5,
 						locator1 = "CommerceEntry#ENTRY_CONTENT_ROW_NUMBER");
 
 					for (var country : list "Afghanistan,Aland Islands,Albania,Algeria") {
 						AssertElementNotPresent(
-							key_tableEntry = "${country}",
+							key_tableEntry = ${country},
 							locator1 = "LexiconTable#TABLE_ENTRY");
 					}
 
 					Click(locator1 = "ACUtils#PREVIOUS_PAGES");
 
 					AssertElementNotPresent(
-						key_rowNumber = "5",
+						key_rowNumber = 5,
 						locator1 = "CommerceEntry#ENTRY_CONTENT_ROW_NUMBER");
 
 					for (var country : list "Afghanistan,Aland Islands,Albania,Algeria") {
 						AssertElementPresent(
-							key_tableEntry = "${country}",
+							key_tableEntry = ${country},
 							locator1 = "LexiconTable#TABLE_ENTRY");
 					}
 
 					Click(
-						key_pageNumber = "4",
+						key_pageNumber = 4,
 						locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
 
 					for (var country : list "Afghanistan,Aland Islands,Albania,Algeria") {
 						AssertElementNotPresent(
-							key_tableEntry = "${country}",
+							key_tableEntry = ${country},
 							locator1 = "LexiconTable#TABLE_ENTRY");
 					}
 				}
@@ -777,13 +926,13 @@ definition {
 	}
 
 	@description = "Verify users can set and edit delivery term eligibility for shipping options."
-	@priority = "3"
+	@priority = 5
 	test CanSetAndEditDeliveryTermsEligibility {
 		property portal.acceptance = "true";
 
 		task ("Given an active delivery term") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "2",
+				termsCount = 2,
 				termsType = "Delivery");
 		}
 
@@ -842,8 +991,154 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-11938. The user can use an email with more than 75 characters in the To field"
+	@priority = 4
+	test CanUseLongEmailAdressInNotificationTemplates {
+		property portal.acceptance = "false";
+
+		task ("Given the user goes to the Channels Admin") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+		}
+
+		task ("And the user creates a new notifications template") {
+			CommerceEntry.gotoMenuTab(menuTab = "Notification Templates");
+
+			Click(locator1 = "Button#PLUS");
+
+			SelectFrameTop();
+
+			CommerceEntry.addNewNotificationTemplate(
+				entryName = "Test Notification Template",
+				fromAddress = "test@liferay.com",
+				fromName = "Test",
+				notificationType = "Order Placed");
+		}
+
+		task ("When in the field To the user place an email address with more than 75 characters") {
+			Type(
+				key_fieldLabel = "To",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "customemailadresswithmorethan75charactersintofieldonthenotificationstemplates@liferay.com");
+		}
+
+		task ("Then the Notification Template is successfully saved") {
+			Button.clickSave();
+
+			Alert.viewSuccessMessage();
+
+			Click(locator1 = "Icon#CLOSE");
+
+			SelectFrameTop();
+
+			AssertVisible(
+				key_entryName = "Test Notification Template",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+
+			CommerceNavigator.gotoEntry(entryName = "Test Notification Template");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			AssertVisible(
+				key_fieldLabel = "To",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "customemailadresswithmorethan75charactersintofieldonthenotificationstemplates@liferay.com");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10602. Verify that the user can see the channel entries only if the 'Channels > Commerce Channel: View' is present"
+	@priority = 3
+	test CanUserWithChannelViewPermissionSeeChannelEntries {
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "false";
+
+		task ("Given the User role has all the required permissions to see the product and channel") {
+			CommercePermissions.defineChannelPermissionsViaJSONAPI(
+				roleTitle = "User",
+				view = "true");
+
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "MANAGE_COMMERCE_PRODUCT_CHANNEL_VISIBILITY",
+				resourceName = "com.liferay.commerce.product",
+				roleTitle = "User");
+
+			CommercePermissions.defineProductPermissionsViaJSONAPI(
+				roleTitle = "User",
+				view = "true");
+		}
+
+		task ("Given a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("When the buyer reach the Channels section") {
+			User.logoutPG();
+
+			User.firstLoginPG(userEmailAddress = "buyer@liferay.com");
+
+			CommerceChannels.openChannelsAdmin();
+		}
+
+		task ("Then the buyer will see 'Minium Portal' entry") {
+			AssertElementPresent(
+				key_productName = "Minium Portal",
+				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+		}
+
+		task ("And when the buyer reach the visibility tab for a product inside the Products section") {
+			CommerceProducts.openProductsAdmin();
+
+			AppBuilderAdmin.searchByItem(itemName = "ABS Sensor");
+
+			CommerceNavigator.gotoEntry(entryName = "ABS Sensor");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Visibility");
+		}
+
+		task ("Then the buyer will see 'Minium Portal' entry") {
+			AssertElementPresent(
+				key_productName = "Minium Portal",
+				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+		}
+
+		task ("But when the VIEW Channel permission is removed") {
+			Permissions.removePermissionViaAPI(
+				resourceAction = "VIEW",
+				resourceName = "com.liferay.commerce.product.model.CommerceChannel",
+				roleTitle = "User");
+		}
+
+		task ("Then for both Channels and Product Visibility the entry 'Minium Portal' is not present anymore") {
+			CommerceEntry.gotoMenuTab(menuTab = "Details");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Visibility");
+
+			AssertElementNotPresent(
+				key_productName = "Minium Portal",
+				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+
+			CommerceChannels.openChannelsAdmin();
+
+			AssertElementNotPresent(
+				key_productName = "Minium Portal",
+				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-4270. CheckAvalaraTaxPresence"
-	@priority = "3"
+	@priority = 3
 	test CheckAvalaraTaxPresence {
 		property portal.acceptance = "false";
 		property portal.release = "false";
@@ -854,9 +1149,7 @@ definition {
 
 		CommerceChannels.avalaraConnection();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -901,9 +1194,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CompleteCheckoutWhereDefaultPaymentMethodIsDisabledIntoChannel {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8539 CompleteCheckoutWhereDefaultPaymentMethodIsDisabledIntoChannel pending implementation
 
@@ -911,9 +1203,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CompleteCheckoutWhereDefaultPaymentMethodIsNotPresentIntoOrderType {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8536 CompleteCheckoutWhereDefaultPaymentMethodIsNotPresentIntoOrderType pending implementation
 
@@ -921,9 +1212,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CompleteCheckoutWhereDefaultPaymentMethodIsPresentIntoOrderType {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8537 CompleteCheckoutWhereDefaultPaymentMethodIsPresentIntoOrderType pending implementation
 
@@ -931,9 +1221,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CompleteCheckoutWhereDefaultPaymentMethodIsPresentIntoOrderTypeButDisabledIntoChannel {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8538 CompleteCheckoutWhereDefaultPaymentMethodIsPresentIntoOrderTypeButDisabledIntoChannel pending implementation
 
@@ -941,9 +1230,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test CompleteCheckoutWithDefaultPaymentMethod {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8535 CompleteCheckoutWithDefaultPaymentMethod pending implementation
 
@@ -964,9 +1252,7 @@ definition {
 			channelType = "Site",
 			siteName = "Guest");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Refresh();
 
@@ -979,15 +1265,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6102. CreateNewChannelCompileAll"
-	@priority = "3"
+	@priority = 5
 	test CreateNewChannelCompileAll {
 		property portal.acceptance = "true";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1025,7 +1309,7 @@ definition {
 
 		Type(
 			locator1 = "TextInput#NUMBER",
-			value1 = "1");
+			value1 = 1);
 
 		Type(
 			locator1 = "CommerceEntry#CHANGE_TAX_CATEGORY",
@@ -1081,7 +1365,7 @@ definition {
 		AssertElementPresent(
 			key_title = "Maximum Number of Open Orders per Account",
 			locator1 = "TextInput#NUMBER",
-			value = "1");
+			value = 1);
 
 		AssertElementPresent(
 			key_title = "Shipping Tax Category",
@@ -1099,12 +1383,12 @@ definition {
 			value1 = "Gross Price");
 	}
 
+	@description = "This is a test for creating a new notification template"
+	@priority = 5
 	test CreateNewNotificationTemplate {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "true";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1131,22 +1415,19 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test DeactivatePaymentMethodLinkedToAnAccount {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8545 DeactivatePaymentMethodLinkedToAnAccount pending implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6109. EditAuthorizePaymentMethod"
-	@priority = "3"
+	@priority = 3
 	test EditAuthorizePaymentMethod {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1181,7 +1462,7 @@ definition {
 
 		for (var key_value : list "Show Bank Account,Show Credit Card,Show Store Name,Require CAPTCHA,Require Card Code Verification") {
 			Check.checkToggleSwitch(
-				checkboxName = "${key_value}",
+				checkboxName = ${key_value},
 				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
@@ -1191,15 +1472,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6122. EditConfigurationRemoteTaxCalculation"
-	@priority = "3"
+	@priority = 3
 	test EditConfigurationRemoteTaxCalculation {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1242,13 +1521,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6107. EditMercanetPaymentMethod"
-	@priority = "3"
+	@priority = 3
 	test EditMercanetPaymentMethod {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1288,13 +1565,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6105. EditMoneyOrderPaymentMethod"
-	@priority = "3"
+	@priority = 3
 	test EditMoneyOrderPaymentMethod {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1320,15 +1595,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6276. EditNotificationTemplate"
-	@priority = "3"
+	@priority = 3
 	test EditNotificationTemplate {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1393,21 +1666,19 @@ definition {
 			locator1 = "CommerceNavigation#ENTRY_NAME");
 	}
 
-	@description = "This is a test for COMMERCE-6106. EditPaypalPaymentMethod"
-	@priority = "3"
-	test EditPaypalPaymentMethod {
+	@description = "This is a test for COMMERCE-6106. EditPaypalSubscriptionsPaymentMethod"
+	@priority = 3
+	test EditPaypalSubscriptionsPaymentMethod {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
 		CommerceEntry.clickTableEntryEditButton(
-			entryName = "PayPal",
+			entryName = "PayPal Subscriptions",
 			table = "Payment Methods");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
@@ -1434,7 +1705,7 @@ definition {
 		Type(
 			key_text = "Payment Attempts Max Count",
 			locator1 = "TextInput#ANY",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -1442,9 +1713,9 @@ definition {
 	}
 
 	@description = "Verify users can configure payment method eligibility to specific payment terms."
-	@priority = "3"
+	@priority = 5
 	test PaymentMethodEligibleForSpecificPaymentTerms {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given an account with a buyer user") {
@@ -1492,7 +1763,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -1507,8 +1778,8 @@ definition {
 				paymentMethod = "PayPal",
 				paymentTerm = "Payment Term 1",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -1517,7 +1788,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -1532,14 +1803,14 @@ definition {
 				paymentMethod = "Mercanet",
 				paymentTerm = "",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-6270. RemoveNotificationQueue"
-	@priority = "3"
+	@priority = 5
 	test RemoveNotificationQueue {
 		property portal.acceptance = "true";
 
@@ -1551,10 +1822,7 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "new Account");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "User Groups");
+		UserGroup.openUserGroupsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1581,9 +1849,7 @@ definition {
 			key_name = "Add",
 			locator1 = "Button#GENERAL_BUTTON_MODAL_FOOTER");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1606,7 +1872,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -1617,13 +1883,11 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1637,15 +1901,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6271. RemoveNotificationTemplate"
-	@priority = "3"
+	@priority = 3
 	test RemoveNotificationTemplate {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1680,16 +1942,14 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6114. RemoveShippingOptionFlatRate"
-	@priority = "3"
+	@priority = 3
 	test RemoveShippingOptionFlatRate {
 		property portal.acceptance = "false";
 
 		// TODO Review
 		// TODO Fix Commerce tests that are skipping portal instances - COMMERCE-6586
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1734,7 +1994,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -1764,15 +2024,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6112. RemoveShippingOptionVariableRate"
-	@priority = "3"
+	@priority = 3
 	test RemoveShippingOptionVariableRate {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1836,15 +2094,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6115. RemoveShippingSettingOptionVariableRate"
-	@priority = "3"
+	@priority = 3
 	test RemoveShippingSettingOptionVariableRate {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1881,15 +2137,15 @@ definition {
 
 		CommerceEntry.addShippingOptionSettingsVariableRate(
 			country = "Italy",
-			fixedPrice = "1",
-			priceUnitWeight = "1",
+			fixedPrice = 1,
+			priceUnitWeight = 1,
 			region = "Roma",
 			shippingOption = "Standard",
-			subtotal = "1",
+			subtotal = 1,
 			warehouse = "Italy",
-			weightFrom = "1",
-			weightTo = "1",
-			zip = "0100");
+			weightFrom = 1,
+			weightTo = 1,
+			zip = 0100);
 
 		Click(
 			key_text = "Standard",
@@ -1901,15 +2157,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6121. RemoveTaxRateSettingsByAddressTaxCalculation"
-	@priority = "3"
+	@priority = 3
 	test RemoveTaxRateSettingsByAddressTaxCalculation {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1939,20 +2193,20 @@ definition {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		for (var current : list "Tax Category-Normal Product,Amount-20,Country-Italy,Region-Roma,Zip-0100") {
-			var fieldLabel = StringUtil.extractFirst("${current}", "-");
-			var value = StringUtil.extractLast("${current}", "-");
+			var fieldLabel = StringUtil.extractFirst(${current}, "-");
+			var value = StringUtil.extractLast(${current}, "-");
 
-			if (("${fieldLabel}" == "Tax Category") || ("${fieldLabel}" == "Country") || ("${fieldLabel}" == "Region")) {
+			if ((${fieldLabel} == "Tax Category") || (${fieldLabel} == "Country") || (${fieldLabel} == "Region")) {
 				Select(
-					key_fieldLabel = "${fieldLabel}",
+					key_fieldLabel = ${fieldLabel},
 					locator1 = "Select#GENERIC_SELECT_FIELD",
-					value1 = "${value}");
+					value1 = ${value});
 			}
 			else {
 				Type(
-					key_fieldLabel = "${fieldLabel}",
+					key_fieldLabel = ${fieldLabel},
 					locator1 = "TextInput#GENERIC_TEXT_INPUT",
-					value1 = "${value}");
+					value1 = ${value});
 			}
 		}
 
@@ -1976,13 +2230,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6124. RemoveTaxRateSettingsFixedTaxRateTaxCalculation"
-	@priority = "3"
+	@priority = 3
 	test RemoveTaxRateSettingsFixedTaxRateTaxCalculation {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2023,7 +2275,7 @@ definition {
 		Type(
 			key_fieldLabel = "Amount",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "1");
+			value1 = 1);
 
 		Button.click(button = "Submit");
 
@@ -2041,13 +2293,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8386. SearchProductDisplayPage"
-	@priority = "3"
+	@priority = 5
 	test SearchProductDisplayPage {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		AppBuilderAdmin.searchByItem(itemName = "Turbocharger");
 
@@ -2062,12 +2312,10 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Visibility");
 
 		for (var nameList : list "Channels,Account Groups") {
-			CommerceEntry.assertCheckedSpecificToggle(name = "${nameList}");
+			CommerceEntry.assertCheckedSpecificToggle(name = ${nameList});
 		}
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2096,7 +2344,7 @@ definition {
 			locator1 = "CommerceNavigation#TD_ANY_ENTRY_NAME");
 
 		Click(
-			key_pageNumber = "3",
+			key_pageNumber = 3,
 			locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
 
 		AssertElementPresent(
@@ -2105,7 +2353,7 @@ definition {
 	}
 
 	@description = "Verify users can set and edit payment term eligibility for payment methods."
-	@priority = "3"
+	@priority = 5
 	test SetAndEditPaymentMethodTermElgibility {
 		property portal.acceptance = "true";
 
@@ -2151,10 +2399,10 @@ definition {
 	}
 
 	@description = "Verify all shipping options are available when orders are made using different order types given shipping option eligibility is set to All Order Types."
-	@priority = "3"
+	@priority = 5
 	test ShippingOptionEligibleForAnyOrderType {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
-		property portal.acceptance = "false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "true";
 
 		task ("Given an account with a buyer user") {
 			CommerceEntry.addAccountEntryUser(
@@ -2209,9 +2457,9 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
-			CommerceOrders.selectOrderFromAccountSelector(orderId = "${order2Id}");
+			CommerceOrders.selectOrderFromAccountSelector(orderId = ${order2Id});
 
 			Button.click(button = "Checkout");
 		}
@@ -2236,15 +2484,15 @@ definition {
 		task ("When the user goes to checkout for the Test Order Type 1 order") {
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
 
-			CommerceOrders.selectOrderFromAccountSelector(orderId = "${order1Id}");
+			CommerceOrders.selectOrderFromAccountSelector(orderId = ${order1Id});
 
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
-			CommerceOrders.selectOrderFromAccountSelector(orderId = "${order1Id}");
+			CommerceOrders.selectOrderFromAccountSelector(orderId = ${order1Id});
 
 			Button.click(button = "Checkout");
 		}
@@ -2268,9 +2516,9 @@ definition {
 	}
 
 	@description = "Verify users can configure shipping option eligibility to specific delivery terms."
-	@priority = "3"
+	@priority = 5
 	test ShippingOptionEligibleForSpecificDeliveryTerms {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given an account with a buyer user") {
@@ -2290,7 +2538,7 @@ definition {
 
 		task ("And given an active delivery term") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "1",
+				termsCount = 1,
 				termsType = "Delivery");
 		}
 
@@ -2315,7 +2563,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 		}
@@ -2329,8 +2577,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -2339,7 +2587,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 		}
@@ -2353,16 +2601,16 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Expedited");
 		}
 	}
 
 	@description = "Verify users can configure shipping option eligibility to specific order types."
-	@priority = "3"
+	@priority = 5
 	test ShippingOptionEligibleForSpecificOrderType {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given an account with a buyer user") {
@@ -2429,9 +2677,9 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
-			CommerceOrders.selectOrderFromAccountSelector(orderId = "${order2Id}");
+			CommerceOrders.selectOrderFromAccountSelector(orderId = ${order2Id});
 
 			Button.click(button = "Checkout");
 		}
@@ -2449,15 +2697,15 @@ definition {
 		task ("When the user goes to checkout for the Test Order Type 1 order") {
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
 
-			CommerceOrders.selectOrderFromAccountSelector(orderId = "${order1Id}");
+			CommerceOrders.selectOrderFromAccountSelector(orderId = ${order1Id});
 
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
-			CommerceOrders.selectOrderFromAccountSelector(orderId = "${order1Id}");
+			CommerceOrders.selectOrderFromAccountSelector(orderId = ${order1Id});
 
 			Button.click(button = "Checkout");
 		}
@@ -2481,14 +2729,12 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8300. The store admin can upload a custom jasper print template"
-	@priority = "3"
+	@priority = 5
 	test UploadCustomJasperPrintTemplate {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("When the sales channel detail page is reached") {
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 		}
 
 		task ("And the "Select File" in the Orders box is clicked and the jasper template is chosen for being uploaded") {
@@ -2496,9 +2742,7 @@ definition {
 
 			CommerceChannels.uploadPrintOrderTemplate(uploadFileName = "commerce_order.jrxml");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 		}
 
 		task ("Then the file name is shown next to the "Select File" button") {
@@ -2512,16 +2756,15 @@ definition {
 
 	@description = "This is a test for COMMERCE-6267. UsePunchOut"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test UsePunchOut {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6267 UsePunchOut
 
 	}
 
 	@description = "This is a test for COMMERCE-6101. UseSearchBar"
-	@priority = "3"
+	@priority = 3
 	test UseSearchBar {
 		property portal.acceptance = "false";
 
@@ -2547,15 +2790,15 @@ definition {
 			key_entryName = "Test Channel",
 			locator1 = "CommerceNavigation#ENTRY_NAME");
 
-		CommerceNavigator.searchEntry(entryName = "1111");
+		CommerceNavigator.searchEntry(entryName = 1111);
 
 		AssertElementPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER");
 	}
 
 	@description = "This is a test for COMMERCE-6266. VerifyNotificationQueue"
-	@priority = "3"
+	@priority = 3
 	test VerifyNotificationQueue {
-		property portal.acceptance = "Intern Test";
+		property portal.acceptance = "false";
 
 		// TODO Review
 
@@ -2565,10 +2808,7 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "new Account");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "User Groups");
+		UserGroup.openUserGroupsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -2595,9 +2835,7 @@ definition {
 			key_name = "Add",
 			locator1 = "Button#GENERAL_BUTTON_MODAL_FOOTER");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2620,7 +2858,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -2631,13 +2869,11 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2645,12 +2881,12 @@ definition {
 
 		AssertElementPresent(
 			key_name = "Test",
-			key_order = "1",
+			key_order = 1,
 			locator1 = "CommerceEntry#ASSERT_NOTIFICATION_QUEUE");
 	}
 
 	@description = "Verify users can view the priority of shipping options"
-	@priority = "3"
+	@priority = 3
 	test VerifyPriorityColumnForShippingOption {
 		property portal.acceptance = "false";
 
@@ -2670,11 +2906,11 @@ definition {
 
 		task ("And the Sales Manager edits the priority for Standard Delivery to 1 and Expedited Delivery to 2") {
 			CommerceChannels.editShippingOption(
-				priority = "1",
+				priority = 1,
 				shippingOption = "Standard Delivery");
 
 			CommerceChannels.editShippingOption(
-				priority = "2",
+				priority = 2,
 				shippingOption = "Expedited Delivery");
 		}
 
@@ -2684,40 +2920,38 @@ definition {
 				locator1 = "Button#ANY");
 
 			AssertTextEquals(
-				key_columnNumber = "3",
+				key_columnNumber = 3,
 				key_entryName = "Standard Delivery",
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
-				value1 = "1");
+				value1 = 1);
 
 			AssertTextEquals(
-				key_columnNumber = "3",
+				key_columnNumber = 3,
 				key_entryName = "Expedited Delivery",
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
-				value1 = "2");
+				value1 = 2);
 		}
 
 		task ("And the shipping options will be re-ordered based on the priority") {
 			AssertTextEquals(
-				key_rowNumber = "1",
+				key_rowNumber = 1,
 				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_NUMBER",
 				value1 = "Standard Delivery");
 
 			AssertTextEquals(
-				key_rowNumber = "2",
+				key_rowNumber = 2,
 				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_NUMBER",
 				value1 = "Expedited Delivery");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8300. The store admin can view and download the jasper template"
-	@priority = "3"
+	@priority = 3
 	test ViewAndDownloadCustomJasperPrintTemplate {
 		property portal.acceptance = "false";
 
 		task ("When the sales channel detail page is reached") {
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 		}
 
 		task ("And the "Select File" in the Orders box is clicked, the jasper template is chosen for being uploaded, the file name is clicked, and the preview template is shown") {
@@ -2734,15 +2968,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8300. The buyer can view the order preview with the uploaded template"
-	@priority = "3"
+	@priority = 5
 	test ViewOrderPreviewWithJasperTemplate {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a channel with a Print Order Template jasper file ") {
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2774,7 +3006,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 

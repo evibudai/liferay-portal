@@ -1,15 +1,16 @@
 definition {
 
-	macro _createNCommentsInBlogPosting {
+	@summary = "Default summary"
+	macro _createNCommentsInBlogPosting(numberOfCommentsToCreate = null, createStrategy = null, blogPostingId = null) {
 		Variables.assertDefined(parameterList = "${blogPostingId},${numberOfCommentsToCreate},${createStrategy}");
 
 		var size = ${numberOfCommentsToCreate} + 1;
-		var i = "1";
+		var i = 1;
 		var body = '''
 			[
 		''';
 
-		while (("${i}" != "${size}") && (maxIterations = "100")) {
+		while ((${i} != ${size}) && (maxIterations = "100")) {
 			var commentBody = '''
 				{
 					"text": "commentText${i}"
@@ -17,13 +18,13 @@ definition {
 			''';
 			var j = ${i} + 1;
 
-			if ("${j}" == "${size}") {
-				var body = StringUtil.replace("${body}", "${body}", "${body}${commentBody}]");
+			if (${j} == ${size}) {
+				var body = StringUtil.replace(${body}, ${body}, "${body}${commentBody}]");
 			}
 			else {
-				var commentBody = StringUtil.replace("${commentBody}", "${commentBody}", "${commentBody},");
+				var commentBody = StringUtil.replace(${commentBody}, ${commentBody}, "${commentBody},");
 
-				var body = StringUtil.replace("${body}", "${body}", "${body}${commentBody}");
+				var body = StringUtil.replace(${body}, ${body}, "${body}${commentBody}");
 			}
 
 			var i = ${i} + 1;
@@ -33,17 +34,18 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/blog-postings/${blogPostingId}/comments/batch?createStrategy=${createStrategy} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json \
-			-d ${body}
+				-u test@liferay.com:test \
+				-H Content-Type: application/json \
+				-d ${body}
 		''';
 
-		var curl = JSONCurlUtil.post("${curl}");
+		var curl = JSONCurlUtil.post(${curl});
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro _curlBlogPostingComments {
+	@summary = "Default summary"
+	macro _curlBlogPostingComments(blogPostingId = null, commentId = null) {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(commentId)) {
@@ -55,15 +57,16 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/${api} \
-			-u test@liferay.com:test \
-			-H Content-Type: application/json
+				-u test@liferay.com:test \
+				-H Content-Type: application/json
 		''';
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro _curlBlogPostingCommentsByExternalReferenceCode {
-		Variables.assertDefined(parameterList = "${blogPostingCommentErc}");
+	@summary = "Default summary"
+	macro _curlBlogPostingCommentsByExternalReferenceCode(blogPostingChildCommentErc = null, blogPostingErc = null, blogPostingCommentErc = null) {
+		Variables.assertDefined(parameterList = ${blogPostingCommentErc});
 
 		var portalURL = JSONCompany.getPortalURL();
 		var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
@@ -79,30 +82,31 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/sites/${siteId}/${api} \
-			-u test@liferay.com:test \
-			-H accept: application/json
+				-u test@liferay.com:test \
+				-H accept: application/json
 		''';
 
-		return "${curl}";
+		return ${curl};
 	}
 
-	macro createCommentInBlogPosting {
-		Variables.assertDefined(parameterList = "${commentText}");
+	@summary = "Default summary"
+	macro createCommentInBlogPosting(blogPostingId = null, commentId = null, commentText = null) {
+		Variables.assertDefined(parameterList = ${commentText});
 
 		if (!(isSet(externalReferenceCode))) {
 			var externalReferenceCode = "";
 		}
 
 		if (!(isSet(parentCommentId))) {
-			var parentCommentId = "0";
+			var parentCommentId = 0;
 		}
 
 		if (isSet(blogPostingId)) {
-			var curl = CommentAPI._curlBlogPostingComments(blogPostingId = "${blogPostingId}");
+			var curl = CommentAPI._curlBlogPostingComments(blogPostingId = ${blogPostingId});
 		}
 
 		if (isSet(commentId)) {
-			var curl = CommentAPI._curlBlogPostingComments(commentId = "${commentId}");
+			var curl = CommentAPI._curlBlogPostingComments(commentId = ${commentId});
 		}
 
 		var body = '''
@@ -113,46 +117,48 @@ definition {
 			}
 		''';
 
-		var curl = StringUtil.add("${curl}", "${body}", " ");
+		var curl = StringUtil.add(${curl}, ${body}, " ");
 
-		var response = JSONCurlUtil.post("${curl}");
+		var response = JSONCurlUtil.post(${curl});
 
-		return "${response}";
+		return ${response};
 	}
 
-	macro getFieldValueOfBlogPostingComments {
-		Variables.assertDefined(parameterList = "${fieldName}");
+	@summary = "Default summary"
+	macro getFieldValueOfBlogPostingComments(blogPostingChildCommentErc = null, fieldName = null, blogPostingId = null, commentId = null, blogPostingErc = null, blogPostingCommentErc = null) {
+		Variables.assertDefined(parameterList = ${fieldName});
 
 		if (!(isSet(responseToParse))) {
 			if (isSet(blogPostingCommentErc)) {
 				var curl = CommentAPI._curlBlogPostingCommentsByExternalReferenceCode(
-					blogPostingChildCommentErc = "${blogPostingChildCommentErc}",
-					blogPostingCommentErc = "${blogPostingCommentErc}",
-					blogPostingErc = "${blogPostingErc}");
+					blogPostingChildCommentErc = ${blogPostingChildCommentErc},
+					blogPostingCommentErc = ${blogPostingCommentErc},
+					blogPostingErc = ${blogPostingErc});
 			}
 			else {
 				var curl = CommentAPI._curlBlogPostingComments(
-					blogPostingId = "${blogPostingId}",
-					commentId = "${commentId}");
+					blogPostingId = ${blogPostingId},
+					commentId = ${commentId});
 			}
 
-			var responseToParse = JSONCurlUtil.get("${curl}");
+			var responseToParse = JSONCurlUtil.get(${curl});
 		}
 
-		var fieldValue = JSONUtil.getWithJSONPath("${responseToParse}", "$..${fieldName}");
+		var fieldValue = JSONUtil.getWithJSONPath(${responseToParse}, "$..${fieldName}");
 
-		return "${fieldValue}";
+		return ${fieldValue};
 	}
 
-	macro getIdOfCreateNCommentsInBlogPostingBatchEngineImportTask {
+	@summary = "Default summary"
+	macro getIdOfCreateNCommentsInBlogPostingBatchEngineImportTask(numberOfCommentsToCreate = null, createStrategy = null, blogPostingId = null) {
 		var response = CommentAPI._createNCommentsInBlogPosting(
-			blogPostingId = "${blogPostingId}",
-			createStrategy = "${createStrategy}",
-			numberOfCommentsToCreate = "${numberOfCommentsToCreate}");
+			blogPostingId = ${blogPostingId},
+			createStrategy = ${createStrategy},
+			numberOfCommentsToCreate = ${numberOfCommentsToCreate});
 
-		var importTaskId = JSONUtil.getWithJSONPath("${response}", "$.id");
+		var importTaskId = JSONPathUtil.getIdValue(response = ${response});
 
-		return "${importTaskId}";
+		return ${importTaskId};
 	}
 
 }

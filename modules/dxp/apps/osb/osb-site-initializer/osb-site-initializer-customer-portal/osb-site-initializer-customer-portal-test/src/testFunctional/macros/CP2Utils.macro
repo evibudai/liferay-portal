@@ -1,73 +1,147 @@
 definition {
 
-	macro assertChangeRole {
+	@summary = "Default summary"
+	macro assertCardTeamMembersActivation(title = null) {
 		AssertElementPresent(
-			key_email = "${email}",
-			key_role = "${role}",
+			key_title = ${title},
+			locator1 = "CP2Utils#NEWS_TITLE");
+	}
+
+	@summary = "Default summary"
+	macro assertChangeRole(role = null,email = null) {
+		AssertElementPresent(
+			key_email = ${email},
+			key_role = ${role},
 			locator1 = "CP2Utils#ROLE");
 	}
 
-	macro assertDropdownList {
-		for (var options : list "${optionList}") {
-			var key_option = "${options}";
+	@summary = "Default summary"
+	macro assertDropdownList(optionList = null) {
+		for (var options : list ${optionList}) {
+			var key_option = ${options};
 
 			AssertVisible(locator1 = "CP2Utils#DROPDOWN_OPTIONS");
 		}
 	}
 
-	macro assertDropdownSubscriptionTermsList {
+	@summary = "Default summary"
+	macro assertDropdownSubscriptionTermsList() {
 		Click(locator1 = "CP2Subscription#SUBSCRIPTION_TERM_DROPDOWN_BUTTON");
 
 		AssertVisible(
-			key_number = "0",
+			key_number = 0,
 			key_options = "Jul 25, 2021 - Jul 24, 2022",
 			locator1 = "CP2Subscription#DROPDOWN_OPTIONS");
 
 		AssertVisible(
-			key_number = "1",
+			key_number = 1,
 			key_options = "Jul 25, 2022 - Jul 24, 2023",
 			locator1 = "CP2Subscription#DROPDOWN_OPTIONS");
 
 		AssertVisible(
-			key_number = "2",
+			key_number = 2,
 			key_options = "Jul 25, 2023 - Jul 24, 2024",
 			locator1 = "CP2Subscription#DROPDOWN_OPTIONS");
 
 		AssertVisible(
-			key_number = "3",
+			key_number = 3,
 			key_options = "Jul 25, 2024 - Jul 24, 2025",
 			locator1 = "CP2Subscription#DROPDOWN_OPTIONS");
 
 		AssertVisible(
-			key_number = "4",
+			key_number = 4,
 			key_options = "Jul 25, 2025 - Jul 24, 2026",
 			locator1 = "CP2Subscription#DROPDOWN_OPTIONS");
 	}
 
-	macro assertNotChangeRole {
+	@summary = "Assert home page logged out on Customer Portal Site"
+	macro assertHomePageLoggedOutCP(navTab = null) {
+		AssertElementPresent(
+			key_tab = ${navTab},
+			locator1 = "NavTab#TAB_LINK");
+
+		AssertElementPresent(locator1 = "CP2Utils#USER_SIGN_IN");
+	}
+
+	@summary = "Default summary"
+	macro assertNotChangeRole(role = null) {
 		AssertVisible(
-			key_role = "${role}",
+			key_role = ${role},
 			locator1 = "CP2Utils#ROLE");
 	}
 
-	macro assertTextVisible {
-		var key_text = "${text}";
+	@summary = "Default summary"
+	macro assertOrganization(text = null) {
+		AssertElementPresent(
+			key_text = ${text},
+			locator1 = "CP2Utils#ANY_TEXT");
+	}
+
+	@summary = "Default summary"
+	macro assertTextVisible(text = null) {
+		var key_text = ${text};
 
 		AssertVisible(locator1 = "CP2Utils#MODAL_TEXT");
 	}
 
-	macro assigneToRoleViaUsersTab {
-		Account.openAccountsAdmin();
-
-		CustomerPortal.accountTableProject(title = "${testAccount}");
-
-		Account.addAssigneeToRoleViaUsersTab(
-			accountRoleTitle = "${accountRoleTitle}",
-			accountUserName = "${accountUserName}");
+	@summary = "Default summary"
+	macro assertThatTheOrganizationIsNotPresent(text = null) {
+		AssertElementNotPresent(
+			key_text = ${text},
+			locator1 = "CP2Utils#ANY_TEXT");
 	}
 
-	macro changeCardStatus {
-		var key_text = "${text}";
+	@summary = "Default summary"
+	macro assigneToRoleViaUsersTab(accountUserName = null,testAccount = null,searchItem = null,accountRoleTitle = null) {
+		if (isSet(searchItem)) {
+			Account.openAccountsAdmin();
+
+			CustomerPortal.accountTableProject(title = ${testAccount});
+
+			Navigator.gotoNavTab(navTab = "Users");
+
+			CustomerPortal.search(searchItem = ${searchItem});
+
+			KeyPress(
+				locator1 = "CustomerPortalSite#SEARCH",
+				value1 = "\ENTER");
+
+			Account.goToEntryMenuItem(
+				menuItem = "Assign Roles",
+				rowEntry = ${accountUserName});
+
+			SelectFrame(
+				key_title = "Assign Roles",
+				locator1 = "IFrame#MODAL_ANY");
+
+			Check(
+				key_tableEntry = ${accountRoleTitle},
+				locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+
+			SelectFrameTop();
+
+			Button.click(button = "Done");
+
+			Alert.viewSuccessMessage();
+
+			Account.addAssigneeToRoleViaUsersTab(
+				accountRoleTitle = ${accountRoleTitle},
+				accountUserName = ${accountUserName});
+		}
+		else {
+			Account.openAccountsAdmin();
+
+			CustomerPortal.accountTableProject(title = ${testAccount});
+
+			Account.addAssigneeToRoleViaUsersTab(
+				accountRoleTitle = ${accountRoleTitle},
+				accountUserName = ${accountUserName});
+		}
+	}
+
+	@summary = "Default summary"
+	macro changeCardStatus(text = null,label = null,value = null) {
+		var key_text = ${text};
 
 		Click(locator1 = "CustomerPortalSite#SVG_ACTIVATION_STATUS");
 
@@ -76,57 +150,96 @@ definition {
 		Click(locator1 = "CustomerPortalSite#SVG_STATUS_OPTION");
 
 		CP2Utils.fillInTheProjectId(
-			label = "${label}",
-			value = "${value}");
+			label = ${label},
+			value = ${value});
 
 		CustomerPortal.clickAtButton(text = "Confirm");
 	}
 
-	macro changeRole {
+	@summary = "Default summary"
+	macro changeRole(role = null) {
 		Select(
 			locator1 = "CP2Utils#SELECT_ROLE",
-			value1 = "${role}");
+			value1 = ${role});
 	}
 
-	macro clickAtFilterMenu {
+	@summary = "Default summary"
+	macro clickAtButtonManagerUsers(product = null) {
+		var key_product = ${product};
+
+		Click(locator1 = "CP2Utils#BUTTON_MANAGE_USERS");
+	}
+
+	@summary = "Click on user avatar"
+	macro clickAtDropdownUserAvatar() {
+		Click(locator1 = "CP2Utils#USER_AVATAR_DROPDOWN");
+
+		AssertVisible(locator1 = "UserBar#USER_AVATAR_DROPDOWN_PORTAL_OPEN");
+	}
+
+	@summary = "Default summary"
+	macro clickAtFilterMenu(checkbox = null,text = null,menu = null) {
 		Click.pauseClickAt(
-			key_text = "${text}",
+			key_text = ${text},
 			locator1 = "CustomerPortalSite#ANY_BUTTON");
 
 		Click.clickNoWaitForVisible(
-			key_checkbox = "${checkbox}",
-			key_menu = "${menu}",
+			key_checkbox = ${checkbox},
+			key_menu = ${menu},
 			locator1 = "CP2NavigationMenu#FILTER_CHECKBOX");
 	}
 
-	macro clickBreadcrumb {
-		var key_project = "${project}";
-
+	@summary = "Default summary"
+	macro clickBreadcrumb() {
 		Click(locator1 = "CP2Utils#SVG_DROPDOWN");
-
-		CP2Utils.search(
-			project = "${project}",
-			searchItem = "${project}");
-
-		Click(locator1 = "CP2Utils#SVG_DROPDOWN_LIST");
 	}
 
-	macro closeModal {
+	@summary = "Default summary"
+	macro clickInTableKeyByName(keyName = null) {
+		Click(
+			key_text = ${keyName},
+			locator1 = "CP2ActivationKeys#RESPONSIVE_TABLE");
+	}
+
+	@summary = "Click on text link"
+	macro clickInTextLink(key_text = null,key_indexNumber = null) {
+		Click(
+			key_indexNumber = ${key_indexNumber},
+			key_text = ${key_text},
+			locator1 = "Link#ANY_N");
+	}
+
+	@summary = "Default summary"
+	macro closeModal() {
 		Click(locator1 = "CP2Utils#CLOSE_BUTTON");
 	}
 
-	macro deleteActivationStatus {
+	@summary = "Default summary"
+	macro deactivateExistingKey(environmentName = null) {
+		CP2ActivationKeys.selectKeyCheckboxByEnvironmentName(key_environmentName = ${environmentName});
+
+		Button.click(button = "Deactivate");
+
+		Button.click(button = "Confirm Deactivate Keys");
+
+		Button.click(button = "Continue");
+
+		Alert.viewSuccessMessage();
+	}
+
+	@summary = "Default summary"
+	macro deleteActivationStatus(position = null,status = null) {
 		ApplicationsMenu.gotoPortlet(
 			category = "Object",
 			panel = "Control Panel",
 			portlet = "Account Subscription Groups");
 
-		CP2Utils.selectPaginationNumber(quantity = "40");
+		CP2Utils.selectPaginationNumber(quantity = 40);
 
-		var key_status = "${status}";
+		var key_status = ${status};
 
 		if (IsElementPresent(locator1 = "CustomerPortalSite#DND_TABLE_ELEMENT")) {
-			CustomerPortal.viewCPObjectCustomInfo(position = "${position}");
+			CustomerPortal.viewCPObjectCustomInfo(position = ${position});
 
 			CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
 				label = "activationStatus",
@@ -142,38 +255,160 @@ definition {
 		}
 	}
 
-	macro deleteSpecificObjectEntry {
+	@summary = "Default summary"
+	macro deleteSpecificObjectEntry(entry = null,portlet = null) {
+		var key_status = ${entry};
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Object",
 			panel = "Control Panel",
-			portlet = "${portlet}");
+			portlet = ${portlet});
 
-		Click(
-			key_text = "${email}",
-			locator1 = "CP2Utils#OBJECT_ENTRY_ELLIPSIS_BUTTON");
+		if (IsElementPresent(locator1 = "CustomerPortalSite#DND_TABLE_ELEMENT")) {
+			Click(
+				key_entry = ${entry},
+				locator1 = "ObjectPortlet#ENTRY_KEBAB_MENU");
 
-		MenuItem.clickNoError(menuItem = "Delete");
+			ClickNoError(locator1 = "ObjectPortlet#DELETE_ENTRY_BUTTON");
 
-		AssertConfirm.waitForConfirmation(value1 = "Are you sure you want to delete this entry?");
-
-		Alert.viewSuccessMessage();
+			AssertElementPresent(locator1 = "CP2Utils#MODAL_DELETE_ENTRY");
+		}
 	}
 
-	macro fillInTheProjectId {
+	@summary = "Default summary"
+	macro fillInTheProjectId(value = null) {
 		Type(
 			locator1 = "CustomerPortalSite#FIELD_VALUE",
-			value1 = "${value}");
+			value1 = ${value});
+	}
+
+	@summary = "Default summary"
+	macro finishActivation(githubUserName = null,firstName = null,lastName = null,primaryRegion = null,disasterRegion = null,projectId = null,email = null) {
+		Button.click(button = "Finish Activation");
+
+		PortletEntry.inputText(
+			fieldLabel = "Project ID",
+			text = ${projectId});
+
+		Select(
+			key_fieldLabel = "Primary Data Center Region",
+			locator1 = "CP2Utils#LABEL_GENERIC_SELECT",
+			value1 = ${primaryRegion});
+
+		Select(
+			key_fieldLabel = "Disaster Recovery Data Center Region",
+			locator1 = "CP2Utils#LABEL_GENERIC_SELECT",
+			value1 = ${disasterRegion});
+
+		Type(
+			locator1 = "TextInput#ANY_WITH_NAME",
+			name = "dxp.admins[0].email",
+			value1 = ${email});
+
+		Type(
+			locator1 = "TextInput#ANY_WITH_NAME",
+			name = "dxp.admins[0].firstName",
+			value1 = ${firstName});
+
+		Type(
+			locator1 = "TextInput#ANY_WITH_NAME",
+			name = "dxp.admins[0].lastName",
+			value1 = ${lastName});
+
+		Type(
+			locator1 = "TextInput#ANY_WITH_NAME",
+			name = "dxp.admins[0].github",
+			value1 = ${githubUserName});
+
+		Button.click(button = "Next");
+
+		Button.click(button = "Submit");
+
+		if (isSet(doneButton)) {
+			Button.click(button = "Done");
+		}
+	}
+
+	@summary = "Default summary"
+	macro fulfillGuestForm(companyName = null,clustered = null,explainField = null,typeOfServer = null,supportRegion = null,email = null) {
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${email},
+			fieldName = "Contact Email Address",
+			typeField = "true");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${companyName},
+			fieldName = "Company Name",
+			typeField = "true");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${supportRegion},
+			fieldName = "Support Region");
+
+		KeyPress(
+			key_option = "Sup",
+			locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+			value1 = "\ENTER");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${explainField},
+			fieldName = "Please explain why you need a replacement activation key",
+			typeField = "true");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${typeOfServer},
+			fieldName = "Type of Server");
+
+		KeyPress(
+			key_option = "Server",
+			locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+			value1 = "\ENTER");
+
+		CP2Utils.fulfillGuestFormFields(
+			fieldInput = ${clustered},
+			fieldName = "Clustered?");
+
+		KeyPress(
+			key_option = "Clustered",
+			locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+			value1 = "\ENTER");
+
+		Click.clickNoWaitForVisible(
+			key_fieldName = "acknowledgement",
+			locator1 = "Checkbox#CHECKBOX_NAME");
+
+		if (isSet(submit)) {
+			Button.click(button = "Submit");
+		}
+	}
+
+	@summary = "Default summary"
+	macro fulfillGuestFormFields(fieldName = null,fieldInput = null) {
+		if (isSet(typeField)) {
+			Type(
+				key_fieldsname = ${fieldName},
+				locator1 = "CP2Utils#GUEST_FORM_FIELDS",
+				value1 = ${fieldInput});
+		}
+		else {
+			Type(
+				key_option = ${fieldName},
+				locator1 = "CP2Utils#GUEST_FORM_OPTIONS",
+				value1 = ${fieldInput});
+		}
 	}
 
 	// Workaround for LPS-168369
 
-	macro goToCustomerPortalSiteWithRefresh {
+	@summary = "Default summary"
+	macro goToCustomerPortalSiteWithRefresh() {
 		ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
 		Refresh();
 	}
 
-	macro goToDXPProductAndAssertAction {
+	@summary = "Default summary"
+	macro goToDXPProductAndAssertAction() {
 		CP2NavigationMenu.goToProductActivation();
 
 		CP2NavigationMenu.clickOnProductButton(product = "DXP");
@@ -181,20 +416,31 @@ definition {
 		CP2Utils.onlySeeExportAllKeys(text = "Actions");
 	}
 
-	macro onboardingFlow {
-		CustomerPortal.clickOnStartProjectSetup();
-
-		CustomerPortal.clickOnSkipForNowButton();
-
-		CustomerPortal.clickOnSkipForNowButton();
+	@summary = "Default summary"
+	macro ifOnboardingPresent() {
+		if (IsElementPresent(key_text = "Start Project Setup", locator1 = "Button#ANY")) {
+			task ("And pass through onboarding") {
+				CP2Utils.onboardingFlow();
+			}
+		}
 	}
 
-	macro onlySeeExportAllKeys {
+	@summary = "Default summary"
+	macro onboardingFlow() {
+		Button.click(button = "Start Project Setup");
+
+		Button.click(button = "Skip for now");
+
+		Button.click(button = "Skip for now");
+	}
+
+	@summary = "Default summary"
+	macro onlySeeExportAllKeys(text = null) {
 		WaitForVisible(
 			key_text = "Redacted",
 			locator1 = "CP2ActivationKeys#RESPONSIVE_TABLE");
 
-		CustomerPortal.clickAtButton(text = "${text}");
+		CustomerPortal.clickAtButton(text = ${text});
 
 		if (IsElementPresent(key_text = "Generate New", locator1 = "CP2ActivationKeys#ACTIONS_DROPDOWN")) {
 			AssertVisible(
@@ -204,74 +450,192 @@ definition {
 		else {
 			for (var actions : list "Generate New,Deactivate") {
 				AssertElementNotPresent(
-					key_text = "${actions}",
+					key_text = ${actions},
 					locator1 = "CP2ActivationKeys#ACTIONS_DROPDOWN");
 			}
 		}
 	}
 
-	macro openActionMenu {
+	@summary = "Default summary"
+	macro openActionMenu(openUser = null,menuItem = null) {
 		Click(
-			key_text = "${openUser}",
+			key_text = ${openUser},
 			locator1 = "Icon#SPECIFIC_ELLIPSIS");
 
-		MenuItem.click(menuItem = "${menuItem}");
+		MenuItem.click(menuItem = ${menuItem});
 	}
 
-	macro search {
+	@summary = "Default summary"
+	macro openPageInTheNewTab(pageURL = null) {
+		var baseURL = PropsUtil.get("portal.url");
+
+		Open.openInTheNewTab(value1 = "${baseURL}/web/customer-portal-site/${pageURL}");
+	}
+
+	@summary = "Default summary"
+	macro openPageLiferayExperienceCloudViaURL() {
+		var portalURL = PropsUtil.get("portal.url");
+
+		Navigator.openSpecificURL(url = "${portalURL}/web/customer-portal-site/project/#/KOR-3809080/liferay-experience-cloud");
+	}
+
+	@summary = "Default summary"
+	macro search(searchItem = null) {
 		if (IsElementPresent(locator1 = "CP2Utils#PROJECT_SEARCH")) {
 			Type(
 				locator1 = "CP2Utils#PROJECT_SEARCH",
-				value1 = "${searchItem}");
+				value1 = ${searchItem});
 		}
 	}
 
-	macro searchKeys {
+	@summary = "Default summary"
+	macro searchForKeyInTable(environmentName = null) {
+		WaitForElementPresent(locator1 = "CustomerPortalSite#SEARCH");
+
+		Type(
+			locator1 = "CustomerPortalSite#SEARCH",
+			value1 = ${environmentName});
+
+		KeyPress(
+			locator1 = "CustomerPortalSite#SEARCH",
+			value1 = "\ENTER");
+	}
+
+	@summary = "Default summary"
+	macro searchKeys(searchinput = null) {
 		Click(locator1 = "CP2NavigationMenu#SEARCH_FILTER");
 
 		Type(
 			locator1 = "CP2NavigationMenu#SEARCH_FILTER",
-			value1 = "${searchinput}");
+			value1 = ${searchinput});
 
 		KeyPress(
 			locator1 = "CP2NavigationMenu#SEARCH_FILTER",
 			value1 = "\ENTER");
 	}
 
-	macro selectPaginationNumber {
+	@summary = "Default summary"
+	macro selectPaginationNumber(quantity = null) {
 		if (IsElementPresent(locator1 = "CP2ActivationKeys#PAGINATION_BUTTON")) {
 			Click(locator1 = "CP2ActivationKeys#PAGINATION_BUTTON");
 
 			AssertVisible(
-				key_quantity = "${quantity}",
+				key_quantity = ${quantity},
 				locator1 = "CP2Utils#PAGINATION_BUTTON_ITEM");
 
 			Click(
-				key_quantity = "${quantity}",
+				key_quantity = ${quantity},
 				locator1 = "CP2Utils#PAGINATION_BUTTON_ITEM");
 		}
 	}
 
-	macro typeSetupInfoFields {
-		if (!(isSet(position))) {
-			var position = "1";
+	@summary = "Select item in the User avatar Bar"
+	macro selectProfileMenuOption(dropdownItem = null) {
+		CP2Utils.clickAtDropdownUserAvatar();
+
+		Click(
+			key_dropdownItem = ${dropdownItem},
+			locator1 = "CP2Utils#USER_AVATAR_DROPDOWN_ITEM");
+	}
+
+	@summary = "Default summary"
+	macro tearDownForCloudEntries(status = null) {
+		if (!(isSet(entry))) {
+			var entry = "ERC-001";
 		}
 
-		var key_index = "${position}";
+		if (!(isSet(entry1))) {
+			var entry1 = "test@liferay.com";
+		}
+
+		if (!(isSet(portlet))) {
+			var portlet = "DXP Cloud Environments";
+		}
+
+		if (!(isSet(portlet1))) {
+			var portlet1 = "Admins DXP Cloud";
+		}
+
+		CustomerPortal.clearStatus(status = ${status});
+
+		CP2Utils.deleteSpecificObjectEntry(
+			entry = ${entry},
+			portlet = ${portlet});
+
+		CP2Utils.deleteSpecificObjectEntry(
+			entry = ${entry1},
+			portlet = ${portlet1});
+	}
+
+	@summary = "Default summary"
+	macro typeSetupInfoFields(value = null) {
+		if (!(isSet(position))) {
+			var position = 1;
+		}
+
+		var key_index = ${position};
 
 		Type(
 			locator1 = "CustomerPortalSite#SETUP_FIELDS",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro unassignUserRole {
+	@summary = "Default summary"
+	macro unassignUserRole(accountUserName = null,testAccount = null,accountRoleTitle = null) {
 		Account.openAccountsAdmin();
 
-		CustomerPortal.accountTableProject(title = "${testAccount}");
+		CustomerPortal.accountTableProject(title = ${testAccount});
 
 		Account.unassignUserRole(
-			accountRoleTitle = "${accountRoleTitle}",
-			accountUserName = "${accountUserName}");
+			accountRoleTitle = ${accountRoleTitle},
+			accountUserName = ${accountUserName});
+	}
+
+	// Workaround for LPS-149449
+
+	@summary = "Default summary"
+	macro typeLinkForTheConsoleLiferayCloud(status = null) {
+		ApplicationsMenu.gotoPortlet(
+			category = "Object",
+			panel = "Control Panel",
+			portlet = "Account Subscription Groups");
+
+		// Refresh added due to portal instability
+
+		Refresh();
+
+		var key_status = ${status};
+
+		Search.searchCP(searchTerm = ${key_status});
+
+		if (IsElementPresent(key_accountName = ${key_status}, locator1 = "CP2Utils#ANY_ACCOUNT_ELLIPSIS_BUTTON")) {
+			Click(
+				key_accountName = ${key_status},
+				locator1 = "CP2Utils#ANY_ACCOUNT_ELLIPSIS_BUTTON");
+
+			MenuItem.click(menuItem = "View");
+
+			// Refresh added due to portal instability
+
+			Refresh();
+
+			CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
+				label = "manageContactsURL",
+				value = "https://console.liferay.cloud");
+
+			Click(locator1 = "Button#SAVE");
+
+			Alert.viewSuccessMessage();
+		}
+	}
+
+	@summary = "View Login Okta page"
+	macro viewLoginOktaPage() {
+		AssertElementPresent(locator1 = "CustomerPortalSite#OKTA_USERNAME");
+
+		AssertElementPresent(locator1 = "CustomerPortalSite#OKTA_PASSWORD");
+
+		AssertElementPresent(locator1 = "CustomerPortalSite#OKTA_SUBMIT");
 	}
 
 }

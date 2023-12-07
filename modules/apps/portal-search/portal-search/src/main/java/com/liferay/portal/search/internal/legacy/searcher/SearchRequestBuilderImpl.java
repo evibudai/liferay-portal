@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.legacy.searcher;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.aggregation.Aggregation;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregation;
+import com.liferay.portal.search.collapse.Collapse;
 import com.liferay.portal.search.filter.ComplexQueryPart;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.highlight.Highlight;
@@ -40,10 +33,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * @author André de Oliveira
@@ -185,6 +176,14 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 		_addFederatedSearchRequests(_buildFederatedSearchRequests());
 
 		return _withSearchRequestGet(Function.identity());
+	}
+
+	@Override
+	public SearchRequestBuilder collapse(Collapse collapse) {
+		_withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.setCollapse(collapse));
+
+		return this;
 	}
 
 	@Override
@@ -388,17 +387,10 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 
 	@Override
 	public SearchRequestBuilder modelIndexerClasses(Class<?>... classes) {
-		String[] classNames = Stream.of(
-			classes
-		).map(
-			clazz -> clazz.getCanonicalName()
-		).toArray(
-			String[]::new
-		);
-
 		_withSearchRequestImpl(
 			searchRequestImpl -> searchRequestImpl.setModelIndexerClassNames(
-				classNames));
+				TransformUtil.transform(
+					classes, Class::getCanonicalName, String.class)));
 
 		return this;
 	}
@@ -532,12 +524,11 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 	public SearchRequestBuilder withSearchRequestBuilder(
 		Consumer<SearchRequestBuilder>... searchRequestBuilderConsumers) {
 
-		Stream.of(
-			searchRequestBuilderConsumers
-		).forEach(
-			searchRequestBuilderConsumer -> searchRequestBuilderConsumer.accept(
-				this)
-		);
+		for (Consumer<SearchRequestBuilder> searchRequestBuilderConsumer :
+				searchRequestBuilderConsumers) {
+
+			searchRequestBuilderConsumer.accept(this);
+		}
 
 		return this;
 	}
@@ -577,14 +568,17 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 	private SearchRequestImpl _getSearchRequestImpl(
 		SearchContext searchContext) {
 
-		return Optional.ofNullable(
+		SearchRequestImpl searchRequestImpl =
 			(SearchRequestImpl)searchContext.getAttribute(
-				_SEARCH_CONTEXT_KEY_SEARCH_REQUEST)
-		).orElseGet(
-			() -> setAttribute(
-				searchContext, _SEARCH_CONTEXT_KEY_SEARCH_REQUEST,
-				new SearchRequestImpl(searchContext))
-		);
+				_SEARCH_CONTEXT_KEY_SEARCH_REQUEST);
+
+		if (searchRequestImpl != null) {
+			return searchRequestImpl;
+		}
+
+		return setAttribute(
+			searchContext, _SEARCH_CONTEXT_KEY_SEARCH_REQUEST,
+			new SearchRequestImpl(searchContext));
 	}
 
 	private SearchRequestBuilder _newFederatedSearchRequestBuilder(
@@ -594,8 +588,12 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 		).federatedSearchKey(
 			federatedSearchKey
 		).withSearchContext(
-			searchContext -> searchContext.setCompanyId(
-				_searchContext.getCompanyId())
+			searchContext -> {
+				searchContext.setCompanyId(_searchContext.getCompanyId());
+				searchContext.setLayout(_searchContext.getLayout());
+				searchContext.setTimeZone(_searchContext.getTimeZone());
+				searchContext.setUserId(_searchContext.getUserId());
+			}
 		);
 	}
 

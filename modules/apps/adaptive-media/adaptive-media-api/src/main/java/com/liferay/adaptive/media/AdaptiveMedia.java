@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media;
@@ -17,8 +8,6 @@ package com.liferay.adaptive.media;
 import java.io.InputStream;
 
 import java.net.URI;
-
-import java.util.Optional;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -49,14 +38,6 @@ public interface AdaptiveMedia<T> {
 	 */
 	public URI getURI();
 
-	/**
-	 * Returns the value of this {@link AdaptiveMedia} instance's attribute.
-	 * This method always returns a non-<code>null</code> optional.
-	 *
-	 * @param  amAttribute the adaptive media attribute
-	 * @return the attribute value wrapped in an {@link Optional}. If no value
-	 *         exists, an {@link Optional#EMPTY} is returned.
-	 */
-	public <V> Optional<V> getValueOptional(AMAttribute<T, V> amAttribute);
+	public <V> V getValue(AMAttribute<T, V> amAttribute);
 
 }

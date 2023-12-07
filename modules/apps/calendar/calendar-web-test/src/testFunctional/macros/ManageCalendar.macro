@@ -1,33 +1,34 @@
 definition {
 
-	macro addCalendar {
+	@summary = "Default summary"
+	macro addCalendar(enableCommentsOption = null, calendarName = null, color = null, description = null, timeZone = null, enableRatingsOption = null, defaultCalendarOption = null) {
 		Click(locator1 = "ManageCalendar#ADD_CALENDAR");
 
-		Calendar._editName(calendarName = "${calendarName}");
+		Calendar._editName(calendarName = ${calendarName});
 
 		if (isSet(description)) {
-			PortletEntry.inputDescription(description = "${description}");
+			PortletEntry.inputDescription(description = ${description});
 		}
 
 		if (isSet(timeZone)) {
-			PortalSettings.configureTimeZone(timeZone = "${timeZone}");
+			PortalSettings.configureTimeZone(timeZone = ${timeZone});
 		}
 
 		if (isSet(color)) {
 			Click(
-				key_calendarColor = "${color}",
+				key_calendarColor = ${color},
 				locator1 = "ManageCalendar#CALENDAR_MENULIST_COLOR_PICKER");
 		}
 
-		if ("${defaultCalendarOption}" == "check") {
+		if (${defaultCalendarOption} == "check") {
 			CalendarMyCalendars.checkboxOption(checkboxName = "Default Calendar");
 		}
 
-		if ("${enableCommentsOption}" == "check") {
+		if (${enableCommentsOption} == "check") {
 			CalendarMyCalendars.checkboxOption(checkboxName = "Enable Comments");
 		}
 
-		if ("${enableRatingsOption}" == "check") {
+		if (${enableRatingsOption} == "check") {
 			CalendarMyCalendars.checkboxOption(checkboxName = "Enable Ratings");
 		}
 
@@ -36,40 +37,41 @@ definition {
 		Navigator.gotoBack();
 	}
 
-	macro editCalendar {
+	@summary = "Default summary"
+	macro editCalendar(newTimeZone = null, enableCommentsOption = null, newColor = null, newCalendarName = null, enableRatingsOption = null, newDescription = null, defaultCalendarOption = null, calendarCurrentName = null) {
 		Click(
-			key_calendarName = "${calendarCurrentName}",
+			key_calendarName = ${calendarCurrentName},
 			locator1 = "ManageCalendar#VERTICAL_ELLIPSIS_BY_NAME");
 
 		MenuItem.click(menuItem = "Edit");
 
 		if (isSet(newCalendarName)) {
-			Calendar._editName(calendarName = "${newCalendarName}");
+			Calendar._editName(calendarName = ${newCalendarName});
 		}
 
 		if (isSet(newDescription)) {
-			PortletEntry.inputDescription(description = "${newDescription}");
+			PortletEntry.inputDescription(description = ${newDescription});
 		}
 
 		if (isSet(newTimeZone)) {
-			PortalSettings.configureTimeZone(timeZone = "${newTimeZone}");
+			PortalSettings.configureTimeZone(timeZone = ${newTimeZone});
 		}
 
 		if (isSet(newColor)) {
 			Click(
-				key_calendarColor = "${newColor}",
+				key_calendarColor = ${newColor},
 				locator1 = "ManageCalendar#CALENDAR_MENULIST_COLOR_PICKER");
 		}
 
-		if ("${defaultCalendarOption}" == "check") {
+		if (${defaultCalendarOption} == "check") {
 			CalendarMyCalendars.checkboxOption(checkboxName = "Default Calendar");
 		}
 
-		if ("${enableCommentsOption}" == "check") {
+		if (${enableCommentsOption} == "check") {
 			CalendarMyCalendars.checkboxOption(checkboxName = "Enable Comments");
 		}
 
-		if ("${enableRatingsOption}" == "check") {
+		if (${enableRatingsOption} == "check") {
 			CalendarMyCalendars.checkboxOption(checkboxName = "Enable Ratings");
 		}
 
@@ -78,14 +80,15 @@ definition {
 		Navigator.gotoBack();
 	}
 
-	macro viewCalendarNameByColumn {
+	@summary = "Default summary"
+	macro viewCalendarNameByColumn(nameList = null) {
 		if (isSet(nameList)) {
-			var rowNumber = "1";
+			var rowNumber = 1;
 
-			for (var name : list "${nameList}") {
+			for (var name : list ${nameList}) {
 				AssertElementPresent(
-					key_name = "${name}",
-					key_rowNumber = "${rowNumber}",
+					key_name = ${name},
+					key_rowNumber = ${rowNumber},
 					locator1 = "ManageCalendar#NAME_BY_COLUMN");
 
 				var rowNumber = ${rowNumber} + 1;
@@ -93,20 +96,21 @@ definition {
 		}
 		else {
 			AssertElementPresent(
-				key_name = "${name}",
-				key_rowNumber = "${rowNumber}",
+				key_name = ${name},
+				key_rowNumber = ${rowNumber},
 				locator1 = "ManageCalendar#NAME_BY_COLUMN");
 		}
 	}
 
-	macro viewColorByColumn {
+	@summary = "Default summary"
+	macro viewColorByColumn(colorList = null) {
 		if (isSet(colorList)) {
-			var rowNumber = "1";
+			var rowNumber = 1;
 
-			for (var color : list "${colorList}") {
+			for (var color : list ${colorList}) {
 				AssertElementPresent(
-					key_color = "${color}",
-					key_rowNumber = "${rowNumber}",
+					key_color = ${color},
+					key_rowNumber = ${rowNumber},
 					locator1 = "ManageCalendar#COLOR_BY_COLUMN");
 
 				var rowNumber = ${rowNumber} + 1;
@@ -114,47 +118,51 @@ definition {
 		}
 		else {
 			AssertElementPresent(
-				key_color = "${color}",
-				key_rowNumber = "${rowNumber}",
+				key_color = ${color},
+				key_rowNumber = ${rowNumber},
 				locator1 = "ManageCalendar#COLOR_BY_COLUMN");
 		}
 	}
 
-	macro viewDefaultOptionOfCalendar {
+	@summary = "Default summary"
+	macro viewDefaultOptionOfCalendar(calendarName = null, defaultOption = null) {
 		AssertElementPresent(
-			key_calendarName = "${calendarName}",
-			key_optionDefault = "${defaultOption}",
+			key_calendarName = ${calendarName},
+			key_optionDefault = ${defaultOption},
 			locator1 = "ManageCalendar#DEFAULT_OPTION_BY_NAME");
 	}
 
-	macro viewMenuItemNotPresent {
+	@summary = "Default summary"
+	macro viewMenuItemNotPresent(calendarName = null, menuItem = null) {
 		Click(
-			key_calendarName = "${calendarName}",
+			key_calendarName = ${calendarName},
 			locator1 = "ManageCalendar#VERTICAL_ELLIPSIS_BY_NAME");
 
 		AssertElementNotPresent(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 
 		Refresh();
 	}
 
-	macro viewMenuItemPresent {
+	@summary = "Default summary"
+	macro viewMenuItemPresent(calendarName = null, menuItem = null) {
 		Click(
-			key_calendarName = "${calendarName}",
+			key_calendarName = ${calendarName},
 			locator1 = "ManageCalendar#VERTICAL_ELLIPSIS_BY_NAME");
 
 		AssertElementPresent(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 
 		Refresh();
 	}
 
-	macro viewTableDisplaysColumns {
+	@summary = "Default summary"
+	macro viewTableDisplaysColumns() {
 		for (var tableHeader : list "Name,Description,Color,Default") {
 			AssertElementPresent(
-				key_tableHeader = "${tableHeader}",
+				key_tableHeader = ${tableHeader},
 				locator1 = "LexiconTable#TABLE_HEADER");
 		}
 	}

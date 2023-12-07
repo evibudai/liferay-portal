@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,7 +26,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can export an available language for multiple experiences."
-	@priority = "5"
+	@priority = 5
 	test CanExportAnAvailableLanguageForMultipleExperiences {
 		property portal.acceptance = "false";
 
@@ -60,17 +60,15 @@ definition {
 
 		Translations.assertFileNameFromTempFolder(pageName = "TranslationContentPage");
 
-		AntCommand(
-			locator1 = "build-test-translation.xml",
-			value1 = "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
+		AntCommands.runCommand("build-test-translation.xml", "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
 
 		for (var fileName : list "TranslationContentPage (NewAnyoneExperience1)-en_US-es_ES.xlf,TranslationContentPage (NewAnyoneExperience2)-en_US-es_ES.xlf") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "${fileName}");
+			DMDocument.assertFileNameFromTempFolder(fileName = ${fileName});
 		}
 	}
 
 	@description = "This ensures that the user can export multiple available languages for a single experience."
-	@priority = "5"
+	@priority = 5
 	test CanExportMultipleAvailableLanguagesForExperience {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -102,17 +100,15 @@ definition {
 
 		Translations.assertFileNameFromTempFolder(pageName = "TranslationContentPage");
 
-		AntCommand(
-			locator1 = "build-test-translation.xml",
-			value1 = "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
+		AntCommands.runCommand("build-test-translation.xml", "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
 
 		for (var fileName : list "TranslationContentPage (NewAnyoneExperience)-en_US-ja_JP.xlf,TranslationContentPage (NewAnyoneExperience)-en_US-es_ES.xlf") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "${fileName}");
+			DMDocument.assertFileNameFromTempFolder(fileName = ${fileName});
 		}
 	}
 
 	@description = "This ensures that the user can export multiple available languages for multiple experiences."
-	@priority = "5"
+	@priority = 5
 	test CanExportMultipleAvailableLanguagesForMultipleExperiences {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -143,17 +139,15 @@ definition {
 
 		Translations.assertFileNameFromTempFolder(pageName = "TranslationContentPage");
 
-		AntCommand(
-			locator1 = "build-test-translation.xml",
-			value1 = "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
+		AntCommands.runCommand("build-test-translation.xml", "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
 
 		for (var fileName : list "TranslationContentPage (Default)-en_US-ja_JP.xlf,TranslationContentPage (Default)-en_US-es_ES.xlf,TranslationContentPage (NewAnyoneExperience)-en_US-ja_JP.xlf,TranslationContentPage (NewAnyoneExperience)-en_US-es_ES.xlf") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "${fileName}");
+			DMDocument.assertFileNameFromTempFolder(fileName = ${fileName});
 		}
 	}
 
 	@description = "This ensures that user can choose to export all experiences when exporting translation for multiple content pages."
-	@priority = "5"
+	@priority = 5
 	test CanExportMultiplePagesAllWithNewExperiences {
 		property custom.properties = "feature.flag.LPS-142736=true";
 		property portal.acceptance = "false";
@@ -193,12 +187,12 @@ definition {
 		Translations.unzipTranslationFile(fileName = "Segments Experience Translations-en_US.zip");
 
 		for (var fileName : list "Translation Content Page1 (Default)-en_US-ja_JP.xlf,Translation Content Page2 (Default)-en_US-ja_JP.xlf,Translation Content Page1 (NewAnyoneExperience)-en_US-ja_JP.xlf,Translation Content Page2 (NewAnyoneExperience)-en_US-ja_JP.xlf") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "${fileName}");
+			DMDocument.assertFileNameFromTempFolder(fileName = ${fileName});
 		}
 	}
 
 	@description = "This ensures that experiences selector shows up when exporting translation for multiple content pages which is at least one page with new experiences."
-	@priority = "5"
+	@priority = 5
 	test CanExportMultiplePagesNotAllWithNewExperiences {
 		property custom.properties = "feature.flag.LPS-142736=true";
 		property portal.acceptance = "false";
@@ -244,12 +238,12 @@ definition {
 		Translations.unzipTranslationFile(fileName = "Segments Experience Translations-en_US.zip");
 
 		for (var fileName : list "Translation Content Page1 (Default)-en_US-ja_JP.xlf,Translation Content Page1 (NewAnyoneExperience)-en_US-ja_JP.xlf,Translation Content Page2 (Default)-en_US-ja_JP.xlf") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "${fileName}");
+			DMDocument.assertFileNameFromTempFolder(fileName = ${fileName});
 		}
 	}
 
 	@description = "This ensures that user can choose to export only the default experience when exporting translation for multiple content pages."
-	@priority = "5"
+	@priority = 5
 	test CanExportMultiplePagesWithDefaultExperiences {
 		property custom.properties = "feature.flag.LPS-142736=true";
 		property portal.acceptance = "false";
@@ -289,12 +283,12 @@ definition {
 		Translations.unzipTranslationFile(fileName = "Page Translations-en_US.zip");
 
 		for (var fileName : list "Translation Content Page1-en_US-es_ES.xlf,Translation Content Page2-en_US-es_ES.xlf,Translation Content Page1-en_US-ja_JP.xlf,Translation Content Page2-en_US-ja_JP.xlf") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "${fileName}");
+			DMDocument.assertFileNameFromTempFolder(fileName = ${fileName});
 		}
 	}
 
 	@description = "This ensures that Users can select multiple available languages when exporting multiple content pages for translation."
-	@priority = "5"
+	@priority = 5
 	test CanExportMultiplePagesWithMultipleLanguages {
 		property custom.properties = "feature.flag.LPS-142736=true";
 		property portal.acceptance = "false";
@@ -329,7 +323,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can export multiple available languages of default experience for translation."
-	@priority = "5"
+	@priority = 5
 	test CanExportWithMultipleLanguages {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -358,7 +352,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can export a single available language of default experience for translation."
-	@priority = "5"
+	@priority = 5
 	test CanExportWithSingleLanguage {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -388,7 +382,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can import the exported content page xliff file with 1.2 version."
-	@priority = "5"
+	@priority = 5
 	test CanImportExportedCustomizeXliffFile {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -480,7 +474,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can import the exported content page xliff file with default version."
-	@priority = "5"
+	@priority = 5
 	test CanImportExportedDefaultXliffFile {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -562,7 +556,7 @@ definition {
 	}
 
 	@description = "This ensures that imported translation for a content page experience can be merged to the correct experience of a content page."
-	@priority = "5"
+	@priority = 5
 	test CanImportExportedTranslationForCorrespondingExperience {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -635,7 +629,9 @@ definition {
 			pageName = "TranslationContentPage",
 			siteName = "Guest");
 
-		ContentPages.changeExperience(experienceName = "NewAnyoneExperience");
+		ContentPages.changeExperience(
+			experienceName = "NewAnyoneExperience",
+			locale = "es");
 
 		Navigator.ensureLocaleURL(locale = "es");
 
@@ -646,7 +642,7 @@ definition {
 	}
 
 	@description = "This ensures that the translation files contains multiple content pages can be imported from a zip."
-	@priority = "5"
+	@priority = 5
 	test CanImportMultiplePages {
 		property portal.acceptance = "false";
 
@@ -743,9 +739,9 @@ definition {
 
 			PageEditor.changeLocale(
 				currentLocale = "en-US",
-				locale = "${language}");
+				locale = ${language});
 
-			var language = StringUtil.replace("${language}", "-", "_");
+			var language = StringUtil.replace(${language}, "-", "_");
 
 			PageEditor.viewFragmentEditableText(
 				editableText = "HTMLTitle${language}",
@@ -760,9 +756,9 @@ definition {
 
 			PageEditor.changeLocale(
 				currentLocale = "en-US",
-				locale = "${language}");
+				locale = ${language});
 
-			var language = StringUtil.replace("${language}", "-", "_");
+			var language = StringUtil.replace(${language}, "-", "_");
 
 			PageEditor.viewFragmentEditableText(
 				editableText = "HTMLTitle${language}",
@@ -772,7 +768,7 @@ definition {
 	}
 
 	@description = "This ensures that user can select multiple Xlf files when importing translations for multiple content pages."
-	@priority = "5"
+	@priority = 5
 	test CanImportMultipleXlfFiles {
 		property portal.acceptance = "false";
 
@@ -856,9 +852,9 @@ definition {
 
 			PageEditor.changeLocale(
 				currentLocale = "en-US",
-				locale = "${language}");
+				locale = ${language});
 
-			var language = StringUtil.replace("${language}", "-", "_");
+			var language = StringUtil.replace(${language}, "-", "_");
 
 			PageEditor.viewFragmentEditableText(
 				editableText = "HTMLTitle${language}",
@@ -873,9 +869,9 @@ definition {
 
 			PageEditor.changeLocale(
 				currentLocale = "en-US",
-				locale = "${language}");
+				locale = ${language});
 
-			var language = StringUtil.replace("${language}", "-", "_");
+			var language = StringUtil.replace(${language}, "-", "_");
 
 			PageEditor.viewFragmentEditableText(
 				editableText = "HTMLTitle${language}",
@@ -885,7 +881,7 @@ definition {
 	}
 
 	@description = "This ensures that user can select multiple zip files when importing translations for multiple content pages with different experience."
-	@priority = "5"
+	@priority = 5
 	test CanImportMultipleZipFilesWithExperiences {
 		property portal.acceptance = "false";
 
@@ -984,7 +980,9 @@ definition {
 				pageName = "TranslationContentPage${i}",
 				siteName = "Guest");
 
-			ContentPages.changeExperience(experienceName = "NewAnyoneExperience");
+			ContentPages.changeExperience(
+				experienceName = "NewAnyoneExperience",
+				locale = "es");
 
 			Navigator.ensureLocaleURL(locale = "es");
 
@@ -1000,7 +998,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can not import an invalid translation file."
-	@priority = "4"
+	@priority = 4
 	test CannotImportAnInvalidFile {
 		for (var num : list "1,2") {
 			JSONLayout.addPublicLayout(
@@ -1021,9 +1019,7 @@ definition {
 			defaultLanguage = "English (United States)",
 			languageList = "Spanish (Spain)");
 
-		AntCommand(
-			locator1 = "build-test-translation.xml",
-			value1 = "unzip-translation-file -DfileName=TranslationContentPage1-en_US.zip");
+		AntCommands.runCommand("build-test-translation.xml", "unzip-translation-file -DfileName=TranslationContentPage1-en_US.zip");
 
 		Translations.importTranslation(
 			contentPageTranslation = "true",
@@ -1038,7 +1034,7 @@ definition {
 	}
 
 	@description = "This ensures that the translation for a content page experience can not be imported after deleting the experience."
-	@priority = "5"
+	@priority = 5
 	test CannotImportTranslationForDeletedExperience {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1068,9 +1064,7 @@ definition {
 			experienceList = "NewAnyoneExperience",
 			languageList = "Spanish (Spain)");
 
-		AntCommand(
-			locator1 = "build-test-translation.xml",
-			value1 = "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
+		AntCommands.runCommand("build-test-translation.xml", "unzip-translation-file -DfileName=TranslationContentPage-en_US.zip");
 
 		ContentPagesNavigator.openEditContentPage(
 			pageName = "TranslationContentPage",
@@ -1095,7 +1089,7 @@ definition {
 	}
 
 	@description = "This ensures that only the valid translation files can be imported from xlf and zip files."
-	@priority = "5"
+	@priority = 5
 	test CanPartiallyImportMultipleFiles {
 		property portal.acceptance = "false";
 
@@ -1189,9 +1183,7 @@ definition {
 			translationFileName = "TranslationContentPage3-en_US-es_ES",
 			translationZipFileName = "TranslationContentPage3-en_US");
 
-		AntCommand(
-			locator1 = "build-test-translation.xml",
-			value1 = "copy-translation-file -Dtranslation.zip.file.name=TranslationContentPage3-en_US -Dtranslation.file.name=TranslationContentPage3-en_US-es_ES.xlf");
+		AntCommands.runCommand("build-test-translation.xml", "copy-translation-file -Dtranslation.file.name=TranslationContentPage3-en_US-es_ES.xlf -Dtranslation.zip.file.name=TranslationContentPage3-en_US");
 
 		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
 
@@ -1250,7 +1242,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-144152. This ensures that the updated draft translation can be published."
-	@priority = "3"
+	@priority = 3
 	test CanPublishUpdatedDraftTranslation {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1343,7 +1335,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can import the translated content page file with Button fragment."
-	@priority = "5"
+	@priority = 5
 	test CanTranslateAndImportButtonFragment {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1434,7 +1426,7 @@ definition {
 	}
 
 	@description = "This ensures that the user can import the translated content page file with HTML fragment."
-	@priority = "5"
+	@priority = 5
 	test CanTranslateAndImportHTMLFragment {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1518,7 +1510,7 @@ definition {
 	}
 
 	@description = "This ensures that users can view the info of the unsuccessfully imported content page translations in the downloaded CSV report."
-	@priority = "5"
+	@priority = 5
 	test CanViewUnsuccessfullyImportedTranslationsInfoInDownloadedCSVReport {
 		property portal.acceptance = "false";
 
@@ -1586,13 +1578,13 @@ definition {
 			pageName = "ContentPage");
 
 		Translations.viewCSVErrorReport(
-			errorReportName = "${errorReportName}",
+			errorReportName = ${errorReportName},
 			reportContent = "ContentPage-en_US-es_ES.xlf,The translation file does not correspond to this page.,ContentPage-en_US_translated.zip",
 			viewNoSuccessfullyImportedTranslation = "ContentPage-en_US-ja_JP");
 	}
 
 	@description = "This ensures that only the default experiences are exported when exporting multiple content pages for translation."
-	@priority = "4"
+	@priority = 4
 	test OnlyDefaultExperiencesExportedWhenExportingMultiplePages {
 		property portal.acceptance = "false";
 
@@ -1631,21 +1623,19 @@ definition {
 
 		var fileName = StringUtil.replace("Page Translations-en_US.zip", " ", "*");
 
-		AntCommand(
-			locator1 = "build-test-translation.xml",
-			value1 = "unzip-translation-file -DfileName=${fileName}");
+		AntCommands.runCommand("build-test-translation.xml", "unzip-translation-file -DfileName=${fileName}");
 
 		for (var fileName : list "TranslationContentPage1-en_US-es_ES.xlf,TranslationContentPage2-en_US-es_ES.xlf") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "${fileName}");
+			DMDocument.assertFileNameFromTempFolder(fileName = ${fileName});
 		}
 
 		for (var translationFileName : list "TranslationContentPage1 (NewAnyoneExperience)-en_US-es_ES.xlf,TranslationContentPage2 (NewAnyoneExperience)-en_US-es_ES.xlf") {
-			DMDocument.assertNoFileNameFromTempFolder(translationFileName = "${translationFileName}");
+			DMDocument.assertNoFileNameFromTempFolder(translationFileName = ${translationFileName});
 		}
 	}
 
 	@description = "This ensures that only the valid translation files can be uploaded from a zip file."
-	@priority = "5"
+	@priority = 5
 	test OnlyValidEntriesAreUploadedFromZip {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1732,7 +1722,7 @@ definition {
 
 		for (var language : list "ja-JP,zh-CN") {
 			Translations.viewTranslationEntry(
-				language = "${language}",
+				language = ${language},
 				status = "Approved",
 				title = "Translation of ContentPage to ${language}");
 		}

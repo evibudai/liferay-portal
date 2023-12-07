@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,7 +33,7 @@ definition {
 	}
 
 	@description = "Verify that a Form can be published after adding a Fieldset"
-	@priority = "5"
+	@priority = 5
 	test AddedToAFormCanBePublished {
 		property portal.acceptance = "true";
 
@@ -52,7 +52,7 @@ definition {
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.closeSidebar();
@@ -81,7 +81,7 @@ definition {
 	}
 
 	@description = "Verify that a Form can be saved after adding a Fieldset"
-	@priority = "5"
+	@priority = 5
 	test AddedToAFormCanBeSaved {
 		property portal.acceptance = "true";
 
@@ -95,12 +95,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.save();
@@ -127,7 +127,7 @@ definition {
 	}
 
 	@description = "Verify that a Form can be submitted after adding a Fieldset"
-	@priority = "5"
+	@priority = 5
 	test AddedToAFormCanBeSubmitted {
 		property portal.acceptance = "true";
 
@@ -146,7 +146,7 @@ definition {
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.closeSidebar();
@@ -179,13 +179,13 @@ definition {
 
 		FormFields.editText(
 			fieldName = "Numeric",
-			fieldValue = "5");
+			fieldValue = 5);
 
 		FormPortlet.submitSuccessfullyAndViewSuccessPage();
 	}
 
 	@description = "Verify that a Color Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddAColorFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -197,12 +197,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Color");
 
 		Form.saveElementSet();
@@ -213,7 +213,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -235,7 +235,7 @@ definition {
 	}
 
 	@description = "Verify that a Date Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddADateFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -247,12 +247,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Date");
 
 		Form.saveElementSet();
@@ -263,7 +263,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -285,7 +285,7 @@ definition {
 	}
 
 	@description = "Verify that a Grid Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddAGridFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -297,23 +297,23 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Grid");
 
 		FormFields.editGridOptions(
 			gridField = "Rows",
 			optionValue = "Row 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editGridOptions(
 			gridField = "Columns",
 			optionValue = "Column 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.saveElementSet();
 
@@ -323,7 +323,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -336,12 +336,12 @@ definition {
 		FormFields.viewOptionRowName(
 			fieldTitle = "Grid",
 			optionName = "Row 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.viewOptionColumnsName(
 			fieldTitle = "Grid",
 			optionName = "Column 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.save();
 
@@ -356,16 +356,16 @@ definition {
 		FormFields.viewOptionRowName(
 			fieldTitle = "Grid",
 			optionName = "Row 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.viewOptionColumnsName(
 			fieldTitle = "Grid",
 			optionName = "Column 1",
-			rowNumber = "1");
+			rowNumber = 1);
 	}
 
 	@description = "Verify that an Image Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddAImageFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -377,12 +377,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Image");
 
 		Form.saveElementSet();
@@ -393,7 +393,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -415,7 +415,7 @@ definition {
 	}
 
 	@description = "Verify that a Multiple Selection Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddAMultipleSelectionFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -427,23 +427,23 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Multiple Selection");
 
 		FormFields.editOptionsRow(
 			optionName = "Option 1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionName = "Option 2",
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.saveElementSet();
 
@@ -453,7 +453,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -469,11 +469,11 @@ definition {
 
 		FormFields.viewOptionsRowFieldValue(
 			fieldValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.viewOptionsRowFieldValue(
 			fieldValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.save();
 
@@ -495,7 +495,7 @@ definition {
 	}
 
 	@description = "Verify that a Numeric Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddANumericFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -507,12 +507,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.saveElementSet();
@@ -523,7 +523,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -545,7 +545,7 @@ definition {
 	}
 
 	@description = "Verify that a Paragraph Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddAParagraphFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -557,12 +557,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Paragraph");
 
 		FormFields.editParagraphBody(content = "Test Body Text");
@@ -575,7 +575,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormViewBuilder.validateFieldLabel(fieldLabel = "Text");
 
@@ -599,7 +599,7 @@ definition {
 	}
 
 	@description = "Verify that a Rich Text Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddARichTextFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -611,12 +611,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Rich Text");
 
 		Form.saveElementSet();
@@ -627,7 +627,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormViewBuilder.validateFieldLabel(fieldLabel = "Text");
 
@@ -643,7 +643,7 @@ definition {
 	}
 
 	@description = "Verify that a Select From List Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddASelectFromListFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -655,23 +655,23 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.saveElementSet();
 
@@ -681,7 +681,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -697,9 +697,10 @@ definition {
 
 		FormsAdminNavigator.gotoPublishedForm();
 
-		FormViewBuilder.validatePredefinedSelectFromList(
-			fieldName = "Select from List",
-			fieldValue = "Choose an Option");
+		Click(
+			key_fieldName = "Select from List",
+			key_fieldValue = "Choose an Option",
+			locator1 = "FormViewBuilder#PREDEFINED_VALUE_AT_FORM_SELECTLIST");
 
 		FormFields.viewSelectFromListOption(optionValue = "Option 1");
 
@@ -707,7 +708,7 @@ definition {
 	}
 
 	@description = "Verify that a Separator Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddASeparatorFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -719,12 +720,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Separator");
 
 		Form.saveElementSet();
@@ -735,7 +736,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -757,7 +758,7 @@ definition {
 	}
 
 	@description = "Verify that a Single Selection Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddASingleSelectionFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -769,17 +770,17 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Single Selection");
 
 		FormFields.editOptionsRow(
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.saveElementSet();
 
@@ -789,7 +790,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		AssertElementPresent(
 			key_name = "Text",
@@ -805,7 +806,7 @@ definition {
 
 		FormFields.viewOptionsRowFieldValue(
 			fieldValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.save();
 
@@ -814,17 +815,17 @@ definition {
 		FormsAdminNavigator.gotoPublishedForm();
 
 		AssertElementPresent(
-			key_rowNumber = "1",
+			key_rowNumber = 1,
 			locator1 = "FormPortlet#SELECT_SINGLE_SELECTION_ROW");
 
 		AssertElementPresent(
 			key_optionValue = "Option 1",
-			key_rowNumber = "1",
+			key_rowNumber = 1,
 			locator1 = "FormPortlet#SELECT_SINGLE_SELECTION_ROW_OPTION");
 	}
 
 	@description = "Verify that a Text Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddATextFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -836,12 +837,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.saveElementSet();
@@ -852,7 +853,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormViewBuilder.validateFieldLabel(fieldLabel = "Text");
 
@@ -870,7 +871,7 @@ definition {
 	}
 
 	@description = "Verify that an Upload Field can be added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test CanAddAUploadFieldToAForm {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -882,12 +883,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Upload");
 
 		Form.saveElementSet();
@@ -898,7 +899,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormViewBuilder.validateFieldLabel(fieldLabel = "Text");
 
@@ -914,7 +915,7 @@ definition {
 	}
 
 	@description = "Verify that a Fieldset can be added to a Fieldset"
-	@priority = "4"
+	@priority = 4
 	test CanBeAddedToAFieldset {
 		property portal.acceptance = "true";
 
@@ -928,12 +929,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.saveElementSet();
@@ -945,7 +946,7 @@ definition {
 		Form.editName(formName = "Element Set 2");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Rich Text");
 
 		Form.closeSidebar();
@@ -953,7 +954,7 @@ definition {
 		Form.gotoAddElementSet(elementSetTitle = "Element Set 1");
 
 		for (var label : list "Rich Text,Text,Numeric") {
-			FormViewBuilder.validateFieldLabel(fieldLabel = "${label}");
+			FormViewBuilder.validateFieldLabel(fieldLabel = ${label});
 		}
 
 		Form.saveElementSet();
@@ -967,12 +968,12 @@ definition {
 			rowEntry = "Element Set 2");
 
 		for (var label : list "Rich Text,Text,Numeric") {
-			FormViewBuilder.validateFieldLabel(fieldLabel = "${label}");
+			FormViewBuilder.validateFieldLabel(fieldLabel = ${label});
 		}
 	}
 
 	@description = "Verify that a Fieldset can be added multiple times to Form"
-	@priority = "3"
+	@priority = 3
 	test CanBeAddedToAFormMultipleTimes {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -984,12 +985,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.saveElementSet();
@@ -999,7 +1000,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		for (var element : list "Element Set 1,Element Set 1") {
-			Form.gotoAddElementSet(elementSetTitle = "${element}");
+			Form.gotoAddElementSet(elementSetTitle = ${element});
 		}
 
 		Form.save();
@@ -1026,7 +1027,7 @@ definition {
 	}
 
 	@description = "Verify that a Fieldset can be created"
-	@priority = "5"
+	@priority = 5
 	test CanBeCreated {
 		property portal.acceptance = "true";
 
@@ -1040,12 +1041,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.saveElementSet();
@@ -1064,7 +1065,7 @@ definition {
 	}
 
 	@description = "Verify that a Fieldset can be deleted"
-	@priority = "5"
+	@priority = 5
 	test CanBeDeleted {
 		property portal.acceptance = "true";
 
@@ -1078,12 +1079,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.saveElementSet();
@@ -1106,7 +1107,7 @@ definition {
 	}
 
 	@description = "Verify that a Fieldset can be edited"
-	@priority = "5"
+	@priority = 5
 	test CanBeEdited {
 		property portal.acceptance = "true";
 
@@ -1120,12 +1121,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Form.save();
@@ -1156,7 +1157,7 @@ definition {
 	}
 
 	@description = "Verify that Options persist after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveOptions {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1168,22 +1169,22 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		FormViewBuilder.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Single Selection",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 1",
-			optionValue = "1");
+			optionValue = 1);
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 2",
-			optionValue = "2");
+			optionValue = 2);
 
 		Form.saveElementSet();
 
@@ -1193,7 +1194,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormViewBuilder.validateFieldLabel(fieldLabel = "Text");
 
@@ -1201,11 +1202,11 @@ definition {
 
 		FormFields.viewSingleSelectionOption(
 			key_optionLabel = "Option 1",
-			key_position = "1");
+			key_position = 1);
 
 		FormFields.viewSingleSelectionOption(
 			key_optionLabel = "Option 2",
-			key_position = "2");
+			key_position = 2);
 
 		Form.save();
 
@@ -1215,15 +1216,15 @@ definition {
 
 		FormFields.viewSingleSelectionOption(
 			key_optionLabel = "Option 1",
-			key_position = "1");
+			key_position = 1);
 
 		FormFields.viewSingleSelectionOption(
 			key_optionLabel = "Option 2",
-			key_position = "2");
+			key_position = 2);
 	}
 
 	@description = "Verify that a Field with the Autocomplete Property persists after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveTheAutoCompleteProperty {
 		property portal.acceptance = "true";
 
@@ -1238,13 +1239,13 @@ definition {
 		Form.editName(formName = "Element Set 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormViewBuilder.closeSidebar();
 
-		Form.addTextField(fieldPositionNumber = "1");
+		Form.addTextField(fieldPositionNumber = 1);
 
 		Form.gotoAutocompleteTab();
 
@@ -1257,12 +1258,12 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.saveElementSet();
 
@@ -1272,7 +1273,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormsAdminNavigator.gotoEditField(fieldName = "Text");
 
@@ -1286,11 +1287,11 @@ definition {
 
 		FormFields.viewOptionsRowFieldValue(
 			fieldValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.viewOptionsRowFieldValue(
 			fieldValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.save();
 
@@ -1307,7 +1308,7 @@ definition {
 	}
 
 	@description = "Verify that the Help Text property persists after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveTheHelpText {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1320,12 +1321,12 @@ definition {
 		Form.editName(formName = "Element Set 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.closeSidebar();
 
-		Form.addTextField(fieldPositionNumber = "1");
+		Form.addTextField(fieldPositionNumber = 1);
 
 		FormViewBuilder.setFieldHelpText(fieldLabel = "Help Text Test");
 
@@ -1337,7 +1338,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormViewBuilder.validateFieldLabel(fieldLabel = "Text");
 
@@ -1359,7 +1360,7 @@ definition {
 	}
 
 	@description = "Verify that a Hide Label Property persists after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveTheHideLabelProperty {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1372,24 +1373,22 @@ definition {
 		Form.editName(formName = "Element Set 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Text");
 
 		Form.gotoAdvancedTab();
 
 		FormFields.disableSwitch(fieldName = "Show Label");
 
-		Form.closeSidebar();
+		Form.saveElementSet();
 
 		FormFields.viewFieldLabelNotPresent(fieldLabel = "Text");
-
-		Form.saveElementSet();
 
 		FormsAdmin.addForm();
 
@@ -1397,7 +1396,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewField(fieldName = "Numeric");
 
@@ -1418,7 +1417,7 @@ definition {
 	}
 
 	@description = "Verify that an Inline Property persists after being added to a Form via Fieldset"
-	@priority = "4"
+	@priority = 4
 	test PreserveTheInlineProperty {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1430,33 +1429,37 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Multiple Selection");
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 1",
-			optionValue = "1");
+			optionValue = 1);
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 2",
-			optionValue = "2");
+			optionValue = 2);
 
-		FormFields.viewOptionsPositionNotHorizontal(
-			key_text1 = "Option 1",
-			key_text2 = "Option 2");
+		for (var optionValue : list "Option 1,Option 2") {
+			AssertElementNotPresent(
+				key_text = ${optionValue},
+				locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
+		}
 
 		Form.gotoAdvancedTab();
 
 		FormFields.enableSwitch(fieldName = "Inline");
 
-		FormFields.viewOptionsPositionHorizontal(
-			key_text1 = "Option 1",
-			key_text2 = "Option 2");
+		for (var optionValue : list "Option 1,Option 2") {
+			AssertElementPresent(
+				key_text = ${optionValue},
+				locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
+		}
 
 		Form.save();
 
@@ -1476,9 +1479,11 @@ definition {
 			fieldLabel = "Multiple Selection",
 			fieldName = "Multiple Selection");
 
-		FormFields.viewOptionsPositionHorizontal(
-			key_text1 = "Option 1",
-			key_text2 = "Option 2");
+		for (var optionValue : list "Option 1,Option 2") {
+			AssertElementPresent(
+				key_text = ${optionValue},
+				locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
+		}
 
 		Form.save();
 
@@ -1486,13 +1491,15 @@ definition {
 
 		FormsAdminNavigator.gotoPublishedForm();
 
-		FormFields.viewOptionsPositionHorizontal(
-			key_text1 = "Option 1",
-			key_text2 = "Option 2");
+		for (var optionValue : list "Option 1,Option 2") {
+			AssertElementPresent(
+				key_text = ${optionValue},
+				locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
+		}
 	}
 
 	@description = "Verify that an Allow Multiple Selections Property persists after being added to a Form via Fieldset"
-	@priority = "4"
+	@priority = 4
 	test PreserveTheMultipleSelectionsProperty {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1504,25 +1511,30 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.gotoAdvancedTab();
 
 		FormFields.enableSwitch(fieldName = "Allow Multiple Selections");
+
+		AssertValue.assertValue(
+			key_fieldName = "Allow Multiple Selections",
+			locator1 = "FormFields#SWITCH",
+			value1 = "true");
 
 		Form.saveElementSet();
 
@@ -1534,17 +1546,20 @@ definition {
 
 		for (var label : list "Text,Select from List") {
 			FormFields.viewLabel(
-				fieldLabel = "${label}",
-				fieldName = "${label}");
+				fieldLabel = ${label},
+				fieldName = ${label});
 		}
 
 		FormsAdminNavigator.gotoEditField(
 			fieldName = "Select from List",
-			fieldPositionNumber = "1");
+			fieldPositionNumber = 1);
 
 		Form.gotoAdvancedTab();
 
-		FormFields.viewSwitchChecked(fieldName = "Allow Multiple Selections");
+		AssertValue.assertValue(
+			key_fieldName = "Allow Multiple Selections",
+			locator1 = "FormFields#SWITCH",
+			value1 = "true");
 
 		Form.save();
 
@@ -1556,15 +1571,21 @@ definition {
 			fieldName = "Select from List",
 			selectOption = "Option 1");
 
-		FormFields.enableCheckbox(fieldName = "Option 2");
+		FormFields.selectSelectOption(
+			fieldName = "Select from List",
+			selectOption = "Option 2");
+
+		Click(
+			key_fieldName = "Select from List",
+			locator1 = "FormFields#SELECT_FIELD");
 
 		for (var option : list "Option 1,Option 2") {
-			FormFields.viewSelectFromListOption(optionValue = "${option}");
+			FormFields.viewSelectFromListOption(optionValue = ${option});
 		}
 	}
 
 	@description = "Verify that a Placeholder Text persists after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveThePlaceholderText {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1580,7 +1601,7 @@ definition {
 
 		Form.closeSidebar();
 
-		Form.addTextField(fieldPositionNumber = "1");
+		Form.addTextField(fieldPositionNumber = 1);
 
 		FormFields.viewFieldPlaceholderText(
 			fieldName = "Text",
@@ -1620,7 +1641,7 @@ definition {
 	}
 
 	@description = "Verify that a Predefined Value persists after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveThePredefinedValue {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1636,7 +1657,7 @@ definition {
 
 		Form.closeSidebar();
 
-		Form.addTextField(fieldPositionNumber = "1");
+		Form.addTextField(fieldPositionNumber = 1);
 
 		FormFields.viewFieldPredefinedValue(
 			fieldName = "Text",
@@ -1676,7 +1697,7 @@ definition {
 	}
 
 	@description = "Verify that a Repeatable Property persists after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveTheRepeatableProperty {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1689,13 +1710,13 @@ definition {
 		Form.editName(formName = "Element Set 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		Form.closeSidebar();
 
-		Form.addTextField(fieldPositionNumber = "1");
+		Form.addTextField(fieldPositionNumber = 1);
 
 		Form.gotoAdvancedTab();
 
@@ -1703,7 +1724,7 @@ definition {
 
 		FormFields.viewFieldRepeatableButton(
 			fieldName = "Text",
-			key_repeatableFieldsNumber = "1");
+			key_repeatableFieldsNumber = 1);
 
 		Form.saveElementSet();
 
@@ -1713,7 +1734,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormFields.viewLabel(
 			fieldLabel = "Text",
@@ -1725,7 +1746,7 @@ definition {
 
 		FormFields.viewFieldRepeatableButton(
 			fieldName = "Text",
-			key_repeatableFieldsNumber = "1");
+			key_repeatableFieldsNumber = 1);
 
 		Form.save();
 
@@ -1735,19 +1756,19 @@ definition {
 
 		FormFields.addRepeatableField(
 			fieldName = "Text",
-			repeatableFieldNumber = "1");
+			repeatableFieldNumber = 1);
 
 		FormFields.viewPublishedFormFieldByIndex(
 			fieldLabel = "Text",
-			index = "1");
+			index = 1);
 
 		FormFields.viewPublishedFormFieldByIndex(
 			fieldLabel = "Text",
-			index = "2");
+			index = 2);
 	}
 
 	@description = "Verify that a Required Field Property persists after being added to a Form via Fieldset"
-	@priority = "5"
+	@priority = 5
 	test PreserveTheRequiredFieldProperty {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1760,13 +1781,13 @@ definition {
 		Form.editName(formName = "Element Set 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Numeric");
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Text");
 
 		FormFields.enableSwitch(fieldName = "Required Field");
@@ -1781,7 +1802,7 @@ definition {
 
 		Form.gotoAddElementSet(
 			elementSetTitle = "Element Set 1",
-			fieldPositionNumber = "0");
+			fieldPositionNumber = 0);
 
 		FormViewBuilder.validateFieldLabel(fieldLabel = "Numeric");
 
@@ -1801,7 +1822,7 @@ definition {
 	}
 
 	@description = "Verify that a Show as Switch Property persists after being added to a Form via Fieldset"
-	@priority = "4"
+	@priority = 4
 	test PreserveTheShowAsSwitchProperty {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -1818,18 +1839,18 @@ definition {
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Multiple Selection");
 
 		FormFields.enableCheckbox(fieldName = "showAsSwitcher");
 
 		FormFields.editOptionsRow(
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.closeSidebar();
 
@@ -1877,7 +1898,7 @@ definition {
 	}
 
 	@description = "Verify that leaving a Fieldset without saving will prompt a notification warning the user that any unsaved changes wil be lost"
-	@priority = "5"
+	@priority = 5
 	test WillWarnUsersWhenExitingWithoutSaving {
 		property portal.acceptance = "true";
 
@@ -1891,12 +1912,12 @@ definition {
 
 		Form.editName(formName = "Element Set 1");
 
-		Form.addTextField(fieldPositionNumber = "0");
+		Form.addTextField(fieldPositionNumber = 0);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Numeric");
 
 		Navigator.gotoBack();

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.file.install.internal.configuration;
@@ -52,20 +43,15 @@ public class ConfigurationFileInstaller implements FileInstaller {
 		_configurationAdmin = configurationAdmin;
 		_encoding = encoding;
 
-		String configsDirPath = Util.getFilePath(
+		_configsDirPath = Util.getFilePath(
 			PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR);
-
-		if (configsDirPath.endsWith(StringPool.SLASH)) {
-			configsDirPath = configsDirPath.substring(
-				0, configsDirPath.length() - 1);
-		}
-
-		_configsDirPath = configsDirPath;
 	}
 
 	@Override
 	public boolean canTransformURL(File file) {
-		if (!Objects.equals(_configsDirPath, file.getParent())) {
+		if (!Objects.equals(
+				_configsDirPath, Util.getFilePath(file.getParent()))) {
+
 			return false;
 		}
 

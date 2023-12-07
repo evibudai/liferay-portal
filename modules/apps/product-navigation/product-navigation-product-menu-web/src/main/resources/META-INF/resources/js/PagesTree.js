@@ -1,25 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {TreeView as ClayTreeView} from '@clayui/core';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import {fetch, openModal, openToast} from 'frontend-js-web';
+import {fetch, navigate, openModal, openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 
+const ACTION_COPY_PAGE = 'copy-page';
+const ACTION_DELETE = 'delete';
 const ENTER_KEYCODE = 13;
 const ROOT_ITEM_ID = '0';
 const NOT_DROPPABLE_TYPES = ['url', 'link_to_layout'];
@@ -31,10 +24,16 @@ export default function PagesTree({
 	selectedLayoutId,
 	selectedLayoutPath,
 }) {
-	const {loadMoreItemsURL, maxPageSize, moveItemURL, namespace} = config;
+	const {
+		isLayoutSetPrototype,
+		loadMoreItemsURL,
+		maxPageSize,
+		moveItemURL,
+		namespace,
+	} = config;
 
 	const onLoadMore = useCallback(
-		(item, initialCursor = 1) => {
+		(item) => {
 			if (!item.hasChildren) {
 				return Promise.resolve({
 					cursor: null,
@@ -42,12 +41,16 @@ export default function PagesTree({
 				});
 			}
 
-			const cursor = item.children ? initialCursor : 0;
+			const cursor = item.children
+				? Math.floor(item.children.length / maxPageSize)
+				: 0;
 
 			return fetch(loadMoreItemsURL, {
 				body: Liferay.Util.objectToURLSearchParams({
 					[`${namespace}parentLayoutId`]: item.layoutId,
 					[`${namespace}privateLayout`]: isPrivateLayoutsTree,
+					[`${namespace}redirect`]:
+						window.location.pathname + window.location.search,
 					[`${namespace}selPlid`]: item.plid,
 					[`${namespace}start`]: cursor * maxPageSize,
 				}),
@@ -83,8 +86,22 @@ export default function PagesTree({
 
 	const [expandedKeys, setExpandedKeys] = useState(selectedLayoutPath);
 
+	useEffect(() => {
+		const activeElement = document.querySelector(
+			'.pages-tree .treeview-link.active'
+		);
+
+		if (activeElement) {
+			activeElement.scrollIntoView({
+				behavior: 'auto',
+				block: 'center',
+				inline: 'center',
+			});
+		}
+	}, []);
+
 	return (
-		<div className="pages-tree">
+		<div className="mx-3 pages-tree">
 			<ClayTreeView
 				defaultItems={items}
 				displayType="dark"
@@ -102,6 +119,7 @@ export default function PagesTree({
 					<TreeItem
 						config={config}
 						expand={expand}
+						isLayoutSetPrototype={isLayoutSetPrototype}
 						item={item}
 						load={load}
 						namespace={namespace}
@@ -120,9 +138,22 @@ PagesTree.propTypes = {
 	selectedLayoutId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
-function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
-	const stackAnchorRef = useRef(null);
-	const itemAnchorRef = useRef(null);
+function TreeItem({
+	config,
+	expand,
+	isSiteTemplate,
+	item,
+	load,
+	namespace,
+	selectedLayoutId,
+}) {
+	const warningMessage = isSiteTemplate
+		? Liferay.Language.get(
+				'there-is-a-page-with-the-same-friendly-url-in-a-site-using-this-site-template'
+		  )
+		: Liferay.Language.get(
+				'there-is-a-page-with-the-same-friendly-url-in-the-site-template'
+		  );
 
 	return (
 		<ClayTreeView.Item
@@ -149,7 +180,7 @@ function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
 				draggable={item.id !== ROOT_ITEM_ID}
 				onKeyDown={(event) => {
 					if (event.keyCode === ENTER_KEYCODE && item.regularURL) {
-						stackAnchorRef.current.click();
+						navigate(item.regularURL);
 					}
 				}}
 			>
@@ -161,7 +192,6 @@ function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
 							className="flex-grow-1 text-decoration-none text-truncate w-100"
 							data-tooltip-floating="true"
 							href={item.regularURL}
-							ref={stackAnchorRef}
 							tabIndex="-1"
 							target={item.target}
 							title={item.name}
@@ -178,7 +208,8 @@ function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
 				{(item) => (
 					<ClayTreeView.Item
 						actions={
-							!config.stagingEnabled && (
+							!config.stagingEnabled &&
+							item.actions && (
 								<ClayDropDownWithItems
 									items={normalizeActions(
 										item.actions,
@@ -203,7 +234,7 @@ function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
 								event.keyCode === ENTER_KEYCODE &&
 								item.regularURL
 							) {
-								itemAnchorRef.current.click();
+								navigate(item.regularURL);
 							}
 						}}
 					>
@@ -212,15 +243,32 @@ function TreeItem({config, expand, item, load, namespace, selectedLayoutId}) {
 						<div className="align-items-center d-flex pl-2">
 							{item.regularURL ? (
 								<a
-									className="flex-grow-1 text-decoration-none text-truncate w-100"
-									data-tooltip-floating="true"
+									aria-label={
+										Liferay.FeatureFlags['LPS-174417'] &&
+										item.hasDuplicatedFriendlyURL
+											? `${item.name}. ${warningMessage}`
+											: item.name
+									}
+									className="flex-grow-1 text-decoration-none text-truncate-inline"
 									href={item.regularURL}
-									ref={itemAnchorRef}
 									tabIndex="-1"
 									target={item.target}
-									title={item.name}
 								>
-									{item.name}
+									<span
+										className="text-truncate"
+										data-title={item.name}
+									>
+										{item.name}
+									</span>
+
+									{Liferay.FeatureFlags['LPS-174417'] &&
+									item.hasDuplicatedFriendlyURL ? (
+										<ClayIcon
+											className="align-self-center flex-shrink-0 icon-warning lfr-portal-tooltip"
+											data-title={warningMessage}
+											symbol="warning-full"
+										/>
+									) : null}
 								</a>
 							) : (
 								<span>{item.name}</span>
@@ -266,11 +314,68 @@ function normalizeActions(actions, namespace) {
 				nextItem.onClick = (event) => {
 					event.preventDefault();
 
-					openModal({
+					let modalData = {
 						id: `${namespace}pagesTreeModal`,
 						title: item.data.modalTitle,
 						url: item.data.url,
-					});
+					};
+
+					if (item.id === ACTION_DELETE) {
+						delete modalData.url;
+
+						modalData = {
+							...modalData,
+							bodyHTML: item.data.message,
+							buttons: [
+								{
+									autoFocus: true,
+									displayType: 'secondary',
+									label: Liferay.Language.get('cancel'),
+									type: 'cancel',
+								},
+								{
+									displayType: 'danger',
+									label: Liferay.Language.get('delete'),
+									onClick: ({processClose}) => {
+										processClose();
+
+										fetch(item.data.url, {
+											method: 'post',
+										})
+											.then((response) => {
+												if (response.redirected) {
+													navigate(response.url);
+												}
+
+												openToast({
+													message: Liferay.Language.get(
+														'your-request-processed-successfully'
+													),
+													toastProps: {
+														autoClose: 5000,
+													},
+													type: 'success',
+												});
+											})
+											.catch(() => openErrorToast());
+									},
+								},
+							],
+							status: 'danger',
+						};
+					}
+					else if (item.id === ACTION_COPY_PAGE) {
+						modalData = {
+							...modalData,
+							containerProps: {
+								className: 'cadmin copy-page-modal',
+							},
+							id: 'addLayoutDialog',
+							size: 'md',
+						};
+					}
+
+					openModal(modalData);
 				};
 			}
 

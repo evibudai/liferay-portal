@@ -1,15 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {render} from '@testing-library/react';
+import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import {AppContext} from '../../../../src/main/resources/META-INF/resources/js/components/AppContext.es';
@@ -18,7 +12,16 @@ import VelocityChart from '../../../../src/main/resources/META-INF/resources/js/
 import '@testing-library/jest-dom/extend-expect';
 
 describe('The velocity chart should', () => {
+	const {ResizeObserver} = window;
+
 	beforeAll(() => {
+		delete window.ResizeObserver;
+		window.ResizeObserver = jest.fn().mockImplementation(() => ({
+			disconnect: jest.fn(),
+			observe: jest.fn(),
+			unobserve: jest.fn(),
+		}));
+
 		jest.spyOn(
 			HTMLElement.prototype,
 			'clientHeight',
@@ -27,6 +30,12 @@ describe('The velocity chart should', () => {
 		jest.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(
 			100
 		);
+	});
+
+	afterAll(() => {
+		cleanup();
+		window.ResizeObserver = ResizeObserver;
+		jest.restoreAllMocks();
 	});
 
 	it('Be rendered in document', () => {

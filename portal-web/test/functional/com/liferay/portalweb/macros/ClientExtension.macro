@@ -1,27 +1,29 @@
 definition {
 
-	macro addPortletToWidgetPage {
+	@summary = "Default summary"
+	macro addPortletToWidgetPage(widgetPageName = null, portletName = null) {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
-			layoutName = "${widgetPageName}");
+			layoutName = ${widgetPageName});
 
-		Navigator.gotoPage(pageName = "${widgetPageName}");
+		Navigator.gotoPage(pageName = ${widgetPageName});
 
 		Click(locator1 = "ControlMenu#ADD");
 
 		Type(
 			locator1 = "NavBar#APPLICATION_SEARCH_FIELD",
-			value1 = "${portletName}");
+			value1 = ${portletName});
 
-		Portlet._clickAddPortlet(portletName = "${portletName}");
+		Portlet._clickAddPortlet(portletName = ${portletName});
 
 		WaitForElementPresent(locator1 = "Message#SUCCESS");
 	}
 
-	macro checkConfigFileCreatedProperly {
+	@summary = "Default summary"
+	macro checkConfigFileCreatedProperly() {
 		var configFileIsCreated = ClientExtension.configFileCreated();
 
-		if ("${configFileIsCreated}" == "true") {
+		if (${configFileIsCreated} == "true") {
 			echo("Config file created successfully.");
 		}
 		else {
@@ -29,32 +31,44 @@ definition {
 		}
 	}
 
-	macro configFileCreated {
+	@summary = "Default summary"
+	macro configFileCreated(staticExtensionType = null) {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
 		var booleanValue = FileUtil.exists("${liferayHome}/osgi/configs/com.liferay.client.extension.type.configuration.CETConfiguration~${staticExtensionType}.config");
 
-		return "${booleanValue}";
+		return ${booleanValue};
 	}
 
-	macro createGlobalVariableClientExtensionType {
-		static var staticExtensionType = "${type}";
+	@summary = "Default summary"
+	macro createGlobalVariableClientExtensionType(type = null) {
+		static var staticExtensionType = ${type};
 
-		return "${staticExtensionType}";
+		return ${staticExtensionType};
 	}
 
-	macro tearDownConfig {
-		Variables.assertDefined(parameterList = "${staticExtensionType}");
+	@summary = "Navigate to Client Extensions Admin with url navigation"
+	macro openClientExtensionsAdmin(baseURL = null) {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = ${baseURL},
+			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet");
 
-		RemoteApps.goToRemoteAppsPortlet();
+		WaitForVisible(locator1 = "Button#PLUS");
+	}
 
-		while (IsElementNotPresent(locator1 = "RemoteApps#EMPTY_REMOTE_TABLE_MESSAGE")) {
+	@summary = "Default summary"
+	macro tearDownConfig(staticExtensionType = null) {
+		Variables.assertDefined(parameterList = ${staticExtensionType});
+
+		ClientExtensionGeneral.goToRemoteAppsPortlet();
+
+		while (IsElementNotPresent(locator1 = "ClientExtension#EMPTY_REMOTE_TABLE_MESSAGE")) {
 			FileInstall.deleteConfigFile(configFile = "com.liferay.client.extension.type.configuration.CETConfiguration~${staticExtensionType}.config");
 
 			Refresh();
 		}
 
-		RemoteApps.viewEmptyRemoteTable();
+		ClientExtensionGeneral.viewEmptyRemoteTable();
 	}
 
 }

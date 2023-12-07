@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.rankings.web.internal.index;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -22,8 +14,6 @@ import com.liferay.portal.search.document.Document;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -39,6 +29,8 @@ public class DocumentToRankingTranslatorImpl
 		return builder(
 		).aliases(
 			_getAliases(document)
+		).groupExternalReferenceCode(
+			document.getString(RankingFields.GROUP_EXTERNAL_REFERENCE_CODE)
 		).hiddenDocumentIds(
 			document.getStrings(RankingFields.BLOCKS)
 		).inactive(
@@ -53,6 +45,9 @@ public class DocumentToRankingTranslatorImpl
 			_getQueryString(document)
 		).rankingDocumentId(
 			rankingDocumentId
+		).sxpBlueprintExternalReferenceCode(
+			document.getString(
+				RankingFields.SXP_BLUEPRINT_EXTERNAL_REFERENCE_CODE)
 		).build();
 	}
 
@@ -92,13 +87,8 @@ public class DocumentToRankingTranslatorImpl
 			return Collections.emptyList();
 		}
 
-		List<Map<String, String>> maps = (List<Map<String, String>>)values;
-
-		Stream<Map<String, String>> stream = maps.stream();
-
-		Stream<Ranking.Pin> pinStream = stream.map(this::_toPin);
-
-		return pinStream.collect(Collectors.toList());
+		return TransformUtil.transform(
+			(List<Map<String, String>>)values, this::_toPin);
 	}
 
 	private String _getQueryString(Document document) {

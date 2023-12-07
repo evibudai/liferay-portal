@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.info.internal.item.provider;
@@ -37,6 +28,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SortedArrayList;
 
@@ -100,6 +92,9 @@ public class AssetEntryInfoItemFieldSetProviderImpl
 						assetVocabulary.getName()
 					).labelInfoLocalizedValue(
 						InfoLocalizedValue.<String>builder(
+						).defaultLocale(
+							LocaleUtil.fromLanguageId(
+								assetVocabulary.getDefaultLanguageId())
 						).values(
 							assetVocabulary.getTitleMap()
 						).build()
@@ -193,6 +188,9 @@ public class AssetEntryInfoItemFieldSetProviderImpl
 						assetVocabulary.getName()
 					).labelInfoLocalizedValue(
 						InfoLocalizedValue.<String>builder(
+						).defaultLocale(
+							LocaleUtil.fromLanguageId(
+								assetVocabulary.getDefaultLanguageId())
 						).values(
 							assetVocabulary.getTitleMap()
 						).build()
@@ -259,24 +257,11 @@ public class AssetEntryInfoItemFieldSetProviderImpl
 	private List<AssetVocabulary> _getNoninternalAssetVocabularies(
 		String itemClassName, long itemClassTypeId, long scopeGroupId) {
 
-		try {
-			if (itemClassTypeId > 0) {
-				List<AssetVocabulary> groupsAssetVocabularies =
-					_assetVocabularyLocalService.getGroupsVocabularies(
-						_portal.getCurrentAndAncestorSiteGroupIds(scopeGroupId),
-						itemClassName, itemClassTypeId);
-
-				return ListUtil.filter(
-					groupsAssetVocabularies,
-					assetVocabulary ->
-						!(assetVocabulary.getVisibilityType() ==
-							AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL));
-			}
-
+		if (itemClassTypeId > 0) {
 			List<AssetVocabulary> groupsAssetVocabularies =
 				_assetVocabularyLocalService.getGroupsVocabularies(
 					_portal.getCurrentAndAncestorSiteGroupIds(scopeGroupId),
-					itemClassName);
+					itemClassName, itemClassTypeId);
 
 			return ListUtil.filter(
 				groupsAssetVocabularies,
@@ -284,9 +269,17 @@ public class AssetEntryInfoItemFieldSetProviderImpl
 					!(assetVocabulary.getVisibilityType() ==
 						AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL));
 		}
-		catch (PortalException portalException) {
-			throw new RuntimeException(portalException);
-		}
+
+		List<AssetVocabulary> groupsAssetVocabularies =
+			_assetVocabularyLocalService.getGroupsVocabularies(
+				_portal.getCurrentAndAncestorSiteGroupIds(scopeGroupId),
+				itemClassName);
+
+		return ListUtil.filter(
+			groupsAssetVocabularies,
+			assetVocabulary ->
+				!(assetVocabulary.getVisibilityType() ==
+					AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL));
 	}
 
 	private List<String> _getTags(List<AssetTag> assetTags) {

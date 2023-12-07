@@ -1,16 +1,7 @@
 /* eslint-disable no-console */
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import Avatar from '../../components/Avatar';
@@ -19,26 +10,37 @@ import ListView from '../../components/ListView';
 import TaskbarProgress from '../../components/ProgressBar/TaskbarProgress';
 import StatusBadge from '../../components/StatusBadge';
 import {StatusBadgeType} from '../../components/StatusBadge/StatusBadge';
+import SearchBuilder from '../../core/SearchBuilder';
 import {useHeader} from '../../hooks';
 import i18n from '../../i18n';
-import {PickList, TestrayTask, testrayTaskImpl} from '../../services/rest';
+import {
+	PickList,
+	TestrayTask,
+	UserAccount,
+	testrayTaskImpl,
+} from '../../services/rest';
 import {StatusesProgressScore, chartClassNames} from '../../util/constants';
 import {getTimeFromNow} from '../../util/date';
 import {getPercentLabel} from '../../util/graph.util';
-import {routines} from '../../util/mock';
+import {TaskStatuses} from '../../util/statuses';
 import TestflowModal from './TestflowModal';
 import useTestflowActions from './useTestflowActions';
 
 const TestFlow = () => {
 	const {actions, modal} = useTestflowActions();
 
-	useHeader({useIcon: 'merge'});
+	const searchBuilder = new SearchBuilder({useURIEncode: false});
+
+	const taskFilter = searchBuilder.ne('dueStatus', TaskStatuses.OPEN).build();
+
+	useHeader({icon: 'merge'});
 
 	return (
 		<Container>
 			<ListView
 				managementToolbarProps={{
 					addButton: () => modal.open(),
+					filterSchema: 'testflow',
 					title: i18n.translate('tasks'),
 				}}
 				resource={testrayTaskImpl.resource}
@@ -124,7 +126,7 @@ const TestFlow = () => {
 								_,
 								{
 									subtaskScoreCompleted,
-									subtaskScoreIncomplete,
+									subtaskScoreSelfIncomplete,
 								}: TestrayTask
 							) => (
 								<TaskbarProgress
@@ -136,7 +138,7 @@ const TestFlow = () => {
 										],
 										[
 											StatusesProgressScore.INCOMPLETE,
-											Number(subtaskScoreIncomplete),
+											Number(subtaskScoreSelfIncomplete),
 										],
 									]}
 									taskbarClassNames={chartClassNames}
@@ -146,22 +148,30 @@ const TestFlow = () => {
 							value: i18n.translate('progress'),
 						},
 						{
-							key: 'assigned',
-							render: () => (
+							key: 'users',
+							render: (users: UserAccount[]) => (
 								<Avatar.Group
-									assignedUsers={routines[0].assigned}
-									groupSize={3}
+									assignedUsers={users.map(
+										({image, name}) => ({
+											name,
+											url: image,
+										})
+									)}
+									groupSize={5}
 								/>
 							),
-							value: i18n.translate('assigned'),
+							value: i18n.translate('assigned-users'),
 						},
 					],
-					navigateTo: (item) => `/testflow/${item.id}`,
+					navigateTo: (task) => `/testflow/${task.id}`,
 					rowWrap: true,
 				}}
 				transformData={(response) =>
 					testrayTaskImpl.transformDataFromList(response)
 				}
+				variables={{
+					filter: taskFilter,
+				}}
 			/>
 
 			<TestflowModal modal={modal} />

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.CatalogResource;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.CatalogSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -453,11 +443,20 @@ public abstract class BaseCatalogResourceTestCase {
 
 		assertContains(catalog1, (List<Catalog>)page.getItems());
 		assertContains(catalog2, (List<Catalog>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetCatalogsPage_getExpectedActions());
 
 		catalogResource.deleteCatalog(catalog1.getId());
 
 		catalogResource.deleteCatalog(catalog2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetCatalogsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -486,33 +485,31 @@ public abstract class BaseCatalogResourceTestCase {
 
 	@Test
 	public void testGetCatalogsPageWithFilterDoubleEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetCatalogsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
-
-		Catalog catalog1 = testGetCatalogsPage_addCatalog(randomCatalog());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Catalog catalog2 = testGetCatalogsPage_addCatalog(randomCatalog());
-
-		for (EntityField entityField : entityFields) {
-			Page<Catalog> page = catalogResource.getCatalogsPage(
-				null, getFilterString(entityField, "eq", catalog1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(catalog1),
-				(List<Catalog>)page.getItems());
-		}
+	@Test
+	public void testGetCatalogsPageWithFilterStringContains() throws Exception {
+		testGetCatalogsPageWithFilter("contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetCatalogsPageWithFilterStringEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetCatalogsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetCatalogsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetCatalogsPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetCatalogsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -525,7 +522,7 @@ public abstract class BaseCatalogResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<Catalog> page = catalogResource.getCatalogsPage(
-				null, getFilterString(entityField, "eq", catalog1),
+				null, getFilterString(entityField, operator, catalog1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -536,10 +533,10 @@ public abstract class BaseCatalogResourceTestCase {
 
 	@Test
 	public void testGetCatalogsPageWithPagination() throws Exception {
-		Page<Catalog> totalPage = catalogResource.getCatalogsPage(
+		Page<Catalog> catalogPage = catalogResource.getCatalogsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(catalogPage.getTotalCount());
 
 		Catalog catalog1 = testGetCatalogsPage_addCatalog(randomCatalog());
 
@@ -565,7 +562,7 @@ public abstract class BaseCatalogResourceTestCase {
 		Assert.assertEquals(catalogs2.toString(), 1, catalogs2.size());
 
 		Page<Catalog> page3 = catalogResource.getCatalogsPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 		assertContains(catalog1, (List<Catalog>)page3.getItems());
 		assertContains(catalog2, (List<Catalog>)page3.getItems());
@@ -677,22 +674,23 @@ public abstract class BaseCatalogResourceTestCase {
 
 		catalog2 = testGetCatalogsPage_addCatalog(catalog2);
 
+		Page<Catalog> page = catalogResource.getCatalogsPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<Catalog> ascPage = catalogResource.getCatalogsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(catalog1, catalog2),
-				(List<Catalog>)ascPage.getItems());
+			assertContains(catalog1, (List<Catalog>)ascPage.getItems());
+			assertContains(catalog2, (List<Catalog>)ascPage.getItems());
 
 			Page<Catalog> descPage = catalogResource.getCatalogsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(catalog2, catalog1),
-				(List<Catalog>)descPage.getItems());
+			assertContains(catalog2, (List<Catalog>)descPage.getItems());
+			assertContains(catalog1, (List<Catalog>)descPage.getItems());
 		}
 	}
 
@@ -772,10 +770,20 @@ public abstract class BaseCatalogResourceTestCase {
 
 		Catalog getCatalog =
 			catalogResource.getProductByExternalReferenceCodeCatalog(
-				postCatalog.getExternalReferenceCode(), Pagination.of(1, 2));
+				testGetProductByExternalReferenceCodeCatalog_getExternalReferenceCode(
+					postCatalog),
+				Pagination.of(1, 2));
 
 		assertEquals(postCatalog, getCatalog);
 		assertValid(getCatalog);
+	}
+
+	protected String
+			testGetProductByExternalReferenceCodeCatalog_getExternalReferenceCode(
+				Catalog catalog)
+		throws Exception {
+
+		return catalog.getExternalReferenceCode();
 	}
 
 	protected Catalog testGetProductByExternalReferenceCodeCatalog_addCatalog()
@@ -805,14 +813,21 @@ public abstract class BaseCatalogResourceTestCase {
 										put(
 											"externalReferenceCode",
 											"\"" +
-												catalog.
-													getExternalReferenceCode() +
-														"\"");
+												testGraphQLGetProductByExternalReferenceCodeCatalog_getExternalReferenceCode(
+													catalog) + "\"");
 									}
 								},
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/productByExternalReferenceCodeCatalog"))));
+	}
+
+	protected String
+			testGraphQLGetProductByExternalReferenceCodeCatalog_getExternalReferenceCode(
+				Catalog catalog)
+		throws Exception {
+
+		return catalog.getExternalReferenceCode();
 	}
 
 	@Test
@@ -852,10 +867,16 @@ public abstract class BaseCatalogResourceTestCase {
 		Catalog postCatalog = testGetProductIdCatalog_addCatalog();
 
 		Catalog getCatalog = catalogResource.getProductIdCatalog(
-			postCatalog.getId(), Pagination.of(1, 2));
+			testGetProductIdCatalog_getId(postCatalog), Pagination.of(1, 2));
 
 		assertEquals(postCatalog, getCatalog);
 		assertValid(getCatalog);
+	}
+
+	protected Long testGetProductIdCatalog_getId(Catalog catalog)
+		throws Exception {
+
+		return catalog.getId();
 	}
 
 	protected Catalog testGetProductIdCatalog_addCatalog() throws Exception {
@@ -877,11 +898,20 @@ public abstract class BaseCatalogResourceTestCase {
 								"productIdCatalog",
 								new HashMap<String, Object>() {
 									{
-										put("id", catalog.getId());
+										put(
+											"id",
+											testGraphQLGetProductIdCatalog_getId(
+												catalog));
 									}
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productIdCatalog"))));
+	}
+
+	protected Long testGraphQLGetProductIdCatalog_getId(Catalog catalog)
+		throws Exception {
+
+		return catalog.getId();
 	}
 
 	@Test
@@ -990,6 +1020,14 @@ public abstract class BaseCatalogResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("accountId", additionalAssertFieldName)) {
+				if (catalog.getAccountId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("actions", additionalAssertFieldName)) {
 				if (catalog.getActions() == null) {
 					valid = false;
@@ -1051,6 +1089,12 @@ public abstract class BaseCatalogResourceTestCase {
 	}
 
 	protected void assertValid(Page<Catalog> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Catalog> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Catalog> catalogs = page.getItems();
@@ -1065,6 +1109,25 @@ public abstract class BaseCatalogResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1132,6 +1195,16 @@ public abstract class BaseCatalogResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
+
+			if (Objects.equals("accountId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						catalog1.getAccountId(), catalog2.getAccountId())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
 				if (!equals(
@@ -1246,14 +1319,16 @@ public abstract class BaseCatalogResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1270,6 +1345,10 @@ public abstract class BaseCatalogResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1279,18 +1358,18 @@ public abstract class BaseCatalogResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1306,31 +1385,150 @@ public abstract class BaseCatalogResourceTestCase {
 		sb.append(operator);
 		sb.append(" ");
 
+		if (entityFieldName.equals("accountId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("actions")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("currencyCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(catalog.getCurrencyCode()));
-			sb.append("'");
+			Object object = catalog.getCurrencyCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("defaultLanguageId")) {
-			sb.append("'");
-			sb.append(String.valueOf(catalog.getDefaultLanguageId()));
-			sb.append("'");
+			Object object = catalog.getDefaultLanguageId();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(catalog.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = catalog.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1341,9 +1539,47 @@ public abstract class BaseCatalogResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(catalog.getName()));
-			sb.append("'");
+			Object object = catalog.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1397,6 +1633,7 @@ public abstract class BaseCatalogResourceTestCase {
 	protected Catalog randomCatalog() throws Exception {
 		return new Catalog() {
 			{
+				accountId = RandomTestUtil.randomLong();
 				currencyCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				defaultLanguageId = StringUtil.toLowerCase(

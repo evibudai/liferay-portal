@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -121,17 +112,24 @@ public class GitHubRemoteGitRepositoryTest extends GitRepositoryTest {
 	public void testLabelEquals() throws Exception {
 		JSONObject jsonObject = new JSONObject();
 
-		jsonObject.put("color", "c7e8cb");
-		jsonObject.put("default", false);
-		jsonObject.put("description", "This is a description");
-		jsonObject.put("id", 884437936);
-		jsonObject.put("name", "ci:test - success");
-		jsonObject.put("node_id", "MDU6TGFiZWw4ODQ0Mzc5MzY=");
 		jsonObject.put(
+			"color", "c7e8cb"
+		).put(
+			"default", false
+		).put(
+			"description", "This is a description"
+		).put(
+			"id", 884437936
+		).put(
+			"name", "ci:test - success"
+		).put(
+			"node_id", "MDU6TGFiZWw4ODQ0Mzc5MzY="
+		).put(
 			"url",
 			JenkinsResultsParserUtil.combine(
 				"https://api.github.com/repos/liferay/liferay-portal/labels/",
-				"ci:test%20-%20success"));
+				"ci:test%20-%20success")
+		);
 
 		GitHubRemoteGitRepository.Label expectedLabel =
 			new GitHubRemoteGitRepository.Label(

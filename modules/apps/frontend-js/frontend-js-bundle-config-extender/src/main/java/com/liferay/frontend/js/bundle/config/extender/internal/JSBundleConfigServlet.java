@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.js.bundle.config.extender.internal;
@@ -20,12 +11,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-
-import java.net.URL;
 
 import java.util.Collection;
 import java.util.Map;
@@ -55,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 		"osgi.http.whiteboard.servlet.pattern=/js_bundle_config",
 		"service.ranking:Integer=" + (Integer.MAX_VALUE - 1000)
 	},
-	service = {JSBundleConfigServlet.class, Servlet.class}
+	service = Servlet.class
 )
 public class JSBundleConfigServlet extends HttpServlet {
 
@@ -96,9 +85,7 @@ public class JSBundleConfigServlet extends HttpServlet {
 			printWriter.print("(function(){");
 
 			for (JSBundleConfigRegistry.JSConfig jsConfig : jsConfigs) {
-				URL url = jsConfig.getURL();
-
-				try (InputStream inputStream = url.openStream()) {
+				try {
 					printWriter.print("try{");
 
 					ServletContext servletContext =
@@ -111,7 +98,7 @@ public class JSBundleConfigServlet extends HttpServlet {
 
 					printWriter.print(
 						StringUtil.removeSubstring(
-							StringUtil.read(inputStream),
+							URLUtil.toString(jsConfig.getURL()),
 							"//# sourceMappingURL=config.js.map"));
 
 					printWriter.print("}catch(error){console.error(error);}");

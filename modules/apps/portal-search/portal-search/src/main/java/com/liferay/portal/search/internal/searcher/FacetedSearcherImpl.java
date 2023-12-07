@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.searcher;
@@ -20,7 +11,6 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
-import com.liferay.portal.kernel.search.HitsImpl;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerPostProcessor;
 import com.liferay.portal.kernel.search.IndexerRegistry;
@@ -30,12 +20,9 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcher;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.asset.SearchableAssetClassNamesProvider;
-import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.internal.expando.helper.ExpandoQueryContributorHelper;
 import com.liferay.portal.search.internal.indexer.helper.AddSearchKeywordsQueryContributorHelper;
 import com.liferay.portal.search.internal.indexer.helper.PostProcessSearchQueryContributorHelper;
@@ -132,16 +119,6 @@ public class FacetedSearcherImpl
 	@Override
 	protected Hits doSearch(SearchContext searchContext)
 		throws SearchException {
-
-		String keywords = StringUtil.trim(searchContext.getKeywords());
-
-		if (Validator.isBlank(keywords) &&
-			!GetterUtil.getBoolean(
-				searchContext.getAttribute(
-					SearchContextAttributes.ATTRIBUTE_KEY_EMPTY_SEARCH))) {
-
-			return new HitsImpl();
-		}
 
 		try {
 			BooleanFilter booleanFilter = new BooleanFilter();

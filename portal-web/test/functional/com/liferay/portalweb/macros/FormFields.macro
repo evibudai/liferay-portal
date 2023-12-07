@@ -1,8 +1,9 @@
 definition {
 
-	var rowNumber = "1";
+	var rowNumber = 1;
 
-	macro addParagraphLinkToAURL {
+	@summary = "Default summary"
+	macro addParagraphLinkToAURL(paragraphLink = null) {
 		Click(
 			key_titleName = "Link",
 			locator1 = "FormFields#TOOLBAR_ANY_ITEM_BUTTON");
@@ -14,38 +15,42 @@ definition {
 		Type(
 			fieldLabel = "URL",
 			locator1 = "FormFields#PARAGRAPH_LINK_TEXT_INPUT",
-			value1 = "${paragraphLink}");
+			value1 = ${paragraphLink});
 
 		Click(locator1 = "CKEditor#OK_BUTTON");
 	}
 
-	macro addRepeatableField {
+	@summary = "Default summary"
+	macro addRepeatableField(fieldName = null, repeatableFieldNumber = null) {
 		Click.javaScriptClick(
-			key_fieldName = "${fieldName}",
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_fieldName = ${fieldName},
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#FIELD_ADD_SPECIFIC");
 	}
 
-	macro addRichTextContent {
+	@summary = "Default summary"
+	macro addRichTextContent(fieldLabel = null, content = null) {
 		SelectFrame.selectFrameNoLoading(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#RICH_TEXT_CONTENT");
 
 		Type(
 			locator1 = "FormFields#PREDEFINED_VALUE_BODY",
-			value1 = "${content}");
+			value1 = ${content});
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro addSingleSelectionOption {
+	@summary = "Default summary"
+	macro addSingleSelectionOption(optionValue = null, optionName = null) {
 		Type(
-			key_rowNumber = "${optionValue}",
+			key_rowNumber = ${optionValue},
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
-			value1 = "${optionName}");
+			value1 = ${optionName});
 	}
 
-	macro addTableInBodyParagraph {
+	@summary = "Default summary"
+	macro addTableInBodyParagraph() {
 		Click.clickNoMouseOver(
 			key_titleName = "Table",
 			locator1 = "FormFields#TOOLBAR_ANY_ITEM_BUTTON");
@@ -53,47 +58,53 @@ definition {
 		Click(locator1 = "CKEditor#OK_BUTTON");
 	}
 
-	macro assertFieldsGroup {
+	@summary = "Default summary"
+	macro assertFieldsGroup(fieldGroupLabel = null, fieldFieldLabel = null) {
 		AssertVisible(
-			key_fieldFieldLabel = "${fieldFieldLabel}",
-			key_fieldsGroupLabel = "${fieldGroupLabel}",
+			key_fieldFieldLabel = ${fieldFieldLabel},
+			key_fieldsGroupLabel = ${fieldGroupLabel},
 			locator1 = "FormFields#FIELD_GROUP");
 	}
 
-	macro assertFieldsNotVisibleInFieldGroup {
-		for (var fieldFieldLabel : list "${fieldGroupLabelList}") {
+	@summary = "Default summary"
+	macro assertFieldsNotVisibleInFieldGroup(fieldGroupLabel = null, fieldGroupLabelList = null) {
+		for (var fieldFieldLabel : list ${fieldGroupLabelList}) {
 			AssertNotVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "${fieldGroupLabel}",
+				key_fieldFieldLabel = ${fieldFieldLabel},
+				key_fieldsGroupLabel = ${fieldGroupLabel},
 				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
 		}
 	}
 
-	macro assertFieldsVisibleInFieldGroup {
-		for (var fieldFieldLabel : list "${fieldGroupLabelList}") {
+	@summary = "Default summary"
+	macro assertFieldsVisibleInFieldGroup(fieldGroupLabel = null, fieldGroupLabelList = null) {
+		for (var fieldFieldLabel : list ${fieldGroupLabelList}) {
 			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "${fieldGroupLabel}",
+				key_fieldFieldLabel = ${fieldFieldLabel},
+				key_fieldsGroupLabel = ${fieldGroupLabel},
 				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
 		}
 	}
 
-	macro assertGridOptionChecked {
+	@summary = "Default summary"
+	macro assertGridOptionChecked(rowValue = null, columnValue = null) {
 		AssertElementPresent(
-			key_columnValue = "${columnValue}",
-			key_rowValue = "${rowValue}",
+			key_columnValue = ${columnValue},
+			key_rowValue = ${rowValue},
 			locator1 = "FormFields#GRID_OPTIONS_OPTION_CHECKED");
 	}
 
-	macro changeFieldType {
+	@summary = "Default summary"
+	macro changeFieldType(selectOption = null) {
 		while (IsElementNotPresent(locator1 = "FormFields#CHANGE_FIELD_TYPE_BUTTON_DROPDOWN")) {
 			Click(locator1 = "FormFields#CHANGE_FIELD_TYPE_BUTTON");
 		}
 
-		MenuItem.click(menuItem = "${selectOption}");
+		MenuItem.click(menuItem = ${selectOption});
 	}
 
-	macro clearUploadField {
+	@summary = "Default summary"
+	macro clearUploadField() {
 		Click(locator1 = "FormFields#UPLOAD_FIELD_CLEAR_BUTTON");
 
 		AssertElementPresent(
@@ -102,30 +113,34 @@ definition {
 			locator1 = "FormFields#UPLOAD_FIELD_BY_VALUE");
 	}
 
-	macro deleteGridOptionsRow {
+	@summary = "Default summary"
+	macro deleteGridOptionsRow(gridField = null, rowNumber = null) {
 		Click.javaScriptClick(
-			key_gridField = "${gridField}",
-			key_rowNumber = "${rowNumber}",
+			key_gridField = ${gridField},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#GRID_OPTIONS_OPTION_DELETE_ROW_BUTTON");
 	}
 
-	macro deleteOptionsRow {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro deleteOptionsRow(rowNumber = null) {
+		var key_rowNumber = ${rowNumber};
 
 		Click(locator1 = "FormFields#OPTIONS_DELETE_ROW_BUTTON");
 	}
 
-	macro deleteSpecificOptionFromMultipleSelection {
+	@summary = "Default summary"
+	macro deleteSpecificOptionFromMultipleSelection(key_valueOption = null) {
 		Click(
-			key_valueOption = "${key_valueOption}",
+			key_valueOption = ${key_valueOption},
 			locator1 = "FormFields#DELETE_OPTION_FROM_MULTIPLE_SELECTION");
 
 		AssertElementNotPresent(
-			key_valueOption = "${key_valueOption}",
+			key_valueOption = ${key_valueOption},
 			locator1 = "FormFields#DELETE_OPTION_FROM_MULTIPLE_SELECTION");
 	}
 
-	macro deleteTextWithBackspaceInBodyParagraph {
+	@summary = "Default summary"
+	macro deleteTextWithBackspaceInBodyParagraph() {
 		Click(
 			key_fieldName = "Paragraph",
 			locator1 = "FormFields#PARAGRAPH_BODY_TEXT_CONTENT");
@@ -139,23 +154,26 @@ definition {
 			value1 = "\BACK_SPACE");
 	}
 
-	macro disableCheckbox {
-		if (IsChecked(key_fieldName = "${fieldName}", locator1 = "FormFields#CHECKBOX")) {
+	@summary = "Default summary"
+	macro disableCheckbox(fieldName = null) {
+		if (IsChecked(key_fieldName = ${fieldName}, locator1 = "FormFields#CHECKBOX")) {
 			Click(
-				key_fieldName = "${fieldName}",
+				key_fieldName = ${fieldName},
 				locator1 = "FormFields#CHECKBOX_LABEL");
 		}
 
-		FormFields.viewCheckboxNotChecked(fieldName = "${fieldName}");
+		FormFields.viewCheckboxNotChecked(fieldName = ${fieldName});
 	}
 
-	macro disableSwitch {
+	@summary = "Default summary"
+	macro disableSwitch(fieldName = null) {
 		Uncheck.uncheckToggleSwitch(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#SWITCH");
 	}
 
-	macro duplicateField {
+	@summary = "Default summary"
+	macro duplicateField() {
 		while (IsElementNotPresent(locator1 = "Form#SIDEBAR_MENUITEM_DUPLICATE_FIELD")) {
 			Click(locator1 = "FormViewBuilder#FIELD_ELLIPSIS");
 		}
@@ -165,400 +183,442 @@ definition {
 			value1 = "Duplicate");
 	}
 
-	macro duplicateSelectListField {
+	@summary = "Default summary"
+	macro duplicateSelectListField() {
 		Click(locator1 = "FormFields#FIELD_ADD_DUPLICATE");
 	}
 
-	macro editBlankMultiTextFieldWithEnterKey {
+	@summary = "Default summary"
+	macro editBlankMultiTextFieldWithEnterKey(fieldName = null) {
 		KeyPress(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_MULTILINE_FIELD",
 			value1 = "\RETURN");
 	}
 
-	macro editBooleanPredefinedValue {
-		var key_predefinedValue = "${predefinedValue}";
+	@summary = "Default summary"
+	macro editBooleanPredefinedValue(predefinedValue = null) {
+		var key_predefinedValue = ${predefinedValue};
 
 		Click(locator1 = "FormFields#BOOLEAN_PREDEFINED_VALUE");
 
-		DropdownMenuItem.click(menuItem = "${key_predefinedValue}");
+		DropdownMenuItem.click(menuItem = ${key_predefinedValue});
 	}
 
-	macro editCaptchaTextVerification {
+	@summary = "Default summary"
+	macro editCaptchaTextVerification(fieldValue = null) {
 		Type(
 			locator1 = "FormFields#CAPTCHA_TEXT_VERIFICATION",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editColor {
+	@summary = "Default summary"
+	macro editColor(fieldLabel = null, colorSwatchItem = null) {
 		Click(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#COLOR_PICKER");
 
 		Click(
-			key_colorSwatchItem = "${colorSwatchItem}",
+			key_colorSwatchItem = ${colorSwatchItem},
 			locator1 = "FormFields#COLOR_SWATCH_ITEM");
 	}
 
-	macro editColorField {
+	@summary = "Default summary"
+	macro editColorField(fieldName = null, fieldLabel = null, colorValue = null, rowNumber = null) {
 		Type(
-			key_fieldName = "${fieldName}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#COLOR_FIELD_BY_ROW",
-			value1 = "${colorValue}");
+			value1 = ${colorValue});
 
 		FormFields.viewColorField(
-			colorValue = "${colorValue}",
-			fieldLabel = "${fieldLabel}",
-			fieldName = "${fieldName}",
-			rowNumber = "${rowNumber}");
+			colorValue = ${colorValue},
+			fieldLabel = ${fieldLabel},
+			fieldName = ${fieldName},
+			rowNumber = ${rowNumber});
 	}
 
-	macro editConfirmationFieldText {
+	@summary = "Default summary"
+	macro editConfirmationFieldText(fieldName = null, fieldValue = null) {
 		AssertElementPresent.assertVisible(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_CONFIRMATION_FIELD");
 
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_CONFIRMATION_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editDate {
+	@summary = "Default summary"
+	macro editDate(fieldName = null, fieldValue = null) {
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#DATE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editDateByIndex {
+	@summary = "Default summary"
+	macro editDateByIndex(index = null, key_value = null) {
 		Type(
 			key_fieldLabel = "Date",
-			key_index = "${index}",
+			key_index = ${index},
 			locator1 = "FormFields#PUBLISHED_FORM_FIELD_BY_INDEX",
-			value1 = "${key_value}");
+			value1 = ${key_value});
 	}
 
-	macro editDateCalendar {
+	@summary = "Default summary"
+	macro editDateCalendar(valueYear = null, fieldName = null, valueMonth = null, valueDay = null, fieldValue = null) {
 		Click(locator1 = "FormFields#DATE_CALENDAR");
 
-		Select(
-			key_valueName = "year",
-			locator1 = "FormFields#DATE_CALENDAR_FIELD",
-			value1 = "${valueYear}");
+		Click(locator1 = "FormFields#YEAR_CALENDAR_FIELD");
+
+		Click(
+			key_optionYear = ${valueYear},
+			locator1 = "FormFields#YEAR_CALENDAR_OPTION");
 
 		Select(
 			key_valueName = "month",
 			locator1 = "FormFields#DATE_CALENDAR_FIELD",
-			value1 = "${valueMonth}");
+			value1 = ${valueMonth});
 
 		Click(
-			key_valueDay = "${valueDay}",
+			key_valueDay = ${valueDay},
 			locator1 = "FormFields#DATE_CALENDAR_DAY");
 
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#DATE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editDatePredefinedValue {
+	@summary = "Default summary"
+	macro editDatePredefinedValue(fieldValue = null) {
 		Type(
 			locator1 = "FormViewBuilder#PREDEFINED_VALUE_DATE_AT_SIDEBAR",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editFieldName {
+	@summary = "Default summary"
+	macro editFieldName(fieldValue = null) {
 		Form.gotoAdvancedTab();
 
-		var key_fieldValue = "${fieldValue}";
+		var key_fieldValue = ${fieldValue};
 
 		Type.clickAtType(
 			locator1 = "FormFields#FIELD_NAME_EDIT",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 
 		Form.gotoBasicTab();
 	}
 
-	macro editFieldPredefined {
+	@summary = "Default summary"
+	macro editFieldPredefined(key_fieldReference = null) {
 		Form.gotoAdvancedTab();
 
 		Type(
 			locator1 = "FormViewBuilder#SIDEBAR_ADVANCED_PREDEFINED_TEXT",
-			value1 = "${key_fieldReference}");
+			value1 = ${key_fieldReference});
 	}
 
-	macro editFieldReference {
+	@summary = "Default summary"
+	macro editFieldReference(key_fieldReference = null) {
 		Form.gotoAdvancedTab();
 
 		Type(
 			locator1 = "Form#FIELD_REFERENCE",
-			value1 = "${key_fieldReference}");
+			value1 = ${key_fieldReference});
 	}
 
-	macro editFrameField {
+	@summary = "Default summary"
+	macro editFrameField(fielName = null, fieldLabel = null) {
 		SelectFrame.selectFrameNoLoading(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "Form#BODY_FIELD_FORM_IFRAME");
 
 		Type(
 			locator1 = "Form#BODY",
-			value1 = "${fielName}");
+			value1 = ${fielName});
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro editGridOptions {
-		var key_gridField = "${gridField}";
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro editGridOptions(optionValue = null, gridField = null, rowNumber = null) {
+		var key_gridField = ${gridField};
+		var key_rowNumber = ${rowNumber};
 
 		Type(
 			locator1 = "FormFields#GRID_OPTIONS_OPTION_VALUE_FIELD",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 
 		AssertElementNotPresent(locator1 = "FormFields#GRID_OPTIONS_OPTION_NAME_FIELD");
 
 		AssertElementPresent(locator1 = "FormFields#GRID_OPTIONS_OPTION_REFERENCE_FIELD");
 	}
 
-	macro editHelpText {
+	@summary = "Default summary"
+	macro editHelpText(fieldHelpText = null, fieldName = null) {
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "${fieldHelpText}");
+			value1 = ${fieldHelpText});
 	}
 
-	macro editHelpTextField {
+	@summary = "Default summary"
+	macro editHelpTextField(fieldHelpText = null) {
 		Type(
 			locator1 = "FormFields#SIDEBAR_BASIC_HELP_TEXT",
-			value1 = "${fieldHelpText}");
+			value1 = ${fieldHelpText});
 	}
 
-	macro editHelpTextFieldAtMultipleSelection {
+	@summary = "Default summary"
+	macro editHelpTextFieldAtMultipleSelection(fieldName = null, fieldValue = null) {
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#DATE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editNumericType {
+	@summary = "Default summary"
+	macro editNumericType(numericType = null) {
 		Click(
 			key_fieldName = "",
-			key_radioOption = "${numericType}",
+			key_radioOption = ${numericType},
 			locator1 = "FormFields#RADIO_OPTION_LABEL");
 	}
 
-	macro editOptionsRow {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro editOptionsRow(optionValue = null, rowNumber = null) {
+		var key_rowNumber = ${rowNumber};
 
 		WaitForElementPresent(
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 
 		Type(
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 
 		AssertElementPresent(locator1 = "FormFields#OPTIONS_OPTION_NAME_FIELD");
 	}
 
-	macro editOptionsRowNameField {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro editOptionsRowNameField(optionValue = null, rowNumber = null) {
+		var key_rowNumber = ${rowNumber};
 
 		WaitForElementPresent(
 			locator1 = "FormFields#OPTIONS_OPTION_NAME_FIELD_EDIT",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 
 		Type.clickAtType(
 			locator1 = "FormFields#OPTIONS_OPTION_NAME_FIELD_EDIT",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 	}
 
-	macro editOptionsRowValueOrFieldReference {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro editOptionsRowValueOrFieldReference(optionValue = null, fieldReference = null, rowNumber = null) {
+		var key_rowNumber = ${rowNumber};
 
 		WaitForElementPresent(
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 
 		Type(
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 
 		if (isSet(fieldReference)) {
 			Type(
 				locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD_REFERENCE",
-				value1 = "${fieldReference}");
+				value1 = ${fieldReference});
 		}
 
 		AssertElementPresent(locator1 = "FormFields#OPTIONS_OPTION_NAME_FIELD");
 	}
 
-	macro editParagraphBody {
+	@summary = "Default summary"
+	macro editParagraphBody(content = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type.clickAtType(
 			locator1 = "CKEditor#BODY",
-			value1 = "${content}");
+			value1 = ${content});
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro editPassword {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro editPassword(fieldName = null, fieldValue = null) {
+		var key_fieldName = ${fieldName};
 
 		Type(
 			locator1 = "FormFields#PASSWORD_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editPlaceholderField {
+	@summary = "Default summary"
+	macro editPlaceholderField(fieldValue = null) {
 		Type(
 			locator1 = "FormFields#SIDEBAR_BASIC_PLACEHOLDER",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editPredefinedValue {
+	@summary = "Default summary"
+	macro editPredefinedValue(key_predefinedValue = null) {
 		Form.gotoAdvancedTab();
 
 		Type(
 			locator1 = "FormViewBuilder#SIDEBAR_ADVANCED_PREDEFINED_TEXT",
-			value1 = "${key_predefinedValue}");
+			value1 = ${key_predefinedValue});
 	}
 
-	macro editPredefinedValueInput {
+	@summary = "Default summary"
+	macro editPredefinedValueInput(fieldValue = null) {
 		Form.gotoAdvancedTab();
 
 		Type(
 			locator1 = "FormFields#PREDEFINED_VALUE_INPUT",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editRepeatableImage {
-		var key_fieldName = "${fieldLabel}";
+	@summary = "Default summary"
+	macro editRepeatableImage(uploadFileName = null, fieldLabel = null, uploadRepeatedFileName = null) {
+		var key_fieldName = ${fieldLabel};
 
 		Click(locator1 = "FormFields#UPLOAD_ON_WIDGET");
 
 		ItemSelector.uploadFile(
 			navTab = "Documents and Media",
-			uploadFileName = "${uploadFileName}");
+			uploadFileName = ${uploadFileName});
 
 		Click(locator1 = "FormFields#UPLOAD_ON_DUPLICATE_FIELD");
 
 		ItemSelector.uploadFile(
 			navTab = "Documents and Media",
-			uploadFileName = "${uploadRepeatedFileName}");
+			uploadFileName = ${uploadRepeatedFileName});
 	}
 
-	macro editRepeatableSingleSelection {
-		var key_rowNumber = "${rowNumber}";
-		var key_optionValue = "${optionValue}";
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro editRepeatableSingleSelection(fieldName = null, optionValue = null, rowNumber = null) {
+		var key_rowNumber = ${rowNumber};
+		var key_optionValue = ${optionValue};
+		var key_fieldName = ${fieldName};
 
 		Click(
-			key_fieldName = "${fieldName}",
-			key_optionValue = "${optionValue}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_optionValue = ${optionValue},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#SELECT_SINGLE_SELECTION_ROW_OPTION");
 	}
 
-	macro editRepeatableTextMultiline {
+	@summary = "Default summary"
+	macro editRepeatableTextMultiline(fieldName = null, fieldValue = null, repeatableFieldNumber = null) {
 		Type(
-			key_fieldName = "${fieldName}",
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_fieldName = ${fieldName},
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#REPEATABLE_TEXT_MULTILINE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editRepeatingText {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro editRepeatingText(fieldName = null, fieldValue = null, fieldValueRepeat = null) {
+		var key_fieldName = ${fieldName};
 
 		Type(
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 
 		AssertElementPresent(locator1 = "FormFields#TEXT_FIELD_2");
 
 		Type(
 			locator1 = "FormFields#TEXT_FIELD_2",
-			value1 = "${fieldValueRepeat}");
+			value1 = ${fieldValueRepeat});
 	}
 
-	macro editRequireConfirmationField {
+	@summary = "Default summary"
+	macro editRequireConfirmationField(confirmationErrorMessage = null, confirmationLabel = null, direction = null) {
 		if (isSet(direction)) {
 			FormFields.selectSelectOption(
 				fieldName = "Direction",
-				selectOption = "${direction}");
+				selectOption = ${direction});
 		}
 
 		if (isSet(confirmationLabel)) {
 			FormFields.editText(
 				fieldName = "confirmationLabel",
-				fieldValue = "${confirmationLabel}");
+				fieldValue = ${confirmationLabel});
 		}
 
 		if (isSet(confirmationErrorMessage)) {
 			FormFields.editText(
 				fieldName = "confirmationErrorMessage",
-				fieldValue = "${confirmationErrorMessage}");
+				fieldValue = ${confirmationErrorMessage});
 		}
 	}
 
-	macro editRequiredErrorMessage {
+	@summary = "Default summary"
+	macro editRequiredErrorMessage(errorMessage = null) {
 		Type(
 			key_fieldName = "requiredErrorMessage",
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "${errorMessage}");
+			value1 = ${errorMessage});
 	}
 
-	macro editText {
+	@summary = "Default summary"
+	macro editText(fieldName = null, fieldValue = null) {
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editTextArea {
+	@summary = "Default summary"
+	macro editTextArea(fieldName = null, fieldValue = null) {
 		Type(
-			key_text = "${fieldName}",
+			key_text = ${fieldName},
 			locator1 = "TextArea#ANY",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editTextBodyToolBar {
+	@summary = "Default summary"
+	macro editTextBodyToolBar(content = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		Type.clickAtType(
 			locator1 = "CKEditor#BODY",
-			value1 = "${content}");
+			value1 = ${content});
 
 		SelectFrame();
 	}
 
-	macro editTextDescription {
+	@summary = "Default summary"
+	macro editTextDescription(fieldName = null, fieldValue = null) {
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD_DESCRIPTION",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editTextFieldWithEnterKey {
+	@summary = "Default summary"
+	macro editTextFieldWithEnterKey(fieldName = null) {
 		KeyPress(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD",
 			value1 = "\RETURN");
 	}
 
-	macro editTextMultiline {
+	@summary = "Default summary"
+	macro editTextMultiline(fieldName = null, fieldValue = null) {
 		Type(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_MULTILINE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editTextWithBackspace {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro editTextWithBackspace(fieldName = null) {
+		var key_fieldName = ${fieldName};
 
 		DoubleClick(locator1 = "FormFields#TEXT_FIELD");
 
@@ -567,131 +627,145 @@ definition {
 			value1 = "\BACK_SPACE");
 	}
 
-	macro editTextWithDataProvider {
+	@summary = "Default summary"
+	macro editTextWithDataProvider(fieldName = null, fieldValue = null) {
 		Type.sendKeys(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro editValidation {
-		ScrollWebElementIntoView(locator1 = "FormFields#VALIDATION_ARGUMENT_2");
+	@summary = "Default summary"
+	macro editValidation(validationErrorMessage = null, validationArgument = null, validationInput = null) {
+		ScrollWebElementIntoView(locator1 = "FormFields#VALIDATION_ARGUMENT");
 
-		Click(locator1 = "FormFields#VALIDATION_ARGUMENT_2");
-
-		MenuItem.click(menuItem = "${validationArgument}");
-
-		Type(
-			locator1 = "FormFields#VALIDATION_INPUT",
-			value1 = "${validationInput}");
-
-		Type(
-			locator1 = "FormFields#VALIDATION_ERROR_MESSAGE",
-			value1 = "${validationErrorMessage}");
-	}
-
-	macro editValidationTargetArgument {
 		Click(locator1 = "FormFields#VALIDATION_ARGUMENT");
 
-		AssertClick(
-			key_validationArgument = "${validationArgument}",
-			locator1 = "FormFields#VALIDATION_ARGUMENT_OPTION_TARGET_INPUT",
-			value1 = "${validationArgument}");
+		Click.javaScriptClick(
+			key_validationArgument = ${validationArgument},
+			locator1 = "FormFields#VALIDATION_ARGUMENT_OPTION_TARGET_INPUT");
 
 		if (isSet(validationInput)) {
 			Type(
 				locator1 = "FormFields#VALIDATION_INPUT",
-				value1 = "${validationInput}");
+				value1 = ${validationInput});
 		}
 
 		Type(
 			locator1 = "FormFields#VALIDATION_ERROR_MESSAGE",
-			value1 = "${validationErrorMessage}");
+			value1 = ${validationErrorMessage});
 	}
 
-	macro enableCheckbox {
-		if (IsNotChecked.isNotCheckedNotVisible(key_fieldName = "${fieldName}", locator1 = "FormFields#CHECKBOX")) {
+	@summary = "Default summary"
+	macro editValidationTargetArgument(validationErrorMessage = null, validationArgument = null, validationInput = null) {
+		Click(locator1 = "FormFields#VALIDATION_ARGUMENT");
+
+		Click.javaScriptClick(
+			key_validationArgument = ${validationArgument},
+			locator1 = "FormFields#VALIDATION_ARGUMENT_OPTION_TARGET_INPUT");
+
+		if (isSet(validationInput)) {
+			Type(
+				locator1 = "FormFields#VALIDATION_INPUT",
+				value1 = ${validationInput});
+		}
+
+		Type(
+			locator1 = "FormFields#VALIDATION_ERROR_MESSAGE",
+			value1 = ${validationErrorMessage});
+	}
+
+	@summary = "Default summary"
+	macro enableCheckbox(fieldName = null) {
+		if (IsNotChecked.isNotCheckedNotVisible(key_fieldName = ${fieldName}, locator1 = "FormFields#CHECKBOX")) {
 			Click(
-				key_fieldName = "${fieldName}",
+				key_fieldName = ${fieldName},
 				locator1 = "FormFields#CHECKBOX_LABEL");
 		}
 
-		FormFields.viewCheckboxChecked(fieldName = "${fieldName}");
+		FormFields.viewCheckboxChecked(fieldName = ${fieldName});
 	}
 
-	macro enableMultipleSelectionCheckbox {
+	@summary = "Default summary"
+	macro enableMultipleSelectionCheckbox(fieldName = null, optionValue = null, rowNumber = null) {
 		Click(
-			key_fieldName = "${fieldName}",
-			key_optionValue = "${optionValue}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_optionValue = ${optionValue},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#SELECT_SINGLE_SELECTION_ROW_OPTION");
 
 		Check.checkToggleSwitch(
-			key_fieldName = "${fieldName}",
-			key_optionValue = "${optionValue}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_optionValue = ${optionValue},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#SELECT_SINGLE_SELECTION_ROW_OPTION_INPUT");
 	}
 
-	macro enableSwitch {
+	@summary = "Default summary"
+	macro enableSwitch(fieldName = null) {
 		Check.checkToggleSwitch(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#SWITCH");
 	}
 
-	macro getFieldName {
+	@summary = "Default summary"
+	macro getFieldName() {
 		var fieldName = selenium.getElementValue("FormFields#FIELD_NAME_EDIT");
 
-		return "${fieldName}";
+		return ${fieldName};
 	}
 
-	macro gotoFormField {
+	@summary = "Default summary"
+	macro gotoFormField(formFieldName = null) {
 		Click(
-			key_formFieldName = "${formFieldName}",
+			key_formFieldName = ${formFieldName},
 			locator1 = "FormFields#GO_TO_FORM_FIELD");
 	}
 
-	macro moveFieldToPosition {
+	@summary = "Default summary"
+	macro moveFieldToPosition(fieldColumnNumber = null, fieldRowNumber = null, fieldLabel = null, formPageNumber = null) {
 		if (isSet(formPageNumber)) {
-			var key_formPageNumber = "${formPageNumber}";
+			var key_formPageNumber = ${formPageNumber};
 		}
 		else {
-			var key_formPageNumber = "0";
+			var key_formPageNumber = 0;
 		}
 
 		if (isSet(fieldColumnNumber)) {
-			var key_fieldColumnNumber = "${fieldColumnNumber}";
+			var key_fieldColumnNumber = ${fieldColumnNumber};
 		}
 		else {
-			var key_fieldColumnNumber = "0";
+			var key_fieldColumnNumber = 0;
 		}
 
 		if (isSet(fieldRowNumber)) {
-			var key_fieldRowNumber = "${fieldRowNumber}";
+			var key_fieldRowNumber = ${fieldRowNumber};
 		}
 		else {
-			var key_fieldRowNumber = "0";
+			var key_fieldRowNumber = 0;
 		}
 
 		DragAndDrop.javaScriptDragAndDropToObject(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#LABEL",
 			locator2 = "Form#ADD_FIELD_SPECIFIC_POSITION");
 	}
 
-	macro moveGridOptionsRow {
+	@summary = "Default summary"
+	macro moveGridOptionsRow(gridField = null, rowNumberEnd = null, rowNumberStart = null) {
 		DragAndDrop.javaScriptDragAndDropToObject(
-			key_gridField = "${gridField}",
-			key_rowNumber1 = "${rowNumberStart}",
-			key_rowNumber2 = "${rowNumberEnd}",
+			key_gridField = ${gridField},
+			key_rowNumber1 = ${rowNumberStart},
+			key_rowNumber2 = ${rowNumberEnd},
 			locator1 = "FormFields#GRID_OPTIONS_DRAG_ICON_1",
 			locator2 = "FormFields#GRID_OPTIONS_DRAG_ICON_2",
 			value1 = "");
 	}
 
-	macro moveOptionsRow {
-		var key_rowNumber1 = "${rowNumberStart}";
-		var key_rowNumber2 = "${rowNumberEnd}";
+	@summary = "Default summary"
+	macro moveOptionsRow(rowNumberEnd = null, rowNumberStart = null) {
+		var key_rowNumber1 = ${rowNumberStart};
+		var key_rowNumber2 = ${rowNumberEnd};
 
 		DragAndDrop.javaScriptDragAndDropToObject(
 			locator1 = "FormFields#OPTIONS_DRAG_ICON_1",
@@ -699,118 +773,133 @@ definition {
 			value1 = "");
 	}
 
-	macro removeSelectOption {
-		var key_fieldName = "${fieldName}";
-		var key_selectOption = "${selectOption}";
+	@summary = "Default summary"
+	macro removeSelectOption(fieldName = null, selectOption = null) {
+		var key_fieldName = ${fieldName};
+		var key_selectOption = ${selectOption};
 
 		MouseOver(locator1 = "FormFields#SELECT_FIELD_MULTIPLE_OPTION");
 
 		Click(locator1 = "FormFields#SELECT_FIELD_MULTIPLE_OPTION_REMOVE");
 
-		AssertElementNotPresent(
+		Click(
+			key_fieldName = ${fieldName},
+			locator1 = "FormFields#SELECT_FIELD");
+
+		IsElementNotPresent.isNotVisible(
 			locator1 = "FormFields#SELECT_FIELD_MULTIPLE_OPTION",
-			value1 = "${selectOption}");
+			value1 = ${selectOption});
 	}
 
-	macro removeSelectOptionViaDropdown {
+	@summary = "Default summary"
+	macro removeSelectOptionViaDropdown(fieldName = null, selectOption = null) {
 		while (IsElementNotPresent(locator1 = "FormFields#SELECTOR")) {
 			Click(
-				key_fieldName = "${fieldName}",
+				key_fieldName = ${fieldName},
 				locator1 = "FormFields#SELECT_FIELD");
 		}
 
-		FormFields.disableCheckbox(fieldName = "${selectOption}");
+		FormFields.disableCheckbox(fieldName = ${selectOption});
 
 		while (IsElementNotPresent(locator1 = "FormFields#SELECTOR")) {
 			Click(
-				key_fieldName = "${fieldName}",
+				key_fieldName = ${fieldName},
 				locator1 = "FormFields#SELECT_FIELD");
 		}
 
 		AssertElementNotPresent(
-			key_fieldName = "${fieldName}",
-			key_selectOption = "${selectOption}",
+			key_fieldName = ${fieldName},
+			key_selectOption = ${selectOption},
 			locator1 = "FormFields#SELECT_FIELD_MULTIPLE_OPTION",
-			value1 = "${selectOption}");
+			value1 = ${selectOption});
 	}
 
-	macro removeTranslation {
+	@summary = "Default summary"
+	macro removeTranslation(key_language = null) {
 		ClickNoError(
-			key_name = "${key_language}",
+			key_name = ${key_language},
 			locator1 = "Form#UNSTYLED_BUTTON");
 
 		Click(locator1 = "FormViewBuilder#DELETE_OBJECT_LABEL_DELETE_BUTTON");
 
 		AssertElementNotPresent(
-			changeAppLanguageTo = "${key_language}",
+			changeAppLanguageTo = ${key_language},
 			locator1 = "FormViewBuilder#SELECT_LANGUAGE_AT_APP_DEPLOYED");
 	}
 
-	macro resizeField {
-		Form.gotoFieldContainer(fieldName = "${fieldName}");
+	@summary = "Default summary"
+	macro resizeField(fieldName = null, moveForce = null) {
+		Form.gotoFieldContainer(fieldName = ${fieldName});
 
 		DragAndDrop.dragAndDrop(
 			locator1 = "FormFields#FIELD_HANDLE_RIGHT",
 			value1 = "${moveForce},0");
 	}
 
-	macro resizeFieldGroup {
-		Form.gotoFieldContainer(fieldName = "${fieldName}");
+	@summary = "Default summary"
+	macro resizeFieldGroup(fieldName = null, moveForce = null) {
+		Form.gotoFieldContainer(fieldName = ${fieldName});
 
 		DragAndDrop.dragAndDrop(
 			locator1 = "FormFields#FIELD_GROUP_HANDLE_RIGHT",
 			value1 = "${moveForce},0");
 	}
 
-	macro selectAutoCompleteOption {
-		var key_autocompleteOption = "${autocompleteOption}";
+	@summary = "Default summary"
+	macro selectAutoCompleteOption(autocompleteOption = null) {
+		var key_autocompleteOption = ${autocompleteOption};
 
 		Click(locator1 = "FormFields#AUTOCOMPLETE_OPTION");
 	}
 
-	macro selectCheckboxOption {
+	@summary = "Default summary"
+	macro selectCheckboxOption(checkboxOption = null, fieldName = null) {
 		Click(
-			key_checkboxOption = "${checkboxOption}",
-			key_fieldName = "${fieldName}",
+			key_checkboxOption = ${checkboxOption},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#CHECKBOX_OPTION_LABEL");
 	}
 
-	macro selectColorFromColorPicker {
+	@summary = "Default summary"
+	macro selectColorFromColorPicker(fieldLabel = null, colorValue = null, rowNumber = null) {
 		Click(
-			key_fieldLabel = "${fieldLabel}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldLabel = ${fieldLabel},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#COLOR_PICKER_BY_ROW");
 
 		Click(
-			key_colorSwatchItem = "${colorValue}",
+			key_colorSwatchItem = ${colorValue},
 			locator1 = "FormFields#COLOR_SWATCH_ITEM");
 	}
 
-	macro selectDataProviderInputType {
+	@summary = "Default summary"
+	macro selectDataProviderInputType(inputParameterType = null) {
 		ScrollWebElementIntoView(locator1 = "Button#SAVE");
 
 		Click(locator1 = "Form#DATA_PROVIDER_INPUT_PARAMETER_TYPE_FIELD");
 
-		var key_inputParameterType = "${inputParameterType}";
+		var key_inputParameterType = ${inputParameterType};
 
 		AssertClick(
 			locator1 = "Form#DATA_PROVIDER_INPUT_PARAMETER_TYPE_FIELD_OPTIONS_LIST",
-			value1 = "${inputParameterType}");
+			value1 = ${inputParameterType});
 	}
 
-	macro selectDataProviderOutputType {
+	@summary = "Default summary"
+	macro selectDataProviderOutputType(outputParameterType = null) {
 		ScrollWebElementIntoView(locator1 = "Button#SAVE");
 
 		Click(locator1 = "Form#DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD");
 
-		var key_outputParameterType = "${outputParameterType}";
+		var key_outputParameterType = ${outputParameterType};
 
 		AssertClick(
 			locator1 = "Form#DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD_OPTIONS_LIST",
-			value1 = "${outputParameterType}");
+			value1 = ${outputParameterType});
 	}
 
-	macro selectDataProviderPermission {
+	@summary = "Default summary"
+	macro selectDataProviderPermission(selectOption = null) {
 		if (IsElementNotPresent(locator1 = "Form#DATA_PROVIDER_PERMISSIONS_VIEWABLE_BY_SELECT")) {
 			Click(locator1 = "Form#DATA_PROVIDER_PERMISSIONS_PARAMETER_PANEL");
 
@@ -819,18 +908,19 @@ definition {
 
 		Select(
 			locator1 = "Form#DATA_PROVIDER_PERMISSIONS_VIEWABLE_BY_SELECT",
-			value1 = "${selectOption}");
+			value1 = ${selectOption});
 	}
 
-	macro selectFileUpload {
+	@summary = "Default summary"
+	macro selectFileUpload(navTab = null, fileName = null, fieldName = null, rowNumber = null) {
 		WaitForElementPresent(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#UPLOAD_ON_WIDGET_SINGLE_ROW");
 
 		if (isSet(rowNumber)) {
 			Click(
-				key_fieldName = "${fieldName}",
-				key_rowNumber = "${rowNumber}",
+				key_fieldName = ${fieldName},
+				key_rowNumber = ${rowNumber},
 				locator1 = "FormFields#UPLOAD_ON_WIDGET_ON_ANY_FIELD");
 		}
 		else {
@@ -838,35 +928,38 @@ definition {
 		}
 
 		ItemSelector.uploadFile(
-			navTab = "${navTab}",
-			uploadFileName = "${fileName}");
+			navTab = ${navTab},
+			uploadFileName = ${fileName});
 	}
 
-	macro selectGridRadioOption {
-		var key_categoryColumnName = "${categoryColumnName}";
-		var key_optionRowName = "${optionRowName}";
-		var optionNumber = "${optionNumber}";
+	@summary = "Default summary"
+	macro selectGridRadioOption(optionRowName = null, fieldName = null, categoryColumnName = null) {
+		var key_categoryColumnName = ${categoryColumnName};
+		var key_optionRowName = ${optionRowName};
+		var optionNumber = ${optionNumber};
 
 		var key_optionNumber = "Row: Option ${optionNumber}, Column: Category ${optionNumber}";
-		var key_fieldName = "${fieldName}";
+		var key_fieldName = ${fieldName};
 
 		Click.clickNoWaitForVisible(locator1 = "FormFields#GRID_RADIO_OPTIONS");
 	}
 
-	macro selectGridRadioOptionWithoutCategory {
-		var optionRowNumber = "${optionRowNumber}";
-		var optionColumnNumber = "${optionColumnNumber}";
+	@summary = "Default summary"
+	macro selectGridRadioOptionWithoutCategory(fieldName = null) {
+		var optionRowNumber = ${optionRowNumber};
+		var optionColumnNumber = ${optionColumnNumber};
 
 		var key_optionNumber = "Row: Option ${optionRowNumber}, Column: Option ${optionColumnNumber}";
-		var key_fieldName = "${fieldName}";
+		var key_fieldName = ${fieldName};
 
 		Click.clickNoWaitForVisible(locator1 = "FormFields#GRID_RADIO_OPTIONS");
 	}
 
-	macro selectImageFromSite {
+	@summary = "Default summary"
+	macro selectImageFromSite(imageFileName = null, siteName = null, rowNumber = null) {
 		if (isSet(rowNumber)) {
 			Click(
-				key_rowNumber = "${rowNumber}",
+				key_rowNumber = ${rowNumber},
 				locator1 = "FormFields#UPLOAD_ON_WIDGET_ON_ANY_ROW");
 		}
 		else {
@@ -874,240 +967,267 @@ definition {
 		}
 
 		ItemSelector.selectSiteImage(
-			imageFileName = "${imageFileName}",
-			siteName = "${siteName}");
+			imageFileName = ${imageFileName},
+			siteName = ${siteName});
 	}
 
-	macro selectImageUpload {
+	@summary = "Default summary"
+	macro selectImageUpload(navTab = null, fileName = null, rowNumber = null) {
 		WaitForElementPresent(locator1 = "FormFields#UPLOAD_ON_WIDGET");
 
 		if (isSet(rowNumber)) {
 			Click(
-				key_rowNumber = "${rowNumber}",
+				key_rowNumber = ${rowNumber},
 				locator1 = "FormFields#UPLOAD_ON_WIDGET_ON_ANY_ROW");
 		}
 		else {
 			Click(
-				key_rowNumber = "1",
+				key_rowNumber = 1,
 				locator1 = "FormFields#UPLOAD_ON_WIDGET_ON_ANY_ROW");
 		}
 
 		ItemSelector.uploadFile(
-			navTab = "${navTab}",
-			uploadFileName = "${fileName}");
+			navTab = ${navTab},
+			uploadFileName = ${fileName});
 	}
 
-	macro selectRadioOption {
+	@summary = "Default summary"
+	macro selectRadioOption(fieldName = null, radioOption = null) {
 		Click(
-			key_fieldName = "${fieldName}",
-			key_radioOption = "${radioOption}",
+			key_fieldName = ${fieldName},
+			key_radioOption = ${radioOption},
 			locator1 = "FormFields#RADIO_OPTION_LABEL");
 	}
 
-	macro selectSelectOption {
-		var key_fieldName = "${fieldName}";
-		var key_selectOption = "${selectOption}";
+	@summary = "Default summary"
+	macro selectSelectOption(fieldName = null, selectOption = null) {
+		var key_fieldName = ${fieldName};
+		var key_menuItem = ${selectOption};
+		var key_selectOption = ${selectOption};
 
 		Click(
 			locator1 = "FormFields#SELECT_FIELD",
-			value1 = "${selectOption}");
+			value1 = ${selectOption});
 
-		if (("${fieldName}" == "Choose a Data Provider") || ("${fieldName}" == "Output Parameter")) {
-			AssertClick(
+		if ((${fieldName} == "Choose a Data Provider") || (${fieldName} == "Choose an Output Parameter")) {
+			Click.javaScriptClick(
 				locator1 = "FormFields#SELECT_FIELD_DATA_PROVIDER_LIST",
-				value1 = "${selectOption}");
+				value1 = ${selectOption});
 		}
 		else {
-			AssertClick(
-				locator1 = "FormFields#SELECT_FIELD_OPTIONS_LIST",
-				value1 = "${selectOption}");
+			Click.javaScriptClick(
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM",
+				value1 = ${selectOption});
 		}
 	}
 
-	macro selectSelectOptionRepeatable {
-		var key_fieldLabel = "${fieldLabel}";
-		var key_selectOption = "${selectOption}";
-		var key_index = "${index}";
+	@summary = "Default summary"
+	macro selectSelectOptionRepeatable(fieldName = null, fieldLabel = null, selectOption = null, index = null) {
+		var key_fieldLabel = ${fieldLabel};
+		var key_selectOption = ${selectOption};
+		var key_index = ${index};
 
 		Click(
-			key_fieldLabel = "${fieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_index = ${index},
 			locator1 = "FormFields#SELECT_SELECT_LIST_INDEX",
-			value1 = "${selectOption}");
+			value1 = ${selectOption});
 
 		Click(
-			key_fieldLabel = "${fieldName}",
+			key_fieldLabel = ${fieldName},
 			locator1 = "FormViewBuilder#SELECT_FIELD_OPTIONS_LIST",
-			value1 = "${selectOption}");
+			value1 = ${selectOption});
 	}
 
-	macro selectSelectWithMultipleOptions {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro selectSelectWithMultipleOptions(fieldName = null, selectOptionsList = null) {
+		var key_fieldName = ${fieldName};
 
 		while (IsElementNotPresent(locator1 = "FormFields#SELECTOR")) {
 			Click(
-				key_fieldName = "${fieldName}",
+				key_fieldName = ${fieldName},
 				locator1 = "FormFields#SELECT_FIELD");
 		}
 
-		for (var selectOption : list "${selectOptionsList}") {
-			FormFields.enableCheckbox(fieldName = "${selectOption}");
+		for (var selectOption : list ${selectOptionsList}) {
+			Click(locator1 = "FormFields#SELECT_FIELD");
+
+			if (IsElementNotPresent(key_fieldName = ${fieldName}, locator1 = "FormFields#CHECKBOX_ENTRY")) {
+				Click(
+					key_menuItem = ${selectOption},
+					locator1 = "MenuItem#ANY_MENU_ITEM");
+			}
 		}
 
-		FormFields.viewSelectMultipleOptions(
-			fieldName = "Select",
-			selectOptionsList = "${selectOptionsList}");
-
 		Click(locator1 = "FormFields#SELECT_FIELD");
+
+		for (var selectOption : list ${selectOptionsList}) {
+			AssertElementPresent(
+				checkboxName = ${selectOption},
+				locator1 = "FormFields#ANY_CHECKBOX_CHECKED");
+		}
 	}
 
-	macro selectSwitchOption {
-		var key_fieldName = "${fieldName}";
-		var key_switchOption = "${switchOption}";
-		var key_switchOption = StringUtil.replace("${switchOption}", " ", "");
+	@summary = "Default summary"
+	macro selectSwitchOption(switchOption = null, fieldName = null) {
+		var key_fieldName = ${fieldName};
+		var key_switchOption = ${switchOption};
+		var key_switchOption = StringUtil.replace(${switchOption}, " ", "");
 
 		Click(locator1 = "FormFields#SWITCH");
 	}
 
-	macro selectTextFieldLineOption {
+	@summary = "Default summary"
+	macro selectTextFieldLineOption(textFieldLineOption = null) {
 		FormFields.selectRadioOption(
 			fieldName = "displayStyle",
-			radioOption = "${textFieldLineOption}");
+			radioOption = ${textFieldLineOption});
 	}
 
-	macro selectValidationCustomDateEndsOn {
-		var key_endsOnOperation = "${endsOnOperation}";
-		var key_endsOnOption = "${endsOnOption}";
-		var key_endsOnQuantity = "${endsOnQuantity}";
-		var key_endsOnUnit = "${endsOnUnit}";
+	@summary = "Default summary"
+	macro selectValidationCustomDateEndsOn(endsOnQuantity = null, endsOnUnit = null, endsOnOperation = null, endsOnOption = null) {
+		var key_endsOnOperation = ${endsOnOperation};
+		var key_endsOnOption = ${endsOnOption};
+		var key_endsOnQuantity = ${endsOnQuantity};
+		var key_endsOnUnit = ${endsOnUnit};
 
 		Click(locator1 = "FormFields#VALIDATION_ENDS_ON");
 
-		DropdownMenuItem.click(menuItem = "${key_endsOnOption}");
+		DropdownMenuItem.click(menuItem = ${key_endsOnOption});
 
 		Click(locator1 = "FormFields#VALIDATION_ENDS_ON_OPERATION");
 
-		DropdownMenuItem.click(menuItem = "${key_endsOnOperation}");
+		DropdownMenuItem.click(menuItem = ${key_endsOnOperation});
 
 		Type(
 			locator1 = "FormFields#VALIDATION_ENDS_ON_QUANTITY",
-			value1 = "${key_endsOnQuantity}");
+			value1 = ${key_endsOnQuantity});
 
 		Click(locator1 = "FormFields#VALIDATION_ENDS_ON_UNIT");
 
-		DropdownMenuItem.click(menuItem = "${key_endsOnUnit}");
+		DropdownMenuItem.click(menuItem = ${key_endsOnUnit});
 	}
 
-	macro selectValidationCustomDateStartsFrom {
-		var key_startsFromOperation = "${startsFromOperation}";
-		var key_startsFromOption = "${startsFromOption}";
-		var key_startsFromQuantity = "${startsFromQuantity}";
-		var key_startsFromUnit = "${startsFromUnit}";
+	@summary = "Default summary"
+	macro selectValidationCustomDateStartsFrom(startsFromOperation = null, startsFromOption = null, startsFromUnit = null, startsFromQuantity = null) {
+		var key_startsFromOperation = ${startsFromOperation};
+		var key_startsFromOption = ${startsFromOption};
+		var key_startsFromQuantity = ${startsFromQuantity};
+		var key_startsFromUnit = ${startsFromUnit};
 
 		Click(locator1 = "FormFields#VALIDATION_STARTS_FROM");
 
-		DropdownMenuItem.click(menuItem = "${key_startsFromOption}");
+		DropdownMenuItem.click(menuItem = ${key_startsFromOption});
 
 		Click(locator1 = "FormFields#VALIDATION_STARTS_FROM_OPERATION");
 
-		DropdownMenuItem.click(menuItem = "${startsFromOperation}");
+		DropdownMenuItem.click(menuItem = ${startsFromOperation});
 
 		Type(
 			locator1 = "FormFields#VALIDATION_STARTS_FROM_QUANTITY",
-			value1 = "${key_startsFromQuantity}");
+			value1 = ${key_startsFromQuantity});
 
 		Click(locator1 = "FormFields#VALIDATION_STARTS_FROM_UNIT");
 
-		DropdownMenuItem.click(menuItem = "${key_startsFromUnit}");
+		DropdownMenuItem.click(menuItem = ${key_startsFromUnit});
 	}
 
-	macro setImagePredefinedValue {
+	@summary = "Default summary"
+	macro setImagePredefinedValue() {
 		Form.gotoAdvancedTab();
 
 		Click(locator1 = "FormFields#UPLOAD_PREDEFINED_VALUE");
 
 		ItemSelector.uploadFile(
 			navTab = "Documents and Media",
-			uploadFileName = "${uploadFileName}");
+			uploadFileName = ${uploadFileName});
 
 		SelectFrame(locator1 = "Form#BUILDER_SIDEBAR_PANEL");
 
-		var uploadFileName = StringUtil.lowerCase("${uploadFileName}");
+		var uploadFileName = StringUtil.lowerCase(${uploadFileName});
 
-		var uploadFileName = StringUtil.replace("${uploadFileName}", ".", "-");
+		var uploadFileName = StringUtil.replace(${uploadFileName}, ".", "-");
 
 		AssertElementPresent(
-			key_imageName = "${uploadFileName}",
+			key_imageName = ${uploadFileName},
 			locator1 = "Form#SIDEBAR_ADVANCED_PREDEFINED_VALUE");
 	}
 
-	macro setInputMaskFormat {
+	@summary = "Default summary"
+	macro setInputMaskFormat(inputMaskFormat = null) {
 		Type(
 			locator1 = "FormFields#INPUT_MASK_FORMAT_VALUE",
-			value1 = "${inputMaskFormat}");
+			value1 = ${inputMaskFormat});
 	}
 
-	macro setInputMaskOnDecimal {
+	@summary = "Default summary"
+	macro setInputMaskOnDecimal(decimalPlaces = null, decimalSeparator = null, prefix = null, suffix = null, thousandsSeparator = null) {
 		if (isSet(thousandsSeparator)) {
-			Click(
+			Click.javaScriptClick(
 				key_fieldName = "Thousands Separator",
 				locator1 = "FormFields#SELECT_FIELD");
 
-			MenuItem.click(menuItem = "${thousandsSeparator}");
+			Click.javaScriptClick(
+				key_menuItem = ${thousandsSeparator},
+				locator1 = "MenuItem#ANY_MENU_ITEM");
 		}
 
 		if (isSet(decimalSeparator)) {
-			Click(
+			Click.javaScriptClick(
 				key_fieldName = "Decimal Separator",
 				locator1 = "FormFields#SELECT_FIELD");
 
-			MenuItem.click(menuItem = "${decimalSeparator}");
+			Click.javaScriptClick(
+				key_menuItem = ${decimalSeparator},
+				locator1 = "MenuItem#ANY_MENU_ITEM");
 		}
 
 		if (isSet(decimalPlaces)) {
 			Type(
 				locator1 = "FormFields#INPUT_MASK_DECIMAL_PLACES",
-				value1 = "${decimalPlaces}");
+				value1 = ${decimalPlaces});
 		}
 
 		if (isSet(prefix)) {
-			var inputMask = "${prefix}";
+			var inputMask = ${prefix};
 			var maskOption = "Prefix";
 
 			Type(
 				locator1 = "FormFields#INPUT_MASK_PREFIX_OR_SUFFIX",
-				value1 = "${inputMask}");
+				value1 = ${inputMask});
 
 			Click(
 				key_fieldName = "",
-				key_radioOption = "${maskOption}",
+				key_radioOption = ${maskOption},
 				locator1 = "FormFields#RADIO_OPTION_LABEL");
 		}
 
 		if (isSet(suffix)) {
-			var inputMask = "${suffix}";
+			var inputMask = ${suffix};
 			var maskOption = "Suffix";
 
 			Type(
 				locator1 = "FormFields#INPUT_MASK_PREFIX_OR_SUFFIX",
-				value1 = "${inputMask}");
+				value1 = ${inputMask});
 
 			Click(
 				key_fieldName = "",
-				key_radioOption = "${maskOption}",
+				key_radioOption = ${maskOption},
 				locator1 = "FormFields#RADIO_OPTION_LABEL");
 		}
 	}
 
-	macro setValidationAcceptedDate {
-		var key_acceptedDateOption = "${acceptedDateOption}";
+	@summary = "Default summary"
+	macro setValidationAcceptedDate(acceptedDateOption = null) {
+		var key_acceptedDateOption = ${acceptedDateOption};
 
 		Click(locator1 = "FormFields#VALIDATION_ACCEPTED_DATE");
 
-		DropdownMenuItem.click(menuItem = "${key_acceptedDateOption}");
+		DropdownMenuItem.click(menuItem = ${key_acceptedDateOption});
 	}
 
-	macro toggleCKEditorContentStyle {
+	@summary = "Default summary"
+	macro toggleCKEditorContentStyle(optionTool = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		SelectFieldText(locator1 = "CKEditor#BODY");
@@ -1115,51 +1235,57 @@ definition {
 		SelectFrame();
 
 		WaitForElementPresent(
-			key_titleName = "${optionTool}",
+			key_titleName = ${optionTool},
 			locator1 = "FormFields#TOOLBAR_ANY_ITEM_BUTTON");
 
 		Click(
-			key_titleName = "${optionTool}",
+			key_titleName = ${optionTool},
 			locator1 = "FormFields#TOOLBAR_ANY_ITEM_BUTTON");
 	}
 
-	macro validateImagePredefinedValue {
+	@summary = "Default summary"
+	macro validateImagePredefinedValue(fileName = null, fieldDescription = null) {
 		AssertElementPresent(
-			key_imageName = "${fileName}",
+			key_imageName = ${fileName},
 			locator1 = "FormFields#IMAGE_PREDEFINED_VALUE");
 
 		if (isSet(fieldDescription)) {
 			AssertElementPresent(
-				key_description = "${fieldDescription}",
+				key_description = ${fieldDescription},
 				locator1 = "FormFields#IMAGE_FIELD_DESCRIPTION");
 		}
 	}
 
-	macro viewAddedLanguage {
+	@summary = "Default summary"
+	macro viewAddedLanguage(key_language = null) {
 		AssertElementPresent(
-			changeAppLanguageTo = "${key_language}",
+			changeAppLanguageTo = ${key_language},
 			locator1 = "FormViewBuilder#SELECT_LANGUAGE_AT_APP_DEPLOYED");
 	}
 
-	macro viewAnyField {
+	@summary = "Default summary"
+	macro viewAnyField(fieldName = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#ANY_FIELD");
 	}
 
-	macro viewAutoCompleteOption {
-		var key_autocompleteOption = "${autocompleteOption}";
+	@summary = "Default summary"
+	macro viewAutoCompleteOption(autocompleteOption = null) {
+		var key_autocompleteOption = ${autocompleteOption};
 
 		AssertElementPresent(locator1 = "FormFields#AUTOCOMPLETE_OPTION");
 	}
 
-	macro viewBooleanField {
+	@summary = "Default summary"
+	macro viewBooleanField(fieldValue = null) {
 		AssertTextEquals(
 			locator1 = "FormFields#BOOLEAN_NAME",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewCaptchaField {
+	@summary = "Default summary"
+	macro viewCaptchaField() {
 		AssertElementPresent.assertVisible(locator1 = "FormFields#CAPTCHA_FIELD");
 
 		AssertElementPresent.assertVisible(locator1 = "FormFields#CAPTCHA_FIELD_REFRESH");
@@ -1171,99 +1297,110 @@ definition {
 		AssertElementPresent.assertVisible(locator1 = "FormFields#CAPTCHA_TEXT_VERIFICATION");
 	}
 
-	macro viewCheckboxChecked {
+	@summary = "Default summary"
+	macro viewCheckboxChecked(fieldName = null) {
 		AssertChecked.assertCheckedNotVisible(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#CHECKBOX");
 	}
 
-	macro viewCheckboxEntry {
+	@summary = "Default summary"
+	macro viewCheckboxEntry(fieldName = null, fieldValue = null) {
 		AssertTextEquals.assertText(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#CHECKBOX_ENTRY",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewCheckboxLabel {
+	@summary = "Default summary"
+	macro viewCheckboxLabel(fieldName = null, fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#CHECKBOX_LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewCheckboxNotChecked {
+	@summary = "Default summary"
+	macro viewCheckboxNotChecked(fieldName = null) {
 		AssertNotChecked.assertNotCheckedNotVisible(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#CHECKBOX");
 	}
 
-	macro viewColorField {
+	@summary = "Default summary"
+	macro viewColorField(fieldName = null, fieldLabel = null, colorValue = null, rowNumber = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#COLOR_FIELD_BY_ROW",
-			value1 = "${colorValue}");
+			value1 = ${colorValue});
 
 		AssertElementPresent(
 			key_colorValue = "#${colorValue}",
-			key_fieldLabel = "${fieldLabel}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldLabel = ${fieldLabel},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#COLOR_FROM_COLOR_PICKER_BY_ROW");
 	}
 
-	macro viewColorLabel {
+	@summary = "Default summary"
+	macro viewColorLabel(fieldName = null, fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewColorValue {
+	@summary = "Default summary"
+	macro viewColorValue(fieldName = null, fieldValue = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#COLOR_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewConfirmationFieldDirection {
-		if ("${direction}" == "vertical") {
+	@summary = "Default summary"
+	macro viewConfirmationFieldDirection(fieldName = null) {
+		if (${direction} == "vertical") {
 			var direction = "col-md-12";
 		}
-		else if ("${direction}" == "horizontal") {
+		else if (${direction} == "horizontal") {
 			var direction = "col-md-6";
 		}
 
 		AssertElementPresent(
-			key_direction = "${direction}",
-			key_fieldName = "${fieldName}",
+			key_direction = ${direction},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_CONFIRMATION_FIELD_DIRECTION");
 	}
 
-	macro viewConfirmationFieldTextLabel {
+	@summary = "Default summary"
+	macro viewConfirmationFieldTextLabel(fieldName = null, fieldLabel = null) {
 		FormFields.viewTextLabel(
-			fieldLabel = "${fieldLabel}",
-			fieldName = "${fieldName}");
+			fieldLabel = ${fieldLabel},
+			fieldName = ${fieldName});
 
 		AssertElementPresent.assertVisible(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_CONFIRMATION_FIELD");
 	}
 
-	macro viewDateField {
+	@summary = "Default summary"
+	macro viewDateField(fieldName = null, fieldLabel = null) {
 		FormFields.viewDateLabel(
-			fieldLabel = "${fieldLabel}",
-			fieldName = "${fieldName}");
+			fieldLabel = ${fieldLabel},
+			fieldName = ${fieldName});
 
 		AssertElementPresent.assertVisible(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#DATE_FIELD");
 	}
 
-	macro viewDateFieldNotPresent {
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewDateFieldNotPresent(fieldName = null, fieldLabel = null) {
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldName = ${fieldName};
 
 		if (IsElementPresent(locator1 = "FormFields#DATE_FIELD")) {
 			AssertNotVisible(locator1 = "FormFields#LABEL");
@@ -1277,128 +1414,145 @@ definition {
 		}
 	}
 
-	macro viewDateLabel {
+	@summary = "Default summary"
+	macro viewDateLabel(fieldName = null, fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewDateValue {
+	@summary = "Default summary"
+	macro viewDateValue(fieldName = null, fieldLabel = null, fieldValue = null) {
 		AssertTextEquals(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#DATE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewDeletedFieldLabel {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewDeletedFieldLabel(fieldName = null) {
+		var key_fieldName = ${fieldName};
 
 		AssertElementNotPresent(
-			key_name = "${fieldName}",
+			key_name = ${fieldName},
 			locator1 = "FormFields#FIELD_TARGET_LABEL");
 	}
 
-	macro viewDeletedSelectFromListOption {
+	@summary = "Default summary"
+	macro viewDeletedSelectFromListOption(optionValue = null) {
 		AssertElementNotPresent(
-			key_value = "${optionValue}",
+			key_value = ${optionValue},
 			locator1 = "FormFields#OPTION_FROM_SELECTED_LIST");
 	}
 
-	macro viewDeletedSelectOptionsRowFieldValue {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro viewDeletedSelectOptionsRowFieldValue(rowNumber = null, fieldValue = null) {
+		var key_rowNumber = ${rowNumber};
 
 		AssertTextNotPresent(
 			locator1 = "FormFields#SELECT_OPTIONS_OPTION_VALUE_FIELD_VISIBLE",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewDisabledSelectOption {
+	@summary = "Default summary"
+	macro viewDisabledSelectOption(fieldName = null, optionValue = null) {
 		Click(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#SELECT_FIELD");
 
 		AssertElementPresent(
-			key_text = "${optionValue}",
+			key_text = ${optionValue},
 			locator1 = "FormFields#ANY_DISABLED_SELECT_OPTION");
 	}
 
-	macro viewField {
+	@summary = "Default summary"
+	macro viewField(fieldName = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#FIELD");
 	}
 
-	macro viewFieldByIndex {
+	@summary = "Default summary"
+	macro viewFieldByIndex(fieldLabel = null, index = null, formPageNumber = null) {
 		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
-			key_formPageNumber = "${formPageNumber}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_formPageNumber = ${formPageNumber},
+			key_index = ${index},
 			locator1 = "FormFields#FIELD_LABEL_BY_INDEX");
 	}
 
-	macro viewFieldDisabled {
+	@summary = "Default summary"
+	macro viewFieldDisabled(fieldName = null) {
 		AssertNotEditable(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD");
 	}
 
-	macro viewFieldDropdownItem {
+	@summary = "Default summary"
+	macro viewFieldDropdownItem(itemName = null) {
 		WaitForElementPresent(
-			key_itemName = "${itemName}",
+			key_itemName = ${itemName},
 			locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
 		AssertElementPresent(
-			key_itemName = "${itemName}",
+			key_itemName = ${itemName},
 			locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 	}
 
-	macro viewFieldEnabled {
+	@summary = "Default summary"
+	macro viewFieldEnabled(fieldName = null) {
 		AssertEditable(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD");
 	}
 
-	macro viewFieldHelpText {
+	@summary = "Default summary"
+	macro viewFieldHelpText(fieldHelpText = null, fieldName = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#HELP_TEXT",
-			value1 = "${fieldHelpText}");
+			value1 = ${fieldHelpText});
 	}
 
-	macro viewFieldHidden {
+	@summary = "Default summary"
+	macro viewFieldHidden(fieldName = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#FIELD_HIDDEN");
 	}
 
-	macro viewFieldLabel {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewFieldLabel(fieldName = null, fieldValue = null) {
+		var key_fieldName = ${fieldName};
 
 		AssertTextEquals(
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewFieldLabelByDataFieldName {
+	@summary = "Default summary"
+	macro viewFieldLabelByDataFieldName(fieldName = null, fieldLabel = null) {
 		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#LABEL_BY_DATA_FIELD_NAME");
 	}
 
-	macro viewFieldLabelNotPresent {
+	@summary = "Default summary"
+	macro viewFieldLabelNotPresent(fieldLabel = null) {
 		AssertElementNotPresent(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewFieldName {
+	@summary = "Default summary"
+	macro viewFieldName(localeBasic = null, fieldName = null, localeAdvanced = null) {
 		if (isSet(localeAdvanced)) {
-			Form.gotoAdvancedTab(key_localeAdvanced = "${localeAdvanced}");
+			Form.gotoAdvancedTab(key_localeAdvanced = ${localeAdvanced});
 		}
 		else {
 			Form.gotoAdvancedTab();
@@ -1406,75 +1560,82 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "FormFields#FIELD_NAME_EDIT",
-			value1 = "${fieldName}");
+			value1 = ${fieldName});
 
 		if (isSet(localeBasic)) {
-			Form.gotoBasicTab(key_localeBasic = "${localeBasic}");
+			Form.gotoBasicTab(key_localeBasic = ${localeBasic});
 		}
 		else {
 			Form.gotoBasicTab();
 		}
 	}
 
-	macro viewFieldNotRequired {
+	@summary = "Default summary"
+	macro viewFieldNotRequired(fieldLabel = null) {
 		AssertElementNotPresent(
-			key_fieldFieldLabel = "${fieldLabel}",
+			key_fieldFieldLabel = ${fieldLabel},
 			locator1 = "FormFields#FIELD_REQUIRED");
 	}
 
-	macro viewFieldNotVisible {
+	@summary = "Default summary"
+	macro viewFieldNotVisible(fieldName = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#FIELD_HIDDEN");
 	}
 
-	macro viewFieldPlaceholderText {
+	@summary = "Default summary"
+	macro viewFieldPlaceholderText(fieldName = null, placeHolder = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_placeHolder = "${placeHolder}",
+			key_fieldName = ${fieldName},
+			key_placeHolder = ${placeHolder},
 			locator1 = "FormFields#TEXT_FIELD_PLACEHOLDER");
 	}
 
-	macro viewFieldPosition {
+	@summary = "Default summary"
+	macro viewFieldPosition(fieldPositionNumber = null, fieldLabel = null, formPageNumber = null) {
 		if (isSet(formPageNumber)) {
-			var key_formPageNumber = "${formPageNumber}";
+			var key_formPageNumber = ${formPageNumber};
 		}
 		else {
-			var key_formPageNumber = "0";
+			var key_formPageNumber = 0;
 		}
 
 		if (isSet(fieldPositionNumber)) {
-			var key_fieldPositionNumber = "${fieldPositionNumber}";
+			var key_fieldPositionNumber = ${fieldPositionNumber};
 		}
 		else {
-			var key_fieldPositionNumber = "0";
+			var key_fieldPositionNumber = 0;
 		}
 
-		var key_fieldName = "${fieldLabel}";
+		var key_fieldName = ${fieldLabel};
 
 		AssertElementPresent(locator1 = "Form#FIELD_BODY_IN_SPECIFIC_POSITION");
 	}
 
-	macro viewFieldPredefinedValue {
+	@summary = "Default summary"
+	macro viewFieldPredefinedValue(fieldName = null, predefinedValue = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_predefinedValue = "${predefinedValue}",
+			key_fieldName = ${fieldName},
+			key_predefinedValue = ${predefinedValue},
 			locator1 = "FormFields#TEXT_FIELD_PREDEFINED_VALUE");
 	}
 
-	macro viewFieldReference {
+	@summary = "Default summary"
+	macro viewFieldReference(fieldName = null, key_fieldReferenceValue = null) {
 		Click(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "Form#FIELD_BODY");
 
 		Form.gotoAdvancedTab();
 
 		AssertTextEquals(
 			locator1 = "Form#FIELD_REFERENCE",
-			value1 = "${key_fieldReferenceValue}");
+			value1 = ${key_fieldReferenceValue});
 	}
 
-	macro viewFieldReferenceFromGridField {
+	@summary = "Default summary"
+	macro viewFieldReferenceFromGridField(fieldReferenceValue = null) {
 		Click(
 			key_fieldName = "Grid",
 			locator1 = "Form#FIELD_BODY");
@@ -1483,57 +1644,64 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Form#FIELD_REFERENCE",
-			value1 = "${fieldReferenceValue}");
+			value1 = ${fieldReferenceValue});
 	}
 
-	macro viewFieldRepeatableButton {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewFieldRepeatableButton(fieldName = null, key_repeatableFieldsNumber = null) {
+		var key_fieldName = ${fieldName};
 
-		for (var number : list "${key_repeatableFieldsNumber}") {
+		for (var number : list ${key_repeatableFieldsNumber}) {
 			AssertElementPresent(
-				key_duplicatedIndex = "${number}",
+				key_duplicatedIndex = ${number},
 				locator1 = "FormFields#FIELD_REPEATABLE_BUTTON_BY_INDEX");
 		}
 	}
 
-	macro viewFieldRequired {
+	@summary = "Default summary"
+	macro viewFieldRequired(fieldLabel = null) {
 		AssertElementPresent(
-			key_fieldFieldLabel = "${fieldLabel}",
+			key_fieldFieldLabel = ${fieldLabel},
 			locator1 = "FormFields#FIELD_REQUIRED");
 	}
 
-	macro viewFieldSize {
+	@summary = "Default summary"
+	macro viewFieldSize(fieldName = null, size = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_size = "${size}",
+			key_fieldName = ${fieldName},
+			key_size = ${size},
 			locator1 = "FormFields#FIELD_SIZE");
 	}
 
-	macro viewFieldSizeNotEquals {
+	@summary = "Default summary"
+	macro viewFieldSizeNotEquals(fieldName = null, size = null) {
 		AssertElementNotPresent(
-			key_fieldName = "${fieldName}",
-			key_size = "${size}",
+			key_fieldName = ${fieldName},
+			key_size = ${size},
 			locator1 = "FormFields#FIELD_SIZE");
 	}
 
-	macro viewFieldsSameRow {
-		for (var fieldName : list "${fieldNames}") {
+	@summary = "Default summary"
+	macro viewFieldsSameRow(fieldRowNumber = null, fieldNames = null) {
+		for (var fieldName : list ${fieldNames}) {
 			AssertElementPresent(
-				key_fieldName = "${fieldName}",
-				key_fieldRowNumber = "${fieldRowNumber}",
+				key_fieldName = ${fieldName},
+				key_fieldRowNumber = ${fieldRowNumber},
 				locator1 = "FormFields#FIELD_ON_ROW");
 		}
 	}
 
-	macro viewFieldText {
+	@summary = "Default summary"
+	macro viewFieldText(fieldName = null, fieldText = null) {
 		AssertElementPresent(
-			key_fieldLabel = "${fieldText}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldText},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#CHECKBOX_TEXT_LABEL");
 	}
 
-	macro viewFieldValidationErrorMessage {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewFieldValidationErrorMessage(fieldName = null, fieldValidationErrorMessage = null) {
+		var key_fieldName = ${fieldName};
 
 		if (IsElementNotPresent(locator1 = "Message#ERROR_SPECIFIC_FORM_FIELD_REQUIRED")) {
 			Click(locator1 = "FormPortlet#FORM_CONTAINER");
@@ -1541,380 +1709,396 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Message#ERROR_SPECIFIC_FORM_FIELD_REQUIRED",
-			value1 = "${fieldValidationErrorMessage}");
+			value1 = ${fieldValidationErrorMessage});
 	}
 
-	macro viewFieldVisible {
+	@summary = "Default summary"
+	macro viewFieldVisible(fieldName = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#FIELD_VISIBLE");
 	}
 
-	macro viewGridOptionNotPresent {
+	@summary = "Default summary"
+	macro viewGridOptionNotPresent(gridField = null, rowNumber = null) {
 		FormFields.viewGridOptionsFieldValue(
 			fieldValue = "",
-			key_gridField = "${gridField}",
-			key_rowNumber = "${rowNumber}");
+			key_gridField = ${gridField},
+			key_rowNumber = ${rowNumber});
 	}
 
-	macro viewGridOptionsFieldValue {
+	@summary = "Default summary"
+	macro viewGridOptionsFieldValue(gridField = null, rowNumber = null, fieldValue = null) {
 		AssertTextEquals(
-			key_gridField = "${gridField}",
-			key_rowNumber = "${rowNumber}",
+			key_gridField = ${gridField},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#GRID_OPTIONS_OPTION_VALUE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewLabel {
+	@summary = "Default summary"
+	macro viewLabel(fieldName = null, fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "Form#FIELD_LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewMultilineTextValue {
+	@summary = "Default summary"
+	macro viewMultilineTextValue(fieldName = null, fieldValue = null) {
 		AssertTextEquals.assertValue(
-			key_fieldName = "${fieldName}",
-			key_fieldValue = "${fieldValue}",
+			key_fieldName = ${fieldName},
+			key_fieldValue = ${fieldValue},
 			locator1 = "FormFields#TEXT_MULTILINE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewNumericFieldValue {
+	@summary = "Default summary"
+	macro viewNumericFieldValue(fieldName = null, rowNumber = null, value = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_fieldValue = "${value}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_fieldValue = ${value},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#NUMBER_FIELD_VALUE_ROW");
 	}
 
-	macro viewNumericInputMask {
+	@summary = "Default summary"
+	macro viewNumericInputMask(inputMaskValue = null, affixValue = null) {
 		AssertElementPresent(
-			key_inputMaskValue = "${inputMaskValue}",
+			key_inputMaskValue = ${inputMaskValue},
 			locator1 = "FormFields#INPUT_MASK_VALUE");
 
 		if (isSet(affixValue)) {
 			AssertElementPresent(
-				key_affixValue = "${affixValue}",
+				key_affixValue = ${affixValue},
 				locator1 = "FormFields#INPUT_MASK_PREFIX_OR_SUFFIX_VALUE");
 		}
 	}
 
-	macro viewOptionColumnsName {
+	@summary = "Default summary"
+	macro viewOptionColumnsName(fieldTitle = null, optionName = null, rowNumber = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldTitle}",
-			key_optionName = "${optionName}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldTitle},
+			key_optionName = ${optionName},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#GRID_OPTIONS_OPTION_COL_NAME");
 	}
 
-	macro viewOptionRowName {
+	@summary = "Default summary"
+	macro viewOptionRowName(fieldTitle = null, optionName = null, rowNumber = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldTitle}",
-			key_optionName = "${optionName}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldTitle},
+			key_optionName = ${optionName},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#GRID_OPTIONS_OPTION_ROW_NAME");
 	}
 
-	macro viewOptionRowNameNotPresent {
+	@summary = "Default summary"
+	macro viewOptionRowNameNotPresent(fieldName = null, optionName = null, rowNumber = null) {
 		AssertElementNotPresent(
-			key_fieldName = "${fieldName}",
-			key_optionName = "${optionName}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_optionName = ${optionName},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#GRID_OPTIONS_OPTION_ROW_NAME");
 	}
 
-	macro viewOptionSelected {
+	@summary = "Default summary"
+	macro viewOptionSelected(optionSelected = null) {
 		AssertElementPresent(
-			key_optionSelected = "${optionSelected}",
+			key_optionSelected = ${optionSelected},
 			locator1 = "FormFields#OPTION_SELECTED");
 	}
 
-	macro viewOptionSingleSelection {
+	@summary = "Default summary"
+	macro viewOptionSingleSelection(fieldName = null, optionName = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_optionName = "${optionName}",
+			key_fieldName = ${fieldName},
+			key_optionName = ${optionName},
 			locator1 = "FormFields#FIELD_TARGET_LABEL_AND_BODY_OPTION");
 	}
 
-	macro viewOptionsPositionHorizontal {
-		AssertElementPresent(
-			key_text = "${key_text1}",
-			locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
-
-		AssertElementPresent(
-			key_text = "${key_text2}",
-			locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
-	}
-
-	macro viewOptionsPositionNotHorizontal {
-		AssertElementNotPresent(
-			key_text = "${key_text1}",
-			locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
-
-		AssertElementNotPresent(
-			key_text = "${key_text2}",
-			locator1 = "FormFields#OPTIONS_HORIZONTALY_POSITIONED");
-	}
-
-	macro viewOptionsRowFieldName {
+	@summary = "Default summary"
+	macro viewOptionsRowFieldName(fieldName = null, rowNumber = null) {
 		AssertTextEquals(
-			key_rowNumber = "${rowNumber}",
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#OPTIONS_OPTION_NAME_FIELD_EDIT",
-			value1 = "${fieldName}");
+			value1 = ${fieldName});
 	}
 
-	macro viewOptionsRowFieldValue {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro viewOptionsRowFieldValue(rowNumber = null, fieldValue = null) {
+		var key_rowNumber = ${rowNumber};
 
 		if (IsVisible(locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD")) {
 			AssertTextEquals(
 				locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
-				value1 = "${fieldValue}");
+				value1 = ${fieldValue});
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD_VISIBLE",
-				value1 = "${fieldValue}");
+				value1 = ${fieldValue});
 		}
 	}
 
-	macro viewOptionsRowFieldValueOrFieldReference {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro viewOptionsRowFieldValueOrFieldReference(fieldReference = null, rowNumber = null, fieldValue = null) {
+		var key_rowNumber = ${rowNumber};
 
 		if (IsVisible(locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD")) {
 			AssertTextEquals(
 				locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
-				value1 = "${fieldValue}");
+				value1 = ${fieldValue});
 
 			if (isSet(fieldReference)) {
 				AssertTextEquals(
 					locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD_REFERENCE",
-					value1 = "${fieldReference}");
+					value1 = ${fieldReference});
 			}
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD_VISIBLE",
-				value1 = "${fieldValue}");
+				value1 = ${fieldValue});
 		}
 	}
 
-	macro viewPaginationField {
-		var key_currentPage = "${key_currentPage}";
-		var key_lastPage = "${key_lastPage}";
+	@summary = "Default summary"
+	macro viewPaginationField() {
+		var key_currentPage = ${key_currentPage};
+		var key_lastPage = ${key_lastPage};
 
 		AssertElementPresent(
 			key_pagination = "Page ${key_currentPage} of ${key_lastPage}",
 			locator1 = "Form#PAGINATION_NUMBER");
 	}
 
-	macro viewParagraphBodyContent {
+	@summary = "Default summary"
+	macro viewParagraphBodyContent(bodyName = null) {
 		AssertElementPresent(
-			key_bodyName = "${bodyName}",
+			key_bodyName = ${bodyName},
 			locator1 = "FormFields#PARAGRAPH_SPECIFIC_FIELD_BY_BODY");
 	}
 
-	macro viewParagraphContentNotEquals {
+	@summary = "Default summary"
+	macro viewParagraphContentNotEquals(fieldValue = null) {
 		AssertTextNotEquals(
 			key_fieldName = "Paragraph",
 			locator1 = "FormFields#PARAGRAPH_BODY_TEXT_CONTENT",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewParagraphField {
+	@summary = "Default summary"
+	macro viewParagraphField(fieldName = null, fieldTitle = null, fieldValue = null, url = null) {
 		if (!(isSet(fieldName))) {
-			var key_fieldName = "${fieldTitle}";
-			var key_fieldName = StringUtil.replace("${fieldTitle}", " ", "");
+			var key_fieldName = ${fieldTitle};
+			var key_fieldName = StringUtil.replace(${fieldTitle}, " ", "");
 		}
 		else {
-			var key_fieldName = "${fieldName}";
+			var key_fieldName = ${fieldName};
 		}
 
-		if ("${fieldTitle}" == "") {
+		if (${fieldTitle} == "") {
 			AssertElementNotPresent(locator1 = "FormFields#PARAGRAPH_TITLE");
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "FormFields#PARAGRAPH_TITLE",
-				value1 = "${fieldTitle}");
+				value1 = ${fieldTitle});
 		}
 
 		if (isSet(url)) {
 			AssertElementPresent(
-				key_url = "${url}",
+				key_url = ${url},
 				locator1 = "FormFields#PARAGRAPH_LINK_TEXT_BODY");
 		}
 		else {
 			AssertTextEquals(
 				locator1 = "FormFields#PARAGRAPH_BODY_TEXT_CONTENT",
-				value1 = "${fieldValue}");
+				value1 = ${fieldValue});
 		}
 	}
 
-	macro viewParagraphFieldNotPresent {
-		var key_fieldName = "${fieldTitle}";
+	@summary = "Default summary"
+	macro viewParagraphFieldNotPresent(fieldTitle = null) {
+		var key_fieldName = ${fieldTitle};
 
 		AssertElementNotPresent(locator1 = "FormFields#PARAGRAPH_TITLE");
 	}
 
-	macro viewParagraphFieldTextBody {
+	@summary = "Default summary"
+	macro viewParagraphFieldTextBody(fieldValue = null) {
 		AssertVisible(
 			locator1 = "FormFields#PARAGRAPH_BODY_TEXT_PAGES",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewPredefinedValueDropdownContent {
+	@summary = "Default summary"
+	macro viewPublishedFormFieldByIndex(fieldLabel = null, index = null) {
 		AssertElementPresent(
-			key_textContent = "${key_textContent}",
-			locator1 = "FormFields#SIDEBAR_ADVANCED_PREDEFINED_SELECT_FROM_LIST_DROPDOWN_CONTENT");
-	}
-
-	macro viewPublishedFormFieldByIndex {
-		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_index = ${index},
 			locator1 = "FormFields#PUBLISHED_FORM_FIELD_BY_INDEX");
 	}
 
-	macro viewPublishedFormFieldSeparatorByIndex {
+	@summary = "Default summary"
+	macro viewPublishedFormFieldSeparatorByIndex(index = null) {
 		AssertElementPresent(
-			key_index = "${index}",
+			key_index = ${index},
 			locator1 = "FormFields#PUBLISHED_FORM_FIELD_SEPARATOR_BY_INDEX");
 	}
 
-	macro viewRadioLabel {
+	@summary = "Default summary"
+	macro viewRadioLabel(fieldName = null, fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "Form#FIELD_LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewRadioValue {
-		var key_fieldName = "${fieldName}";
-		var key_radioOption = "${fieldValue}";
+	@summary = "Default summary"
+	macro viewRadioValue(fieldName = null, fieldValue = null) {
+		var key_fieldName = ${fieldName};
+		var key_radioOption = ${fieldValue};
 
 		AssertElementPresent(locator1 = "FormFields#RADIO_OPTION_CHECKED");
 	}
 
-	macro viewRepeatableFieldDuplicateHidden {
+	@summary = "Default summary"
+	macro viewRepeatableFieldDuplicateHidden() {
 		AssertNotVisible(locator1 = "FormFields#FIELD_ADD_DUPLICATE");
 	}
 
-	macro viewRepeatableFieldDuplicateVisible {
+	@summary = "Default summary"
+	macro viewRepeatableFieldDuplicateVisible() {
 		AssertVisible(locator1 = "FormFields#FIELD_ADD_DUPLICATE");
 	}
 
-	macro viewRepeatableFieldGroup {
+	@summary = "Default summary"
+	macro viewRepeatableFieldGroup(repeatableFieldNumber = null) {
 		AssertElementPresent(
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#FIELD_REPEATABLE_FIELD_GROUP");
 	}
 
-	macro viewRepeatableFieldHelpText {
+	@summary = "Default summary"
+	macro viewRepeatableFieldHelpText(fieldHelpText = null, fieldName = null, repeatableFieldNumber = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_fieldName = ${fieldName},
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#REPEATABLE_HELP_TEXT",
-			value1 = "${fieldHelpText}");
+			value1 = ${fieldHelpText});
 	}
 
-	macro viewRepeatableFieldInFieldGroup {
+	@summary = "Default summary"
+	macro viewRepeatableFieldInFieldGroup(fieldName = null, repeatableFieldNumber = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_fieldName = ${fieldName},
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#FIELD_REPEATABLE_FIELD_IN_FIELD_GROUP");
 	}
 
-	macro viewRepeatableFields {
-		for (var row : list "${rows}") {
+	@summary = "Default summary"
+	macro viewRepeatableFields(fieldName = null, rows = null) {
+		for (var row : list ${rows}) {
 			AssertElementPresent(
-				key_fieldName = "${fieldName}",
-				key_rowNumber = "${row}",
+				key_fieldName = ${fieldName},
+				key_rowNumber = ${row},
 				locator1 = "FormFields#UPLOAD_ON_WIDGET_ON_ANY_FIELD");
 		}
 	}
 
-	macro viewRepeatableSelectFromList {
+	@summary = "Default summary"
+	macro viewRepeatableSelectFromList(fieldLabel = null, index = null) {
 		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_index = ${index},
 			locator1 = "FormFields#SELECT_SELECT_LIST_INDEX");
 	}
 
-	macro viewRepeatableSingleSelectionRow {
-		var key_rowNumber = "${rowNumber}";
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewRepeatableSingleSelectionRow(fieldName = null, rowNumber = null) {
+		var key_rowNumber = ${rowNumber};
+		var key_fieldName = ${fieldName};
 
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
-			key_rowNumber = "${rowNumber}",
+			key_fieldName = ${fieldName},
+			key_rowNumber = ${rowNumber},
 			locator1 = "FormFields#SELECT_SINGLE_SELECTION_ROW");
 	}
 
-	macro viewRepeatableTextMultilineField {
+	@summary = "Default summary"
+	macro viewRepeatableTextMultilineField(fieldHelpText = null, fieldName = null, fieldLabel = null, repeatableFieldNumber = null) {
 		FormFields.viewRepeatableTextMultilineLabel(
-			fieldLabel = "${fieldLabel}",
-			fieldName = "${fieldName}",
-			repeatableFieldNumber = "${repeatableFieldNumber}");
+			fieldLabel = ${fieldLabel},
+			fieldName = ${fieldName},
+			repeatableFieldNumber = ${repeatableFieldNumber});
 
 		if (isSet(fieldHelpText)) {
 			FormFields.viewRepeatableFieldHelpText(
-				fieldHelpText = "${fieldHelpText}",
-				fieldName = "${fieldName}",
-				repeatableFieldNumber = "${repeatableFieldNumber}");
+				fieldHelpText = ${fieldHelpText},
+				fieldName = ${fieldName},
+				repeatableFieldNumber = ${repeatableFieldNumber});
 		}
 
 		AssertElementPresent.assertVisible(
-			key_fieldName = "${fieldName}",
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_fieldName = ${fieldName},
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#REPEATABLE_TEXT_MULTILINE_FIELD");
 	}
 
-	macro viewRepeatableTextMultilineLabel {
+	@summary = "Default summary"
+	macro viewRepeatableTextMultilineLabel(fieldName = null, fieldLabel = null, repeatableFieldNumber = null) {
 		AssertTextEquals.assertText(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#REPEATABLE_TEXT_MULTILINE_LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewRepeatableTextMultilineValue {
+	@summary = "Default summary"
+	macro viewRepeatableTextMultilineValue(fieldName = null, fieldValue = null, repeatableFieldNumber = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
-			key_repeatableFieldNumber = "${repeatableFieldNumber}",
+			key_fieldName = ${fieldName},
+			key_repeatableFieldNumber = ${repeatableFieldNumber},
 			locator1 = "FormFields#REPEATABLE_TEXT_MULTILINE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewRequiredAsterisk {
+	@summary = "Default summary"
+	macro viewRequiredAsterisk() {
 		AssertElementPresent.assertVisible(locator1 = "Icon#ASTERISK");
 	}
 
-	macro viewRequiredAsteriskDataField {
+	@summary = "Default summary"
+	macro viewRequiredAsteriskDataField(fieldFieldLabel = null) {
 		AssertElementPresent.assertVisible(
-			key_fieldFieldLabel = "${fieldFieldLabel}",
+			key_fieldFieldLabel = ${fieldFieldLabel},
 			locator1 = "Icon#ASTERISK_DATE_FIELD");
 	}
 
-	macro viewRequiredAsteriskDataFieldNotPresent {
+	@summary = "Default summary"
+	macro viewRequiredAsteriskDataFieldNotPresent(fieldFieldLabel = null) {
 		AssertElementNotPresent(
-			key_fieldFieldLabel = "${fieldFieldLabel}",
+			key_fieldFieldLabel = ${fieldFieldLabel},
 			locator1 = "Icon#ASTERISK_DATE_FIELD");
 	}
 
-	macro viewRequiredAsteriskNotPresent {
+	@summary = "Default summary"
+	macro viewRequiredAsteriskNotPresent() {
 		AssertElementNotPresent(locator1 = "Icon#ASTERISK");
 	}
 
-	macro viewRequiredErrorMessage {
+	@summary = "Default summary"
+	macro viewRequiredErrorMessage(errorMessage = null) {
 		AssertElementPresent(
-			key_errorMessage = "${errorMessage}",
+			key_errorMessage = ${errorMessage},
 			locator1 = "FormFields#SIDEBAR_BASIC_ERROR_MESSAGE");
 	}
 
-	macro viewRichTextPredefinedValue {
+	@summary = "Default summary"
+	macro viewRichTextPredefinedValue(fieldValue = null) {
 		SelectFrame.selectFrameNoLoading(
 			key_fieldLabel = "Rich Text",
 			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
@@ -1922,148 +2106,166 @@ definition {
 		AssertTextEquals(
 			key_fieldName = "Rich Text",
 			locator1 = "CKEditor#BODY",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro viewRichTextValue {
+	@summary = "Default summary"
+	macro viewRichTextValue(fieldName = null, fieldValue = null) {
 		SelectFrame.selectFrameNoLoading(
 			key_fieldLabel = "Rich Text",
 			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
 
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "CKEditor#BODY",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro viewSelectFromListOption {
+	@summary = "Default summary"
+	macro viewSelectFromListOption(optionValue) {
 		AssertElementPresent(
-			key_value = "${optionValue}",
-			locator1 = "FormFields#OPTION_FROM_SELECTED_LIST");
+			key_menuItem = ${optionValue},
+			locator1 = "MenuItem#MENU_ITEM_SPECIFIC");
 	}
 
-	macro viewSelectLabel {
+	@summary = "Default summary"
+	macro viewSelectLabel(fieldName = null, fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "Form#FIELD_LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewSelectMultipleOptions {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewSelectMultipleOptions(fieldName = null, selectOptionsList = null) {
+		var key_fieldName = ${fieldName};
 
-		for (var selectOption : list "${selectOptionsList}") {
+		for (var selectOption : list ${selectOptionsList}) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "FormFields#SELECT_FIELD",
-				value1 = "${selectOption}");
+				value1 = ${selectOption});
 		}
 	}
 
-	macro viewSelectMultipleOptionsPredefined {
-		for (var selectOption : list "${selectOptionsList}") {
+	@summary = "Default summary"
+	macro viewSelectMultipleOptionsPredefined(selectOptionsList = null) {
+		for (var selectOption : list ${selectOptionsList}) {
 			AssertElementPresent(
-				checkboxName = "${selectOption}",
+				checkboxName = ${selectOption},
 				locator1 = "FormFields#ANY_CHECKBOX_CHECKED");
 		}
 	}
 
-	macro viewSelectOption {
+	@summary = "Default summary"
+	macro viewSelectOption(fieldName = null, selectOption = null) {
 		AssertTextEquals.assertPartialText(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#SELECT_FIELD",
-			value1 = "${selectOption}");
+			value1 = ${selectOption});
 	}
 
-	macro viewSelectOptionsList {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewSelectOptionsList(fieldName = null, selectOption = null) {
+		var key_fieldName = ${fieldName};
 
 		Click(locator1 = "FormFields#SELECT_FIELD");
 
-		var key_selectOption = "${selectOption}";
+		var key_menuItem = ${selectOption};
 
-		AssertElementPresent(locator1 = "FormFields#SELECT_FIELD_OPTIONS_LIST");
+		AssertElementPresent(locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 	}
 
-	macro viewSelectOptionsRowFieldValue {
-		var key_rowNumber = "${rowNumber}";
+	@summary = "Default summary"
+	macro viewSelectOptionsRowFieldValue(rowNumber = null, fieldValue = null) {
+		var key_rowNumber = ${rowNumber};
 
 		AssertTextEquals(
 			locator1 = "FormFields#SELECT_OPTIONS_OPTION_VALUE_FIELD_VISIBLE",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewSelectValue {
+	@summary = "Default summary"
+	macro viewSelectValue(fieldName = null) {
 		AssertElementPresent(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#SELECT_FIELD");
 	}
 
-	macro viewSeparator {
+	@summary = "Default summary"
+	macro viewSeparator(fieldLabel = null) {
 		AssertTextEquals(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 
 		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#SEPARATOR_LINE");
 	}
 
-	macro viewSingleSelectionOption {
+	@summary = "Default summary"
+	macro viewSingleSelectionOption(optionLabel = null, optionPosition = null) {
 		AssertElementPresent(
-			key_optionLabel = "${optionLabel}",
-			key_position = "${optionPosition}",
+			key_optionLabel = ${optionLabel},
+			key_position = ${optionPosition},
 			locator1 = "FormFields#SELECT_ASSERT_RADIO_OPTION_ORDER");
 	}
 
-	macro viewSourceElement {
-		var key_value = "${value}";
-		var key_elementName = "${elementName}";
+	@summary = "Default summary"
+	macro viewSourceElement(value = null, elementName = null) {
+		var key_value = ${value};
+		var key_elementName = ${elementName};
 
 		AssertElementPresent(locator1 = "FormFields#ANY_SOURCE_ELEMENT");
 	}
 
-	macro viewSwitch {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewSwitch(fieldName = null) {
+		var key_fieldName = ${fieldName};
 
 		AssertElementPresent(locator1 = "FormFields#SWITCH");
 	}
 
-	macro viewSwitchChecked {
+	@summary = "Default summary"
+	macro viewSwitchChecked(fieldName = null) {
 		AssertChecked.assertCheckedNotVisible(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#SWITCH");
 	}
 
-	macro viewSwitchLabel {
+	@summary = "Default summary"
+	macro viewSwitchLabel(fieldName = null, fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewSwitchLabelNotPresent {
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewSwitchLabelNotPresent(fieldName = null, fieldLabel = null) {
+		var key_fieldName = ${fieldName};
 
 		AssertTextNotPresent(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewSwitchOption {
-		var key_fieldName = "${fieldName}";
-		var key_optionValue = "${optionValue}";
+	@summary = "Default summary"
+	macro viewSwitchOption(fieldName = null, optionValue = null) {
+		var key_fieldName = ${fieldName};
+		var key_optionValue = ${optionValue};
 
 		AssertElementPresent(locator1 = "FormFields#SWITCH_OPTION_IN_FIELD");
 	}
 
-	macro viewTableNotPresent {
+	@summary = "Default summary"
+	macro viewTableNotPresent() {
 		AssertElementNotPresent(
 			key_fieldName = "liferay-ddm-form-field-paragraph-text",
 			locator1 = "FormFields#PARAGRAPH_BODY_CONTENT_TABLE");
@@ -2071,199 +2273,203 @@ definition {
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro viewTextAreaValue {
+	@summary = "Default summary"
+	macro viewTextAreaValue(fieldName = null, fieldValue = null) {
 		AssertTextEquals.assertText(
-			key_text = "${fieldName}",
+			key_text = ${fieldName},
 			locator1 = "TextArea#ANY",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewTextField {
+	@summary = "Default summary"
+	macro viewTextField(fieldHelpText = null, fieldName = null, fieldLabel = null) {
 		FormFields.viewTextLabel(
-			fieldLabel = "${fieldLabel}",
-			fieldName = "${fieldName}");
+			fieldLabel = ${fieldLabel},
+			fieldName = ${fieldName});
 
 		if (isSet(fieldHelpText)) {
 			FormFields.viewFieldHelpText(
-				fieldHelpText = "${fieldHelpText}",
-				fieldName = "${fieldName}");
+				fieldHelpText = ${fieldHelpText},
+				fieldName = ${fieldName});
 		}
 
 		AssertElementPresent.assertVisible(
-			key_fieldLabel = "${fieldLabel}",
-			key_fieldName = "${fieldName}",
+			key_fieldLabel = ${fieldLabel},
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD");
 	}
 
-	macro viewTextFieldNotPresent {
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewTextFieldNotPresent(fieldName = null, fieldLabel = null) {
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldName = ${fieldName};
 
 		AssertElementNotPresent(locator1 = "FormFields#LABEL");
 
 		AssertElementNotPresent(locator1 = "FormFields#TEXT_FIELD");
 	}
 
-	macro viewTextFieldNotVisible {
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewTextFieldNotVisible(fieldName = null, fieldLabel = null) {
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldName = ${fieldName};
 
 		AssertNotVisible(locator1 = "FormFields#LABEL");
 
 		AssertNotVisible(locator1 = "FormFields#TEXT_FIELD");
 	}
 
-	macro viewTextLabel {
+	@summary = "Default summary"
+	macro viewTextLabel(fieldLabel = null) {
 		AssertTextEquals.assertText(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "FormFields#LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewTextMultilineValue {
+	@summary = "Default summary"
+	macro viewTextMultilineValue(fieldName = null, fieldValue = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_MULTILINE_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewTextValue {
+	@summary = "Default summary"
+	macro viewTextValue(fieldName = null, fieldValue = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewTextValueAlt {
+	@summary = "Default summary"
+	macro viewTextValueAlt(fieldName = null, fieldValue = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD_ALT",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewTextValueDescription {
+	@summary = "Default summary"
+	macro viewTextValueDescription(fieldName = null, fieldValue = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#TEXT_FIELD_DESCRIPTION",
-			value1 = "${fieldValue}");
+			value1 = ${fieldValue});
 	}
 
-	macro viewTransltaionNotDuplicated {
-		AssertElementPresent(
-			key_language = "${key_language1}",
-			key_position = "${key_position1}",
-			locator1 = "FormFields#TRANSLATION_LIST");
-
-		AssertElementNotPresent(
-			key_language = "${key_language2}",
-			key_position = "${key_position2}",
-			locator1 = "FormFields#TRANSLATION_LIST");
-	}
-
-	macro viewUploadField {
+	@summary = "Default summary"
+	macro viewUploadField(fieldName = null, fieldLabel = null) {
 		FormFields.viewUploadLabel(
-			fieldLabel = "${fieldLabel}",
-			fieldName = "${fieldName}");
+			fieldLabel = ${fieldLabel},
+			fieldName = ${fieldName});
 
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldName = "${fieldName}";
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldName = ${fieldName};
 
 		AssertElementPresent.assertVisible(locator1 = "FormFields#UPLOAD_FIELD");
 	}
 
-	macro viewUploadFieldAsGuest {
+	@summary = "Default summary"
+	macro viewUploadFieldAsGuest(fieldName = null, fieldLabel = null) {
 		FormFields.viewUploadLabel(
-			fieldLabel = "${fieldLabel}",
-			fieldName = "${fieldName}");
+			fieldLabel = ${fieldLabel},
+			fieldName = ${fieldName});
 
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldName = "${fieldName}";
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldName = ${fieldName};
 
 		AssertElementPresent(locator1 = "FormFields#UPLOAD_FIELD_GUEST");
 	}
 
-	macro viewUploadLabel {
-		var key_fieldLabel = "${fieldLabel}";
-		var key_fieldName = "${fieldName}";
+	@summary = "Default summary"
+	macro viewUploadLabel(fieldName = null, fieldLabel = null) {
+		var key_fieldLabel = ${fieldLabel};
+		var key_fieldName = ${fieldName};
 
 		AssertTextEquals.assertText(
 			locator1 = "Form#FIELD_LABEL",
-			value1 = "${fieldLabel}");
+			value1 = ${fieldLabel});
 	}
 
-	macro viewValidationCustomDateEndsOn {
-		var key_endsOnOperation = "${endsOnOperation}";
-		var key_endsOnOption = "${endsOnOption}";
-		var key_endsOnQuantity = "${endsOnQuantity}";
-		var key_endsOnUnit = "${endsOnUnit}";
+	@summary = "Default summary"
+	macro viewValidationCustomDateEndsOn(endsOnQuantity = null, endsOnUnit = null, endsOnOperation = null, endsOnOption = null) {
+		var key_endsOnOperation = ${endsOnOperation};
+		var key_endsOnOption = ${endsOnOption};
+		var key_endsOnQuantity = ${endsOnQuantity};
+		var key_endsOnUnit = ${endsOnUnit};
 
 		if (isSet(endsOnOption)) {
 			Click(locator1 = "FormFields#VALIDATION_ENDS_ON");
 
-			DropdownMenuItem.click(menuItem = "${key_endsOnOption}");
+			DropdownMenuItem.click(menuItem = ${key_endsOnOption});
 		}
 
 		if (isSet(endsOnOperation)) {
 			AssertTextEquals(
 				locator1 = "FormFields#VALIDATION_ENDS_ON_OPERATION",
-				value1 = "${key_endsOnOperation}");
+				value1 = ${key_endsOnOperation});
 		}
 
 		if (isSet(endsOnQuantity)) {
 			AssertTextEquals.assertValue(
 				locator1 = "FormFields#VALIDATION_ENDS_ON_QUANTITY_VALUE",
-				value1 = "${key_endsOnQuantity}");
+				value1 = ${key_endsOnQuantity});
 		}
 
 		if (isSet(endsOnUnit)) {
 			AssertTextEquals(
 				locator1 = "FormFields#VALIDATION_ENDS_ON_UNIT_VALUE",
-				value1 = "${key_endsOnUnit}");
+				value1 = ${key_endsOnUnit});
 		}
 	}
 
-	macro viewValidationCustomDateStartsFrom {
-		var key_startsFromOperation = "${startsFromOperation}";
-		var key_startsFromOption = "${startsFromOption}";
-		var key_startsFromQuantity = "${startsFromQuantity}";
-		var key_startsFromUnit = "${startsFromUnit}";
+	@summary = "Default summary"
+	macro viewValidationCustomDateStartsFrom(startsFromOperation = null, startsFromOption = null, startsFromUnit = null, startsFromQuantity = null) {
+		var key_startsFromOperation = ${startsFromOperation};
+		var key_startsFromOption = ${startsFromOption};
+		var key_startsFromQuantity = ${startsFromQuantity};
+		var key_startsFromUnit = ${startsFromUnit};
 
 		if (isSet(startsFromOption)) {
 			Click(locator1 = "FormFields#VALIDATION_STARTS_FROM");
 
-			DropdownMenuItem.click(menuItem = "${key_startsFromOption}");
+			DropdownMenuItem.click(menuItem = ${key_startsFromOption});
 		}
 
 		if (isSet(startsFromOperation)) {
 			AssertTextEquals(
 				locator1 = "FormFields#VALIDATION_STARTS_FROM_OPERATION",
-				value1 = "${key_startsFromOperation}");
+				value1 = ${key_startsFromOperation});
 		}
 
 		if (isSet(startsFromQuantity)) {
 			AssertTextEquals.assertValue(
 				locator1 = "FormFields#VALIDATION_STARTS_FROM_QUANTITY_VALUE",
-				value1 = "${key_startsFromQuantity}");
+				value1 = ${key_startsFromQuantity});
 		}
 
 		if (isSet(startsFromUnit)) {
 			AssertTextEquals(
 				locator1 = "FormFields#VALIDATION_STARTS_FROM_UNIT",
-				value1 = "${key_startsFromUnit}");
+				value1 = ${key_startsFromUnit});
 		}
 	}
 
-	macro viewValidationValueFieldNotPresent {
-		var key_fieldLabel = "${fieldLabel}";
+	@summary = "Default summary"
+	macro viewValidationValueFieldNotPresent(fieldLabel = null) {
+		var key_fieldLabel = ${fieldLabel};
 
 		AssertElementNotPresent(locator1 = "FormFields#VALIDATION_VALUE_FIELD");
 	}
 
-	macro viewWarningMessage {
+	@summary = "Default summary"
+	macro viewWarningMessage(fieldName = null, warningMessage = null) {
 		AssertTextEquals(
-			key_fieldName = "${fieldName}",
+			key_fieldName = ${fieldName},
 			locator1 = "FormFields#HELP_TEXT",
-			value1 = "${warningMessage}");
+			value1 = ${warningMessage});
 	}
 
 }

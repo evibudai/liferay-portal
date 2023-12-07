@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.v7_0_0;
@@ -34,8 +25,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Brian Wing Shun Chan
@@ -119,26 +108,26 @@ public class UpgradeOrganization extends UpgradeProcess {
 					continue;
 				}
 
-				List<String> treePaths = StringUtil.split(
+				List<String> organizationIds = StringUtil.split(
 					organizationGroup._organizationTreePath, CharPool.SLASH);
 
-				Stream<String> stream = treePaths.stream();
+				StringBundler sb = new StringBundler(
+					(2 * organizationIds.size()) + 1);
 
-				String groupTreePath = stream.filter(
-					organizationId -> organizationId.length() > 0
-				).map(
-					organizationId -> String.valueOf(
-						OrganizationGroup.getGroupId(organizationId))
-				).collect(
-					Collectors.joining(
-						StringPool.SLASH, StringPool.SLASH, StringPool.SLASH)
-				);
+				sb.append(StringPool.SLASH);
+
+				for (String organizationId : organizationIds) {
+					if (organizationId.length() > 0) {
+						sb.append(OrganizationGroup.getGroupId(organizationId));
+						sb.append(StringPool.SLASH);
+					}
+				}
 
 				preparedStatement2.setLong(
 					1,
 					OrganizationGroup.getGroupId(
 						organizationGroup._parentOrganizationId));
-				preparedStatement2.setString(2, groupTreePath);
+				preparedStatement2.setString(2, sb.toString());
 				preparedStatement2.setLong(3, organizationGroup._groupId);
 
 				preparedStatement2.addBatch();

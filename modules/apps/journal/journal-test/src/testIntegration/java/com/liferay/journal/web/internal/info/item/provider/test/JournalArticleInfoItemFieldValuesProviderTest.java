@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.info.item.provider.test;
@@ -21,7 +12,7 @@ import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.type.WebImage;
@@ -53,7 +44,6 @@ import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -105,13 +95,13 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), content,
-			ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(), null,
+			ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(), null,
 			displayDateCalendar.get(Calendar.MONTH),
 			displayDateCalendar.get(Calendar.DAY_OF_MONTH),
 			displayDateCalendar.get(Calendar.YEAR),
 			displayDateCalendar.get(Calendar.HOUR_OF_DAY),
 			displayDateCalendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true, 0, 0,
-			0, 0, 0, true, true, false, null, null, null, null,
+			0, 0, 0, true, true, false, 0, 0, null, null, null, null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		InfoItemFieldValues infoItemFieldValues =
@@ -152,10 +142,8 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 
 		InfoField infoField = ddmTemplateInfoFieldValue.getInfoField();
 
-		Optional<Boolean> optional = infoField.getAttributeOptional(
-			TextInfoFieldType.HTML);
-
-		Assert.assertTrue(optional.orElse(false));
+		Assert.assertEquals(
+			HTMLInfoFieldType.INSTANCE, infoField.getInfoFieldType());
 	}
 
 	@Test
@@ -192,15 +180,15 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 					RandomTestUtil.randomLocaleStringMap(),
 					RandomTestUtil.randomLocaleStringMap(),
 					RandomTestUtil.randomLocaleStringMap(), content,
-					ddmStructure.getStructureKey(),
-					ddmTemplate.getTemplateKey(), null,
-					displayDateCalendar.get(Calendar.MONTH),
+					ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(),
+					null, displayDateCalendar.get(Calendar.MONTH),
 					displayDateCalendar.get(Calendar.DAY_OF_MONTH),
 					displayDateCalendar.get(Calendar.YEAR),
 					displayDateCalendar.get(Calendar.HOUR_OF_DAY),
 					displayDateCalendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0,
-					true, 0, 0, 0, 0, 0, true, true, true, null, _getFile(),
-					null, null,
+					true, 0, 0, 0, 0, 0, true, true, true,
+					JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER, 0,
+					null, _getFile(), null, null,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId()));
 
@@ -215,7 +203,7 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 
 			Assert.assertEquals(
 				journalArticle.getArticleImageURL(themeDisplay),
-				webImage.getUrl());
+				webImage.getURL());
 		}
 		finally {
 			ServiceContextThreadLocal.pushServiceContext(
@@ -264,6 +252,8 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 
 		themeDisplay.setRequest(mockHttpServletRequest);
 
+		themeDisplay.setScopeGroupId(_group.getGroupId());
+		themeDisplay.setSiteGroupId(_group.getGroupId());
 		themeDisplay.setURLCurrent("http://localhost:8080/currentURL");
 
 		return themeDisplay;
@@ -273,7 +263,7 @@ public class JournalArticleInfoItemFieldValuesProviderTest {
 	private Group _group;
 
 	@Inject(
-		filter = "component.name=*.JournalArticleInfoItemFieldValuesProvider"
+		filter = "component.name=com.liferay.journal.web.internal.info.item.provider.JournalArticleInfoItemFieldValuesProvider"
 	)
 	private InfoItemFieldValuesProvider _infoItemFieldValuesProvider;
 

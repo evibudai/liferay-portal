@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.friendly.url.model.impl;
@@ -216,80 +207,95 @@ public class FriendlyURLEntryMappingModelImpl
 	public Map<String, Function<FriendlyURLEntryMapping, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<FriendlyURLEntryMapping, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<FriendlyURLEntryMapping, Object>>
-		_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<FriendlyURLEntryMapping, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<FriendlyURLEntryMapping, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<FriendlyURLEntryMapping, Object>>();
-		Map<String, BiConsumer<FriendlyURLEntryMapping, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<FriendlyURLEntryMapping, ?>>();
+		private static final Map
+			<String, Function<FriendlyURLEntryMapping, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", FriendlyURLEntryMapping::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<FriendlyURLEntryMapping, Long>)
-				FriendlyURLEntryMapping::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", FriendlyURLEntryMapping::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<FriendlyURLEntryMapping, Long>)
-				FriendlyURLEntryMapping::setCtCollectionId);
-		attributeGetterFunctions.put(
-			"friendlyURLEntryMappingId",
-			FriendlyURLEntryMapping::getFriendlyURLEntryMappingId);
-		attributeSetterBiConsumers.put(
-			"friendlyURLEntryMappingId",
-			(BiConsumer<FriendlyURLEntryMapping, Long>)
-				FriendlyURLEntryMapping::setFriendlyURLEntryMappingId);
-		attributeGetterFunctions.put(
-			"companyId", FriendlyURLEntryMapping::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<FriendlyURLEntryMapping, Long>)
-				FriendlyURLEntryMapping::setCompanyId);
-		attributeGetterFunctions.put(
-			"classNameId", FriendlyURLEntryMapping::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<FriendlyURLEntryMapping, Long>)
-				FriendlyURLEntryMapping::setClassNameId);
-		attributeGetterFunctions.put(
-			"classPK", FriendlyURLEntryMapping::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<FriendlyURLEntryMapping, Long>)
-				FriendlyURLEntryMapping::setClassPK);
-		attributeGetterFunctions.put(
-			"friendlyURLEntryId",
-			FriendlyURLEntryMapping::getFriendlyURLEntryId);
-		attributeSetterBiConsumers.put(
-			"friendlyURLEntryId",
-			(BiConsumer<FriendlyURLEntryMapping, Long>)
-				FriendlyURLEntryMapping::setFriendlyURLEntryId);
+		static {
+			Map<String, Function<FriendlyURLEntryMapping, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<FriendlyURLEntryMapping, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", FriendlyURLEntryMapping::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", FriendlyURLEntryMapping::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"friendlyURLEntryMappingId",
+				FriendlyURLEntryMapping::getFriendlyURLEntryMappingId);
+			attributeGetterFunctions.put(
+				"companyId", FriendlyURLEntryMapping::getCompanyId);
+			attributeGetterFunctions.put(
+				"classNameId", FriendlyURLEntryMapping::getClassNameId);
+			attributeGetterFunctions.put(
+				"classPK", FriendlyURLEntryMapping::getClassPK);
+			attributeGetterFunctions.put(
+				"friendlyURLEntryId",
+				FriendlyURLEntryMapping::getFriendlyURLEntryId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<FriendlyURLEntryMapping, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<FriendlyURLEntryMapping, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<FriendlyURLEntryMapping, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<FriendlyURLEntryMapping, Long>)
+					FriendlyURLEntryMapping::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<FriendlyURLEntryMapping, Long>)
+					FriendlyURLEntryMapping::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"friendlyURLEntryMappingId",
+				(BiConsumer<FriendlyURLEntryMapping, Long>)
+					FriendlyURLEntryMapping::setFriendlyURLEntryMappingId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<FriendlyURLEntryMapping, Long>)
+					FriendlyURLEntryMapping::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<FriendlyURLEntryMapping, Long>)
+					FriendlyURLEntryMapping::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<FriendlyURLEntryMapping, Long>)
+					FriendlyURLEntryMapping::setClassPK);
+			attributeSetterBiConsumers.put(
+				"friendlyURLEntryId",
+				(BiConsumer<FriendlyURLEntryMapping, Long>)
+					FriendlyURLEntryMapping::setFriendlyURLEntryId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -687,7 +693,8 @@ public class FriendlyURLEntryMappingModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<FriendlyURLEntryMapping, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

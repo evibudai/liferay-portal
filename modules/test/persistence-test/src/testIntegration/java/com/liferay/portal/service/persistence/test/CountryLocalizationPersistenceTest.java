@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.persistence.test;
@@ -123,6 +114,8 @@ public class CountryLocalizationPersistenceTest {
 
 		newCountryLocalization.setMvccVersion(RandomTestUtil.nextLong());
 
+		newCountryLocalization.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newCountryLocalization.setCompanyId(RandomTestUtil.nextLong());
 
 		newCountryLocalization.setCountryId(RandomTestUtil.nextLong());
@@ -140,6 +133,9 @@ public class CountryLocalizationPersistenceTest {
 		Assert.assertEquals(
 			existingCountryLocalization.getMvccVersion(),
 			newCountryLocalization.getMvccVersion());
+		Assert.assertEquals(
+			existingCountryLocalization.getCtCollectionId(),
+			newCountryLocalization.getCtCollectionId());
 		Assert.assertEquals(
 			existingCountryLocalization.getCountryLocalizationId(),
 			newCountryLocalization.getCountryLocalizationId());
@@ -200,9 +196,9 @@ public class CountryLocalizationPersistenceTest {
 
 	protected OrderByComparator<CountryLocalization> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"CountryLocalization", "mvccVersion", true, "countryLocalizationId",
-			true, "companyId", true, "countryId", true, "languageId", true,
-			"title", true);
+			"CountryLocalization", "mvccVersion", true, "ctCollectionId", true,
+			"countryLocalizationId", true, "companyId", true, "countryId", true,
+			"languageId", true, "title", true);
 	}
 
 	@Test
@@ -476,6 +472,8 @@ public class CountryLocalizationPersistenceTest {
 		CountryLocalization countryLocalization = _persistence.create(pk);
 
 		countryLocalization.setMvccVersion(RandomTestUtil.nextLong());
+
+		countryLocalization.setCtCollectionId(RandomTestUtil.nextLong());
 
 		countryLocalization.setCompanyId(RandomTestUtil.nextLong());
 

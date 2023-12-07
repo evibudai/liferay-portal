@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.internal.graphql.query.v1_0;
 
+import com.liferay.headless.commerce.admin.channel.dto.v1_0.AccountAddressChannel;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.Channel;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.OrderType;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.PaymentMethodGroupRelOrderType;
@@ -23,6 +15,7 @@ import com.liferay.headless.commerce.admin.channel.dto.v1_0.ShippingFixedOptionT
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.ShippingMethod;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.TaxCategory;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.Term;
+import com.liferay.headless.commerce.admin.channel.resource.v1_0.AccountAddressChannelResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ChannelResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.OrderTypeResource;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.PaymentMethodGroupRelOrderTypeResource;
@@ -63,6 +56,14 @@ import org.osgi.service.component.ComponentServiceObjects;
  */
 @Generated("")
 public class Query {
+
+	public static void setAccountAddressChannelResourceComponentServiceObjects(
+		ComponentServiceObjects<AccountAddressChannelResource>
+			accountAddressChannelResourceComponentServiceObjects) {
+
+		_accountAddressChannelResourceComponentServiceObjects =
+			accountAddressChannelResourceComponentServiceObjects;
+	}
 
 	public static void setChannelResourceComponentServiceObjects(
 		ComponentServiceObjects<ChannelResource>
@@ -143,6 +144,76 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {accountAddressByExternalReferenceCodeAccountAddressChannels(externalReferenceCode: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public AccountAddressChannelPage
+			accountAddressByExternalReferenceCodeAccountAddressChannels(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_accountAddressChannelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			accountAddressChannelResource -> new AccountAddressChannelPage(
+				accountAddressChannelResource.
+					getAccountAddressByExternalReferenceCodeAccountAddressChannelsPage(
+						externalReferenceCode, Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {accountAddressIdAccountAddressChannels(addressId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public AccountAddressChannelPage accountAddressIdAccountAddressChannels(
+			@GraphQLName("addressId") Long addressId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_accountAddressChannelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			accountAddressChannelResource -> new AccountAddressChannelPage(
+				accountAddressChannelResource.
+					getAccountAddressIdAccountAddressChannelsPage(
+						addressId, search,
+						_filterBiFunction.apply(
+							accountAddressChannelResource, filterString),
+						Pagination.of(page, pageSize),
+						_sortsBiFunction.apply(
+							accountAddressChannelResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {accountAddressChannelChannel(accountAddressChannelId: ___){accountId, currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Channel accountAddressChannelChannel(
+			@GraphQLName("accountAddressChannelId") Long
+				accountAddressChannelId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource -> channelResource.getAccountAddressChannelChannel(
+				accountAddressChannelId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channels(filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves channels.")
@@ -168,7 +239,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelByExternalReferenceCode(externalReferenceCode: ___){currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelByExternalReferenceCode(externalReferenceCode: ___){accountId, currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrive information of the given Channel.")
 	public Channel channelByExternalReferenceCode(
@@ -186,7 +257,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channel(channelId: ___){currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channel(channelId: ___){accountId, currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrive information of the given Channel.")
 	public Channel channel(@GraphQLName("channelId") Long channelId)
@@ -457,6 +528,37 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Channel.class)
+	public class
+		GetAccountAddressByExternalReferenceCodeAccountAddressChannelsPageTypeExtension {
+
+		public GetAccountAddressByExternalReferenceCodeAccountAddressChannelsPageTypeExtension(
+			Channel channel) {
+
+			_channel = channel;
+		}
+
+		@GraphQLField
+		public AccountAddressChannelPage
+				accountAddressByExternalReferenceCodeAccountAddressChannels(
+					@GraphQLName("pageSize") int pageSize,
+					@GraphQLName("page") int page)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_accountAddressChannelResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				accountAddressChannelResource -> new AccountAddressChannelPage(
+					accountAddressChannelResource.
+						getAccountAddressByExternalReferenceCodeAccountAddressChannelsPage(
+							_channel.getExternalReferenceCode(),
+							Pagination.of(page, pageSize))));
+		}
+
+		private Channel _channel;
+
+	}
+
+	@GraphQLTypeExtension(Channel.class)
 	public class GetChannelShippingMethodsPageTypeExtension {
 
 		public GetChannelShippingMethodsPageTypeExtension(Channel channel) {
@@ -481,6 +583,39 @@ public class Query {
 
 	}
 
+	@GraphQLName("AccountAddressChannelPage")
+	public class AccountAddressChannelPage {
+
+		public AccountAddressChannelPage(Page accountAddressChannelPage) {
+			actions = accountAddressChannelPage.getActions();
+
+			items = accountAddressChannelPage.getItems();
+			lastPage = accountAddressChannelPage.getLastPage();
+			page = accountAddressChannelPage.getPage();
+			pageSize = accountAddressChannelPage.getPageSize();
+			totalCount = accountAddressChannelPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<AccountAddressChannel> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
 	@GraphQLName("ChannelPage")
 	public class ChannelPage {
 
@@ -495,7 +630,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Channel> items;
@@ -528,7 +663,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<OrderType> items;
@@ -563,7 +698,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PaymentMethodGroupRelOrderType> items;
@@ -598,7 +733,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<PaymentMethodGroupRelTerm> items;
@@ -633,7 +768,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<ShippingFixedOptionOrderType> items;
@@ -666,7 +801,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<ShippingFixedOptionTerm> items;
@@ -699,7 +834,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<ShippingMethod> items;
@@ -732,7 +867,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<TaxCategory> items;
@@ -765,7 +900,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Term> items;
@@ -801,6 +936,22 @@ public class Query {
 		finally {
 			componentServiceObjects.ungetService(resource);
 		}
+	}
+
+	private void _populateResourceContext(
+			AccountAddressChannelResource accountAddressChannelResource)
+		throws Exception {
+
+		accountAddressChannelResource.setContextAcceptLanguage(_acceptLanguage);
+		accountAddressChannelResource.setContextCompany(_company);
+		accountAddressChannelResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		accountAddressChannelResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		accountAddressChannelResource.setContextUriInfo(_uriInfo);
+		accountAddressChannelResource.setContextUser(_user);
+		accountAddressChannelResource.setGroupLocalService(_groupLocalService);
+		accountAddressChannelResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(ChannelResource channelResource)
@@ -949,6 +1100,8 @@ public class Query {
 		termResource.setRoleLocalService(_roleLocalService);
 	}
 
+	private static ComponentServiceObjects<AccountAddressChannelResource>
+		_accountAddressChannelResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ChannelResource>
 		_channelResourceComponentServiceObjects;
 	private static ComponentServiceObjects<OrderTypeResource>

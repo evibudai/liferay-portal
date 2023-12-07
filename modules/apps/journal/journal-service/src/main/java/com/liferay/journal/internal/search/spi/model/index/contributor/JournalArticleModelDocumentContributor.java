@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.search.spi.model.index.contributor;
@@ -30,7 +21,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.Portal;
@@ -39,6 +31,7 @@ import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 import com.liferay.trash.TrashHelper;
 
+import java.util.Date;
 import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
@@ -48,7 +41,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Lourdes Fernández Besada
  */
 @Component(
-	immediate = true,
 	property = "indexer.class.name=com.liferay.journal.model.JournalArticle",
 	service = ModelDocumentContributor.class
 )
@@ -58,7 +50,7 @@ public class JournalArticleModelDocumentContributor
 	@Override
 	public void contribute(Document document, JournalArticle journalArticle) {
 		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing article " + journalArticle);
+			_log.debug("Indexing journal article " + journalArticle);
 		}
 
 		_uidFactory.setUID(journalArticle, document);
@@ -74,13 +66,14 @@ public class JournalArticleModelDocumentContributor
 		DDMFormValues ddmFormValues = null;
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
-			_portal.getSiteGroupId(journalArticle.getGroupId()),
-			_portal.getClassNameId(JournalArticle.class),
-			journalArticle.getDDMStructureKey(), true);
+			journalArticle.getDDMStructureId());
 
 		if (ddmStructure != null) {
 			document.addKeyword(
 				Field.CLASS_TYPE_ID, ddmStructure.getStructureId());
+
+			document.addKeyword(
+				"ddmStructureKey", ddmStructure.getStructureKey());
 
 			ddmFormValues = journalArticle.getDDMFormValues();
 
@@ -103,6 +96,10 @@ public class JournalArticleModelDocumentContributor
 			}
 		}
 
+		if (!document.hasField(Field.CREATE_DATE)) {
+			document.addDate(Field.CREATE_DATE, journalArticle.getCreateDate());
+		}
+
 		String[] descriptionAvailableLanguageIds =
 			_localization.getAvailableLanguageIds(
 				journalArticle.getDescriptionMapAsXML());
@@ -110,7 +107,7 @@ public class JournalArticleModelDocumentContributor
 		for (String descriptionAvailableLanguageId :
 				descriptionAvailableLanguageIds) {
 
-			String description = _html.stripHtml(
+			String description = HtmlUtil.stripHtml(
 				journalArticle.getDescription(descriptionAvailableLanguageId));
 
 			document.addText(
@@ -124,6 +121,21 @@ public class JournalArticleModelDocumentContributor
 			Field.EXPIRATION_DATE, journalArticle.getExpirationDate());
 		document.addKeyword(Field.FOLDER_ID, journalArticle.getFolderId());
 		document.addKeyword(Field.LAYOUT_UUID, journalArticle.getLayoutUuid());
+
+		if (!document.hasField(Field.MODIFIED_DATE)) {
+			document.addDate(
+				Field.MODIFIED_DATE, journalArticle.getModifiedDate());
+		}
+
+		if (!document.hasField(Field.PUBLISH_DATE)) {
+			if (journalArticle.isApproved()) {
+				document.addDate(
+					Field.PUBLISH_DATE, journalArticle.getDisplayDate());
+			}
+			else {
+				document.addDate(Field.PUBLISH_DATE, new Date(0));
+			}
+		}
 
 		String[] titleAvailableLanguageIds =
 			_localization.getAvailableLanguageIds(
@@ -142,8 +154,6 @@ public class JournalArticleModelDocumentContributor
 			Field.TREE_PATH,
 			StringUtil.split(journalArticle.getTreePath(), CharPool.SLASH));
 		document.addKeyword(Field.VERSION, journalArticle.getVersion());
-		document.addKeyword(
-			"ddmStructureKey", journalArticle.getDDMStructureKey());
 		document.addKeyword(
 			"ddmTemplateKey", journalArticle.getDDMTemplateKey());
 
@@ -167,6 +177,20 @@ public class JournalArticleModelDocumentContributor
 		document.addKeyword(
 			"latest", JournalUtil.isLatestArticle(journalArticle));
 
+		if (!document.hasField("localized_title")) {
+			document.addLocalizedKeyword(
+				"localized_title",
+				_localization.populateLocalizationMap(
+					HashMapBuilder.putAll(
+						journalArticle.getTitleMap()
+					).build(),
+					journalArticle.getDefaultLanguageId(),
+					journalArticle.getGroupId()),
+				true, true);
+		}
+
+		document.addDate("reviewDate", journalArticle.getReviewDate());
+
 		// Scheduled listable articles should be visible in asset browser
 
 		if (journalArticle.isScheduled() && headListable) {
@@ -177,13 +201,15 @@ public class JournalArticleModelDocumentContributor
 			}
 		}
 
-		for (String titleAvailableLanguageId : titleAvailableLanguageIds) {
+		for (Locale locale :
+				_language.getAvailableLocales(journalArticle.getGroupId())) {
+
+			String languageId = LocaleUtil.toLanguageId(locale);
+
 			try {
 				document.addKeywordSortable(
-					_localization.getLocalizedName(
-						"urlTitle", titleAvailableLanguageId),
-					journalArticle.getUrlTitle(
-						LocaleUtil.fromLanguageId(titleAvailableLanguageId)));
+					_localization.getLocalizedName("urlTitle", languageId),
+					journalArticle.getUrlTitle(locale));
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
@@ -191,7 +217,7 @@ public class JournalArticleModelDocumentContributor
 						StringBundler.concat(
 							"Unable to get friendly URL for article ID ",
 							journalArticle.getId(), " and language ID ",
-							titleAvailableLanguageId),
+							languageId),
 						portalException);
 				}
 			}
@@ -200,8 +226,11 @@ public class JournalArticleModelDocumentContributor
 		document.addNumber(
 			"versionCount", GetterUtil.getDouble(journalArticle.getVersion()));
 
+		document.addKeyword(Field.UUID, journalArticle.getUuid());
+
 		if (_log.isDebugEnabled()) {
-			_log.debug("Document " + journalArticle + " indexed successfully");
+			_log.debug(
+				"Journal article " + journalArticle + " indexed successfully");
 		}
 	}
 
@@ -216,9 +245,6 @@ public class JournalArticleModelDocumentContributor
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
-
-	@Reference
-	private Html _html;
 
 	@Reference
 	private Language _language;

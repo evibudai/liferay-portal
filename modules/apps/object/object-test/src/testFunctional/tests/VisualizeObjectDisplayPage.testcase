@@ -14,57 +14,42 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to define a fixed filters with Boolean type for table view on the Display Page"
-	@priority = "4"
+	@priority = 4
 	test CanDefineFixedFilterForBooleanType {
-		ObjectAdmin.openObjectAdmin();
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ObjectAdmin.addNewObject(
-			fieldLabelName = "Custom Object 314",
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 314",
+			objectName = "CustomObject314",
 			pluralLabelName = "Custom Objects 314");
 
-		ObjectAdmin.saveCustomObject();
-
-		ObjectPortlet.selectCustomObject(label = "Custom Object 314");
-
-		ObjectAdmin.goToFieldsTab();
-
-		ObjectAdmin.addObjectFieldViaUI(
-			fieldLabel = "Field",
-			fieldType = "Boolean");
-
-		ObjectAdmin.openObjectAdmin();
-
-		ObjectPortlet.selectCustomObject(label = "Custom Object 314");
-
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
-
-		CreateObject.saveObject();
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Boolean",
+			fieldLabelName = "Boolean",
+			fieldName = "booleanField",
+			fieldType = "Boolean",
+			isRequired = "false",
+			objectName = "CustomObject314");
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject314");
 
-		ObjectAdmin.addObjectBooleanFieldEntryViaUI(
-			objectName = "CustomObject314",
-			value = "true");
+		for (var entryName : list "true,false") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "booleanField",
+				objectName = "CustomObject314",
+				value = ${entryName});
+		}
 
-		ObjectAdmin.addObjectBooleanFieldEntryViaUI(
-			objectName = "CustomObject314",
-			value = "false");
-
-		ObjectAdmin.addObjectBooleanFieldEntryViaUI(
-			objectName = "CustomObject314",
-			value = "false");
-
-		Navigator.openURL();
-
-		ContentPages.addPage(pageName = "Test Content Page Name");
+		ContentPages.addPage(pageName = "Filter Boolean Field");
 
 		PageEditor.addFragment(
 			collectionName = "Content Display",
@@ -74,29 +59,27 @@ definition {
 			fragmentName = "Collection Display",
 			infoListProviderName = "Custom Objects 314");
 
-		PageEditor.gotoTab(tabName = "Fragments and Widgets");
-
-		VisualizeObjectCollectionDisplay.addFieldForCollectionDisplay(fragmentName = "Heading");
-
-		VisualizeObjectCollectionDisplay.openHeading();
-
-		VisualizeObjectCollectionDisplay.addFieldInsideCollectionDisplay(
-			fragmentName = "Heading",
-			label = "Expand Collection Display");
-
 		PageEditor.editCollectionDisplay(
-			fieldLabel = "Field",
+			fieldLabel = "Boolean",
 			filterCollection = "true",
 			fragmentName = "Collection Display",
 			option = "True",
-			selectedName = "Custom Objects 314",
-			styleDisplay = "Table");
+			selectedName = "Custom Objects 314");
+
+		PageEditor.addFragmentToCollectionDisplay(
+			collectionName = "Basic Components",
+			entryTitle = "Sample Collection Item",
+			fragmentName = "Heading");
+
+		VisualizeObjectCollectionDisplay.openHeading();
+
+		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Boolean");
 
 		PageEditor.publish();
 
 		PagesAdmin.gotoPageEllipsisMenuItem(
 			menuItem = "View",
-			pageName = "Test Content Page Name");
+			pageName = "Filter Boolean Field");
 
 		PageEditor.assertTrueEntryIsPresent();
 
@@ -104,13 +87,13 @@ definition {
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to define a fixed filters with Picklist type for table view on the Display Page"
-	@priority = "4"
+	@priority = 4
 	test CanDefineFixedFilterForPicklistType {
 		Picklist.addPicklistViaAPI(picklistName = "Custom Picklist");
 
 		for (var itemsName : list "1,2") {
 			Picklist.addPicklistItemViaAPI(
-				itemKey = "${itemsName}",
+				itemKey = ${itemsName},
 				itemName = "Item Test ${itemsName}",
 				picklistName = "Custom Picklist");
 		}
@@ -138,7 +121,9 @@ definition {
 		for (var entryName : list "1,2") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject315");
 
-			ObjectAdmin.addObjectPicklistFieldEntryViaUI(picklistOption = "Item Test ${entryName}");
+			ObjectAdmin.addObjectPicklistFieldEntryViaUI(
+				labelName = "Field Picklist",
+				picklistOption = "Item Test ${entryName}");
 		}
 
 		Navigator.openURL();
@@ -160,11 +145,20 @@ definition {
 
 		PageEditor.gotoEllipsisMenuItemInItemSelector(
 			fieldLabel = "Collection",
-			menuItem = "Prefilter Collection");
+			menuItem = "Filter Collection");
 
-		VisualizeObjectDisplayPage.selectFilterCollection(
-			fieldLabel = "Field Picklist",
-			itemName = "Item Test 1");
+		Click(locator1 = "ObjectAdmin#VIEW_SHEET_ON_DEFINE_PERMISSIONS");
+
+		Click(
+			key_fieldLabel = "Field Picklist",
+			locator1 = "VisualizeObjectDisplayPage#SELECT_CHOOSE_AN_OPTION_FIELD");
+
+		Select(
+			key_fieldLabel = "Field Picklist",
+			locator1 = "VisualizeObjectDisplayPage#SELECT_ITEM_IN_FILTER_COLLECTION",
+			value1 = "Item Test 1");
+
+		Click(locator1 = "Button#SAVE");
 
 		PageEditor.publish();
 
@@ -172,13 +166,17 @@ definition {
 			menuItem = "View",
 			pageName = "Blank Display Page");
 
-		VisualizeObjectCollectionDisplay.assertTableEntriesPresent(entries = "Item Test 1");
+		AssertElementPresent(
+			key_entries = "Item Test 1",
+			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
 
-		VisualizeObjectCollectionDisplay.assertTableEntriesNotPresent(entries = "Item Test 2");
+		AssertElementNotPresent(
+			key_entries = "Item Test 2",
+			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to set the pagination as Numeric"
-	@priority = "4"
+	@priority = 4
 	test CanSetPaginationNumeric {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 316",
@@ -195,22 +193,14 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject316");
 
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject316",
-			value = "Test text 1");
+		for (var entryName : list "A,B") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customObjectField",
+				objectName = "CustomObject316",
+				value = "Entry ${entryName}");
+		}
 
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject316",
-			value = "Test text 2");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject316",
-			value = "Test text 3");
-
-		ContentPages.addPage(pageName = "Test Content Page Name");
+		ContentPages.addPage(pageName = "Numeric Pagination");
 
 		PageEditor.addFragment(
 			collectionName = "Content Display",
@@ -220,15 +210,12 @@ definition {
 			fragmentName = "Collection Display",
 			infoListProviderName = "Custom Objects 316");
 
-		PageEditor.gotoTab(tabName = "Fragments and Widgets");
+		Refresh();
 
-		VisualizeObjectCollectionDisplay.addFieldForCollectionDisplay(fragmentName = "Heading");
-
-		VisualizeObjectCollectionDisplay.openHeading();
-
-		VisualizeObjectCollectionDisplay.addFieldInsideCollectionDisplay(
-			fragmentName = "Heading",
-			label = "Expand Collection Display");
+		PageEditor.addFragmentToCollectionDisplay(
+			collectionName = "Basic Components",
+			entryTitle = "",
+			fragmentName = "Heading");
 
 		PageEditor.editCollectionDisplay(
 			fragmentName = "Collection Display",
@@ -238,14 +225,14 @@ definition {
 		PageEditor.publish();
 
 		ContentPagesNavigator.openEditContentPage(
-			pageName = "Test Content Page Name",
+			pageName = "Numeric Pagination",
 			siteName = "Guest");
 
-		PageEditor.assertPaginationNumericTypeIsDisplayed(pageNumberList = "1");
+		PageEditor.assertPaginationNumericTypeIsDisplayed(pageNumberList = 1);
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to set the pagination as Simple"
-	@priority = "4"
+	@priority = 4
 	test CanSetPaginationSimple {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 317",
@@ -262,22 +249,14 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject317");
 
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject317",
-			value = "Test text 1");
+		for (var entryName : list "A,B") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customObjectField",
+				objectName = "CustomObject317",
+				value = "Entry ${entryName}");
+		}
 
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject317",
-			value = "Test text 2");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject317",
-			value = "Test text 3");
-
-		ContentPages.addPage(pageName = "Test Content Page Name");
+		ContentPages.addPage(pageName = "Simple Pagination");
 
 		PageEditor.addFragment(
 			collectionName = "Content Display",
@@ -287,15 +266,12 @@ definition {
 			fragmentName = "Collection Display",
 			infoListProviderName = "Custom Objects 317");
 
-		PageEditor.gotoTab(tabName = "Fragments and Widgets");
+		Refresh();
 
-		VisualizeObjectCollectionDisplay.addFieldForCollectionDisplay(fragmentName = "Heading");
-
-		VisualizeObjectCollectionDisplay.openHeading();
-
-		VisualizeObjectCollectionDisplay.addFieldInsideCollectionDisplay(
-			fragmentName = "Heading",
-			label = "Expand Collection Display");
+		PageEditor.addFragmentToCollectionDisplay(
+			collectionName = "Basic Components",
+			entryTitle = "",
+			fragmentName = "Heading");
 
 		PageEditor.editCollectionDisplay(
 			fragmentName = "Collection Display",
@@ -305,14 +281,14 @@ definition {
 		PageEditor.publish();
 
 		ContentPagesNavigator.openEditContentPage(
-			pageName = "Test Content Page Name",
+			pageName = "Simple Pagination",
 			siteName = "Guest");
 
 		PageEditor.assertPaginationSimpleTypeIsDisplayed();
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of Big Decimal type for a specific Object"
-	@priority = "4"
+	@priority = 4
 	test DisplaySpecificEntryBigDecimal {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 318",
@@ -348,7 +324,9 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "BigDecimal");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "123.123456");
+		AssertElementPresent(
+			key_entry = "123.123456",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 
 		PageEditor.publish();
 
@@ -356,11 +334,13 @@ definition {
 			menuItem = "View",
 			pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "123.123456");
+		AssertElementPresent(
+			key_entry = "123.123456",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of Boolean type for a specific Object"
-	@priority = "4"
+	@priority = 4
 	test DisplaySpecificEntryBoolean {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 319",
@@ -396,7 +376,9 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Boolean");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "true");
+		AssertElementPresent(
+			key_entry = "true",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 
 		PageEditor.publish();
 
@@ -404,12 +386,16 @@ definition {
 			menuItem = "View",
 			pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "true");
+		AssertElementPresent(
+			key_entry = "true",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of Date type for a specific Object"
-	@priority = "4"
+	@priority = 4
 	test DisplaySpecificEntryDate {
+		property portal.upstream = "quarantine";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 320",
 			objectName = "CustomObject320",
@@ -444,7 +430,9 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Date");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "1/1/21");
+		AssertElementPresent(
+			key_entry = "Jan 1, 2021",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 
 		PageEditor.publish();
 
@@ -452,11 +440,13 @@ definition {
 			menuItem = "View",
 			pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "1/1/21");
+		AssertElementPresent(
+			key_entry = "Jan 1, 2021",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of Double type for a specific Object"
-	@priority = "4"
+	@priority = 4
 	test DisplaySpecificEntryDouble {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 321",
@@ -492,7 +482,9 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Double");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "1.54");
+		AssertElementPresent(
+			key_entry = "1.54",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 
 		PageEditor.publish();
 
@@ -500,11 +492,13 @@ definition {
 			menuItem = "View",
 			pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "1.54");
+		AssertElementPresent(
+			key_entry = "1.54",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of Integer type for a specific Object"
-	@priority = "4"
+	@priority = 4
 	test DisplaySpecificEntryInteger {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 322",
@@ -524,7 +518,7 @@ definition {
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
 			objectName = "CustomObject322",
-			value = "123456789");
+			value = 123456789);
 
 		ContentPages.addPage(pageName = "Test Content Page Name");
 
@@ -540,7 +534,9 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Integer");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "123456789");
+		AssertElementPresent(
+			key_entry = 123456789,
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 
 		PageEditor.publish();
 
@@ -548,11 +544,13 @@ definition {
 			menuItem = "View",
 			pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "123456789");
+		AssertElementPresent(
+			key_entry = 123456789,
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of Long type for a specific Object"
-	@priority = "4"
+	@priority = 4
 	test DisplaySpecificEntryLong {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 323",
@@ -572,7 +570,7 @@ definition {
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
 			objectName = "CustomObject323",
-			value = "1234567891234567");
+			value = 1234567891234567);
 
 		ContentPages.addPage(pageName = "Test Content Page Name");
 
@@ -588,7 +586,9 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Long");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "1234567891234567");
+		AssertElementPresent(
+			key_entry = 1234567891234567,
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 
 		PageEditor.publish();
 
@@ -596,11 +596,13 @@ definition {
 			menuItem = "View",
 			pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "1234567891234567");
+		AssertElementPresent(
+			key_entry = 1234567891234567,
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of String type for a specific Object"
-	@priority = "5"
+	@priority = 5
 	test DisplaySpecificEntryString {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 324",
@@ -636,7 +638,9 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "String");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "Test text");
+		AssertElementPresent(
+			key_entry = "Test text",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 
 		PageEditor.publish();
 
@@ -644,11 +648,13 @@ definition {
 			menuItem = "View",
 			pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "Test text");
+		AssertElementPresent(
+			key_entry = "Test text",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-137104 - Verify if Objects and its data are displayed as a Content Type and Subtype for a Page Template"
-	@priority = "5"
+	@priority = 5
 	test ObjectDisplayedForPageTemplate {
 		property portal.acceptance = "true";
 
@@ -683,7 +689,7 @@ definition {
 	}
 
 	@description = "LPS-137105 - Verify if the Object entries are rendered when previewing it"
-	@priority = "5"
+	@priority = 5
 	test ObjectEntriesAreRendered {
 		property portal.acceptance = "true";
 
@@ -693,7 +699,7 @@ definition {
 			fieldLabelName = "Custom Object 326",
 			pluralLabelName = "Custom Objects 326");
 
-		ObjectAdmin.saveCustomObject();
+		CreateObject.saveObject();
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 326");
 
@@ -707,7 +713,11 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 326");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
+
+		CreateObject.selectTitleField(fieldLabel = "Field");
 
 		CreateObject.saveObject();
 
@@ -734,13 +744,15 @@ definition {
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Field");
 
-		PageEditor.selectItemToPreviewWithObject(objectLabel = "Custom Object 326");
+		PageEditor.selectItemToPreviewWithObject(entryValue = "Test Entry");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "Test Entry");
+		AssertElementPresent(
+			key_entry = "Test Entry",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-137106 - Verify if it is possible to link a Mapped URL with the Objects Page Template"
-	@priority = "5"
+	@priority = 5
 	test ObjectMappedURL {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 327",
@@ -809,7 +821,7 @@ definition {
 		Select(
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "Display Page URL");
+			value1 = "Default");
 
 		PageEditor.publish();
 
@@ -827,7 +839,7 @@ definition {
 	}
 
 	@description = "LPS-133867|LPS-135004 - Verify if it's possible map and view the image of user Profile in a Fragment of Display Page"
-	@priority = "4"
+	@priority = 4
 	test ViewImageUserProfileFromSpecificEntry {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 327",

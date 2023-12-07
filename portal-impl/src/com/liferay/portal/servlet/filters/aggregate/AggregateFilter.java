@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.servlet.filters.aggregate;
@@ -25,7 +16,7 @@ import com.liferay.portal.internal.minifier.MinifierThreadLocal;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.BrowserSniffer;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.servlet.BufferCacheServletResponse;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
@@ -41,11 +32,11 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.minifier.MinifierUtil;
+import com.liferay.portal.servlet.BrowserSnifferUtil;
 import com.liferay.portal.servlet.filters.IgnoreModuleRequestFilter;
 import com.liferay.portal.servlet.filters.dynamiccss.DynamicCSSUtil;
 import com.liferay.portal.servlet.filters.util.CacheFileNameGenerator;
@@ -539,8 +530,11 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 				_noticeableFutures.computeIfAbsent(
 					cacheCommonFileName,
 					key -> {
+						PortalExecutorManager portalExecutorManager =
+							_portalExecutorManagerSnapshot.get();
+
 						NoticeableExecutorService noticeableExecutorService =
-							_portalExecutorManager.getPortalExecutor(
+							portalExecutorManager.getPortalExecutor(
 								AggregateFilter.class.getName());
 
 						return noticeableExecutorService.submit(
@@ -604,7 +598,7 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 
 		String browserId = ParamUtil.getString(httpServletRequest, "browserId");
 
-		if (!browserId.equals(BrowserSniffer.BROWSER_ID_IE)) {
+		if (!browserId.equals(BrowserSnifferUtil.BROWSER_ID_IE)) {
 			Matcher matcher = _pattern.matcher(content);
 
 			content = matcher.replaceAll(StringPool.BLANK);
@@ -744,9 +738,10 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 
 		if (url == null) {
 			ObjectValuePair<String, Long> objectValuePair =
-				RequestDispatcherUtil.getContentAndLastModifiedTime(
-					httpServletRequest.getRequestDispatcher(resourcePath),
-					httpServletRequest, httpServletResponse);
+				RequestDispatcherUtil.
+					getContentAndLastModifiedTimeObjectValuePair(
+						httpServletRequest.getRequestDispatcher(resourcePath),
+						httpServletRequest, httpServletResponse);
 
 			return objectValuePair.getKey();
 		}
@@ -781,10 +776,9 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 
 	private static final Pattern _pattern = Pattern.compile(
 		"^(\\.ie|\\.js\\.ie)([^}]*)}", Pattern.MULTILINE);
-	private static volatile PortalExecutorManager _portalExecutorManager =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			PortalExecutorManager.class, AggregateFilter.class,
-			"_portalExecutorManager", true);
+	private static final Snapshot<PortalExecutorManager>
+		_portalExecutorManagerSnapshot = new Snapshot<>(
+			AggregateFilter.class, PortalExecutorManager.class);
 
 	private final Map<String, NoticeableFuture<String>> _noticeableFutures =
 		new ConcurrentHashMap<>();

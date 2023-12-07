@@ -42,7 +42,7 @@
 </tr>
 <tr>
 	<td>REASSIGN_CHECKBOX_DISABLED</td>
-	<td>//div[contains(@class,'custom-control')]//input[@type='checkbox' and @disabled]</td>
+	<td>//ul[contains(@class,'navbar')]//strong[contains(text(),'Filter By')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -73,26 +73,6 @@
 <tr>
 	<td>DUE_DATE_POPOVER_SLA_INFO</td>
 	<td>//div[@class='popover-body']//div[${key_slaPosition}]//div[contains(text(), '${key_slaName}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>REASSIGN_TASK_DROPDOWN</td>
-	<td>//div[@class='dropdown-menu show']//button[@class='dropdown-item'][contains(text(),'Reassign Task')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>UPDATE_DUE_DATE_DROPDOWN</td>
-	<td>//div[@class='dropdown-menu show']//button[@class='dropdown-item'][contains(text(),'Update Due Date')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>KEBAB_MENU_OPTIONS</td>
-	<td>//div[@class='dropdown-menu show']//button[@class='dropdown-item'][contains(text(),'${key_menuOption}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TRANSITION_DROPDOWN</td>
-	<td>//div[@class='dropdown-menu show']//button[@class='dropdown-item'][contains(text(),'Transition')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -227,7 +207,7 @@
 </tr>
 <tr>
 	<td>DETAIL_PAGE_TITLE</td>
-	<td>//div[contains(@class,'modal-header')]/div[contains(@class,'modal-title')]</td>
+	<td>//div[contains(@class,'modal-header')]/h1[contains(@class,'modal-title')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -352,7 +332,7 @@
 </tr>
 <tr>
 	<td>METRICS_INSTANCE_ITEMS_POSITION</td>
-	<td>//tr[${key_rowNumber}]//td[${key_itemPosition}]</td>
+	<td>//tbody[${key_rowNumber}]//td[${key_itemPosition}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -442,7 +422,7 @@
 </tr>
 <tr>
 	<td>DETAIL_SLA_STATUS</td>
-	<td>//div[contains(@class,'modal-header')]/div[contains(@class,'modal-title')]/../..//div[contains(@class,'modal-body')]/h4[contains(.,'Due Date by SLA')]/..//div[contains(@class,'sla-result')]//*[contains(@class,'lexicon-icon-${key_status}')]</td>
+	<td>//h4[contains(.,'Due Date by SLA')]/..//div[contains(@class,'sla-result')]//*[contains(@class,'lexicon-icon-${key_status}')] | //div[contains(@class,'workflow-metrics')]//*[contains(@class,'lexicon-icon-${key_status}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -462,7 +442,7 @@
 </tr>
 <tr>
 	<td>WORKFLOW_SLA_STATUS_BEFORE_TITLE</td>
-	<td>//div[contains(@class,'modal-header')]/div[contains(@class,'modal-title')]/../..//div[contains(@class,'modal-body')]/h4[contains(.,'Due Date by SLA')]</td>
+	<td>//div[contains(@class,'modal-header')]/h1[contains(@class,'modal-title')]/../..//div[contains(@class,'modal-body')]/h4[contains(.,'Due Date by SLA')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -502,7 +482,7 @@
 </tr>
 <tr>
 	<td>TRACK_APPROVAL_BODY</td>
-	<td>//div[contains(@class, 'modal-title') and contains(.,'Track Workflow')]//..//..//div[contains(@class,'modal-body')]</td>
+	<td>//h1[contains(@class, 'modal-title') and contains(.,'Track Workflow')]//..//..//div[contains(@class,'modal-body')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -2,7 +2,7 @@
 definition {
 
 	property analytics.cloud.release = "true";
-	property analytics.cloud.upstream = "false";
+	property analytics.cloud.upstream = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "false";
 	property portal.upstream = "true";
@@ -49,24 +49,28 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACIndividualsDashboard.deleteBreakdown();
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
+
+		ACNavigation.exitSettings();
+
+		ACNavigation.goToIndividuals();
+
+		ACIndividualsDashboard.deleteBreakdown();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8657 | Test Summary: Add a new breakdown by an attribute and assert that correct results appear"
-	@priority = "5"
+	@priority = 5
 	test AddNewBreakdownByAttributeAndAssertCorrectResultsAppear {
 		task ("View the blog page") {
 			ACUtils.navigateToSitePageWithUser(
@@ -84,7 +88,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to the Individuals dashboard") {
@@ -105,7 +109,7 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8997 | Test Summary: Distribution page can be filtered by a specific string"
-	@priority = "5"
+	@priority = 5
 	test BreakdownByAttributeOnDistributionPage {
 		task ("View the blog page") {
 			ACUtils.navigateToSitePageWithUser(
@@ -123,7 +127,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to the Distribution tab of Individuals dashboard") {
@@ -139,12 +143,12 @@ definition {
 		task ("View the individual in chart") {
 			ACIndividualsDashboard.viewBreakdownRecharts(
 				fillColor = "#4B9BFF",
-				tick = "ac@liferay.com- 100.0%");
+				tick = "ac@liferay.com - 100.0%");
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8658 | Test Summary: Delete a new breakdown"
-	@priority = "5"
+	@priority = 5
 	test DeleteNewBreakdown {
 		task ("View the blog page") {
 			ACUtils.navigateToSitePageWithUser(
@@ -162,7 +166,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to the Individuals dashboard") {
@@ -185,17 +189,17 @@ definition {
 	}
 
 	@description = "Bug: LRAC-11573 | Automation ID: LRAC-11825 | Test Summary: Check that the number of members shown in the chart is equal to the number of members shown in the chart's details sidebar"
-	@priority = "5"
+	@priority = 5
 	test DistributionChartShowsSameAmountOfMembersAsSidebar {
 		var usernameList = "user1,user2";
 
 		task ("Add a new user") {
-			for (var name : list "${usernameList}") {
+			for (var name : list ${usernameList}) {
 				JSONUser.addUser(
 					userEmailAddress = "${name}@liferay.com",
 					userFirstName = "user1",
-					userLastName = "${name}",
-					userScreenName = "${name}");
+					userLastName = ${name},
+					userScreenName = ${name});
 
 				JSONUser.setFirstPassword(
 					agreeToTermsAndAnswerReminderQuery = "true",
@@ -224,7 +228,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to the Distribution tab of Individuals dashboard") {
@@ -240,16 +244,16 @@ definition {
 		task ("Check that the number of users shown in the tooltip is correct") {
 			ACIndividualsDashboard.viewDistributionBarByAttribute(
 				type = "count",
-				value = "2");
+				value = 2);
 
 			ACIndividualsDashboard.viewDistributionBarByAttribute(
-				index = "2",
+				index = 2,
 				type = "count",
-				value = "1");
+				value = 1);
 		}
 
 		task ("Click on the chart in the dashboard") {
-			ACUtils.clickOnDistributionBar(index = "1");
+			ACUtils.clickOnDistributionBar(index = 1);
 		}
 
 		task ("Check that the number of users shown in the sidebar list is correct") {
@@ -257,7 +261,7 @@ definition {
 		}
 
 		task ("Click on the chart in the dashboard") {
-			ACUtils.clickOnDistributionBar(index = "2");
+			ACUtils.clickOnDistributionBar(index = 2);
 		}
 
 		task ("Check that the number of users shown in the sidebar list is correct") {
@@ -266,7 +270,7 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9000 | Test Summary: As a Business User, I should be able to select different tabs in breakdown"
-	@priority = "3"
+	@priority = 3
 	test SelectDifferentTabsInbreakdown {
 		task ("View the blog page") {
 			ACUtils.navigateToSitePageWithUser(
@@ -284,7 +288,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to the Individuals dashboard") {

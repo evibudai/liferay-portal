@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.change.tracking.spi.display;
@@ -20,25 +11,27 @@ import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.document.library.constants.DLFileVersionPreviewConstants;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileVersion;
+import com.liferay.document.library.kernel.model.DLProcessorConstants;
+import com.liferay.document.library.kernel.processor.AudioProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessorHelperUtil;
+import com.liferay.document.library.kernel.processor.ImageProcessor;
+import com.liferay.document.library.kernel.processor.PDFProcessor;
+import com.liferay.document.library.kernel.processor.VideoProcessor;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.store.Store;
-import com.liferay.document.library.kernel.util.AudioProcessor;
-import com.liferay.document.library.kernel.util.DLProcessorRegistryUtil;
-import com.liferay.document.library.kernel.util.ImageProcessor;
-import com.liferay.document.library.kernel.util.PDFProcessor;
-import com.liferay.document.library.kernel.util.VideoProcessor;
 import com.liferay.document.library.preview.DLPreviewRendererProvider;
 import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
 import com.liferay.frontend.taglib.clay.servlet.taglib.LinkTag;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
 
@@ -49,7 +42,6 @@ import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Samuel Trong Tran
@@ -72,8 +64,9 @@ public class DLFileVersionCTDisplayRenderer
 		throws PortalException {
 
 		return getDownloadInputStream(
-			_store, _audioProcessor, _dlAppLocalService, dlFileVersion,
-			_imageProcessor, key, _pdfProcessor, _videoProcessor);
+			_store, (AudioProcessor)_audioDLProcessor, _dlAppLocalService,
+			dlFileVersion, (ImageProcessor)_imageDLProcessor, key,
+			(PDFProcessor)_pdfDLProcessor, (VideoProcessor)_videoDLProcessor);
 	}
 
 	@Override
@@ -108,8 +101,10 @@ public class DLFileVersionCTDisplayRenderer
 		String fileName = fileVersion.getFileName();
 		String mimeType = fileVersion.getMimeType();
 
-		if (_audioProcessor.isSupported(mimeType)) {
-			if (!_audioProcessor.hasAudio(fileVersion) ||
+		AudioProcessor audioProcessor = (AudioProcessor)_audioDLProcessor;
+
+		if (audioProcessor.isSupported(mimeType)) {
+			if (!audioProcessor.hasAudio(fileVersion) ||
 				_dlFileVersionPreviewLocalService.hasDLFileVersionPreview(
 					fileVersion.getFileEntryId(),
 					fileVersion.getFileVersionId(),
@@ -120,17 +115,16 @@ public class DLFileVersionCTDisplayRenderer
 
 			return StringBundler.concat(
 				"<audio controls controlsList=\"nodownload\" style=\"",
-				"max-width: ",
-				String.valueOf(PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH),
+				"max-width: ", PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH,
 				"px;\"><source src=\"",
 				displayContext.getDownloadURL(
 					_AUDIO_PREVIEW + ",mp3",
-					_audioProcessor.getPreviewFileSize(fileVersion, "mp3"),
+					audioProcessor.getPreviewFileSize(fileVersion, "mp3"),
 					FileUtil.stripExtension(fileName) + ".mp3"),
 				"\" type=\"audio/mp3\"/><source src=\"",
 				displayContext.getDownloadURL(
 					_AUDIO_PREVIEW + ",ogg",
-					_audioProcessor.getPreviewFileSize(fileVersion, "ogg"),
+					audioProcessor.getPreviewFileSize(fileVersion, "ogg"),
 					FileUtil.stripExtension(fileName) + ".ogg"),
 				"\" type=\"audio/ogg\"/></audio>");
 		}
@@ -139,7 +133,9 @@ public class DLFileVersionCTDisplayRenderer
 			_dlPreviewRendererProvider.getMimeTypes();
 
 		if (documentMimeTypes.contains(mimeType)) {
-			if (!_pdfProcessor.isDocumentSupported(fileVersion) ||
+			PDFProcessor pdfProcessor = (PDFProcessor)_pdfDLProcessor;
+
+			if (!pdfProcessor.isDocumentSupported(fileVersion) ||
 				_dlFileVersionPreviewLocalService.hasDLFileVersionPreview(
 					fileVersion.getFileEntryId(),
 					fileVersion.getFileVersionId(),
@@ -147,8 +143,8 @@ public class DLFileVersionCTDisplayRenderer
 
 				return null;
 			}
-			else if (!_pdfProcessor.hasImages(fileVersion)) {
-				if (!DLProcessorRegistryUtil.isPreviewableSize(fileVersion)) {
+			else if (!pdfProcessor.hasImages(fileVersion)) {
+				if (!DLProcessorHelperUtil.isPreviewableSize(fileVersion)) {
 					return null;
 				}
 
@@ -168,14 +164,16 @@ public class DLFileVersionCTDisplayRenderer
 				"<img src=\"",
 				displayContext.getDownloadURL(
 					_PDF_PREVIEW,
-					_pdfProcessor.getPreviewFileSize(fileVersion, 1), fileName),
+					pdfProcessor.getPreviewFileSize(fileVersion, 1), fileName),
 				"\" style=\"margin: auto; max-height:624px; max-width:100%;",
 				"\">");
 		}
 
-		if (_imageProcessor.isSupported(mimeType)) {
-			if (!DLProcessorRegistryUtil.isPreviewableSize(fileVersion) ||
-				!_imageProcessor.hasImages(fileVersion) ||
+		ImageProcessor imageProcessor = (ImageProcessor)_imageDLProcessor;
+
+		if (imageProcessor.isSupported(mimeType)) {
+			if (!DLProcessorHelperUtil.isPreviewableSize(fileVersion) ||
+				!imageProcessor.hasImages(fileVersion) ||
 				_dlFileVersionPreviewLocalService.hasDLFileVersionPreview(
 					fileVersion.getFileEntryId(),
 					fileVersion.getFileVersionId(),
@@ -186,25 +184,27 @@ public class DLFileVersionCTDisplayRenderer
 
 			fileName = StringBundler.concat(
 				FileUtil.stripExtension(fileName), StringPool.PERIOD,
-				_imageProcessor.getPreviewType(fileVersion));
+				imageProcessor.getPreviewType(fileVersion));
 
 			return StringBundler.concat(
 				"<img src=\"",
 				displayContext.getDownloadURL(
 					_IMAGE_PREVIEW,
-					_imageProcessor.getPreviewFileSize(fileVersion), fileName),
+					imageProcessor.getPreviewFileSize(fileVersion), fileName),
 				"\" style=\"margin: auto; max-height:624px; max-width:100%;",
 				"\">");
 		}
 
-		Set<String> videoMimeTypes = _videoProcessor.getVideoMimeTypes();
+		VideoProcessor videoProcessor = (VideoProcessor)_videoDLProcessor;
+
+		Set<String> videoMimeTypes = videoProcessor.getVideoMimeTypes();
 
 		if (videoMimeTypes.contains(mimeType) ||
 			mimeType.equals(
 				ContentTypes.
 					APPLICATION_VND_LIFERAY_VIDEO_EXTERNAL_SHORTCUT_HTML)) {
 
-			if (!_videoProcessor.hasVideo(fileVersion)) {
+			if (!videoProcessor.hasVideo(fileVersion)) {
 				return null;
 			}
 
@@ -212,16 +212,16 @@ public class DLFileVersionCTDisplayRenderer
 				"<video controls controlsList=\"nodownload\" style=\"",
 				"background-color: #000; display: block; margin: auto; ",
 				"max-height:624px; max-width:",
-				String.valueOf(PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH),
+				PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH,
 				"px;\"><source src=\"",
 				displayContext.getDownloadURL(
 					_VIDEO_PREVIEW + ",mp4",
-					_audioProcessor.getPreviewFileSize(fileVersion, "mp4"),
+					audioProcessor.getPreviewFileSize(fileVersion, "mp4"),
 					FileUtil.stripExtension(fileName) + ".mp4"),
 				"\" type=\"video/mp4\"/><source src=\"",
 				displayContext.getDownloadURL(
 					_VIDEO_PREVIEW + ",ogv",
-					_audioProcessor.getPreviewFileSize(fileVersion, "ogv"),
+					audioProcessor.getPreviewFileSize(fileVersion, "ogv"),
 					FileUtil.stripExtension(fileName) + ".ogv"),
 				"\" type=\"video/ogv\"/></audio>");
 		}
@@ -333,8 +333,8 @@ public class DLFileVersionCTDisplayRenderer
 
 	private static final String _VIDEO_PREVIEW = "VIDEO_PREVIEW";
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private AudioProcessor _audioProcessor;
+	@Reference(target = "(type=" + DLProcessorConstants.AUDIO_PROCESSOR + ")")
+	private DLProcessor _audioDLProcessor;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
@@ -350,19 +350,19 @@ public class DLFileVersionCTDisplayRenderer
 	)
 	private DLPreviewRendererProvider _dlPreviewRendererProvider;
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private ImageProcessor _imageProcessor;
+	@Reference(target = "(type=" + DLProcessorConstants.IMAGE_PROCESSOR + ")")
+	private DLProcessor _imageDLProcessor;
 
 	@Reference
 	private Language _language;
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private PDFProcessor _pdfProcessor;
+	@Reference(target = "(type=" + DLProcessorConstants.PDF_PROCESSOR + ")")
+	private DLProcessor _pdfDLProcessor;
 
 	@Reference(target = "(default=true)")
 	private Store _store;
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private VideoProcessor _videoProcessor;
+	@Reference(target = "(type=" + DLProcessorConstants.VIDEO_PROCESSOR + ")")
+	private DLProcessor _videoDLProcessor;
 
 }

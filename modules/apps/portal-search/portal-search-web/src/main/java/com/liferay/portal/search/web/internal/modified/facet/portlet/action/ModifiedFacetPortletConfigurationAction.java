@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.portlet.action;
@@ -22,14 +13,13 @@ import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.web.internal.modified.facet.builder.DateRangeFactory;
 import com.liferay.portal.search.web.internal.modified.facet.constants.ModifiedFacetPortletKeys;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.builder.ModifiedFacetDisplayContextBuilder;
+import com.liferay.portal.search.web.internal.util.DateRangeFactoryUtil;
 
 import java.text.ParseException;
 
@@ -90,10 +80,7 @@ public class ModifiedFacetPortletConfigurationAction
 		String ranges = unicodeProperties.getProperty("ranges");
 
 		try {
-			DateRangeFactory dateRangeFactory = new DateRangeFactory(
-				DateFormatFactoryUtil.getDateFormatFactory());
-
-			dateRangeFactory.validateRange(ranges);
+			DateRangeFactoryUtil.validateRanges(ranges);
 		}
 		catch (JSONException | ParseException exception) {
 			SessionErrors.add(actionRequest, "unparsableDate");
@@ -112,7 +99,7 @@ public class ModifiedFacetPortletConfigurationAction
 		try {
 			ModifiedFacetDisplayContextBuilder
 				modifiedFacetDisplayContextBuilder =
-					new ModifiedFacetDisplayContextBuilder(null, renderRequest);
+					new ModifiedFacetDisplayContextBuilder(renderRequest);
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);

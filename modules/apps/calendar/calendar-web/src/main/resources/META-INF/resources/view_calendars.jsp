@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -119,14 +110,12 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 </div>
 
 <aui:script use="io-upload-iframe">
-	var <portlet:namespace />importDialog;
+	let importDialog;
 
 	Liferay.provide(
 		window,
 		'<portlet:namespace />importCalendar',
 		(url) => {
-			var A = AUI();
-
 			function hideMessage(messageElement) {
 				messageElement.style.display = 'none';
 				messageElement.hidden = true;
@@ -139,13 +128,13 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 				messageElement.classList.remove('hide');
 			}
 
-			if (!<portlet:namespace />importDialog) {
-				var buttons = [
+			if (!importDialog) {
+				const buttons = [
 					{
 						label: '<liferay-ui:message key="import" />',
 						on: {
 							click: function () {
-								var form = document.getElementById(
+								const form = document.getElementById(
 									'<portlet:namespace />importFm'
 								);
 
@@ -157,22 +146,22 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 										return response.text();
 									})
 									.then((data) => {
-										var responseData = {};
+										const responseData = {};
 
 										try {
 											responseData = JSON.parse(data);
 										}
 										catch (e) {}
 
-										var portletErrorMessage = document.getElementById(
+										const portletErrorMessage = document.getElementById(
 											'<portlet:namespace />portletErrorMessage'
 										);
 
-										var portletSuccessMessage = document.getElementById(
+										const portletSuccessMessage = document.getElementById(
 											'<portlet:namespace />portletSuccessMessage'
 										);
 
-										var error =
+										const error =
 											responseData && responseData.error;
 
 										if (error) {
@@ -193,30 +182,30 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 					},
 				];
 
-				var buttonClose = [
+				const buttonClose = [
 					{
 						cssClass: 'close',
 						labelHTML: '<span aria-label="close">&times;</span>',
 						on: {
 							click: function () {
-								<portlet:namespace />importDialog.hide();
+								importDialog.hide();
 							},
 						},
 						render: true,
 					},
 				];
 
-				var importCalendarContainer = document.getElementById(
+				const importCalendarContainer = document.getElementById(
 					'<portlet:namespace />importCalendarContainer'
 				);
 
-				<portlet:namespace />importDialog = Liferay.Util.Window.getWindow({
+				importDialog = Liferay.Util.Window.getWindow({
 					dialog: {
 						bodyContent: importCalendarContainer.innerHTML,
 						modal: true,
 						on: {
 							visibleChange: function (event) {
-								var importForm = document.getElementById(
+								const importForm = document.getElementById(
 									'<portlet:namespace />importFm'
 								);
 
@@ -224,10 +213,10 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 									importForm.reset();
 								}
 
-								var portletErrorMessage = document.getElementById(
+								const portletErrorMessage = document.getElementById(
 									'<portlet:namespace />portletErrorMessage'
 								);
-								var portletSuccessMessage = document.getElementById(
+								const portletSuccessMessage = document.getElementById(
 									'<portlet:namespace />portletSuccessMessage'
 								);
 
@@ -245,7 +234,7 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 				}).render();
 			}
 
-			<portlet:namespace />importDialog.show();
+			importDialog.show();
 		},
 		['aui-io', 'liferay-util-window']
 	);

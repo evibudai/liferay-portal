@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.portlet.action;
@@ -22,6 +13,7 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.exception.ArticleContentSizeException;
 import com.liferay.journal.model.JournalArticle;
@@ -50,7 +42,6 @@ import java.io.File;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -62,7 +53,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eudaldo Alonso
  */
 @Component(
-	immediate = true,
 	property = {
 		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/add_data_engine_default_values",
@@ -98,8 +88,18 @@ public class UpdateDataEngineDefaultValuesMVCActionCommand
 			throw new PortalException(throwable);
 		}
 
-		UploadPortletRequest uploadPortletRequest =
-			_portal.getUploadPortletRequest(actionRequest);
+		JournalArticle article = _addOrUpdateArticleDefaultValues(
+			actionRequest, _portal.getUploadPortletRequest(actionRequest));
+
+		_assetDisplayPageEntryFormProcessor.process(
+			JournalArticle.class.getName(), article.getResourcePrimKey(),
+			actionRequest);
+	}
+
+	private JournalArticle _addOrUpdateArticleDefaultValues(
+			ActionRequest actionRequest,
+			UploadPortletRequest uploadPortletRequest)
+		throws Exception {
 
 		String actionName = ParamUtil.getString(
 			actionRequest, ActionRequest.ACTION_NAME);
@@ -110,13 +110,11 @@ public class UpdateDataEngineDefaultValuesMVCActionCommand
 		Map<Locale, String> titleMap = _localization.getLocalizationMap(
 			actionRequest, "titleMapAsXML");
 
-		String ddmStructureKey = ParamUtil.getString(
-			uploadPortletRequest, "ddmStructureKey");
+		long ddmStructureId = ParamUtil.getLong(
+			uploadPortletRequest, "ddmStructureId");
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
-			_portal.getSiteGroupId(groupId),
-			_portal.getClassNameId(JournalArticle.class), ddmStructureKey,
-			true);
+			ddmStructureId);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			JournalArticle.class.getName(), uploadPortletRequest);
@@ -200,7 +198,7 @@ public class UpdateDataEngineDefaultValuesMVCActionCommand
 			uploadPortletRequest, "expirationDateAmPm");
 
 		boolean neverExpire = ParamUtil.getBoolean(
-			uploadPortletRequest, "neverExpire", displayDateYear == 0);
+			uploadPortletRequest, "neverExpire");
 
 		if (!PropsValues.SCHEDULER_ENABLED) {
 			neverExpire = true;
@@ -224,7 +222,7 @@ public class UpdateDataEngineDefaultValuesMVCActionCommand
 			uploadPortletRequest, "reviewDateAmPm");
 
 		boolean neverReview = ParamUtil.getBoolean(
-			uploadPortletRequest, "neverReview", displayDateYear == 0);
+			uploadPortletRequest, "neverReview");
 
 		if (!PropsValues.SCHEDULER_ENABLED) {
 			neverReview = true;
@@ -237,19 +235,30 @@ public class UpdateDataEngineDefaultValuesMVCActionCommand
 		boolean indexable = ParamUtil.getBoolean(
 			uploadPortletRequest, "indexable");
 
-		String smallImageSource = ParamUtil.getString(
-			uploadPortletRequest, "smallImageSource", "none");
+		int smallImageSource = ParamUtil.getInteger(
+			uploadPortletRequest, "smallImageSource",
+			JournalArticleConstants.SMALL_IMAGE_SOURCE_NONE);
 
-		boolean smallImage = !Objects.equals(smallImageSource, "none");
+		boolean smallImage = false;
+
+		if (smallImageSource !=
+				JournalArticleConstants.SMALL_IMAGE_SOURCE_NONE) {
+
+			smallImage = true;
+		}
 
 		String smallImageURL = StringPool.BLANK;
 		File smallFile = null;
 
-		if (Objects.equals(smallImageSource, "url")) {
+		if (smallImageSource ==
+				JournalArticleConstants.SMALL_IMAGE_SOURCE_URL) {
+
 			smallImageURL = ParamUtil.getString(
 				uploadPortletRequest, "smallImageURL");
 		}
-		else if (Objects.equals(smallImageSource, "file")) {
+		else if (smallImageSource ==
+					JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER) {
+
 			smallFile = uploadPortletRequest.getFile("smallFile");
 		}
 
@@ -265,14 +274,14 @@ public class UpdateDataEngineDefaultValuesMVCActionCommand
 
 			article = _journalArticleService.addArticleDefaultValues(
 				groupId, classNameId, classPK, titleMap, descriptionMap,
-				content, ddmStructureKey, ddmTemplateKey, layoutUuid,
+				content, ddmStructureId, ddmTemplateKey, layoutUuid,
 				displayDateMonth, displayDateDay, displayDateYear,
 				displayDateHour, displayDateMinute, expirationDateMonth,
 				expirationDateDay, expirationDateYear, expirationDateHour,
 				expirationDateMinute, neverExpire, reviewDateMonth,
 				reviewDateDay, reviewDateYear, reviewDateHour, reviewDateMinute,
-				neverReview, indexable, smallImage, smallImageURL, smallFile,
-				serviceContext);
+				neverReview, indexable, smallImage, 0, smallImageSource,
+				smallImageURL, smallFile, serviceContext);
 		}
 		else if (actionName.equals(
 					"/journal/update_data_engine_default_values")) {
@@ -281,20 +290,16 @@ public class UpdateDataEngineDefaultValuesMVCActionCommand
 
 			article = _journalArticleService.updateArticleDefaultValues(
 				groupId, articleId, titleMap, descriptionMap, content,
-				ddmStructureKey, ddmTemplateKey, layoutUuid, displayDateMonth,
-				displayDateDay, displayDateYear, displayDateHour,
-				displayDateMinute, expirationDateMonth, expirationDateDay,
-				expirationDateYear, expirationDateHour, expirationDateMinute,
-				neverExpire, reviewDateMonth, reviewDateDay, reviewDateYear,
-				reviewDateHour, reviewDateMinute, neverReview, indexable,
-				smallImage, smallImageURL, smallFile, serviceContext);
+				ddmTemplateKey, layoutUuid, displayDateMonth, displayDateDay,
+				displayDateYear, displayDateHour, displayDateMinute,
+				expirationDateMonth, expirationDateDay, expirationDateYear,
+				expirationDateHour, expirationDateMinute, neverExpire,
+				reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
+				reviewDateMinute, neverReview, indexable, smallImage, 0,
+				smallImageSource, smallImageURL, smallFile, serviceContext);
 		}
 
-		// Asset display page
-
-		_assetDisplayPageEntryFormProcessor.process(
-			JournalArticle.class.getName(), article.getResourcePrimKey(),
-			actionRequest);
+		return article;
 	}
 
 	@Reference

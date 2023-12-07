@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect} from 'react';
@@ -19,19 +10,17 @@ import {
 	useOutletContext,
 	useParams,
 } from 'react-router-dom';
+import PageRenderer from '~/components/PageRenderer';
 
 import {useFetch} from '../../../../hooks/useFetch';
 import useHeader from '../../../../hooks/useHeader';
 import i18n from '../../../../i18n';
 import {
-	APIResponse,
+	TestrayBuild,
 	TestrayProject,
 	TestrayRoutine,
-	TestrayTask,
 	testrayBuildImpl,
-	testrayTaskImpl,
 } from '../../../../services/rest';
-import BuildAlertBar from './BuildAlertBar';
 import BuildOverview from './BuildOverview';
 import useBuildActions from './useBuildActions';
 
@@ -50,30 +39,17 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 	const {pathname} = useLocation();
 	const {testrayProject, testrayRoutine}: OutletContext = useOutletContext();
 
-	const {
-		data: testrayBuild,
-		mutate: mutateBuild,
-	} = useFetch(testrayBuildImpl.getResource(buildId as string), (response) =>
-		testrayBuildImpl.transformData(response)
-	);
+	const {data: testrayBuild, error, loading, mutate: mutateBuild} = useFetch<
+		TestrayBuild
+	>(testrayBuildImpl.getResource(buildId as string), {
+		transformData: (response) => testrayBuildImpl.transformData(response),
+	});
 
 	const hasOtherParams = !!Object.values(otherParams).length;
 
 	const {setHeaderActions, setHeading, setTabs} = useHeader({
 		shouldUpdate: !hasOtherParams,
-		timeout: 200,
 	});
-
-	const {data: testrayTasksData} = useFetch<APIResponse<TestrayTask>>(
-		testrayTaskImpl.resource,
-		(response) => testrayTaskImpl.transformDataFromList(response)
-	);
-
-	const testrayTasks = testrayTasksData?.items || [];
-
-	const testrayTask = testrayTasks.find(
-		(testrayTask) => testrayTask?.build?.id === Number(buildId)
-	);
 
 	const isCurrentPathIgnored = ignorePaths.some((ignorePath) =>
 		pathname.includes(ignorePath)
@@ -105,7 +81,7 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 				},
 			]);
 		}
-	}, [setHeading, testrayProject, testrayRoutine, testrayBuild]);
+	}, [pathname, setHeading, testrayBuild, testrayProject, testrayRoutine]);
 
 	useEffect(() => {
 		if (!isCurrentPathIgnored) {
@@ -139,24 +115,16 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 		}
 	}, [basePath, isCurrentPathIgnored, pathname, setTabs]);
 
-	if (testrayBuild) {
-		return (
+	return (
+		<PageRenderer error={error} loading={loading}>
 			<>
-				{!isCurrentPathIgnored && (
-					<>
-						{testrayTask && (
-							<BuildAlertBar testrayTask={testrayTask} />
-						)}
-
-						<BuildOverview
-							testrayBuild={testrayBuild}
-							testrayTask={testrayTask}
-						/>
-					</>
+				{!isCurrentPathIgnored && testrayBuild && (
+					<BuildOverview testrayBuild={testrayBuild} />
 				)}
 
 				<Outlet
 					context={{
+						actions: testrayBuild?.actions,
 						mutateBuild,
 						testrayBuild,
 						testrayProject,
@@ -164,10 +132,8 @@ const BuildOutlet: React.FC<BuildOutletProps> = ({ignorePaths}) => {
 					}}
 				/>
 			</>
-		);
-	}
-
-	return null;
+		</PageRenderer>
+	);
 };
 
 export default BuildOutlet;

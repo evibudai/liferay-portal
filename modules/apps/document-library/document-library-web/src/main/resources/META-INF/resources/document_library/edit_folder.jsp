@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -82,7 +73,7 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 							<aui:input name="parentFolder" type="resource" value="<%= dlEditFolderDisplayContext.getParentFolderName() %>" />
 						</c:if>
 
-						<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>" name="name" />
+						<aui:input name="name" />
 
 						<c:if test="<%= dlEditFolderDisplayContext.isShowDescription() %>">
 							<aui:input name="description" />
@@ -179,7 +170,7 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 						<c:if test="<%= dlEditFolderDisplayContext.isWorkflowEnabled() %>">
 							<c:choose>
 								<c:when test="<%= !dlEditFolderDisplayContext.isRootFolder() %>">
-									<aui:input checked="<%= dlEditFolderDisplayContext.isRestrictionTypeWorkflow() %>" id="restrictionTypeWorkflow" label='<%= LanguageUtil.format(locale, "default-workflow-for-this-folder-x", folder.getName(), false) %>' name="restrictionType" type="radio" value="<%= DLFolderConstants.RESTRICTION_TYPE_WORKFLOW %>" />
+									<aui:input checked="<%= dlEditFolderDisplayContext.isRestrictionTypeWorkflow() %>" id="restrictionTypeWorkflow" label='<%= LanguageUtil.format(locale, "set-the-default-workflow-for-the-folders-content-x", folder.getName(), false) %>' name="restrictionType" type="radio" value="<%= DLFolderConstants.RESTRICTION_TYPE_WORKFLOW %>" />
 								</c:when>
 								<c:otherwise>
 									<aui:input name="restrictionType" type="hidden" value="<%= DLFolderConstants.RESTRICTION_TYPE_WORKFLOW %>" />
@@ -412,8 +403,6 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 	searchContainer.get('contentBox').delegate(
 		'click',
 		(event) => {
-			var A = AUI();
-
 			var link = event.currentTarget;
 
 			var tr = link.ancestor('tr');

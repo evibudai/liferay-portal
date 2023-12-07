@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import './Panel.scss';
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayPanel from '@clayui/panel';
 import classNames from 'classnames';
 import {
 	EVENT_TYPES as CORE_EVENT_TYPES,
@@ -23,155 +15,96 @@ import {
 } from 'data-engine-js-components-web';
 import React from 'react';
 
-import useHeightTransition from './useHeightTransition.es';
+const PanelHeader = ({
+	name,
+	readOnly,
+	repeatable,
+	showRepeatableRemoveButton,
+	title,
+}) => {
+	const dispatch = useForm();
 
-/**
- * Alternative component for ClayPanel,
- * since the original component don't have to much flexibility
- * for adding items on the ClayPanel trigger.
- */
+	return (
+		<div className="ddm-form-field-panel-header-container">
+			<label className="text-uppercase">{title}</label>
+
+			{repeatable && (
+				<span className="actions collapse-icon-options">
+					<div className="lfr-ddm-form-field-repeatable-toolbar">
+						{showRepeatableRemoveButton && (
+							<ClayButton
+								className="ddm-form-field-repeatable-delete-button lfr-portal-tooltip p-0"
+								disabled={readOnly}
+								onClick={(event) => {
+									event.stopPropagation();
+
+									dispatch({
+										payload: name,
+										type: CORE_EVENT_TYPES.FIELD.REMOVED,
+									});
+								}}
+								small
+								title={Liferay.Language.get('remove')}
+							>
+								<ClayIcon symbol="hr" />
+							</ClayButton>
+						)}
+
+						<ClayButton
+							className="ddm-form-field-repeatable-add-button lfr-portal-tooltip p-0"
+							disabled={readOnly}
+							onClick={(event) => {
+								event.stopPropagation();
+
+								dispatch({
+									payload: name,
+									type: CORE_EVENT_TYPES.FIELD.REPEATED,
+								});
+							}}
+							small
+							title={Liferay.Language.get('duplicate')}
+						>
+							<ClayIcon symbol="plus" />
+						</ClayButton>
+					</div>
+				</span>
+			)}
+		</div>
+	);
+};
+
 const Panel = ({
 	children,
 	name,
 	readOnly,
 	repeatable,
-	showLabel,
 	showRepeatableRemoveButton,
 	title,
 }) => {
-	const panelRef = React.useRef(null);
-	const [expanded, setExpanded] = React.useState(true);
-
-	const dispatch = useForm();
-
-	const [
-		transitioning,
-		handleTransitionEnd,
-		startTransition,
-	] = useHeightTransition(expanded, setExpanded, panelRef);
-
-	const showIconCollapsed = !(
-		(!expanded && transitioning) ||
-		(expanded && !transitioning)
-	);
-
 	return (
-		<div
+		<ClayPanel
 			className={classNames(
 				'collapsable-panel',
 				'panel',
 				'panel-unstyled'
 			)}
+			collapsable
+			defaultExpanded
+			displayTitle={
+				<PanelHeader
+					name={name}
+					readOnly={readOnly}
+					repeatable={repeatable}
+					showRepeatableRemoveButton={showRepeatableRemoveButton}
+					title={title}
+				/>
+			}
 			role="tablist"
 		>
 			<>
-				<ClayButton
-					aria-expanded={expanded}
-					className={classNames(
-						'collapse-icon',
-						'collapse-icon-middle',
-						'panel-header',
-						'panel-header-link',
-						{
-							collapsed: showIconCollapsed,
-						}
-					)}
-					displayType="unstyled"
-					onClick={startTransition}
-					role="tab"
-				>
-					<>
-						{showLabel && (
-							<span className="panel-title">
-								<label className="text-uppercase">
-									{title}
-								</label>
-							</span>
-						)}
-
-						{repeatable && (
-							<span className="actions collapse-icon-options">
-								<div className="lfr-ddm-form-field-repeatable-toolbar">
-									{showRepeatableRemoveButton && (
-										<ClayButton
-											className="ddm-form-field-repeatable-delete-button lfr-portal-tooltip p-0"
-											disabled={readOnly}
-											onClick={(event) => {
-												event.stopPropagation();
-
-												dispatch({
-													payload: name,
-													type:
-														CORE_EVENT_TYPES.FIELD
-															.REMOVED,
-												});
-											}}
-											small
-											title={Liferay.Language.get(
-												'remove'
-											)}
-										>
-											<ClayIcon symbol="hr" />
-										</ClayButton>
-									)}
-
-									<ClayButton
-										className="ddm-form-field-repeatable-add-button lfr-portal-tooltip p-0"
-										disabled={readOnly}
-										onClick={(event) => {
-											event.stopPropagation();
-
-											dispatch({
-												payload: name,
-												type:
-													CORE_EVENT_TYPES.FIELD
-														.REPEATED,
-											});
-										}}
-										small
-										title={Liferay.Language.get(
-											'duplicate'
-										)}
-									>
-										<ClayIcon symbol="plus" />
-									</ClayButton>
-								</div>
-							</span>
-						)}
-
-						<span
-							className={classNames(
-								'actions',
-								'collapse-icon-closed'
-							)}
-						>
-							<ClayIcon symbol="angle-down" />
-						</span>
-						<span
-							className={classNames(
-								'actions',
-								'collapse-icon-open'
-							)}
-						>
-							<ClayIcon symbol="angle-up" />
-						</span>
-					</>
-				</ClayButton>
-
-				<div
-					className={classNames('panel-collapse', {
-						collapse: !transitioning,
-						collapsing: transitioning,
-						show: expanded,
-					})}
-					onTransitionEnd={handleTransitionEnd}
-					ref={panelRef}
-					role="tabpanel"
-				>
-					{children}
-				</div>
+				<ClayPanel.Body>{children}</ClayPanel.Body>
 			</>
-		</div>
+		</ClayPanel>
 	);
 };
 

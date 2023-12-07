@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.graphql.data.processor;
 
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -34,9 +24,9 @@ import com.liferay.portal.vulcan.graphql.dto.GraphQLDTOProperty;
 import com.liferay.portal.vulcan.internal.accept.language.AcceptLanguageImpl;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.AggregationContextProvider;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.FilterContextProvider;
-import com.liferay.portal.vulcan.internal.jaxrs.context.provider.SortContextProvider;
 import com.liferay.portal.vulcan.pagination.Page;
-import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.pagination.provider.PaginationProvider;
+import com.liferay.portal.vulcan.util.SortUtil;
 
 import java.io.Serializable;
 
@@ -45,16 +35,26 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Carlos Correa
  */
-@Component(
-	immediate = true, service = GraphQLDTOContributorDataFetchingProcessor.class
-)
 public class GraphQLDTOContributorDataFetchingProcessor {
+
+	public GraphQLDTOContributorDataFetchingProcessor(
+		DTOConverterRegistry dtoConverterRegistry,
+		ExpressionConvert<Filter> expressionConvert,
+		FilterParserProvider filterParserProvider, Language language,
+		PaginationProvider paginationProvider, Portal portal,
+		SortParserProvider sortParserProvider) {
+
+		_dtoConverterRegistry = dtoConverterRegistry;
+		_expressionConvert = expressionConvert;
+		_filterParserProvider = filterParserProvider;
+		_language = language;
+		_paginationProvider = paginationProvider;
+		_portal = portal;
+		_sortParserProvider = sortParserProvider;
+	}
 
 	public Object create(
 			Object dto, GraphQLDTOContributor graphQLDTOContributor,
@@ -128,9 +128,13 @@ public class GraphQLDTOContributorDataFetchingProcessor {
 			_getFilter(
 				acceptLanguage, graphQLDTOContributor.getEntityModel(),
 				filterString),
-			Pagination.of(page, pageSize), search,
-			_getSorts(
+			_paginationProvider.getPagination(
+				_portal.getCompanyId(httpServletRequest), page, pageSize),
+			search,
+			SortUtil.getSorts(
 				acceptLanguage, graphQLDTOContributor.getEntityModel(),
+				_sortParserProvider.provide(
+					graphQLDTOContributor.getEntityModel()),
 				sortsString));
 	}
 
@@ -193,35 +197,12 @@ public class GraphQLDTOContributorDataFetchingProcessor {
 			acceptLanguage, entityModel, filterString);
 	}
 
-	private Sort[] _getSorts(
-		AcceptLanguage acceptLanguage, EntityModel entityModel,
-		String sortsString) {
-
-		SortContextProvider sortContextProvider = new SortContextProvider(
-			_language, _portal, _sortParserProvider);
-
-		return sortContextProvider.createContext(
-			acceptLanguage, entityModel, sortsString);
-	}
-
-	@Reference
-	private DTOConverterRegistry _dtoConverterRegistry;
-
-	@Reference(
-		target = "(result.class.name=com.liferay.portal.kernel.search.filter.Filter)"
-	)
-	private ExpressionConvert<Filter> _expressionConvert;
-
-	@Reference
-	private FilterParserProvider _filterParserProvider;
-
-	@Reference
-	private Language _language;
-
-	@Reference
-	private Portal _portal;
-
-	@Reference
-	private SortParserProvider _sortParserProvider;
+	private final DTOConverterRegistry _dtoConverterRegistry;
+	private final ExpressionConvert<Filter> _expressionConvert;
+	private final FilterParserProvider _filterParserProvider;
+	private final Language _language;
+	private final PaginationProvider _paginationProvider;
+	private final Portal _portal;
+	private final SortParserProvider _sortParserProvider;
 
 }

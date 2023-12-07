@@ -1,23 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import {useModal} from '@clayui/modal';
+import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
 
-import {SCHEMA_SELECTED_EVENT} from '../constants';
+import {
+	EXPORT_FILE_FORMAT_SELECTED_EVENT,
+	OBJECT_DEFINITION,
+	SCHEMA_SELECTED_EVENT,
+} from '../constants';
 import ExportModal from './ExportModal';
 
 function Export({
@@ -35,20 +31,58 @@ function Export({
 		(event) => {
 			event.preventDefault();
 
+			const isFieldChecked = document.querySelectorAll(
+				'#fieldsTableBody input[type=checkbox]:checked'
+			);
+
+			if (!isFieldChecked?.length) {
+				openToast({
+					message: Liferay.Language.get(
+						'please-select-at-least-one-field'
+					),
+					type: 'danger',
+				});
+
+				return;
+			}
+
 			setVisible(true);
 		},
 		[setVisible]
 	);
 
 	useEffect(() => {
+		const handleExportFileFormatUpdated = ({
+			selectedExportFileFormat,
+			selectedSchema,
+		}) => {
+			if (
+				selectedExportFileFormat === 'CSV' &&
+				selectedSchema === OBJECT_DEFINITION
+			) {
+				setDisable(true);
+			}
+		};
+
 		function handleSchemaChange(event) {
 			if (event.schema) {
 				setDisable(false);
 			}
 		}
+
+		Liferay.on(
+			EXPORT_FILE_FORMAT_SELECTED_EVENT,
+			handleExportFileFormatUpdated
+		);
 		Liferay.on(SCHEMA_SELECTED_EVENT, handleSchemaChange);
 
-		return () => Liferay.detach(SCHEMA_SELECTED_EVENT, handleSchemaChange);
+		return () => {
+			Liferay.detach(
+				EXPORT_FILE_FORMAT_SELECTED_EVENT,
+				handleExportFileFormatUpdated
+			);
+			Liferay.detach(SCHEMA_SELECTED_EVENT, handleSchemaChange);
+		};
 	}, [portletNamespace]);
 
 	return (

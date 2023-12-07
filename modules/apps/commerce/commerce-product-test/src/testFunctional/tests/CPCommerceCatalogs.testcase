@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6278. AddAnImageToCatalogAndRemove"
-	@priority = "3"
+	@priority = 5
 	test AddAnImageToCatalogAndRemove {
 		property portal.acceptance = "true";
 
@@ -50,6 +50,8 @@ definition {
 
 		Alert.viewSuccessMessage();
 
+		Navigator.gotoBack();
+
 		Click.clickNoWaitForVisible(
 			key_value = "Test Catalog",
 			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
@@ -66,6 +68,8 @@ definition {
 
 		Button.clickSave();
 
+		Navigator.gotoBack();
+
 		Click.clickNoWaitForVisible(
 			key_value = "Test Catalog",
 			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
@@ -78,7 +82,7 @@ definition {
 	}
 
 	@description = "Verify that by creating a new catalog with a language other than English, base pricelist and promotion will be translated into the new language and new product fields will have the new language as the default locale."
-	@priority = "3"
+	@priority = 3
 	test CatalogProductsPromotionsAndPriceListsAreLocalized {
 		property portal.acceptance = "false";
 
@@ -126,8 +130,10 @@ definition {
 		}
 	}
 
+	@description = "This is a test for creating a catalog"
+	@priority = 5
 	test CreateNewCatalog {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
@@ -161,7 +167,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6273. EditACatalog"
-	@priority = "3"
+	@priority = 5
 	test EditACatalog {
 		property portal.acceptance = "true";
 
@@ -219,6 +225,8 @@ definition {
 
 		Alert.viewSuccessMessage();
 
+		Navigator.gotoBack();
+
 		ClickNoError(
 			key_entryName = "Test Catalog Edited",
 			locator1 = "CommerceEntry#ENTRY_NAME_BODY_VERTICAL_ELLIPSIS");
@@ -241,7 +249,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6279. EditAPermissionOnACatalog"
-	@priority = "3"
+	@priority = 3
 	test EditAPermissionOnACatalog {
 		property portal.acceptance = "false";
 
@@ -324,9 +332,9 @@ definition {
 	}
 
 	@description = "Verify that Master Catalog is created by default and cannot be deleted."
-	@priority = "3"
+	@priority = 3
 	test MasterCatalogIsCreatedByDefaultAndCannotBeDeleted {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "false";
 
 		task ("When the admin goes to the catalogs page") {
@@ -355,7 +363,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6272. RemoveACatalog"
-	@priority = "3"
+	@priority = 3
 	test RemoveACatalog {
 		property portal.acceptance = "false";
 
@@ -392,9 +400,9 @@ definition {
 	}
 
 	@description = "Verify users without permission cannot add, edit, or delete catalogs."
-	@priority = "3"
+	@priority = 5
 	test UserWithoutPermissionCannotAddEditOrDeleteCatalogs {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a user") {
@@ -413,7 +421,7 @@ definition {
 		task ("And given the user has permission to view catalogs in the catalog section of the admin panel") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
+				resourceName = 90,
 				roleTitle = "User");
 
 			Permissions.definePermissionViaJSONAPI(
@@ -471,9 +479,9 @@ definition {
 	}
 
 	@description = "Verify users with the permission to edit catalog permissions can edit the permissions on a catalog."
-	@priority = "3"
+	@priority = 5
 	test UserWithPermissionCanEditAPermissionOnACatalog {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a user") {
@@ -508,7 +516,7 @@ definition {
 			CommerceCatalog.openCatalogsAdmin();
 
 			Click(
-				key_indexNumber = "2",
+				key_indexNumber = 2,
 				key_text = "Permissions",
 				locator1 = "Button#ANY_N");
 
@@ -523,7 +531,7 @@ definition {
 
 		task ("Then those permissions should be saved on the catalog") {
 			Click(
-				key_indexNumber = "2",
+				key_indexNumber = 2,
 				key_text = "Permissions",
 				locator1 = "Button#ANY_N");
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.organization.web.internal.display.context;
@@ -17,22 +8,25 @@ package com.liferay.commerce.organization.web.internal.display.context;
 import com.liferay.commerce.organization.web.internal.configuration.CommerceOrganizationPortletInstanceConfiguration;
 import com.liferay.commerce.organization.web.internal.display.context.helper.CommerceOrganizationRequestHelper;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletQName;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.OrganizationService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
-import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -60,11 +54,10 @@ public class CommerceOrganizationDisplayContext {
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
-
 		_commerceOrganizationPortletInstanceConfiguration =
-			portletDisplay.getPortletInstanceConfiguration(
-				CommerceOrganizationPortletInstanceConfiguration.class);
+			ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				CommerceOrganizationPortletInstanceConfiguration.class,
+				_themeDisplay);
 	}
 
 	public String getKeywords() {
@@ -197,6 +190,29 @@ public class CommerceOrganizationDisplayContext {
 		}
 
 		return _commerceOrganizationRequestHelper.getUserId();
+	}
+
+	public String getSelectLogoURL() {
+		return PortletURLBuilder.createRenderURL(
+			PortalUtil.getLiferayPortletResponse(
+				_commerceOrganizationRequestHelper.getLiferayPortletResponse()),
+			PortletKeys.IMAGE_UPLOADER
+		).setMVCRenderCommandName(
+			"/image_uploader/upload_image"
+		).setParameter(
+			"aspectRatio", 1
+		).setParameter(
+			"currentLogoURL", "[$CURRENT_LOGO_URL$]"
+		).setParameter(
+			"preserveRatio", true
+		).setParameter(
+			"randomNamespace",
+			PortalUtil.generateRandomKey(
+				_commerceOrganizationRequestHelper.getRequest(),
+				"commerce-organization-web")
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public boolean hasAddOrganizationPermissions() throws PortalException {

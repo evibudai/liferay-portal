@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.admin.web.internal.portlet.action;
 
 import com.liferay.asset.kernel.NoSuchClassTypeException;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
-import com.liferay.layout.page.template.admin.web.internal.handler.LayoutPageTemplateEntryExceptionRequestHandler;
+import com.liferay.layout.page.template.admin.web.internal.handler.LayoutPageTemplateEntryExceptionRequestHandlerUtil;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.exception.NoSuchClassNameException;
@@ -24,6 +16,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -40,11 +33,8 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-
-import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -98,11 +88,8 @@ public class AddDisplayPageMVCActionCommand extends BaseMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String layoutFullURL = _portal.getLayoutFullURL(
-			draftLayout, themeDisplay);
-
-		layoutFullURL = HttpComponentsUtil.setParameter(
-			layoutFullURL, "p_l_back_url",
+		return HttpComponentsUtil.addParameters(
+			_portal.getLayoutFullURL(draftLayout, themeDisplay), "p_l_back_url",
 			PortletURLBuilder.create(
 				PortletURLFactoryUtil.create(
 					actionRequest,
@@ -110,10 +97,16 @@ public class AddDisplayPageMVCActionCommand extends BaseMVCActionCommand {
 					PortletRequest.RENDER_PHASE)
 			).setTabs1(
 				"display-page-templates"
-			).buildString());
-
-		return HttpComponentsUtil.setParameter(
-			layoutFullURL, "p_l_mode", Constants.EDIT);
+			).setParameter(
+				"layoutPageTemplateCollectionId",
+				ParamUtil.getLong(
+					actionRequest, "layoutPageTemplateCollectionId",
+					LayoutPageTemplateConstants.
+						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT)
+			).buildString(),
+			"p_l_back_url_title",
+			_language.get(themeDisplay.getLocale(), "page-templates"),
+			"p_l_mode", Constants.EDIT);
 	}
 
 	private JSONObject _addDisplayPage(
@@ -129,9 +122,6 @@ public class AddDisplayPageMVCActionCommand extends BaseMVCActionCommand {
 		long classTypeId = ParamUtil.getLong(actionRequest, "classTypeId");
 		long masterLayoutPlid = ParamUtil.getLong(
 			actionRequest, "masterLayoutPlid");
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			serviceContext.getLocale(), AddDisplayPageMVCActionCommand.class);
 
 		try {
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -149,21 +139,21 @@ public class AddDisplayPageMVCActionCommand extends BaseMVCActionCommand {
 			if (portalException instanceof NoSuchClassNameException) {
 				errorJSONObject = JSONUtil.put(
 					"classNameId",
-					ResourceBundleUtil.getString(
-						resourceBundle, "invalid-content-type"));
+					_language.get(
+						serviceContext.getLocale(), "invalid-content-type"));
 			}
 			else if (portalException instanceof NoSuchClassTypeException) {
 				errorJSONObject = JSONUtil.put(
 					"classTypeId",
-					ResourceBundleUtil.getString(
-						resourceBundle, "invalid-subtype"));
+					_language.get(
+						serviceContext.getLocale(), "invalid-subtype"));
 			}
 			else {
 				errorJSONObject = JSONUtil.put(
 					"name",
 					() -> {
 						JSONObject jsonObject =
-							_layoutPageTemplateEntryExceptionRequestHandler.
+							LayoutPageTemplateEntryExceptionRequestHandlerUtil.
 								createErrorJSONObject(
 									actionRequest, portalException);
 
@@ -179,11 +169,10 @@ public class AddDisplayPageMVCActionCommand extends BaseMVCActionCommand {
 	private JSONFactory _jsonFactory;
 
 	@Reference
-	private LayoutLocalService _layoutLocalService;
+	private Language _language;
 
 	@Reference
-	private LayoutPageTemplateEntryExceptionRequestHandler
-		_layoutPageTemplateEntryExceptionRequestHandler;
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;

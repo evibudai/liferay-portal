@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.runner.util;
@@ -35,13 +26,6 @@ public class ExecUtil {
 
 	public static String executeCommand(String command)
 		throws IOException, TimeoutException {
-
-		if (!_isWhitelistedExecutable(command)) {
-			throw new RuntimeException(
-				"Unable to run command: " + command +
-					"\nPlease use a whitelisted executable: " +
-						_whitelistedExecutableNames);
-		}
 
 		Process process = executeCommands(
 			true, new File("."), 1000 * 60 * _timeoutDuration, command);
@@ -246,20 +230,8 @@ public class ExecUtil {
 		}
 	}
 
-	private static boolean _isWhitelistedExecutable(String command) {
-		for (String executableName : _whitelistedExecutableNames) {
-			if (command.startsWith(executableName)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	private static final long _BASH_COMMAND_TIMEOUT_DEFAULT = 1000 * 60 * 60;
 
 	private static long _timeoutDuration = 15;
-	private static final List<String> _whitelistedExecutableNames =
-		Arrays.asList("git", "grep", "sed");
 
 }

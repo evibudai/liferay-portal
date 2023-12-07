@@ -1,31 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.document.library.web.internal.counter;
 
 import com.liferay.adaptive.media.image.counter.AMImageCounter;
-import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
-import com.liferay.adaptive.media.image.size.AMImageSizeProvider;
-import com.liferay.adaptive.media.image.validator.AMImageValidator;
+import com.liferay.adaptive.media.image.counter.BaseAMImageCounter;
+import com.liferay.document.library.configuration.DLFileEntryConfigurationProvider;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
-import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.exception.PortalException;
+
+import java.util.function.Consumer;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,92 +24,24 @@ import org.osgi.service.component.annotations.Reference;
 	property = "adaptive.media.key=document-library",
 	service = AMImageCounter.class
 )
-public class DLAMImageCounter implements AMImageCounter {
+public class DLAMImageCounter extends BaseAMImageCounter {
 
 	@Override
-	public int countExpectedAMImageEntries(long companyId) {
-		return _getFileEntriesCount(companyId) -
-			_getTrashedFileEntriesCount(companyId);
-	}
+	protected void forEachFileEntry(
+			long companyId, Consumer<DLFileEntry> consumer)
+		throws PortalException {
 
-	private int _getFileEntriesCount(long companyId) {
-		DynamicQuery dlFileEntryEntryDynamicQuery =
-			_dlFileEntryLocalService.dynamicQuery();
-
-		Property companyIdProperty = PropertyFactoryUtil.forName("companyId");
-
-		dlFileEntryEntryDynamicQuery.add(companyIdProperty.eq(companyId));
-
-		Property groupIdProperty = PropertyFactoryUtil.forName("groupId");
-		Property repositoryIdProperty = PropertyFactoryUtil.forName(
-			"repositoryId");
-
-		dlFileEntryEntryDynamicQuery.add(
-			groupIdProperty.eqProperty(repositoryIdProperty));
-
-		Property mimeTypeProperty = PropertyFactoryUtil.forName("mimeType");
-
-		dlFileEntryEntryDynamicQuery.add(
-			mimeTypeProperty.in(
-				ArrayUtil.filter(
-					_amImageMimeTypeProvider.getSupportedMimeTypes(),
-					_amImageValidator::isProcessingSupported)));
-
-		Property sizeProperty = PropertyFactoryUtil.forName("size");
-
-		dlFileEntryEntryDynamicQuery.add(
-			sizeProperty.le(_amImageSizeProvider.getImageMaxSize()));
-
-		return (int)_dlFileEntryLocalService.dynamicQueryCount(
-			dlFileEntryEntryDynamicQuery);
-	}
-
-	private int _getTrashedFileEntriesCount(long companyId) {
-		DynamicQuery dlFileVersionDynamicQuery =
-			_dlFileVersionLocalService.dynamicQuery();
-
-		dlFileVersionDynamicQuery.setProjection(
-			ProjectionFactoryUtil.countDistinct("fileEntryId"));
-
-		Property companyIdProperty = PropertyFactoryUtil.forName("companyId");
-
-		dlFileVersionDynamicQuery.add(companyIdProperty.eq(companyId));
-
-		Property groupIdProperty = PropertyFactoryUtil.forName("groupId");
-		Property repositoryIdProperty = PropertyFactoryUtil.forName(
-			"repositoryId");
-
-		dlFileVersionDynamicQuery.add(
-			groupIdProperty.eqProperty(repositoryIdProperty));
-
-		Property mimeTypeProperty = PropertyFactoryUtil.forName("mimeType");
-
-		dlFileVersionDynamicQuery.add(
-			mimeTypeProperty.in(
-				_amImageMimeTypeProvider.getSupportedMimeTypes()));
-
-		Property statusProperty = PropertyFactoryUtil.forName("status");
-
-		dlFileVersionDynamicQuery.add(
-			statusProperty.eq(WorkflowConstants.STATUS_IN_TRASH));
-
-		return (int)_dlFileEntryLocalService.dynamicQueryCount(
-			dlFileVersionDynamicQuery);
+		_dlFileEntryLocalService.forEachFileEntry(
+			companyId, consumer,
+			_dlFileEntryConfigurationProvider.
+				getCompanyPreviewableProcessorMaxSize(companyId),
+			getMimeTypes());
 	}
 
 	@Reference
-	private AMImageMimeTypeProvider _amImageMimeTypeProvider;
-
-	@Reference
-	private AMImageSizeProvider _amImageSizeProvider;
-
-	@Reference
-	private AMImageValidator _amImageValidator;
+	private DLFileEntryConfigurationProvider _dlFileEntryConfigurationProvider;
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
-
-	@Reference
-	private DLFileVersionLocalService _dlFileVersionLocalService;
 
 }

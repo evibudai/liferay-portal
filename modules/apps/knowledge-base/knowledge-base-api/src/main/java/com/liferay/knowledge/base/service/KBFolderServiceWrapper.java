@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service;
 
+import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -35,7 +27,7 @@ public class KBFolderServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder addKBFolder(
+	public KBFolder addKBFolder(
 			String externalReferenceCode, long groupId,
 			long parentResourceClassNameId, long parentResourcePrimKey,
 			String name, String description,
@@ -48,26 +40,24 @@ public class KBFolderServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder deleteKBFolder(
-			long kbFolderId)
+	public KBFolder deleteKBFolder(long kbFolderId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbFolderService.deleteKBFolder(kbFolderId);
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder fetchFirstChildKBFolder(
-			long groupId, long kbFolderId)
+	public KBFolder fetchFirstChildKBFolder(long groupId, long kbFolderId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbFolderService.fetchFirstChildKBFolder(groupId, kbFolderId);
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder fetchFirstChildKBFolder(
+	public KBFolder fetchFirstChildKBFolder(
 			long groupId, long kbFolderId,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.knowledge.base.model.KBFolder> orderByComparator)
+			com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+				orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbFolderService.fetchFirstChildKBFolder(
@@ -75,15 +65,14 @@ public class KBFolderServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder fetchKBFolder(
-			long kbFolderId)
+	public KBFolder fetchKBFolder(long kbFolderId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbFolderService.fetchKBFolder(kbFolderId);
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder fetchKBFolderByUrlTitle(
+	public KBFolder fetchKBFolderByUrlTitle(
 			long groupId, long parentKbFolderId, String urlTitle)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -92,17 +81,15 @@ public class KBFolderServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder getKBFolder(
-			long kbFolderId)
+	public KBFolder getKBFolder(long kbFolderId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbFolderService.getKBFolder(kbFolderId);
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder
-			getKBFolderByExternalReferenceCode(
-				long groupId, String externalReferenceCode)
+	public KBFolder getKBFolderByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbFolderService.getKBFolderByExternalReferenceCode(
@@ -110,7 +97,7 @@ public class KBFolderServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder getKBFolderByUrlTitle(
+	public KBFolder getKBFolderByUrlTitle(
 			long groupId, long parentKbFolderId, String urlTitle)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -119,9 +106,8 @@ public class KBFolderServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.knowledge.base.model.KBFolder>
-			getKBFolders(
-				long groupId, long parentKBFolderId, int start, int end)
+	public java.util.List<KBFolder> getKBFolders(
+			long groupId, long parentKBFolderId, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbFolderService.getKBFolders(
@@ -172,7 +158,14 @@ public class KBFolderServiceWrapper
 	}
 
 	@Override
-	public com.liferay.knowledge.base.model.KBFolder updateKBFolder(
+	public KBFolder moveKBFolderToTrash(long kbFolderId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbFolderService.moveKBFolderToTrash(kbFolderId);
+	}
+
+	@Override
+	public KBFolder updateKBFolder(
 			long parentResourceClassNameId, long parentResourcePrimKey,
 			long kbFolderId, String name, String description,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)

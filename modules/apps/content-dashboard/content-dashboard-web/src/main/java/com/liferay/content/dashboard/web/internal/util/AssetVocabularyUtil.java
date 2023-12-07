@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.util;
@@ -42,7 +33,7 @@ import java.util.Set;
  */
 public class AssetVocabularyUtil {
 
-	public static AssetVocabulary addAssetVocabulary(
+	public static void addAssetVocabulary(
 			AssetVocabularyLocalService assetVocabularyLocalService,
 			Collection<Long> classNameIds, Company company,
 			String assetVocabularyName, int visibilityType)
@@ -59,9 +50,11 @@ public class AssetVocabularyUtil {
 				StringUtil.toLowerCase(assetVocabularyName));
 
 		if (assetVocabulary == null) {
-			return _addAssetVocabulary(
+			_addAssetVocabulary(
 				assetVocabularyLocalService, assetVocabularyName, classNameIds,
 				company, visibilityType);
+
+			return;
 		}
 
 		AssetVocabularySettingsHelper assetVocabularySettingsHelper =
@@ -72,22 +65,22 @@ public class AssetVocabularyUtil {
 		if (Objects.equals(settings, assetVocabulary.getSettings()) &&
 			(visibilityType == assetVocabulary.getVisibilityType())) {
 
-			return assetVocabulary;
+			return;
 		}
 
-		return assetVocabularyLocalService.updateVocabulary(
+		assetVocabularyLocalService.updateVocabulary(
 			assetVocabulary.getVocabularyId(), assetVocabulary.getTitleMap(),
 			assetVocabulary.getDescriptionMap(),
 			assetVocabularySettingsHelper.toString(), visibilityType);
 	}
 
-	private static AssetVocabulary _addAssetVocabulary(
+	private static void _addAssetVocabulary(
 			AssetVocabularyLocalService assetVocabularyLocalService,
 			String assetVocabularyName, Collection<Long> classNameIdsCollection,
 			Company company, int visibilityType)
 		throws PortalException {
 
-		User user = company.getDefaultUser();
+		User user = company.getGuestUser();
 
 		Map<Locale, String> titleMap = new HashMap<>();
 
@@ -123,7 +116,7 @@ public class AssetVocabularyUtil {
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
 
-		return assetVocabularyLocalService.addVocabulary(
+		assetVocabularyLocalService.addVocabulary(
 			null, user.getUserId(), company.getGroupId(), assetVocabularyName,
 			StringPool.BLANK, titleMap, Collections.emptyMap(),
 			assetVocabularySettingsHelper.toString(), visibilityType,

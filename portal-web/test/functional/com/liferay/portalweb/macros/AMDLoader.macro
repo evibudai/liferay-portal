@@ -1,17 +1,19 @@
 definition {
 
-	macro confirmLogLevelOptionSetCorrectly {
+	@summary = "Default summary"
+	macro confirmLogLevelOptionSetCorrectly() {
 		var logLevel = AMDLoader.getAMDLoaderLogLevel();
-		var selectOption = StringUtil.lowerCase("${selectOption}");
+		var selectOption = StringUtil.lowerCase(${selectOption});
 
-		if ("${logLevel}" != "${selectOption}") {
+		if (${logLevel} != ${selectOption}) {
 			takeScreenshot();
 
 			fail("AMD log level isn't set to "+"${selectOption}"+" in JS console.");
 		}
 	}
 
-	macro getAMDLoaderLogLevel {
+	@summary = "Default summary"
+	macro getAMDLoaderLogLevel() {
 		WaitForSPARefresh();
 
 		var javaScript = '''
@@ -20,15 +22,16 @@ definition {
 		return logLevel;
 		''';
 
-		var logLevel = selenium.getEval("${javaScript}");
+		var logLevel = selenium.getEval(${javaScript});
 
-		return "${logLevel}";
+		return ${logLevel};
 	}
 
-	macro setLogLevelOption {
+	@summary = "Default summary"
+	macro setLogLevelOption(selectOption = null) {
 		SystemSettings.selectOptionSetting(
 			fieldName = "Log Level",
-			selectOption = "${selectOption}");
+			selectOption = ${selectOption});
 
 		SystemSettings.saveConfiguration();
 
@@ -36,7 +39,7 @@ definition {
 
 		FormFields.viewSelectOption(
 			fieldName = "Log Level",
-			selectOption = "${selectOption}");
+			selectOption = ${selectOption});
 	}
 
 }

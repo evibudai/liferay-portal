@@ -1,53 +1,51 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Pages Tree";
 
+	static var randomSiteName = StringUtil.randomString(8);
+
+	static var randomSiteURLKey = StringUtil.toLowerCase(${randomSiteName});
+
 	setUp {
-		TestCase.setUpPortalInstance();
-
-		User.firstLoginPG();
-
-		JSONGroup.addGroup(groupName = "Test Site Name");
-
-		JSONGroup.addGroup(groupName = "Site Name");
-
-		Staging.openStagingAdmin(siteURLKey = "test-site-name");
-
-		Staging.activateStagingCP(siteName = "Test Site Name");
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
 		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 
-			JSONGroup.deleteGroupByName(groupName = "Site Name");
+		task ("Sign in") {
+			User.firstLoginPG();
+		}
+
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = ${randomSiteName});
+		}
+
+		task ("Activate local live staging") {
+			Staging.openStagingAdmin(siteURLKey = ${randomSiteURLKey});
+
+			Staging.activateStagingCP(siteName = ${randomSiteName});
 		}
 	}
 
 	@description = "This is the test for LPS-107774. Can create a Collection Page based on Collections or Collection Providers in Pages Tree panel of Staging site."
-	@priority = "4"
+	@priority = 4
 	test AddCollectionPageViaPageFinder {
 		task ("Add three Web Content Articles based on Basic Web Content") {
 			for (var entryTitle : list "First Web Content,Second Web Content,Third Web Content") {
 				JSONWebcontent.addWebContent(
 					content = "Web Content Content",
-					groupName = "Test Site Name (Staging)",
+					groupName = "${randomSiteName} (Staging)",
 					site = "false",
-					title = "${entryTitle}");
+					title = ${entryTitle});
 			}
 		}
 
 		task ("Add a dynamic Collections and select Web Content Article as Asset Entry Type") {
 			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				itemSubtype = "Basic Web Content",
 				itemType = "Web Content Article",
 				site = "false",
@@ -55,7 +53,7 @@ definition {
 		}
 
 		task ("Add a Collection Page based on Dynamic Collection via Pages Tree Panel") {
-			ProductMenu.gotoStagingSite(site = "Test Site Name");
+			ProductMenu.gotoStagingSite(site = ${randomSiteName});
 
 			PagesFinder.goToPagesFinder();
 
@@ -64,27 +62,35 @@ definition {
 				pageName = "Test Collection Page Name 1",
 				tabName = "Collections");
 
-			AssertTextEquals.assertPartialText(
-				locator1 = "ControlMenu#PAGE_TYPE",
-				value1 = "Collection Page");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
+
+			PagesAdmin.viewPageType(
+				pageName = "Test Collection Page Name 1",
+				pageType = "Collection Page");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Collection Page Name 1",
+				siteName = "${randomSiteName} Staging");
 
 			AssertVisible(
 				key_elementHeader = "//div[contains(.,'Dynamic Collection') and contains(@id,'fragment-')]",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 
-			var n = "1";
+			var n = 1;
 
 			for (var title : list "Third Web Content,Second Web Content,First Web Content") {
 				AssertVisible(
-					key_colPosition = "1",
-					key_entryTitle = "${title}",
+					key_colPosition = 1,
+					key_entryTitle = ${title},
 					key_fragmentName = "Collection Display",
-					key_rowPosition = "${n}",
+					key_rowPosition = ${n},
 					locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 
 				var n = ${n} + 1;
 			}
+
+			PagesFinder.goToPagesFinder();
 
 			PagesFinder.viewPageNameInPagesFinder(pageName = "Test Collection Page Name 1*");
 		}
@@ -97,63 +103,77 @@ definition {
 				pageName = "Test Collection Page Name 2",
 				tabName = "Collection Providers");
 
-			AssertTextEquals.assertPartialText(
-				locator1 = "ControlMenu#PAGE_TYPE",
-				value1 = "Collection Page");
+			PagesAdmin.openPagesAdmin(siteURLKey = "${randomSiteURLKey}-staging");
+
+			PagesAdmin.viewPageType(
+				pageName = "Test Collection Page Name 2",
+				pageType = "Collection Page");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Collection Page Name 2",
+				siteName = "${randomSiteName} Staging");
 
 			AssertVisible(
 				key_elementHeader = "//div[contains(.,'Most Viewed Assets') and contains(@id,'fragment-')]",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 
-			var n = "1";
+			var n = 1;
 
 			for (var title : list "Third Web Content,Second Web Content,First Web Content") {
 				AssertVisible(
-					key_colPosition = "1",
-					key_entryTitle = "${title}",
+					key_colPosition = 1,
+					key_entryTitle = ${title},
 					key_fragmentName = "Collection Display",
-					key_rowPosition = "${n}",
+					key_rowPosition = ${n},
 					locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 
 				var n = ${n} + 1;
 			}
+
+			PagesFinder.goToPagesFinder();
 
 			PagesFinder.viewPageNameInPagesFinder(pageName = "Test Collection Page Name 2*");
 		}
 	}
 
 	@description = "This is the test for LPS-116428. Can reorganize the pages via Page Tree panel in Staging site but not in Live site."
-	@priority = "3"
+	@priority = 3
 	test CanReorganizePagesViaPageFinderInStagingSiteNotInLiveSite {
-		task ("Add a widget page and a content page in Site Name") {
+		var siteName = StringUtil.randomString(8);
+
+		var siteURLKey = StringUtil.toLowerCase(${siteName});
+
+		task ("Add a widget page and a content page") {
+			HeadlessSite.addSite(siteName = ${siteName});
+
 			JSONLayout.addPublicLayout(
-				groupName = "Site Name",
+				groupName = ${siteName},
 				layoutName = "Test Widget Page");
 
 			JSONLayout.addPublicLayout(
-				groupName = "Site Name",
+				groupName = ${siteName},
 				layoutName = "Test Content Page",
 				type = "content");
 		}
 
-		task ("Enable Local Live in Site Name") {
-			Staging.openStagingAdmin(siteURLKey = "site-name");
+		task ("Enable Local Live") {
+			Staging.openStagingAdmin(siteURLKey = ${siteURLKey});
 
-			Staging.activateStagingCP(siteName = "Site Name");
+			Staging.activateStagingCP(siteName = ${siteName});
 		}
 
 		task ("Assert can reorganize pages via Page Tree panel in Staging site") {
-			ProductMenu.gotoStagingSite(site = "Site Name");
+			ProductMenu.gotoStagingSite(site = ${siteName});
 
 			PagesFinder.goToPagesFinder();
 
-			var n = "1";
+			var n = 1;
 
 			for (var pageName : list "Test Widget Page,Test Content Page*") {
 				AssertVisible(
-					key_index = "${n}",
-					key_pageName = "${pageName}",
+					key_index = ${n},
+					key_pageName = ${pageName},
 					locator1 = "PagesFinder#TREE_NODE_ITEM");
 
 				var n = ${n} + 1;
@@ -163,12 +183,12 @@ definition {
 				locator1 = "//ul[contains(@class,'treeview-group')]//div[contains(@role,'treeitem')][normalize-space()='Test Content Page*']",
 				locator2 = "//ul[contains(@class,'treeview-group')]//div[contains(@role,'treeitem')][normalize-space()='Test Widget Page']");
 
-			var n = "1";
+			var n = 1;
 
 			for (var pageName : list "Test Content Page*,Test Widget Page") {
 				AssertVisible(
-					key_index = "${n}",
-					key_pageName = "${pageName}",
+					key_index = ${n},
+					key_pageName = ${pageName},
 					locator1 = "PagesFinder#TREE_NODE_ITEM");
 
 				var n = ${n} + 1;
@@ -176,20 +196,20 @@ definition {
 		}
 
 		task ("Assert can not reorganize pages via Page Tree panel in Live site") {
-			ProductMenu.gotoLiveSite(site = "Site Name");
+			ProductMenu.gotoLiveSite(site = ${siteName});
 
 			PagesFinder.goToPagesFinder();
 
 			DragAndDrop.javaScriptDragAndDropToUp(
 				locator1 = "//ul[contains(@class,'treeview-group')]//div[contains(@role,'treeitem')][normalize-space()='Test Widget Page']",
-				locator2 = "//ul[contains(@class,'treeview-group')]//div[contains(@role,'treeitem')][normalize-space()='Test Content Page']");
+				locator2 = "//ul[contains(@class,'treeview-group')]//div[contains(@role,'treeitem')][normalize-space()='Test Content Page*']");
 
-			var n = "1";
+			var n = 1;
 
-			for (var pageName : list "Test Widget Page,Test Content Page") {
+			for (var pageName : list "Test Widget Page,Test Content Page*") {
 				AssertVisible(
-					key_index = "${n}",
-					key_pageName = "${pageName}",
+					key_index = ${n},
+					key_pageName = ${pageName},
 					locator1 = "PagesFinder#TREE_NODE_ITEM");
 
 				var n = ${n} + 1;
@@ -198,12 +218,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-133709. The user can navigate to public pages defined in navigation menu via the Page Tree in staging and live site."
-	@priority = "3"
+	@priority = 3
 	test NavigateToPublicPagesDefinedInNavigationMenuViaPageTreeInStagingAndLiveSite {
 		task ("Add two public pages") {
 			for (var n : list "1,2") {
 				JSONLayout.addPublicLayout(
-					groupName = "Test Site Name (Staging)",
+					groupName = "${randomSiteName} (Staging)",
 					layoutName = "Test Page Name ${n}",
 					site = "false");
 			}
@@ -211,7 +231,7 @@ definition {
 
 		task ("Add a navigation menu") {
 			JSONSitenavigation.addSiteNavigationMenu(
-				groupName = "Test Site Name (Staging)",
+				groupName = "${randomSiteName} (Staging)",
 				site = "false",
 				siteNavigationMenuName = "Navigation Menu Name");
 		}
@@ -219,7 +239,7 @@ definition {
 		task ("Add two pages to the navigation menu") {
 			for (var n : list "1,2") {
 				JSONSitenavigation.addSiteNavigationMenuItem(
-					groupName = "Test Site Name (Staging)",
+					groupName = "${randomSiteName} (Staging)",
 					privateLayout = "false",
 					site = "false",
 					siteNavigationMenuItemName = "Test Page Name ${n}",
@@ -229,7 +249,7 @@ definition {
 		}
 
 		task ("Select the navigation menu in page type selctor of Page Tree") {
-			Navigator.openStagingSiteURL(siteName = "Test Site Name");
+			Navigator.openStagingSiteURL(siteName = ${randomSiteName});
 
 			PagesFinder.goToPagesFinder();
 
@@ -238,7 +258,7 @@ definition {
 
 		task ("Navigate to each page via Page Tree") {
 			for (var pageName : list "Test Page Name 1,Test Page Name 2") {
-				PagesFinder.navigateToPage(pageName = "${pageName}");
+				PagesFinder.navigateToPage(pageName = ${pageName});
 			}
 		}
 
@@ -249,12 +269,12 @@ definition {
 		}
 
 		task ("Navigate to live site") {
-			Navigator.openSiteURL(siteName = "Test Site Name");
+			Navigator.openSiteURL(siteName = ${randomSiteName});
 		}
 
 		task ("Navigate to each page via Page Tree in live site") {
 			for (var pageName : list "Test Page Name 1,Test Page Name 2") {
-				PagesFinder.navigateToPage(pageName = "${pageName}");
+				PagesFinder.navigateToPage(pageName = ${pageName});
 
 				AssertVisible(
 					key_tab = "Live",

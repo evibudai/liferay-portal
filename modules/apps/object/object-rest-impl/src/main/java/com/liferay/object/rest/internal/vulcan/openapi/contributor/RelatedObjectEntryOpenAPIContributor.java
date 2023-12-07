@@ -1,34 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.openapi.contributor;
 
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.rest.internal.vulcan.openapi.contributor.util.OpenAPIContributorUtil;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResource;
+import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResourceProvider;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.openapi.OpenAPIContext;
 import com.liferay.portal.vulcan.openapi.contributor.OpenAPIContributor;
 
 import io.swagger.v3.oas.models.OpenAPI;
@@ -42,14 +34,9 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 
-import java.net.URI;
-
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -63,45 +50,43 @@ public class RelatedObjectEntryOpenAPIContributor
 	extends BaseOpenAPIContributor {
 
 	@Override
-	public void contribute(OpenAPI openAPI, UriInfo uriInfo) throws Exception {
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-153324")) ||
-			(uriInfo == null)) {
+	public void contribute(OpenAPI openAPI, OpenAPIContext openAPIContext)
+		throws Exception {
 
+		if (openAPIContext == null) {
 			return;
 		}
 
-		Map<ObjectDefinition, SystemObjectDefinitionMetadata>
-			systemObjectDefinitionMetadataMap = new HashMap<>();
+		Map<ObjectDefinition, SystemObjectDefinitionManager>
+			systemObjectDefinitionManagerMap = new HashMap<>();
 
 		for (ObjectDefinition systemObjectDefinition :
 				_objectDefinitionLocalService.getSystemObjectDefinitions()) {
 
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
-				_systemObjectDefinitionMetadataRegistry.
-					getSystemObjectDefinitionMetadata(
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
 						systemObjectDefinition.getName());
 
-			if (systemObjectDefinitionMetadata == null) {
+			if (systemObjectDefinitionManager == null) {
 				continue;
 			}
 
-			URI uri = uriInfo.getBaseUri();
-
-			String path = uri.getPath();
-
 			JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-				systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+				systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
+
+			String path = openAPIContext.getPath();
 
 			if (path.contains(
 					jaxRsApplicationDescriptor.getApplicationPath())) {
 
-				systemObjectDefinitionMetadataMap.put(
-					systemObjectDefinition, systemObjectDefinitionMetadata);
+				systemObjectDefinitionManagerMap.put(
+					systemObjectDefinition, systemObjectDefinitionManager);
 			}
 		}
 
-		for (Map.Entry<ObjectDefinition, SystemObjectDefinitionMetadata> entry :
-				systemObjectDefinitionMetadataMap.entrySet()) {
+		for (Map.Entry<ObjectDefinition, SystemObjectDefinitionManager> entry :
+				systemObjectDefinitionManagerMap.entrySet()) {
 
 			ObjectDefinition systemObjectDefinition = entry.getKey();
 
@@ -111,41 +96,51 @@ public class RelatedObjectEntryOpenAPIContributor
 
 				_contribute(
 					openAPI, systemObjectDefinition, entry.getValue(),
-					systemObjectRelationship, uriInfo);
+					systemObjectRelationship, openAPIContext.getVersion());
 			}
 		}
 	}
 
 	@Activate
 	protected void activate() {
-		init(_dtoConverterRegistry, _systemObjectDefinitionMetadataRegistry);
+		init(_dtoConverterRegistry, _systemObjectDefinitionManagerRegistry);
 	}
 
 	private void _contribute(
 			OpenAPI openAPI, ObjectDefinition systemObjectDefinition,
-			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata,
-			ObjectRelationship systemObjectRelationship, UriInfo uriInfo)
+			SystemObjectDefinitionManager systemObjectDefinitionManager,
+			ObjectRelationship systemObjectRelationship, String version)
 		throws Exception {
+
+		ObjectDefinition relatedObjectDefinition =
+			ObjectRelationshipUtil.getRelatedObjectDefinition(
+				systemObjectDefinition, systemObjectRelationship);
+
+		if (!relatedObjectDefinition.isActive()) {
+			return;
+		}
 
 		Paths paths = openAPI.getPaths();
 
-		ObjectDefinition relatedObjectDefinition = _getRelatedObjectDefinition(
-			systemObjectDefinition, systemObjectRelationship);
-
 		String relatedSchemaName = getSchemaName(relatedObjectDefinition);
-		OpenAPI relatedOpenAPI = OpenAPIContributorUtil.getObjectEntryOpenAPI(
-			relatedObjectDefinition, _objectEntryOpenAPIResource);
+
+		ObjectEntryOpenAPIResource objectEntryOpenAPIResource =
+			_objectEntryOpenAPIResourceProvider.getObjectEntryOpenAPIResource(
+				relatedObjectDefinition);
+
+		Map<String, Schema> relatedSchemas =
+			objectEntryOpenAPIResource.getSchemas();
 
 		OpenAPIContributorUtil.copySchemas(
-			relatedSchemaName, relatedOpenAPI,
-			relatedObjectDefinition.isSystem(), openAPI);
+			relatedSchemaName, relatedSchemas,
+			relatedObjectDefinition.isUnmodifiableSystemObject(), openAPI);
 
 		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-			systemObjectDefinitionMetadata.getJaxRsApplicationDescriptor();
+			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
 		String schemaName = getSchemaName(systemObjectDefinition);
 
 		String name = StringBundler.concat(
-			StringPool.SLASH, _getJaxRsVersion(uriInfo), StringPool.SLASH,
+			StringPool.SLASH, version, StringPool.SLASH,
 			jaxRsApplicationDescriptor.getPath(), StringPool.SLASH,
 			_getIdParameterTemplate(schemaName), StringPool.SLASH,
 			systemObjectRelationship.getName());
@@ -234,7 +229,7 @@ public class RelatedObjectEntryOpenAPIContributor
 								});
 						}
 					});
-				tags(Collections.singletonList(schemaName));
+				tags(Arrays.asList(schemaName));
 			}
 		};
 	}
@@ -251,7 +246,7 @@ public class RelatedObjectEntryOpenAPIContributor
 					_getOperationId(
 						"get", objectRelationship.getName(), schemaName));
 				parameters(
-					Collections.singletonList(
+					Arrays.asList(
 						new Parameter() {
 							{
 								in("path");
@@ -274,7 +269,7 @@ public class RelatedObjectEntryOpenAPIContributor
 								});
 						}
 					});
-				tags(Collections.singletonList(schemaName));
+				tags(Arrays.asList(schemaName));
 			}
 		};
 	}
@@ -286,10 +281,6 @@ public class RelatedObjectEntryOpenAPIContributor
 	private String _getIdParameterTemplate(String name) {
 		return StringPool.OPEN_CURLY_BRACE + _getIdParameterName(name) +
 			StringPool.CLOSE_CURLY_BRACE;
-	}
-
-	private String _getJaxRsVersion(UriInfo uriInfo) {
-		return StringUtil.extractFirst(uriInfo.getPath(), StringPool.SLASH);
 	}
 
 	private String _getOperationId(
@@ -344,28 +335,9 @@ public class RelatedObjectEntryOpenAPIContributor
 								});
 						}
 					});
-				tags(Collections.singletonList(schemaName));
+				tags(Arrays.asList(schemaName));
 			}
 		};
-	}
-
-	private ObjectDefinition _getRelatedObjectDefinition(
-			ObjectDefinition systemObjectDefinition,
-			ObjectRelationship systemObjectRelationship)
-		throws Exception {
-
-		long objectDefinitionId1 =
-			systemObjectRelationship.getObjectDefinitionId1();
-
-		if (objectDefinitionId1 !=
-				systemObjectDefinition.getObjectDefinitionId()) {
-
-			return _objectDefinitionLocalService.getObjectDefinition(
-				systemObjectRelationship.getObjectDefinitionId1());
-		}
-
-		return _objectDefinitionLocalService.getObjectDefinition(
-			systemObjectRelationship.getObjectDefinitionId2());
 	}
 
 	@Reference
@@ -375,13 +347,14 @@ public class RelatedObjectEntryOpenAPIContributor
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
-	private ObjectEntryOpenAPIResource _objectEntryOpenAPIResource;
+	private ObjectEntryOpenAPIResourceProvider
+		_objectEntryOpenAPIResourceProvider;
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Reference
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

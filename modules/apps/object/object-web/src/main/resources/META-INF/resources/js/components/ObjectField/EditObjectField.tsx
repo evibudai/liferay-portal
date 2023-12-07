@@ -1,75 +1,82 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayTabs from '@clayui/tabs';
 import {
 	API,
+	Card,
 	SidePanelForm,
 	openToast,
 	saveAndReload,
 } from '@liferay/object-js-components-web';
-import React, {useState} from 'react';
+import React, {useEffect} from 'react';
 
-import './EditObjectField.scss';
-import {AdvancedTab} from './Tabs/Advanced/AdvancedTab';
-import {BasicInfo} from './Tabs/BasicInfo/BasicInfo';
+import {EditObjectFieldContent} from './EditObjectFieldContent';
 import {useObjectFieldForm} from './useObjectFieldForm';
 
-interface EditObjectFieldProps {
+import './EditObjectField.scss';
+
+export interface EditObjectFieldProps {
+	baseResourceURL: string;
+	creationLanguageId: Liferay.Language.Locale;
 	filterOperators: TFilterOperators;
 	forbiddenChars: string[];
 	forbiddenLastChars: string[];
 	forbiddenNames: string[];
 	isApproved: boolean;
 	isDefaultStorageType: boolean;
+	learnResources: ObjectWebLearnResources;
 	objectDefinitionExternalReferenceCode: string;
-	objectField: ObjectField;
-	objectFieldTypes: ObjectFieldType[];
-	objectName: string;
-	objectRelationshipId: number;
+	objectFieldId: number;
 	readOnly: boolean;
-	workflowStatusJSONArray: LabelValueObject[];
+	workflowStatuses: LabelValueObject[];
 }
 
-const TABS = [Liferay.Language.get('basic-info')];
+export const objectFieldInitialValues: Partial<ObjectField> = {
+	DBType: '',
+	businessType: 'Text',
+	externalReferenceCode: '',
+	id: 0,
+	indexed: true,
+	indexedAsKeyword: false,
+	indexedLanguageId: 'en_US',
+	label: {en_US: ''},
+	listTypeDefinitionId: 0,
+	name: '',
+	objectFieldSettings: [],
+	readOnlyConditionExpression: '',
+	relationshipType: '',
+	required: false,
+	state: false,
+	system: false,
+};
 
 export default function EditObjectField({
+	baseResourceURL,
+	creationLanguageId,
 	filterOperators,
 	forbiddenChars,
 	forbiddenLastChars,
 	forbiddenNames,
 	isApproved,
 	isDefaultStorageType,
+	learnResources,
 	objectDefinitionExternalReferenceCode,
-	objectField,
-	objectFieldTypes,
-	objectName,
-	objectRelationshipId,
+	objectFieldId,
 	readOnly,
-	workflowStatusJSONArray,
+	workflowStatuses,
 }: EditObjectFieldProps) {
-	const [activeIndex, setActiveIndex] = useState(0);
-
 	const onSubmit = async ({id, ...objectField}: ObjectField) => {
+		delete objectField.defaultValue;
 		delete objectField.listTypeDefinitionId;
 		delete objectField.system;
 
 		try {
-			await API.save(
-				`/o/object-admin/v1.0/object-fields/${id}`,
-				objectField
-			);
+			await API.save({
+				item: objectField,
+				url: `/o/object-admin/v1.0/object-fields/${id}`,
+			});
 
 			saveAndReload();
 			openToast({
@@ -93,13 +100,31 @@ export default function EditObjectField({
 		forbiddenChars,
 		forbiddenLastChars,
 		forbiddenNames,
-		initialValues: objectField,
+		initialValues: objectFieldInitialValues,
 		onSubmit,
 	});
 
-	if (Liferay.FeatureFlags['LPS-159913'] && TABS.length < 2) {
-		TABS.push(Liferay.Language.get('advanced'));
-	}
+	useEffect(() => {
+		const makeFetch = async () => {
+			const objectFieldResponse = await API.getObjectField(objectFieldId);
+
+			setValues(objectFieldResponse);
+		};
+
+		makeFetch();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectFieldId]);
+
+	useEffect(() => {
+		if (errors.defaultValue) {
+			openToast({
+				message: Liferay.Language.get(
+					'please-fill-out-all-required-fields'
+				),
+				type: 'danger',
+			});
+		}
+	}, [errors]);
 
 	return (
 		<SidePanelForm
@@ -108,47 +133,24 @@ export default function EditObjectField({
 			readOnly={readOnly}
 			title={Liferay.Language.get('field')}
 		>
-			<ClayTabs className="side-panel-iframe__tabs">
-				{TABS.map((label, index) => (
-					<ClayTabs.Item
-						active={activeIndex === index}
-						key={index}
-						onClick={() => setActiveIndex(index)}
-					>
-						{label}
-					</ClayTabs.Item>
-				))}
-			</ClayTabs>
-
-			<ClayTabs.Content activeIndex={activeIndex} fade>
-				<ClayTabs.TabPane>
-					<BasicInfo
-						errors={errors}
-						filterOperators={filterOperators}
-						handleChange={handleChange}
-						isApproved={isApproved}
-						isDefaultStorageType={isDefaultStorageType}
-						objectDefinitionExternalReferenceCode={
-							objectDefinitionExternalReferenceCode
-						}
-						objectFieldTypes={objectFieldTypes}
-						objectName={objectName}
-						objectRelationshipId={objectRelationshipId}
-						readOnly={readOnly}
-						setValues={setValues}
-						values={values}
-						workflowStatusJSONArray={workflowStatusJSONArray}
-					/>
-				</ClayTabs.TabPane>
-
-				{Liferay.FeatureFlags['LPS-159913'] ? (
-					<ClayTabs.TabPane>
-						<AdvancedTab setValues={setValues} values={values} />
-					</ClayTabs.TabPane>
-				) : (
-					<></>
-				)}
-			</ClayTabs.Content>
+			<EditObjectFieldContent
+				baseResourceURL={baseResourceURL}
+				containerWrapper={Card}
+				creationLanguageId={creationLanguageId}
+				errors={errors}
+				filterOperators={filterOperators}
+				handleChange={handleChange}
+				isApproved={isApproved}
+				isDefaultStorageType={isDefaultStorageType}
+				learnResources={learnResources}
+				objectDefinitionExternalReferenceCode={
+					objectDefinitionExternalReferenceCode
+				}
+				readOnly={readOnly}
+				setValues={setValues}
+				values={values}
+				workflowStatuses={workflowStatuses}
+			/>
 		</SidePanelForm>
 	);
 }

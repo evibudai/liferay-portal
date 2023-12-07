@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -31,10 +22,10 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 	value="organizations"
 />
 
-<liferay-ui:membership-policy-error />
+<liferay-site:membership-policy-error />
 
 <clay:content-row
-	containerElement="h3"
+	containerElement="div"
 	cssClass="sheet-subtitle"
 >
 	<clay:content-col
@@ -45,30 +36,17 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 	<c:if test="<%= !portletName.equals(myAccountPortletId) %>">
 		<clay:content-col>
-			<span class="heading-end">
-				<liferay-ui:icon
-					cssClass="modify-link"
-					id="selectOrganizationLink"
-					label="<%= true %>"
-					linkCssClass="btn btn-secondary btn-sm"
-					message="select"
-					method="get"
-					url="javascript:void(0);"
-				/>
-			</span>
+			<clay:button
+				aria-label='<%= LanguageUtil.format(request, "select-x", "organizations") %>'
+				cssClass="heading-end modify-link"
+				displayType="secondary"
+				id='<%= liferayPortletResponse.getNamespace() + "selectOrganizationLink" %>'
+				label='<%= LanguageUtil.get(request, "select") %>'
+				small="<%= true %>"
+			/>
 		</clay:content-col>
 	</c:if>
 </clay:content-row>
-
-<liferay-util:buffer
-	var="removeOrganizationIcon"
->
-	<liferay-ui:icon
-		icon="times-circle"
-		markupView="lexicon"
-		message="remove"
-	/>
-</liferay-util:buffer>
 
 <aui:input name="addOrganizationIds" type="hidden" value="<%= organizationIdsString %>" />
 <aui:input name="deleteOrganizationIds" type="hidden" />
@@ -117,12 +95,20 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 		<liferay-ui:search-container-column-text
 			cssClass="table-cell-expand"
 			name="roles"
-			value="<%= HtmlUtil.escape(UsersAdminUtil.getUserColumnText(locale, userGroupRoles, UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR, userGroupRolesCount)) %>"
+			value="<%= HtmlUtil.escape(UsersAdminUtil.getUserColumnText(locale, userGroupRoles, UsersAdminUtil.USER_GROUP_ROLE_TITLE_ACCESSOR, userGroupRolesCount)) %>"
 		/>
 
 		<c:if test="<%= !portletName.equals(myAccountPortletId) && ((selUser == null) || !OrganizationMembershipPolicyUtil.isMembershipProtected(permissionChecker, selUser.getUserId(), organization.getOrganizationId())) %>">
 			<liferay-ui:search-container-column-text>
-				<a class="modify-link" data-rowId="<%= organization.getOrganizationId() %>" href="javascript:void(0);"><%= removeOrganizationIcon %></a>
+				<clay:button
+					aria-label='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escape(organization.getName())) %>'
+					cssClass="lfr-portal-tooltip modify-link"
+					data-rowId="<%= organization.getOrganizationId() %>"
+					displayType="unstyled"
+					icon="times-circle"
+					small="<%= true %>"
+					title='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escape(organization.getName())) %>'
+				/>
 			</liferay-ui:search-container-column-text>
 		</c:if>
 	</liferay-ui:search-container-row>
@@ -134,108 +120,52 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 <c:if test="<%= !portletName.equals(myAccountPortletId) %>">
 	<aui:script use="liferay-search-container">
-		var AArray = A.Array;
-		var Util = Liferay.Util;
-
-		var addOrganizationIds = [];
-
-		var organizationValues =
-			document.<portlet:namespace />fm.<portlet:namespace />addOrganizationIds
-				.value;
-
-		if (organizationValues) {
-			addOrganizationIds.push(organizationValues);
-		}
-
-		var deleteOrganizationIds = [];
-
 		var searchContainer = Liferay.SearchContainer.get(
 			'<portlet:namespace />organizationsSearchContainer'
 		);
 
-		var searchContainerContentBox = searchContainer.get('contentBox');
-
-		searchContainerContentBox.delegate(
+		searchContainer.get('contentBox').delegate(
 			'click',
 			(event) => {
 				var link = event.currentTarget;
 
-				var rowId = link.attr('data-rowId');
-
-				var tr = link.ancestor('tr');
-
-				var selectOrganization = Util.getWindow(
-					'<portlet:namespace />selectOrganization'
+				document.<portlet:namespace />fm.<portlet:namespace />deleteOrganizationIds.value = link.attr(
+					'data-rowId'
 				);
 
-				if (selectOrganization) {
-					var selectButton = selectOrganization.iframe.node
-						.get('contentWindow.document')
-						.one('.selector-button[data-entityid="' + rowId + '"]');
-
-					Util.toggleDisabled(selectButton, false);
-				}
-
-				searchContainer.deleteRow(tr, rowId);
-
-				AArray.removeItem(addOrganizationIds, rowId);
-
-				deleteOrganizationIds.push(rowId);
-
-				document.<portlet:namespace />fm.<portlet:namespace />addOrganizationIds.value = addOrganizationIds.join(
-					','
-				);
-				document.<portlet:namespace />fm.<portlet:namespace />deleteOrganizationIds.value = deleteOrganizationIds.join(
-					','
-				);
+				submitForm(document.<portlet:namespace />fm);
 			},
 			'.modify-link'
 		);
 
-		var selectOrganizationLink = A.one(
-			'#<portlet:namespace />selectOrganizationLink'
+		const selectOrganizationLink = document.getElementById(
+			'<portlet:namespace />selectOrganizationLink'
 		);
 
 		if (selectOrganizationLink) {
-			selectOrganizationLink.on('click', (event) => {
-				Util.openSelectionModal({
-					onSelect: (selectedItem) => {
-						if (selectedItem) {
-							const entityId = selectedItem.entityid;
+			selectOrganizationLink.addEventListener('click', (event) => {
+				Liferay.Util.openSelectionModal({
+					multiple: true,
+					onSelect(data) {
+						if (data.value && data.value.length) {
+							document.<portlet:namespace />fm.<portlet:namespace />addOrganizationIds.value = Array.from(
+								data.value
+							)
+								.map((selectedItem) => {
+									const organization = JSON.parse(selectedItem);
 
-							const rowColumns = [];
+									return organization.organizationId;
+								})
+								.join(',');
 
-							rowColumns.push(selectedItem.entityname);
-							rowColumns.push(selectedItem.type);
-							rowColumns.push('');
-							rowColumns.push(
-								'<a class="modify-link" data-rowId="' +
-									entityId +
-									'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeOrganizationIcon) %></a>'
-							);
-
-							searchContainer.addRow(rowColumns, entityId);
-
-							searchContainer.updateDataStore();
-
-							AArray.removeItem(deleteOrganizationIds, entityId);
-
-							addOrganizationIds.push(entityId);
-
-							document.<portlet:namespace />fm.<portlet:namespace />addOrganizationIds.value = addOrganizationIds.join(
-								','
-							);
-							document.<portlet:namespace />fm.<portlet:namespace />deleteOrganizationIds.value = deleteOrganizationIds.join(
-								','
-							);
+							submitForm(document.<portlet:namespace />fm);
 						}
 					},
 					selectEventName: '<portlet:namespace />selectOrganization',
-					selectedData: searchContainer.getData(true),
 					title:
 						'<liferay-ui:message arguments="organization" key="select-x" />',
 					url:
-						'<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcPath" value="/select_organization.jsp" /><portlet:param name="p_u_i_d" value='<%= (selUser == null) ? "0" : String.valueOf(selUser.getUserId()) %>' /></portlet:renderURL>',
+						'<%= userDisplayContext.getOrganizationItemSelectorURL(true) %>',
 				});
 			});
 		}

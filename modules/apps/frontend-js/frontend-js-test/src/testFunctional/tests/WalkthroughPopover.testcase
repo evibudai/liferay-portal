@@ -35,9 +35,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -47,8 +47,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-154368. Assert component will switch to hotspot mode in the current step when closing popover."
-	@priority = "5"
+	@description = "LPS-150906. Assert component will switch to hotspot mode in the current step when closing popover."
+	@priority = 5
 	test CanBeClosed {
 		task ("Given click hotspot element") {
 			Click(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");
@@ -63,8 +63,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-154643. Assert popover mode contains content."
-	@priority = "5"
+	@description = "LPS-150906. Assert popover mode contains content."
+	@priority = 5
 	test CanDisplayContent {
 		task ("When click hotspot element") {
 			Click(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");
@@ -72,20 +72,20 @@ definition {
 
 		task ("Then content text is present on popover") {
 			AssertElementPresent(
-				key_index = "1",
+				key_index = 1,
 				locator1 = "Walkthrough#POPOVER_SAMPLE_CONTENT");
 		}
 	}
 
-	@description = "LPS-154645. Assert popover contains a button to transition to previous step."
-	@priority = "5"
+	@description = "LPS-150906. Assert popover contains a button to transition to previous step."
+	@priority = 5
 	test CanDisplayPreviousButtonOnIntermediateStep {
 		task ("And Given popover mode") {
 			Walkthrough.enablePopoverMode();
 		}
 
 		task ("When navigate to 2nd step popover") {
-			Walkthrough.goToNextStep(key_step = "2");
+			Walkthrough.goToNextStep(key_step = 2);
 		}
 
 		task ("Then previous step button is present") {
@@ -109,8 +109,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-154644. Assert popover mode can display step number."
-	@priority = "4"
+	@description = "LPS-150906. Assert popover mode can display step number."
+	@priority = 4
 	test CanDisplayStepNumber {
 		task ("And given click hotspot element") {
 			Click(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");
@@ -129,8 +129,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-154642. Assert popover mode contains a title."
-	@priority = "5"
+	@description = "LPS-150906. Assert popover mode contains a title."
+	@priority = 5
 	test CanDisplayTitle {
 		task ("When click hotspot element") {
 			Click(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");
@@ -143,8 +143,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-154641. Assert a dark background overlay can be toggled."
-	@priority = "3"
+	@description = "LPS-150906. Assert a dark background overlay can be toggled."
+	@priority = 3
 	test CanHaveADarkBackgroundOverlay {
 		task ("When click hotspot element") {
 			Click(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");
@@ -154,14 +154,14 @@ definition {
 			AssertElementPresent(locator1 = "Walkthrough#POPOVER_OVERLAY");
 
 			AssertAttributeValue(
-				attribute1 = "fill",
 				locator1 = "Walkthrough#POPOVER_OVERLAY",
-				value1 = "#393a4a");
+				value1 = "fill",
+				value2 = "#393a4a");
 		}
 	}
 
-	@description = "LPS-154640. Assert popover mode can have a shadow around element."
-	@priority = "2"
+	@description = "LPS-150906. Assert popover mode can have a shadow around element."
+	@priority = 2
 	test CanHaveAShadowAroundElement {
 		task ("When click hotspot element until Step 4") {
 			Click(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");
@@ -182,8 +182,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-154649. Assert hotspot can transition back to previous step if next element doesn't exist on the page."
-	@priority = "3"
+	@description = "LPS-150906. Assert hotspot can transition back to previous step if next element doesn't exist on the page."
+	@priority = 3
 	test CanReturnToPreviousStepIfElementDoesNotExist {
 		task ("Given JSON file includes an element that does not exist on the page/sample portlet") {
 			Navigator.gotoNavTab(navTab = "Test Walkable");
@@ -202,10 +202,10 @@ definition {
 		}
 	}
 
-	@description = "LPS-154648. Assert close button on final step can reset walkthrough process."
-	@priority = "5"
+	@description = "LPS-150906. Assert close button on final step can reset walkthrough process."
+	@priority = 5
 	test CloseButtonOnFinalStepCanResetTheProcess {
-		task ("And Given popover mode") {
+		task ("And popover mode") {
 			Walkthrough.enablePopoverMode();
 		}
 
@@ -215,8 +215,8 @@ definition {
 				locator1 = "Walkthrough#POPOVER_TITLE");
 		}
 
-		task ("And When click on all next steps") {
-			Walkthrough.goToSpecificStep(key_step = "5");
+		task ("And click on all next steps") {
+			Walkthrough.goToSpecificStep(key_step = 5);
 		}
 
 		task ("Then last step contains close button") {
@@ -231,7 +231,7 @@ definition {
 			AssertElementNotPresent(locator1 = "Walkthrough#POPOVER");
 		}
 
-		task ("And Then hotspot element is present on 1st element") {
+		task ("Then hotspot element is present on 1st element") {
 			AssertElementPresent(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");
 
 			WalkthroughPopover.viewCoordinatePositionMatchesElementStep(
@@ -240,8 +240,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-154646. Assert 1st step popover does not contain a button to transition to previous step."
-	@priority = "5"
+	@description = "LPS-150906. Assert 1st step popover does not contain a button to transition to previous step."
+	@priority = 5
 	test FirstStepDoesNotHavePreviousStepButton {
 		task ("And Given popover mode") {
 			Walkthrough.enablePopoverMode();
@@ -278,10 +278,10 @@ definition {
 		}
 	}
 
-	@description = "LPS-154647. Assert intermediate step displays previous and next step button."
-	@priority = "5"
+	@description = "LPS-150906. Assert intermediate step displays previous and next step button."
+	@priority = 5
 	test IntermediateStepHasPreviousAndNextStepPresent {
-		task ("And Given popover mode") {
+		task ("And popover mode") {
 			Walkthrough.enablePopoverMode();
 		}
 
@@ -291,8 +291,8 @@ definition {
 				locator1 = "Walkthrough#POPOVER_TITLE");
 		}
 
-		task ("And When click on next steps until second to last step") {
-			Walkthrough.goToSpecificStep(key_step = "4");
+		task ("And click on next steps until second to last step") {
+			Walkthrough.goToSpecificStep(key_step = 4);
 		}
 
 		task ("Then able to reach second to final step") {
@@ -301,17 +301,17 @@ definition {
 				locator1 = "Walkthrough#POPOVER_TITLE");
 		}
 
-		task ("And Then primary button is present") {
+		task ("And primary button is present") {
 			AssertElementPresent(locator1 = "Button#OK");
 		}
 
-		task ("And Then secondary button previous step is present") {
+		task ("Then secondary button previous step is present") {
 			AssertElementPresent(locator1 = "Button#PREVIOUS");
 		}
 	}
 
-	@description = "LPS-154639. Assert component will switch to hotspot mode in the 2nd step when closing 2nd popover."
-	@priority = "5"
+	@description = "LPS-150906. Assert component will switch to hotspot mode in the 2nd step when closing 2nd popover."
+	@priority = 5
 	test WhenClosedCanTransitionToHotSpotModeOnCurrentStepElement {
 		task ("Given click hotspot element") {
 			Click(locator1 = "Walkthrough#SAMPLE_PORTLET_HOTSPOT");

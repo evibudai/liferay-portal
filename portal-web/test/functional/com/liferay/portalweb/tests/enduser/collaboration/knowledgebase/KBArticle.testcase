@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,7 +28,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddArticleAsDraft {
 		property portal.acceptance = "true";
@@ -48,9 +48,9 @@ definition {
 
 	@description = "This test ensures that users can add article via center pane button."
 	@e2etest
-	@priority = "5"
+	@priority = 5
 	test CanAddArticleViaCenterPaneButton {
-		property custom.properties = "feature.flag.LPS-156421=true";
+		property portal.acceptance = "true";
 
 		KBArticle.openPageTreePanel(section = "Folders and Articles");
 
@@ -68,7 +68,7 @@ definition {
 		Button.viewNotPresent(button = "New");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddArticleWithAttachment {
 		KBArticle.addCP(
@@ -84,7 +84,7 @@ definition {
 			kbArticleTitle = "Knowledge Base Article Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddArticleWithCategory {
 		Category.openCategoriesAdmin(siteURLKey = "guest");
@@ -115,8 +115,10 @@ definition {
 	}
 
 	@description = "This test ensures that users can add an article with a custom friendly URL via the new configuration pane."
-	@priority = "5"
+	@priority = 5
 	test CanAddArticleWithCustomFriendlyURL {
+		property portal.acceptance = "true";
+
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.addCP(
@@ -137,7 +139,23 @@ definition {
 			skipNavigation = "true");
 	}
 
-	@priority = "4"
+	@description = "This test ensures that users can add an article with the description."
+	@priority = 5
+	test CanAddArticleWithDescription {
+		KBArticle.addCP(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbDescription = "Knowledge Base Article Description");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewCP(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbDescription = "Knowledge Base Article Description");
+	}
+
+	@priority = 4
 	@refactordone
 	test CanAddArticleWithHTML {
 		KBArticle.addCP(
@@ -150,7 +168,7 @@ definition {
 			kbArticleTitle = "Knowledge Base Article Title");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanAddArticleWithRelatedBlog {
 		JSONBlog.addEntry(
@@ -175,7 +193,7 @@ definition {
 		KBArticle.viewBlogsEntryRelatedAsset(kbArticleRelatedAssetTitle = "Blogs Entry Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddChildArticle {
 		property portal.acceptance = "true";
@@ -204,10 +222,8 @@ definition {
 	}
 
 	@description = "This test ensures that a user can add a child article for a kb entry from the navigation pane."
-	@priority = "5"
+	@priority = 5
 	test CanAddChildArticleFromNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
@@ -237,7 +253,7 @@ definition {
 			pageTreePanel = "true");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanCancelAddingArticle {
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
@@ -249,7 +265,7 @@ definition {
 		KBArticle.viewDefaultCP();
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanCancelEditingArticle {
 		JSONKnowledgeBase.addkBArticle(
@@ -273,10 +289,8 @@ definition {
 	}
 
 	@description = "This test ensures that a user can delete the kb entry from the navigation pane."
-	@priority = "5"
+	@priority = 5
 	test CanDeleteArticleFromNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
@@ -294,16 +308,52 @@ definition {
 
 		KBArticle.openPageTreePanel(section = "Folders and Articles");
 
-		KBArticle.viewDefaultCP(
-			defaultHome = "true",
-			featureFlag = "true");
+		KBArticle.viewDefaultCP();
+	}
+
+	@description = "This test ensures that users can delete article in the table view."
+	@priority = 4
+	test CanDeleteArticleInTableView {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+
+		LexiconTable.delete(tableEntry = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewDefaultCP();
+	}
+
+	@description = "This test ensures that users can edit article in the table view."
+	@priority = 4
+	test CanEditArticleInTableView {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+
+		KBArticle.editCP(
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbArticleTitleEdit = "Knowledge Base Article Title Edit");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconEntry.viewEntryName(rowEntry = "Knowledge Base Article Title Edit");
 	}
 
 	@description = "This test ensures that a user can edit the kb entry permissions from the navigation pane."
-	@priority = "5"
+	@priority = 4
 	test CanEditArticlePermissionsFromNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
@@ -337,10 +387,35 @@ definition {
 			roleTitle = "site member");
 	}
 
+	@description = "This test checks that a user can edit from an article."
+	@priority = 4
+	test CanEditArticleViaToolbar {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBArticle.openToKBArticleInSite(
+			groupName = "Guest",
+			kbArticleTitle = "Knowledge Base Article Title",
+			siteURLKey = "guest");
+
+		KBArticle.editCP(
+			editActionToolbar = "true",
+			kbArticleContentEdit = "Knowledge Base Article Content Edit",
+			kbArticleTitleEdit = "Knowledge Base Article Title Edit");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewCP(
+			kbArticleContent = "Knowledge Base Article Content Edit",
+			kbArticleTitle = "Knowledge Base Article Title Edit");
+	}
+
 	@description = "This test ensures that a user can edit the kb entry from the navigation pane."
-	@priority = "5"
+	@priority = 5
 	test CanEditEntryFromNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
+		property portal.acceptance = "true";
 
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -365,10 +440,145 @@ definition {
 		KBArticle.viewArticleThroughPageTreePanel(kbArticleTitle = "Knowledge Base Article Title Edit");
 	}
 
+	@description = "This test ensures that the KB article is expired when the user clicks the "Expire" in the ellipses drop-menu."
+	@priority = 5
+	test CanExpireAnArticle {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Knowledge Base Display Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = 2,
+			groupName = "Guest",
+			layoutName = "Knowledge Base Display Page",
+			widgetName = "Knowledge Base Display");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Asset Publisher Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = 2,
+			groupName = "Guest",
+			layoutName = "Asset Publisher Page",
+			widgetName = "Asset Publisher");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "Administrator",
+			userEmailAddress = "userea@liferay.com");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.subscribeCP(kbArticleTitle = "Knowledge Base Article Title");
+
+		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
+
+		KBDisplayWidget.viewViaKBDisplayPG(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		Navigator.gotoPage(pageName = "Asset Publisher Page");
+
+		AssetPublisherPortlet.viewAssetPG(assetTitle = "Knowledge Base Article Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "test test");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Expire",
+			rowEntry = "Knowledge Base Article Title");
+
+		AssertElementPresent(
+			key_kbArticleStatus = "Expired",
+			key_kbArticleTitle = "Knowledge Base Article Title",
+			locator1 = "KnowledgeBase#ARTICLE_TABLE_ARTICLE_STATUS");
+
+		LexiconEntry.viewNoEntryMenuItem(
+			menuItem = "Expire",
+			rowEntry = "Knowledge Base Article Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		Notifications.gotoNotifications();
+
+		AssertTextEquals(
+			locator1 = "Notifications#NOTIFICATIONS_TITLE",
+			value1 = "A knowledge base article has expired.");
+
+		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
+
+		Portlet.viewPG(
+			portletBody = "Please configure this portlet to make it visible to all users.",
+			portletName = "Knowledge Base Display");
+
+		Navigator.gotoPage(pageName = "Asset Publisher Page");
+
+		AssertTextNotPresent(
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
+			value1 = "Knowledge Base Article Title");
+	}
+
+	@description = "This test ensures that a user can move the kb entry from the Move Modal."
+	@priority = 4
+	test CanMoveArticleFromMoveModal {
+		JSONKnowledgeBase.addkBFolder(
+			groupName = "Guest",
+			kbFolderName = "KB Folder");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.moveArticleCP(
+			destinationItem = "KB Folder",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		Alert.reloadPageAfterSuccessMessage(successMessage = "Your request completed successfully.");
+
+		KBFolder.gotoCP(kbFolderName = "KB Folder");
+
+		KBArticle.viewCP(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+	}
+
 	@description = "This test ensures that a user can move the kb entry from the navigation pane."
-	@priority = "5"
+	@priority = 5
 	test CanMoveArticleFromNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
+		property portal.acceptance = "true";
 
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
@@ -384,13 +594,11 @@ definition {
 		KBArticle.openPageTreePanel(section = "Folders and Articles");
 
 		KBArticle.moveArticleCP(
-			kbArticleCurrentParent = "Home",
+			destinationItem = "KB Folder",
 			kbArticleTitle = "Knowledge Base Article Title",
 			navigationPane = "true");
 
-		KBFolder.selectParentCP(kbFolderName = "KB Folder");
-
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
+		Alert.reloadPageAfterSuccessMessage(successMessage = "Your request completed successfully.");
 
 		KBArticle.openPageTreePanel(section = "Folders and Articles");
 
@@ -403,7 +611,7 @@ definition {
 		LexiconEntry.viewEntryName(rowEntry = "Knowledge Base Article Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test CannotAddArticleWithDuplicateURL {
 		JSONKnowledgeBase.addkBArticle(
@@ -431,10 +639,11 @@ definition {
 			kbArticleTitle = "Knowledge Base Article Title");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactorneeded
 	test CannotAddArticleWithInvalidAttachmentSize {
-		property test.name.skip.portal.instance = "KBArticle#CannotAddArticleWithInvalidAttachmentSize";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SystemSettings.openSystemSettingsAdmin();
 
@@ -443,7 +652,7 @@ definition {
 			configurationName = "Upload Servlet Request",
 			configurationScope = "System Scope");
 
-		ServerAdministration.configureFileUploadOverallMaximumFileSize(maxFileSize = "102400");
+		ServerAdministration.configureFileUploadOverallMaximumFileSize(maxFileSize = 102400);
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -451,7 +660,7 @@ definition {
 			kbArticleAttachment = "Document_1.ppt",
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title",
-			maxFileSize = "100");
+			maxFileSize = 100);
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -461,7 +670,7 @@ definition {
 			noAttachment = "true");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CannotAddArticleWithoutCategory {
 		Category.openCategoriesAdmin(siteURLKey = "guest");
@@ -485,7 +694,7 @@ definition {
 			vocabularyName = "Vocabulary Name");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddArticleWithoutContent {
 		KBArticle.viewFieldRequiredAsterisk(fieldLabel = "Content");
@@ -502,7 +711,7 @@ definition {
 		KBArticle.viewDefaultCP();
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddArticleWithoutTitle {
 		KBArticle.addCPWithInvalidTitle(
@@ -515,7 +724,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can print the kb entry by clicking the ellipsis on the kb entry."
-	@priority = "5"
+	@priority = 3
 	test CanPreviewPrintContent {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -530,7 +739,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can replace the attachment for an article via the new configuration pane."
-	@priority = "5"
+	@priority = 4
 	test CanReplaceArticleAttachment {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -562,13 +771,13 @@ definition {
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title");
 
-		AssertTextNotEquals.assertNotPartialText(
+		AssertTextNotEquals.assertNotPartialMatch(
 			locator1 = "KnowledgeBaseArticle#ATTACHMENTS_SAVED_ATTACHMENTS_CONTAINER",
 			value1 = "Document_1.jpg");
 	}
 
 	@description = "This test ensures that users can replace the category for an article via the new configuration pane."
-	@priority = "5"
+	@priority = 4
 	test CanReplaceArticleCategory {
 		JSONCategory.addVocabulary(
 			groupName = "Guest",
@@ -585,7 +794,7 @@ definition {
 			vocabularyName = "Vocabulary Name");
 
 		JSONKnowledgeBase.addkBArticle(
-			assetCategoryIds = "${categoryId}",
+			assetCategoryIds = ${categoryId},
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title");
@@ -614,7 +823,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can replace the related asset for an article via the new configuration pane."
-	@priority = "5"
+	@priority = 4
 	test CanReplaceArticleRelatedAsset {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -659,7 +868,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can replace the tag for an article via the new configuration pane."
-	@priority = "5"
+	@priority = 4
 	test CanReplaceArticleTag {
 		JSONKnowledgeBase.addkBArticle(
 			assetTagNames = "Tag1",
@@ -688,7 +897,162 @@ definition {
 		AssetCategorization.viewTag(tagName = "Tag2");
 	}
 
-	@priority = "4"
+	@description = "This test ensures that the KB article is expired when the user clicks the "Expire" in the ellipses drop-menu."
+	@priority = 4
+	test CanRepublishAnExpiredArticle {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		KBArticle.updateCheckInterval(fieldValue = 1);
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Expire",
+			rowEntry = "Knowledge Base Article Title");
+
+		KBArticle.editCP(
+			enableExpirationDate = "true",
+			extendedMinutes = 1,
+			kbArticleTitleEdit = "Knowledge Base Article Title",
+			key_rowEntry = "Knowledge Base Article Title",
+			notificationDate = 0);
+
+		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = 20000);
+
+		Navigator.openURL();
+
+		Notifications.viewBadgeCount(notificationCount = 1);
+
+		Notifications.gotoNotifications();
+
+		AssertTextEquals(
+			locator1 = "Notifications#NOTIFICATIONS_TITLE",
+			value1 = "A knowledge base article has expired.");
+
+		Notifications.navigateToContent(contentBody = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#TITLE",
+			value1 = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#CONTENT",
+			value1 = "Knowledge Base Article Content");
+
+		AssertElementPresent(
+			key_kbArticleStatus = "Expired",
+			key_kbArticleTitle = "Knowledge Base Article Title",
+			locator1 = "WorkflowKnowledgeBaseArticle#ARTICLE_TABLE_ARTICLE_STATUS");
+	}
+
+	@description = "This test ensures that the owner of the kb article receives a notification once the review date is reached."
+	@priority = 5
+	test CanReviewArticleWhenReviewDateIsReached {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		KBArticle.updateCheckInterval(fieldValue = 1);
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.addCP(
+			configureReviewDate = "true",
+			increaseMinutes = 2,
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			uncheckNeverReview = "true");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewCP(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = 40000);
+
+		Navigator.openURL();
+
+		Notifications.viewBadgeCount(notificationCount = 1);
+
+		Notifications.gotoNotifications();
+
+		AssertTextEquals(
+			locator1 = "Notifications#NOTIFICATIONS_TITLE",
+			value1 = "A knowledge base article needs review.");
+
+		Notifications.navigateToContent(contentBody = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#TITLE",
+			value1 = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#CONTENT",
+			value1 = "Knowledge Base Article Content");
+	}
+
+	@description = "This test ensures that the owner of the kb article receives a notification once the review date is reached."
+	@priority = 5
+	test CanReviewArticleWhenReviewDateIsUpdated {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		KBArticle.updateCheckInterval(fieldValue = 1);
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.addCP(
+			configureReviewDate = "true",
+			increaseMinutes = 10,
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			uncheckNeverReview = "true");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.openToEditKBArticleInSite(
+			groupName = "Guest",
+			kbArticleTitle = "Knowledge Base Article Title",
+			siteURLKey = "guest");
+
+		KBArticle.setReviewDate(increaseMinutes = 1);
+
+		PortletEntry.publish();
+
+		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = 20000);
+
+		Navigator.openURL();
+
+		Notifications.viewBadgeCount(notificationCount = 1);
+
+		Notifications.gotoNotifications();
+
+		AssertTextEquals(
+			locator1 = "Notifications#NOTIFICATIONS_TITLE",
+			value1 = "A knowledge base article needs review.");
+
+		Notifications.navigateToContent(contentBody = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#TITLE",
+			value1 = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#CONTENT",
+			value1 = "Knowledge Base Article Content");
+	}
+
+	@priority = 4
 	@refactordone
 	test CanSaveEditedArticleAsDraft {
 		JSONKnowledgeBase.addkBArticle(
@@ -712,8 +1076,78 @@ definition {
 			kbStatus = "Draft");
 	}
 
+	@description = "This test ensures that a user can search the kb entry from the Move Modal."
+	@priority = 4
+	test CanSearchArticleInMoveModal {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content2",
+			kbArticleTitle = "Knowledge Base Article Title2");
+
+		JSONKnowledgeBase.addkBChildArticle(
+			groupName = "Guest",
+			kbArticleTitle = "Knowledge Base Article Title2",
+			kbChildArticleContent = "Child Knowledge Base Article Content",
+			kbChildArticleTitle = "apple");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.searchArticleInMoveModal(
+			kbArticleTitle = "Knowledge Base Article Title",
+			searchItem = "apple");
+
+		AssertTextEquals(
+			key_itemName = "apple",
+			locator1 = "KnowledgeBase#MOVE_MODAL_SEARCH_RESULT",
+			value1 = "apple");
+	}
+
+	@description = "This test covers LPS-128095. It validates that the articles can be sorted."
+	@priority = 3
+	test CanSortArticles {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Apple",
+			kbArticleTitle = "Apple");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Bag",
+			kbArticleTitle = "Bag");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Cat",
+			kbArticleTitle = "Cat");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconList.viewListEntryTitleLinkSpecific(
+			listEntry = "Apple",
+			position = 1);
+
+		LexiconList.viewListEntryTitleLinkSpecific(
+			listEntry = "Cat",
+			position = 3);
+
+		ManagementBar.sortAssets(sortDirection = "Descending");
+
+		LexiconList.viewListEntryTitleLinkSpecific(
+			listEntry = "Apple",
+			position = 3);
+
+		LexiconList.viewListEntryTitleLinkSpecific(
+			listEntry = "Cat",
+			position = 1);
+	}
+
 	@description = "This test ensures that users can subscribe to a kb article by clicking the ellipsis on the kb entry."
-	@priority = "5"
+	@priority = 4
 	test CanSubscribeToArticle {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -732,10 +1166,8 @@ definition {
 	}
 
 	@description = "This test ensures that a user can subscribe to a kb article from the navigation pane."
-	@priority = "5"
+	@priority = 4
 	test CanSubscribeToArticleFromNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
@@ -759,7 +1191,7 @@ definition {
 	}
 
 	@description = "This test ensures that suggestion form is displayed on the KB article preview page when the KB article has suggestions."
-	@priority = "5"
+	@priority = 4
 	test CanViewArticlesWithSuggestions {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -784,7 +1216,7 @@ definition {
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title",
 			kbStatus = "Approved",
-			versionNumber = "1");
+			versionNumber = 1);
 
 		for (var suggestionCount : list "1,2") {
 			KBArticleSuggestion.viewPG(
@@ -795,7 +1227,7 @@ definition {
 	}
 
 	@description = "This test ensures that a user is able to embed a video in a KB article."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanViewEmbeddedVideo {
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
@@ -815,7 +1247,7 @@ definition {
 	}
 
 	@description = "This test ensures that the information related to the KB entry can be viewed."
-	@priority = "4"
+	@priority = 4
 	test CanViewEntryInfo {
 		property custom.properties = "company.default.time.zone=America/Los_Angeles";
 
@@ -830,7 +1262,7 @@ definition {
 
 		KBArticle.viewInfoPanel(
 			kbArticleTitle = "Knowledge Base Article Title",
-			versionNumber = "1",
+			versionNumber = 1,
 			workflowStatus = "APPROVED");
 
 		KBArticle.viewInfoPanelVersions(
@@ -849,7 +1281,7 @@ definition {
 
 		KBArticle.viewInfoPanel(
 			kbArticleTitle = "Knowledge Base Article Title Edit",
-			versionNumber = "2",
+			versionNumber = 2,
 			workflowStatus = "APPROVED");
 
 		KBArticle.viewInfoPanelVersions(
@@ -857,8 +1289,134 @@ definition {
 			userName = "Test Test");
 	}
 
+	@description = "This test ensures that the kb article status is expired when the expiration date is reached."
+	@priority = 5
+	test CanViewExpiredArticle {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		KBArticle.updateCheckInterval(fieldValue = 1);
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.addCP(
+			enableExpirationDate = "true",
+			extendedMinutes = 1,
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			notificationDate = 0,
+			viewExpirationTime = "true");
+
+		KBArticle.viewCP(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewExpirationStatus(
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbExpirationStatus = "Expiring Soon");
+
+		AssertElementPresent(
+			key_kbArticleStatus = "Approved",
+			key_kbArticleTitle = "Knowledge Base Article Title",
+			locator1 = "KnowledgeBase#ARTICLE_TABLE_ARTICLE_STATUS");
+
+		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = 20000);
+
+		Navigator.openURL();
+
+		Notifications.viewBadgeCount(notificationCount = 1);
+
+		Notifications.gotoNotifications();
+
+		AssertTextEquals(
+			locator1 = "Notifications#NOTIFICATIONS_TITLE",
+			value1 = "A knowledge base article has expired.");
+
+		Notifications.navigateToContent(contentBody = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#TITLE",
+			value1 = "Knowledge Base Article Title");
+
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseArticle#CONTENT",
+			value1 = "Knowledge Base Article Content");
+
+		AssertElementPresent(
+			key_kbArticleStatus = "Expired",
+			key_kbArticleTitle = "Knowledge Base Article Title",
+			locator1 = "WorkflowKnowledgeBaseArticle#ARTICLE_TABLE_ARTICLE_STATUS");
+	}
+
+	@description = "This test covers LPS-184220. It checks that the article can not be expired before approving and it can be expired after approving."
+	@priority = 4
+	test CanViewExpiredArticleWithWorkflowEnabled {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		Workflow.openWorkflowAdmin(siteURLKey = "guest");
+
+		Workflow.configureWorkflow(
+			workflowDefinition = "Single Approver",
+			workflowResourceValue = "Knowledge Base Article");
+
+		KBArticle.updateCheckInterval(fieldValue = 1);
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.addCP(
+			enableExpirationDate = "true",
+			extendedMinutes = 1,
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbWorkflowAction = "Submit for Workflow",
+			notificationDate = 0);
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconList.viewListEntryLabel(
+			listEntry = "Knowledge Base Article Title",
+			listEntryLabel = "Pending");
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "Knowledge Base Article Title",
+			workflowAssetType = "Knowledge Base Article",
+			workflowTask = "Review");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "Knowledge Base Article Title",
+			workflowAssetType = "Knowledge Base Article",
+			workflowTask = "Review");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconList.viewListEntryLabel(
+			listEntry = "Knowledge Base Article Title",
+			listEntryLabel = "Approved");
+
+		LexiconList.viewListEntryLabel(
+			listEntry = "Knowledge Base Article Title",
+			listEntryLabel = "Expiring Soon");
+
+		// We need to wait for the system time to pass by 1 minute in order to verify the article is expired. There is currently no easy way to manipulate the system time in CI for automation. 1 minute is the shortest value we can set while ensuring the stability of the test. See LPS-157957.
+
+		Pause(value1 = 60000);
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		LexiconList.viewListEntryLabel(
+			listEntry = "Knowledge Base Article Title",
+			listEntryLabel = "Expired");
+	}
+
 	@description = "This ensures that an image in the KB content field can be rendered correctly after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInKBAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -902,7 +1460,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can view kb entry history by clicking the ellipsis on the kb entry."
-	@priority = "5"
+	@priority = 5
 	test CanViewKBArticleHistory {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -921,12 +1479,12 @@ definition {
 			kbArticleContent = "Knowledge Base Article Content Edit",
 			kbArticleContentAddedDiff = "Edit",
 			kbArticleTitle = "Knowledge Base Article Title Edit",
-			kbArticleVersionNew = "2",
-			kbArticleVersionOld = "1");
+			kbArticleVersionNew = 2,
+			kbArticleVersionOld = 1);
 	}
 
 	@description = "This ensures that an external video in the KB content field can be rendered correctly after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewVideoInKBAfterMovingToFolder {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -971,13 +1529,26 @@ definition {
 			locator1 = "BlogsEntry#CONTENT_VIDEO");
 	}
 
-	@priority = "3"
+	@description = "This test checks that all the correct actions appear after selecting an article."
+	@priority = 5
+	test CorrectActionsAppearInToolbarAfterSelectingArticle {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBArticle.openToKBArticleInSite(
+			groupName = "Guest",
+			kbArticleTitle = "Knowledge Base Article Title",
+			siteURLKey = "guest");
+
+		KBArticle.viewActionsDetailsToolbar(moreActions = "true");
+	}
+
+	@priority = 3
 	@refactorneeded
 	test EditKBArticleWithCustomField {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Custom Fields");
+		CustomFields.openCustomFieldAdmin();
 
 		CustomFields.addCP(
 			customFieldName = "Text Field",
@@ -990,7 +1561,7 @@ definition {
 			layoutName = "Knowledge Base Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Knowledge Base Page",
 			widgetName = "Knowledge Base Display");
@@ -1029,7 +1600,7 @@ definition {
 	}
 
 	@description = "This test ensures that some article info only display in panel."
-	@priority = "5"
+	@priority = 3
 	test SomeArticleInfoOnlyDisplayInPanel {
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
@@ -1059,13 +1630,14 @@ definition {
 		KBArticle.viewInfoPanel(
 			childArticlesQuantity = "1 Child Articles",
 			kbArticleTitle = "Knowledge Base Article Title",
-			viewQuantity = "0");
+			viewQuantity = 0);
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactorneeded
 	test ViewKBArticleGitHubSourceURL {
-		property test.name.skip.portal.instance = "KBArticle#ViewKBArticleGitHubSourceURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -1099,7 +1671,7 @@ definition {
 			layoutName = "KB Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "KB Page",
 			widgetName = "Knowledge Base Display");

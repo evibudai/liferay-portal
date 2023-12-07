@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,9 +27,10 @@ definition {
 	}
 
 	@description = "This makes sure that canceling the image edition will preserve the original image."
-	@priority = "5"
+	@priority = 4
 	test CanDiscardChange {
-		property test.name.skip.portal.instance = "ImageEditor#CanDiscardChange";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -50,19 +51,23 @@ definition {
 
 		LexiconCard.checkCardCheckbox(card = "Document_2.jpg");
 
+		DMDocument.expandInfo();
+
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "313",
+			metadataData = 313,
 			metadataLabel = "Image Length");
 
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "500",
+			metadataData = 500,
 			metadataLabel = "Image Width");
 	}
 
 	@description = "This makes sure that a resized image can be saved."
-	@priority = "5"
+	@priority = 5
 	test CanSaveResizedImage {
-		property test.name.skip.portal.instance = "ImageEditor#CanSaveResizedImage";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -83,19 +88,23 @@ definition {
 
 		LexiconCard.checkCardCheckbox(card = "Document_2.jpg");
 
+		DMDocument.expandInfo();
+
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "312",
+			metadataData = 312,
 			metadataLabel = "Image Length");
 
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "500",
+			metadataData = 500,
 			metadataLabel = "Image Width");
 	}
 
 	@description = "This makes sure that a resized image preview can be saved and that a copy is made."
-	@priority = "5"
+	@priority = 5
 	test CanSaveResizedImagePreview {
-		property test.name.skip.portal.instance = "ImageEditor#CanSaveResizedImagePreview";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -128,31 +137,36 @@ definition {
 
 		LexiconCard.checkCardCheckbox(card = "Document_2.jpg");
 
+		DMDocument.expandInfo();
+
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "313",
+			metadataData = 313,
 			metadataLabel = "Image Length");
 
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "500",
+			metadataData = 500,
 			metadataLabel = "Image Width");
 
 		Refresh();
 
 		LexiconCard.checkCardCheckbox(card = "Document_2 (1).jpg");
 
+		DMDocument.expandInfo();
+
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "312",
+			metadataData = 312,
 			metadataLabel = "Image Length");
 
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "500",
+			metadataData = 500,
 			metadataLabel = "Image Width");
 	}
 
 	@description = "This makes sure that a rotated image can be saved."
-	@priority = "5"
+	@priority = 5
 	test CanSaveRotatedImage {
-		property test.name.skip.portal.instance = "ImageEditor#CanSaveRotatedImage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -173,12 +187,14 @@ definition {
 
 		LexiconCard.checkCardCheckbox(card = "Document_2.jpg");
 
+		DMDocument.expandInfo();
+
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "313",
+			metadataData = 313,
 			metadataLabel = "Image Length");
 
 		DMDocument.viewDocumentMetadataCP(
-			metadataData = "195",
+			metadataData = 195,
 			metadataLabel = "Image Width");
 	}
 

@@ -1,8 +1,9 @@
 definition {
 
-	macro MarkAsNotSpam {
-		if ("${assetType}" == "wikiPage") {
-			var key_wikiPageTitle = "${wikiPageTitle}";
+	@summary = "Default summary"
+	macro MarkAsNotSpam(wikiPageTitle = null, assetType = null) {
+		if (${assetType} == "wikiPage") {
+			var key_wikiPageTitle = ${wikiPageTitle};
 
 			Check(locator1 = "SpamModeration#WIKI_PAGE_TABLE_CHECKBOX");
 
@@ -16,37 +17,40 @@ definition {
 		}
 	}
 
-	macro navigateToWikis {
+	@summary = "Default summary"
+	macro navigateToWikis() {
 		AssertClick(
 			locator1 = "SpamModeration#NAVIGATION_WIKIS",
 			value1 = "Wikis");
 	}
 
-	macro viewDefault {
-		if ("${assetType}" == "wikiPage") {
+	@summary = "Default summary"
+	macro viewDefault(assetType = null) {
+		if (${assetType} == "wikiPage") {
 			AssertTextEquals(
 				locator1 = "Message#INFO",
 				value1 = "There are no pages. ");
 		}
 	}
 
-	macro viewMarkedAsSpam {
-		if ("${assetType}" == "wikiPage") {
-			var key_wikiPageTitle = "${wikiPageTitle}";
+	@summary = "Default summary"
+	macro viewMarkedAsSpam(wikiPageTitle = null, wikiPageUsername = null, wikiPageRevision = null, assetType = null) {
+		if (${assetType} == "wikiPage") {
+			var key_wikiPageTitle = ${wikiPageTitle};
 
 			AssertElementPresent(locator1 = "SpamModeration#WIKI_PAGE_TABLE_CHECKBOX");
 
 			AssertTextEquals(
 				locator1 = "SpamModeration#WIKI_PAGE_TABLE_TITLE",
-				value1 = "${wikiPageTitle}");
+				value1 = ${wikiPageTitle});
 
 			AssertTextEquals(
 				locator1 = "WikiTable#ALL_PAGES_REVISION",
-				value1 = "${wikiPageRevision}");
+				value1 = ${wikiPageRevision});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "SpamModeration#WIKI_PAGE_TABLE_POSTED_BY",
-				value1 = "${wikiPageUsername}");
+				value1 = ${wikiPageUsername});
 
 			AssertElementPresent(locator1 = "SpamModeration#WIKI_PAGE_TABLE_ACTIONS");
 		}

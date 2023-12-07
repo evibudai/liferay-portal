@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.portlet;
@@ -33,26 +24,31 @@ import javax.portlet.PortletPreferences;
  */
 public class PortletSetupUtil {
 
-	public static JSONObject cssToJSONObject(PortletPreferences portletSetup)
+	public static JSONObject cssToJSONObject(
+			PortletPreferences portletPreferences)
 		throws Exception {
 
-		String css = portletSetup.getValue("portletSetupCss", StringPool.BLANK);
+		String css = portletPreferences.getValue(
+			"portletSetupCss", StringPool.BLANK);
 
-		return _toJSONObject(portletSetup, css);
+		return _toJSONObject(portletPreferences, css);
 	}
 
 	public static JSONObject cssToJSONObject(
-			PortletPreferences portletSetup, String css)
+			PortletPreferences portletPreferences, String css)
 		throws Exception {
 
-		return _toJSONObject(portletSetup, css);
+		return _toJSONObject(portletPreferences, css);
 	}
 
-	public static String cssToJSONString(PortletPreferences portletSetup) {
-		String css = portletSetup.getValue("portletSetupCss", StringPool.BLANK);
+	public static String cssToJSONString(
+		PortletPreferences portletPreferences) {
+
+		String css = portletPreferences.getValue(
+			"portletSetupCss", StringPool.BLANK);
 
 		try {
-			JSONObject jsonObject = _toJSONObject(portletSetup, css);
+			JSONObject jsonObject = _toJSONObject(portletPreferences, css);
 
 			return jsonObject.toString();
 		}
@@ -68,7 +64,7 @@ public class PortletSetupUtil {
 	}
 
 	private static JSONObject _toJSONObject(
-			PortletPreferences portletSetup, String css)
+			PortletPreferences portletPreferences, String css)
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
@@ -98,7 +94,7 @@ public class PortletSetupUtil {
 			String languageId = LocaleUtil.toLanguageId(locale);
 
 			if (Validator.isNotNull(languageId)) {
-				String title = portletSetup.getValue(
+				String title = portletPreferences.getValue(
 					"portletSetupTitle_" + languageId, null);
 
 				titlesJSONObject.put(languageId, title);
@@ -106,12 +102,13 @@ public class PortletSetupUtil {
 		}
 
 		String portletDecoratorId = GetterUtil.getString(
-			portletSetup.getValue("portletSetupPortletDecoratorId", null));
+			portletPreferences.getValue(
+				"portletSetupPortletDecoratorId", null));
 
 		portletDataJSONObject.put("portletDecoratorId", portletDecoratorId);
 
 		boolean useCustomTitle = GetterUtil.getBoolean(
-			portletSetup.getValue("portletSetupUseCustomTitle", null));
+			portletPreferences.getValue("portletSetupUseCustomTitle", null));
 
 		portletDataJSONObject.put("useCustomTitle", useCustomTitle);
 

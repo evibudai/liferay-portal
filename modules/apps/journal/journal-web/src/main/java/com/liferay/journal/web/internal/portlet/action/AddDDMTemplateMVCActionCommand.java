@@ -1,32 +1,34 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.portlet.action;
 
 import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
+import com.liferay.dynamic.data.mapping.exception.TemplateCreationDisabledException;
+import com.liferay.dynamic.data.mapping.exception.TemplateNameException;
+import com.liferay.dynamic.data.mapping.exception.TemplateScriptException;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.template.TemplateConstants;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -49,7 +51,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eudaldo Alonso
  */
 @Component(
-	immediate = true,
 	property = {
 		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/add_ddm_template"
@@ -97,13 +98,55 @@ public class AddDDMTemplateMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			DDMTemplate.class.getName(), uploadPortletRequest);
 
-		DDMTemplate ddmTemplate = _ddmTemplateService.addTemplate(
-			groupId, _portal.getClassNameId(DDMStructure.class), classPK,
-			_portal.getClassNameId(JournalArticle.class), templateKey, nameMap,
-			descriptionMap, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
-			StringPool.BLANK, TemplateConstants.LANG_TYPE_FTL, script,
-			cacheable, smallImage, smallImageURL, smallImageFile,
-			serviceContext);
+		DDMTemplate ddmTemplate = null;
+
+		try {
+			ddmTemplate = _ddmTemplateService.addTemplate(
+				groupId, _portal.getClassNameId(DDMStructure.class), classPK,
+				_portal.getClassNameId(JournalArticle.class), templateKey,
+				nameMap, descriptionMap,
+				DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, StringPool.BLANK,
+				TemplateConstants.LANG_TYPE_FTL, script, cacheable, smallImage,
+				smallImageURL, smallImageFile, serviceContext);
+		}
+		catch (PortalException portalException) {
+			SessionErrors.add(actionRequest, portalException.getClass());
+
+			String message = null;
+
+			if (portalException instanceof TemplateCreationDisabledException) {
+				message =
+					"the-template-could-not-be-created-because-template-" +
+						"creation-is-disabled";
+			}
+
+			if (portalException instanceof TemplateNameException) {
+				message = "please-enter-a-valid-name";
+			}
+
+			if (portalException instanceof TemplateScriptException) {
+				message = "please-enter-a-valid-script";
+			}
+
+			if (message == null) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException);
+				}
+
+				message = "an-unexpected-error-occurred";
+			}
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			JSONPortletResponseUtil.writeJSON(
+				actionRequest, actionResponse,
+				JSONUtil.put(
+					"error",
+					_language.get(themeDisplay.getRequest(), message)));
+
+			return;
+		}
 
 		boolean saveAndContinue = ParamUtil.getBoolean(
 			uploadPortletRequest, "saveAndContinue");
@@ -123,8 +166,14 @@ public class AddDDMTemplateMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		AddDDMTemplateMVCActionCommand.class);
+
 	@Reference
 	private DDMTemplateService _ddmTemplateService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Localization _localization;

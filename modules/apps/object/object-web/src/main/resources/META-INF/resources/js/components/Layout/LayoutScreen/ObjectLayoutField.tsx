@@ -1,19 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayLabel from '@clayui/label';
-import {Panel, PanelSimpleBody} from '@liferay/object-js-components-web';
+import {
+	Panel,
+	PanelSimpleBody,
+	getLocalizableLabel,
+} from '@liferay/object-js-components-web';
 import React from 'react';
 
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
@@ -27,8 +22,6 @@ interface ObjectLayoutFieldProps extends React.HTMLAttributes<HTMLElement> {
 	tabIndex: number;
 }
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 export function ObjectLayoutField({
 	boxIndex,
 	columnIndex,
@@ -36,7 +29,10 @@ export function ObjectLayoutField({
 	rowIndex,
 	tabIndex,
 }: ObjectLayoutFieldProps) {
-	const [{objectFieldTypes, objectFields}, dispatch] = useLayoutContext();
+	const [
+		{creationLanguageId, objectFieldTypes, objectFields},
+		dispatch,
+	] = useLayoutContext();
 
 	const objectField = objectFields.find(
 		({name}) => name === objectFieldName
@@ -66,7 +62,11 @@ export function ObjectLayoutField({
 							}}
 						/>
 					}
-					title={objectField?.label[defaultLanguageId]!}
+					title={getLocalizableLabel(
+						creationLanguageId,
+						objectField.label,
+						objectField.name
+					)}
 				>
 					<small className="text-secondary">
 						{objectFieldType?.label} |{' '}
@@ -83,11 +83,9 @@ export function ObjectLayoutField({
 							: Liferay.Language.get('optional')}
 					</ClayLabel>
 
-					{objectField.objectFieldSettings?.find(
-						(fieldSetting: ObjectFieldSetting) =>
-							fieldSetting.value === 'true' ||
-							fieldSetting.value === 'conditional'
-					) && (
+					{(objectField.businessType === 'AutoIncrement' ||
+						objectField.readOnly === 'true' ||
+						objectField.readOnly === 'conditional') && (
 						<ClayLabel
 							className="label-inside-custom-select"
 							displayType="secondary"

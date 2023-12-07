@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.pricing.web.internal.frontend.data.set.provider;
 
 import com.liferay.account.constants.AccountPortletKeys;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.constants.CommerceAccountActionKeys;
 import com.liferay.commerce.pricing.web.internal.constants.CommercePricingFDSNames;
 import com.liferay.commerce.pricing.web.internal.model.PricingEntry;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
@@ -27,7 +19,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -72,7 +63,7 @@ public class PricingEntryCommerceChannelAccountEntryRelFDSActionProvider
 		return DropdownItemListBuilder.add(
 			() -> _accountEntryModelResourcePermission.contains(
 				permissionChecker, pricingEntry.getAccountEntryId(),
-				ActionKeys.UPDATE),
+				CommerceAccountActionKeys.MANAGE_CHANNEL_DEFAULTS),
 			dropdownItem -> {
 				dropdownItem.setHref(
 					_getCommerceChannelAccountEntryRelEditURL(
@@ -86,7 +77,7 @@ public class PricingEntryCommerceChannelAccountEntryRelFDSActionProvider
 		).add(
 			() -> _accountEntryModelResourcePermission.contains(
 				permissionChecker, pricingEntry.getAccountEntryId(),
-				ActionKeys.UPDATE),
+				CommerceAccountActionKeys.MANAGE_CHANNEL_DEFAULTS),
 			dropdownItem -> {
 				dropdownItem.setHref(
 					_getCommerceChannelAccountEntryRelDeleteURL(

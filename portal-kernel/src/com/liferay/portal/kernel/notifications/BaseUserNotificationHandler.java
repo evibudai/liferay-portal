@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.notifications;
@@ -64,8 +55,8 @@ public abstract class BaseUserNotificationHandler
 			else {
 				Locale locale = serviceContext.getLocale();
 
-				String portletTitle = PortalUtil.getPortletTitle(
-					getPortletId(), locale);
+				String title = LanguageUtil.get(
+					locale, "notification-no-longer-applies");
 
 				String body = StringUtil.replace(
 					_BODY_TEMPLATE_DEFAULT,
@@ -73,13 +64,13 @@ public abstract class BaseUserNotificationHandler
 					new String[] {
 						LanguageUtil.format(
 							locale, "notification-for-x-was-deleted",
-							portletTitle, false),
-						LanguageUtil.get(
-							locale, "notification-no-longer-applies")
+							PortalUtil.getPortletTitle(getPortletId(), locale),
+							false),
+						title
 					});
 
 				userNotificationFeedEntry = new UserNotificationFeedEntry(
-					false, body, StringPool.BLANK, false);
+					false, body, StringPool.BLANK, false, title);
 			}
 
 			return userNotificationFeedEntry;
@@ -151,7 +142,8 @@ public abstract class BaseUserNotificationHandler
 			userNotificationEvent, serviceContext);
 
 		return new UserNotificationFeedEntry(
-			isActionable(), body, link, applicable);
+			isActionable(), body, link, applicable,
+			getTitle(userNotificationEvent, serviceContext));
 	}
 
 	protected String getBody(
@@ -177,6 +169,14 @@ public abstract class BaseUserNotificationHandler
 	}
 
 	protected String getLink(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		return StringPool.BLANK;
+	}
+
+	protected String getTitle(
 			UserNotificationEvent userNotificationEvent,
 			ServiceContext serviceContext)
 		throws Exception {

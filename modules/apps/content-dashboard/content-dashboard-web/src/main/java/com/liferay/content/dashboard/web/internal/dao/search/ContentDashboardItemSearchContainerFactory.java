@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.dao.search;
@@ -23,6 +14,7 @@ import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFacto
 import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardSearchContextBuilder;
 import com.liferay.content.dashboard.web.internal.searcher.ContentDashboardSearchRequestBuilderFactory;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -40,11 +32,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
@@ -106,7 +95,7 @@ public class ContentDashboardItemSearchContainerFactory {
 		_portletResponse = portletResponse;
 		_searcher = searcher;
 
-		_locale = _portal.getLocale(_portletRequest);
+		_locale = portal.getLocale(portletRequest);
 	}
 
 	private SearchContainer<ContentDashboardItem<?>> _create(
@@ -116,24 +105,11 @@ public class ContentDashboardItemSearchContainerFactory {
 		SearchResponse searchResponse = _getSearchResponse(end, start);
 
 		searchContainer.setResultsAndTotal(
-			() -> _getContentDashboardItems(searchResponse.getDocuments71()),
+			() -> TransformUtil.transform(
+				searchResponse.getDocuments71(), this::_toContentDashboardItem),
 			searchResponse.getTotalHits());
 
 		return searchContainer;
-	}
-
-	private List<ContentDashboardItem<?>> _getContentDashboardItems(
-		List<Document> documents) {
-
-		Stream<Document> stream = documents.stream();
-
-		return stream.map(
-			this::_toContentDashboardItem
-		).filter(
-			Objects::nonNull
-		).collect(
-			Collectors.toList()
-		);
 	}
 
 	private SearchContainer<ContentDashboardItem<?>>
@@ -230,8 +206,15 @@ public class ContentDashboardItemSearchContainerFactory {
 		Document document) {
 
 		try {
-			return contentDashboardItemFactory.create(
-				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)));
+			long classPK = GetterUtil.getLong(
+				document.get(Field.ENTRY_CLASS_PK));
+
+			if (classPK == 0) {
+				classPK = GetterUtil.getLong(
+					document.get(Field.ROOT_ENTRY_CLASS_PK));
+			}
+
+			return contentDashboardItemFactory.create(classPK);
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);

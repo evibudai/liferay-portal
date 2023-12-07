@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -43,7 +34,7 @@ public class JavaMapBuilderGenericsCheck extends BaseJavaTermCheck {
 			String fileContent)
 		throws IOException {
 
-		return _formatGenerics(javaTerm, fileContent);
+		return _formatGenerics(fileContent, fileName, javaTerm);
 	}
 
 	@Override
@@ -51,7 +42,9 @@ public class JavaMapBuilderGenericsCheck extends BaseJavaTermCheck {
 		return new String[] {JAVA_CONSTRUCTOR, JAVA_METHOD, JAVA_VARIABLE};
 	}
 
-	private String _formatGenerics(JavaTerm javaTerm, String fileContent) {
+	private String _formatGenerics(
+		String fileContent, String fileName, JavaTerm javaTerm) {
+
 		String content = javaTerm.getContent();
 
 		Matcher matcher = _mapBuilderPattern.matcher(content);
@@ -66,7 +59,7 @@ public class JavaMapBuilderGenericsCheck extends BaseJavaTermCheck {
 			}
 			else {
 				genericTypesArray = _getGenericTypesArray(
-					javaTerm, fileContent, matcher);
+					fileContent, fileName, javaTerm, matcher);
 			}
 
 			if (genericTypesArray == null) {
@@ -170,39 +163,6 @@ public class JavaMapBuilderGenericsCheck extends BaseJavaTermCheck {
 		return null;
 	}
 
-	private String[] _getGenericTypesArray(
-		JavaTerm javaTerm, String fileContent, Matcher matcher) {
-
-		if (matcher.group(1) == null) {
-			return null;
-		}
-
-		String mapTypeName = null;
-
-		if (Objects.equals(matcher.group(2), "return")) {
-			JavaSignature javaSignature = javaTerm.getSignature();
-
-			mapTypeName = javaSignature.getReturnType();
-		}
-		else {
-			mapTypeName = getVariableTypeName(
-				javaTerm.getContent(), fileContent, matcher.group(3), true);
-		}
-
-		if (mapTypeName == null) {
-			return null;
-		}
-
-		int x = mapTypeName.indexOf("<");
-
-		if (x == -1) {
-			return null;
-		}
-
-		return _getGenericTypesArray(
-			mapTypeName.substring(x + 1, mapTypeName.length() - 1));
-	}
-
 	private String[] _getGenericTypesArray(String genericTypes) {
 		int x = -1;
 
@@ -222,6 +182,45 @@ public class JavaMapBuilderGenericsCheck extends BaseJavaTermCheck {
 				StringUtil.trim(genericTypes.substring(x + 1))
 			};
 		}
+	}
+
+	private String[] _getGenericTypesArray(
+		String fileContent, String fileName, JavaTerm javaTerm,
+		Matcher matcher) {
+
+		if (matcher.group(1) == null) {
+			return null;
+		}
+
+		String mapTypeName = null;
+
+		if (Objects.equals(matcher.group(2), "return")) {
+			JavaSignature javaSignature = javaTerm.getSignature();
+
+			if (javaSignature == null) {
+				return null;
+			}
+
+			mapTypeName = javaSignature.getReturnType();
+		}
+		else {
+			mapTypeName = getVariableTypeName(
+				javaTerm.getContent(), javaTerm, fileContent, fileName,
+				matcher.group(3), true);
+		}
+
+		if (mapTypeName == null) {
+			return null;
+		}
+
+		int x = mapTypeName.indexOf("<");
+
+		if (x == -1) {
+			return null;
+		}
+
+		return _getGenericTypesArray(
+			mapTypeName.substring(x + 1, mapTypeName.length() - 1));
 	}
 
 	private boolean _requiresGenerics(Class<?> clazz) {

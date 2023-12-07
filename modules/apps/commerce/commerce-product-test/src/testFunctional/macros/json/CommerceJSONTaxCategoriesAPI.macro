@@ -1,25 +1,28 @@
 definition {
 
-	macro _deleteCommerceTaxCategories {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _deleteCommerceTaxCategories() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var commerceTaxCategoriesIds = CommerceJSONTaxCategoriesAPI._getCommerceTaxCategories();
 
-		if ("${commerceTaxCategoriesIds}" != "") {
-			for (var commerceTaxCategoriesId : list "${commerceTaxCategoriesIds}") {
+		if (${commerceTaxCategoriesIds} != "") {
+			for (var commerceTaxCategoriesId : list ${commerceTaxCategoriesIds}) {
 				echo("Deleting Commerce Tax Categories with id: ${commerceTaxCategoriesId}");
+
+				var userLoginInfo = JSONUtil2.formatJSONUser();
 
 				var curl = '''
 					${baseURL}/api/jsonws/commerce.cptaxcategory/delete-cp-tax-category \
-						-u test@liferay.com:test \
+						-u ${userLoginInfo} \
 						-d cpTaxCategoryId=${commerceTaxCategoriesId}
 				''';
 
-				JSONCurlUtil.post("${curl}");
+				JSONCurlUtil.post(${curl});
 			}
 		}
 		else {
@@ -27,46 +30,49 @@ definition {
 		}
 	}
 
-	macro _getCommerceTaxCategories {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceTaxCategories() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var companyId = JSONCompany.getCompanyId();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
-			  ${baseURL}/api/jsonws/commerce.cptaxcategory/get-cp-tax-categories \
-				  -u test@liferay.com:test \
-				  -d companyId=${companyId} \
-				  -d "start=-1" \
-				  -d "end=-1" \
-				  -d -orderByComparator=''
+			${baseURL}/api/jsonws/commerce.cptaxcategory/get-cp-tax-categories \
+				-u ${userLoginInfo} \
+				-d companyId=${companyId} \
+				-d "start=-1" \
+				-d "end=-1" \
+				-d -orderByComparator=''
 		''';
 
 		echo("curl: ${curl}");
 
-		var commerceTaxCategories = JSONCurlUtil.post("${curl}", "$..['CPTaxCategoryId']");
+		var commerceTaxCategories = JSONCurlUtil.post(${curl}, "$..['CPTaxCategoryId']");
 
 		echo("commerceTaxCategories: ${commerceTaxCategories}");
 
-		return "${commerceTaxCategories}";
+		return ${commerceTaxCategories};
 	}
 
-	macro _getCommereTaxCategoriesCount {
-		var taxCategoriesCount = "0";
+	@summary = "Default summary"
+	macro _getCommereTaxCategoriesCount() {
+		var taxCategoriesCount = 0;
 		var commerceTaxCategoriesIds = CommerceJSONTaxCategoriesAPI._getCommerceTaxCategories();
 
-		for (var commerceTaxCategoriesId : list "${commerceTaxCategoriesIds}") {
-			if ("${commerceTaxCategoriesId}" != "") {
+		for (var commerceTaxCategoriesId : list ${commerceTaxCategoriesIds}) {
+			if (${commerceTaxCategoriesId} != "") {
 				var taxCategoriesCount = ${taxCategoriesCount} + 1;
 			}
 		}
 
 		echo("The Commerce available estimates count is: ${taxCategoriesCount}");
 
-		return "${taxCategoriesCount}";
+		return ${taxCategoriesCount};
 	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.context;
@@ -25,7 +16,6 @@ import com.liferay.portal.kernel.mobile.device.Dimensions;
 import com.liferay.portal.kernel.mobile.device.UnknownDevice;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.servlet.BrowserSniffer;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -41,6 +31,7 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.IdEntityField;
 import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
+import com.liferay.portal.servlet.BrowserSnifferUtil;
 import com.liferay.segments.context.Context;
 import com.liferay.segments.context.RequestContextMapper;
 import com.liferay.segments.context.contributor.RequestContextContributor;
@@ -83,7 +74,8 @@ public class RequestContextMapperImpl implements RequestContextMapper {
 		Context context = new Context();
 
 		context.put(
-			Context.BROWSER, _browserSniffer.getBrowserId(httpServletRequest));
+			Context.BROWSER,
+			BrowserSnifferUtil.getBrowserId(httpServletRequest));
 		context.put(Context.COOKIES, _getCookies(httpServletRequest));
 
 		Device device = DeviceDetectionUtil.detectDevice(httpServletRequest);
@@ -152,7 +144,7 @@ public class RequestContextMapperImpl implements RequestContextMapper {
 		boolean signedIn = false;
 
 		if (user != null) {
-			signedIn = !user.isDefaultUser();
+			signedIn = !user.isGuestUser();
 		}
 
 		context.put(Context.SIGNED_IN, signedIn);
@@ -236,9 +228,6 @@ public class RequestContextMapperImpl implements RequestContextMapper {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RequestContextMapperImpl.class);
-
-	@Reference
-	private BrowserSniffer _browserSniffer;
 
 	private final ContextEntityModel _contextEntityModel =
 		new ContextEntityModel(Collections.emptyList());

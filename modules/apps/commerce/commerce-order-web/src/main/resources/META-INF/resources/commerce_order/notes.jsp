@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,7 +12,7 @@ CommerceOrderEditDisplayContext commerceOrderEditDisplayContext = (CommerceOrder
 
 long commerceOrderId = commerceOrderEditDisplayContext.getCommerceOrderId();
 
-Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
+Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 %>
 
 <portlet:actionURL name="/commerce_order/edit_commerce_order_note" var="editCommerceOrderNoteURL">
@@ -50,10 +41,9 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 					<div class="panel-body px-0 py-4">
 						<div class="row">
 							<div class="col-auto">
-								<liferay-ui:user-portrait
-									cssClass="sticker-lg"
+								<liferay-user:user-portrait
+									size="lg"
 									userId="<%= commerceOrderNote.getUserId() %>"
-									userName="<%= HtmlUtil.escape(commerceOrderNote.getUserName()) %>"
 								/>
 							</div>
 
@@ -73,7 +63,10 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 									</aui:a>
 
 									<c:if test="<%= commerceOrderNote.isRestricted() %>">
-										<aui:icon image="lock" markupView="lexicon" message="private" />
+										<clay:icon
+											cssClass="d-block"
+											symbol="lock"
+										/>
 									</c:if>
 								</header>
 
@@ -92,7 +85,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 									<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - commerceOrderNoteCreateDate.getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
 
 									<c:if test="<%= commerceOrderNoteCreateDate.before(commerceOrderNote.getModifiedDate()) %>">
-										<strong onmouseover="Liferay.Portal.ToolTip.show(this, '<%= HtmlUtil.escapeJS(dateFormatDateTime.format(commerceOrderNote.getModifiedDate())) %>');">
+										<strong onmouseover="Liferay.Portal.ToolTip.show(this, '<%= HtmlUtil.escapeJS(dateTimeFormat.format(commerceOrderNote.getModifiedDate())) %>');">
 											- <liferay-ui:message key="edited" />
 										</strong>
 									</c:if>
@@ -111,6 +104,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 									<portlet:renderURL var="editURL">
 										<portlet:param name="mvcRenderCommandName" value="/commerce_order/edit_commerce_order_note" />
 										<portlet:param name="redirect" value="<%= currentURL %>" />
+										<portlet:param name="commerceOrderId" value="<%= String.valueOf(commerceOrderNote.getCommerceOrderId()) %>" />
 										<portlet:param name="commerceOrderNoteId" value="<%= String.valueOf(commerceOrderNote.getCommerceOrderNoteId()) %>" />
 									</portlet:renderURL>
 
@@ -145,14 +139,14 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 				<div class="panel">
 					<div class="panel-body px-0 py-4">
 						<div class="lfr-discussion-details">
-							<liferay-ui:user-portrait
-								cssClass="sticker-lg"
+							<liferay-user:user-portrait
+								size="lg"
 								user="<%= user %>"
 							/>
 						</div>
 
 						<div class="lfr-discussion-body">
-							<aui:input autoFocus="<%= true %>" label="" name="content" placeholder="type-your-note-here" />
+							<aui:input label="" name="content" placeholder="type-your-note-here" />
 							<aui:input helpMessage="restricted-help" label="private" name="restricted" type="toggle-switch" />
 
 							<aui:button-row>

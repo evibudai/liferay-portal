@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.dao.orm;
@@ -20,8 +11,6 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 
 import java.util.Arrays;
 
@@ -41,15 +30,14 @@ public class IndexableActionableDynamicQueryTest {
 
 	@Before
 	public void setUp() {
-		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
-
-		_serviceRegistration = bundleContext.registerService(
-			PortalExecutorManager.class,
-			Mockito.mock(PortalExecutorManager.class), null);
-
-		indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setIndexWriterHelper(indexWriterHelper);
+		_indexWriterHelperServiceRegistration = _bundleContext.registerService(
+			IndexWriterHelper.class, indexWriterHelper, null);
+		_indexerRegistryServiceRegistration = _bundleContext.registerService(
+			IndexerRegistry.class, Mockito.mock(IndexerRegistry.class), null);
+		_portalExecutorManagerServiceRegistration =
+			_bundleContext.registerService(
+				PortalExecutorManager.class,
+				Mockito.mock(PortalExecutorManager.class), null);
 
 		IndexerRegistry indexerRegistry = Mockito.mock(IndexerRegistry.class);
 
@@ -58,14 +46,13 @@ public class IndexableActionableDynamicQueryTest {
 		).thenReturn(
 			Mockito.mock(Indexer.class)
 		);
-
-		ReflectionTestUtil.setFieldValue(
-			IndexerRegistryUtil.class, "_indexerRegistry", indexerRegistry);
 	}
 
 	@After
 	public void tearDown() {
-		_serviceRegistration.unregister();
+		_indexWriterHelperServiceRegistration.unregister();
+		_indexerRegistryServiceRegistration.unregister();
+		_portalExecutorManagerServiceRegistration.unregister();
 	}
 
 	@Test
@@ -107,10 +94,19 @@ public class IndexableActionableDynamicQueryTest {
 	protected Document document1 = Mockito.mock(Document.class);
 	protected Document document2 = Mockito.mock(Document.class);
 	protected Document document3 = Mockito.mock(Document.class);
-	protected IndexableActionableDynamicQuery indexableActionableDynamicQuery;
+	protected IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+		new IndexableActionableDynamicQuery();
 	protected IndexWriterHelper indexWriterHelper = Mockito.mock(
 		IndexWriterHelper.class);
 
-	private ServiceRegistration<?> _serviceRegistration;
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
+
+	private ServiceRegistration<IndexerRegistry>
+		_indexerRegistryServiceRegistration;
+	private ServiceRegistration<IndexWriterHelper>
+		_indexWriterHelperServiceRegistration;
+	private ServiceRegistration<PortalExecutorManager>
+		_portalExecutorManagerServiceRegistration;
 
 }

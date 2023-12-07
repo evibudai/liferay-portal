@@ -1,25 +1,27 @@
 definition {
 
-	macro addCategoryLogLevels {
+	@summary = "Add ${categoryLevel} to ${categoryName}"
+	macro addCategoryLogLevels(categoryLevel = null, categoryName = null) {
 		Navigator.gotoNavItem(navItem = "Log Levels");
 
 		LexiconEntry.gotoAdd();
 
 		Type(
 			locator1 = "ServerAdministrationLogLevels#ADD_CATEGORY_NAME_FIELD",
-			value1 = "${categoryName}");
+			value1 = ${categoryName});
 
 		Select(
 			locator1 = "ServerAdministrationLogLevels#ADD_CATEGORY_PRIORITY_SELECT",
-			value1 = "${categoryLevel}");
+			value1 = ${categoryLevel});
 
 		PortletEntry.save();
 	}
 
-	macro configureFileUploadOverallMaximumFileSize {
+	@summary = "Configure the file upload overall ${maxFileSize}"
+	macro configureFileUploadOverallMaximumFileSize(maxFileSize = null) {
 		Type(
 			locator1 = "ServerAdministrationFileUploads#GENERAL_OVERALL_MAX_FILE_SIZE_FIELD",
-			value1 = "${maxFileSize}");
+			value1 = ${maxFileSize});
 
 		AssertClick(
 			locator1 = "Button#SAVE",
@@ -30,8 +32,11 @@ definition {
 			value1 = "Your request completed successfully.");
 	}
 
-	macro configureMailServerSettings {
-		Navigator.gotoNavItem(navItem = "Mail");
+	@summary = "Configure the mail server settings"
+	macro configureMailServerSettings(userPassword = null, needsReply = null, userName = null) {
+		if (IsElementPresent(key_navItem = "Mail", locator1 = "NavBar#NAV_ITEM_LINK")) {
+			Navigator.gotoNavItem(navItem = "Mail");
+		}
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_POP_SERVER",
@@ -39,11 +44,11 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_PORT",
-			value1 = "995");
+			value1 = 995);
 
 		Check(locator1 = "ServerAdministrationMail#INCOMING_SECURE_NETWORK_CONNECTION_CHECKBOX");
 
-		if ("${needsReply}" == "true") {
+		if (${needsReply} == "true") {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_USER_NAME",
 				value1 = "recent:${userName}");
@@ -51,12 +56,12 @@ definition {
 		else {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_USER_NAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_PASSWORD",
-			value1 = "${userPassword}");
+			value1 = ${userPassword});
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_SMTP_SERVER",
@@ -64,11 +69,11 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_PORT",
-			value1 = "465");
+			value1 = 465);
 
 		Check(locator1 = "ServerAdministrationMail#OUTGOING_SECURE_CONNECTION_CHECKBOX");
 
-		if ("${needsReply}" == "true") {
+		if (${needsReply} == "true") {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_USER_NAME",
 				value1 = "recent:${userName}");
@@ -76,12 +81,12 @@ definition {
 		else {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_USER_NAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_PASSWORD",
-			value1 = "${userPassword}");
+			value1 = ${userPassword});
 
 		AssertClick(
 			locator1 = "Button#SAVE",
@@ -92,14 +97,15 @@ definition {
 			value1 = "Your request completed successfully.");
 	}
 
-	macro executeScript {
+	@summary = "Execute a groovy ${script}"
+	macro executeScript(htmlOutput = null, language = null, script = null) {
 		Navigator.gotoNavItem(navItem = "Script");
 
 		Select(
 			locator1 = "ServerAdministrationScript#LANGUAGE_SELECT",
-			value1 = "${language}");
+			value1 = ${language});
 
-		if ("${htmlOutput}" == "true") {
+		if (${htmlOutput} == "true") {
 			Select(
 				key_selectFieldLabel = "Output",
 				locator1 = "Select#ANY",
@@ -108,7 +114,7 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationScript#SCRIPT_TEXT",
-			value1 = "${script}");
+			value1 = ${script});
 
 		AssertClick(
 			locator1 = "ServerAdministrationScript#EXECUTE_BUTTON",
@@ -117,16 +123,17 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro executeServerResourcesActions {
+	@summary = "Execute server resource actions"
+	macro executeServerResourcesActions(actionsDescription = null) {
 		Navigator.gotoNavItem(navItem = "Resources");
 
 		Panel.expandPanel(panel = "Clean Up Actions");
 
-		var key_actionsDescription = "${actionsDescription}";
+		var key_actionsDescription = ${actionsDescription};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "ServerAdministrationResources#ACTIONS_TABLE_DESCRIPTION",
-			value1 = "${actionsDescription}");
+			value1 = ${actionsDescription});
 
 		AssertClick(
 			locator1 = "ServerAdministrationResources#ACTIONS_TABLE_EXECUTE",
@@ -135,17 +142,16 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro openServerAdmin {
+	@summary = "Open the server admin via URL"
+	macro openServerAdmin(baseURL = null) {
 		Navigator.openWithAppendToBaseURL(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_server_admin_web_portlet_ServerAdminPortlet");
 	}
 
-	macro tearDownDMFileUploadSettings {
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+	@summary = "TearDown DM File Upload settings"
+	macro tearDownDMFileUploadSettings() {
+		ServerAdministration.openServerAdmin();
 
 		Navigator.gotoNavItem(navItem = "File Uploads");
 
@@ -158,11 +164,9 @@ definition {
 			value1 = "Save");
 	}
 
-	macro tearDownMailServerSettings {
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+	@summary = "TearDown Mail server settings"
+	macro tearDownMailServerSettings() {
+		ServerAdministration.openServerAdmin();
 
 		Navigator.gotoNavItem(navItem = "Mail");
 
@@ -172,7 +176,7 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#INCOMING_PORT",
-			value1 = "110");
+			value1 = 110);
 
 		Uncheck(locator1 = "ServerAdministrationMail#INCOMING_SECURE_NETWORK_CONNECTION_CHECKBOX");
 
@@ -190,7 +194,7 @@ definition {
 
 		Type(
 			locator1 = "ServerAdministrationMail#OUTGOING_PORT",
-			value1 = "25");
+			value1 = 25);
 
 		Uncheck(locator1 = "ServerAdministrationMail#OUTGOING_SECURE_CONNECTION_CHECKBOX");
 
@@ -211,50 +215,55 @@ definition {
 			value1 = "Your request completed successfully.");
 	}
 
-	macro viewCategoryLogLevels {
+	@summary = "View the category log levels for category ${categoryName}"
+	macro viewCategoryLogLevels(categoryName = null) {
 		Navigator.gotoNavItem(navItem = "Log Levels");
 
-		Search.searchCP(searchTerm = "${categoryName}");
+		Search.searchCP(searchTerm = ${categoryName});
 
 		AssertElementPresent(
-			key_categoryName = "${categoryName}",
+			key_categoryName = ${categoryName},
 			locator1 = "ServerAdministrationLogLevels#CATEGORY_NAME");
 
 		AssertSelectedLabel(
-			key_categoryName = "${categoryName}",
+			key_categoryName = ${categoryName},
 			locator1 = "ServerAdministrationLogLevels#CATEGORY_LEVEL_SELECT",
 			value1 = "DEBUG");
 	}
 
-	macro viewForbiddenErrorMessageAlert {
+	@summary = "Assert Error:Forbidden message"
+	macro viewForbiddenErrorMessageAlert() {
 		AssertTextEquals(
 			locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-			value1 = "Forbidden");
+			value1 = "Error:Forbidden");
 	}
 
-	macro viewJSONWSSecurityEmptyPage {
+	@summary = "Assert the Security page is empty"
+	macro viewJSONWSSecurityEmptyPage() {
 		AssertElementPresent(locator1 = "JSONWS#SECURITY_EMPTY_PAGE");
 	}
 
-	macro viewOutputField {
+	@summary = "Assert the output filter of ${valueName}"
+	macro viewOutputField(valueName = null) {
 		AssertTextEquals.assertPartialText(
 			locator1 = "ServerAdministrationScript#OUTPUT_FIELD",
-			value1 = "${valueName}");
+			value1 = ${valueName});
 	}
 
-	macro viewProperties {
+	@summary = "Click on the property title and assert the property name is present"
+	macro viewProperties(propertyName = null, propertyTitle = null) {
 		Navigator.gotoNavItem(navItem = "Properties");
 
-		var key_propertyName = "${propertyName}";
-		var key_propertyTitle = "${propertyTitle}";
+		var key_propertyName = ${propertyName};
+		var key_propertyTitle = ${propertyTitle};
 
 		AssertClick(
 			locator1 = "ServerAdministrationProperties#PORTAL_SYSTEM_PROPERTY_TITLE",
-			value1 = "${propertyTitle}");
+			value1 = ${propertyTitle});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "ServerAdministrationProperties#PORTAL_SYSTEM_PROPERTY_NAME",
-			value1 = "${propertyName}");
+			value1 = ${propertyName});
 	}
 
 }

@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Message Boards";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,7 +26,7 @@ definition {
 	}
 
 	@description = "Assert comments created outside of a publication will not result in changes within the publication."
-	@priority = "4"
+	@priority = 4
 	test AddPublicationWithUnrelatedComments {
 		JSONMBMessage.addMessage(
 			groupName = "Guest",
@@ -45,7 +45,7 @@ definition {
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
 
 		MessageboardsThread.viewCP(
-			replyCount = "1",
+			replyCount = 1,
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject");
 
@@ -57,13 +57,13 @@ definition {
 	}
 
 	@description = "Assert we can publish the publication with category with Message Board Thread."
-	@priority = "4"
+	@priority = 4
 	test PublishCategoryWithMessageBoardThread {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONMBMessage.addCategory(
 			categoryDescription = "MB Category Description",
@@ -87,27 +87,25 @@ definition {
 			changeTitle = "Message Boards Category",
 			changeType = "Added",
 			changeUser = "Test Test",
-			showAllItems = "true");
+			showSystemChanges = "true");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "site-name");
 
 		MessageboardsCategory.gotoCP(categoryName = "MB Category Name");
 
 		MessageboardsThread.viewCP(
-			replyCount = "0",
+			replyCount = 0,
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject",
 			userName = "Test Test");
 	}
 
 	@description = "Assert we can publish the publication with edited message board thread."
-	@priority = "4"
+	@priority = 4
 	test PublishEditedMessageBoardThread {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -157,9 +155,7 @@ definition {
 			changeType = "Modified",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
@@ -171,18 +167,13 @@ definition {
 	}
 
 	@description = "Assert we can publish the publication with message board thread and reiview the changes."
-	@priority = "4"
+	@priority = 4
 	test PublishNewMessageBoardThreadAndMessage {
-
-		// Workaround LPS-129369 and LPS-148424
-
-		property database.types = "hypersonic,mariadb,mysql,postgresql,sqlserver";
-
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONMBMessage.addMessage(
 			groupName = "Site Name",
@@ -207,7 +198,6 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Message Boards Message",
-			changeOrder = "2",
 			changeSite = "Site Name",
 			changeTitle = "RE: MB Thread Message Subject",
 			changeType = "Added",
@@ -220,14 +210,12 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "site-name");
 
 		MessageboardsThread.viewCP(
-			replyCount = "1",
+			replyCount = 1,
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject",
 			userName = "Test Test");
@@ -239,16 +227,18 @@ definition {
 	}
 
 	@description = "Assert we can publish the publication with split message board threads."
-	@priority = "4"
+	@priority = 4
 	test PublishSplitMessageBoardThreads {
-		JSONGroup.addGroup(groupName = "Site Name");
+		property test.liferay.virtual.instance = "false";
+
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Message Boards Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
+			column = 2,
 			groupName = "Site Name",
 			layoutName = "Message Boards Page",
 			widgetName = "Message Boards");
@@ -273,7 +263,7 @@ definition {
 
 		MessageboardsThread.gotoPG(
 			lastPostUserName = "Test Test",
-			replyCount = "1",
+			replyCount = 1,
 			threadSubject = "MB Thread Message Subject");
 
 		MessageboardsThread.splitThreadPG(
@@ -295,7 +285,6 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Message Boards Message",
-			changeOrder = "2",
 			changeSite = "Site Name",
 			changeTitle = "Split Reply Thread Subject",
 			changeType = "Added",
@@ -310,15 +299,12 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Message Boards Thread",
-			changeOrder = "2",
 			changeSite = "Site Name",
 			changeTitle = "MB Thread Split Subject",
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(publicationName = "Publication Name");
 
 		Navigator.gotoSitePage(
 			pageName = "Message Boards Page",
@@ -336,9 +322,12 @@ definition {
 	}
 
 	@description = "Assert we can resolve the conflict publications by discarding."
-	@priority = "4"
+	@priority = 4
 	test ResolveConflictingPublicationsByDiscarding {
-		JSONGroup.addGroup(groupName = "Site Name");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONMBMessage.addMessage(
 			groupName = "Site Name",
@@ -362,26 +351,20 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name 2");
 
-		JSONMBMessage.moveThreadToTrash(
-			groupName = "Site Name",
-			threadSubject = "MB Thread Message Subject");
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "site-name");
 
-		RecycleBin.openRecycleBinAdmin(siteURLKey = "site-name");
-
-		RecycleBin.deleteCP(
-			assetName = "MB Thread Message Subject",
-			assetType = "Message Boards Thread");
+		MessageboardsThread.deletePG(threadSubject = "MB Thread Message Subject");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name 1");
 
-		JSONPublications.publishPublication(publicationName = "Publication Name 1");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name 1");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name 1");
 
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "site-name");
 
 		MessageboardsThread.viewCP(
-			replyCount = "0",
+			replyCount = 0,
 			threadBody = "MB Thread Message Body Edit",
 			threadSubject = "MB Thread Message Subject Edit",
 			userName = "Test Test");
@@ -398,28 +381,28 @@ definition {
 
 		Publications.viewNeedsManualResolution(
 			entryTitle = "Asset",
-			warningMessage = "Modification Deletion Conflict: Deletion conflicts with a modification.");
+			warningMessage = "Entity Recently Updated");
 
 		Publications.viewNeedsManualResolution(
 			entryTitle = "Message Boards Thread",
-			warningMessage = "Modification Deletion Conflict: Deletion conflicts with a modification.");
+			warningMessage = "Entity Recently Updated");
 
 		Publications.viewNeedsManualResolution(
 			entryTitle = "Message Boards Message",
-			warningMessage = "Modification Deletion Conflict: Deletion conflicts with a modification.");
+			warningMessage = "Entity Recently Updated");
 
 		PublicationsChanges.discardChanges(
 			changeCategory = "Message Boards Thread",
-			changeTitle = "Message Boards Thread",
+			changeTitle = "MB Thread Message Subject",
 			conflictingChanges = "true",
-			entryTitle = "Message Boards Thread");
+			entryTitle = "MB Thread Message Subject");
 
 		Publications.publishPublication(publicationName = "Publication Name 2");
 
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "site-name");
 
 		MessageboardsThread.viewCP(
-			replyCount = "0",
+			replyCount = 0,
 			threadBody = "MB Thread Message Body Edit",
 			threadSubject = "MB Thread Message Subject Edit",
 			userName = "Test Test");

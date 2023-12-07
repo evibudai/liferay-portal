@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.info.collection.provider;
 
-import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -24,7 +14,8 @@ import com.liferay.info.collection.provider.FilteredInfoCollectionProvider;
 import com.liferay.info.collection.provider.InfoCollectionProvider;
 import com.liferay.info.collection.provider.SingleFormVariationInfoCollectionProvider;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.type.SelectInfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
+import com.liferay.info.field.type.OptionInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.filter.InfoFilter;
 import com.liferay.info.filter.KeywordsInfoFilter;
@@ -37,7 +28,9 @@ import com.liferay.info.sort.Sort;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.web.internal.util.JournalSearcherUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.QueryConfig;
@@ -48,17 +41,16 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portlet.asset.util.comparator.AssetTagNameComparator;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,9 +58,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Eudaldo Alonso
  */
-@Component(
-	enabled = false, immediate = true, service = InfoCollectionProvider.class
-)
+@Component(enabled = false, service = InfoCollectionProvider.class)
 public class BasicWebContentSingleFormVariationInfoCollectionProvider
 	implements ConfigurableInfoCollectionProvider<JournalArticle>,
 			   FilteredInfoCollectionProvider<JournalArticle>,
@@ -78,13 +68,15 @@ public class BasicWebContentSingleFormVariationInfoCollectionProvider
 	public InfoPage<JournalArticle> getCollectionInfoPage(
 		CollectionQuery collectionQuery) {
 
-		List<JournalArticle> articles =
+		SearchResponse searchResponse =
 			JournalSearcherUtil.searchJournalArticles(
 				searchContext -> _populateSearchContext(
 					collectionQuery, searchContext));
 
 		return InfoPage.of(
-			articles, collectionQuery.getPagination(), articles.size());
+			JournalSearcherUtil.transformJournalArticles(
+				searchResponse.getDocuments71()),
+			collectionQuery.getPagination(), searchResponse.getTotalHits());
 	}
 
 	@Override
@@ -110,15 +102,7 @@ public class BasicWebContentSingleFormVariationInfoCollectionProvider
 
 	@Override
 	public String getFormVariationKey() {
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
-			serviceContext.getScopeGroupId(),
-			_portal.getClassNameId(JournalArticle.class.getName()),
-			"BASIC-WEB-CONTENT", true);
-
-		return String.valueOf(ddmStructure.getStructureId());
+		return String.valueOf(_getDDDMStructureId());
 	}
 
 	@Override
@@ -132,42 +116,42 @@ public class BasicWebContentSingleFormVariationInfoCollectionProvider
 	}
 
 	private InfoField<?> _getAssetTagsInfoField() {
-		List<SelectInfoFieldType.Option> options = new ArrayList<>();
-
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		List<AssetTag> assetTags = new ArrayList<>(
-			_assetTagLocalService.getGroupTags(
-				serviceContext.getScopeGroupId()));
-
-		assetTags.sort(new AssetTagNameComparator(true));
-
-		for (AssetTag assetTag : assetTags) {
-			options.add(
-				new SelectInfoFieldType.Option(
-					new SingleValueInfoLocalizedValue<>(assetTag.getName()),
-					assetTag.getName()));
-		}
-
-		InfoField.FinalStep<?> finalStep = InfoField.builder(
+		return InfoField.builder(
 		).infoFieldType(
-			SelectInfoFieldType.INSTANCE
+			MultiselectInfoFieldType.INSTANCE
 		).namespace(
 			StringPool.BLANK
 		).name(
 			Field.ASSET_TAG_NAMES
 		).attribute(
-			SelectInfoFieldType.MULTIPLE, true
-		).attribute(
-			SelectInfoFieldType.OPTIONS, options
+			MultiselectInfoFieldType.OPTIONS,
+			TransformUtil.transform(
+				_assetTagLocalService.getGroupTags(
+					serviceContext.getScopeGroupId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, new AssetTagNameComparator(true)),
+				assetTag -> new OptionInfoFieldType(
+					new SingleValueInfoLocalizedValue<>(assetTag.getName()),
+					assetTag.getName()))
 		).labelInfoLocalizedValue(
 			InfoLocalizedValue.localize(getClass(), "tag")
 		).localizable(
 			true
-		);
+		).build();
+	}
 
-		return finalStep.build();
+	private long _getDDDMStructureId() {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
+			serviceContext.getScopeGroupId(),
+			_portal.getClassNameId(JournalArticle.class.getName()),
+			"BASIC-WEB-CONTENT", true);
+
+		return ddmStructure.getStructureId();
 	}
 
 	private SearchContext _populateSearchContext(
@@ -176,17 +160,16 @@ public class BasicWebContentSingleFormVariationInfoCollectionProvider
 		Map<String, Serializable> attributes = searchContext.getAttributes();
 
 		attributes.put(Field.STATUS, WorkflowConstants.STATUS_APPROVED);
-		attributes.put("ddmStructureKey", "BASIC-WEB-CONTENT");
 		attributes.put("head", true);
-		attributes.put("latest", true);
 
 		searchContext.setAttributes(attributes);
 
-		Optional<Map<String, String[]>> configurationOptional =
-			collectionQuery.getConfigurationOptional();
+		Map<String, String[]> configuration =
+			collectionQuery.getConfiguration();
 
-		Map<String, String[]> configuration = configurationOptional.orElse(
-			Collections.emptyMap());
+		if (configuration == null) {
+			configuration = Collections.emptyMap();
+		}
 
 		String[] assetTagNames = configuration.get(Field.ASSET_TAG_NAMES);
 
@@ -202,6 +185,8 @@ public class BasicWebContentSingleFormVariationInfoCollectionProvider
 			searchContext.setAttribute(Field.TITLE, title[0]);
 		}
 
+		searchContext.setClassTypeIds(new long[] {_getDDDMStructureId()});
+
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -214,21 +199,16 @@ public class BasicWebContentSingleFormVariationInfoCollectionProvider
 		searchContext.setGroupIds(
 			new long[] {serviceContext.getScopeGroupId()});
 
-		Optional<KeywordsInfoFilter> keywordsInfoFilterOptional =
-			collectionQuery.getInfoFilterOptional(KeywordsInfoFilter.class);
+		KeywordsInfoFilter keywordsInfoFilter = collectionQuery.getInfoFilter(
+			KeywordsInfoFilter.class);
 
-		if (keywordsInfoFilterOptional.isPresent()) {
-			KeywordsInfoFilter keywordsInfoFilter =
-				keywordsInfoFilterOptional.get();
-
+		if (keywordsInfoFilter != null) {
 			searchContext.setKeywords(keywordsInfoFilter.getKeywords());
 		}
 
-		Optional<Sort> sortOptional = collectionQuery.getSortOptional();
+		Sort sort = collectionQuery.getSort();
 
-		if (sortOptional.isPresent()) {
-			Sort sort = sortOptional.get();
-
+		if (sort != null) {
 			searchContext.setSorts(
 				new com.liferay.portal.kernel.search.Sort(
 					sort.getFieldName(),

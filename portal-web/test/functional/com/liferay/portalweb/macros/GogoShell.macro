@@ -1,32 +1,64 @@
 definition {
 
-	macro executeCommand {
+	@summary = "Execute ${commandName} on Gogo Shell"
+	macro executeCommand(commandName = null) {
 		Type(
 			locator1 = "GogoShell#COMMAND_FIELD",
-			value1 = "${commandName}");
+			value1 = ${commandName});
 
 		AssertClick(
 			locator1 = "GogoShell#EXECUTE_BUTTON",
 			value1 = "Execute");
 	}
 
-	macro getModuleID {
-		GogoShell.listModuleStatus(moduleName = "${moduleName}");
+	@summary = "Execute a Gogo Shell command via telnet"
+	macro executeCommandViaTelnet(expectedOutput = null, command = null) {
+		if (!(isSet(nodePort))) {
+			var nodePort = 8080;
+		}
+
+		var leadingPortNumber = StringUtil.replace(${nodePort}, 080, "");
+
+		var bundleIndex = ${leadingPortNumber} - 8;
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
+		if (${bundleIndex} != 0) {
+			var liferayHome = "${liferayHome}-${bundleIndex}";
+		}
+
+		AntCommands.runCommand("build-test.xml", "execute-command-from-gogo-shell -Dbundle.index=${bundleIndex} -Dcommand=${command}");
+
+		if (isSet(expectedOutput)) {
+			var outputContent = FileUtil.read("${liferayHome}/gogo-output.txt");
+
+			if (contains(${outputContent}, ${expectedOutput})) {
+				echo("${expectedOutput} exists!");
+			}
+			else {
+				fail("${expectedOutput} does not exist!");
+			}
+		}
+	}
+
+	@summary = "Get the ${moduleName} ID"
+	macro getModuleID(moduleName = null) {
+		GogoShell.listModuleStatus(moduleName = ${moduleName});
 
 		AssertElementPresent(locator1 = "GogoShell#OUTPUT_FIELD");
 
 		var moduleStatusOutput = selenium.getText("GogoShell#OUTPUT_FIELD");
 
-		var partialModuleStatusOutput = StringUtil.stripBetween("${moduleStatusOutput}", "START", "Name");
+		var partialModuleStatusOutput = StringUtil.stripBetween(${moduleStatusOutput}, "START", "Name");
 
-		var originalmoduleId = StringUtil.extractFirst("${partialModuleStatusOutput}", "|");
+		var originalmoduleId = StringUtil.extractFirst(${partialModuleStatusOutput}, "|");
 
-		var moduleId = StringUtil.trim("${originalmoduleId}");
+		var moduleId = StringUtil.trim(${originalmoduleId});
 
-		return "${moduleId}";
+		return ${moduleId};
 	}
 
-	macro listModuleStatus {
+	@summary = "List the ${moduleName} status on Gogo Shell"
+	macro listModuleStatus(moduleName = null) {
 		Type(
 			locator1 = "GogoShell#COMMAND_FIELD",
 			value1 = "lb ${moduleName}");
@@ -36,11 +68,20 @@ definition {
 			value1 = "Execute");
 	}
 
-	macro openGogoShellAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_gogo_shell_web_internal_portlet_GogoShellPortlet");
+	@summary = "Open the Gogo Shell Admin via URL"
+	macro openGogoShellAdmin(baseURL = null) {
+		if (isSet(baseURL)) {
+			Navigator.openWithAppendToBaseURL(
+				baseURL = ${baseURL},
+				urlAppend = "group/control_panel/manage?p_p_id=com_liferay_gogo_shell_web_internal_portlet_GogoShellPortlet");
+		}
+		else {
+			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_gogo_shell_web_internal_portlet_GogoShellPortlet");
+		}
 	}
 
-	macro startModule {
+	@summary = "Start ${moduleId} via Gogo Shell"
+	macro startModule(moduleId = null) {
 		Type(
 			locator1 = "GogoShell#COMMAND_FIELD",
 			value1 = "start ${moduleId}");
@@ -50,7 +91,8 @@ definition {
 			value1 = "Execute");
 	}
 
-	macro stopModule {
+	@summary = "Stop ${moduleId} via Gogo Shell"
+	macro stopModule(moduleId = null) {
 		Type(
 			locator1 = "GogoShell#COMMAND_FIELD",
 			value1 = "stop ${moduleId}");
@@ -60,24 +102,27 @@ definition {
 			value1 = "Execute");
 	}
 
-	macro viewModuleStatus {
-		GogoShell.listModuleStatus(moduleName = "${moduleName}");
+	@summary = "Assert ${moduleStatus} on Gogo Shell"
+	macro viewModuleStatus(moduleStatus = null, moduleName = null) {
+		GogoShell.listModuleStatus(moduleName = ${moduleName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "GogoShell#OUTPUT_FIELD",
-			value1 = "${moduleStatus}");
+			value1 = ${moduleStatus});
 	}
 
-	macro viewNoOutput {
+	@summary = "Assert the output is not ${outputContent}"
+	macro viewNoOutput(outputContent = null) {
 		AssertTextNotPresent(
 			locator1 = "GogoShell#OUTPUT_FIELD",
-			value1 = "${outputContent}");
+			value1 = ${outputContent});
 	}
 
-	macro viewOutput {
+	@summary = "Assert the ${outputContent}"
+	macro viewOutput(outputContent = null) {
 		AssertTextEquals.assertPartialText(
 			locator1 = "GogoShell#OUTPUT_FIELD",
-			value1 = "${outputContent}");
+			value1 = ${outputContent});
 	}
 
 }

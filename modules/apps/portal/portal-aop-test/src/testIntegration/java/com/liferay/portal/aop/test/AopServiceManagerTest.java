@@ -1,32 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.aop.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.concurrent.DefaultNoticeableFuture;
+import com.liferay.petra.function.UnsafeSupplier;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.spring.aop.AopCacheManager;
 import com.liferay.portal.spring.aop.AopInvocationHandler;
 import com.liferay.portal.spring.transaction.TransactionAttributeAdapter;
-import com.liferay.portal.spring.transaction.TransactionHandler;
+import com.liferay.portal.spring.transaction.TransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionStatusAdapter;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -35,8 +29,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 import java.util.Dictionary;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -52,9 +49,14 @@ import org.osgi.framework.PrototypeServiceFactory;
 import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationListener;
 import org.osgi.service.log.LogListener;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.service.log.LogService;
+
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * @author Preston Crary
@@ -68,7 +70,7 @@ public class AopServiceManagerTest {
 		new LiferayIntegrationTestRule();
 
 	@Before
-	public void setUp() throws ReflectiveOperationException {
+	public void setUp() throws Exception {
 		Bundle bundle = FrameworkUtil.getBundle(AopServiceManagerTest.class);
 
 		_bundleContext = bundle.getBundleContext();
@@ -82,6 +84,18 @@ public class AopServiceManagerTest {
 		_getServiceMethod = serviceObjectsClass.getMethod("getService");
 		_ungetServiceMethod = serviceObjectsClass.getMethod(
 			"ungetService", Object.class);
+
+		_configuration = _configurationAdmin.getConfiguration(
+			"com.liferay.portal.aop.internal.AopServiceManager",
+			StringPool.QUESTION);
+
+		_updateConfiguration(
+			MapUtil.singletonDictionary("parallel.enabled", false));
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		_updateConfiguration(null);
 	}
 
 	@Test
@@ -93,18 +107,18 @@ public class AopServiceManagerTest {
 				"key", "value"
 			).build();
 
+		TestTransactionExecutor testTransactionExecutor =
+			new TestTransactionExecutor();
+
+		ServiceRegistration<TransactionExecutor>
+			transactionExecutorServiceRegistration =
+				_bundleContext.registerService(
+					TransactionExecutor.class, testTransactionExecutor,
+					properties);
+
 		ServiceRegistration<AopService> aopServiceServiceRegistration =
 			_bundleContext.registerService(
 				AopService.class, new TestServiceImpl(), properties);
-
-		TestTransactionHandler testTransactionHandler =
-			new TestTransactionHandler();
-
-		ServiceRegistration<TransactionHandler>
-			transactionExecutorServiceRegistration =
-				_bundleContext.registerService(
-					TransactionHandler.class, testTransactionHandler,
-					properties);
 
 		ServiceReference<TestService> testServiceServiceReference =
 			_bundleContext.getServiceReference(TestService.class);
@@ -120,11 +134,11 @@ public class AopServiceManagerTest {
 
 			Assert.assertTrue(ProxyUtil.isProxyClass(testService.getClass()));
 
-			Assert.assertFalse(testTransactionHandler._called);
+			Assert.assertFalse(testTransactionExecutor._called);
 
 			Assert.assertSame(testService, testService.getEnclosingAopProxy());
 
-			Assert.assertTrue(testTransactionHandler._called);
+			Assert.assertTrue(testTransactionExecutor._called);
 
 			properties.put("key", "value2");
 
@@ -281,7 +295,46 @@ public class AopServiceManagerTest {
 		}
 	}
 
+	private void _updateConfiguration(Dictionary<String, Object> dictionary)
+		throws Exception {
+
+		CountDownLatch countDownLatch = new CountDownLatch(1);
+
+		ServiceRegistration<?> serviceRegistration =
+			_bundleContext.registerService(
+				ConfigurationListener.class,
+				configurationEvent -> {
+					if (Objects.equals(
+							configurationEvent.getPid(),
+							"com.liferay.portal.aop.internal." +
+								"AopServiceManager")) {
+
+						countDownLatch.countDown();
+					}
+				},
+				null);
+
+		try {
+			if (dictionary == null) {
+				_configuration.delete();
+			}
+			else {
+				_configuration.update(dictionary);
+			}
+
+			countDownLatch.await();
+		}
+		finally {
+			serviceRegistration.unregister();
+		}
+	}
+
 	private BundleContext _bundleContext;
+	private Configuration _configuration;
+
+	@Inject
+	private ConfigurationAdmin _configurationAdmin;
+
 	private Method _getServiceMethod;
 	private Method _getServiceObjectsMethod;
 
@@ -334,12 +387,27 @@ public class AopServiceManagerTest {
 
 	}
 
-	private static class TestTransactionHandler implements TransactionHandler {
+	private static class TestTransactionExecutor
+		implements TransactionExecutor {
 
 		@Override
 		public void commit(
 			TransactionAttributeAdapter transactionAttributeAdapter,
 			TransactionStatusAdapter transactionStatusAdapter) {
+		}
+
+		@Override
+		public <T> T execute(
+				TransactionAttributeAdapter transactionAttributeAdapter,
+				UnsafeSupplier<T, Throwable> unsafeSupplier)
+			throws Throwable {
+
+			return null;
+		}
+
+		@Override
+		public PlatformTransactionManager getPlatformTransactionManager() {
+			return null;
 		}
 
 		@Override

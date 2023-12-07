@@ -2,16 +2,16 @@
 @import 'sidebar';
 
 $table-responsive-margin-left-md: 375px !default;
-$user-icon-color-0: $cadmin-secondary !default;
-$user-icon-color-1: $cadmin-blue !default;
-$user-icon-color-2: $cadmin-orange !default;
-$user-icon-color-3: $cadmin-red !default;
-$user-icon-color-4: $cadmin-teal !default;
-$user-icon-color-5: $cadmin-pink !default;
-$user-icon-color-6: $cadmin-green !default;
-$user-icon-color-7: $cadmin-purple !default;
-$user-icon-color-8: $cadmin-yellow !default;
-$user-icon-color-9: $cadmin-cyan !default;
+$user-icon-color-0: #6b6c7e !default;
+$user-icon-color-1: #4a97f2 !default;
+$user-icon-color-2: #e87523 !default;
+$user-icon-color-3: #fb625b !default;
+$user-icon-color-4: #4fa488 !default;
+$user-icon-color-5: #fe4fb5 !default;
+$user-icon-color-6: #879b7a !default;
+$user-icon-color-7: #af78ff !default;
+$user-icon-color-8: #bf8c2a !default;
+$user-icon-color-9: #5f9bc7 !default;
 
 html#{$cadmin-selector} {
 	.cadmin {
@@ -146,6 +146,35 @@ html#{$cadmin-selector} {
 			color: $user-icon-color-9;
 		}
 
+		// Autocomplete Input List
+
+		.yui3-aclist {
+			&-content {
+				background: $cadmin-white;
+				border: 1px solid #afafaf;
+				box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.58);
+			}
+
+			&-hidden {
+				visibility: hidden;
+			}
+
+			&-item {
+				padding: 2px 5px;
+
+				&-active {
+					background: #2647a0;
+					color: $cadmin-white;
+				}
+			}
+
+			&-list {
+				margin: 0;
+				overflow: hidden;
+				padding: 0;
+			}
+		}
+
 		// Taglib Move Boxes
 
 		.taglib-move-boxes {
@@ -251,6 +280,260 @@ html#{$cadmin-selector} {
 
 		&.mobile .taglib-move-boxes .selector-container {
 			display: none;
+		}
+
+		// CKEditor
+
+		.cke_chrome {
+			border: 1px solid $cadmin-gray-300;
+
+			.cke_bottom {
+				padding: 6px 8px 2px;
+			}
+
+			span.cke_top {
+				padding: 6px 7px;
+			}
+
+			.cke_contents {
+				border: 1px solid #e7e7e7;
+				margin: 0 -1px;
+			}
+
+			&.cke_focus .cke_contents {
+				border-color: $cadmin-primary-l1;
+			}
+
+			.cke_reset_all,
+			.cke_reset_all a,
+			.cke_reset_all textarea {
+				font: 12px sans-serif;
+				text-decoration: none;
+			}
+
+			a.cke_button {
+				border: 2px solid transparent;
+				margin: 0 1px;
+				padding: 6px;
+
+				.cke_button_icon {
+					height: 16px;
+					width: 16px;
+				}
+
+				.cke_button_label {
+					color: $cadmin-gray-600;
+					font-weight: 600;
+					margin-top: 1px;
+					padding-left: 3px;
+				}
+			}
+
+			.cke_combo_on a.cke_combo_button,
+			.cke_combo_off a.cke_combo_button:hover,
+			.cke_combo_off a.cke_combo_button:active,
+			a.cke_button_off:hover,
+			a.cke_button_off:active {
+				background-color: rgba(39, 40, 51, 0.04);
+			}
+
+			a.cke_button_on {
+				background-color: rgba(39, 40, 51, 0.06);
+			}
+
+			a.cke_button__source.cke_button_off
+				+ a.cke_button__expand.cke_button_disabled {
+				display: none;
+			}
+
+			a.cke_combo_button {
+				border: 2px solid transparent;
+				margin: 0 4px;
+				padding: 6px 18px;
+
+				.cke_combo_arrow {
+					border-left: 4px solid transparent;
+					border-right: 4px solid transparent;
+					border-top: 4px solid $cadmin-gray-600;
+				}
+
+				.cke_combo_open {
+					margin: 1px 1px 1px 10px;
+				}
+
+				.cke_combo_text {
+					color: $cadmin-gray-600;
+					font-weight: 600;
+				}
+			}
+
+			.cke_resizer {
+				border-width: 8px 8px 0 0;
+				height: 0;
+				margin: 6px -4px 2px;
+			}
+
+			.cke_toolgroup {
+				margin: 1px 4px 6px 0;
+				padding-right: 3px;
+			}
+		}
+
+		.CodeMirror {
+			font-family: monospace;
+
+			.CodeMirror-gutters {
+				background-color: #f7f7f7;
+				border-right: 1px solid #ddd;
+				min-height: 100%;
+			}
+
+			.CodeMirror-linenumber {
+				color: #999;
+				font-size: 14px;
+				min-width: 20px;
+				padding: 0 3px 0 5px;
+				text-align: right;
+			}
+
+			.CodeMirror-cursor {
+				border-left: 1px solid $cadmin-black;
+			}
+
+			.CodeMirror-scroll {
+				height: 100%;
+				margin-bottom: -50px;
+				margin-right: -50px;
+				overflow: scroll;
+				padding-bottom: 50px;
+			}
+
+			pre.CodeMirror-line,
+			pre.CodeMirror-line-like {
+				font-family: inherit;
+				margin: 0;
+				overflow: visible;
+				padding: 0 4px;
+				white-space: pre;
+			}
+
+			.CodeMirror-lines {
+				padding: 4px 0;
+			}
+
+			.CodeMirror-foldgutter {
+				width: 0.7em;
+			}
+
+			.CodeMirror-scroll,
+			.CodeMirror-sizer,
+			.CodeMirror-gutter,
+			.CodeMirror-gutters,
+			.CodeMirror-linenumber {
+				box-sizing: content-box;
+			}
+
+			.CodeMirror-measure {
+				visibility: hidden;
+			}
+
+			.CodeMirror-selected {
+				background: #d9d9d9;
+			}
+
+			&.CodeMirror-wrap pre.CodeMirror-line,
+			&.CodeMirror-wrap pre.CodeMirror-line-like {
+				white-space: pre-wrap;
+				word-break: normal;
+				word-wrap: break-word;
+			}
+
+			&.CodeMirror-focused .CodeMirror-selected {
+				background: #d7d4f0;
+			}
+
+			&.cm-s-default {
+				.cm-error,
+				.cm-invalidchar {
+					color: #f00;
+				}
+				.cm-header {
+					color: blue;
+				}
+				.cm-quote {
+					color: #090;
+				}
+				.cm-keyword {
+					color: #708;
+				}
+				.cm-atom {
+					color: #219;
+				}
+				.cm-number {
+					color: #164;
+				}
+				.cm-def {
+					color: #00f;
+				}
+				.cm-variable-3,
+				.cm-type {
+					color: #085;
+				}
+				.cm-comment {
+					color: #a50;
+				}
+				.cm-string {
+					color: #a11;
+				}
+				.cm-string-2 {
+					color: #f50;
+				}
+				.cm-qualifier,
+				.cm-meta {
+					color: #555;
+				}
+				.cm-builtin {
+					color: #30a;
+				}
+				.cm-bracket {
+					color: #997;
+				}
+				.cm-tag {
+					color: #170;
+				}
+				.cm-link,
+				.cm-attribute {
+					color: #00c;
+				}
+				.cm-hr {
+					color: #999;
+				}
+			}
+
+			.cm-negative {
+				color: #d44;
+			}
+
+			.cm-positive {
+				color: #292;
+			}
+
+			.cm-header,
+			.cm-strong {
+				font-weight: bold;
+			}
+
+			.cm-em {
+				font-style: italic;
+			}
+
+			.cm-link {
+				text-decoration: underline;
+			}
+
+			.cm-strikethrough {
+				text-decoration: line-through;
+			}
 		}
 
 		// Taglib Portlet Preview
@@ -606,58 +889,6 @@ html#{$cadmin-selector} {
 				}
 			}
 		}
-
-		// Info Bar
-
-		.info-bar-container {
-			background-color: #fff;
-			border-bottom: 1px solid #edf0f2;
-			min-height: 47px;
-
-			.info-bar {
-				padding: 0;
-			}
-
-			@include media-breakpoint-up(sm, $cadmin-grid-breakpoints) {
-				min-height: 59px;
-			}
-
-			.info-bar-default {
-				.taglib-workflow-status .workflow-version {
-					color: #6b6c7e;
-				}
-
-				.btn {
-					margin: 7px 0 7px 15px;
-
-					@include media-breakpoint-up(sm, $cadmin-grid-breakpoints) {
-						margin: 13px 0 13px 15px;
-					}
-				}
-			}
-
-			.info-bar-center {
-				left: 50%;
-				margin-top: 16px;
-				position: absolute;
-				text-align: center;
-				transform: translate(-50%);
-				width: 100%;
-
-				@include media-breakpoint-up(sm) {
-					margin-top: 20px;
-				}
-			}
-
-			&.affix {
-				min-height: 35px;
-				transition: min-height 0.15s ease;
-
-				.info-bar-center {
-					margin-top: 5px;
-				}
-			}
-		}
 	}
 
 	.portal-popup,
@@ -728,14 +959,6 @@ html#{$cadmin-selector} {
 
 		.login-container {
 			padding: $cadmin-modal-inner-padding;
-		}
-
-		.management-bar-default {
-			border-left-width: 0;
-			border-radius: 0;
-			border-right-width: 0;
-			border-top-width: 0;
-			margin-bottom: 0;
 		}
 
 		.navbar ~ .portlet-configuration-setup,
@@ -870,4 +1093,14 @@ html#{$cadmin-selector} {
 		display: block;
 		position: static;
 	}
+}
+
+body {
+	/* stylelint-disable */
+	--control-menu-container-height: calc(
+		var(--change-tracking-indicator-height, 0px) +
+			var(--control-menu-height, 0px) +
+			var(--staging-indicator-height, 0px)
+	);
+	/* stylelint-enable */
 }

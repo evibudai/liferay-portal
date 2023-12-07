@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.order.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.order.client.resource.v1_0.OrderRuleChannelResource;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.OrderRuleChannelSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -42,6 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -65,8 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -224,7 +215,7 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 				getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			OrderRuleChannel irrelevantOrderRuleChannel =
@@ -235,14 +226,18 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 			page =
 				orderRuleChannelResource.
 					getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantOrderRuleChannel),
+			assertContains(
+				irrelevantOrderRuleChannel,
 				(List<OrderRuleChannel>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		OrderRuleChannel orderRuleChannel1 =
@@ -258,12 +253,26 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 				getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(orderRuleChannel1, orderRuleChannel2),
-			(List<OrderRuleChannel>)page.getItems());
-		assertValid(page);
+		assertContains(
+			orderRuleChannel1, (List<OrderRuleChannel>)page.getItems());
+		assertContains(
+			orderRuleChannel2, (List<OrderRuleChannel>)page.getItems());
+		assertValid(
+			page,
+			testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -272,6 +281,14 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 
 		String externalReferenceCode =
 			testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_getExternalReferenceCode();
+
+		Page<OrderRuleChannel> orderRuleChannelPage =
+			orderRuleChannelResource.
+				getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			orderRuleChannelPage.getTotalCount());
 
 		OrderRuleChannel orderRuleChannel1 =
 			testGetOrderRuleByExternalReferenceCodeOrderRuleChannelsPage_addOrderRuleChannel(
@@ -288,20 +305,21 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		Page<OrderRuleChannel> page1 =
 			orderRuleChannelResource.
 				getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<OrderRuleChannel> orderRuleChannels1 =
 			(List<OrderRuleChannel>)page1.getItems();
 
 		Assert.assertEquals(
-			orderRuleChannels1.toString(), 2, orderRuleChannels1.size());
+			orderRuleChannels1.toString(), totalCount + 2,
+			orderRuleChannels1.size());
 
 		Page<OrderRuleChannel> page2 =
 			orderRuleChannelResource.
 				getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<OrderRuleChannel> orderRuleChannels2 =
 			(List<OrderRuleChannel>)page2.getItems();
@@ -312,12 +330,15 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		Page<OrderRuleChannel> page3 =
 			orderRuleChannelResource.
 				getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				orderRuleChannel1, orderRuleChannel2, orderRuleChannel3),
-			(List<OrderRuleChannel>)page3.getItems());
+		assertContains(
+			orderRuleChannel1, (List<OrderRuleChannel>)page3.getItems());
+		assertContains(
+			orderRuleChannel2, (List<OrderRuleChannel>)page3.getItems());
+		assertContains(
+			orderRuleChannel3, (List<OrderRuleChannel>)page3.getItems());
 	}
 
 	protected OrderRuleChannel
@@ -377,7 +398,7 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 			orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
 				id, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			OrderRuleChannel irrelevantOrderRuleChannel =
@@ -385,14 +406,18 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 					irrelevantId, randomIrrelevantOrderRuleChannel());
 
 			page = orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
-				irrelevantId, null, null, Pagination.of(1, 2), null);
+				irrelevantId, null, null, Pagination.of(1, (int)totalCount + 1),
+				null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantOrderRuleChannel),
+			assertContains(
+				irrelevantOrderRuleChannel,
 				(List<OrderRuleChannel>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetOrderRuleIdOrderRuleChannelsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		OrderRuleChannel orderRuleChannel1 =
@@ -406,12 +431,24 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		page = orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
 			id, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(orderRuleChannel1, orderRuleChannel2),
-			(List<OrderRuleChannel>)page.getItems());
-		assertValid(page);
+		assertContains(
+			orderRuleChannel1, (List<OrderRuleChannel>)page.getItems());
+		assertContains(
+			orderRuleChannel2, (List<OrderRuleChannel>)page.getItems());
+		assertValid(
+			page,
+			testGetOrderRuleIdOrderRuleChannelsPage_getExpectedActions(id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderRuleIdOrderRuleChannelsPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -450,43 +487,39 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 	public void testGetOrderRuleIdOrderRuleChannelsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetOrderRuleIdOrderRuleChannelsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetOrderRuleIdOrderRuleChannelsPageWithFilterStringContains()
+		throws Exception {
 
-		Long id = testGetOrderRuleIdOrderRuleChannelsPage_getId();
-
-		OrderRuleChannel orderRuleChannel1 =
-			testGetOrderRuleIdOrderRuleChannelsPage_addOrderRuleChannel(
-				id, randomOrderRuleChannel());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		OrderRuleChannel orderRuleChannel2 =
-			testGetOrderRuleIdOrderRuleChannelsPage_addOrderRuleChannel(
-				id, randomOrderRuleChannel());
-
-		for (EntityField entityField : entityFields) {
-			Page<OrderRuleChannel> page =
-				orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
-					id, null,
-					getFilterString(entityField, "eq", orderRuleChannel1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(orderRuleChannel1),
-				(List<OrderRuleChannel>)page.getItems());
-		}
+		testGetOrderRuleIdOrderRuleChannelsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetOrderRuleIdOrderRuleChannelsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetOrderRuleIdOrderRuleChannelsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetOrderRuleIdOrderRuleChannelsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetOrderRuleIdOrderRuleChannelsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetOrderRuleIdOrderRuleChannelsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -507,7 +540,7 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 			Page<OrderRuleChannel> page =
 				orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
 					id, null,
-					getFilterString(entityField, "eq", orderRuleChannel1),
+					getFilterString(entityField, operator, orderRuleChannel1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -521,6 +554,13 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		throws Exception {
 
 		Long id = testGetOrderRuleIdOrderRuleChannelsPage_getId();
+
+		Page<OrderRuleChannel> orderRuleChannelPage =
+			orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
+				id, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			orderRuleChannelPage.getTotalCount());
 
 		OrderRuleChannel orderRuleChannel1 =
 			testGetOrderRuleIdOrderRuleChannelsPage_addOrderRuleChannel(
@@ -536,19 +576,20 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 
 		Page<OrderRuleChannel> page1 =
 			orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
-				id, null, null, Pagination.of(1, 2), null);
+				id, null, null, Pagination.of(1, totalCount + 2), null);
 
 		List<OrderRuleChannel> orderRuleChannels1 =
 			(List<OrderRuleChannel>)page1.getItems();
 
 		Assert.assertEquals(
-			orderRuleChannels1.toString(), 2, orderRuleChannels1.size());
+			orderRuleChannels1.toString(), totalCount + 2,
+			orderRuleChannels1.size());
 
 		Page<OrderRuleChannel> page2 =
 			orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
-				id, null, null, Pagination.of(2, 2), null);
+				id, null, null, Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<OrderRuleChannel> orderRuleChannels2 =
 			(List<OrderRuleChannel>)page2.getItems();
@@ -558,12 +599,14 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 
 		Page<OrderRuleChannel> page3 =
 			orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
-				id, null, null, Pagination.of(1, 3), null);
+				id, null, null, Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				orderRuleChannel1, orderRuleChannel2, orderRuleChannel3),
-			(List<OrderRuleChannel>)page3.getItems());
+		assertContains(
+			orderRuleChannel1, (List<OrderRuleChannel>)page3.getItems());
+		assertContains(
+			orderRuleChannel2, (List<OrderRuleChannel>)page3.getItems());
+		assertContains(
+			orderRuleChannel3, (List<OrderRuleChannel>)page3.getItems());
 	}
 
 	@Test
@@ -691,24 +734,32 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 			testGetOrderRuleIdOrderRuleChannelsPage_addOrderRuleChannel(
 				id, orderRuleChannel2);
 
+		Page<OrderRuleChannel> page =
+			orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
+				id, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<OrderRuleChannel> ascPage =
 				orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
-					id, null, null, Pagination.of(1, 2),
+					id, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(orderRuleChannel1, orderRuleChannel2),
-				(List<OrderRuleChannel>)ascPage.getItems());
+			assertContains(
+				orderRuleChannel1, (List<OrderRuleChannel>)ascPage.getItems());
+			assertContains(
+				orderRuleChannel2, (List<OrderRuleChannel>)ascPage.getItems());
 
 			Page<OrderRuleChannel> descPage =
 				orderRuleChannelResource.getOrderRuleIdOrderRuleChannelsPage(
-					id, null, null, Pagination.of(1, 2),
+					id, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(orderRuleChannel2, orderRuleChannel1),
-				(List<OrderRuleChannel>)descPage.getItems());
+			assertContains(
+				orderRuleChannel2, (List<OrderRuleChannel>)descPage.getItems());
+			assertContains(
+				orderRuleChannel1, (List<OrderRuleChannel>)descPage.getItems());
 		}
 	}
 
@@ -918,6 +969,13 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 	}
 
 	protected void assertValid(Page<OrderRuleChannel> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<OrderRuleChannel> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<OrderRuleChannel> orderRuleChannels =
@@ -933,6 +991,25 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1127,14 +1204,16 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1151,6 +1230,10 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1160,18 +1243,18 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1199,11 +1282,47 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		}
 
 		if (entityFieldName.equals("channelExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					orderRuleChannel.getChannelExternalReferenceCode()));
-			sb.append("'");
+			Object object = orderRuleChannel.getChannelExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1219,11 +1338,48 @@ public abstract class BaseOrderRuleChannelResourceTestCase {
 		}
 
 		if (entityFieldName.equals("orderRuleExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					orderRuleChannel.getOrderRuleExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				orderRuleChannel.getOrderRuleExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

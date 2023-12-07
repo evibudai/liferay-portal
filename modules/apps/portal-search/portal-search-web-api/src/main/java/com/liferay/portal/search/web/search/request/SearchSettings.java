@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.search.request;
@@ -20,8 +11,6 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
-
-import java.util.Optional;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -36,23 +25,23 @@ public interface SearchSettings {
 	public void addFacet(Facet facet);
 
 	public SearchRequestBuilder getFederatedSearchRequestBuilder(
-		Optional<String> federatedSearchKeyOptional);
+		String federatedSearchKey);
 
-	public Optional<String> getKeywordsParameterName();
+	public String getKeywordsParameterName();
 
-	public Optional<Integer> getPaginationDelta();
+	public Integer getPaginationDelta();
 
-	public Optional<String> getPaginationDeltaParameterName();
+	public String getPaginationDeltaParameterName();
 
-	public Optional<Integer> getPaginationStart();
+	public Integer getPaginationStart();
 
-	public Optional<String> getPaginationStartParameterName();
+	public String getPaginationStartParameterName();
 
 	public QueryConfig getQueryConfig();
 
-	public Optional<String> getScope();
+	public String getScope();
 
-	public Optional<String> getScopeParameterName();
+	public String getScopeParameterName();
 
 	public SearchContext getSearchContext();
 

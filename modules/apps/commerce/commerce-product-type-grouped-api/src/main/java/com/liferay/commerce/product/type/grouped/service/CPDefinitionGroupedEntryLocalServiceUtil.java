@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.grouped.service;
@@ -44,26 +35,12 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.product.type.grouped.service.impl.CPDefinitionGroupedEntryLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
 	public static void addCPDefinitionGroupedEntries(
-			long cpDefinitionId, long[] entryCPDefinitionIds,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		getService().addCPDefinitionGroupedEntries(
-			cpDefinitionId, entryCPDefinitionIds, serviceContext);
-	}
-
-	public static void addCPDefinitionGroupedEntriesByEntryCProductIds(
 			long cpDefinitionId, long[] entryCProductIds,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
-		getService().addCPDefinitionGroupedEntriesByEntryCProductIds(
+		getService().addCPDefinitionGroupedEntries(
 			cpDefinitionId, entryCProductIds, serviceContext);
 	}
 
@@ -84,29 +61,13 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 			cpDefinitionGroupedEntry);
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
 	public static CPDefinitionGroupedEntry addCPDefinitionGroupedEntry(
-			long cpDefinitionId, long entryCPDefinitionId, double priority,
+			long cpDefinitionId, long entryCProductId, double priority,
 			int quantity,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addCPDefinitionGroupedEntry(
-			cpDefinitionId, entryCPDefinitionId, priority, quantity,
-			serviceContext);
-	}
-
-	public static CPDefinitionGroupedEntry
-			addCPDefinitionGroupedEntryByEntryCProductId(
-				long cpDefinitionId, long entryCProductId, double priority,
-				int quantity,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().addCPDefinitionGroupedEntryByEntryCProductId(
 			cpDefinitionId, entryCProductId, priority, quantity,
 			serviceContext);
 	}
@@ -291,17 +252,6 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 	}
 
 	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public static CPDefinitionGroupedEntry fetchCPDefinitionGroupedEntryByC_E(
-		long cpDefinitionId, long entryCPDefinitionId) {
-
-		return getService().fetchCPDefinitionGroupedEntryByC_E(
-			cpDefinitionId, entryCPDefinitionId);
-	}
-
-	/**
 	 * Returns the cp definition grouped entry matching the UUID and group.
 	 *
 	 * @param uuid the cp definition grouped entry's UUID
@@ -351,6 +301,15 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 
 		return getService().getCPDefinitionGroupedEntries(
 			cpDefinitionId, start, end, orderByComparator);
+	}
+
+	public static List<CPDefinitionGroupedEntry> getCPDefinitionGroupedEntries(
+			long companyId, long cpDefinitionId, String keywords, int start,
+			int end, com.liferay.portal.kernel.search.Sort sort)
+		throws PortalException {
+
+		return getService().getCPDefinitionGroupedEntries(
+			companyId, cpDefinitionId, keywords, start, end, sort);
 	}
 
 	public static List<CPDefinitionGroupedEntry>
@@ -407,6 +366,14 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 		return getService().getCPDefinitionGroupedEntriesCount(cpDefinitionId);
 	}
 
+	public static int getCPDefinitionGroupedEntriesCount(
+			long companyId, long cpDefinitionId, String keywords)
+		throws PortalException {
+
+		return getService().getCPDefinitionGroupedEntriesCount(
+			companyId, cpDefinitionId, keywords);
+	}
+
 	/**
 	 * Returns the cp definition grouped entry with the primary key.
 	 *
@@ -437,6 +404,16 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 
 		return getService().getCPDefinitionGroupedEntryByUuidAndGroupId(
 			uuid, groupId);
+	}
+
+	public static List<CPDefinitionGroupedEntry>
+			getEntryCProductCPDefinitionGroupedEntries(
+				long entryCProductId, int start, int end,
+				OrderByComparator<CPDefinitionGroupedEntry> orderByComparator)
+		throws PortalException {
+
+		return getService().getEntryCProductCPDefinitionGroupedEntries(
+			entryCProductId, start, end, orderByComparator);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
@@ -472,6 +449,22 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
+	public static com.liferay.portal.kernel.search.BaseModelSearchResult
+		<CPDefinitionGroupedEntry> searchCPDefinitionGroupedEntries(
+				com.liferay.portal.kernel.search.SearchContext searchContext)
+			throws PortalException {
+
+		return getService().searchCPDefinitionGroupedEntries(searchContext);
+	}
+
+	public static int searchCPDefinitionGroupedEntriesCount(
+			com.liferay.portal.kernel.search.SearchContext searchContext)
+		throws PortalException {
+
+		return getService().searchCPDefinitionGroupedEntriesCount(
+			searchContext);
+	}
+
 	/**
 	 * Updates the cp definition grouped entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -499,6 +492,12 @@ public class CPDefinitionGroupedEntryLocalServiceUtil {
 
 	public static CPDefinitionGroupedEntryLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(
+		CPDefinitionGroupedEntryLocalService service) {
+
+		_service = service;
 	}
 
 	private static volatile CPDefinitionGroupedEntryLocalService _service;

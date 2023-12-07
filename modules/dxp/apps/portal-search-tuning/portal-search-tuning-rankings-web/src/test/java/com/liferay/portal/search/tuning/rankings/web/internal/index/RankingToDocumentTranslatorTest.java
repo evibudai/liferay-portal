@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.rankings.web.internal.index;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.Field;
@@ -24,8 +16,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -85,10 +75,13 @@ public class RankingToDocumentTranslatorTest {
 			document, null);
 
 		Assert.assertEquals("[]", String.valueOf(ranking2.getAliases()));
+		Assert.assertEquals(null, ranking2.getGroupExternalReferenceCode());
 		Assert.assertEquals(
 			"[]", String.valueOf(ranking2.getHiddenDocumentIds()));
 		Assert.assertEquals("[]", String.valueOf(ranking2.getPins()));
 		Assert.assertEquals("[]", String.valueOf(ranking2.getQueryStrings()));
+		Assert.assertEquals(
+			null, ranking2.getSXPBlueprintExternalReferenceCode());
 	}
 
 	@Test
@@ -156,14 +149,9 @@ public class RankingToDocumentTranslatorTest {
 	}
 
 	private String _toString(List<Ranking.Pin> pins) {
-		Stream<Ranking.Pin> stream = pins.stream();
-
 		return String.valueOf(
-			stream.map(
-				pin -> pin.getPosition() + "=" + pin.getDocumentId()
-			).collect(
-				Collectors.toList()
-			));
+			TransformUtil.transform(
+				pins, pin -> pin.getPosition() + "=" + pin.getDocumentId()));
 	}
 
 	private DocumentToRankingTranslator _documentToRankingTranslator;

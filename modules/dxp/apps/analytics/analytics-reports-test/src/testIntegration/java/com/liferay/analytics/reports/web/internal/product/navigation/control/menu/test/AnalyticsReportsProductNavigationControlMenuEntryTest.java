@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.product.navigation.control.menu.test;
@@ -18,30 +9,31 @@ import com.liferay.analytics.reports.constants.AnalyticsReportsWebKeys;
 import com.liferay.analytics.reports.test.MockObject;
 import com.liferay.analytics.reports.test.analytics.reports.info.item.MockObjectAnalyticsReportsInfoItem;
 import com.liferay.analytics.reports.test.util.MockContextUtil;
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PrefsProps;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PrefsPropsImpl;
 import com.liferay.portlet.PortalPreferencesImpl;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 
+import java.util.Dictionary;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
@@ -109,18 +101,27 @@ public class AnalyticsReportsProductNavigationControlMenuEntryTest {
 	}
 
 	@Test
-	public void testIsShowWithIsShowAnalyticsReportsInfoItemWithAnalyticsConnected()
+	public void testIsShowWithIsShowAnalyticsReportsInfoItem()
 		throws Exception {
 
-		PrefsProps prefsProps = PrefsPropsUtil.getPrefsProps();
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						AnalyticsConfiguration.class.getName(),
+						HashMapDictionaryBuilder.<String, Object>put(
+							"liferayAnalyticsDataSourceId",
+							RandomTestUtil.nextLong()
+						).put(
+							"liferayAnalyticsEnableAllGroupIds", true
+						).put(
+							"liferayAnalyticsFaroBackendSecuritySignature",
+							RandomTestUtil.randomString()
+						).put(
+							"liferayAnalyticsFaroBackendURL",
+							RandomTestUtil.randomString()
+						).build())) {
 
-		ValidPrefsPropsWrapper validPrefsPropsWrapper =
-			new ValidPrefsPropsWrapper(prefsProps);
-
-		ReflectionTestUtil.setFieldValue(
-			PrefsPropsUtil.class, "_prefsProps", validPrefsPropsWrapper);
-
-		try {
 			MockContextUtil.testWithMockContext(
 				new MockContextUtil.MockContext.Builder(
 				).mockObjectAnalyticsReportsInfoItem(
@@ -133,25 +134,22 @@ public class AnalyticsReportsProductNavigationControlMenuEntryTest {
 					_productNavigationControlMenuEntry.isShow(
 						_getHttpServletRequest())));
 		}
-		finally {
-			ReflectionTestUtil.setFieldValue(
-				PrefsPropsUtil.class, "_prefsProps", prefsProps);
-		}
 	}
 
 	@Test
-	public void testIsShowWithIsShowAnalyticsReportsInfoItemWithoutAnalyticsConnected()
+	public void testIsShowWithIsShowAnalyticsReportsInfoItemWithNullLiferayAnalyticsDataSourceId()
 		throws Exception {
 
-		PrefsProps prefsProps = PrefsPropsUtil.getPrefsProps();
+		Dictionary<String, Object> dictionary = new HashMapDictionary();
 
-		InvalidPropsWrapper invalidPropsWrapper = new InvalidPropsWrapper(
-			prefsProps);
+		dictionary.put("liferayAnalyticsDataSourceId", null);
 
-		ReflectionTestUtil.setFieldValue(
-			PrefsPropsUtil.class, "_prefsProps", invalidPropsWrapper);
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						AnalyticsConfiguration.class.getName(), dictionary)) {
 
-		try {
 			MockContextUtil.testWithMockContext(
 				new MockContextUtil.MockContext.Builder(
 				).mockObjectAnalyticsReportsInfoItem(
@@ -164,23 +162,11 @@ public class AnalyticsReportsProductNavigationControlMenuEntryTest {
 					_productNavigationControlMenuEntry.isShow(
 						_getHttpServletRequest())));
 		}
-		finally {
-			ReflectionTestUtil.setFieldValue(
-				PrefsPropsUtil.class, "_prefsProps", prefsProps);
-		}
 	}
 
 	@Test
-	public void testIsShowWithIsShowAnalyticsReportsInfoItemWithoutAnalyticsConnectedAndHidePanel()
+	public void testIsShowWithIsShowAnalyticsReportsInfoItemWithNullLiferayAnalyticsDataSourceIdAndHidePanel()
 		throws Exception {
-
-		PrefsProps prefsProps = PrefsPropsUtil.getPrefsProps();
-
-		InvalidPropsWrapper invalidPropsWrapper = new InvalidPropsWrapper(
-			prefsProps);
-
-		ReflectionTestUtil.setFieldValue(
-			PrefsPropsUtil.class, "_prefsProps", invalidPropsWrapper);
 
 		HttpServletRequest httpServletRequest = _getHttpServletRequest();
 
@@ -190,7 +176,16 @@ public class AnalyticsReportsProductNavigationControlMenuEntryTest {
 			WebKeys.PORTAL_PREFERENCES,
 			new HidePanelPortalPreferencesWrapper());
 
-		try {
+		Dictionary<String, Object> dictionary = new HashMapDictionary();
+
+		dictionary.put("liferayAnalyticsDataSourceId", null);
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						AnalyticsConfiguration.class.getName(), dictionary)) {
+
 			MockContextUtil.testWithMockContext(
 				new MockContextUtil.MockContext.Builder(
 				).mockObjectAnalyticsReportsInfoItem(
@@ -202,10 +197,6 @@ public class AnalyticsReportsProductNavigationControlMenuEntryTest {
 				() -> Assert.assertFalse(
 					_productNavigationControlMenuEntry.isShow(
 						httpServletRequest)));
-		}
-		finally {
-			ReflectionTestUtil.setFieldValue(
-				PrefsPropsUtil.class, "_prefsProps", prefsProps);
 		}
 	}
 
@@ -247,66 +238,17 @@ public class AnalyticsReportsProductNavigationControlMenuEntryTest {
 	private ProductNavigationControlMenuEntry
 		_productNavigationControlMenuEntry;
 
-	@Inject
-	private UserLocalService _userLocalService;
-
 	private class HidePanelPortalPreferencesWrapper
 		extends PortalPreferencesImpl {
 
 		@Override
 		public String getValue(String namespace, String key) {
-			if (Objects.equals("hide-panel", key)) {
+			if (Objects.equals(key, "hide-panel")) {
 				return String.valueOf(Boolean.TRUE);
 			}
 
 			return null;
 		}
-
-	}
-
-	private class InvalidPropsWrapper extends PrefsPropsImpl {
-
-		public InvalidPropsWrapper(PrefsProps prefsProps) {
-			_prefsProps = prefsProps;
-		}
-
-		@Override
-		public String getString(long companyId, String name) {
-			if (Objects.equals("liferayAnalyticsDataSourceId", name) ||
-				Objects.equals(
-					name, "liferayAnalyticsFaroBackendSecuritySignature") ||
-				Objects.equals("liferayAnalyticsFaroBackendURL", name)) {
-
-				return null;
-			}
-
-			return _prefsProps.getString(companyId, name);
-		}
-
-		private final PrefsProps _prefsProps;
-
-	}
-
-	private class ValidPrefsPropsWrapper extends PrefsPropsImpl {
-
-		public ValidPrefsPropsWrapper(PrefsProps prefsProps) {
-			_prefsProps = prefsProps;
-		}
-
-		@Override
-		public String getString(long companyId, String name) {
-			if (Objects.equals("liferayAnalyticsDataSourceId", name) ||
-				Objects.equals(
-					name, "liferayAnalyticsFaroBackendSecuritySignature") ||
-				Objects.equals("liferayAnalyticsFaroBackendURL", name)) {
-
-				return "test";
-			}
-
-			return _prefsProps.getString(companyId, name);
-		}
-
-		private final PrefsProps _prefsProps;
 
 	}
 

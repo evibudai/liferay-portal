@@ -1,6 +1,7 @@
 @component-name = "portal-lima"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -13,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -24,10 +25,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-106613. It ensures that the custom abstract field cannot be reset to empty after typing in the content field."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test AbstractDescriptionPersistsWhenTypingInContentField {
-		property test.name.skip.portal.instance = "BlogsEntry#AbstractDescriptionPersistsWhenTypingInContentField";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		BlogsNavigator.openToAddEntry(
 			layoutName = "Blogs Page",
@@ -51,7 +53,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-70143."
-	@priority = "4"
+	@priority = 3
 	@refactorneeded
 	test AddBlogsEntryWithDMLink {
 		JSONDocument.addFileWithUploadedFile(
@@ -88,7 +90,7 @@ definition {
 
 		BlogsEntry.viewEntryExternalURL(
 			entryContent = "Blogs Entry Content",
-			entryExternalURL = "${dmDocument1URL}",
+			entryExternalURL = ${dmDocument1URL},
 			entryTitle = "Blogs Entry Title");
 
 		BlogsEntry.addEntryExternalLinkViaBrowseButton(
@@ -98,11 +100,11 @@ definition {
 
 		BlogsEntry.viewEntryExternalURL(
 			entryContent = "Blogs Entry Content",
-			entryExternalURL = "${dmDocument2URL}",
+			entryExternalURL = ${dmDocument2URL},
 			entryTitle = "Blogs Entry Title");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactorneeded
 	test AddBlogWithFormatting {
 		property testray.component.names = "Training,WYSIWYG";
@@ -126,7 +128,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136760. It checks that content can be added in code view."
-	@priority = "2"
+	@priority = 2
 	test CanAddContentInCodeView {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -158,7 +160,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136762. It checks that content can be added in full screen mode."
-	@priority = "2"
+	@priority = 2
 	test CanAddContentInFullScreenMode {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -191,7 +193,7 @@ definition {
 	}
 
 	@description = "This ensures that content can be added in code view using cite tag."
-	@priority = "3"
+	@priority = 3
 	test CanAddContentWithCiteTag {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -223,14 +225,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136763. It checks that 400 characters can be added to the description."
-	@priority = "3"
+	@priority = 3
 	test CanAddDescriptionWith400Characters {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -247,7 +249,7 @@ definition {
 	}
 
 	@description = "This test checks that HTML is rendered in the blog content field."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddHTMLToContentField {
 		JSONLayout.addPublicLayout(
@@ -255,7 +257,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -278,7 +280,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136761. It checks that special characters can be added to a custom abstract"
-	@priority = "3"
+	@priority = 3
 	test CanAddSpecialCharactersToCustomAbstract {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -312,7 +314,7 @@ definition {
 	}
 
 	@description = "This is the same case as BlogsPage#CanAddTitleWithoutEscapingCharacters, but due to LPS-130537 we should ensure both contexts are covered."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddTitleWithoutEscapingCharacters {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -331,7 +333,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-69240. It checks that a blog entry with custom URL can be added and also that the automatic URL is generated properly in the UI."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddWithCustomURL {
 		JSONLayout.addPublicLayout(
@@ -339,7 +341,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -381,7 +383,7 @@ definition {
 	}
 
 	@description = "This is a usecase for LPS-75241. It checks that an embedded video can be added to a blog."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanAddWithEmbeddedVideo {
 		property testray.component.names = "WYSIWYG";
@@ -391,7 +393,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -405,10 +407,11 @@ definition {
 			navTab = "URL",
 			videoService = "youtube");
 
-		BlogsNavigator.openToBlogEntry(
-			entryTitle = "Blogs Entry Title",
-			layoutName = "Blogs Page",
-			siteURLKey = "guest");
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		BlogsNavigator.gotoPG(
+			entryContent = "video",
+			entryTitle = "Blogs Entry Title");
 
 		BlogsEntry.viewEntryPG(
 			embedVideo = "true",
@@ -417,7 +420,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-126756. It ensures that a blog entry can be added with a static gif."
-	@priority = "5"
+	@priority = 3
 	@refactorneeded
 	test CanAddWithStaticGif {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -443,7 +446,7 @@ definition {
 
 	@description = "This checks that basic text can be inputted and displayed in the most common fields in a blog entry."
 	@e2etest
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanAddWithSubtitle {
 		JSONLayout.addPublicLayout(
@@ -451,7 +454,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -474,7 +477,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry with a trackback URL can be added."
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test CanAddWithTrackbackURL {
 		property custom.properties = "blogs.trackback.enabled=true";
@@ -484,7 +487,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -517,8 +520,54 @@ definition {
 			entryTitle2 = "Blogs Entry2 Title");
 	}
 
+	@description = "LPS-186698 Confirm that the blog is created via API, check that the console, and the Title and Content fields are faulty."
+	@priority = 4
+	test CanAssertThatTheBlogContentViaAPI {
+		task ("Given go to http://localhost:8080/o/api and create a new blog post") {
+			var blogPostingId = BlogPostingAPI.getIdOfCreatedBlogPosting(
+				articleBody = "test",
+				headline = "test");
+		}
+
+		task ("And navigate to the DM admin and check the blog entry") {
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Blogs");
+
+			Click(
+				key_card = "test",
+				locator1 = "Card#CARD_TITLE_LINK");
+		}
+
+		task ("Blogs will display titles and content correctly") {
+			AssertElementPresent(
+				key_value = "test",
+				locator1 = "CommerceFrontStore#TEXTAREA_FIELD");
+
+			AssertElementPresent(
+				key_eventDescription = "test",
+				locator1 = "CalendarViewEventDetails#EVENT_DESCRIPTION");
+
+			Click(locator1 = "Button#PUBLISH");
+		}
+
+		task ("The blog content disappeared and the browser console reported an error") {
+			AssertConsoleTextNotPresent(value1 = "TypeError: propsTransformer is not a function");
+		}
+
+		task ("The options button for the blog should be available.") {
+			AssertElementPresent(locator1 = "WorkflowAllItems#KEBAB_DROPDOWN_DISABLED");
+		}
+
+		task ("The blog can be deleted from DM admin page.") {
+			Click(locator1 = "WorkflowAllItems#KEBAB_DROPDOWN_DISABLED");
+
+			ClickNoError(locator1 = "ObjectPortlet#DELETE_ENTRY_BUTTON");
+		}
+	}
+
 	@description = "This checks that a blog entry can be automatically saved as a draft."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanAutomaticallySaveEntryAsDraft {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -542,17 +591,19 @@ definition {
 
 	@description = "This checks that a user can change the publish date for a scheduled entry to the present and publish it."
 	@e2etest
-	@priority = "4"
+	@priority = 3
 	@refactordone
 	test CanChangeAScheduledEntryToThePresentAndPublish {
-		property test.name.skip.portal.instance = "BlogsEntry#CanChangeAScheduledEntryToThePresentAndPublish";
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -579,7 +630,7 @@ definition {
 
 		Panel.expandPanel(panel = "Configuration");
 
-		BlogsEntry.editDisplayDate(displayTimeMinute = "00");
+		BlogsEntry.editDisplayDate(minutesAdjustmentValue = "-2");
 
 		PortletEntry.publish();
 
@@ -591,7 +642,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136772. It checks that the cover image caption can be deleted."
-	@priority = "3"
+	@priority = 3
 	test CanDeleteCoverImageCaption {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -641,7 +692,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry can saved as a draft and then deleted."
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test CanDeleteDraft {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -676,7 +727,7 @@ definition {
 	}
 
 	@description = "This checks that blog entries can be deleted through the UI."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanDeleteMultipleEntriesSequentially {
 		JSONBlog.addEntry(
@@ -703,7 +754,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136771. It checks that the cover image caption can be edited with special characters."
-	@priority = "3"
+	@priority = 3
 	test CanEditCoverImageCaptionWithSpecialCharacters {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -747,17 +798,18 @@ definition {
 	}
 
 	@description = "This test covers LPS-106613. It ensures that the custom abstract can be added and edited."
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test CanEditCustomAbstract {
-		property test.name.skip.portal.instance = "BlogsEntry#CanEditCustomAbstract";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -808,7 +860,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-108029. It ensures that a blog entry can be edited from the search result."
-	@priority = "4"
+	@priority = 3
 	@refactorneeded
 	test CanEditViaSearchResults {
 		JSONBlog.addEntry(
@@ -818,9 +870,9 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs Entry Title");
+		SearchPage.searchEmbedded(searchTerm = "Blogs Entry Title");
 
-		SearchPortlets.gotoResultDetails(searchAssetTitle = "Blogs Entry Title");
+		SearchPage.gotoResultDetails(searchAssetTitle = "Blogs Entry Title");
 
 		Blogs.editEntryViaSearchResultDetails(
 			entryContent = "Blogs Entry Content",
@@ -839,10 +891,11 @@ definition {
 	}
 
 	@description = "This is a test for LPS-67515. It ensures that an exported blog entry with a cover image can be imported to a new site after cleaning the DB."
-	@priority = "4"
+	@priority = 4
 	test CanImportEntryWithImageAfterCleaningDB {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "BlogsEntry#CanImportEntryWithImageAfterCleaningDB";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var testRunEnvironment = PropsUtil.get("test.run.environment");
 		var imageId = JSONBlog.uploadBlogImage(
@@ -850,7 +903,7 @@ definition {
 			sourceFileName = "Document_1.jpg");
 
 		JSONBlog.addEntryWithImage(
-			coverImageId = "${imageId}",
+			coverImageId = ${imageId},
 			entryContent = "Blogs Entry Content",
 			entrySubtitle = "Blogs Entry Subtitle",
 			entryTitle = "Blogs Entry Title",
@@ -864,19 +917,19 @@ definition {
 
 		SQL.executeMySQLStatement(mysqlStatement = "drop database if exists lportal;");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "rebuild-database -Ddatabase.type=mysql -Dsql.dir=sql/create-bare/ -Dsql.file=create-bare-mysql.sql");
+		AntCommands.runCommand("build-test.xml", "rebuild-database -Ddatabase.type=mysql -Dkeep.osgi.state=true -Dsql.dir=sql/create-bare/ -Dsql.file=create-bare-mysql.sql");
 
-		Portlet.startServer(
-			deleteLiferayHome = "false",
-			keepOsGiState = "true");
+		AntCommands.runCommand("build-test.xml", "start-app-server -Ddelete.liferay.home=false -Dkeep.osgi.state=true");
 
-		if ("${testRunEnvironment}" == "EE") {
+		if (${testRunEnvironment} == "EE") {
 			License.deployLicenseFile();
 		}
 
-		Open.openInTheNewTab(locator1 = "http://localhost:8080");
+		Open.openInTheNewTab(value1 = "http://localhost:8080");
+
+		takeScreenshot();
+
+		Refresh();
 
 		User._clickSignInLink();
 
@@ -906,18 +959,18 @@ definition {
 	}
 
 	@description = "This is a test for LPS-67515. It ensures that a blog entry with a cover image can be exported and imported between different sites."
-	@priority = "4"
+	@priority = 4
 	test CanImportEntryWithImageBetweenDifferentSites {
 		property portal.acceptance = "false";
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		var imageId = JSONBlog.uploadBlogImage(
 			groupName = "Guest",
 			sourceFileName = "Document_1.jpg");
 
 		JSONBlog.addEntryWithImage(
-			coverImageId = "${imageId}",
+			coverImageId = ${imageId},
 			entryContent = "Blogs Entry Content",
 			entrySubtitle = "Blogs Entry Subtitle",
 			entryTitle = "Blogs Entry Title",
@@ -945,10 +998,11 @@ definition {
 	}
 
 	@description = "This is a test for LPS-67515. It ensures that an exported blog entry with a small image can be imported to a new site after cleaning the DB."
-	@priority = "4"
+	@priority = 4
 	test CanImportEntryWithSmallImageAfterCleaningDB {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "BlogsEntry#CanImportEntryWithSmallImageAfterCleaningDB";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var testRunEnvironment = PropsUtil.get("test.run.environment");
 
@@ -974,19 +1028,19 @@ definition {
 
 		SQL.executeMySQLStatement(mysqlStatement = "drop database if exists lportal;");
 
-		AntCommand(
-			locator1 = "build-test.xml",
-			value1 = "rebuild-database -Ddatabase.type=mysql -Dsql.dir=sql/create-bare/ -Dsql.file=create-bare-mysql.sql");
+		AntCommands.runCommand("build-test.xml", "rebuild-database -Ddatabase.type=mysql -Dkeep.osgi.state=true -Dsql.dir=sql/create-bare/ -Dsql.file=create-bare-mysql.sql");
 
-		Portlet.startServer(
-			deleteLiferayHome = "false",
-			keepOsGiState = "true");
+		AntCommands.runCommand("build-test.xml", "start-app-server -Ddelete.liferay.home=false -Dkeep.osgi.state=true");
 
-		if ("${testRunEnvironment}" == "EE") {
+		if (${testRunEnvironment} == "EE") {
 			License.deployLicenseFile();
 		}
 
-		Open.openInTheNewTab(locator1 = "http://localhost:8080");
+		Open.openInTheNewTab(value1 = "http://localhost:8080");
+
+		takeScreenshot();
+
+		Refresh();
 
 		User._clickSignInLink();
 
@@ -1015,11 +1069,11 @@ definition {
 	}
 
 	@description = "This is a test for LPS-67515. It ensures that a blog entry with a small image can be exported and imported between different sites."
-	@priority = "4"
+	@priority = 4
 	test CanImportEntryWithSmallImageBetweenDifferentSites {
 		property portal.acceptance = "false";
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		BlogsNavigator.openToAddEntry(
 			layoutName = "Blogs Page",
@@ -1056,7 +1110,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry can be manually saved as a draft."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanManuallySaveAsDraft {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -1079,7 +1133,7 @@ definition {
 	}
 
 	@description = "This this a use case for LPS-69240. It checks that a blog entry with a URL that duplicates an existing one cannot be published."
-	@priority = "4"
+	@priority = 3
 	@refactordone
 	test CannotAddDuplicateCustomURLThroughUI {
 		JSONBlog.addEntry(
@@ -1116,7 +1170,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry cannot be published if the custom abstracted is selected but empty."
-	@priority = "4"
+	@priority = 3
 	@refactorneeded
 	test CannotAddWhenCustomAbstractIsSelectedButEmpty {
 		BlogsNavigator.openToAddEntry(siteURLKey = "guest");
@@ -1135,7 +1189,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry without content cannot be added."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddWithEmptyContent {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -1150,7 +1204,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry without a title cannot be added."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddWithEmptyTitle {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -1165,7 +1219,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147320. It checks that Javascript cannot be executed in the code view."
-	@priority = "4"
+	@priority = 3
 	test CannotExecuteXSSInCodeView {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1195,7 +1249,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136764. It checks that Javascript cannot be executed in the content field."
-	@priority = "3"
+	@priority = 3
 	test CannotExecuteXSSInContent {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1230,7 +1284,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136773. It checks that XSS cannot be executed in the cover image caption."
-	@priority = "3"
+	@priority = 3
 	test CannotExecuteXSSInCoverImageCaption {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1263,7 +1317,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136765. It checks that Javascript cannot be executed in the custom abstract."
-	@priority = "3"
+	@priority = 3
 	test CannotExecuteXSSInCustomAbstract {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1287,13 +1341,13 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-82204. View blogs entry with XSS custom abstract."
-	@priority = "5"
+	@priority = 3
 	test CannotExecuteXSSInCustomAbstractViaAP {
 		property testray.component.names = "Security";
 
 		var entryAbstractDescription = '''<script>alert(123)</script>''';
 
-		var key_entryAbstractDescription = "${entryAbstractDescription}";
+		var key_entryAbstractDescription = ${entryAbstractDescription};
 
 		task ("Add public layout") {
 			JSONLayout.addPublicLayout(
@@ -1310,7 +1364,7 @@ definition {
 
 		task ("Add custom abstract") {
 			JSONBlog.addEntry(
-				entryAbstractDescription = "${entryAbstractDescription}",
+				entryAbstractDescription = ${entryAbstractDescription},
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title");
 		}
@@ -1320,22 +1374,23 @@ definition {
 
 			AssertAlertNotPresent();
 
-			Blogs.viewContentAbstractDescription(descriptionValue = "${entryAbstractDescription}");
+			Blogs.viewContentAbstractDescription(descriptionValue = ${entryAbstractDescription});
 		}
 	}
 
 	@description = "This test covers LPS-49419. It validates that BBCode cannot be injected into a blog comment using Pingback."
-	@priority = "4"
+	@priority = 3
 	test CannotInjectBBCodeIntoCommentUsingPingback {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "BlogsEntry#CannotInjectBBCodeIntoCommentUsingPingback";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1349,20 +1404,20 @@ definition {
 		for (var ip : list "0.0.0.0,127.127.127.127,[::1],10.0.0.10,172.17.172.17") {
 			BlogsEntry.executePingbackViacURL(
 				entryTitle = "test",
-				ip = "${ip}",
-				portalURL = "${portalURL}");
+				ip = ${ip},
+				portalURL = ${portalURL});
 		}
 	}
 
 	@description = "This is a test for LPS-136788. It checks that a user cannot rate a post when it is disabled in the configuration."
-	@priority = "3"
+	@priority = 3
 	test CannotRatePost {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1398,7 +1453,7 @@ definition {
 	}
 
 	@description = "This checks that a blog draft can be published."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanPublishDraft {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -1426,15 +1481,17 @@ definition {
 	}
 
 	@description = "This checks that a blog entry that is scheduled is in a pre-publish status in the UI."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanSchedulePost {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1461,7 +1518,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry can be searched for by its content."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanSearchByContent {
 		JSONLayout.addPublicLayout(
@@ -1475,17 +1532,17 @@ definition {
 		for (var searchTerm : list "Unique,Unique Content") {
 			Navigator.gotoPage(pageName = "Search Page");
 
-			SearchPortlets.searchEmbedded(searchTerm = "${searchTerm}");
+			SearchPage.searchEmbedded(searchTerm = ${searchTerm});
 
-			SearchResultPortlet.viewSearchResults(
+			SearchResults.viewSearchResults(
 				searchAssetTitle = "Blogs Entry Title",
 				searchAssetType = "Blogs Entry",
-				searchTerm = "${searchTerm}");
+				searchTerm = ${searchTerm});
 		}
 	}
 
 	@description = "This checks that a blog entry can be searched for by its title."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanSearchByTitle {
 		JSONLayout.addPublicLayout(
@@ -1499,17 +1556,17 @@ definition {
 		for (var searchTerm : list "Blogs,Blogs Entry Title") {
 			Navigator.gotoPage(pageName = "Search Page");
 
-			SearchPortlets.searchEmbedded(searchTerm = "${searchTerm}");
+			SearchPage.searchEmbedded(searchTerm = ${searchTerm});
 
-			SearchResultPortlet.viewSearchResults(
+			SearchResults.viewSearchResults(
 				searchAssetTitle = "Blogs Entry Title",
 				searchAssetType = "Blogs Entry",
-				searchTerm = "${searchTerm}");
+				searchTerm = ${searchTerm});
 		}
 	}
 
 	@description = "This is a test for LPS-80502. It asserts that user can search a draft blog entry."
-	@priority = "5"
+	@priority = 4
 	test CanSearchForDraftEntry {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1529,13 +1586,14 @@ definition {
 		BlogsEntry.searchCP(
 			entrySearchTerm = "Blogs Entry Title",
 			entryTitle = "Blogs Entry Title",
-			position = "2");
+			position = 2);
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactorneeded
 	test CanViewDefaultAbstract {
-		property test.name.skip.portal.instance = "BlogsEntry#CanViewDefaultAbstract";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
@@ -1549,7 +1607,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1557,12 +1615,12 @@ definition {
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		BlogsEntry.viewAbstractDisplay(
-			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares...",
+			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares represent...",
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
 		BlogsNavigator.gotoEntryWithAbstractPG(
-			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares...",
+			entryAbstractDescription = "Liferay Portal provides an excellent platform for building web applications, websites, and portals, but it can additionally be used for a new category of web applications called social applications. The definition is simple: a social application is a web application that additionally leverages social identity, data, and features or services. In the left figure, the light blue squares represent...",
 			entryTitle = "Blogs Entry Title");
 
 		BlogsEntry.viewEntryPG(
@@ -1571,7 +1629,7 @@ definition {
 	}
 
 	@description = "This ensures that an external video in the Blogs content field can be rendered correctly after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewInlineVideoAfterMovingToFolder {
 		property portal.acceptance = "false";
 
@@ -1620,7 +1678,7 @@ definition {
 	}
 
 	@description = "This ensures that an external video in the Blogs content field can be rendered correctly when publication is enabled."
-	@priority = "5"
+	@priority = 4
 	test CanViewInlineVideoWithPublication {
 		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 		property osgi.module.configurations = "enabled=B\"true\"";
@@ -1652,7 +1710,9 @@ definition {
 
 		PortletEntry.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		BlogsNavigator.openToEditEntryInSite(
 			entryTitle = "Blogs Entry Title",
@@ -1666,14 +1726,14 @@ definition {
 	}
 
 	@description = "This checks that an external video embedded in a blog content can be played correctly."
-	@priority = "3"
+	@priority = 3
 	test ExternalVideoEmbeddedInBlogContentFieldCanBePlayed {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1687,10 +1747,11 @@ definition {
 			navTab = "URL",
 			videoService = "youtube");
 
-		BlogsNavigator.openToBlogEntry(
-			entryTitle = "Blogs Entry Title",
-			layoutName = "Blogs Page",
-			siteURLKey = "guest");
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		BlogsNavigator.gotoEntryPG(
+			entryContent = "video",
+			entryTitle = "Blogs Entry Title");
 
 		YoutubePortlet.playEmbeddedVideo(
 			progressBarInitialization = "0 Minutes 0 Seconds of 0 Minutes 0 Seconds",
@@ -1699,7 +1760,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-90966. It checks that the caption link will keep persisting."
-	@priority = "4"
+	@priority = 3
 	test LinkToImageInCaptionPersistsAfterBeingAdded {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
@@ -1724,7 +1785,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-133714. The blog entry creator receives a notification of its own blog"
-	@priority = "3"
+	@priority = 3
 	test NotificationIsReceivedByNewEntryCreator {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -1742,7 +1803,7 @@ definition {
 		}
 
 		task ("Check no notifications are pending") {
-			Notifications.viewBadgeCount(notificationCount = "0");
+			Notifications.viewBadgeCount(notificationCount = 0);
 		}
 
 		task ("Create a Blog Page and subscribe to widget to receive notifications") {
@@ -1751,7 +1812,7 @@ definition {
 				layoutName = "Blogs Page Admin");
 
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Guest",
 				layoutName = "Blogs Page Admin",
 				widgetName = "Blogs");
@@ -1778,12 +1839,12 @@ definition {
 		task ("Check entry creator has a notification") {
 			Navigator.gotoPage(pageName = "Blogs Page Admin");
 
-			Notifications.viewBadgeCount(notificationCount = "1");
+			Notifications.viewBadgeCount(notificationCount = 1);
 		}
 	}
 
 	@description = "This is a use case for LPS-69240. It checks that when blog entries are duplicated their custom URL's are unique."
-	@priority = "4"
+	@priority = 3
 	@refactordone
 	test ShouldHaveUniqueURLForDuplicate {
 		var portalURL = PropsUtil.get("portal.url");
@@ -1793,7 +1854,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1822,7 +1883,7 @@ definition {
 	}
 
 	@description = "This checks that a string that is over 255 characters in the title will be trimmed to 255."
-	@priority = "4"
+	@priority = 3
 	@refactordone
 	test ShouldTrimTitleTo255CharactersWhenOver {
 		JSONLayout.addPublicLayout(
@@ -1830,7 +1891,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1852,7 +1913,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-128451. It ensures that a blog entry can be published normally with xss code injected title."
-	@priority = "4"
+	@priority = 3
 	@refactordone
 	test TitleWillNotExecuteXSS {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -1868,7 +1929,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1886,7 +1947,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136769. It checks that a friendly URL can be added with escape characters."
-	@priority = "3"
+	@priority = 3
 	test URLWithEscapeCharactersWillBeNormalized {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -1895,7 +1956,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.categories.internal.validator;
@@ -44,15 +35,15 @@ public class CardinalityAssetEntryValidator implements AssetEntryValidator {
 			long[] categoryIds, String[] tagNames)
 		throws PortalException {
 
-		long classNameId = _classNameLocalService.getClassNameId(className);
-
-		if (!_isCategorizable(groupId, classNameId, classPK)) {
+		if (!_isCategorizable(groupId, className, classPK)) {
 			return;
 		}
 
 		if (className.equals(Group.class.getName())) {
 			groupId = classPK;
 		}
+
+		long classNameId = _classNameLocalService.getClassNameId(className);
 
 		for (AssetVocabulary assetVocabulary :
 				_assetVocabularyLocalService.getGroupsVocabularies(
@@ -89,11 +80,11 @@ public class CardinalityAssetEntryValidator implements AssetEntryValidator {
 	}
 
 	private boolean _isCategorizable(
-		long groupId, long classNameId, long classPK) {
+		long groupId, String className, long classPK) {
 
 		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				_portal.getClassName(classNameId));
+				className);
 
 		if ((assetRendererFactory == null) ||
 			!assetRendererFactory.isCategorizable()) {
@@ -114,8 +105,8 @@ public class CardinalityAssetEntryValidator implements AssetEntryValidator {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						StringBundler.concat(
-							"Entity with ClassPK: ", classPK,
-							" and ClassNameId: ", classNameId,
+							"Asset entry with class PK ", classPK,
+							" and class name ", className,
 							" is not categorizable"),
 						portalException);
 				}

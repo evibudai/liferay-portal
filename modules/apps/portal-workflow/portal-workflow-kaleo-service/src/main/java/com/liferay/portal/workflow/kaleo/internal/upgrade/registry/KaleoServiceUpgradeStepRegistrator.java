@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.internal.upgrade.registry;
@@ -51,17 +42,14 @@ import com.liferay.portal.workflow.kaleo.internal.upgrade.v2_0_0.util.KaleoTrans
 import com.liferay.portal.workflow.kaleo.internal.upgrade.v2_0_1.UpgradeMessageBoardsClassName;
 import com.liferay.portal.workflow.kaleo.internal.upgrade.v3_1_1.KaleoNotificationUpgradeProcess;
 import com.liferay.portal.workflow.kaleo.internal.upgrade.v3_2_0.KaleoInstanceUpgradeProcess;
+import com.liferay.portal.workflow.kaleo.internal.upgrade.v4_0_0.KaleoDefinitionContentUpgradeProcess;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
  * @author Marcellus Tavares
  */
-@Component(
-	service = {
-		KaleoServiceUpgradeStepRegistrator.class, UpgradeStepRegistrator.class
-	}
-)
+@Component(service = UpgradeStepRegistrator.class)
 public class KaleoServiceUpgradeStepRegistrator
 	implements UpgradeStepRegistrator {
 
@@ -171,6 +159,19 @@ public class KaleoServiceUpgradeStepRegistrator
 				"KaleoTaskForm", "KaleoTaskFormInstance",
 				"KaleoTaskInstanceToken", "KaleoTimer",
 				"KaleoTimerInstanceToken", "KaleoTransition"));
+
+		registry.register(
+			"3.5.0", "3.5.1",
+			new com.liferay.portal.workflow.kaleo.internal.upgrade.v3_5_1.
+				KaleoActionUpgradeProcess());
+
+		registry.register(
+			"3.5.1", "3.5.2",
+			UpgradeProcessFactory.alterColumnType(
+				"KaleoAction", "scriptLanguage", "VARCHAR(255) null"));
+
+		registry.register(
+			"3.5.2", "4.0.0", new KaleoDefinitionContentUpgradeProcess());
 	}
 
 }

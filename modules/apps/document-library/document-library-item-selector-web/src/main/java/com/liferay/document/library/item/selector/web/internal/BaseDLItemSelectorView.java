@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.item.selector.web.internal;
@@ -18,6 +9,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyService;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.item.selector.web.internal.constants.DLItemSelectorWebKeys;
 import com.liferay.document.library.item.selector.web.internal.display.context.DLItemSelectorViewDisplayContext;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -90,7 +82,8 @@ public abstract class BaseDLItemSelectorView<T extends ItemSelectorCriterion>
 
 		DLItemSelectorViewDisplayContext dlItemSelectorViewDisplayContext =
 			new DLItemSelectorViewDisplayContext<>(
-				assetVocabularyService, classNameLocalService, this,
+				assetVocabularyService, classNameLocalService,
+				dlFileEntryTypeLocalService, this,
 				folderModelResourcePermission,
 				(HttpServletRequest)servletRequest, t, itemSelectedEventName,
 				itemSelectorReturnTypeResolverHandler, portletURL, search,
@@ -115,6 +108,9 @@ public abstract class BaseDLItemSelectorView<T extends ItemSelectorCriterion>
 
 	@Reference
 	protected ClassNameLocalService classNameLocalService;
+
+	@Reference
+	protected DLFileEntryTypeLocalService dlFileEntryTypeLocalService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.portal.kernel.repository.model.Folder)"

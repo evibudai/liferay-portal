@@ -1,6 +1,7 @@
 definition {
 
-	macro addContent {
+	@summary = "Default summary"
+	macro addContent(linkAddress = null, linkText = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#GOOGLE_DOC");
 
 		if (IsElementPresent(locator1 = "GoogleDoc#DISMISS")) {
@@ -16,13 +17,13 @@ definition {
 
 			Type(
 				locator1 = "GoogleDoc#INSERT_LINK_LINK",
-				value1 = "${linkAddress}");
+				value1 = ${linkAddress});
 
 			Click(locator1 = "GoogleDoc#INSERT_LINK_TEXT");
 
 			Type(
 				locator1 = "GoogleDoc#INSERT_LINK_TEXT",
-				value1 = "${linkText}");
+				value1 = ${linkText});
 
 			Click(locator1 = "GoogleDoc#INSERT_LINK_APPLY_BUTTON");
 		}
@@ -30,7 +31,8 @@ definition {
 		SelectFrameTop();
 	}
 
-	macro discardChanges {
+	@summary = "Default summary"
+	macro discardChanges() {
 		var key_text = "Discard Changes";
 
 		AssertElementPresent(locator1 = "Button#ANY");
@@ -40,14 +42,15 @@ definition {
 			value1 = "Discard Changes");
 	}
 
-	macro editTitleInGoogleDoc {
+	@summary = "Default summary"
+	macro editTitleInGoogleDoc(dmDocumentTitle = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#GOOGLE_DOC");
 
 		Click(locator1 = "GoogleDoc#TITLE");
 
 		Type(
 			locator1 = "GoogleDoc#TITLE",
-			value1 = "${dmDocumentTitle}");
+			value1 = ${dmDocumentTitle});
 
 		KeyPress(
 			locator1 = "GoogleDoc#TITLE",
@@ -58,23 +61,28 @@ definition {
 		Refresh();
 	}
 
-	macro gotoEdit {
-		var key_dmDocumentTitle = "${dmDocumentTitle}";
+	@summary = "Default summary"
+	macro gotoEdit(dmDocumentTitle = null, dmDocumentTypeName = null) {
+		var key_dmDocumentTitle = ${dmDocumentTitle};
 
 		Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Edit in ${dmDocumentTypeName}");
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		WaitForPageLoad();
 
-		if (IsElementNotPresent(key_text = "Save and Return to ${siteName}", locator1 = "Button#ANY")) {
-			Refresh();
+		WaitForFrameLoad();
 
-			Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+		while ((IsElementNotPresent(key_text = "Save and Return to ${siteName}", locator1 = "Button#ANY")) && (${i} != 5)) {
+			var i = ${i} + 1;
 
-			MenuItem.click(menuItem = "Edit in ${dmDocumentTypeName}");
+			WaitForPageLoad();
+
+			WaitForFrameLoad();
+
+			takeScreenshot();
 		}
 
 		AssertElementPresent(
@@ -82,22 +90,40 @@ definition {
 			locator1 = "Button#ANY");
 	}
 
-	macro saveAndExit {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+	@summary = "Default summary"
+	macro saveAndExit(depotName = null) {
+		if (isSet(depotName)) {
+			var key_text = "Save and Return to ${depotName}";
 
-		var key_text = "Save and Return to ${siteName}";
+			AssertElementPresent(locator1 = "Button#ANY");
 
-		AssertElementPresent(locator1 = "Button#ANY");
+			AssertClick(
+				locator1 = "Button#ANY",
+				value1 = "Save and Return to ${depotName}");
 
-		AssertClick(
-			locator1 = "Button#ANY",
-			value1 = "Save and Return to ${siteName}");
+			Alert.viewSuccessMessage();
 
-		Alert.viewSuccessMessage();
+			WaitForElementNotPresent(
+				locator1 = "Button#ANY",
+				value1 = "Save and Return to ${depotName}");
+		}
+		else {
+			var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		WaitForElementNotPresent(
-			locator1 = "Button#ANY",
-			value1 = "Save and Return to ${siteName}");
+			var key_text = "Save and Return to ${siteName}";
+
+			AssertElementPresent(locator1 = "Button#ANY");
+
+			AssertClick(
+				locator1 = "Button#ANY",
+				value1 = "Save and Return to ${siteName}");
+
+			Alert.viewSuccessMessage();
+
+			WaitForElementNotPresent(
+				locator1 = "Button#ANY",
+				value1 = "Save and Return to ${siteName}");
+		}
 
 		Navigator.openURL();
 	}

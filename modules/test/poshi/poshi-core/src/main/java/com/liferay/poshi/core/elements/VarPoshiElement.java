@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
@@ -120,7 +111,11 @@ public class VarPoshiElement extends PoshiElement {
 	public void parsePoshiScript(String poshiScript)
 		throws PoshiScriptParserException {
 
-		if (poshiScript.startsWith("static")) {
+		if (!(getParent() instanceof ExecutePoshiElement)) {
+			validateSemicolon(poshiScript);
+		}
+
+		if (poshiScript.startsWith("static var")) {
 			addAttribute("static", "true");
 
 			poshiScript = poshiScript.replaceFirst("static", "");
@@ -180,6 +175,14 @@ public class VarPoshiElement extends PoshiElement {
 		}
 
 		if (value.endsWith("\"") && value.startsWith("\"")) {
+			if (value.contains("\n")) {
+				throw new PoshiScriptParserException(
+					"Invalid variable assignment syntax, please use triple " +
+						"quotes (''') to wrap a multiline string instead of " +
+							"double quotes",
+					value, (PoshiElement)getParent());
+			}
+
 			value = getDoubleQuotedContent(value);
 
 			if (value.endsWith("}") && value.startsWith("${")) {
@@ -373,7 +376,11 @@ public class VarPoshiElement extends PoshiElement {
 			else {
 				value = StringUtil.replace(value, "\"", "\\\"");
 
-				if (isDoubleQuotedVar(value)) {
+				String elementName = getName();
+
+				if (isDoubleQuotedVar(value) ||
+					elementName.equals("property")) {
+
 					value = doubleQuoteContent(value);
 				}
 			}
@@ -435,6 +442,11 @@ public class VarPoshiElement extends PoshiElement {
 	@Override
 	protected String getBlockName() {
 		return null;
+	}
+
+	@Override
+	protected Pattern getStatementPattern() {
+		return _statementPattern;
 	}
 
 	protected void initValueAttributeName(Element element) {
@@ -538,18 +550,18 @@ public class VarPoshiElement extends PoshiElement {
 	protected String valueAttributeName;
 
 	private boolean _isElementType(String poshiScript) {
-		if (isValidPoshiScriptStatement(_statementPattern, poshiScript) ||
-			isVarAssignedToMacroInvocation(poshiScript)) {
-
-			return true;
+		if (isVarAssignedToMacroInvocation(poshiScript)) {
+			return false;
 		}
 
-		return false;
+		return isValidPoshiScriptStatement(
+			_partialStatementPattern, poshiScript);
 	}
 
 	private static final String _ELEMENT_NAME = "var";
 
-	private static final String _VAR_VALUE_INTEGER_REGEX = "\\d+";
+	private static final String _VAR_VALUE_INTEGER_REGEX =
+		"\\d+[\\s]*(?![\\+-\\/\\*])";
 
 	private static final String _VAR_VALUE_MATH_EXPRESSION_REGEX;
 
@@ -563,7 +575,7 @@ public class VarPoshiElement extends PoshiElement {
 
 	private static final String _VAR_VALUE_REGEX;
 
-	private static final String _VAR_VALUE_STRING_REGEX = "\".*\"";
+	private static final String _VAR_VALUE_STRING_REGEX = "\".*?\"";
 
 	private static final String _VAR_VALUE_VARIABLE_REGEX = "\\$\\{[\\w_-]+\\}";
 
@@ -580,6 +592,7 @@ public class VarPoshiElement extends PoshiElement {
 		"MathUtil\\.(\\w+)\\('(.+)', '(.+)'\\)");
 	private static final Pattern _nestedCDATAPattern = Pattern.compile(
 		"(?<cdata1><.+]])(?<cdata2>>.*>?)");
+	private static final Pattern _partialStatementPattern;
 	private static final Pattern _statementPattern;
 	private static final Pattern _varValueMathExpressionPattern;
 
@@ -595,7 +608,11 @@ public class VarPoshiElement extends PoshiElement {
 
 		_statementPattern = Pattern.compile(
 			"^" + VAR_NAME_REGEX + ASSIGNMENT_REGEX + _VAR_VALUE_REGEX +
-				VAR_STATEMENT_END_REGEX,
+				"(;|)$",
+			Pattern.DOTALL | Pattern.MULTILINE);
+
+		_partialStatementPattern = Pattern.compile(
+			"^" + VAR_NAME_REGEX + ASSIGNMENT_REGEX + _VAR_VALUE_REGEX,
 			Pattern.DOTALL);
 
 		_varValueMathExpressionPattern = Pattern.compile(

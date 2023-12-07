@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.internal.upgrade.v5_1_0;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -48,7 +40,11 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select layoutPageTemplateStructureId, companyId, userId," +
-					"classPK from LayoutPageTemplateStructure")) {
+					"classPK from LayoutPageTemplateStructure");
+			SafeCloseable safeCloseable1 = addTemporaryIndex(
+				"FragmentEntryLink", false, "segmentsExperienceId", "plid");
+			SafeCloseable safeCloseable2 = addTemporaryIndex(
+				"SegmentsExperiment", false, "plid", "segmentsExperienceId")) {
 
 			try (ResultSet resultSet = preparedStatement1.executeQuery()) {
 				while (resultSet.next()) {
@@ -89,7 +85,7 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 			User user = _userLocalService.fetchUser(userId);
 
 			if (user == null) {
-				userId = _userLocalService.getDefaultUserId(companyId);
+				userId = _userLocalService.getGuestUserId(companyId);
 			}
 
 			SegmentsExperience defaultSegmentsExperience =
@@ -176,7 +172,7 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 					"? where segmentsExperienceId = 0 and ",
 					"segmentsExperimentId in (select ",
 					"SegmentsExperiment.segmentsExperimentId from ",
-					"SegmentsExperiment where classPK = ? or classPK = ?)"))) {
+					"SegmentsExperiment where plid = ? or plid = ?)"))) {
 
 			preparedStatement.setLong(1, defaultSegmentsExperienceId);
 			preparedStatement.setLong(2, draftPlid);
@@ -193,8 +189,8 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"update SegmentsExperiment set segmentsExperienceId = ? " +
-					"where segmentsExperienceId = 0 and (classPK = ? or " +
-						"classPK = ?)")) {
+					"where segmentsExperienceId = 0 and (plid = ? or plid = " +
+						"?)")) {
 
 			preparedStatement.setLong(1, defaultSegmentsExperienceId);
 			preparedStatement.setLong(2, draftPlid);

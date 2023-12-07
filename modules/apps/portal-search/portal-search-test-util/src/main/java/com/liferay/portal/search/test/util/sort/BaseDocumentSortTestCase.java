@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.sort;
@@ -39,7 +30,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_DOUBLE, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		assertSort(
 			"Smith", FIELD_DOUBLE, Sort.DOUBLE_TYPE,
@@ -51,7 +42,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_DOUBLE, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		for (String keywords : _KEYWORDS) {
 			assertSort(
@@ -71,7 +62,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_FLOAT, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		assertSort(
 			"Smith", FIELD_FLOAT, Sort.FLOAT_TYPE, _SCREEN_NAMES_FLOAT_ORDER);
@@ -82,7 +73,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_FLOAT, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		for (String keywords : _KEYWORDS) {
 			assertSort(
@@ -102,7 +93,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_INTEGER, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		assertSort(
 			"Smith", FIELD_INTEGER, Sort.INT_TYPE, _SCREEN_NAMES_INTEGER_ORDER);
@@ -113,7 +104,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_INTEGER, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		for (String keywords : _KEYWORDS) {
 			assertSort(
@@ -133,7 +124,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_LONG, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		assertSort(
 			"Smith", FIELD_LONG, Sort.LONG_TYPE, _SCREEN_NAMES_LONG_ORDER);
@@ -144,7 +135,7 @@ public abstract class BaseDocumentSortTestCase extends BaseDocumentTestCase {
 		addDocuments(
 			screenName -> document -> populate(
 				document, FIELD_LONG, screenName),
-			Arrays.asList(SCREEN_NAMES));
+			SCREEN_NAMES);
 
 		for (String keywords : _KEYWORDS) {
 			assertSort(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.change.tracking.spi.display;
@@ -29,9 +20,12 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 
@@ -111,6 +105,12 @@ public class LayoutCTDisplayRenderer extends BaseCTDisplayRenderer<Layout> {
 
 	@Override
 	public boolean isHideable(Layout layout) {
+		if (layout.isDraftLayout() &&
+			(layout.getStatus() == WorkflowConstants.STATUS_DRAFT)) {
+
+			return false;
+		}
+
 		return layout.isSystem();
 	}
 
@@ -127,25 +127,45 @@ public class LayoutCTDisplayRenderer extends BaseCTDisplayRenderer<Layout> {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		String url = null;
+		Layout previewLayout = layout;
 
-		if (!layout.isDenied() && !layout.isPending()) {
-			url = _portal.getLayoutFriendlyURL(layout, themeDisplay);
-		}
-		else {
-			url = _portal.getLayoutFriendlyURL(
-				layout.fetchDraftLayout(), themeDisplay);
+		if (layout.isDenied() || layout.isPending()) {
+			previewLayout = layout.fetchDraftLayout();
 		}
 
-		url = HttpComponentsUtil.addParameter(url, "p_l_mode", "preview");
+		String url = HttpComponentsUtil.addParameter(
+			themeDisplay.getPathMain() + "/portal/update_language", "p_l_id",
+			previewLayout.getPlid());
+
+		String redirect = HttpComponentsUtil.addParameter(
+			_portal.getLayoutFriendlyURL(previewLayout, themeDisplay),
+			"p_l_mode", "preview");
+
+		redirect = HttpComponentsUtil.addParameter(
+			redirect, "previewCTCollectionId", layout.getCtCollectionId());
+
+		long segmentsExperienceId = ParamUtil.getLong(
+			httpServletRequest, "segmentsExperienceId");
+
+		if (segmentsExperienceId > 0) {
+			redirect = HttpComponentsUtil.addParameter(
+				redirect, "segmentsExperienceId", segmentsExperienceId);
+		}
+
+		url = HttpComponentsUtil.addParameter(url, "redirect", redirect);
+
+		String languageId = LocaleUtil.toLanguageId(displayContext.getLocale());
+
+		url = HttpComponentsUtil.addParameter(url, "languageId", languageId);
+
+		url = HttpComponentsUtil.addParameter(url, "persistState", "false");
 		url = HttpComponentsUtil.addParameter(
-			url, "previewCTCollectionId", layout.getCtCollectionId());
+			url, "showUserLocaleOptionsMessage", "false");
 
 		return StringBundler.concat(
-			"<div style=\"pointer-events: none;\"><iframe frameborder=\"0\" ",
-			"onload=\"this.style.height = (this.contentWindow.document.body.",
-			"scrollHeight+20) + 'px';\" src=\"", url,
-			"\" width=\"100%\"></iframe></div>");
+			"<iframe frameborder=\"0\" onload=\"this.style.height = ",
+			"(this.contentWindow.document.body.scrollHeight+20) + 'px';\" ",
+			"src=\"", url, "\" width=\"100%\"></iframe>");
 	}
 
 	@Override

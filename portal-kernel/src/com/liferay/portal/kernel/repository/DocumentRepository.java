@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.repository;
 
-import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.capabilities.CapabilityProvider;
@@ -24,7 +14,6 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.repository.model.RepositoryEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.File;
@@ -59,8 +48,8 @@ public interface DocumentRepository extends CapabilityProvider {
 		throws PortalException;
 
 	public Folder addFolder(
-			long userId, long parentFolderId, String name, String description,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long parentFolderId,
+			String name, String description, ServiceContext serviceContext)
 		throws PortalException;
 
 	public void checkInFileEntry(
@@ -100,7 +89,15 @@ public interface DocumentRepository extends CapabilityProvider {
 	public default FileEntry fetchFileEntryByExternalReferenceCode(
 		String externalReferenceCode) {
 
-		return null;
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	public default Folder fetchFolderByExternalReferenceCode(
+		String externalReferenceCode) {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	public List<FileEntry> getFileEntries(
@@ -149,16 +146,8 @@ public interface DocumentRepository extends CapabilityProvider {
 			String externalReferenceCode)
 		throws PortalException {
 
-		try {
-			return getFileEntry(
-				GetterUtil.getLongStrict(externalReferenceCode));
-		}
-		catch (NumberFormatException numberFormatException) {
-			throw new NoSuchFileEntryException(
-				"No file entry exists with external reference code " +
-					externalReferenceCode,
-				numberFormatException);
-		}
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	public default FileEntry getFileEntryByFileName(
@@ -180,6 +169,14 @@ public interface DocumentRepository extends CapabilityProvider {
 
 	public Folder getFolder(long parentFolderId, String name)
 		throws PortalException;
+
+	public default Folder getFolderByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	public List<Folder> getFolders(
 			long parentFolderId, boolean includeMountFolders, int start,

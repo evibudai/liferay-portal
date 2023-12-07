@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.internal.search;
@@ -18,6 +9,8 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.util.KnowledgeBaseUtil;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -49,18 +42,16 @@ import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContri
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Peter Shin
@@ -120,17 +111,18 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		return hits;
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		service = ModelDocumentContributor.class,
-		target = "(indexer.class.name=com.liferay.knowledge.base.model.KBArticle)"
-	)
-	protected void addModelDocumentContributor(
-		ModelDocumentContributor<KBArticle> modelDocumentContributor) {
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext,
+			(Class<ModelDocumentContributor<KBArticle>>)
+				(Class<?>)ModelDocumentContributor.class,
+			"(indexer.class.name=com.liferay.knowledge.base.model.KBArticle)");
+	}
 
-		_modelDocumentContributors.add(modelDocumentContributor);
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerList.close();
 	}
 
 	@Override
@@ -143,7 +135,7 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	protected Document doGetDocument(KBArticle kbArticle) throws Exception {
 		Document document = getBaseModelDocument(CLASS_NAME, kbArticle);
 
-		_modelDocumentContributors.forEach(
+		_serviceTrackerList.forEach(
 			modelDocumentContributor -> modelDocumentContributor.contribute(
 				document, kbArticle));
 
@@ -212,12 +204,6 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		_reindexKBArticles(companyId);
 	}
 
-	protected void removeModelDocumentContributor(
-		ModelDocumentContributor<KBArticle> modelDocumentContributor) {
-
-		_modelDocumentContributors.remove(modelDocumentContributor);
-	}
-
 	@Reference
 	protected IndexWriterHelper indexWriterHelper;
 
@@ -236,14 +222,21 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	}
 
 	private void _reindexKBArticles(KBArticle kbArticle) throws Exception {
-		List<KBArticle> kbArticles =
-			kbArticleLocalService.getKBArticleAndAllDescendantKBArticles(
-				kbArticle.getResourcePrimKey(),
-				WorkflowConstants.STATUS_APPROVED, null);
-
 		Collection<Document> documents = new ArrayList<>();
 
-		for (KBArticle curKBArticle : kbArticles) {
+		for (KBArticle curKBArticle :
+				kbArticleLocalService.getKBArticleAndAllDescendantKBArticles(
+					kbArticle.getResourcePrimKey(),
+					WorkflowConstants.STATUS_ANY, null)) {
+
+			documents.add(getDocument(curKBArticle));
+		}
+
+		for (KBArticle curKBArticle :
+				kbArticleLocalService.getKBArticleAndAllDescendantKBArticles(
+					kbArticle.getResourcePrimKey(),
+					WorkflowConstants.STATUS_IN_TRASH, null)) {
+
 			documents.add(getDocument(curKBArticle));
 		}
 
@@ -291,7 +284,7 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	private ModelResourcePermission<KBArticle>
 		_kbArticleModelResourcePermission;
 
-	private final List<ModelDocumentContributor<KBArticle>>
-		_modelDocumentContributors = new CopyOnWriteArrayList<>();
+	private ServiceTrackerList<ModelDocumentContributor<KBArticle>>
+		_serviceTrackerList;
 
 }

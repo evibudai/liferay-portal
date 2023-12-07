@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -81,40 +72,38 @@ if (ratingsType == null) {
 
 	<liferay-ui:success key="suggestionSaved" message="suggestion-was-saved-successfully" />
 
-	<c:choose>
-		<c:when test="<%= kbCommentsCount == 1 %>">
-			<c:choose>
-				<c:when test="<%= showAdminSuggestionView %>">
-					<h5>
+	<h5 class="mb-0">
+		<c:choose>
+			<c:when test="<%= kbCommentsCount == 1 %>">
+				<c:choose>
+					<c:when test="<%= showAdminSuggestionView %>">
 						<liferay-ui:message key="there-is-one-suggestion" />
 
 						<c:if test="<%= pendingKBCommentsCount > 0 %>">
 							(<liferay-ui:message arguments="<%= pendingKBCommentsCount %>" key="x-pending" />)
 						</c:if>
-					</h5>
-				</c:when>
-				<c:otherwise>
-					<liferay-ui:message key="you-sent-one-suggestion-for-this-article" />
-				</c:otherwise>
-			</c:choose>
-		</c:when>
-		<c:when test="<%= kbCommentsCount > 1 %>">
-			<c:choose>
-				<c:when test="<%= showAdminSuggestionView %>">
-					<h5>
+					</c:when>
+					<c:otherwise>
+						<liferay-ui:message key="you-sent-one-suggestion-for-this-article" />
+					</c:otherwise>
+				</c:choose>
+			</c:when>
+			<c:when test="<%= kbCommentsCount > 1 %>">
+				<c:choose>
+					<c:when test="<%= showAdminSuggestionView %>">
 						<liferay-ui:message arguments="<%= kbCommentsCount %>" key="there-are-x-suggestions" />
 
 						<c:if test="<%= pendingKBCommentsCount > 0 %>">
 							(<liferay-ui:message arguments="<%= pendingKBCommentsCount %>" key="x-pending" />)
 						</c:if>
-					</h5>
-				</c:when>
-				<c:otherwise>
-					<liferay-ui:message arguments="<%= kbCommentsCount %>" key="you-sent-x-suggestions-for-this-article" />
-				</c:otherwise>
-			</c:choose>
-		</c:when>
-	</c:choose>
+					</c:when>
+					<c:otherwise>
+						<liferay-ui:message arguments="<%= kbCommentsCount %>" key="you-sent-x-suggestions-for-this-article" />
+					</c:otherwise>
+				</c:choose>
+			</c:when>
+		</c:choose>
+	</h5>
 
 	<c:if test="<%= kbCommentsCount > 0 %>">
 		<c:choose>

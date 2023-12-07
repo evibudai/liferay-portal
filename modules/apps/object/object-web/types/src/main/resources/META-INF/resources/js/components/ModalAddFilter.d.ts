@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 /// <reference types="react" />
 
 import {Observer} from '@clayui/modal/lib/types';
+import {MultiSelectItem} from '@liferay/object-js-components-web';
 import './ModalAddFilter.scss';
-interface IProps {
+interface ModalAddFilterProps {
 	aggregationFilter?: boolean;
+	creationLanguageId?: Liferay.Language.Locale;
 	currentFilters: CurrentFilter[];
+	disableAutoClose?: boolean;
 	disableDateValues?: boolean;
 	editingFilter: boolean;
 	editingObjectFieldName: string;
@@ -34,7 +28,7 @@ interface IProps {
 		fieldLabel?: LocalizedValue<string>,
 		objectFieldBusinessType?: string,
 		filterType?: string,
-		valueList?: IItem[],
+		valueList?: MultiSelectItem[],
 		value?: string
 	) => void;
 	validate: ({
@@ -42,14 +36,11 @@ interface IProps {
 		disableDateValues,
 		items,
 		selectedFilterBy,
-		selectedFilterType,
+		selectedFilterTypeValue,
 		setErrors,
 		value,
 	}: FilterValidation) => FilterErrors;
-	workflowStatusJSONArray: LabelValueObject[];
-}
-interface IItem extends LabelValueObject {
-	checked?: boolean;
+	workflowStatuses: LabelValueObject[];
 }
 export declare type FilterErrors = {
 	endDate?: string;
@@ -60,11 +51,11 @@ export declare type FilterErrors = {
 	value?: string;
 };
 export declare type FilterValidation = {
-	checkedItems: IItem[];
+	checkedItems: MultiSelectItem[];
 	disableDateValues?: boolean;
-	items: IItem[];
+	items: MultiSelectItem[];
 	selectedFilterBy?: ObjectField;
-	selectedFilterType?: LabelValueObject | null;
+	selectedFilterTypeValue?: string;
 	setErrors: (value: FilterErrors) => void;
 	value?: string;
 };
@@ -83,7 +74,9 @@ declare type CurrentFilter = {
 };
 export declare function ModalAddFilter({
 	aggregationFilter,
+	creationLanguageId,
 	currentFilters,
+	disableAutoClose,
 	disableDateValues,
 	editingFilter,
 	editingObjectFieldName,
@@ -95,6 +88,6 @@ export declare function ModalAddFilter({
 	onClose,
 	onSave,
 	validate,
-	workflowStatusJSONArray,
-}: IProps): JSX.Element;
+	workflowStatuses,
+}: ModalAddFilterProps): JSX.Element;
 export {};

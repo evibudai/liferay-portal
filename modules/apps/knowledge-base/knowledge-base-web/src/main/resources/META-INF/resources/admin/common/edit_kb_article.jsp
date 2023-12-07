@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -22,6 +13,7 @@ EditKBArticleDisplayContext editKBArticleDisplayContext = new EditKBArticleDispl
 if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(editKBArticleDisplayContext.getRedirect());
+	portletDisplay.setURLBackTitle(portletDisplay.getTitle());
 
 	renderResponse.setTitle(editKBArticleDisplayContext.getHeaderTitle());
 }
@@ -37,13 +29,14 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 
 <aui:form action="<%= editKBArticleDisplayContext.getUpdateKBArticleURL() %>" cssClass="edit-knowledge-base-article-form" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= editKBArticleDisplayContext.getRedirect() %>" />
+	<aui:input name="displayDate" type="hidden" value="" />
 	<aui:input name="workflowAction" type="hidden" value="<%= WorkflowConstants.ACTION_SAVE_DRAFT %>" />
 
 	<nav class="component-tbar subnav-tbar-light tbar tbar-knowledge-base-edit-article">
 		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
-					<aui:input autocomplete="off" cssClass="form-control-inline" label="" name="title" placeholder='<%= LanguageUtil.format(request, "untitled-x", "article") %>' required="<%= true %>" type="text" value="<%= HtmlUtil.escape(editKBArticleDisplayContext.getKBArticleTitle()) %>" wrapperCssClass="mb-0" />
+					<aui:input autocomplete="off" cssClass="form-control-inline" label='<%= LanguageUtil.get(request, "name") %>' labelCssClass="sr-only" name="title" placeholder='<%= LanguageUtil.format(request, "untitled-x", "article") %>' required="<%= true %>" type="text" value="<%= HtmlUtil.escape(editKBArticleDisplayContext.getKBArticleTitle()) %>" wrapperCssClass="mb-0" />
 				</li>
 				<li class="tbar-item">
 					<div class="tbar-section text-right">
@@ -65,19 +58,55 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 							type="submit"
 						/>
 
-						<clay:button
-							cssClass="mr-3"
-							disabled="<%= editKBArticleDisplayContext.isPending() %>"
-							displayType="primary"
-							id='<%= liferayPortletResponse.getNamespace() + "publishButton" %>'
-							label="<%= editKBArticleDisplayContext.getPublishButtonLabel() %>"
-							name="publishButton"
-							small="<%= true %>"
-							type="submit"
-						/>
+						<c:choose>
+							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-188058") && editKBArticleDisplayContext.isSchedulerEnabled() %>'>
+								<c:choose>
+									<c:when test="<%= editKBArticleDisplayContext.isScheduled() %>">
+										<span class="lfr-portal-tooltip">
+											<clay:button
+												cssClass="c-mr-3"
+												displayType="primary"
+												icon="date-time"
+												id='<%= liferayPortletResponse.getNamespace() + "scheduledButton" %>'
+												label="edit-schedule"
+												small="<%= true %>"
+												title='<%= LanguageUtil.format(request, "this-article-will-be-published-on-x", editKBArticleDisplayContext.getUserFormattedDisplayDateString()) %>'
+												type="button"
+											/>
+										</span>
+									</c:when>
+									<c:otherwise>
+										<clay:dropdown-menu
+											cssClass="c-mr-3"
+											displayType="primary"
+											dropdownItems="<%= editKBArticleDisplayContext.getEditKBArticleActionDropdownItems() %>"
+											icon="caret-bottom"
+											id='<%= liferayPortletResponse.getNamespace() + "publishDropdown" %>'
+											label="<%= editKBArticleDisplayContext.getPublishButtonLabel() %>"
+											name="publishDropdown"
+											small="<%= true %>"
+											swapIconSide="<%= true %>"
+										/>
+									</c:otherwise>
+								</c:choose>
+							</c:when>
+							<c:otherwise>
+								<clay:button
+									cssClass="c-mr-3"
+									disabled="<%= editKBArticleDisplayContext.isPending() %>"
+									displayType="primary"
+									id='<%= liferayPortletResponse.getNamespace() + "publishButton" %>'
+									label="<%= editKBArticleDisplayContext.getPublishButtonLabel() %>"
+									name="publishButton"
+									small="<%= true %>"
+									type="submit"
+								/>
+							</c:otherwise>
+						</c:choose>
 
 						<clay:button
 							borderless="<%= true %>"
+							displayType="secondary"
 							icon="cog"
 							id='<%= liferayPortletResponse.getNamespace() + "contextualSidebarButton" %>'
 							small="<%= true %>"
@@ -132,14 +161,17 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 					<liferay-frontend:fieldset
 						collapsed="<%= true %>"
 						collapsible="<%= true %>"
+						cssClass="panel-unstyled"
 						label="display-page"
 					>
-						<liferay-asset:select-asset-display-page
-							classNameId="<%= PortalUtil.getClassNameId(KBArticle.class) %>"
-							classPK="<%= editKBArticleDisplayContext.getResourcePrimKey() %>"
-							groupId="<%= scopeGroupId %>"
-							showViewInContextLink="<%= true %>"
-						/>
+						<div class="mb-3">
+							<liferay-asset:select-asset-display-page
+								classNameId="<%= PortalUtil.getClassNameId(KBArticle.class) %>"
+								classPK="<%= editKBArticleDisplayContext.getResourcePrimKey() %>"
+								groupId="<%= scopeGroupId %>"
+								showViewInContextLink="<%= true %>"
+							/>
+						</div>
 					</liferay-frontend:fieldset>
 
 					<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="categorization">
@@ -155,10 +187,11 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 						/>
 					</aui:fieldset>
 
-					<c:if test='<%= GetterUtil.getBoolean(com.liferay.portal.kernel.util.PropsUtil.get("feature.flag.LPS-165476")) %>'>
+					<c:if test="<%= editKBArticleDisplayContext.isSchedulerEnabled() %>">
 						<liferay-frontend:fieldset
 							collapsed="<%= true %>"
 							collapsible="<%= true %>"
+							cssClass="panel-unstyled"
 							label="expiration-date"
 						>
 							<aui:model-context bean="<%= editKBArticleDisplayContext.getKBArticle() %>" model="<%= KBArticle.class %>" />
@@ -187,9 +220,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 							<aui:input cssClass="input-medium" data-custom-url="<%= false %>" disabled="<%= editKBArticleDisplayContext.isURLTitleDisabled() %>" ignoreRequestValue="<%= true %>" label="" name="urlTitle" placeholder="sample-article-url-title" type="text" value="<%= editKBArticleDisplayContext.getKBArticleURLTitle() %>" />
 						</aui:field-wrapper>
 
-						<c:if test="<%= editKBArticleDisplayContext.isKBArticleDescriptionEnabled() %>">
-							<aui:input name="description" value="<%= editKBArticleDisplayContext.getKBArticleDescription() %>" />
-						</c:if>
+						<aui:input name="description" value="<%= editKBArticleDisplayContext.getKBArticleDescription() %>" />
 
 						<c:if test="<%= editKBArticleDisplayContext.isSourceURLEnabled() %>">
 							<aui:input label="source-url" name="sourceURL" value="<%= editKBArticleDisplayContext.getKBArticleSourceURL() %>" />
@@ -241,6 +272,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 				</c:if>
 
 				<liferay-ui:error exception="<%= FileNameException.class %>" message="please-enter-a-file-with-a-valid-file-name" />
+				<liferay-ui:error exception="<%= KBArticleDisplayDateException.class %>" message="please-enter-a-valid-schedule-date" />
 				<liferay-ui:error exception="<%= KBArticleExpirationDateException.class %>" message="please-enter-a-valid-expiration-date" />
 				<liferay-ui:error exception="<%= KBArticleReviewDateException.class %>" message="please-enter-a-valid-review-date" />
 				<liferay-ui:error exception="<%= KBArticleStatusException.class %>" message="this-article-cannot-be-published-because-its-parent-has-not-been-published" />
@@ -275,7 +307,7 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 				<liferay-ui:error exception="<%= NoSuchFileException.class %>" message="the-document-could-not-be-found" />
 
 				<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationProviderUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 				</liferay-ui:error>
 
 				<liferay-asset:asset-categories-error />
@@ -338,7 +370,41 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 			"kbArticle", editKBArticleDisplayContext.getKBArticle()
 		).put(
 			"publishAction", WorkflowConstants.ACTION_PUBLISH
+		).put(
+			"schedulerEnabled", FeatureFlagManagerUtil.isEnabled("LPS-188058") && editKBArticleDisplayContext.isSchedulerEnabled()
 		).build()
 	%>'
 	module="admin/js/EditKBArticle"
 />
+
+<div>
+	<react:component
+		module="admin/js/components/ScheduleKBArticle"
+		props='<%=
+			HashMapBuilder.<String, Object>put(
+				"displayDate", editKBArticleDisplayContext.getDatePickerFormattedDisplayDate()
+			).put(
+				"scheduled", editKBArticleDisplayContext.isScheduled()
+			).put(
+				"timeZone", timeZone.getID()
+			).build()
+		%>'
+	/>
+</div>
+
+<%
+String kbArticleSuccessMessage = GetterUtil.getString(MultiSessionMessages.get(renderRequest, "kbArticleSuccessMessage"));
+%>
+
+<c:if test="<%= Validator.isNotNull(kbArticleSuccessMessage) %>">
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"autoClose", 20000
+			).put(
+				"message", kbArticleSuccessMessage
+			).build()
+		%>'
+		module="admin/js/utils/openToast"
+	/>
+</c:if>

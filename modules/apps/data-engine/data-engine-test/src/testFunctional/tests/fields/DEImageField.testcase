@@ -10,15 +10,15 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,7 +27,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-68645. This test verifies that is possible to delete the field."
-	@priority = "5"
+	@priority = 5
 	test CanBeDeleted {
 		NavItem.gotoStructures();
 
@@ -55,7 +55,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-68645. This test verifies that is possible to duplicate the field."
-	@priority = "4"
+	@priority = 4
 	test CanBeDuplicated {
 		NavItem.gotoStructures();
 
@@ -81,7 +81,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69272. This test verifies that is possible to clear the uploaded image."
-	@priority = "5"
+	@priority = 5
 	test CanClearImage {
 		NavItem.gotoStructures();
 
@@ -127,7 +127,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69272. This test verifies that upon uploading a new image, preview is updated."
-	@priority = "4"
+	@priority = 4
 	test CanEditImage {
 		NavItem.gotoStructures();
 
@@ -189,7 +189,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-68645. This test verifies that Label and Help text can be edited."
-	@priority = "5"
+	@priority = 5
 	test CanEditLabelAndHelpText {
 		NavItem.gotoStructures();
 
@@ -226,7 +226,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69272. This test verifies that is not possible to publish the Web Content with a required field blank."
-	@priority = "4"
+	@priority = 4
 	test CanNotPublishBlankRequiredField {
 		NavItem.gotoStructures();
 
@@ -252,7 +252,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69272. This test verifies is possible to remove a duplicated field (repeatable)."
-	@priority = "4"
+	@priority = 4
 	test CanRemoveDuplicatedField {
 		NavItem.gotoStructures();
 
@@ -286,13 +286,14 @@ definition {
 
 		DEBuilder.assertFieldNotPresent(
 			fieldLabel = "Image",
-			index = "2");
+			index = 2);
 	}
 
 	@description = "This is a test for LRQA-68645. This test verifies that Default Searchable property is Disable when System Setting is left unchecked."
-	@priority = "3"
+	@priority = 3
 	test CanSetDefaultSearchablePropertyToDisable {
-		property test.name.skip.portal.instance = "DEImageField#CanSetDefaultSearchablePropertyToDisable";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -324,9 +325,10 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-68645. This test verifies that Default Searchable property is Text when System Setting is checked."
-	@priority = "3"
+	@priority = 3
 	test CanSetDefaultSearchablePropertyToText {
-		property test.name.skip.portal.instance = "DEImageField#CanSetDefaultSearchablePropertyToText";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -358,7 +360,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-68645. This test verifies that Label and Help text can be set."
-	@priority = "5"
+	@priority = 5
 	test CanSetLabelAndHelpText {
 		NavItem.gotoStructures();
 
@@ -383,7 +385,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-68645. This test verifies that Label can be shown or hidden."
-	@priority = "3"
+	@priority = 3
 	test CanSetLabelToShownOrHidden {
 		NavItem.gotoStructures();
 
@@ -413,7 +415,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69272. This test verifies that is possible to upload an image."
-	@priority = "5"
+	@priority = 5
 	test CanUploadImage {
 		NavItem.gotoStructures();
 
@@ -459,7 +461,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69272. This test verifies that upon duplicating a repeatable field, inputted data on both fields persists."
-	@priority = "5"
+	@priority = 5
 	test CanUploadImageOnDuplicatedField {
 		NavItem.gotoStructures();
 
@@ -496,7 +498,7 @@ definition {
 		DERenderer.inputDataInImageField(
 			fieldLabel = "Image",
 			imageFileName = "Document Title 1",
-			index = "2",
+			index = 2,
 			navTab = "Documents and Media",
 			webContentImage = "Document Title 1");
 
@@ -508,17 +510,87 @@ definition {
 			fieldLabel = "Image",
 			imageFile = "Document_1.jpg",
 			imageTitle = "Document Title 1",
-			index = "1");
+			index = 1);
 
 		DERenderer.assertDataInImageField(
 			fieldLabel = "Image",
 			imageFile = "Document_1.jpg",
 			imageTitle = "Document Title 1",
-			index = "2");
+			index = 2);
+	}
+
+	@description = "LPS-190801 - Verify if the image selector defaults to the Global site image library"
+	@priority = 3
+	test ViewDefaultImageSelector {
+		task ("Given that a user uploads an image to documents and media on a Global site") {
+			ApplicationsMenu.gotoSite(site = "Global");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "global");
+
+			DMDocument.addCP(
+				dmDocumentFile = "ray_one.png",
+				dmDocumentTitle = "ray_one");
+		}
+
+		task ("And Given a structure with an image selector required field") {
+			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "global");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "content-structure");
+
+			FormViewBuilder.addFieldByDoubleClick(fieldType = "Upload");
+
+			Check.checkToggleSwitch(
+				checkboxName = "Required Field",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			Button.clickSave();
+		}
+
+		task ("And Given a new Web Content based on the structure created") {
+			Navigator.gotoNavTab(navTab = "Web Content");
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "content-structure");
+
+			WebContent.addWithStructureCP(webContentTitle = "WC WebContent Title");
+		}
+
+		task ("When the user goes to select an uploaded image") {
+			SelectFrameTop();
+
+			ClickNoError(locator1 = "FormFields#SELECT_UPLOAD_FIELD");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		}
+
+		task ("Then the image selector defaults to the Global site image library") {
+			AssertElementPresent(
+				key_viewHomeFolder = "Global",
+				locator1 = "ObjectField#VIEW_HOME_FOLDER");
+
+			LexiconCard.clickCardTitle(card = "ray_one");
+		}
+
+		task ("And When the user goes to select an uploaded image again") {
+			SelectFrameTop();
+
+			ClickNoError(locator1 = "FormFields#SELECT_UPLOAD_FIELD");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		}
+
+		task ("Then the image picker still defaults to the site's global image library") {
+			AssertElementPresent(
+				key_viewHomeFolder = "Global",
+				locator1 = "ObjectField#VIEW_HOME_FOLDER");
+
+			LexiconCard.clickCardTitle(card = "ray_one");
+		}
 	}
 
 	@description = "Check if Image Field details can be seen."
-	@priority = "4"
+	@priority = 4
 	test ViewImageFieldDetails {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -533,7 +605,7 @@ definition {
 
 		DEBuilder.openField(
 			fieldLabel = "Image",
-			index = "1");
+			index = 1);
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 
@@ -555,7 +627,7 @@ definition {
 
 		DEBuilder.openField(
 			fieldLabel = "Image",
-			index = "1");
+			index = 1);
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 

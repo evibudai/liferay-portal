@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.machine.learning.internal.forecast;
@@ -18,6 +9,7 @@ import com.liferay.commerce.machine.learning.forecast.CommerceMLForecast;
 import com.liferay.commerce.machine.learning.internal.forecast.constants.CommerceMLForecastField;
 import com.liferay.commerce.machine.learning.internal.forecast.constants.CommerceMLForecastPeriod;
 import com.liferay.commerce.machine.learning.internal.search.api.CommerceMLIndexer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -61,8 +53,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -79,8 +69,6 @@ public abstract class BaseCommerceMLForecastServiceImpl
 
 		IndexDocumentRequest indexDocumentRequest = new IndexDocumentRequest(
 			commerceMLIndexer.getIndexName(model.getCompanyId()), document);
-
-		indexDocumentRequest.setType(commerceMLIndexer.getDocumentType());
 
 		IndexDocumentResponse indexDocumentResponse =
 			searchEngineAdapter.execute(indexDocumentRequest);
@@ -299,16 +287,9 @@ public abstract class BaseCommerceMLForecastServiceImpl
 		SearchSearchResponse searchSearchResponse = searchEngineAdapter.execute(
 			searchSearchRequest);
 
-		List<Document> documents = _getDocuments(
-			searchSearchResponse.getHits());
-
-		Stream<Document> stream = documents.stream();
-
-		return stream.map(
-			this::toForecastModel
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			_getDocuments(searchSearchResponse.getHits()),
+			this::toForecastModel);
 	}
 
 	protected SearchSearchRequest getSearchSearchRequest(
@@ -318,9 +299,9 @@ public abstract class BaseCommerceMLForecastServiceImpl
 			{
 				setIndexNames(new String[] {indexName});
 				setQuery(query);
-				setStart(Integer.valueOf(start));
 				setSize(Integer.valueOf(size));
 				setSorts(sorts);
+				setStart(Integer.valueOf(start));
 				setStats(Collections.emptyMap());
 			}
 		};
@@ -361,7 +342,7 @@ public abstract class BaseCommerceMLForecastServiceImpl
 	protected static final String SORTABLE_FIELD_SUFFIX = "_sortable";
 
 	@Reference(
-		target = "(component.name=com.liferay.commerce.machine.learning.internal.forecast.search.index.CommerceMLForecastIndexer)"
+		target = "(component.name=com.liferay.commerce.machine.learning.internal.forecast.search.index.ForecastCommerceMLIndexer)"
 	)
 	protected volatile CommerceMLIndexer commerceMLIndexer;
 

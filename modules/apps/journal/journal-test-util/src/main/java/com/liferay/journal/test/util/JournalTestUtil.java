@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.test.util;
@@ -41,8 +32,6 @@ import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalFeedLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.util.JournalConverter;
-import com.liferay.journal.util.JournalHelper;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -52,7 +41,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.portlet.PortletRequestModel;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -60,11 +49,9 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -74,8 +61,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.rss.util.RSSUtil;
 
-import java.lang.reflect.Method;
-
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -83,7 +68,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.wiring.BundleWiring;
 
@@ -459,12 +443,12 @@ public class JournalTestUtil {
 			externalReferenceCode, serviceContext.getUserId(), groupId,
 			folderId, classNameId, 0, articleId, autoArticleId,
 			JournalArticleConstants.VERSION_DEFAULT, titleMap, descriptionMap,
-			friendlyUrlMap, content, ddmStructure.getStructureKey(),
+			friendlyUrlMap, content, ddmStructure.getStructureId(),
 			ddmTemplate.getTemplateKey(), layoutUuid, displayDateMonth,
 			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, neverExpire, 0, 0, 0, 0,
-			0, true, true, false, null, null, null, null, serviceContext);
+			0, true, true, false, 0, 0, null, null, null, null, serviceContext);
 	}
 
 	public static JournalArticle addArticle(
@@ -626,6 +610,11 @@ public class JournalTestUtil {
 			Map<String, byte[]> images, ServiceContext serviceContext)
 		throws Exception {
 
+		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(
+			PortalUtil.getSiteGroupId(serviceContext.getScopeGroupId()),
+			PortalUtil.getClassNameId(JournalArticle.class.getName()),
+			ddmStructureKey, true);
+
 		return JournalArticleLocalServiceUtil.addArticle(
 			null, serviceContext.getUserId(), serviceContext.getScopeGroupId(),
 			folderId, classNameId, classPK, StringPool.BLANK, true, 0,
@@ -636,9 +625,9 @@ public class JournalTestUtil {
 			HashMapBuilder.put(
 				defaultLocale, RandomTestUtil.randomString()
 			).build(),
-			xml, ddmStructureKey, ddmTemplateKey, null, 1, 1, 1965, 0, 0, 0, 0,
-			0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false, null, null, images,
-			null, serviceContext);
+			xml, ddmStructure.getStructureId(), ddmTemplateKey, null, 1, 1,
+			1965, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false,
+			0, 0, null, null, images, null, serviceContext);
 	}
 
 	public static JournalArticle addArticleWithXMLContent(
@@ -731,7 +720,7 @@ public class JournalTestUtil {
 	}
 
 	public static JournalFeed addFeed(
-			long groupId, long plid, String name, String ddmStructureKey,
+			long groupId, long plid, String name, long ddmStructureId,
 			String ddmTemplateKey, String rendererTemplateKey)
 		throws Exception {
 
@@ -755,7 +744,7 @@ public class JournalTestUtil {
 
 		return JournalFeedLocalServiceUtil.addFeed(
 			userId, groupId, feedId, autoFeedId, name, description,
-			ddmStructureKey, ddmTemplateKey, rendererTemplateKey, delta,
+			ddmStructureId, ddmTemplateKey, rendererTemplateKey, delta,
 			orderByCol, orderByType, friendlyURL, targetPortletId, contentField,
 			feedFormat, feedVersion, serviceContext);
 	}
@@ -903,14 +892,6 @@ public class JournalTestUtil {
 			version, null, ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
-	public static Method getJournalUtilTransformMethod() {
-		return ReflectionTestUtil.getMethod(
-			_JOURNAL_UTIL_CLASS, "transform", JournalArticle.class,
-			DDMTemplate.class, JournalHelper.class, String.class,
-			LayoutDisplayPageProviderRegistry.class, PortletRequestModel.class,
-			boolean.class, String.class, ThemeDisplay.class, String.class);
-	}
-
 	public static String getSampleTemplateFTL() {
 		return "${name.getData()}";
 	}
@@ -1049,12 +1030,13 @@ public class JournalTestUtil {
 		return JournalArticleLocalServiceUtil.updateArticle(
 			userId, article.getGroupId(), article.getFolderId(),
 			article.getArticleId(), article.getVersion(), titleMap,
-			article.getDescriptionMap(), content, article.getDDMStructureKey(),
+			article.getDescriptionMap(), null, content,
 			article.getDDMTemplateKey(), article.getLayoutUuid(),
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true,
-			article.isIndexable(), article.isSmallImage(),
-			article.getSmallImageURL(), null, null, null, serviceContext);
+			article.isIndexable(), article.isSmallImage(), 0,
+			article.getSmallImageSource(), article.getSmallImageURL(), null,
+			null, null, serviceContext);
 	}
 
 	public static JournalArticle updateArticleWithWorkflow(
@@ -1235,19 +1217,8 @@ public class JournalTestUtil {
 	static {
 		Bundle testBundle = FrameworkUtil.getBundle(JournalTestUtil.class);
 
-		BundleContext bundleContext = testBundle.getBundleContext();
-
-		Bundle journalServiceBundle = null;
-
-		for (Bundle bundle : bundleContext.getBundles()) {
-			String symbolicName = bundle.getSymbolicName();
-
-			if (symbolicName.equals("com.liferay.journal.service")) {
-				journalServiceBundle = bundle;
-
-				break;
-			}
-		}
+		Bundle journalServiceBundle = BundleUtil.getBundle(
+			testBundle.getBundleContext(), "com.liferay.journal.service");
 
 		if (journalServiceBundle == null) {
 			throw new ExceptionInInitializerError(

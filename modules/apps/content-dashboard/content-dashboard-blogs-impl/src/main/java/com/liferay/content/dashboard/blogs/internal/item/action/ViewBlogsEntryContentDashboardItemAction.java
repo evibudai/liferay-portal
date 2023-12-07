@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.blogs.internal.item.action;
@@ -17,11 +8,14 @@ package com.liferay.content.dashboard.blogs.internal.item.action;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -29,7 +23,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Locale;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -96,26 +89,30 @@ public class ViewBlogsEntryContentDashboardItemAction
 
 			clonedThemeDisplay.setScopeGroupId(_blogsEntry.getGroupId());
 
-			return Optional.ofNullable(
-				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					BlogsEntry.class.getName(), _blogsEntry.getEntryId(),
-					locale, clonedThemeDisplay)
-			).map(
-				url -> {
-					String backURL = ParamUtil.getString(
-						_httpServletRequest, "backURL");
+			String url = _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+				new InfoItemReference(
+					BlogsEntry.class.getName(),
+					new ClassPKInfoItemIdentifier(_blogsEntry.getEntryId())),
+				locale, clonedThemeDisplay);
 
-					if (Validator.isNotNull(backURL)) {
-						return HttpComponentsUtil.setParameter(
-							url, "p_l_back_url", backURL);
-					}
+			if (url == null) {
+				return StringPool.BLANK;
+			}
 
-					return HttpComponentsUtil.setParameter(
-						url, "p_l_back_url", themeDisplay.getURLCurrent());
-				}
-			).orElse(
-				StringPool.BLANK
-			);
+			String backURL = ParamUtil.getString(
+				_httpServletRequest, "backURL");
+
+			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+			if (Validator.isNotNull(backURL)) {
+				return HttpComponentsUtil.addParameters(
+					url, "p_l_back_url", backURL, "p_l_back_url_title",
+					portletDisplay.getPortletDisplayName());
+			}
+
+			return HttpComponentsUtil.addParameters(
+				url, "p_l_back_url", themeDisplay.getURLCurrent(),
+				"p_l_back_url_title", portletDisplay.getPortletDisplayName());
 		}
 		catch (CloneNotSupportedException | PortalException exception) {
 			_log.error(exception);

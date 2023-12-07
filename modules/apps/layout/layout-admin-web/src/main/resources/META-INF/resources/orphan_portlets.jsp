@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -26,6 +17,7 @@ Layout selLayout = orphanPortletsDisplayContext.getSelLayout();
 portletDisplay.setDescription(LanguageUtil.get(request, "orphan-widgets-description"));
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(orphanPortletsDisplayContext.getBackURL());
+portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 renderResponse.setTitle(LanguageUtil.get(request, "orphan-widgets"));
 %>
@@ -42,26 +34,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "orphan-widgets"));
 </portlet:actionURL>
 
 <aui:form action="<%= deleteOrphanPortletsURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
-	<div class="alert alert-warning" role="alert">
-		<span class="alert-indicator">
-			<aui:icon image="warning-full" markupView="lexicon" />
-		</span>
-
-		<strong class="lead"><liferay-ui:message key="warning-colon" /></strong>
-
-		<c:choose>
-			<c:when test="<%= selLayout.isLayoutPrototypeLinkActive() %>">
-				<liferay-ui:message key="layout-inherits-from-a-prototype-widgets-cannot-be-manipulated" />
-			</c:when>
-			<c:otherwise>
-				<liferay-ui:message key="warning-preferences-of-selected-widgets-will-be-reset-or-deleted" />
-			</c:otherwise>
-		</c:choose>
-
-		<button aria-label="<%= LanguageUtil.get(request, "close") %>" class="close" data-dismiss="liferay-alert" type="button">
-			<aui:icon image="times" markupView="lexicon" />
-		</button>
-	</div>
+	<clay:alert
+		dismissible="<%= true %>"
+		displayType="warning"
+		message='<%= selLayout.isLayoutPrototypeLinkActive() ? "layout-inherits-from-a-prototype-widgets-cannot-be-manipulated" : "warning-preferences-of-selected-widgets-will-be-reset-or-deleted" %>'
+		symbol="warning-full"
+	/>
 
 	<liferay-ui:search-container
 		searchContainer="<%= orphanPortletsDisplayContext.getOrphanPortletsSearchContainer() %>"

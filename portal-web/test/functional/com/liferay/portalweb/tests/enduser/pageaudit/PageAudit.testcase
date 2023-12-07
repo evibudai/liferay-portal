@@ -1,6 +1,7 @@
 @component-name = "portal-page-audit"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Page Audit";
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		task ("Create content page") {
 			JSONLayout.addPublicLayout(
@@ -24,27 +25,15 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		TestUtils.hardRefresh();
-
-		JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-	}
-
-	@description = "LPS-132234: Given the detail view of the page audit panel
-	Then the checks related to Low contrast ratio, Missing image-alt and Missing input-image-alt will appear under the Accessibility section"
-	@priority = "3"
+	@description = "LPS-132234 Given the detail view of the page audit panel Then the checks related to Low contrast ratio, Missing image-alt and Missing input-image-alt will appear under the Accessibility section"
+	@priority = 3
 	test AccessibilityFailures {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckIllegibleFontSizes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -77,10 +66,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-119066: Given the Page Audit Panel
-	When the user clicks on the language selector and selects other language
-	Then the title of the page shows the matching translation (if existing), the URL changes (if localized URLs is enabled) and the API is called so the progress bar shows"
-	@priority = "3"
+	@description = "LPS-119066 Given the Page Audit Panel When the user clicks on the language selector and selects other language Then the title of the page shows the matching translation (if existing), the URL changes (if localized URLs is enabled) and the API is called so the progress bar shows"
+	@priority = 3
 	test AssertPageAuditLocale {
 		task ("Set Google PageSpeed API") {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
@@ -128,10 +115,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-129375: Given the Page Audit panel of a content page
-	When the localized canonical URLs options is not enabled and the user changes the language
-	Then the URL for that language shows and is consulted"
-	@priority = "4"
+	@description = "LPS-129375 Given the Page Audit panel of a content/widget/display page When the localized canonical URLs options is not enabled and the user changes the language Then the URL for that language shows and is consulted"
+	@priority = 4
 	test AssertPageAuditLocaleInContentPage {
 		property portal.acceptance = "true";
 
@@ -158,10 +143,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-129375: Given the Page Audit panel of a display page
-	When the localized canonical URLs options is not enabled and the user changes the language
-	Then the URL for that language shows and is consulted"
-	@priority = "4"
+	@description = "LPS-129375 Given the Page Audit panel of a content/widget/display page When the localized canonical URLs options is not enabled and the user changes the language Then the URL for that language shows and is consulted"
+	@priority = 4
 	test AssertPageAuditLocaleInDisplayPage {
 		property portal.acceptance = "true";
 
@@ -226,10 +209,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-129375: Given the Page Audit panel of a widget page
-	When the localized canonical URLs options is not enabled and the user changes the language
-	Then the URL for that language shows and is consulted"
-	@priority = "4"
+	@description = "LPS-129375 Given the Page Audit panel of a content/widget/display page When the localized canonical URLs options is not enabled and the user changes the language Then the URL for that language shows and is consulted"
+	@priority = 4
 	test AssertPageAuditLocaleInWidgetPage {
 		property portal.acceptance = "true";
 
@@ -264,10 +245,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-130621 Given the page audit panel
-	When the panel is showing cached data
-	Then there's an alert informing about the date and the hour when it was last updated"
-	@priority = "3"
+	@description = "LPS-130621 Given the page audit panel When the panel is showing cached data Then there's an alert informing about the date and the hour when it was last updated. "
+	@priority = 3
 	test CachedDataAlert {
 		task ("Create second content page") {
 			JSONLayout.addPublicLayout(
@@ -277,7 +256,7 @@ definition {
 		}
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -309,14 +288,12 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "PageAudit#CACHE_ALERT",
-				value1 = "Relaunch to update data.");
+				value1 = "Reload to update data.");
 		}
 	}
 
-	@description = "LPS-129375: Given the Page Audit panel of a content page
-	When the localized canonical URLs options is enabled and the user changes the language
-	Then the matching canonical URL shows and is consulted"
-	@priority = "4"
+	@description = "LPS-129375 Given the Page Audit panel of a content/widget/display page When the localized canonical URLs options is enabled and the user changes the language Then the matching canonical URL shows and is consulted"
+	@priority = 4
 	test CanonicalUrlLocaleInContentPage {
 		property portal.acceptance = "true";
 
@@ -329,7 +306,7 @@ definition {
 		task ("Set a custom page as canonical URL to have data already loaded") {
 			PageAudit.setSEOcanonicalURL(
 				canonicalLocale = "fr-FR",
-				url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+				url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Open Page Audit panel and change locale/language") {
@@ -356,10 +333,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-129375: Given the Page Audit panel of a widget page
-	When the localized canonical URLs options is enabled and the user changes the language
-	Then the matching canonical URL shows and is consulted"
-	@priority = "4"
+	@description = "LPS-129375 Given the Page Audit panel of a content/widget/display page When the localized canonical URLs options is enabled and the user changes the language Then the matching canonical URL shows and is consulted"
+	@priority = 4
 	test CanonicalUrlLocaleInWidgetPage {
 		property portal.acceptance = "true";
 
@@ -381,7 +356,7 @@ definition {
 			PageAudit.setSEOcanonicalURL(
 				canonicalLocale = "nl-NL",
 				pageName = "Widget Page Name",
-				url = "https://liferay-tango.github.io/liferay-portal/page-audit-test",
+				url = "https://liferay-echo.github.io/liferay-portal/page-audit-test",
 				urlAppend = "web/test-site-name/3");
 		}
 
@@ -409,17 +384,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there is more than the 60% of the texts on the page with insufficient font sizes
-	Then the users will see the matching failing elements, with the size of the illegible font and the percentage of text it covers"
-	@priority = "4"
+	@description = "LPS-132234 Given the page audit panel detail view When there is more than the 60% of the texts on the page with insufficient font sizes Then the users will see the matching failing elements, with the size of the illegible font and the percentage of text it covers"
+	@priority = 4
 	@uitest
 	test CheckIllegibleFontSizes {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckIllegibleFontSizes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -441,17 +415,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there are images on the page with a displayed ratio different from the actual one
-	Then the users will see the matching failing elements, with its source link and the occurrences separately, and the Displayed Aspect Ratio and the Actual Aspect Ratio for each one of them"
-	@priority = "4"
+	@description = "LPS-132234 Given the page audit panel detail view When there are images on the page with a displayed ratio different from the actual one Then the users will see the matching failing elements, with its source link and the occurrences separately, and the Displayed Aspect Ratio and the Actual Aspect Ratio  for each one of them"
+	@priority = 4
 	@uitest
 	test CheckIncorrectImageAspectRatio {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckIncorrectImageAspectRatio";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -485,17 +458,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there links on the page that are not formatted with the a href attributes or have invalid target URLs
-	Then the users will see the matching failing elements, with current link snippet"
-	@priority = "4"
+	@description = "LPS-132234 Given the page audit panel detail view When there links on the page that are not formatted with the a href attributes or have invalid target URLs Then the users will see the matching failing elements, with current link snippet"
+	@priority = 4
 	@uitest
 	test CheckLinksCrawlable {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckLinksCrawlable";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -521,17 +493,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there are texts on the page with insufficient contrast ratio
-	Then the users will see the matching failing elements, with its current ratio, foreground color code, background color code, font size, font weight and expected ratio"
-	@priority = "4"
+	@description = "LPS-132234 Given the page audit panel detail view When there are texts on the page with insufficient contrast ratio Then the users will see the matching failing elements, with its current ratio, foreground color code, background color code, font size, font weight and expected ratio"
+	@priority = 4
 	@uitest
 	test CheckLowContrastRatio {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckLowContrastRatio";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -557,17 +528,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there are images on the page with no alt text
-	Then the users will see the matching failing elements, and the current code snippet "
-	@priority = "4"
+	@description = "LPS-132234 Given the page audit panel detail view When there are images on the page with no alt text Then the users will see the matching failing elements, and the current code snippet "
+	@priority = 4
 	@uitest
 	test CheckMissingImgALTAttributes {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckMissingImgALTAttributes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -593,17 +563,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there are input-type images on the page with no alt text
-	Then the users will see the matching failing elements, and the current code snippet"
-	@priority = "4"
+	@description = "LPS-132234 Given the page audit panel detail view When there are input-type images on the page with no alt text Then the users will see the matching failing elements, and the current code snippet "
+	@priority = 4
 	@uitest
 	test CheckMissingInputALTAttributes {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckMissingInputALTAttributes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -629,9 +598,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-134760: Given the Page Audit panel in a private page
-	Then the reload button won't be visible."
-	@priority = "3"
+	@description = "LPS-134760 Given the Page Audit panel in a private page Then the reload button won't be visible."
+	@priority = 3
 	test CheckNotVisibleReloadbButtonInPrivatePage {
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 
@@ -656,15 +624,13 @@ definition {
 		}
 	}
 
-	@description = "LPS-132406: Given the Page Audit Panel
-	When the users leave the page because the session expires or s/he does log out
-	Then they find the panel closed"
-	@priority = "3"
+	@description = "LPS-132406 Given the Page Audit Panel When the users leave the page because the session expires or s/he does log out Then they find the panel closed"
+	@priority = 3
 	test CheckPageAuditClosedAfterLogout {
 		task ("Open Content Performance panel") {
 			PageAudit.openPageAuditSidebar();
 
-			AssertVisible(locator1 = "PageAudit#SIDEBAR");
+			AssertElementPresent(locator1 = "PageAudit#SIDEBAR");
 		}
 
 		task ("Logout and login") {
@@ -674,14 +640,12 @@ definition {
 		}
 
 		task ("Check if panel is closed") {
-			AssertNotVisible(locator1 = "PageAudit#SIDEBAR");
+			AssertElementNotPresent(locator1 = "PageAudit#SIDEBAR");
 		}
 	}
 
-	@description = "LPS-132406: Given the Page Audit Panel
-	When the users leave the page using any of the internal links in the panel (to navigate to System, instance, site or page settings) and return to the page using the 'back' button
-	Then they find the panel open"
-	@priority = "3"
+	@description = "LPS-132406 Given the Page Audit Panel When the users leave the page using any of the internal links in the panel (to navigate to System, instance, site or page settings) and return to the page using the ""back"" button Then they find the panel open "
+	@priority = 3
 	test CheckPageAuditOpenAfterNavigation {
 		task ("Open Content Performance panel") {
 			PageAudit.openPageAuditSidebar();
@@ -698,17 +662,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there tap targets on the page that are too small or are overlapping with others
-	Then the users will see the matching failing elements, with the tap target snippet, size and Overlapping Target if there is one"
-	@priority = "4"
+	@description = "LPS-132234 Given the page audit panel detail view When there tap targets on the page that are too small or are overlapping with others Then the users will see the matching failing elements, with the tap target snippet, size and Overlapping Target if there is one"
+	@priority = 4
 	@uitest
 	test CheckSmallTapTargets {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckSmallTapTargets";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -734,15 +697,13 @@ definition {
 		}
 	}
 
-	@description = "LPS-128385: Given the preferred strategy dropdown in the Site Scope section
-	When the value is void ('Choose an option')
-	Then the call is made for Google Page Speed default value - desktop"
-	@priority = "3"
+	@description = "LPS-128385 Given the preferred strategy dropdown in the Site Scope section When the value is void (""Choose an option"") Then the call is made for Google Page Speed default value - desktop"
+	@priority = 3
 	test DefaultStrategyAtSiteSettings {
 		property portal.acceptance = "true";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -766,15 +727,13 @@ definition {
 		}
 	}
 
-	@description = "LPS-128385: Given the preferred strategy dropdown in the Site Scope section
-	When the value is Desktop
-	Then additional checks: Small Tap Targets, Incorrect Aspect Ratios and Illegible font sizes are NOT retrieved"
-	@priority = "4"
+	@description = "LPS-128385 Given the preferred strategy dropdown in the Site Scope section When the value is Desktop Then additional checks: Small Tap Targets and Illegible font sizes are NOT retrieved"
+	@priority = 4
 	test DesktopStrategyAtSiteSettings {
 		property portal.acceptance = "true";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -798,16 +757,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the page audit panel detail view
-	When there are more than 10 failing elements for a single issue
-	Then the users can see a Show more button every 10 failing elements, and when they click on it another 10 elements are displayed"
-	@priority = "3"
+	@description = "LPS-132234 Given the page audit panel detail view When there are more than 10 failing elements for a single issue Then the users can see a Show more button every 10 failing elements, and when they click on it another 10 elements are displayed"
+	@priority = 3
 	test DisplayMoreErrors {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckIllegibleFontSizes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test-10-more-issues.html");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test-10-more-issues.html");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -826,27 +784,64 @@ definition {
 			PageAudit.goToDetailView(failingCheckName = "Illegible Font Sizes");
 
 			AssertElementPresent(
-				badgeValue = "12",
+				badgeValue = 12,
 				locator1 = "PageAudit#BADGE_NUMBER");
 
-			PageAudit.assertFailingElementCount(expectedLabels = "10");
+			PageAudit.assertFailingElementCount(expectedLabels = 10);
 
 			Button.click(button = "View More");
 
-			PageAudit.assertFailingElementCount(expectedLabels = "12");
+			PageAudit.assertFailingElementCount(expectedLabels = 12);
 		}
 	}
 
-	@description = "LPS-135681: Given the Page Audit panel when the invalid API Key error is retrieved
-	When the user clicks on the Set API Key button
-	Then the user navigates to Site settings > Pages > Google PageSpeed Insights tab"
-	@priority = "3"
+	@description = "This is a test for LPS-192049. The page creator could access to details view of item on Performance list."
+	@priority = 4
+	test GoToDetailsOfItemOnPerformancePanel {
+		property custom.properties = "feature.flag.LPS-187284=true${line.separator}feature.flag.LPS-187285=true";
+
+		task ("Given a page creator has a Heading fragment on a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page creator opens the Page Audit sidebar") {
+			PageAudit.openPageAuditSidebar();
+		}
+
+		task ("Then the page creator could go to the details of Heading fragment") {
+			PageAudit.goToElementDetails(elementName = "Heading");
+
+			AssertTextEquals(
+				key_panel = "Warnings",
+				locator1 = "Panel#PANEL_ALERT_FEEDBACK",
+				value1 = "No issues found in this component.");
+
+			for (var itemName : list "Server Render Time,Component Type,Origin,Cache Status") {
+				AssertVisible(
+					key_itemName = ${itemName},
+					key_panel = "Basic Information",
+					locator1 = "Panel#PANEL_INFO_ITEM");
+			}
+		}
+	}
+
+	@description = "LPS-135681 Given the Page Audit panel when the invalid API Key error is retrieved When the user clicks on the Set API Key button Then the user navigates to Site settings > Pages > Google PageSpeed Insights tab"
+	@priority = 3
 	test InvalidAPIKeyErrorIsRecovered {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#InvalidAPIKeyErrorIsRecovered";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -878,10 +873,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-130636: Given a site
-	When the user visits a page where s/he had opened the Page Audit Panel previously to that visit
-	Then the API / cached data is called for the selected language URL and the progress bar shows"
-	@priority = "3"
+	@description = "LPS-130621 Given the page audit panel  When there is a language version of the page that has no cached data and another one that does have Then the first one shows the Launch a Page Audit... message, and the other one shows the cached data."
+	@priority = 3
 	test LanguageCacheData {
 		property portal.acceptance = "true";
 
@@ -895,7 +888,7 @@ definition {
 		}
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -925,16 +918,15 @@ definition {
 		}
 	}
 
-	@description = "Given the page audit panel
-	When the user clicks the launch button, either the one on the header or the one in the panel
-	Then the API is called and the data is retrieved"
-	@priority = "4"
+	@description = "LPS-130621 Given the page audit panel When the user clicks the launch button, either the one on the header or the one in the panel Then the API is called and the data is retrieved"
+	@priority = 4
 	test LaunchPageAudit {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckIllegibleFontSizes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -960,15 +952,13 @@ definition {
 		}
 	}
 
-	@description = "LPS-128385: Given the preferred strategy dropdown in the Site Scope section
-	When the value is Mobile
-	Then additional checks: Small Tap Targets, Incorrect Aspect Ratios and Illegible font sizes are retrieved"
-	@priority = "4"
+	@description = "LPS-128385 Given the preferred strategy dropdown in the Site Scope section When the value is Mobile Then additional checks: Small Tap Targets and Illegible font sizes are retrieved"
+	@priority = 4
 	test MobileStrategyAtSiteSettings {
 		property portal.acceptance = "true";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -992,17 +982,16 @@ definition {
 		}
 	}
 
-	@description = "LPS-127668: Given the page audit panel
-	When the users access the second level
-	Then they can see the title of the issue, the description and tips sections"
-	@priority = "4"
+	@description = "LPS-127668 Given the page audit panel When the users access the second level Then they can see the title of the issue, the description and tips sections"
+	@priority = 4
 	@uitest
 	test NavigateToSecondLevel {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#NavigateToSecondLevel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -1018,20 +1007,14 @@ definition {
 
 			PageAudit.goToDetailView(failingCheckName = "Low Contrast Ratio");
 
-			AssertTextPresent(
-				locator1 = "PageAudit#FAILING_CHECK_TITLE",
-				value1 = "Low Contrast Ratio");
+			AssertTextPresent(value1 = "Low Contrast Ratio");
 
-			AssertTextPresent(
-				locator1 = "PageAudit#PANEL_TITLE",
-				value1 = "DESCRIPTION");
+			AssertTextPresent(value1 = "DESCRIPTION");
 
-			AssertTextPresent(
-				locator1 = "PageAudit#PANEL_TITLE",
-				value1 = "TIPS");
+			AssertTextPresent(value1 = "TIPS");
 
 			AssertElementPresent(
-				badgeValue = "1",
+				badgeValue = 1,
 				locator1 = "PageAudit#BADGE_NUMBER");
 
 			AssertTextPresent(
@@ -1040,13 +1023,12 @@ definition {
 		}
 	}
 
-	@description = "LPS-135681: Given the Page Audit panel in its initial state (no API Key configured)
-	When the user clicks on the Configure button
-	Then the user navigates to Site settings > Pages > Google PageSpeed Insights tab"
-	@priority = "4"
+	@description = "LPS-135681 Given the Page Audit panel in its initial state (no API Key configured) When the user clicks on the Configure button Then the user navigates to Site settings > Pages > Google PageSpeed Insights tab"
+	@priority = 4
 	test NavigateToSiteSettingsWhenApiKeyNotConfigured {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#NavigateToSiteSettingsWhenApiKeyNotConfigured";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Open Page Audit panel") {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
@@ -1075,10 +1057,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-130621 Given the page audit panel
-	When there is a language version of the page that has no cached data and another one that does have
-	Then the first one shows the Launch a Page Audit... message, and the other one shows the cached data"
-	@priority = "4"
+	@description = "LPS-130621 Given the page audit panel  When there is a language version of the page that has no cached data and another one that does have Then the first one shows the Launch a Page Audit... message, and the other one shows the cached data."
+	@priority = 4
 	test OtherLanguageCacheData {
 		property portal.acceptance = "true";
 
@@ -1090,13 +1070,13 @@ definition {
 		}
 
 		task ("Set a custom page as canonical URL for first language") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set a custom page as canonical URL for second language") {
 			PageAudit.setSEOcanonicalURL(
 				canonicalLocale = "pt-BR",
-				url = "https://liferay-tango.github.io/liferay-portal/page-audit-test-no-issues");
+				url = "https://liferay-echo.github.io/liferay-portal/page-audit-test-no-issues");
 		}
 
 		task ("Set Google PageSpeed API to first page") {
@@ -1137,10 +1117,11 @@ definition {
 	}
 
 	@description = "LPS-119068: When the user, after s/he has clicked on the Connect with Page Speed (button) and being led to Site Settings > Pages > Google PageSpeed, clicks on Back button, s/he is led to the page view again"
-	@priority = "3"
+	@priority = 3
 	test PageAuditBackButton {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#PageAuditBackButton";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add Content Page") {
 			JSONLayout.addPublicLayout(
@@ -1177,10 +1158,11 @@ definition {
 	}
 
 	@description = "LPS-119068: When the user, after s/he has clicked on the Connect with Page Speed (button) and being led to Site Settings > Pages > Google PageSpeed, clicks on Cancel button, s/he is led to the page view again"
-	@priority = "3"
+	@priority = 3
 	test PageAuditCancelButton {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#PageAuditCancelButton";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add Content Page") {
 			JSONLayout.addPublicLayout(
@@ -1216,10 +1198,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-128385: Given the Google PageSpeed settings tab in the Virtual Instance Scope section
-	When the Enable Google PageSpeed Insights check is unchecked
-	Then the Page Audit icon won't be visible from the view mode of the pages in the site"
-	@priority = "3"
+	@description = "LPS-128385 Given the Google PageSpeed settings tab in the Virtual Instance Scope section When the Enable Google PageSpeed Insights check is unchecked Then the Page Audit icon won't be visible from the view mode of the pages in the site."
+	@priority = 3
 	test PageAuditIconInvisible {
 		task ("Check that Page Audit icon is visible") {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
@@ -1240,10 +1220,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-130621 Given the page audit panel
-	When the panel is showing no data because the audit has never been launched for that page / language combination
-	Then there's an image, a help texts and a button: Launch a Page Audit to check issues that impact on your page’s accessibility and SEO. + Button: Launch Page Audit, and the user is able to launch the audit by the means of clicking the button"
-	@priority = "5"
+	@description = "LPS-130621 Given the page audit panel When the panel is showing no data because the audit has never been launched for that page / language combination Then there's an image, a help texts and a button: Launch a Page Audit to check issues that impact on your page’s accessibility and SEO. + Button: Launch Page Audit, and the user is able to launch the audit by the means of clicking the button "
+	@priority = 5
 	@uitest
 	test PanelInfo {
 		property portal.acceptance = "true";
@@ -1273,16 +1251,15 @@ definition {
 		}
 	}
 
-	@description = "LPS-132234: Given the detail view of the page audit panel
-	Then the checks related to Incorrect image-aspect-ratio, Missing meta-description, Invalid Hreflang, Invalid canonical URL, Illegible font sizes,
-	Small tap targets, Missing <title> element and Crawlable-anchors will appear under the SEO section"
-	@priority = "3"
+	@description = "LPS-132234 Given the detail view of the page audit panel Then the checks related to Incorrect image-aspect-ratio, Missing meta-description, Invalid Hreflang, Invalid canonical URL, Illegible font sizes, Small tap targets, Missing <title> element and Crawlable-anchors will appear under the SEO section"
+	@priority = 3
 	test SEOFailures {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "PageAudit#CheckIllegibleFontSizes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Set a custom page as canonical URL to have data already loaded") {
-			PageAudit.setSEOcanonicalURL(url = "https://liferay-tango.github.io/liferay-portal/page-audit-test");
+			PageAudit.setSEOcanonicalURL(url = "https://liferay-echo.github.io/liferay-portal/page-audit-test");
 		}
 
 		task ("Set Google PageSpeed API") {
@@ -1337,6 +1314,205 @@ definition {
 				failingCheckCategory = "SEO",
 				failingCheckName = "Missing <title> Element",
 				locator1 = "PageAudit#FAILING_CHECK_CATEGORY_NAME");
+		}
+	}
+
+	@description = "This is a test for LPS-198257. View the Experience Selector on the Page Audit is on the Performance Tab."
+	@priority = 3
+	test SwitchExperienceOnPageAudit {
+		property custom.properties = "feature.flag.LPS-187284=true${line.separator}feature.flag.LPS-187285=true";
+
+		task ("Given a content page with an experience") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page",
+				siteName = "Test Site Name");
+
+			PageEditor.addExperience(
+				experienceName = "Experience",
+				segmentName = "Anyone");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditor.publish();
+		}
+
+		task ("When accessing the page audit performance tab") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page",
+				siteName = "Test Site Name");
+
+			PageEditor.viewFragmentNotPresent(fragmentName = "Button");
+
+			PageAudit.openPageAuditSidebar();
+		}
+
+		task ("Then it is possible to select the experience through the performance tab") {
+			Click(locator1 = "PageAudit#PAGE_AUDIT_EXPERIENCE_SELECTOR");
+
+			MenuItem.click(menuItem = "Experience");
+
+			PageEditor.viewFragmentNotPresent(fragmentName = "Button");
+		}
+	}
+
+	@description = "This is a test for LPS-196044. View improvement in page audit when adding a Button fragment."
+	@priority = 3
+	test ViewStylesImprovementOfButtonFragment {
+		property custom.properties = "feature.flag.LPS-187284=true${line.separator}feature.flag.LPS-187285=true";
+
+		task ("Given a button fragment added in content page") {
+			task ("Add a Button fragment to content page") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Content Page",
+					siteName = "Test Site Name");
+
+				PageEditor.addFragment(
+					collectionName = "Basic Components",
+					fragmentName = "Button");
+			}
+
+			task ("Publish the page") {
+				PageEditor.publish();
+			}
+		}
+
+		task ("When go to a Page Audit sidebar") {
+			PageAudit.openPageAuditSidebar();
+		}
+
+		task ("Then view styles improvement of Button fragment") {
+			AssertCssValue(
+				locator1 = "PageAudit#PAGE_AUDIT_NAME",
+				locator2 = "height",
+				value1 = "21px");
+
+			AssertCssValue(
+				locator1 = "PageAudit#PAGE_AUDIT_TIME",
+				locator2 = "height",
+				value1 = "21px");
+		}
+
+		task ("When go to the details of Button fragment") {
+			PageAudit.goToElementDetails(elementName = "Button");
+		}
+
+		task ("Then view the distance between feedback indicator and “Basic information” accordion is 24 px") {
+			AssertCssValue(
+				locator1 = "//div[contains(@class,'panel-collapse')]//div[contains(@class,'panel-body')]",
+				locator2 = "padding-top",
+				value1 = "16px");
+
+			AssertCssValue(
+				key_panel = "Basic Information",
+				locator1 = "Panel#PANEL",
+				locator2 = "padding-top",
+				value1 = "8px");
+		}
+
+		task ("When Go to Fragment Admin > Basic Components") {
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+
+			FragmentsAdminNavigator.gotoCollection(collectionName = "Basic Components");
+		}
+
+		task ("The view “CACHED” label color is in blue") {
+			AssertCssValue(
+				index = 1,
+				key_card = "Button",
+				locator1 = "Card#CARD_LABEL",
+				locator2 = "color",
+				value1 = "rgba(46, 90, 172, 1)");
+		}
+	}
+
+	@description = "This is a test for LPS-196044. View improvement in page audit when adding an Image fragment."
+	@priority = 3
+	test ViewStylesImprovementOfImageFragment {
+		property custom.properties = "feature.flag.LPS-187284=true${line.separator}feature.flag.LPS-187285=true";
+
+		task ("Given an image fragment added in content page") {
+			task ("Add a Image fragment to content page") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Content Page",
+					siteName = "Test Site Name");
+
+				PageEditor.addFragment(
+					collectionName = "Basic Components",
+					fragmentName = "Image");
+			}
+
+			task ("Enable big image file size and add a big size image") {
+				PageEditor.editFragmentImage(
+					fragmentName = "Image",
+					id = "image-square",
+					imageFileName = "high_resolution_photo.jpg",
+					uploadFileName = "high_resolution_photo.jpg");
+			}
+
+			task ("Publish the page") {
+				PageEditor.publish();
+			}
+		}
+
+		task ("When go to the details of Image fragment on Page Audit sidebar") {
+			PageAudit.openPageAuditSidebar();
+
+			PageAudit.goToElementDetails(elementName = "Image");
+		}
+
+		task ("Then there's improvement in page audit") {
+			task ("View the first sentence of the warning indicator is semi-bold. And the rest is regular.") {
+				AssertCssValue(
+					errorTitle = "Big image file size used.",
+					locator1 = "PageAudit#ERROR_WARNING_TITLE",
+					locator2 = "font-weight",
+					value1 = 600);
+
+				AssertCssValue(
+					locator1 = "PageAudit#WARNING_TEXT",
+					locator2 = "font-weight",
+					value1 = 400);
+			}
+
+			task ("View the distance between feedback indicator and “Basic information” accordion is 24 px") {
+				AssertCssValue(
+					locator1 = "PageAudit#WARNING_TEXT",
+					locator2 = "margin-top",
+					value1 = "16px");
+
+				AssertCssValue(
+					key_panel = "Basic Information",
+					locator1 = "Panel#PANEL",
+					locator2 = "padding-top",
+					value1 = "8px");
+			}
+
+			task ("Go to content page edit mode") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Content Page",
+					siteName = "Test Site Name");
+			}
+
+			task ("Go to the configuration of Image fragment") {
+				PageEditor.clickEditableField(
+					contributed = "true",
+					fragmentName = "Image",
+					id = "image");
+			}
+
+			task ("View Enable Lazy Loading configuration is above “Image description” field.") {
+				AssertTextEquals.assertPartialText(
+					key_itemNumber = 5,
+					locator1 = "PageAudit#PAGE_AUDIT_ANY_ITEM",
+					value1 = "Enable Lazy Loading");
+
+				AssertTextEquals.assertPartialText(
+					key_itemNumber = 6,
+					locator1 = "PageAudit#PAGE_AUDIT_ANY_ITEM",
+					value1 = "Image Description");
+			}
 		}
 	}
 

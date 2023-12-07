@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a content page") {
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,8 +37,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-124056. The page creator could enable Lazy loading on the Image fragment."
-	@priority = "5"
+	@priority = 5
 	test ConfigureLazyLoadingOnImageFragment {
+		property portal.acceptance = "true";
+
 		task ("Given a page creator has a content page with an Image fragment") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
@@ -48,12 +51,12 @@ definition {
 				fragmentName = "Image");
 
 			AssertAttributeValue(
-				attribute1 = "loading",
 				fragmentName = "image",
 				id = "image",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
-				value1 = "auto");
+				value1 = "loading",
+				value2 = "auto");
 		}
 
 		task ("When the page creator accesses to the Image Source panel of Image") {
@@ -68,12 +71,12 @@ definition {
 			PageEditor.configureFragment(enableLazyLoading = "true");
 
 			AssertAttributeValue(
-				attribute1 = "loading",
 				fragmentName = "image",
 				id = "image",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
-				value1 = "lazy");
+				value1 = "loading",
+				value2 = "lazy");
 		}
 
 		task ("When the page creator disable lazy loading on Image") {
@@ -82,12 +85,12 @@ definition {
 
 		task ("Then the value of loading is back to auto") {
 			AssertAttributeValue(
-				attribute1 = "loading",
 				fragmentName = "image",
 				id = "image",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
-				value1 = "auto");
+				value1 = "loading",
+				value2 = "auto");
 		}
 	}
 

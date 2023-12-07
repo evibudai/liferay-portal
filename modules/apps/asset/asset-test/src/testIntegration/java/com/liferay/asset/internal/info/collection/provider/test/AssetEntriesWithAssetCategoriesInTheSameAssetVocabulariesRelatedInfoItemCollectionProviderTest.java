@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.internal.info.collection.provider.test;
@@ -28,7 +19,7 @@ import com.liferay.info.collection.provider.CollectionQuery;
 import com.liferay.info.collection.provider.ConfigurableInfoCollectionProvider;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.type.SelectInfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.pagination.InfoPage;
 import com.liferay.journal.constants.JournalFolderConstants;
@@ -52,6 +43,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -190,6 +182,68 @@ public class
 	}
 
 	@Test
+	public void testGetCollectionInfoPageWithSameAssetCategoryLatestVersionInDraftStatus()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		serviceContext.setRequest(_getHttpServletRequest());
+
+		AssetVocabulary assetVocabulary =
+			AssetVocabularyLocalServiceUtil.addVocabulary(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(), serviceContext);
+
+		AssetCategory assetCategory = _addAssetCategory(
+			_group, serviceContext, assetVocabulary);
+
+		JournalArticle journalArticle = _addJournalArticle(
+			assetCategory, serviceContext);
+		JournalArticle relatedJournalArticle = _addJournalArticle(
+			assetCategory, serviceContext);
+
+		CollectionQuery collectionQuery = new CollectionQuery();
+
+		collectionQuery.setRelatedItemObject(
+			_getAssetEntry(relatedJournalArticle));
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+		try {
+			JournalArticle updateJournalArticle = JournalTestUtil.updateArticle(
+				journalArticle, journalArticle.getTitleMap(),
+				journalArticle.getContent(), true, false,
+				ServiceContextTestUtil.getServiceContext());
+
+			int compare = Double.compare(
+				journalArticle.getVersion(), updateJournalArticle.getVersion());
+
+			Assert.assertTrue(compare < 0);
+
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_DRAFT,
+				updateJournalArticle.getStatus());
+
+			InfoPage<AssetEntry> collectionInfoPage =
+				_relatedInfoItemCollectionProvider.getCollectionInfoPage(
+					collectionQuery);
+
+			List<? extends AssetEntry> pageItems =
+				collectionInfoPage.getPageItems();
+
+			Assert.assertEquals(pageItems.toString(), 1, pageItems.size());
+
+			AssetEntry assetEntry = pageItems.get(0);
+
+			Assert.assertEquals(_getAssetEntry(journalArticle), assetEntry);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
+	@Test
 	public void testGetConfigurationInfoForm() throws Exception {
 		ConfigurableInfoCollectionProvider configurableInfoCollectionProvider =
 			(ConfigurableInfoCollectionProvider)
@@ -216,7 +270,8 @@ public class
 			InfoField<?> infoField = infoFields.get(0);
 
 			Assert.assertTrue(
-				infoField.getInfoFieldType() instanceof SelectInfoFieldType);
+				infoField.getInfoFieldType() instanceof
+					MultiselectInfoFieldType);
 			Assert.assertEquals(
 				_language.get(LocaleUtil.US, "item-type"),
 				infoField.getLabel(LocaleUtil.US));

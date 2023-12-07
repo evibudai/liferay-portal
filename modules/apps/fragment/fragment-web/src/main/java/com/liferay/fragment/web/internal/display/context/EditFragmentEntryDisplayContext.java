@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.display.context;
@@ -23,17 +14,21 @@ import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.service.FragmentCollectionLocalServiceUtil;
 import com.liferay.fragment.service.FragmentCollectionServiceUtil;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
-import com.liferay.fragment.web.internal.constants.FragmentWebKeys;
 import com.liferay.fragment.web.internal.info.field.type.CaptchaInfoFieldType;
 import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
+import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.LongTextInfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -42,7 +37,6 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -55,6 +49,7 @@ import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -87,12 +82,12 @@ public class EditFragmentEntryDisplayContext {
 
 		_fragmentCollectionContributorRegistry =
 			(FragmentCollectionContributorRegistry)
-				_httpServletRequest.getAttribute(
-					FragmentWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER);
+				httpServletRequest.getAttribute(
+					FragmentCollectionContributorRegistry.class.getName());
 		_fragmentEntryProcessorRegistry =
-			(FragmentEntryProcessorRegistry)_httpServletRequest.getAttribute(
-				FragmentWebKeys.FRAGMENT_ENTRY_PROCESSOR_REGISTRY);
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			(FragmentEntryProcessorRegistry)httpServletRequest.getAttribute(
+				FragmentEntryProcessorRegistry.class.getName());
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_setViewAttributes();
@@ -437,16 +432,23 @@ public class EditFragmentEntryDisplayContext {
 			"autocompleteTags",
 			_fragmentEntryProcessorRegistry.getAvailableTagsJSONArray()
 		).put(
-			"cacheable", _fragmentEntry.isCacheable()
-		).put(
-			"cacheableEnabled", _isCacheableEnabled()
-		).put(
 			"dataAttributes",
 			_fragmentEntryProcessorRegistry.getDataAttributesJSONArray()
 		).put(
 			"fieldTypes", _getFieldTypesJSONArray()
 		).put(
 			"fragmentCollectionId", getFragmentCollectionId()
+		).put(
+			"fragmentConfigurationURL",
+			PortletURLBuilder.createRenderURL(
+				PortalUtil.getLiferayPortletResponse(_renderResponse)
+			).setMVCPath(
+				"/configuration/icon/configuration.jsp"
+			).setRedirect(
+				_themeDisplay.getURLCurrent()
+			).setBackURL(
+				_themeDisplay.getURLCurrent()
+			).buildString()
 		).put(
 			"fragmentEntryId", getFragmentEntryId()
 		).put(
@@ -536,7 +538,17 @@ public class EditFragmentEntryDisplayContext {
 				"redirect", getRedirect()
 			).put(
 				"render",
-				_getFragmentEntryRenderURL("/fragment/render_fragment_entry")
+				() -> {
+					FragmentEntry fragmentEntry = getFragmentEntry();
+
+					return HttpComponentsUtil.addParameters(
+						_themeDisplay.getPathMain() +
+							"/portal/fragment/render_fragment_entry",
+						"groupId", _themeDisplay.getScopeGroupId(),
+						"fragmentEntryId", fragmentEntry.getFragmentEntryId(),
+						"fragmentEntryKey",
+						fragmentEntry.getFragmentEntryKey());
+				}
 			).build()
 		).build();
 	}
@@ -564,16 +576,6 @@ public class EditFragmentEntryDisplayContext {
 			fragmentCollection.getResourcesMap();
 
 		return new ArrayList<>(resourcesMap.keySet());
-	}
-
-	private boolean _isCacheableEnabled() {
-		FragmentEntry fragmentEntry = getFragmentEntry();
-
-		if (!fragmentEntry.isTypeInput()) {
-			return true;
-		}
-
-		return false;
 	}
 
 	private boolean _isReadOnlyFragmentEntry() {
@@ -612,6 +614,7 @@ public class EditFragmentEntryDisplayContext {
 
 		portletDisplay.setShowBackIcon(true);
 		portletDisplay.setURLBack(getRedirect());
+		portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 		FragmentEntry fragmentEntry = getFragmentEntry();
 
@@ -643,7 +646,9 @@ public class EditFragmentEntryDisplayContext {
 
 	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
 		BooleanInfoFieldType.INSTANCE, CaptchaInfoFieldType.INSTANCE,
-		DateInfoFieldType.INSTANCE, FileInfoFieldType.INSTANCE,
+		DateInfoFieldType.INSTANCE, DateTimeInfoFieldType.INSTANCE,
+		FileInfoFieldType.INSTANCE, HTMLInfoFieldType.INSTANCE,
+		LongTextInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
 		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
 		SelectInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
 	};

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.servlet.taglib.util;
@@ -24,11 +15,15 @@ import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.admin.web.internal.configuration.LayoutUtilityPageThumbnailConfiguration;
 import com.liferay.layout.admin.web.internal.security.permission.resource.LayoutUtilityPageEntryPermission;
 import com.liferay.layout.utility.page.constants.LayoutUtilityPageActionKeys;
+import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRenderer;
+import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRendererRegistryUtil;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalServiceUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -38,14 +33,14 @@ import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.taglib.security.PermissionsURLTag;
@@ -89,9 +84,7 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> LayoutUtilityPageEntryPermission.contains(
-							_themeDisplay.getPermissionChecker(),
-							_layoutUtilityPageEntry, ActionKeys.UPDATE),
+						() -> _hasUpdatePermission(),
 						_getEditLayoutUtilityPageEntryActionUnsafeConsumer()
 					).add(
 						() -> LayoutUtilityPageEntryPermission.contains(
@@ -105,20 +98,22 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> LayoutUtilityPageEntryPermission.contains(
-							_themeDisplay.getPermissionChecker(),
-							_layoutUtilityPageEntry, ActionKeys.UPDATE),
+						() ->
+							_hasAssignDefaultLayoutUtilityPagePermission() &&
+							_hasUpdatePermission(),
 						_getMarkAsDefaultLayoutUtilityPageEntryActionUnsafeConsumer()
 					).add(
-						() -> LayoutUtilityPageEntryPermission.contains(
-							_themeDisplay.getPermissionChecker(),
-							_layoutUtilityPageEntry, ActionKeys.UPDATE),
+						() -> _hasUpdatePermission(),
 						_getRenameLayoutUtilityPageEntryActionUnsafeConsumer()
 					).add(
-						() -> LayoutUtilityPageEntryPermission.contains(
-							_themeDisplay.getPermissionChecker(),
-							_layoutUtilityPageEntry, ActionKeys.UPDATE),
+						() -> _hasUpdatePermission(),
 						_getUpdateLayoutUtilityPageEntryPreviewActionUnsafeConsumer()
+					).add(
+						() ->
+							_hasUpdatePermission() &&
+							(_layoutUtilityPageEntry.getPreviewFileEntryId() >
+								0),
+						_getDeleteLayoutUtilityPageEntryPreviewActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
 			}
@@ -160,9 +155,7 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> LayoutUtilityPageEntryPermission.contains(
-							_themeDisplay.getPermissionChecker(),
-							_layoutUtilityPageEntry, ActionKeys.DELETE),
+						() -> _hasDeletePermission(),
 						_getDeleteLayoutUtilityPageEntryActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -228,18 +221,45 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
+		_getDeleteLayoutUtilityPageEntryPreviewActionUnsafeConsumer() {
+
+		return dropdownItem -> {
+			dropdownItem.putData(
+				"action", "deleteLayoutUtilityPageEntryPreview");
+			dropdownItem.putData(
+				"deleteLayoutUtilityPageEntryPreviewURL",
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/layout_admin/delete_layout_utility_page_entry_preview"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"layoutUtilityPageEntryId",
+					_layoutUtilityPageEntry.getLayoutUtilityPageEntryId()
+				).buildString());
+			dropdownItem.putData(
+				"layoutUtilityPageEntryId",
+				String.valueOf(
+					_layoutUtilityPageEntry.getLayoutUtilityPageEntryId()));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "remove-thumbnail"));
+		};
+	}
+
+	private UnsafeConsumer<DropdownItem, Exception>
 		_getEditLayoutUtilityPageEntryActionUnsafeConsumer() {
 
 		return dropdownItem -> {
-			String layoutFullURL = PortalUtil.getLayoutFullURL(
-				_draftLayout, _themeDisplay);
+			PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
 
-			layoutFullURL = HttpComponentsUtil.setParameter(
-				layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent());
-			layoutFullURL = HttpComponentsUtil.setParameter(
-				layoutFullURL, "p_l_mode", Constants.EDIT);
-
-			dropdownItem.setHref(layoutFullURL);
+			dropdownItem.setHref(
+				HttpComponentsUtil.addParameters(
+					PortalUtil.getLayoutFullURL(_draftLayout, _themeDisplay),
+					"p_l_back_url", _themeDisplay.getURLCurrent(),
+					"p_l_back_url_title",
+					portletDisplay.getPortletDisplayName(), "p_l_mode",
+					Constants.EDIT));
 
 			dropdownItem.setIcon("pencil");
 			dropdownItem.setLabel(
@@ -261,8 +281,7 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			"/layout_admin/export_layout_utility_page_entries");
 
 		return dropdownItem -> {
-			dropdownItem.setDisabled(
-				_draftLayout.getStatus() == WorkflowConstants.STATUS_DRAFT);
+			dropdownItem.setDisabled(!_layout.isPublished());
 			dropdownItem.setHref(exportLayoutUtilityPageEntryURL);
 			dropdownItem.setIcon("upload");
 			dropdownItem.setLabel(
@@ -278,7 +297,7 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			).extensions(
 				_layoutUtilityPageThumbnailConfiguration.thumbnailExtensions()
 			).maxFileSize(
-				UploadServletRequestConfigurationHelperUtil.getMaxSize()
+				UploadServletRequestConfigurationProviderUtil.getMaxSize()
 			).portletId(
 				LayoutAdminPortletKeys.GROUP_PAGES
 			).repositoryName(
@@ -355,8 +374,21 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			if (Validator.isNull(message) &&
 				_layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
 
-				message = LanguageUtil.get(
-					_httpServletRequest, "unmark-default-confirmation");
+				LayoutUtilityPageEntryViewRenderer
+					layoutUtilityPageEntryViewRenderer =
+						LayoutUtilityPageEntryViewRendererRegistryUtil.
+							getLayoutUtilityPageEntryViewRenderer(
+								_layoutUtilityPageEntry.getType());
+
+				message = LanguageUtil.format(
+					_httpServletRequest,
+					"the-site-will-use-the-default-x-system-page-from-now-" +
+						"on.-are-you-sure-you-want-to-unmark-this",
+					new String[] {
+						layoutUtilityPageEntryViewRenderer.getLabel(
+							_themeDisplay.getLocale())
+					},
+					false);
 			}
 
 			dropdownItem.putData("message", message);
@@ -465,7 +497,90 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			dropdownItem.setIcon("shortcut");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "preview"));
+			dropdownItem.setTarget("_blank");
 		};
+	}
+
+	private boolean _hasAssignDefaultLayoutUtilityPagePermission() {
+		if (_assignDefaultLayoutUtilityPagePermission != null) {
+			return _assignDefaultLayoutUtilityPagePermission;
+		}
+
+		try {
+			_assignDefaultLayoutUtilityPagePermission =
+				GroupPermissionUtil.contains(
+					_themeDisplay.getPermissionChecker(),
+					_layoutUtilityPageEntry.getGroupId(),
+					LayoutUtilityPageActionKeys.
+						ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
+
+		return _assignDefaultLayoutUtilityPagePermission;
+	}
+
+	private boolean _hasDeletePermission() {
+		if (_deletePermission != null) {
+			return _deletePermission;
+		}
+
+		Boolean deletePermission = null;
+
+		try {
+			deletePermission = LayoutUtilityPageEntryPermission.contains(
+				_themeDisplay.getPermissionChecker(), _layoutUtilityPageEntry,
+				ActionKeys.DELETE);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			deletePermission = false;
+		}
+
+		if (!deletePermission) {
+			_deletePermission = false;
+
+			return false;
+		}
+
+		if (!_layoutUtilityPageEntry.isDefaultLayoutUtilityPageEntry()) {
+			_deletePermission = true;
+
+			return true;
+		}
+
+		_deletePermission = _hasAssignDefaultLayoutUtilityPagePermission();
+
+		return _deletePermission;
+	}
+
+	private boolean _hasUpdatePermission() {
+		if (_updatePermission != null) {
+			return _updatePermission;
+		}
+
+		try {
+			_updatePermission = LayoutUtilityPageEntryPermission.contains(
+				_themeDisplay.getPermissionChecker(), _layoutUtilityPageEntry,
+				ActionKeys.UPDATE);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
+
+		return _updatePermission;
 	}
 
 	private boolean _isLiveGroup() {
@@ -481,6 +596,11 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 		return false;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutUtilityPageEntryActionDropdownItemsProvider.class);
+
+	private Boolean _assignDefaultLayoutUtilityPagePermission;
+	private Boolean _deletePermission;
 	private final Layout _draftLayout;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;
@@ -490,5 +610,6 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 		_layoutUtilityPageThumbnailConfiguration;
 	private final RenderResponse _renderResponse;
 	private final ThemeDisplay _themeDisplay;
+	private Boolean _updatePermission;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0;
@@ -95,6 +86,35 @@ public class ProductSpecificationSerDes {
 			sb.append(productSpecification.getProductId());
 		}
 
+		if (productSpecification.getSpecificationGroupKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationGroupKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productSpecification.getSpecificationGroupKey()));
+
+			sb.append("\"");
+		}
+
+		if (productSpecification.getSpecificationGroupTitle() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationGroupTitle\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(productSpecification.getSpecificationGroupTitle()));
+
+			sb.append("\"");
+		}
+
 		if (productSpecification.getSpecificationId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -115,6 +135,20 @@ public class ProductSpecificationSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(productSpecification.getSpecificationKey()));
+
+			sb.append("\"");
+		}
+
+		if (productSpecification.getSpecificationTitle() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationTitle\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productSpecification.getSpecificationTitle()));
 
 			sb.append("\"");
 		}
@@ -187,6 +221,26 @@ public class ProductSpecificationSerDes {
 				String.valueOf(productSpecification.getProductId()));
 		}
 
+		if (productSpecification.getSpecificationGroupKey() == null) {
+			map.put("specificationGroupKey", null);
+		}
+		else {
+			map.put(
+				"specificationGroupKey",
+				String.valueOf(
+					productSpecification.getSpecificationGroupKey()));
+		}
+
+		if (productSpecification.getSpecificationGroupTitle() == null) {
+			map.put("specificationGroupTitle", null);
+		}
+		else {
+			map.put(
+				"specificationGroupTitle",
+				String.valueOf(
+					productSpecification.getSpecificationGroupTitle()));
+		}
+
 		if (productSpecification.getSpecificationId() == null) {
 			map.put("specificationId", null);
 		}
@@ -203,6 +257,15 @@ public class ProductSpecificationSerDes {
 			map.put(
 				"specificationKey",
 				String.valueOf(productSpecification.getSpecificationKey()));
+		}
+
+		if (productSpecification.getSpecificationTitle() == null) {
+			map.put("specificationTitle", null);
+		}
+		else {
+			map.put(
+				"specificationTitle",
+				String.valueOf(productSpecification.getSpecificationTitle()));
 		}
 
 		if (productSpecification.getValue() == null) {
@@ -257,6 +320,22 @@ public class ProductSpecificationSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "specificationGroupKey")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setSpecificationGroupKey(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "specificationGroupTitle")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setSpecificationGroupTitle(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "specificationId")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setSpecificationId(
@@ -266,6 +345,14 @@ public class ProductSpecificationSerDes {
 			else if (Objects.equals(jsonParserFieldName, "specificationKey")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setSpecificationKey(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "specificationTitle")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setSpecificationTitle(
 						(String)jsonParserFieldValue);
 				}
 			}

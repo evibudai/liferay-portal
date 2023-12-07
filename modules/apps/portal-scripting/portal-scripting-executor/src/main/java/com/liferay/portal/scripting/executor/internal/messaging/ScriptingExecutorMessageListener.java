@@ -1,29 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.scripting.executor.internal.messaging;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.scripting.Scripting;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.scripting.executor.internal.constants.ScriptingExecutorMessagingConstants;
-
-import java.io.InputStream;
 
 import java.net.URL;
 
@@ -43,7 +34,7 @@ public class ScriptingExecutorMessageListener extends BaseMessageListener {
 	protected void doReceive(Message message) throws Exception {
 		Thread currentThread = Thread.currentThread();
 
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+		ClassLoader classLoader = currentThread.getContextClassLoader();
 
 		String scriptingLanguage = message.getString(
 			ScriptingExecutorMessagingConstants.MESSAGE_KEY_SCRIPTING_LANGUAGE);
@@ -51,30 +42,31 @@ public class ScriptingExecutorMessageListener extends BaseMessageListener {
 		List<URL> urls = (List<URL>)message.get(
 			ScriptingExecutorMessagingConstants.MESSAGE_KEY_URLS);
 
-		for (URL url : urls) {
-			try (InputStream inputStream = url.openStream()) {
-				ClassLoader bundleClassLoader = (ClassLoader)message.get(
-					ScriptingExecutorMessagingConstants.
-						MESSAGE_KEY_BUNDLE_CLASS_LOADER);
+		ClassLoader bundleClassLoader = (ClassLoader)message.get(
+			ScriptingExecutorMessagingConstants.
+				MESSAGE_KEY_BUNDLE_CLASS_LOADER);
 
-				if (bundleClassLoader != null) {
-					currentThread.setContextClassLoader(
-						AggregateClassLoader.getAggregateClassLoader(
-							contextClassLoader, bundleClassLoader));
-				}
+		if (bundleClassLoader != null) {
+			classLoader = AggregateClassLoader.getAggregateClassLoader(
+				classLoader, bundleClassLoader);
+		}
 
-				_scripting.exec(
-					null, new HashMap<String, Object>(), scriptingLanguage,
-					StringUtil.read(inputStream));
-			}
-			catch (Exception exception) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"Unable to execute script " + url.getFile(), exception);
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				classLoader)) {
+
+			for (URL url : urls) {
+				try {
+					_scripting.exec(
+						null, new HashMap<String, Object>(), scriptingLanguage,
+						URLUtil.toString(url));
 				}
-			}
-			finally {
-				currentThread.setContextClassLoader(contextClassLoader);
+				catch (Exception exception) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to execute script " + url.getFile(),
+							exception);
+					}
+				}
 			}
 		}
 	}

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.resource.v2_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.commerce.admin.pricing.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.pricing.client.resource.v2_0.DiscountOrderTypeResource;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.DiscountOrderTypeSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -42,6 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -65,8 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -225,7 +216,7 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 				getDiscountByExternalReferenceCodeDiscountOrderTypesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			DiscountOrderType irrelevantDiscountOrderType =
@@ -236,14 +227,18 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 			page =
 				discountOrderTypeResource.
 					getDiscountByExternalReferenceCodeDiscountOrderTypesPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDiscountOrderType),
+			assertContains(
+				irrelevantDiscountOrderType,
 				(List<DiscountOrderType>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetDiscountByExternalReferenceCodeDiscountOrderTypesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		DiscountOrderType discountOrderType1 =
@@ -259,12 +254,26 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 				getDiscountByExternalReferenceCodeDiscountOrderTypesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(discountOrderType1, discountOrderType2),
-			(List<DiscountOrderType>)page.getItems());
-		assertValid(page);
+		assertContains(
+			discountOrderType1, (List<DiscountOrderType>)page.getItems());
+		assertContains(
+			discountOrderType2, (List<DiscountOrderType>)page.getItems());
+		assertValid(
+			page,
+			testGetDiscountByExternalReferenceCodeDiscountOrderTypesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDiscountByExternalReferenceCodeDiscountOrderTypesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -273,6 +282,14 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 
 		String externalReferenceCode =
 			testGetDiscountByExternalReferenceCodeDiscountOrderTypesPage_getExternalReferenceCode();
+
+		Page<DiscountOrderType> discountOrderTypePage =
+			discountOrderTypeResource.
+				getDiscountByExternalReferenceCodeDiscountOrderTypesPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			discountOrderTypePage.getTotalCount());
 
 		DiscountOrderType discountOrderType1 =
 			testGetDiscountByExternalReferenceCodeDiscountOrderTypesPage_addDiscountOrderType(
@@ -289,20 +306,21 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		Page<DiscountOrderType> page1 =
 			discountOrderTypeResource.
 				getDiscountByExternalReferenceCodeDiscountOrderTypesPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<DiscountOrderType> discountOrderTypes1 =
 			(List<DiscountOrderType>)page1.getItems();
 
 		Assert.assertEquals(
-			discountOrderTypes1.toString(), 2, discountOrderTypes1.size());
+			discountOrderTypes1.toString(), totalCount + 2,
+			discountOrderTypes1.size());
 
 		Page<DiscountOrderType> page2 =
 			discountOrderTypeResource.
 				getDiscountByExternalReferenceCodeDiscountOrderTypesPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DiscountOrderType> discountOrderTypes2 =
 			(List<DiscountOrderType>)page2.getItems();
@@ -313,12 +331,15 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		Page<DiscountOrderType> page3 =
 			discountOrderTypeResource.
 				getDiscountByExternalReferenceCodeDiscountOrderTypesPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				discountOrderType1, discountOrderType2, discountOrderType3),
-			(List<DiscountOrderType>)page3.getItems());
+		assertContains(
+			discountOrderType1, (List<DiscountOrderType>)page3.getItems());
+		assertContains(
+			discountOrderType2, (List<DiscountOrderType>)page3.getItems());
+		assertContains(
+			discountOrderType3, (List<DiscountOrderType>)page3.getItems());
 	}
 
 	protected DiscountOrderType
@@ -379,7 +400,7 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 			discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
 				id, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			DiscountOrderType irrelevantDiscountOrderType =
@@ -388,14 +409,18 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 
 			page =
 				discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
-					irrelevantId, null, null, Pagination.of(1, 2), null);
+					irrelevantId, null, null,
+					Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDiscountOrderType),
+			assertContains(
+				irrelevantDiscountOrderType,
 				(List<DiscountOrderType>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetDiscountIdDiscountOrderTypesPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		DiscountOrderType discountOrderType1 =
@@ -409,12 +434,24 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		page = discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
 			id, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(discountOrderType1, discountOrderType2),
-			(List<DiscountOrderType>)page.getItems());
-		assertValid(page);
+		assertContains(
+			discountOrderType1, (List<DiscountOrderType>)page.getItems());
+		assertContains(
+			discountOrderType2, (List<DiscountOrderType>)page.getItems());
+		assertValid(
+			page,
+			testGetDiscountIdDiscountOrderTypesPage_getExpectedActions(id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDiscountIdDiscountOrderTypesPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -453,43 +490,39 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 	public void testGetDiscountIdDiscountOrderTypesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetDiscountIdDiscountOrderTypesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetDiscountIdDiscountOrderTypesPageWithFilterStringContains()
+		throws Exception {
 
-		Long id = testGetDiscountIdDiscountOrderTypesPage_getId();
-
-		DiscountOrderType discountOrderType1 =
-			testGetDiscountIdDiscountOrderTypesPage_addDiscountOrderType(
-				id, randomDiscountOrderType());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		DiscountOrderType discountOrderType2 =
-			testGetDiscountIdDiscountOrderTypesPage_addDiscountOrderType(
-				id, randomDiscountOrderType());
-
-		for (EntityField entityField : entityFields) {
-			Page<DiscountOrderType> page =
-				discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
-					id, null,
-					getFilterString(entityField, "eq", discountOrderType1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(discountOrderType1),
-				(List<DiscountOrderType>)page.getItems());
-		}
+		testGetDiscountIdDiscountOrderTypesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetDiscountIdDiscountOrderTypesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetDiscountIdDiscountOrderTypesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetDiscountIdDiscountOrderTypesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetDiscountIdDiscountOrderTypesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetDiscountIdDiscountOrderTypesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -510,7 +543,7 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 			Page<DiscountOrderType> page =
 				discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
 					id, null,
-					getFilterString(entityField, "eq", discountOrderType1),
+					getFilterString(entityField, operator, discountOrderType1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -524,6 +557,13 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		throws Exception {
 
 		Long id = testGetDiscountIdDiscountOrderTypesPage_getId();
+
+		Page<DiscountOrderType> discountOrderTypePage =
+			discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
+				id, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			discountOrderTypePage.getTotalCount());
 
 		DiscountOrderType discountOrderType1 =
 			testGetDiscountIdDiscountOrderTypesPage_addDiscountOrderType(
@@ -539,19 +579,20 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 
 		Page<DiscountOrderType> page1 =
 			discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
-				id, null, null, Pagination.of(1, 2), null);
+				id, null, null, Pagination.of(1, totalCount + 2), null);
 
 		List<DiscountOrderType> discountOrderTypes1 =
 			(List<DiscountOrderType>)page1.getItems();
 
 		Assert.assertEquals(
-			discountOrderTypes1.toString(), 2, discountOrderTypes1.size());
+			discountOrderTypes1.toString(), totalCount + 2,
+			discountOrderTypes1.size());
 
 		Page<DiscountOrderType> page2 =
 			discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
-				id, null, null, Pagination.of(2, 2), null);
+				id, null, null, Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DiscountOrderType> discountOrderTypes2 =
 			(List<DiscountOrderType>)page2.getItems();
@@ -561,12 +602,14 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 
 		Page<DiscountOrderType> page3 =
 			discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
-				id, null, null, Pagination.of(1, 3), null);
+				id, null, null, Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				discountOrderType1, discountOrderType2, discountOrderType3),
-			(List<DiscountOrderType>)page3.getItems());
+		assertContains(
+			discountOrderType1, (List<DiscountOrderType>)page3.getItems());
+		assertContains(
+			discountOrderType2, (List<DiscountOrderType>)page3.getItems());
+		assertContains(
+			discountOrderType3, (List<DiscountOrderType>)page3.getItems());
 	}
 
 	@Test
@@ -694,23 +737,35 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 			testGetDiscountIdDiscountOrderTypesPage_addDiscountOrderType(
 				id, discountOrderType2);
 
+		Page<DiscountOrderType> page =
+			discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
+				id, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<DiscountOrderType> ascPage =
 				discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
-					id, null, null, Pagination.of(1, 2),
+					id, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(discountOrderType1, discountOrderType2),
+			assertContains(
+				discountOrderType1,
+				(List<DiscountOrderType>)ascPage.getItems());
+			assertContains(
+				discountOrderType2,
 				(List<DiscountOrderType>)ascPage.getItems());
 
 			Page<DiscountOrderType> descPage =
 				discountOrderTypeResource.getDiscountIdDiscountOrderTypesPage(
-					id, null, null, Pagination.of(1, 2),
+					id, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(discountOrderType2, discountOrderType1),
+			assertContains(
+				discountOrderType2,
+				(List<DiscountOrderType>)descPage.getItems());
+			assertContains(
+				discountOrderType1,
 				(List<DiscountOrderType>)descPage.getItems());
 		}
 	}
@@ -929,6 +984,13 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 	}
 
 	protected void assertValid(Page<DiscountOrderType> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<DiscountOrderType> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<DiscountOrderType> discountOrderTypes =
@@ -944,6 +1006,25 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1150,14 +1231,16 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1174,6 +1257,10 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1183,18 +1270,18 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1217,11 +1304,48 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		}
 
 		if (entityFieldName.equals("discountExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					discountOrderType.getDiscountExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				discountOrderType.getDiscountExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1242,11 +1366,48 @@ public abstract class BaseDiscountOrderTypeResourceTestCase {
 		}
 
 		if (entityFieldName.equals("orderTypeExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					discountOrderType.getOrderTypeExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				discountOrderType.getOrderTypeExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

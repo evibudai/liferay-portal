@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.message.body;
@@ -21,7 +12,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import com.liferay.portal.vulcan.fields.FieldsQueryParam;
 import com.liferay.portal.vulcan.fields.RestrictFieldsQueryParam;
-import com.liferay.portal.vulcan.internal.jackson.databind.ser.VulcanPropertyFilter;
+import com.liferay.portal.vulcan.jackson.databind.ser.VulcanPropertyFilter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,7 +20,6 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.InternalServerErrorException;
@@ -37,6 +27,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
@@ -84,14 +75,19 @@ public abstract class BaseMessageBodyWriter
 	}
 
 	private ObjectMapper _getObjectMapper(Class<?> clazz) {
-		return Optional.ofNullable(
-			_providers.getContextResolver(_contextType, _mediaType)
-		).map(
-			contextResolver -> contextResolver.getContext(clazz)
-		).orElseThrow(
-			() -> new InternalServerErrorException(
-				"Unable to generate object mapper for class " + clazz)
-		);
+		ContextResolver<? extends ObjectMapper> contextResolver =
+			_providers.getContextResolver(_contextType, _mediaType);
+
+		if (contextResolver != null) {
+			ObjectMapper objectMapper = contextResolver.getContext(clazz);
+
+			if (objectMapper != null) {
+				return objectMapper;
+			}
+		}
+
+		throw new InternalServerErrorException(
+			"Unable to generate object mapper for class " + clazz);
 	}
 
 	private SimpleFilterProvider _getSimpleFilterProvider() {

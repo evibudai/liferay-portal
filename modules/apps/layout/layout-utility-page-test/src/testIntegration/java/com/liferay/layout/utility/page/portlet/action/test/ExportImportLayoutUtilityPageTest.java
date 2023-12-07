@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.utility.page.portlet.action.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.importer.LayoutsImportStrategy;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.importer.LayoutsImporterResultEntry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
@@ -24,6 +16,7 @@ import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
+import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -107,7 +100,9 @@ public class ExportImportLayoutUtilityPageTest {
 			_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 				externalReferenceCode, _serviceContext.getUserId(),
 				_serviceContext.getScopeGroupId(), 0, 0, false,
-				StringUtil.randomString(), "LAYOUT", 0);
+				StringUtil.randomString(),
+				LayoutUtilityPageEntryConstants.TYPE_SC_NOT_FOUND, 0,
+				_serviceContext);
 
 		_addItemsToLayout(
 			layoutUtilityPageEntry1.getGroupId(),
@@ -152,7 +147,7 @@ public class ExportImportLayoutUtilityPageTest {
 		try {
 			layoutsImporterResultEntries = _layoutsImporter.importFile(
 				TestPropsValues.getUserId(), otherGroup.getGroupId(), 0, file,
-				false);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -202,7 +197,9 @@ public class ExportImportLayoutUtilityPageTest {
 			_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 				externalReferenceCode, _serviceContext.getUserId(),
 				_serviceContext.getScopeGroupId(), 0, 0, false,
-				StringUtil.randomString(), "LAYOUT", 0);
+				StringUtil.randomString(),
+				LayoutUtilityPageEntryConstants.TYPE_SC_NOT_FOUND, 0,
+				_serviceContext);
 
 		_addItemsToLayout(
 			layoutUtilityPageEntry1.getGroupId(),
@@ -237,7 +234,7 @@ public class ExportImportLayoutUtilityPageTest {
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
 			_layoutsImporter.importFile(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0, file,
-				false);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 
 		Assert.assertNotNull(layoutsImporterResultEntries);
 		Assert.assertEquals(
@@ -252,7 +249,8 @@ public class ExportImportLayoutUtilityPageTest {
 			layoutUtilityPageImportEntry.getStatus());
 
 		layoutsImporterResultEntries = _layoutsImporter.importFile(
-			TestPropsValues.getUserId(), _group.getGroupId(), 0, file, true);
+			TestPropsValues.getUserId(), _group.getGroupId(), 0, file,
+			LayoutsImportStrategy.OVERWRITE, true);
 
 		Assert.assertNotNull(layoutsImporterResultEntries);
 		Assert.assertEquals(

@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.portlet;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutFriendlyURLComposite;
@@ -48,13 +40,7 @@ public class VirtualLayoutFriendlyURLResolver implements FriendlyURLResolver {
 
 		// Group friendly URL
 
-		String groupFriendlyURL = null;
-
-		int pos = friendlyURL.indexOf(CharPool.SLASH, 3);
-
-		if (pos != -1) {
-			groupFriendlyURL = friendlyURL.substring(2, pos);
-		}
+		String groupFriendlyURL = _getGroupFriendlyURL(friendlyURL);
 
 		if (Validator.isNull(groupFriendlyURL)) {
 			return mainPath;
@@ -67,13 +53,8 @@ public class VirtualLayoutFriendlyURLResolver implements FriendlyURLResolver {
 			return mainPath;
 		}
 
-		// Layout friendly URL
-
-		String layoutFriendlyURL = null;
-
-		if ((pos != -1) && ((pos + 1) != friendlyURL.length())) {
-			layoutFriendlyURL = friendlyURL.substring(pos);
-		}
+		String layoutFriendlyURL = _getLayoutFriendlyURL(
+			friendlyURL, groupFriendlyURL);
 
 		if (Validator.isNull(layoutFriendlyURL)) {
 			return mainPath;
@@ -97,24 +78,21 @@ public class VirtualLayoutFriendlyURLResolver implements FriendlyURLResolver {
 
 		// Group friendly URL
 
-		String groupFriendlyURL = null;
+		String groupFriendlyURL = _getGroupFriendlyURL(friendlyURL);
 
-		int pos = friendlyURL.indexOf(CharPool.SLASH, 3);
-
-		if (pos != -1) {
-			groupFriendlyURL = friendlyURL.substring(2, pos);
+		if (Validator.isNull(groupFriendlyURL)) {
+			return null;
 		}
 
 		Group group = _groupLocalService.fetchFriendlyURLGroup(
 			companyId, groupFriendlyURL);
 
-		// Layout friendly URL
-
-		String layoutFriendlyURL = null;
-
-		if ((pos != -1) && ((pos + 1) != friendlyURL.length())) {
-			layoutFriendlyURL = friendlyURL.substring(pos);
+		if (group == null) {
+			return null;
 		}
+
+		String layoutFriendlyURL = _getLayoutFriendlyURL(
+			friendlyURL, groupFriendlyURL);
 
 		LayoutQueryStringComposite layoutQueryStringComposite =
 			_portal.getActualLayoutQueryStringComposite(
@@ -138,6 +116,10 @@ public class VirtualLayoutFriendlyURLResolver implements FriendlyURLResolver {
 				companyId, groupId, privateLayout, friendlyURL, params,
 				requestContext);
 
+		if (layoutFriendlyURLComposite == null) {
+			return null;
+		}
+
 		return new LayoutFriendlyURLSeparatorComposite(
 			layoutFriendlyURLComposite, Portal.FRIENDLY_URL_SEPARATOR);
 	}
@@ -145,6 +127,38 @@ public class VirtualLayoutFriendlyURLResolver implements FriendlyURLResolver {
 	@Override
 	public String getURLSeparator() {
 		return VirtualLayoutConstants.CANONICAL_URL_SEPARATOR;
+	}
+
+	private String _getGroupFriendlyURL(String friendlyURL) {
+		String urlSeparator = getURLSeparator();
+
+		String url = friendlyURL.substring(urlSeparator.length());
+
+		if (Validator.isNull(url) || !url.startsWith(StringPool.SLASH)) {
+			return null;
+		}
+
+		int pos = url.indexOf(CharPool.SLASH, 1);
+
+		if (pos != -1) {
+			return url.substring(0, pos);
+		}
+
+		return null;
+	}
+
+	private String _getLayoutFriendlyURL(
+		String friendlyURL, String groupFriendlyURL) {
+
+		String urlSeparator = getURLSeparator();
+
+		int pos = urlSeparator.length() + groupFriendlyURL.length();
+
+		if (pos < friendlyURL.length()) {
+			return friendlyURL.substring(pos);
+		}
+
+		return null;
 	}
 
 	@Reference

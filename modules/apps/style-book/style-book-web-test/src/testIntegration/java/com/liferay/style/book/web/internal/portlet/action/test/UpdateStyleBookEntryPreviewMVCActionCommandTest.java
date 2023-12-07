@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.style.book.web.internal.portlet.action.test;
@@ -109,24 +100,25 @@ public class UpdateStyleBookEntryPreviewMVCActionCommandTest {
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_serviceContext);
 
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
 		FileEntry tempFileEntry1 = _addFileEntry(
 			"thumbnail1.png", styleBookEntry);
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"fileEntryId", String.valueOf(tempFileEntry1.getFileEntryId()));
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(
+		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.PORTLET_ID, StyleBookPortletKeys.STYLE_BOOK);
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		_updateStyleBookEntryPreviewMVCActionCommandTest.processAction(
-			actionRequest, new MockActionResponse());
+			mockLiferayPortletActionRequest, new MockActionResponse());
 
 		Assert.assertNotNull(
 			PortletFileRepositoryUtil.getPortletFileEntry(
@@ -142,23 +134,24 @@ public class UpdateStyleBookEntryPreviewMVCActionCommandTest {
 		Assert.assertEquals(
 			fileEntry.getFileEntryId(), styleBookEntry.getPreviewFileEntryId());
 
-		actionRequest = new MockLiferayPortletActionRequest();
+		mockLiferayPortletActionRequest = new MockLiferayPortletActionRequest();
 
 		FileEntry tempFileEntry2 = _addFileEntry(
 			"thumbnail2.png", styleBookEntry);
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"fileEntryId", String.valueOf(tempFileEntry2.getFileEntryId()));
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(
+		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.PORTLET_ID, StyleBookPortletKeys.STYLE_BOOK);
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		_updateStyleBookEntryPreviewMVCActionCommandTest.processAction(
-			actionRequest, new MockActionResponse());
+			mockLiferayPortletActionRequest, new MockActionResponse());
 
 		StyleBookEntry updateStyleBookEntry =
 			_styleBookEntryLocalService.fetchStyleBookEntry(
@@ -184,7 +177,7 @@ public class UpdateStyleBookEntryPreviewMVCActionCommandTest {
 
 	@Test
 	public void testUpdateStyleBookEntryPreview() throws Exception {
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
 		StyleBookEntry styleBookEntry =
@@ -196,18 +189,19 @@ public class UpdateStyleBookEntryPreviewMVCActionCommandTest {
 		FileEntry tempFileEntry = _addFileEntry(
 			"thumbnail.png", styleBookEntry);
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"fileEntryId", String.valueOf(tempFileEntry.getFileEntryId()));
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(
+		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.PORTLET_ID, StyleBookPortletKeys.STYLE_BOOK);
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		_updateStyleBookEntryPreviewMVCActionCommandTest.processAction(
-			actionRequest, new MockActionResponse());
+			mockLiferayPortletActionRequest, new MockActionResponse());
 
 		styleBookEntry = _styleBookEntryLocalService.fetchStyleBookEntry(
 			styleBookEntry.getStyleBookEntryId());

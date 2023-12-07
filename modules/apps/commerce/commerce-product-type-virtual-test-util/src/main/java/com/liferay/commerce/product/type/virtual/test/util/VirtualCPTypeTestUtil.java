@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.virtual.test.util;
@@ -21,8 +12,8 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -56,10 +47,10 @@ public class VirtualCPTypeTestUtil {
 			url = "http://www.example.com/download";
 		}
 
-		String sampleUrl = null;
+		String sampleURL = null;
 
 		if (sampleFileEntryId <= 0) {
-			sampleUrl = "http://www.example.com/sample";
+			sampleURL = "http://www.example.com/sample";
 		}
 
 		Map<Locale, String> termsOfUseContentMap = null;
@@ -72,7 +63,7 @@ public class VirtualCPTypeTestUtil {
 			addCPDefinitionVirtualSetting(
 				className, classPK, fileEntryId, url, activationStatus,
 				duration, RandomTestUtil.randomInt(), true, sampleFileEntryId,
-				sampleUrl, true, termsOfUseContentMap,
+				sampleURL, true, termsOfUseContentMap,
 				termsOfUseJournalArticleResourcePrimKey, serviceContext);
 	}
 
@@ -104,11 +95,11 @@ public class VirtualCPTypeTestUtil {
 			PortalUtil.getClassNameId(JournalArticle.class));
 
 		return JournalArticleLocalServiceUtil.addArticle(
-			serviceContext.getUserId(), groupId,
+			null, serviceContext.getUserId(), groupId,
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), content,
-			ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(),
+			ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(),
 			serviceContext);
 	}
 

@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useForm} from 'react-hook-form';
 
 import Form from '../../../components/Form';
 import Modal from '../../../components/Modal';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {withVisibleContent} from '../../../hoc/withVisibleContent';
 import {useFetch} from '../../../hooks/useFetch';
 import {FormModalOptions} from '../../../hooks/useFormModal';
@@ -26,7 +18,6 @@ import {
 	TestrayTeam,
 	testrayComponentImpl,
 } from '../../../services/rest';
-import {searchUtil} from '../../../util/search';
 
 type ComponentForm = typeof yupSchema.component.__outputType;
 
@@ -40,7 +31,7 @@ const ComponentFormModal: React.FC<ComponentProps> = ({
 	projectId,
 }) => {
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		watch,
@@ -49,7 +40,6 @@ const ComponentFormModal: React.FC<ComponentProps> = ({
 			? {
 					id: modalState.id,
 					name: modalState.name,
-
 					teamId: modalState.team?.id,
 			  }
 			: {
@@ -58,16 +48,19 @@ const ComponentFormModal: React.FC<ComponentProps> = ({
 		resolver: yupResolver(yupSchema.component),
 	});
 
-	const {data: teamsResponse} = useFetch<APIResponse<TestrayTeam>>(
-		`/teams?filter=${searchUtil.eq(
-			'projectId',
-			projectId
-		)}&sort=name:asc&pageSize=100&fields=id,name`
-	);
+	const {data: teamsResponse} = useFetch<APIResponse<TestrayTeam>>(`/teams`, {
+		params: {
+			fields: 'id,name',
+			filter: SearchBuilder.eq('projectId', projectId),
+			pageSize: 100,
+			sort: 'name:asc',
+		},
+	});
 
-	const teams = teamsResponse?.items || [];
 	const teamId = watch('teamId');
-	const _onSubmit = (componentForm: ComponentForm) => {
+	const teams = teamsResponse?.items || [];
+
+	const _onSubmit = (componentForm: ComponentForm) =>
 		onSubmit(
 			{
 				...componentForm,
@@ -80,7 +73,6 @@ const ComponentFormModal: React.FC<ComponentProps> = ({
 		)
 			.then(onSave)
 			.catch(onError);
-	};
 
 	return (
 		<Modal
@@ -88,6 +80,7 @@ const ComponentFormModal: React.FC<ComponentProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}

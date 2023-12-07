@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.aggregation;
@@ -91,9 +82,7 @@ import com.liferay.portal.search.elasticsearch7.internal.hits.SearchHitsTranslat
 import com.liferay.portal.search.geolocation.GeoBuilders;
 import com.liferay.portal.search.geolocation.GeoLocationPoint;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.join.aggregations.Children;
@@ -194,8 +183,7 @@ public class ElasticsearchAggregationResultTranslator
 				children.getName(), children.getDocCount());
 
 		childrenAggregationResult.addChildrenAggregationResults(
-			_translateAggregationResults(
-				children.getAggregations(), childrenAggregation));
+			translate(children.getAggregations(), childrenAggregation));
 
 		return childrenAggregationResult;
 	}
@@ -233,7 +221,7 @@ public class ElasticsearchAggregationResultTranslator
 					sampler.getName(), sampler.getDocCount());
 
 		diversifiedSamplerAggregationResult.addChildrenAggregationResults(
-			_translateAggregationResults(
+			translate(
 				sampler.getAggregations(), diversifiedSamplerAggregation));
 
 		return diversifiedSamplerAggregationResult;
@@ -261,8 +249,7 @@ public class ElasticsearchAggregationResultTranslator
 			_aggregationResults.filter(filter.getName(), filter.getDocCount());
 
 		filterAggregationResult.addChildrenAggregationResults(
-			_translateAggregationResults(
-				filter.getAggregations(), filterAggregation));
+			translate(filter.getAggregations(), filterAggregation));
 
 		return filterAggregationResult;
 	}
@@ -332,8 +319,7 @@ public class ElasticsearchAggregationResultTranslator
 			_aggregationResults.global(global.getName(), global.getDocCount());
 
 		globalAggregationResult.addChildrenAggregationResults(
-			_translateAggregationResults(
-				global.getAggregations(), globalAggregation));
+			translate(global.getAggregations(), globalAggregation));
 
 		return globalAggregationResult;
 	}
@@ -373,8 +359,7 @@ public class ElasticsearchAggregationResultTranslator
 				missing.getName(), missing.getDocCount());
 
 		missingAggregationResult.addChildrenAggregationResults(
-			_translateAggregationResults(
-				missing.getAggregations(), missingAggregation));
+			translate(missing.getAggregations(), missingAggregation));
 
 		return missingAggregationResult;
 	}
@@ -386,9 +371,8 @@ public class ElasticsearchAggregationResultTranslator
 		NestedAggregationResult nestedAggregationResult =
 			_aggregationResults.nested(nested.getName(), nested.getDocCount());
 
-		List<AggregationResult> aggregationResults =
-			_translateAggregationResults(
-				nested.getAggregations(), nestedAggregation);
+		List<AggregationResult> aggregationResults = translate(
+			nested.getAggregations(), nestedAggregation);
 
 		nestedAggregationResult.addChildrenAggregationResults(
 			aggregationResults);
@@ -448,7 +432,7 @@ public class ElasticsearchAggregationResultTranslator
 				reverseNested.getName(), reverseNested.getDocCount());
 
 		reverseNestedAggregationResult.addChildrenAggregationResults(
-			_translateAggregationResults(
+			translate(
 				reverseNested.getAggregations(), reverseNestedAggregation));
 
 		return reverseNestedAggregationResult;
@@ -465,8 +449,7 @@ public class ElasticsearchAggregationResultTranslator
 				sampler.getName(), sampler.getDocCount());
 
 		samplerAggregationResult.addChildrenAggregationResults(
-			_translateAggregationResults(
-				sampler.getAggregations(), samplerAggregation));
+			translate(sampler.getAggregations(), samplerAggregation));
 
 		return samplerAggregationResult;
 	}
@@ -570,7 +553,7 @@ public class ElasticsearchAggregationResultTranslator
 			weightedAvg.getName(), weightedAvg.getValue());
 	}
 
-	protected Stream<AggregationResult> translate(
+	protected List<AggregationResult> translate(
 		Aggregations elasticsearchAggregations, Aggregation aggregation) {
 
 		ElasticsearchAggregationResultsTranslator
@@ -581,19 +564,6 @@ public class ElasticsearchAggregationResultTranslator
 
 		return elasticsearchAggregationResultsTranslator.translate(
 			elasticsearchAggregations);
-	}
-
-	private List<AggregationResult> _translateAggregationResults(
-		Aggregations elasticsearchAggregations, Aggregation aggregation) {
-
-		List<AggregationResult> aggregationResults = new ArrayList<>();
-
-		Stream<AggregationResult> stream = translate(
-			elasticsearchAggregations, aggregation);
-
-		stream.forEach(aggregationResults::add);
-
-		return aggregationResults;
 	}
 
 	private <T extends BucketAggregationResult> T _translateBuckets(
@@ -610,11 +580,13 @@ public class ElasticsearchAggregationResultTranslator
 					multiBucketAggregationBucket.getKeyAsString(),
 					multiBucketAggregationBucket.getDocCount());
 
-				Stream<AggregationResult> stream = translate(
-					multiBucketAggregationBucket.getAggregations(),
-					aggregation);
+				for (AggregationResult aggregationResult :
+						translate(
+							multiBucketAggregationBucket.getAggregations(),
+							aggregation)) {
 
-				stream.forEach(bucket::addChildAggregationResult);
+					bucket.addChildAggregationResult(aggregationResult);
+				}
 			});
 
 		return bucketAggregationResult;

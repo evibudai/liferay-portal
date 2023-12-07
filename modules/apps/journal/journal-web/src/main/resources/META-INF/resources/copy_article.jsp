@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -26,6 +17,7 @@ double version = ParamUtil.getDouble(request, "version");
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
+portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 renderResponse.setTitle(LanguageUtil.get(request, "web-content"));
 %>
@@ -52,14 +44,14 @@ renderResponse.setTitle(LanguageUtil.get(request, "web-content"));
 			<aui:input name="id" type="resource" value="<%= oldArticleId %>" />
 
 			<c:choose>
-				<c:when test="<%= journalWebConfiguration.journalFeedForceAutogenerateId() %>">
+				<c:when test="<%= journalWebConfiguration.journalArticleForceAutogenerateId() %>">
 					<aui:input name="newId" type="resource" value='<%= LanguageUtil.get(request, "autogenerate-id") %>' />
 
 					<aui:input name="newArticleId" type="hidden" />
 					<aui:input name="autoArticleId" type="hidden" value="<%= true %>" />
 				</c:when>
 				<c:otherwise>
-					<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>" bean="<%= null %>" cssClass="lfr-input-text-container" field="articleId" fieldParam="newArticleId" label="" model="<%= JournalArticle.class %>" name="newArticleId" value="<%= newArticleId %>" />
+					<aui:input bean="<%= null %>" cssClass="lfr-input-text-container" field="articleId" fieldParam="newArticleId" label="" model="<%= JournalArticle.class %>" name="newArticleId" value="<%= newArticleId %>" />
 				</c:otherwise>
 			</c:choose>
 		</liferay-frontend:fieldset>

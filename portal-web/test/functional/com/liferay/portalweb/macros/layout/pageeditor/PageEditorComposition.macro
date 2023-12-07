@@ -1,19 +1,20 @@
 definition {
 
-	macro saveAsFragment {
+	@summary = "Default summary"
+	macro saveAsFragment(saveInlineContent = null, fragmentName = null, saveMappingConfigurationAndLink = null, collectionName = null) {
 		SelectFrameTop();
 
 		Type(
 			locator1 = "TextInput#NAME",
-			value1 = "${fragmentName}");
+			value1 = ${fragmentName});
 
-		if ("${saveInlineContent}" == "true") {
+		if (${saveInlineContent} == "true") {
 			Check.checkNotVisible(
 				checkboxName = "Save Inline Content",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
-		if ("${saveMappingConfigurationAndLink}" == "true") {
+		if (${saveMappingConfigurationAndLink} == "true") {
 			Check.checkNotVisible(
 				checkboxName = "Save Mapping Configuration and Link",
 				locator1 = "Checkbox#ANY_CHECKBOX");
@@ -22,19 +23,21 @@ definition {
 		if (isSet(collectionName)) {
 			if (isSet(selectCollectionName)) {
 				AssertClick(
-					key_card = "${collectionName}",
+					key_card = ${collectionName},
 					locator1 = "Card#CARD",
-					value1 = "${collectionName}");
+					value1 = ${collectionName});
 			}
 
 			AssertElementPresent(
-				key_card = "${collectionName}",
+				key_card = ${collectionName},
 				locator1 = "Card#CARD_SELECTED");
 		}
 
 		AssertClick(
 			locator1 = "//button[normalize-space()='Save']",
 			value1 = "Save");
+
+		Alert.viewSuccessMessageText(successMessage = "The fragment was created successfully. You can view it in Fragments.");
 	}
 
 }

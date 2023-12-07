@@ -1,37 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.internal.service.taglib;
 
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
+import com.liferay.client.extension.internal.service.taglib.util.ClientExtensionDynamicIncludeUtil;
 import com.liferay.client.extension.model.ClientExtensionEntryRel;
-import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.client.extension.type.GlobalCSSCET;
 import com.liferay.client.extension.type.manager.CETManager;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutSet;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,8 +43,13 @@ public class ClientExtensionTopHeadDynamicInclude implements DynamicInclude {
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
+		List<ClientExtensionEntryRel> clientExtensionEntryRels =
+			ClientExtensionDynamicIncludeUtil.getClientExtensionEntryRels(
+				themeDisplay.getLayout(),
+				ClientExtensionEntryConstants.TYPE_GLOBAL_CSS);
+
 		for (ClientExtensionEntryRel clientExtensionEntryRel :
-				_getClientExtensionEntryRels(themeDisplay.getLayout())) {
+				clientExtensionEntryRels) {
 
 			GlobalCSSCET globalCSSCET = (GlobalCSSCET)_cetManager.getCET(
 				clientExtensionEntryRel.getCompanyId(),
@@ -78,53 +68,7 @@ public class ClientExtensionTopHeadDynamicInclude implements DynamicInclude {
 			"/html/common/themes/top_head.jsp#post");
 	}
 
-	private List<ClientExtensionEntryRel> _getClientExtensionEntryRels(
-		Layout layout) {
-
-		LayoutSet layoutSet = layout.getLayoutSet();
-
-		List<ClientExtensionEntryRel> clientExtensionEntryRels =
-			new ArrayList<>(
-				_clientExtensionEntryRelLocalService.
-					getClientExtensionEntryRels(
-						_portal.getClassNameId(LayoutSet.class),
-						layoutSet.getLayoutSetId(),
-						ClientExtensionEntryConstants.TYPE_GLOBAL_CSS,
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-
-		Layout masterLayout = _layoutLocalService.fetchLayout(
-			layout.getMasterLayoutPlid());
-
-		if (masterLayout != null) {
-			clientExtensionEntryRels.addAll(
-				_clientExtensionEntryRelLocalService.
-					getClientExtensionEntryRels(
-						_portal.getClassNameId(Layout.class),
-						masterLayout.getPlid(),
-						ClientExtensionEntryConstants.TYPE_GLOBAL_CSS,
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-		}
-
-		clientExtensionEntryRels.addAll(
-			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
-				_portal.getClassNameId(Layout.class), layout.getPlid(),
-				ClientExtensionEntryConstants.TYPE_GLOBAL_CSS,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-
-		return clientExtensionEntryRels;
-	}
-
 	@Reference
 	private CETManager _cetManager;
-
-	@Reference
-	private ClientExtensionEntryRelLocalService
-		_clientExtensionEntryRelLocalService;
-
-	@Reference
-	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private Portal _portal;
 
 }

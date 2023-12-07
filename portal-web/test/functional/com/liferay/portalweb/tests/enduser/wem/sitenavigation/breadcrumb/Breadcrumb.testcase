@@ -1,6 +1,7 @@
 @component-name = "portal-breadcrumb"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Breadcrumb";
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -18,9 +19,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +30,7 @@ definition {
 	}
 
 	@description = "Add a widget template via Breadcrumb widget."
-	@priority = "4"
+	@priority = 4
 	test AddADTViaBreadcrumb {
 		property testray.component.names = "Breadcrumb,Content and Appliation Templates";
 
@@ -41,9 +42,9 @@ definition {
 		}
 
 		task ("Add a widget template for Breadcrumb widget") {
-			ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "test-site-name");
+			WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "test-site-name");
 
-			ApplicationDisplayTemplates.addCP(
+			WidgetTemplates.addCP(
 				adtType = "Breadcrumb",
 				fieldNameList = "Breadcrumb Entry");
 		}
@@ -53,7 +54,7 @@ definition {
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
-			ApplicationDisplayTemplates.selectPortletADT(
+			WidgetTemplates.selectPortletADT(
 				portletName = "Breadcrumb",
 				templateName = "Breadcrumb Test ADT");
 		}
@@ -74,7 +75,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-150908. Configure Display Template without saving in Breadcrumb widget."
-	@priority = "4"
+	@priority = 4
 	test ConfigureDisplayTemplateWithoutSave {
 		task ("Add a Breadcrumb widget to page") {
 			JSONLayout.addWidgetToPublicLayout(
@@ -115,7 +116,7 @@ definition {
 	}
 
 	@description = "Configure Show Application in Breadcrumb widget."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test ConfigureShowApplication {
 		task ("Set up the layout of page to 1 column") {
@@ -130,7 +131,7 @@ definition {
 				JSONLayout.addWidgetToPublicLayout(
 					groupName = "Test Site Name",
 					layoutName = "Test Page Name",
-					widgetName = "${portletName}");
+					widgetName = ${portletName});
 			}
 		}
 
@@ -150,7 +151,7 @@ definition {
 				categoryDescription = "MB Subcategory Description",
 				categoryName = "MB Subcategory Name",
 				groupName = "Test Site Name",
-				parentCategoryId = "${parentCategoryId}",
+				parentCategoryId = ${parentCategoryId},
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -163,7 +164,7 @@ definition {
 				categoryDescription = "MB Subcategory Subcategory Description",
 				categoryName = "MB Subcategory Subcategory Name",
 				groupName = "Test Site Name",
-				parentCategoryId = "${parentCategoryId}",
+				parentCategoryId = ${parentCategoryId},
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -177,12 +178,12 @@ definition {
 			MessageboardsCategory.viewPG(
 				categoryDescription = "MB Subcategory Description",
 				categoryName = "MB Subcategory Name",
-				threadCount = "0");
+				threadCount = 0);
 
 			MessageboardsCategory.viewPG(
 				categoryDescription = "MB Subcategory Subcategory Description",
 				categoryName = "MB Subcategory Subcategory Name",
-				threadCount = "0");
+				threadCount = 0);
 		}
 
 		task ("View displayed content in Breadcrumb widget") {
@@ -211,12 +212,12 @@ definition {
 			MessageboardsCategory.viewPG(
 				categoryDescription = "MB Subcategory Description",
 				categoryName = "MB Subcategory Name",
-				threadCount = "0");
+				threadCount = 0);
 
 			MessageboardsCategory.viewPG(
 				categoryDescription = "MB Subcategory Subcategory Description",
 				categoryName = "MB Subcategory Subcategory Name",
-				threadCount = "0");
+				threadCount = 0);
 
 			Breadcrumb.viewSpecificPG(
 				breadcrumbListNotVisible = "MB Category Name,MB Subcategory Name,MB Subcategory Subcategory Name",
@@ -245,19 +246,19 @@ definition {
 			MessageboardsCategory.viewPG(
 				categoryDescription = "MB Subcategory Description",
 				categoryName = "MB Subcategory Name",
-				threadCount = "0");
+				threadCount = 0);
 
 			MessageboardsCategory.viewPG(
 				categoryDescription = "MB Subcategory Subcategory Description",
 				categoryName = "MB Subcategory Subcategory Name",
-				threadCount = "0");
+				threadCount = 0);
 
 			Breadcrumb.viewPG(breadcrumbListVisible = "Test Site Name,Test Page Name,MB Category Name,MB Subcategory Name,MB Subcategory Subcategory Name");
 		}
 	}
 
 	@description = "Configure Show Current Site in Breadcrumb widget."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test ConfigureShowCurrentSite {
 		property portal.acceptance = "true";
@@ -317,7 +318,7 @@ definition {
 	}
 
 	@description = "Disable Show Page in Breadcrumb widget."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test DisableShowPage {
 		property portal.acceptance = "true";
@@ -361,13 +362,13 @@ definition {
 	}
 
 	@description = "Disable Show Parent Site in Breadcrumb widget."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test DisableShowParentSite {
 		task ("Add a child site") {
-			JSONGroup.addChildGroup(
-				groupName = "Child SiteName",
-				parentGroupName = "Test Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Test Site Name",
+				siteName = "Child SiteName");
 		}
 
 		task ("Add a parent widget page in child site") {
@@ -423,7 +424,7 @@ definition {
 	}
 
 	@description = "Enable Show Guest Site in Breadcrumb widget."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test EnableShowGuestSite {
 		task ("Add a Breadcrumb widget to page") {
@@ -442,9 +443,9 @@ definition {
 
 			Breadcrumb.viewConfigurationPreview(breadcrumbListVisible = "Test Site Name,Test Page Name");
 
-			var siteName = TestCase.getSiteName(siteName = "${siteName}");
+			var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-			Breadcrumb.viewConfigurationPreview(breadcrumbListNotVisible = "${siteName}");
+			Breadcrumb.viewConfigurationPreview(breadcrumbListNotVisible = ${siteName});
 
 			Breadcrumb.configureBreadcrumb(checkSetupName = "Show Guest Site");
 
@@ -465,9 +466,10 @@ definition {
 	}
 
 	@description = "View Breadcrumb when navigate to page via IP address."
-	@priority = "4"
+	@priority = 4
 	test ViewBreadcrumbWhenNavigateToPageViaIPAddress {
-		property test.name.skip.portal.instance = "Breadcrumb#ViewBreadcrumbWhenNavigateToPageViaIPAddress";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -497,11 +499,11 @@ definition {
 		}
 
 		task ("View the displayed content in Breadcrumb") {
-			var siteName = TestCase.getSiteName(siteName = "${siteName}");
+			var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 			Breadcrumb.viewPG(breadcrumbListVisible = "${siteName},Test Site Name,Test Page Name");
 
-			var key_url = "${portalURL}";
+			var key_url = ${portalURL};
 
 			AssertElementNotPresent(locator1 = "BreadcrumbPortlet#BREADCRUMB_PAGE_LINK");
 
@@ -509,7 +511,31 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "BreadcrumbPortlet#BREADCRUMB_PAGE_LINK",
-				value1 = "${siteName}");
+				value1 = ${siteName});
+		}
+	}
+
+	@description = "This is a use case for LPS-179500. The administrater could see the description of DDM Template Key Default."
+	@priority = 3
+	test ViewDescriptionOfDDMTemplateKeyDefault {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given an administrater navigates to the System Settings") {
+			SystemSettings.openSystemSettingsAdmin();
+		}
+
+		task ("When the administrater navigates to the configuration of Breadcrumb Template") {
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Breadcrumbs",
+				configurationName = "Breadcrumb Template",
+				configurationScope = "System Scope");
+		}
+
+		task ("Then the administrater sees the description of DDM Template Key Default") {
+			SystemSettings.viewTextLabel(fieldLabel = "DDM Template Key Default");
+
+			SystemSettings.viewSettingsText(settingsText = "The dynamic data mapping template key belongs to a breadcrumb widget template that is used as a default template to render the breadcrumb. You can find this key in the properties panel when editing the widget template.");
 		}
 	}
 

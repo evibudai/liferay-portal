@@ -1,6 +1,7 @@
 definition {
 
-	macro addOfflinePaymentMethod {
+	@summary = "Default summary"
+	macro addOfflinePaymentMethod(key = null) {
 		if (!(IsElementPresent(key_title = "Offline Payment Method Keys", locator1 = "Header#H2_TITLE"))) {
 			SystemSettings.openSystemSettingsAdmin();
 
@@ -14,14 +15,14 @@ definition {
 
 		Type(
 			locator1 = "SystemSettings#KEY",
-			value1 = "${key}");
+			value1 = ${key});
 
 		Button.clickSave();
 
 		Alert.viewSuccessMessage();
 
 		AssertElementPresent(
-			key_configurationEntry = "${key}",
+			key_configurationEntry = ${key},
 			locator1 = "SystemSettings#CONFIGURATION_ENTRY");
 	}
 

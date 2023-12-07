@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -26,12 +20,17 @@ const ActionsInfo = ({
 	sectionsLength,
 	setSections,
 }) => {
-	const {functionActionExecutors, selectedItem, setSelectedItem} = useContext(
-		DiagramBuilderContext
-	);
+	const {
+		functionActionExecutors,
+		selectedItem,
+		setSelectedItem,
+		statuses,
+	} = useContext(DiagramBuilderContext);
 	const {actions} = selectedItem.data;
 
 	const [script, setScript] = useState(actions?.script?.[index] || '');
+
+	const [status, setStatus] = useState(actions?.status?.[index] || '');
 
 	const [description, setDescription] = useState(
 		actions?.description?.[index] || ''
@@ -59,6 +58,11 @@ const ActionsInfo = ({
 			type: 'script',
 			value: 'java',
 		},
+		{
+			label: Liferay.Language.get('update-status'),
+			type: 'status',
+			value: 'update-status',
+		},
 	];
 
 	if (functionActionExecutors?.length) {
@@ -75,8 +79,21 @@ const ActionsInfo = ({
 		actions?.scriptLanguage?.[index] || 'select-a-script-type'
 	);
 
+	let defaultActionType;
+
+	if (status) {
+		defaultActionType = actionTypeOptions.find(
+			(item) => item.value === 'update-status'
+		);
+	}
+	else {
+		defaultActionType = actionTypeOptions.find(
+			(item) => item.value === scriptLanguage
+		);
+	}
+
 	const [selectedActionType, setSelectedActionType] = useState(
-		actionTypeOptions.find((item) => item.value === scriptLanguage)
+		defaultActionType
 	);
 
 	if (
@@ -102,7 +119,9 @@ const ActionsInfo = ({
 				(prevSection) => prevSection.identifier !== identifier
 			);
 
-			updateSelectedItem(newSections);
+			if (name && executionType) {
+				updateSelectedItem(newSections);
+			}
 
 			return newSections;
 		});
@@ -113,7 +132,8 @@ const ActionsInfo = ({
 			item.name &&
 			(item.script ||
 				(selectedActionType?.type === 'functionActionExecutor' &&
-					item.script === '')) &&
+					item.script === '') ||
+				item.status) &&
 			item.executionType
 		) {
 			setSections((prev) => {
@@ -123,6 +143,7 @@ const ActionsInfo = ({
 					...updatedSection[index],
 					...item,
 				};
+
 				updateSelectedItem(updatedSection);
 
 				return updatedSection;
@@ -147,6 +168,7 @@ const ActionsInfo = ({
 						({scriptLanguage}) => scriptLanguage
 					),
 					sectionsData: values.map((values) => values),
+					status: values.map((status) => status.status),
 				},
 			},
 		}));
@@ -177,6 +199,9 @@ const ActionsInfo = ({
 				setScript={setScript}
 				setScriptLanguage={setScriptLanguage}
 				setSelectedActionType={setSelectedActionType}
+				setStatus={setStatus}
+				status={status}
+				statuses={statuses}
 				updateActionInfo={updateActionInfo}
 			/>
 

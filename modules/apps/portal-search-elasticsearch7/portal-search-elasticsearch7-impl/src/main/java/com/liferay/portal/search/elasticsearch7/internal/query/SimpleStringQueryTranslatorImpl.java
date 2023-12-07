@@ -1,30 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.query;
 
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.search.query.Operator;
 import com.liferay.portal.search.query.SimpleStringQuery;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.SimpleQueryStringBuilder;
@@ -60,17 +46,16 @@ public class SimpleStringQueryTranslatorImpl
 		Map<String, Float> fieldBoostMap = simpleStringQuery.getFieldBoostMap();
 
 		if (MapUtil.isNotEmpty(fieldBoostMap)) {
-			Set<Map.Entry<String, Float>> entrySet = fieldBoostMap.entrySet();
+			for (Map.Entry<String, Float> entry : fieldBoostMap.entrySet()) {
+				Float value = entry.getValue();
 
-			Stream<Map.Entry<String, Float>> stream = entrySet.stream();
-
-			simpleQueryStringBuilder.fields(
-				stream.collect(
-					Collectors.toMap(
-						Map.Entry::getKey,
-						entry -> GetterUtil.getFloat(
-							entry.getValue(),
-							AbstractQueryBuilder.DEFAULT_BOOST))));
+				if (value != null) {
+					simpleQueryStringBuilder.field(entry.getKey(), value);
+				}
+				else {
+					simpleQueryStringBuilder.field(entry.getKey());
+				}
+			}
 		}
 
 		if (simpleStringQuery.getDefaultOperator() != null) {

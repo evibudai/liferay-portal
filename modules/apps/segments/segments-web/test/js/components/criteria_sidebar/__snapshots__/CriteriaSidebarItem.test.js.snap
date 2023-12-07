@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CriteriaSidebarItem renders 1`] = `
+<DocumentFragment>
+  <li
+    aria-label="drag-x"
+    class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex"
+    role="menuitem"
+    tabindex="-1"
+  >
+    <div
+      class="h-100 w-100"
+      draggable="true"
+    >
+      <svg
+        class="lexicon-icon lexicon-icon-drag mt-0"
+        role="presentation"
+      >
+        <use
+          href="#drag"
+        />
+      </svg>
+      <span
+        class="sticker"
+      >
+        <svg
+          class="lexicon-icon lexicon-icon-text"
+          role="presentation"
+        >
+          <use
+            href="#text"
+          />
+        </svg>
+      </span>
+    </div>
+  </li>
+</DocumentFragment>
+`;

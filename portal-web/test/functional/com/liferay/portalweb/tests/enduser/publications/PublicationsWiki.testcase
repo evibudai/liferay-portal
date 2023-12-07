@@ -1,0 +1,449 @@
+@component-name = "portal-publications"
+definition {
+
+	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
+	property osgi.module.configurations = "enabled=B\"true\"";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.component.names = "Wiki";
+	property testray.main.component.name = "Publications";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+	}
+
+	tearDown {
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		if (${testLiferayVirtualInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Publications.disablePublications();
+		}
+	}
+
+	@description = "Assert that is possible to add a Wiki Page within a publication and then publish it"
+	@priority = 3
+	test CanAddWikiPageWithinPublications {
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "site-name");
+
+		WikiNode.addCP(wikiNodeName = "Wiki Node Name");
+
+		// Workaround LPS-201153
+
+		WikiNavigator.gotoNode(wikiNodeName = "Wiki Node Name");
+
+		WikiPage.addCP(
+			wikiPageContent = "Wiki Page Content",
+			wikiPageTitle = "Wiki Page Title");
+
+		PublicationsNavigator.gotoReviewChanges(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Wiki Node",
+			changeSite = "Site Name",
+			changeTitle = "Wiki Node Name",
+			changeType = "Added",
+			changeUser = "Test Test");
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Wiki Page",
+			changeSite = "Site Name",
+			changeTitle = "Wiki Page Title",
+			changeType = "Added",
+			changeUser = "Test Test");
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@description = "Assert that is possible to delete a Wiki Page within a publication and then publish it"
+	@priority = 3
+	test CanDeleteWikiPageWithinPublications {
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "site-name");
+
+		WikiNode.addCP(wikiNodeName = "Wiki Node Name");
+
+		// Workaround LPS-201153
+
+		WikiNavigator.gotoNode(wikiNodeName = "Wiki Node Name");
+
+		WikiPage.addCP(
+			wikiPageContent = "Wiki Page Content",
+			wikiPageTitle = "Wiki Page Title");
+
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "site-name");
+
+		WikiNavigator.gotoNode(wikiNodeName = "Wiki Node Name");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+
+		WikiPage.deleteCP(
+			assetType = "Wiki Page",
+			wikiNodeName = "Wiki Node Name",
+			wikiPageTitle = "Wiki Page Title");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "site-name");
+
+		WikiNode.deleteCP(
+			assetType = "Wiki Node",
+			wikiNodeName = "Wiki Node Name");
+
+		PublicationsNavigator.gotoReviewChanges(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		// Workaround LPS-183473
+
+		/*PublicationsChanges.filterChangesByItem(
+			checkboxName = "Site Name",
+			menuItem = "Sites");
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Wiki Page",
+			changeSite = "Site Name",
+			changeTitle = "Wiki Page Title (1.0)",
+			changeType = "Deleted",
+			changeUser = "Test Test");
+
+		PublicationsChanges.filterChangesByItem(
+			checkboxName = "Wiki Node",
+			menuItem = "Types");
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Wiki Node",
+			changeSite = "Site Name",
+			changeTitle = "Wiki Node Name",
+			changeType = "Deleted",
+			changeUser = "Test Test");*/
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@description = "Can edit Wiki Pages Within Publications"
+	@priority = 3
+	test CanEditWikiPageWithinPublications {
+		task ("Create Wiki Node and Wiki Page with Attachment") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
+			JSONWiki.addWikiNode(
+				groupName = "Site Name",
+				wikiNodeDescription = "Wiki Node Description",
+				wikiNodeName = "Wiki Node Test");
+
+			JSONWiki.addWikiPage(
+				groupName = "Site Name",
+				wikiNodeName = "Wiki Node Test",
+				wikiPageContent = "Wiki Page Content",
+				wikiPageName = "Wiki Page Test");
+
+			JSONWiki.addAttachmentToWikiPage(
+				fileName = "Document_1.txt",
+				groupName = "Site Name",
+				mimeType = "text/txt",
+				wikiNodeName = "Wiki Node Test",
+				wikiPageName = "Wiki Page Test");
+		}
+
+		JSONPublications.addPublication(publicationName = "Test Publication");
+
+		JSONPublications.selectPublication(publicationName = "Test Publication");
+
+		task ("Edit Wiki Node and Wiki Page") {
+			WikiNavigator.openWikiAdmin(siteURLKey = "site-name");
+
+			WikiNode.editCP(
+				wikiNodeDescription = "Wiki Node Description",
+				wikiNodeDescriptionEdit = "Wiki Node Description Edit",
+				wikiNodeName = "Wiki Node Test",
+				wikiNodeNameEdit = "WIKI NODE");
+
+			WikiNavigator.gotoNode(wikiNodeName = "WIKI NODE");
+
+			WikiPage.editPageCP(
+				groupName = "Site Name",
+				siteURLKey = "site-name",
+				wikiNodeName = "WIKI NODE",
+				wikiPageContentEdit = "WIKI PAGE",
+				wikiPageTitle = "Wiki Page Test");
+		}
+
+		task ("View the publications changes for wiki") {
+			PublicationsNavigator.gotoReviewChanges(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Wiki Node",
+				changeSite = "Site Name",
+				changeTitle = "WIKI NODE",
+				changeType = "Modified",
+				changeUser = "Test Test");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Wiki Page",
+				changeSite = "Site Name",
+				changeTitle = "Wiki Page Test (1.0)",
+				changeType = "Modified",
+				changeUser = "Test Test");
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Wiki Page",
+				changeSite = "Site Name",
+				changeTitle = "Wiki Page Test (1.1)",
+				changeType = "Added",
+				changeUser = "Test Test");
+		}
+
+		task ("Publish the publication") {
+			Publications.publishPublication(publicationName = "Test Publication");
+		}
+	}
+
+	@description = "This is the use case for LPS-179026. Can preview changes for WikiPages"
+	@priority = 3
+	test CanPreviewChangesForWikiPages {
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONWiki.addWikiPage(
+			groupName = "Site Name",
+			wikiNodeName = "Main",
+			wikiPageContent = "Wiki Page Content",
+			wikiPageName = "Wiki Page Title");
+
+		JSONPublications.addPublication(publicationName = "Publication Name 1");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name 1");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "site-name");
+
+		JSONWiki.updateWikiPage(
+			groupName = "Site Name",
+			wikiNodeName = "Main",
+			wikiPageContent = "Wiki Page Content Edited",
+			wikiPageName = "Wiki Page Title");
+
+		JSONWiki.addAttachmentToWikiPage(
+			fileName = "Document_1.txt",
+			groupName = "Site Name",
+			mimeType = "text/txt",
+			wikiNodeName = "Main",
+			wikiPageName = "Wiki Page Title");
+
+		task ("View the wiki page change details on Display tab") {
+			PublicationsNavigator.gotoReviewChanges();
+
+			PublicationsNavigator.gotoViewChangeDetails(
+				changeCategory = "Wiki Page",
+				changeTitle = "Wiki Page Title (1.1)");
+
+			PublicationsChangeDetails.viewChangeDetailsInDisplay(
+				changeType = "Modified",
+				contentValueInProduction = "Wiki Page Content",
+				contentValueInPublication = "Wiki Page Content Edited",
+				diffAddedValue = "Attachments",
+				publicationName = "Publication Name 1");
+		}
+	}
+
+	@description = "This is a use case for LPS-174885. Resolve typical conflicts when using wiki with publications"
+	@priority = 3
+	test CanResolveConflictingPublicationsAutomatically {
+		task ("Add Wiki Node and Wiki Page") {
+			JSONWiki.addWikiNode(
+				groupName = "Guest",
+				wikiNodeDescription = "Wiki Node Description",
+				wikiNodeName = "Wiki Node Name");
+
+			JSONWiki.addWikiPage(
+				groupName = "Guest",
+				wikiNodeName = "Wiki Node Name",
+				wikiPageContent = "Wiki Page Content",
+				wikiPageName = "Wiki Page Test");
+		}
+
+		JSONPublications.addPublication(publicationName = "Publication Name 1");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name 1");
+
+		task ("Edit Wiki Name Content within Publication Name 1") {
+			WikiNavigator.openWikiAdmin(siteURLKey = "guest");
+
+			WikiPage.editPageCP(
+				groupName = "Guest",
+				siteURLKey = "guest",
+				wikiNodeName = "Wiki Node Name",
+				wikiPageContentEdit = "Some content for Publication Name 1",
+				wikiPageTitle = "Wiki Page Test");
+		}
+
+		JSONPublications.addPublication(publicationName = "Publication Name 2");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name 2");
+
+		task ("Edit Wiki Name Content within Publication Name 2") {
+			WikiNavigator.openWikiAdmin(siteURLKey = "guest");
+
+			WikiPage.editPageCP(
+				groupName = "Guest",
+				siteURLKey = "guest",
+				wikiNodeName = "Wiki Node Name",
+				wikiPageContentEdit = "Some content for Publication Name 2",
+				wikiPageTitle = "Wiki Page Test");
+		}
+
+		task ("Publish publications and assert that was successful") {
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name 2");
+
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name 1");
+		}
+	}
+
+	@description = "This is a use case for LPS-173707. Multiple 'Your request repeated successfully' messages appear when switching between publications on a page with many Asset Publishers"
+	@priority = 3
+	test DoesNotDisplaySuccessMessageWhenSwitchingToProduction {
+		Navigator.openURL();
+
+		ContentPages.addPage(pageName = "Test Page");
+
+		PageEditor.addWidget(portletName = "Asset Publisher");
+
+		var count = 0;
+
+		while (${count} != 3) {
+			PageEditor.addWidget(
+				portletName = "Asset Publisher",
+				targetFragmentName = "Asset Publisher");
+
+			var count = ${count} + 1;
+		}
+
+		PageEditor.publish();
+
+		JSONPublications.addPublication(publicationName = "Test Publication");
+
+		JSONPublications.selectPublication(publicationName = "Test Publication");
+
+		ContentPagesNavigator.openViewContentPage(
+			pageName = "Test Page",
+			siteName = "Guest");
+
+		Publications.workOnProduction();
+
+		Alert.viewWarningSpecificNotPresent(warningMessage = "Your request repeated successfully");
+	}
+
+	@description = "Assert that the search results shows only wiki pages from the active publication"
+	@priority = 3
+	test ViewSearchResultsFromActivePublication {
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Wiki");
+
+		WikiNode.addCP(wikiNodeName = "Wiki Node");
+
+		WikiNavigator.gotoNode(wikiNodeName = "Wiki Node");
+
+		WikiPage.addCP(
+			wikiPageContent = "Original content",
+			wikiPageTitle = "Wiki Page Production");
+
+		JSONPublications.addPublication(publicationName = "Publication 1");
+
+		JSONPublications.selectPublication(publicationName = "Publication 1");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "guest");
+
+		WikiNavigator.gotoNode(wikiNodeName = "Wiki Node");
+
+		WikiPage.addCP(
+			wikiPageContent = "Publication 1",
+			wikiPageTitle = "Wiki Page Publication 1");
+
+		Publications.workOnProduction();
+
+		JSONPublications.addPublication(publicationName = "Publication 2");
+
+		JSONPublications.selectPublication(publicationName = "Publication 2");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "guest");
+
+		WikiNavigator.gotoNode(wikiNodeName = "Wiki Node");
+
+		WikiPage.addCP(
+			wikiPageContent = "Publication 2",
+			wikiPageTitle = "Wiki Page Publication 2");
+
+		WikiPage.editPageCP(
+			wikiPageContentEdit = "Wiki Page Content Edit",
+			wikiPageTitle = "Wiki Page Production");
+
+		Navigator.openURL();
+
+		SearchPage.searchEmbedded(searchTerm = "Wiki");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Wiki Page Content Edit",
+			searchAssetTitle = "Wiki Page Production",
+			searchTerm = "Wiki");
+
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "Wiki Page Publication 2",
+			searchTerm = "Wiki");
+
+		JSONPublications.selectPublication(publicationName = "Publication 1");
+
+		Navigator.openURL();
+
+		SearchPage.searchEmbedded(searchTerm = "Wiki");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Original content",
+			searchAssetTitle = "Wiki Page Production",
+			searchTerm = "Wiki");
+
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "Wiki Page Publication 1",
+			searchTerm = "Wiki");
+
+		Publications.workOnProduction();
+
+		Navigator.openURL();
+
+		SearchPage.searchEmbedded(searchTerm = "Wiki");
+
+		SearchResults.viewSearchResults(
+			searchAssetSummary = "Original content",
+			searchAssetTitle = "Wiki Page Production",
+			searchAssetType = "Wiki Page");
+
+		SearchResults.viewSearchResultNotPresent(
+			searchAssetTitle = "Wiki Page Publication 1",
+			searchAssetType = "Wiki Page");
+
+		SearchResults.viewSearchResultNotPresent(
+			searchAssetTitle = "Wiki Page Publication 2",
+			searchAssetType = "Wiki Page");
+	}
+
+}

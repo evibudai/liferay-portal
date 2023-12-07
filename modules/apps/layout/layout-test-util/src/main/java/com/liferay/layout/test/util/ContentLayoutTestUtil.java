@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.test.util;
@@ -352,6 +343,24 @@ public class ContentLayoutTestUtil {
 				CompanyLocalServiceUtil.getCompany(layout.getCompanyId()),
 				GroupLocalServiceUtil.getGroup(layout.getGroupId()), layout);
 
+		long segmentsExperienceId =
+			SegmentsExperienceLocalServiceUtil.fetchDefaultSegmentsExperienceId(
+				layout.getPlid());
+
+		mockLiferayPortletActionRequest.addParameter(
+			"segmentsExperienceId", String.valueOf(segmentsExperienceId));
+
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			LayoutPageTemplateStructureLocalServiceUtil.
+				fetchLayoutPageTemplateStructure(
+					layout.getGroupId(), layout.getPlid());
+
+		LayoutStructure layoutStructure = LayoutStructure.of(
+			layoutPageTemplateStructure.getData(segmentsExperienceId));
+
+		mockLiferayPortletActionRequest.addParameter(
+			"parentItemId", layoutStructure.getMainItemId());
+
 		mockLiferayPortletActionRequest.addParameter("portletId", portletId);
 
 		return ReflectionTestUtil.invoke(
@@ -401,9 +410,7 @@ public class ContentLayoutTestUtil {
 
 		mockLiferayPortletActionRequest.setAttribute(
 			PortletServlet.PORTLET_SERVLET_REQUEST, mockHttpServletRequest);
-
 		mockLiferayPortletActionRequest.setAttribute(WebKeys.LAYOUT, layout);
-
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
 
@@ -453,7 +460,8 @@ public class ContentLayoutTestUtil {
 
 		LayoutSet layoutSet = group.getPublicLayoutSet();
 
-		themeDisplay.setLookAndFeel(layoutSet.getTheme(), null);
+		themeDisplay.setLookAndFeel(
+			layoutSet.getTheme(), layoutSet.getColorScheme());
 
 		themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
@@ -507,15 +515,10 @@ public class ContentLayoutTestUtil {
 			ReflectionTestUtil.invoke(
 				publishLayoutMVCActionCommand, "_publishLayout",
 				new Class<?>[] {
-					ActionRequest.class, ActionResponse.class, Layout.class,
-					Layout.class, ServiceContext.class, long.class
+					Layout.class, Layout.class, ServiceContext.class, long.class
 				},
-				getMockLiferayPortletActionRequest(
-					CompanyLocalServiceUtil.getCompany(layout.getCompanyId()),
-					GroupLocalServiceUtil.getGroup(layout.getGroupId()),
-					layout),
-				new MockLiferayPortletActionResponse(), draftLayout, layout,
-				serviceContext, TestPropsValues.getUserId());
+				draftLayout, layout, serviceContext,
+				TestPropsValues.getUserId());
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();

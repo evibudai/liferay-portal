@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.address.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.admin.address.client.pagination.Pagination;
 import com.liferay.headless.admin.address.client.resource.v1_0.RegionResource;
 import com.liferay.headless.admin.address.client.serdes.v1_0.RegionSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -66,8 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -207,20 +197,23 @@ public abstract class BaseRegionResourceTestCase {
 		Page<Region> page = regionResource.getCountryRegionsPage(
 			countryId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantCountryId != null) {
 			Region irrelevantRegion = testGetCountryRegionsPage_addRegion(
 				irrelevantCountryId, randomIrrelevantRegion());
 
 			page = regionResource.getCountryRegionsPage(
-				irrelevantCountryId, null, null, Pagination.of(1, 2), null);
+				irrelevantCountryId, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantRegion), (List<Region>)page.getItems());
-			assertValid(page);
+			assertContains(irrelevantRegion, (List<Region>)page.getItems());
+			assertValid(
+				page,
+				testGetCountryRegionsPage_getExpectedActions(
+					irrelevantCountryId));
 		}
 
 		Region region1 = testGetCountryRegionsPage_addRegion(
@@ -232,20 +225,44 @@ public abstract class BaseRegionResourceTestCase {
 		page = regionResource.getCountryRegionsPage(
 			countryId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(region1, region2), (List<Region>)page.getItems());
-		assertValid(page);
+		assertContains(region1, (List<Region>)page.getItems());
+		assertContains(region2, (List<Region>)page.getItems());
+		assertValid(
+			page, testGetCountryRegionsPage_getExpectedActions(countryId));
 
 		regionResource.deleteRegion(region1.getId());
 
 		regionResource.deleteRegion(region2.getId());
 	}
 
+	protected Map<String, Map<String, String>>
+			testGetCountryRegionsPage_getExpectedActions(Long countryId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-admin-address/v1.0/countries/{countryId}/regions/batch".
+				replace("{countryId}", String.valueOf(countryId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
+	}
+
 	@Test
 	public void testGetCountryRegionsPageWithPagination() throws Exception {
 		Long countryId = testGetCountryRegionsPage_getCountryId();
+
+		Page<Region> regionPage = regionResource.getCountryRegionsPage(
+			countryId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(regionPage.getTotalCount());
 
 		Region region1 = testGetCountryRegionsPage_addRegion(
 			countryId, randomRegion());
@@ -257,27 +274,28 @@ public abstract class BaseRegionResourceTestCase {
 			countryId, randomRegion());
 
 		Page<Region> page1 = regionResource.getCountryRegionsPage(
-			countryId, null, null, Pagination.of(1, 2), null);
+			countryId, null, null, Pagination.of(1, totalCount + 2), null);
 
 		List<Region> regions1 = (List<Region>)page1.getItems();
 
-		Assert.assertEquals(regions1.toString(), 2, regions1.size());
+		Assert.assertEquals(
+			regions1.toString(), totalCount + 2, regions1.size());
 
 		Page<Region> page2 = regionResource.getCountryRegionsPage(
-			countryId, null, null, Pagination.of(2, 2), null);
+			countryId, null, null, Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<Region> regions2 = (List<Region>)page2.getItems();
 
 		Assert.assertEquals(regions2.toString(), 1, regions2.size());
 
 		Page<Region> page3 = regionResource.getCountryRegionsPage(
-			countryId, null, null, Pagination.of(1, 3), null);
+			countryId, null, null, Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(region1, region2, region3),
-			(List<Region>)page3.getItems());
+		assertContains(region1, (List<Region>)page3.getItems());
+		assertContains(region2, (List<Region>)page3.getItems());
+		assertContains(region3, (List<Region>)page3.getItems());
 	}
 
 	@Test
@@ -387,22 +405,25 @@ public abstract class BaseRegionResourceTestCase {
 
 		region2 = testGetCountryRegionsPage_addRegion(countryId, region2);
 
+		Page<Region> page = regionResource.getCountryRegionsPage(
+			countryId, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<Region> ascPage = regionResource.getCountryRegionsPage(
-				countryId, null, null, Pagination.of(1, 2),
+				countryId, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(region1, region2),
-				(List<Region>)ascPage.getItems());
+			assertContains(region1, (List<Region>)ascPage.getItems());
+			assertContains(region2, (List<Region>)ascPage.getItems());
 
 			Page<Region> descPage = regionResource.getCountryRegionsPage(
-				countryId, null, null, Pagination.of(1, 2),
+				countryId, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(region2, region1),
-				(List<Region>)descPage.getItems());
+			assertContains(region2, (List<Region>)descPage.getItems());
+			assertContains(region1, (List<Region>)descPage.getItems());
 		}
 	}
 
@@ -446,10 +467,17 @@ public abstract class BaseRegionResourceTestCase {
 		Region postRegion = testGetCountryRegionByRegionCode_addRegion();
 
 		Region getRegion = regionResource.getCountryRegionByRegionCode(
-			postRegion.getCountryId(), postRegion.getRegionCode());
+			testGetCountryRegionByRegionCode_getCountryId(postRegion),
+			postRegion.getRegionCode());
 
 		assertEquals(postRegion, getRegion);
 		assertValid(getRegion);
+	}
+
+	protected Long testGetCountryRegionByRegionCode_getCountryId(Region region)
+		throws Exception {
+
+		return region.getCountryId();
 	}
 
 	protected Region testGetCountryRegionByRegionCode_addRegion()
@@ -473,7 +501,11 @@ public abstract class BaseRegionResourceTestCase {
 								"countryRegionByRegionCode",
 								new HashMap<String, Object>() {
 									{
-										put("countryId", region.getCountryId());
+										put(
+											"countryId",
+											testGraphQLGetCountryRegionByRegionCode_getCountryId(
+												region));
+
 										put(
 											"regionCode",
 											"\"" + region.getRegionCode() +
@@ -483,6 +515,13 @@ public abstract class BaseRegionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/countryRegionByRegionCode"))));
+	}
+
+	protected Long testGraphQLGetCountryRegionByRegionCode_getCountryId(
+			Region region)
+		throws Exception {
+
+		return region.getCountryId();
 	}
 
 	@Test
@@ -534,19 +573,28 @@ public abstract class BaseRegionResourceTestCase {
 
 		assertContains(region1, (List<Region>)page.getItems());
 		assertContains(region2, (List<Region>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetRegionsPage_getExpectedActions());
 
 		regionResource.deleteRegion(region1.getId());
 
 		regionResource.deleteRegion(region2.getId());
 	}
 
+	protected Map<String, Map<String, String>>
+			testGetRegionsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
 	@Test
 	public void testGetRegionsPageWithPagination() throws Exception {
-		Page<Region> totalPage = regionResource.getRegionsPage(
+		Page<Region> regionPage = regionResource.getRegionsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(regionPage.getTotalCount());
 
 		Region region1 = testGetRegionsPage_addRegion(randomRegion());
 
@@ -572,7 +620,7 @@ public abstract class BaseRegionResourceTestCase {
 		Assert.assertEquals(regions2.toString(), 1, regions2.size());
 
 		Page<Region> page3 = regionResource.getRegionsPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 		assertContains(region1, (List<Region>)page3.getItems());
 		assertContains(region2, (List<Region>)page3.getItems());
@@ -684,22 +732,23 @@ public abstract class BaseRegionResourceTestCase {
 
 		region2 = testGetRegionsPage_addRegion(region2);
 
+		Page<Region> page = regionResource.getRegionsPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<Region> ascPage = regionResource.getRegionsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(region1, region2),
-				(List<Region>)ascPage.getItems());
+			assertContains(region1, (List<Region>)ascPage.getItems());
+			assertContains(region2, (List<Region>)ascPage.getItems());
 
 			Page<Region> descPage = regionResource.getRegionsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(region2, region1),
-				(List<Region>)descPage.getItems());
+			assertContains(region2, (List<Region>)descPage.getItems());
+			assertContains(region1, (List<Region>)descPage.getItems());
 		}
 	}
 
@@ -1046,6 +1095,12 @@ public abstract class BaseRegionResourceTestCase {
 	}
 
 	protected void assertValid(Page<Region> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Region> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Region> regions = page.getItems();
@@ -1060,6 +1115,25 @@ public abstract class BaseRegionResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1231,14 +1305,16 @@ public abstract class BaseRegionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1255,6 +1331,10 @@ public abstract class BaseRegionResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1264,18 +1344,18 @@ public abstract class BaseRegionResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1307,9 +1387,47 @@ public abstract class BaseRegionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(region.getName()));
-			sb.append("'");
+			Object object = region.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1321,9 +1439,47 @@ public abstract class BaseRegionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("regionCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(region.getRegionCode()));
-			sb.append("'");
+			Object object = region.getRegionCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

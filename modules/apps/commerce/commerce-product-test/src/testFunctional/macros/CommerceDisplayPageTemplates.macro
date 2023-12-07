@@ -1,7 +1,7 @@
 definition {
 
-	@summary = "Add multiple fragments using index or position in a Display Page Template."
-	macro addFragment {
+	@summary = "Default summary"
+	macro addFragment(fragmentName = null, index = null, collectionName = null) {
 		PageEditor.assertFragmentSidebarLoaded();
 
 		PageEditor.gotoTab(tabName = "Fragments and Widgets");
@@ -11,17 +11,17 @@ definition {
 		}
 
 		if (!(isSet(targetFragmentName))) {
-			var targetFragmentName = "${fragmentName}";
+			var targetFragmentName = ${fragmentName};
 		}
 
 		Navigator.gotoNavTab(navTab = "Fragments");
 
-		PageEditor.expandFragmentCollection(collectionName = "${collectionName}");
+		PageEditor.expandFragmentCollection(collectionName = ${collectionName});
 
-		if ("${index}" == "1") {
+		if (${index} == 1) {
 			DragAndDrop.javaScriptDragAndDropToObject(
-				key_collectionName = "${collectionName}",
-				key_fragmentName = "${fragmentName}",
+				key_collectionName = ${collectionName},
+				key_fragmentName = ${fragmentName},
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
 				locator2 = "PageEditor#FRAGMENT_DROP_TARGET",
 				value1 = "");
@@ -30,10 +30,10 @@ definition {
 			var position = ${index} - 1;
 
 			DragAndDrop.javaScriptDragAndDropToBottom(
-				key_collectionName = "${collectionName}",
-				key_fragmentName = "${fragmentName}",
-				key_index = "${position}",
-				key_targetFragmentName = "${targetFragmentName}",
+				key_collectionName = ${collectionName},
+				key_fragmentName = ${fragmentName},
+				key_index = ${position},
+				key_targetFragmentName = ${targetFragmentName},
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
 				locator2 = "CommerceEntry#ANY_FRAGMENT_DROP_TARGET_N",
 				value1 = "");
@@ -42,51 +42,260 @@ definition {
 		PageEditor.waitForAutoSave();
 	}
 
-	@summary = "Add Display Page Template entry and map fragments to the given fields."
-	macro addMappedDisplayPageTemplateEntry {
+	@summary = "Default summary"
+	macro addMappedDisplayPageTemplateEntry(groupName = null, fragmentName = null, displayPageName = null, siteURLKey = null, menuItem = null, contentType = null, fieldsList = null) {
 		task ("Given a new ${contentType} type display page template with fragment created") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
-				contentType = "${contentType}",
-				displayPageTemplateEntryName = "${displayPageName}",
-				groupName = "${groupName}");
+				contentType = ${contentType},
+				displayPageTemplateEntryName = ${displayPageName},
+				groupName = ${groupName});
 		}
 
 		task ("And the fragments mapped to the given fields, published and optionally click on the given menu item") {
 			CommerceDisplayPageTemplates.mapFragmentsToFields(
-				displayPageName = "${displayPageName}",
-				fieldsList = "${fieldsList}",
-				fragmentName = "${fragmentName}",
-				siteURLKey = "${siteURLKey}");
+				displayPageName = ${displayPageName},
+				fieldsList = ${fieldsList},
+				fragmentName = ${fragmentName},
+				siteURLKey = ${siteURLKey});
 
 			if (isSet(menuItem)) {
 				LexiconEntry.gotoEntryMenuItem(
-					menuItem = "${menuItem}",
-					rowEntry = "${displayPageName}");
+					menuItem = ${menuItem},
+					rowEntry = ${displayPageName});
 
 				Alert.viewSuccessMessage();
 			}
 		}
 	}
 
-	macro checkCollectionDisplayProductSpecificationsPresent {
-		var productSpecifications = CommerceJSONProductsAPI._getCommerceProductSpecifications(productName = "${product}");
+	@summary = "Default summary"
+	macro checkCollectionDisplayProductSpecificationsPresent(product = null) {
+		var productSpecifications = CommerceJSONProductsAPI._getCommerceProductSpecifications(productName = ${product});
 
-		for (var productSpecification : list "${productSpecifications}") {
-			var specification = StringUtil.extractFirst("${productSpecification}", ":");
-			var value = StringUtil.extractLast("${productSpecification}", ":");
+		for (var productSpecification : list ${productSpecifications}) {
+			var specification = StringUtil.extractFirst(${productSpecification}, ":");
+			var value = StringUtil.extractLast(${productSpecification}, ":");
 
 			AssertElementPresent(
-				key_specification = "${specification}",
-				key_value = "${value}",
+				key_specification = ${specification},
+				key_value = ${value},
 				locator1 = "CommerceFrontStore#COLLECTION_DISPLAY_PRODUCT_SPECIFICATION_ENTRY");
 
 			echo("The Specification ${specification} with the value ${value} is present");
 		}
 	}
 
-	@summary = "Map a fragment to a field in a Display Page Template"
-	macro mapEditableTextToField {
-		if ("${index}" == "1") {
+	@summary = "Default summary"
+	macro configureProductCardFragment(fragmentName = null, checkList = null, uncheckList = null) {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
+
+		PageEditor.clickConfigurableField(
+			fragmentName = ${fragmentName},
+			index = ${index});
+
+		Navigator.gotoNavTab(navTab = "General");
+
+		if (isSet(checkList)) {
+			for (var element : list ${checkList}) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "Show ${element}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+
+		if (isSet(uncheckList)) {
+			for (var element : list ${uncheckList}) {
+				Uncheck.uncheckToggleSwitch(
+					key_toggleSwitchLabel = "Show ${element}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+	}
+
+	@summary = "Default summary"
+	macro editCollectionDisplay(deviceType = null, listItemStyle = null, infoListProviderName = null, depotName = null, fragmentName = null, columnNumber = null, styleDisplay = null, assetListName = null, infoItemRelatedListProviderName = null) {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
+
+		var key_fragmentName = ${fragmentName};
+		var key_index = ${index};
+
+		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
+		}
+
+		if (isSet(columnNumber)) {
+			Click.clickNoWaitForVisible(
+				key_columnNumber = ${columnNumber},
+				key_elementHeader = "//div[@aria-label='${key_fragmentName}']",
+				key_position = 1,
+				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
+		}
+		else {
+			PageEditor.clickConfigurableField(
+				fragmentName = ${fragmentName},
+				index = ${index});
+		}
+
+		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
+			SelectFrame(value1 = "relative=top");
+		}
+
+		AssertVisible(
+			key_sidebarButton = "Browser",
+			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
+
+		Navigator.gotoNavTab(navTab = "General");
+
+		if (!(isSet(deviceType)) || (${deviceType} == "Desktop")) {
+			if (IsTextEqual(key_fieldLabel = "Collection", locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT", value1 = "")) {
+				Click(
+					key_fieldLabel = "Collection",
+					key_text = "plus",
+					locator1 = "Icon#ANY_ITEM_SELECTOR");
+			}
+			else {
+				Click(
+					key_fieldLabel = "Collection",
+					key_text = "change",
+					locator1 = "Icon#ANY_ITEM_SELECTOR");
+			}
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			if (isSet(assetListName)) {
+				NavItem.click(navItem = "Collections");
+
+				if (isSet(depotName)) {
+					Click(
+						key_breadcrumbName = "Sites and Libraries",
+						locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
+
+					Click(
+						key_groupTab = "Asset Library",
+						locator1 = "ItemSelector#NAVIGATION_GROUP_TAB");
+
+					LexiconCard.clickCardTitle(card = ${depotName});
+				}
+
+				LexiconCard.clickCardTitle(card = ${assetListName});
+
+				SelectFrameTop();
+
+				PageEditor.viewItemSelectorText(
+					fieldLabel = "Collection",
+					text = ${assetListName});
+			}
+			else if (isSet(infoListProviderName)) {
+				NavItem.click(navItem = "Collection Providers");
+
+				LexiconCard.clickCardTitle(card = ${infoListProviderName});
+
+				Refresh();
+
+				PageEditor.clickConfigurableField(
+					fragmentName = ${fragmentName},
+					index = ${index});
+
+				PageEditor.viewItemSelectorText(
+					fieldLabel = "Collection",
+					text = ${infoListProviderName});
+			}
+			else if (isSet(infoItemRelatedListProviderName)) {
+				NavItem.click(navItem = "Related Items Collection Providers");
+
+				LexiconCard.clickCardTitle(card = ${infoItemRelatedListProviderName});
+
+				PageEditor.viewItemSelectorText(
+					fieldLabel = "Collection",
+					text = ${infoItemRelatedListProviderName});
+			}
+		}
+
+		if (isSet(styleDisplay)) {
+			if ((${styleDisplay} != "Grid") && (${styleDisplay} != "Flex Row") && (${styleDisplay} != "Flex Column")) {
+				AssertElementPresent(
+					key_fieldLabel = "Style Display",
+					key_groupLabel = "Templates",
+					key_value = ${styleDisplay},
+					locator1 = "Select#GROUPED_SELECT_VALUE");
+			}
+
+			Select(
+				key_fieldLabel = "Style Display",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${styleDisplay});
+
+			PageEditor.waitForAutoSave();
+
+			AssertSelectedLabel(
+				key_fieldLabel = "Style Display",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${styleDisplay});
+
+			if (isSet(listItemStyle)) {
+				Select(
+					key_fieldLabel = "List Item Style",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = ${listItemStyle});
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "List Item Style",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = ${listItemStyle});
+			}
+		}
+	}
+
+	@summary = "Default summary"
+	macro editDynamicField(field = null, fragmentName = null, valueElementType = null, label = null, labelElementType = null) {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
+
+		PageEditor.clickConfigurableField(
+			fragmentName = ${fragmentName},
+			index = ${index});
+
+		Navigator.gotoNavTab(navTab = "General");
+
+		if (isSet(field)) {
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${field});
+		}
+
+		if (isSet(labelElementType)) {
+			Select(
+				key_fieldLabel = "Label Element Type",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${labelElementType});
+		}
+
+		if (isSet(valueElementType)) {
+			Select(
+				key_fieldLabel = "Value Element Type",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${valueElementType});
+		}
+
+		if (isSet(label)) {
+			Type(
+				key_text = "Label",
+				locator1 = "TextInput#ANY",
+				value1 = ${label});
+		}
+	}
+
+	@summary = "Default summary"
+	macro mapEditableTextToField(field = null, fragmentName = null, index = null, className = null, source = null) {
+		if (${index} == 1) {
 			var contributed = "false";
 		}
 		else {
@@ -98,51 +307,51 @@ definition {
 		}
 
 		PageEditorMapping.gotoEditableFieldMapping(
-			className = "${className}",
-			contributed = "${contributed}",
-			fragmentName = "${fragmentName}",
-			id = "${id}",
-			index = "${index}");
+			className = ${className},
+			contributed = ${contributed},
+			fragmentName = ${fragmentName},
+			id = ${id},
+			index = ${index});
 
 		if (isSet(source)) {
 			Select(
 				key_fieldLabel = "Source",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "${source}");
+				value1 = ${source});
 		}
 
 		Select(
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${field}");
+			value1 = ${field});
 
 		PageEditor.waitForAutoSave();
 	}
 
-	@summary = "Map multiple fields to multiple fragments using index and position. Then publish the Display Page Template"
-	macro mapFragmentsToFields {
+	@summary = "Default summary"
+	macro mapFragmentsToFields(fragmentName = null, displayPageName = null, siteURLKey = null, fieldsList = null) {
 		Variables.assertDefined(parameterList = "${displayPageName},${fieldsList},${fragmentName},${siteURLKey}");
 
 		if (!(isSet(collectionName))) {
 			var collectionName = "Basic Components";
 		}
 
-		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "${siteURLKey}");
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = ${siteURLKey});
 
-		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "${displayPageName}");
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = ${displayPageName});
 
-		var index = "1";
+		var index = 1;
 
-		for (var fieldName : list "${fieldsList}") {
+		for (var fieldName : list ${fieldsList}) {
 			CommerceDisplayPageTemplates.addFragment(
-				collectionName = "${collectionName}",
-				fragmentName = "${fragmentName}",
-				index = "${index}");
+				collectionName = ${collectionName},
+				fragmentName = ${fragmentName},
+				index = ${index});
 
 			CommerceDisplayPageTemplates.mapEditableTextToField(
-				field = "${fieldName}",
-				fragmentName = "${fragmentName}",
-				index = "${index}");
+				field = ${fieldName},
+				fragmentName = ${fragmentName},
+				index = ${index});
 
 			var index = ${index} + 1;
 		}
@@ -150,21 +359,102 @@ definition {
 		PageEditor.publish();
 	}
 
-	macro viewFragmentText {
-		if (!(isSet(id))) {
-			var id = "element-text";
+	@summary = "Default summary"
+	macro viewDynamicFieldContent(fieldLabel = null, fieldValue = null) {
+		Variables.assertDefined(parameterList = ${fieldValue});
+
+		if (!(isSet(index))) {
+			var index = 1;
 		}
 
-		AssertElementPresent(
-			key_fragmentText = "${fragmentText}",
-			key_id = "${id}",
-			locator1 = "CommerceEntry#ASSERT_FRAGMENTS_TEXT_IN_SF");
+		if (!(isSet(labelElementType))) {
+			var labelElementType = "span";
+		}
+
+		if (!(isSet(valueElementType))) {
+			var valueElementType = "span";
+		}
+
+		if (isSet(fieldLabel)) {
+			AssertTextEquals(
+				key_element = ${labelElementType},
+				key_index = ${index},
+				key_node = "label",
+				locator1 = "CommerceFrontStore#FS_DYNAMIC_FIELD",
+				value1 = "${fieldLabel}:");
+		}
+
+		AssertTextEquals(
+			key_element = ${valueElementType},
+			key_index = ${index},
+			key_node = "value",
+			locator1 = "CommerceFrontStore#FS_DYNAMIC_FIELD",
+			value1 = ${fieldValue});
 	}
 
-	@summary = "Verify the multiple mapped fields’ outcome."
-	macro viewMappedFragmentsText {
-		for (var fragmentText : list "${fragmentsTextList}") {
-			CommerceDisplayPageTemplates.viewFragmentText(fragmentText = "${fragmentText}");
+	@summary = "Default summary"
+	macro viewDynamicFields() {
+		Variables.assertDefined(parameterList = ${valuesList});
+
+		if (!(isSet(elementsList))) {
+			var elementsList = "";
+			var isElementsListEmpty = "true";
+		}
+		else {
+			var elementsList = ListUtil.newListFromString(${elementsList});
+			var isElementsListEmpty = "false";
+		}
+
+		var count = 0;
+		var valuesList = ListUtil.newListFromString(${valuesList});
+
+		var size = ListUtil.size(${valuesList});
+
+		var isLessThanSize = MathUtil.isLessThan(${count}, ${size});
+
+		while ((${isLessThanSize} == "true")) {
+			var index = ${count} + 1;
+			var values = ListUtil.get(${valuesList}, ${count});
+
+			var label = StringUtil.extractFirst(${values}, ":");
+			var value = StringUtil.extractLast(${values}, ":");
+
+			if (${isElementsListEmpty} == "false") {
+				var elements = ListUtil.get(${elementsList}, ${count});
+
+				var labelElementType = StringUtil.extractFirst(${elements}, ":");
+				var valueElementType = StringUtil.extractLast(${elements}, ":");
+			}
+
+			CommerceDisplayPageTemplates.viewDynamicFieldContent(
+				fieldLabel = ${label},
+				fieldValue = ${value},
+				index = ${index},
+				labelElementType = ${labelElementType},
+				valueElementType = ${valueElementType});
+
+			var count = ${count} + 1;
+
+			var count = StringUtil.valueOf(${count});
+
+			var isLessThanSize = MathUtil.isLessThan(${count}, ${size});
+		}
+	}
+
+	@summary = "Default summary"
+	macro viewMappedFragmentsText(fragmentsTextList = null) {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
+
+		for (var fragmentText : list ${fragmentsTextList}) {
+			AssertElementPresent(
+				index = ${index},
+				key_fragmentText = ${fragmentText},
+				key_id = "element-text",
+				locator1 = "CommerceEntry#ASSERT_FRAGMENTS_TEXT_IN_SF_N");
+
+			var index = ${index} + 1;
 		}
 	}
 

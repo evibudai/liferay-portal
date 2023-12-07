@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.groupby;
@@ -36,11 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -195,17 +184,16 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 			"two", 2
 		).build();
 
-		map1.forEach((key, value) -> indexDuplicates(key, value));
+		Map<String, String> map2 = new HashMap<>();
 
-		Set<Map.Entry<String, Integer>> entries = map1.entrySet();
+		for (Map.Entry<String, Integer> entry : map1.entrySet()) {
+			String key = entry.getKey();
+			Integer value = entry.getValue();
 
-		Stream<Map.Entry<String, Integer>> stream = entries.stream();
+			indexDuplicates(key, value);
 
-		Map<String, String> map2 = stream.collect(
-			Collectors.toMap(
-				Map.Entry::getKey,
-				entry -> getCountPairString(
-					entry.getValue(), entry.getValue() - 1)));
+			map2.put(key, getCountPairString(value, value - 1));
+		}
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -255,15 +243,13 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 		map1.remove("one", 1);
 
-		Set<Map.Entry<String, Integer>> entries = map1.entrySet();
+		Map<String, String> map2 = new HashMap<>();
 
-		Stream<Map.Entry<String, Integer>> stream = entries.stream();
-
-		Map<String, String> map2 = stream.collect(
-			Collectors.toMap(
-				Map.Entry::getKey,
-				entry -> getCountPairString(
-					entry.getValue(), entry.getValue())));
+		for (Map.Entry<String, Integer> entry : map1.entrySet()) {
+			map2.put(
+				entry.getKey(),
+				getCountPairString(entry.getValue(), entry.getValue()));
+		}
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -350,17 +336,16 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 			"two", 2
 		).build();
 
-		map1.forEach((key, value) -> indexDuplicates(key, value));
+		Map<String, String> map2 = new HashMap<>();
 
-		Set<Map.Entry<String, Integer>> entries = map1.entrySet();
+		for (Map.Entry<String, Integer> entry : map1.entrySet()) {
+			String key = entry.getKey();
+			Integer value = entry.getValue();
 
-		Stream<Map.Entry<String, Integer>> stream = entries.stream();
+			indexDuplicates(key, value);
 
-		Map<String, String> map2 = stream.collect(
-			Collectors.toMap(
-				Map.Entry::getKey,
-				entry -> getCountPairString(
-					entry.getValue(), entry.getValue())));
+			map2.put(key, getCountPairString(value, value));
+		}
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -399,7 +384,6 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 						groupByRequest.setTermsSorts(
 							new Sort(SORT_FIELD, Sort.STRING_TYPE, true));
-
 						groupByRequest.setTermsStart(1);
 
 						searchRequestBuilder.groupByRequests(groupByRequest);
@@ -509,16 +493,14 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 		Map<String, String> expectedCountsMap, Hits hits,
 		IndexingTestHelper indexingTestHelper) {
 
+		Map<String, String> actualCountsMap = new HashMap<>();
+
 		Map<String, Hits> hitsMap = hits.getGroupedHits();
 
-		Collection<Map.Entry<String, Hits>> entries = hitsMap.entrySet();
-
-		Stream<Map.Entry<String, Hits>> stream = entries.stream();
-
-		Map<String, String> actualCountsMap = stream.collect(
-			Collectors.toMap(
-				Map.Entry::getKey,
-				entry -> getCountPairString(entry.getValue())));
+		for (Map.Entry<String, Hits> entry : hitsMap.entrySet()) {
+			actualCountsMap.put(
+				entry.getKey(), getCountPairString(entry.getValue()));
+		}
 
 		AssertUtils.assertEquals(
 			indexingTestHelper.getRequestString(), expectedCountsMap,
@@ -645,7 +627,6 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 	protected void setTermsSortsAndDocsSize(GroupByRequest groupByRequest) {
 		groupByRequest.setTermsSorts(
 			new Sort(SORT_FIELD, Sort.STRING_TYPE, true));
-
 		groupByRequest.setDocsSize(2);
 	}
 

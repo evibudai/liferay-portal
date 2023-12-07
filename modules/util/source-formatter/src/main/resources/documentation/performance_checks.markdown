@@ -25,6 +25,7 @@ ParsePrimitiveTypeCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Verifie
 [PoshiPauseUsageCheck](check/poshi_pause_usage_check.markdown#poshipauseusagecheck) | .function, .jar, .lar, .macro, .path, .testcase, .war or .zip | Finds missing comment with JIRA project when using `Pause`. |
 RedundantBranchingStatementCheck | .java | Finds unnecessary branching (`break`, `continue` or `return`) statements. |
 [RedundantLogCheck](check/redundant_log_check.markdown#redundantlogcheck) | .java | Finds unnecessary logs. |
+[ResourcePermissionFactoryCheck](check/resource_permission_factory_check.markdown#resourcepermissionfactorycheck) | .java | Checks usage of `*ResourcePermissionFactory` classes. |
 SetUtilMethodsCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds cases of inefficient SetUtil operations. |
 StringCastCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds cases where a redundant `toString()` is called on variable type `String`. |
 [StringMethodsCheck](check/string_methods_check.markdown#stringmethodscheck) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks if performance can be improved by using different String operation methods. |
@@ -41,4 +42,4 @@ UnusedVariableCheck | .java | Finds variables that are declared, but not used. |
 [UpgradeProcessCheck](check/upgrade_process_check.markdown#upgradeprocesscheck) | .java | Performs several checks on `*UpgradeProcess` classes. |
 [ValidatorEqualsCheck](check/validator_equals_check.markdown#validatorequalscheck) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that there are no calls to `Validator.equals(Object, Object)`. |
 VariableDeclarationAsUsedCheck | .java | Finds cases where a variable declaration can be inlined or moved closer to where it is used. |
-XMLSpringExtenderServiceCheck | .action, .function, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Finds cases where Spring extender service is used as a dependency injection. |
+XMLSpringExtenderServiceCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Finds cases where Spring extender service is used as a dependency injection. |

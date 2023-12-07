@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,9 +19,11 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 	cssClass="item-selector lfr-item-viewer"
 	id='<%= liferayPortletResponse.getNamespace() + "articlesContainer" %>'
 >
-	<liferay-site-navigation:breadcrumb
-		breadcrumbEntries="<%= journalArticleItemSelectorViewDisplayContext.getPortletBreadcrumbEntries() %>"
-	/>
+	<c:if test="<%= journalArticleItemSelectorViewDisplayContext.isShowBreadcrumb() %>">
+		<liferay-site-navigation:breadcrumb
+			breadcrumbEntries="<%= journalArticleItemSelectorViewDisplayContext.getPortletBreadcrumbEntries() %>"
+		/>
+	</c:if>
 
 	<liferay-ui:search-container
 		emptyResultsMessage="no-web-content-was-found"
@@ -57,14 +50,11 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 			%>
 
 			<c:choose>
-				<c:when test="<%= curArticle != null %>">
+				<c:when test="<%= (curArticle != null) && !journalArticleItemSelectorViewDisplayContext.isRefererArticle(curArticle) %>">
 
 					<%
 					row.setCssClass("articles " + row.getCssClass());
-
-					if (!journalArticleItemSelectorViewDisplayContext.isRefererArticle(curArticle)) {
-						row.setCssClass("selector-button " + row.getCssClass());
-					}
+					row.setCssClass("selector-button " + row.getCssClass());
 
 					row.setData(
 						HashMapBuilder.<String, Object>put(
@@ -77,13 +67,11 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 						<c:when test='<%= Objects.equals(journalArticleItemSelectorViewDisplayContext.getDisplayStyle(), "descriptive") %>'>
 
 							<%
-							if (!journalArticleItemSelectorViewDisplayContext.isRefererArticle(curArticle)) {
-								row.setCssClass("item-preview " + row.getCssClass());
-							}
+							row.setCssClass("item-preview " + row.getCssClass());
 							%>
 
 							<liferay-ui:search-container-column-text>
-								<liferay-ui:user-portrait
+								<liferay-user:user-portrait
 									userId="<%= curArticle.getUserId() %>"
 								/>
 							</liferay-ui:search-container-column-text>
@@ -118,6 +106,22 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 										</span>
 									</h6>
 								</c:if>
+
+								<c:if test="<%= journalArticleItemSelectorViewDisplayContext.getStatus() == WorkflowConstants.STATUS_ANY %>">
+									<span class="text-default">
+										<c:if test="<%= !curArticle.isApproved() && curArticle.hasApprovedVersion() %>">
+											<clay:label
+												displayType="success"
+												label="approved"
+											/>
+										</c:if>
+
+										<clay:label
+											displayType="<%= WorkflowConstants.getStatusStyle(curArticle.getStatus()) %>"
+											label="<%= WorkflowConstants.getStatusLabel(curArticle.getStatus()) %>"
+										/>
+									</span>
+								</c:if>
 							</liferay-ui:search-container-column-text>
 						</c:when>
 						<c:when test='<%= Objects.equals(journalArticleItemSelectorViewDisplayContext.getDisplayStyle(), "icon") %>'>
@@ -129,16 +133,14 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 							<liferay-ui:search-container-column-text>
 								<clay:vertical-card
 									disabled="<%= journalArticleItemSelectorViewDisplayContext.isRefererArticle(curArticle) %>"
-									verticalCard="<%= new JournalArticleItemSelectorVerticalCard(curArticle, renderRequest, journalArticleItemSelectorViewDisplayContext.isMultiSelection()) %>"
+									verticalCard="<%= new JournalArticleItemSelectorVerticalCard(curArticle, journalArticleItemSelectorViewDisplayContext, renderRequest, journalArticleItemSelectorViewDisplayContext.isMultiSelection()) %>"
 								/>
 							</liferay-ui:search-container-column-text>
 						</c:when>
 						<c:otherwise>
 
 							<%
-							if (!journalArticleItemSelectorViewDisplayContext.isRefererArticle(curArticle)) {
-								row.setCssClass("item-preview " + row.getCssClass());
-							}
+							row.setCssClass("item-preview " + row.getCssClass());
 							%>
 
 							<c:if test="<%= journalArticleItemSelectorViewDisplayContext.showArticleId() %>">
@@ -179,6 +181,25 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 								name="author"
 								value="<%= HtmlUtil.escape(PortalUtil.getUserName(curArticle)) %>"
 							/>
+
+							<c:if test="<%= journalArticleItemSelectorViewDisplayContext.getStatus() == WorkflowConstants.STATUS_ANY %>">
+								<liferay-ui:search-container-column-text
+									cssClass="text-nowrap"
+									name="status"
+								>
+									<c:if test="<%= !curArticle.isApproved() && curArticle.hasApprovedVersion() %>">
+										<clay:label
+											displayType="success"
+											label="approved"
+										/>
+									</c:if>
+
+									<clay:label
+										displayType="<%= WorkflowConstants.getStatusStyle(curArticle.getStatus()) %>"
+										label="<%= WorkflowConstants.getStatusLabel(curArticle.getStatus()) %>"
+									/>
+								</liferay-ui:search-container-column-text>
+							</c:if>
 
 							<liferay-ui:search-container-column-date
 								cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
@@ -357,7 +378,7 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 		<liferay-ui:search-iterator
 			displayStyle="<%= journalArticleItemSelectorViewDisplayContext.getDisplayStyle() %>"
 			markupView="lexicon"
-			resultRowSplitter="<%= new JournalResultRowSplitter() %>"
+			resultRowSplitter='<%= Objects.equals(journalArticleItemSelectorViewDisplayContext.getDisplayStyle(), "icon") ? new JournalResultRowSplitter() : null %>'
 			searchContainer="<%= searchContainer %>"
 		/>
 	</liferay-ui:search-container>

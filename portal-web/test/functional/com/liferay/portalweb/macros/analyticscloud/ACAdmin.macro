@@ -1,6 +1,20 @@
 definition {
 
-	macro configureMailSettings {
+	@summary = "Default summary"
+	macro changeACUserPassword(userScreenName) {
+		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
+
+		User.openUsersAdmin(baseURL = ${analyticsCloudURL});
+
+		UserNavigator.gotoUser(userScreenName = ${userScreenName});
+
+		UserNavigator.gotoPassword();
+
+		User.resetPassword();
+	}
+
+	@summary = "Default summary"
+	macro configureMailSettings(incomingPOPServer = null, userPassword = null, outgoingSMTPServer = null, userName = null, incomingPort = null, outgoingPort = null,) {
 		ACAdmin.goToServerAdministration();
 
 		Navigator.gotoNavItem(navItem = "Mail");
@@ -8,13 +22,13 @@ definition {
 		if (isSet(incomingPOPServer)) {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_POP_SERVER",
-				value1 = "${incomingPOPServer}");
+				value1 = ${incomingPOPServer});
 		}
 
 		if (isSet(incomingPort)) {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_PORT",
-				value1 = "${incomingPort}");
+				value1 = ${incomingPort});
 
 			Check(locator1 = "ServerAdministrationMail#INCOMING_SECURE_NETWORK_CONNECTION_CHECKBOX");
 		}
@@ -22,25 +36,25 @@ definition {
 		if (isSet(userName)) {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_USER_NAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 
 		if (isSet(userPassword)) {
 			Type(
 				locator1 = "ServerAdministrationMail#INCOMING_PASSWORD",
-				value1 = "${userPassword}");
+				value1 = ${userPassword});
 		}
 
 		if (isSet(outgoingSMTPServer)) {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_SMTP_SERVER",
-				value1 = "${outgoingSMTPServer}");
+				value1 = ${outgoingSMTPServer});
 		}
 
 		if (isSet(outgoingPort)) {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_PORT",
-				value1 = "${outgoingPort}");
+				value1 = ${outgoingPort});
 
 			Check(locator1 = "ServerAdministrationMail#OUTGOING_SECURE_CONNECTION_CHECKBOX");
 		}
@@ -48,13 +62,13 @@ definition {
 		if (isSet(userName)) {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_USER_NAME",
-				value1 = "${userName}");
+				value1 = ${userName});
 		}
 
 		if (isSet(userPassword)) {
 			Type(
 				locator1 = "ServerAdministrationMail#OUTGOING_PASSWORD",
-				value1 = "${userPassword}");
+				value1 = ${userPassword});
 		}
 
 		AssertClick(
@@ -66,19 +80,34 @@ definition {
 			value1 = "Your request completed successfully.");
 	}
 
-	macro getUserID {
+	@summary = "Default summary"
+	macro getUserID() {
 		var userID = selenium.getElementValue("UsersAndOrganizationsEditUser#DETAILS_USER_ID_FIELD");
 
-		return "${userID}";
+		return ${userID};
 	}
 
-	macro goToACAdmin {
-		var currentURL = Navigator.getCurrentURL();
+	@summary = "Default summary"
+	macro goToACAdmin(userScreenNameToResetPassword = null,) {
+		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
 
-		Navigator.openSpecificURL(url = "${currentURL}admin");
+		Navigator.openSpecificURL(url = "${analyticsCloudURL}/admin");
+
+		if (IsElementPresent(locator1 = "TextInput#PASSWORD_1")) {
+			User.resetPassword(newPassword = "test1");
+
+			if (IsElementPresent(locator1 = "Modal#HEADER")) {
+				Click(locator1 = "Button#DONE");
+			}
+
+			if (isSet(userScreenNameToResetPassword)) {
+				ACAdmin.changeACUserPassword(userScreenName = ${userScreenNameToResetPassword});
+			}
+		}
 	}
 
-	macro goToServerAdministration {
+	@summary = "Default summary"
+	macro goToServerAdministration() {
 		ProductMenuHelper.expandPanel(panel = "control panel");
 
 		ProductMenuHelper.expandCategory(category = "Configuration");

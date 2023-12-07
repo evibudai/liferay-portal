@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Control Menu";
@@ -12,9 +13,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -23,15 +24,15 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-127446 and LPS-121106. Assert the Product Menu is shown correctly."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test ViewProductMenuStyles {
 		property portal.acceptance = "true";
 
-		var minCategoryPaddingHorizontal = "20";
-		var minCategoryPaddingVertical = "10";
-		var minPortletPaddingHorizontal = "14";
-		var minPortletPaddingVertical = "8";
+		var minCategoryPaddingHorizontal = 20;
+		var minCategoryPaddingVertical = 10;
+		var minPortletPaddingHorizontal = 14;
+		var minPortletPaddingVertical = 8;
 
 		task ("Open the Product Menu") {
 			ProductMenuHelper.openProductMenu();
@@ -50,16 +51,16 @@ definition {
 
 			for (var paddingVertical : list "padding-bottom,padding-top") {
 				Css.assertCssValueIsGreaterThan(
-					attribute = "${paddingVertical}",
+					attribute = ${paddingVertical},
 					element = "//a[@data-qa-id='appGroup'][normalize-space(text())='Design']",
-					expected = "${minCategoryPaddingVertical}");
+					expected = ${minCategoryPaddingVertical});
 			}
 
 			for (var paddingHorizontal : list "padding-left,padding-right") {
 				Css.assertCssValueIsGreaterThan(
-					attribute = "${paddingHorizontal}",
+					attribute = ${paddingHorizontal},
 					element = "//a[@data-qa-id='appGroup'][normalize-space(text())='Design']",
-					expected = "${minCategoryPaddingHorizontal}");
+					expected = ${minCategoryPaddingHorizontal});
 			}
 		}
 
@@ -72,16 +73,16 @@ definition {
 
 			for (var paddingVertical : list "padding-bottom,padding-top") {
 				Css.assertCssValueIsGreaterThan(
-					attribute = "${paddingVertical}",
+					attribute = ${paddingVertical},
 					element = "//a[contains(@id,'Portlet') and @data-title='Style Books']",
-					expected = "${minPortletPaddingVertical}");
+					expected = ${minPortletPaddingVertical});
 			}
 
 			for (var paddingHorizontal : list "padding-left,padding-right") {
 				Css.assertCssValueIsGreaterThan(
-					attribute = "${paddingHorizontal}",
+					attribute = ${paddingHorizontal},
 					element = "//a[contains(@id,'Portlet') and @data-title='Style Books']",
-					expected = "${minPortletPaddingHorizontal}");
+					expected = ${minPortletPaddingHorizontal});
 			}
 		}
 	}

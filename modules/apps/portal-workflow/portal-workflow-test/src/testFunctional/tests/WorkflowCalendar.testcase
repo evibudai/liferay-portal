@@ -1,7 +1,7 @@
 @component-name = "portal-workflow"
 definition {
 
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Workflow";
@@ -9,15 +9,15 @@ definition {
 	setUp {
 		TestCase.setUpPortalInstance();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		User.firstLoginPG();
 
-		if ("${testPortalInstance}" != "true") {
+		if (${testLiferayVirtualInstance} != "true") {
 			SearchAdministration.executeReindex();
 
-			ApplicationsMenu.gotoSite(site = "${siteName}");
+			ApplicationsMenu.gotoSite(site = ${siteName});
 		}
 
 		ProductMenu.gotoPortlet(
@@ -64,19 +64,15 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			PagesAdmin.tearDownCP();
 
@@ -85,7 +81,7 @@ definition {
 	}
 
 	@description = "Verify that an approved Calendar Event can be deleted"
-	@priority = "4"
+	@priority = 4
 	test ApprovedEventCanBeDeleted {
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -116,7 +112,7 @@ definition {
 			locator1 = "WorkflowCalendar#CALENDAR_EVENT_BY_TITLE");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ApproveEventWithInvitedUser {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
@@ -128,7 +124,7 @@ definition {
 
 		CalendarEvent.viewSiteRSVPWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
@@ -136,7 +132,7 @@ definition {
 
 		CalendarEvent.viewNoUserInviteWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -163,13 +159,15 @@ definition {
 
 		CalendarEvent.viewInvitedUserRSVPWithApprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}",
+			siteCalendarName = ${siteName},
 			userCalendarName = "Test Test");
 	}
 
 	@description = "Verify that a calendar event created on the pop up can be approved"
-	@priority = "4"
+	@priority = 4
 	test CalendarPopUpCanBeApproved {
+		property ci.retries.disabled = "true";
+
 		CalendarScheduler.selectSpecificEvent(eventTitle = "Calendar Event Title");
 
 		CalendarScheduler.gotoDetailsViaDialogBox();
@@ -177,6 +175,8 @@ definition {
 		CalendarEvent.viewStatusViaDetails(status = "Pending");
 
 		CalendarNavigator.closeModal(modalTitle = "View Event Details");
+
+		Click(locator1 = "Button#CLOSE_IFRAME");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -200,13 +200,17 @@ definition {
 	}
 
 	@description = "Verify that a calendar event created on the pop up can be rejected"
-	@priority = "3"
+	@priority = 3
 	test CalendarPopUpCanBeRejected {
+		property ci.retries.disabled = "true";
+
 		CalendarNavigator.gotoEventDetails(eventTitle = "Calendar Event Title");
 
 		CalendarEvent.viewStatusViaDetails(status = "PENDING");
 
 		CalendarNavigator.closeModal(modalTitle = "View Event Details");
+
+		Click(locator1 = "UserBar#USER_AVATAR_ICON");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -228,9 +232,9 @@ definition {
 	}
 
 	@description = "Verify that a calendar event on draft can be approved"
-	@priority = "4"
+	@priority = 4
 	test CalendarWithDraftStatusCanBecomeApproved {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		CalendarNavigator.gotoAddEvent();
 
@@ -243,7 +247,7 @@ definition {
 		Navigator.gotoPage(pageName = "Calendar Page");
 
 		CalendarEvent.viewDetails(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Event Title Draft",
 			eventType = "Regular");
 
@@ -254,8 +258,8 @@ definition {
 		CalendarNavigator.gotoEditEvent(eventTitle = "Event Title Draft");
 
 		AssertClick(
-			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
-			value1 = "Submit for Publication");
+			locator1 = "Button#SUBMIT_FOR_WORKFLOW",
+			value1 = "Submit for Workflow");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
@@ -274,7 +278,7 @@ definition {
 		Navigator.gotoPage(pageName = "Calendar Page");
 
 		CalendarEvent.viewDetails(
-			calendarName = "${siteName}",
+			calendarName = ${siteName},
 			eventTitle = "Event Title Draft",
 			eventType = "Regular");
 
@@ -282,7 +286,7 @@ definition {
 	}
 
 	@description = "Verify that the user can approve calendar events on Single Approver workflow"
-	@priority = "5"
+	@priority = 5
 	test CanApproveCalendarEventOnSingleApprover {
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -312,12 +316,9 @@ definition {
 	}
 
 	@description = "Verify that the user can assign a Workflow to Calendar Event"
-	@priority = "5"
+	@priority = 5
 	test CanAssignWorkflowToCalendarEvent {
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Workflow.openWorkflowListView();
 
 		Navigator.gotoNavItem(navItem = "Configuration");
 
@@ -333,15 +334,17 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-59572."
-	@priority = "3"
+	@priority = 3
 	test DeleteAndRestoreEvent {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		CalendarNavigator.gotoView(viewType = "Week");
 
 		CalendarEvent.viewSiteRSVPWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
+
+		Click(locator1 = "Button#CLOSE_IFRAME");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -383,7 +386,9 @@ definition {
 
 		CalendarEvent.viewSiteRSVPWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
+
+		Click(locator1 = "Button#CLOSE_IFRAME");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -430,7 +435,9 @@ definition {
 
 		CalendarEvent.viewSiteRSVPWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
+
+		Click(locator1 = "Button#CLOSE_IFRAME");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -455,19 +462,19 @@ definition {
 
 		CalendarEvent.viewInvitedUserRSVPWithApprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}",
+			siteCalendarName = ${siteName},
 			userCalendarName = "Test Test");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RejectEventWithInvitedUser {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		CalendarNavigator.gotoView(viewType = "Week");
 
 		CalendarEvent.viewSiteRSVPWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
@@ -475,7 +482,7 @@ definition {
 
 		CalendarEvent.viewNoUserInviteWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -497,16 +504,16 @@ definition {
 
 		CalendarEvent.viewSiteRSVPWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}");
+			siteCalendarName = ${siteName});
 
 		CalendarEvent.viewNoUserInviteWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
-			siteCalendarName = "${siteName}",
+			siteCalendarName = ${siteName},
 			userCalendarName = "Test Test");
 	}
 
 	@description = "Verify that the Calendar Event status become pending after submit"
-	@priority = "4"
+	@priority = 4
 	test StatusBecomePendingAfterSubmit {
 		CalendarScheduler.selectSpecificEvent(eventTitle = "Calendar Event Title");
 
@@ -515,17 +522,8 @@ definition {
 		CalendarEvent.viewStatusViaDetails(status = "Pending");
 	}
 
-	@description = "Verify that the Calendar Event status changes when approved"
-	@ignore = "Test Stub"
-	@priority = "4"
-	test StatusChangesWhenApproved {
-
-		// TODO LRQA-68597 StatusChangesWhenApproved pending implementation
-
-	}
-
 	@description = "Verify that the Calendar Event status stay on pending when rejected after submitted"
-	@priority = "3"
+	@priority = 3
 	test StatusStayPendingAfterRejected {
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -555,7 +553,7 @@ definition {
 	}
 
 	@description = "Verify that a Unpublish warning message appears when the user edit a approved event"
-	@priority = "3"
+	@priority = 3
 	test UnpublishWarningMessageIsDisplayedOnEdit {
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -582,7 +580,7 @@ definition {
 		Alert.viewInfoMessageSpecific(infoMessage = "This Calendar Event is approved. Publishing these changes will cause it to be unpublished and go through the approval process again.");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test ViewPendingStatusInEventDetails {
 		CalendarNavigator.gotoView(viewType = "Week");
 

@@ -18,7 +18,7 @@ definition {
 			layoutName = "Media Gallery Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
+			column = 2,
 			groupName = "Guest",
 			layoutName = "Media Gallery Page",
 			widgetName = "Media Gallery");
@@ -29,9 +29,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +41,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddDocumentInFolder {
 		JSONFolder.addFolder(
@@ -65,7 +65,7 @@ definition {
 		DMDocument.viewPGViaMG(mgDocumentTitle = "DM Document Title");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanAddMGWidgetTemplate {
 		JSONFolder.addFolder(
@@ -89,9 +89,9 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_2.jpeg");
 
-		ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtFile = "adt_media_gallery_carousel.ftl",
 			adtType = "Media Gallery");
 
@@ -99,7 +99,7 @@ definition {
 
 		MGPortlet.viewFolderItemsPG(mgFolderName = "DM Folder Name");
 
-		ApplicationDisplayTemplates.selectPortletADT(templateName = "Media Gallery Test ADT");
+		WidgetTemplates.selectPortletADT(templateName = "Media Gallery Test ADT");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -107,7 +107,7 @@ definition {
 	}
 
 	@e2etest
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanAddMultipleFolders {
 		Navigator.gotoPage(pageName = "Media Gallery Page");
@@ -127,7 +127,7 @@ definition {
 		DMFolder.viewPGViaMG(mgFolderName = "DM Folder2 Name");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanDeleteDocument {
 		property portal.acceptance = "true";
@@ -144,7 +144,7 @@ definition {
 		DMDocument.deletePGViaMG(mgDocumentTitle = "DM Document Title");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditDocument {
 		JSONDocument.addFileWithUploadedFile(
@@ -163,7 +163,7 @@ definition {
 			mgDocumentTitleEdit = "DM Document Title Edit");
 	}
 
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanEditSubfolder {
 		JSONFolder.addFolder(
@@ -195,9 +195,10 @@ definition {
 	}
 
 	@description = "This test ensures that the restricted file extension cannot be uploaded via Media Gallery."
-	@priority = "3"
+	@priority = 3
 	test CanLimitUploadedFileExtension {
-		property test.name.skip.portal.instance = "DMMediaGallery#CanLimitUploadedFileExtension";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateFileExtensions(fieldValue = ".jpg");
 
@@ -225,7 +226,7 @@ definition {
 		DMDocument.viewNoFilesViaMG(mgDocumentTitle = "Document_1.jpeg");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanSearchForDocumentInFolder {
 		JSONFolder.addFolder(
@@ -243,23 +244,23 @@ definition {
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM Document Title");
+		SearchPage.searchEmbedded(searchTerm = "DM Document Title");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = '''"DM Document Title"''');
+		SearchPage.searchEmbedded(searchTerm = '''"DM Document Title"''');
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
 			searchAssetType = "Document");
 	}
 
 	@description = "This test covers LPS-153892. It ensures that the external video shortcuts can be rendered."
-	@priority = "4"
+	@priority = 4
 	test CanViewExternalVideoShortcut {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -273,7 +274,7 @@ definition {
 	}
 
 	@description = "This test ensures that a users can view file after configuring a new root folder."
-	@priority = "3"
+	@priority = 3
 	test CanViewFileAfterConfiguringRootFolder {
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
@@ -311,7 +312,7 @@ definition {
 	}
 
 	@description = "This ensures that an image in MG widget can be rendered correctly after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageViaMGAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -338,7 +339,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-107521. It ensures that the SVG file can be viewed."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanViewSVGImage {
 		Navigator.gotoPage(pageName = "Media Gallery Page");
@@ -355,11 +356,12 @@ definition {
 	}
 
 	@description = "This test covers LPS-89361. It ensures that video can be played via media gallery."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanViewVideoViaMediaGallery {
 		property test.assert.warning.exceptions = "false";
-		property test.name.skip.portal.instance = "PGMediagallery#ViewVideoViaMediaGallery";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -381,7 +383,7 @@ definition {
 			mgVideoPreview = "true");
 	}
 
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test DocumentWillNotAppearIfSearchQueryIsIrrelevant {
 		JSONDocument.addFileWithUploadedFile(
@@ -393,9 +395,9 @@ definition {
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
-		SearchPortlets.searchEmbedded(searchTerm = "asdf");
+		SearchPage.searchEmbedded(searchTerm = "asdf");
 
-		SearchResultPortlet.viewNoSearchResults(searchTerm = "asdf");
+		SearchResults.viewNoSearchResults(searchTerm = "asdf");
 	}
 
 }

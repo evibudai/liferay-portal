@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.portlets.web.internal.display.context;
 
 import com.liferay.layout.portlets.web.internal.constants.LayoutsPortletsPortletKeys;
 import com.liferay.layout.portlets.web.internal.search.PortletSearch;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
@@ -33,12 +26,9 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.WebAppPool;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -60,7 +50,7 @@ public class LayoutPortletsDisplayContext {
 		_renderResponse = renderResponse;
 
 		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
+			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
 		_initPortlets(themeDisplay.getCompanyId());
@@ -103,15 +93,11 @@ public class LayoutPortletsDisplayContext {
 	}
 
 	public String getPortletCategoryLabels(String portletId) {
-		String[] categories = _layoutPortletCategories.get(portletId);
-
-		Stream<String> stream = Arrays.stream(categories);
-
-		return stream.map(
-			category -> LanguageUtil.get(_httpServletRequest, category)
-		).collect(
-			Collectors.joining(StringPool.COMMA_AND_SPACE)
-		);
+		return StringUtil.merge(
+			TransformUtil.transformToList(
+				_layoutPortletCategories.get(portletId),
+				category -> LanguageUtil.get(_httpServletRequest, category)),
+			StringPool.COMMA_AND_SPACE);
 	}
 
 	public PortletURL getPortletURL() {

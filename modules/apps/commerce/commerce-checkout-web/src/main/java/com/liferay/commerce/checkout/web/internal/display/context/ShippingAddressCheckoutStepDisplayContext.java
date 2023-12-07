@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.checkout.web.internal.display.context;
@@ -17,8 +8,8 @@ package com.liferay.commerce.checkout.web.internal.display.context;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
+import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
@@ -26,6 +17,7 @@ import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -64,11 +56,13 @@ public class ShippingAddressCheckoutStepDisplayContext
 
 	@Override
 	public List<CommerceAddress> getCommerceAddresses() throws PortalException {
+		CommerceContext commerceContext = getCommerceContext();
 		CommerceOrder commerceOrder = getCommerceOrder();
 
 		return commerceAddressService.getShippingCommerceAddresses(
-			commerceOrder.getCompanyId(), AccountEntry.class.getName(),
-			commerceOrder.getCommerceAccountId());
+			commerceContext.getCommerceChannelId(),
+			AccountEntry.class.getName(), commerceOrder.getCommerceAccountId(),
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 	}
 
 	@Override
@@ -85,18 +79,11 @@ public class ShippingAddressCheckoutStepDisplayContext
 	public long getDefaultCommerceAddressId(long commerceChannelId)
 		throws PortalException {
 
+		long shippingAddressId = 0;
+
 		CommerceOrder commerceOrder = getCommerceOrder();
 
-		long shippingAddressId = commerceOrder.getShippingAddressId();
-
-		if (shippingAddressId > 0) {
-			return shippingAddressId;
-		}
-
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
-
-		AccountEntry accountEntry = accountEntryLocalService.fetchAccountEntry(
-			commerceAccount.getCommerceAccountId());
+		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 		if (accountEntry == null) {
 			return shippingAddressId;

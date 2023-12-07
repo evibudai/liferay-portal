@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,7 +26,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test IFrameDemo {
 		property testray.component.names = "IFrame Portlet";
 
@@ -47,21 +47,21 @@ definition {
 
 		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
-		IFrame.addCP(sourceURL = "http://iscaliforniaonfire.com");
+		IFrame.addCP(sourceURL = "http://whereiscaliforniaonfire.com");
 
 		Navigator.gotoPage(pageName = "IFrame Page");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME_PORTLET");
 
 		AssertVisible(
-			key_title = "Yes",
+			key_title = "Fires",
 			locator1 = "Header#H1_TITLE");
 
 		SelectFrameTop();
 	}
 
 	@description = "This is a test for LPS-140253. View no private page in page administration."
-	@priority = "4"
+	@priority = 4
 	test IFrameDemoFF {
 		property testray.component.names = "IFrame Portlet";
 
@@ -82,35 +82,38 @@ definition {
 
 		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
-		IFrame.addCP(sourceURL = "http://iscaliforniaonfire.com");
+		IFrame.addCP(sourceURL = "http://whereiscaliforniaonfire.com");
 
 		Navigator.gotoPage(pageName = "IFrame Page");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME_PORTLET");
 
 		AssertVisible(
-			key_title = "Yes",
+			key_title = "Fires",
 			locator1 = "Header#H1_TITLE");
 
 		SelectFrameTop();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SalesDemo {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property testray.component.names = "Web Content Administration,Web Content Display";
 
+		var groupId = JSONGroupSetter.setGroupId(groupName = "Guest");
+
 		JSONLayout.addPublicLayout(
-			groupName = "Guest",
+			groupId = ${groupId},
 			layoutName = "Test Page Name");
 
 		JSONLayout.updateLayoutTemplateOfPublicLayout(
-			groupName = "Guest",
+			groupId = ${groupId},
 			layoutName = "Test Page Name",
 			layoutTemplate = "2 Columns (50/50)");
 
 		JSONWebcontent.addWebContent(
 			content = "DHS Content",
-			groupName = "Guest",
+			groupId = ${groupId},
 			title = "DHS Title");
 
 		Navigator.gotoPage(pageName = "Test Page Name");
@@ -127,14 +130,10 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -155,7 +154,7 @@ definition {
 			webContentTitle = "DHS Content");
 
 		JSONLayout.addPublicLayout(
-			groupName = "Guest",
+			groupId = ${groupId},
 			layoutName = "Sales Page");
 
 		Navigator.gotoPage(pageName = "Sales Page");

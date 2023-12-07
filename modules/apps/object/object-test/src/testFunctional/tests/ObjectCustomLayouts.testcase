@@ -14,15 +14,15 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-165850 - Verify it's possible to add a new entry in the related object without leaving the current context (OneToMany)"
-	@priority = "5"
+	@priority = 5
 	test CanAddEntryOnRelationshipTabFor1toM {
 		property portal.acceptance = "true";
 
@@ -48,7 +48,7 @@ definition {
 				relationshipType = "oneToMany");
 
 			ObjectAdmin.addObjectLayoutViaAPI(
-				layoutName = "Custom Layout",
+				layoutName = "Custom Layout 171590",
 				objectName = "CustomObject171590");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject171590");
@@ -64,8 +64,8 @@ definition {
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
-				objectLabel = "Custom Layout");
+				kebabOption = "Edit",
+				objectLabel = "Custom Layout 171590");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -73,7 +73,7 @@ definition {
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldList = "Custom Field",
 				tabName = "Field Tab");
 
@@ -119,11 +119,12 @@ definition {
 	}
 
 	@description = "LPS-165850 - Verify it's possible to add a new entry in the related object without leaving the current context (ManyToMany)"
-	@priority = "5"
+	@priority = 5
 	test CanAddEntryOnRelationshipTabForMtoM {
+		property ci.retries.disabled = "true";
 		property portal.acceptance = "true";
 
-		task ("Given a related object with Custom Layout and Relationship tab (Many to Many)") {
+		task ("Given a custom object that contains a text field and a relationship with itself (Many to Many)") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 171597",
 				objectName = "CustomObject171597",
@@ -144,11 +145,13 @@ definition {
 				relationshipName = "relationship",
 				relationshipType = "manyToMany");
 
-			ObjectAdmin.addObjectLayoutViaAPI(
-				layoutName = "Custom Layout",
-				objectName = "CustomObject171597");
-
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject171597");
+		}
+
+		task ("And given a custom layout for the custom object") {
+			ObjectAdmin.addObjectLayoutViaAPI(
+				layoutName = "Custom Layout 171597",
+				objectName = "CustomObject171597");
 
 			ObjectAdmin.openObjectAdmin();
 
@@ -161,8 +164,8 @@ definition {
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
-				objectLabel = "Custom Layout");
+				kebabOption = "Edit",
+				objectLabel = "Custom Layout 171597");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -170,7 +173,7 @@ definition {
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldList = "Custom Field",
 				tabName = "Field Tab");
 
@@ -183,7 +186,7 @@ definition {
 			PortletEntry.save();
 		}
 
-		task ("When add the entry on Relationship tab") {
+		task ("And given two custom object entries") {
 			for (var letter : list "A,B") {
 				ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 					fieldName = "customField",
@@ -192,7 +195,9 @@ definition {
 			}
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject171597");
+		}
 
+		task ("When relating the entries") {
 			ObjectPortlet.viewEntryDetails(entry = "Entry Test A");
 
 			Click(
@@ -200,9 +205,13 @@ definition {
 				locator1 = "ObjectAdmin#ENTRY_RELATIONSHIP_TAB");
 
 			ObjectCustomLayouts.addEntryOnRelationshipTab(selectEntry = "Entry Test B");
+
+			WaitForElementPresent(
+				key_fieldLabel = "Entry Test B",
+				locator1 = "ObjectAdmin#VIEW_OBJECT_FIELD_LABEL");
 		}
 
-		task ("Then the new entry is saved on the Relationship Tab Parent and the entry is present on Relationship Tab Child") {
+		task ("Then one entry is related as the Parent and the other entry is related as the Child") {
 			AssertElementPresent(
 				key_fieldLabel = "Entry Test B",
 				locator1 = "ObjectAdmin#VIEW_OBJECT_FIELD_LABEL");
@@ -221,8 +230,80 @@ definition {
 		}
 	}
 
+	@description = "LPS-168228 - Verify it's possible to add many custom fields in the custom layout"
+	@priority = 4
+	test CanAddManyFieldsOnLayout {
+		task ("Given an object with 20 fields is created") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 168228",
+				objectName = "CustomObject168228",
+				pluralLabelName = "Custom Objects 168228");
+
+			for (var n : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Text",
+					fieldLabelName = "Custom Field${n}",
+					fieldName = "customField${n}",
+					fieldType = "String",
+					isRequired = "false",
+					objectName = "CustomObject168228");
+			}
+		}
+
+		task ("And given a layout is created with all custom fields added") {
+			ObjectAdmin.addObjectLayoutViaAPI(
+				layoutName = "Layout Name",
+				objectName = "CustomObject168228");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 168228");
+
+			ObjectAdmin.goToLayoutsTab();
+
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
+
+			ObjectAdmin.markLayoutAsDefault();
+
+			ObjectAdmin.goToLayoutTabOnLayouts();
+
+			ObjectAdmin.addTabFieldsOnLayout(
+				blockName = "Block 1",
+				columnsNumber = 1,
+				fieldList = "Custom Field1,Custom Field2,Custom Field3,Custom Field4,Custom Field5,Custom Field6,Custom Field7,Custom Field8,Custom Field9,Custom Field10,Custom Field11,Custom Field12,Custom Field13,Custom Field14,Custom Field15,Custom Field16,Custom Field17,Custom Field18,Custom Field19,Custom Field20",
+				tabName = "Field Tab");
+
+			PortletEntry.save();
+		}
+
+		task ("When the Object is published and entries are added in all fields") {
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject168228");
+
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject168228");
+
+			LexiconEntry.gotoAdd();
+
+			for (var k : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20") {
+				Type.type(
+					key_customField = "Custom Field${k}",
+					locator1 = "ObjectPortlet#ENTRY_FIELD_GENERIC",
+					value1 = "Can Add Many Fields On Layout${k}");
+			}
+
+			PortletEntry.save();
+		}
+
+		task ("Then all the entries of the custom fields are added") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject168228");
+
+			for (var j : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20") {
+				ObjectPortlet.viewEntry(entry = "Can Add Many Fields On Layout${j}");
+			}
+		}
+	}
+
 	@description = "LPS-165850 - Verify it's possible to cancel a new entry"
-	@priority = "3"
+	@priority = 3
 	test CanCancelNewEntryOnRelationshipTab {
 		task ("Given a related object with Custom Layout and Relationship tab") {
 			ObjectAdmin.addObjectViaAPI(
@@ -246,7 +327,7 @@ definition {
 				relationshipType = "oneToMany");
 
 			ObjectAdmin.addObjectLayoutViaAPI(
-				layoutName = "Custom Layout",
+				layoutName = "Custom Layout 171629",
 				objectName = "CustomObject171629");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject171629");
@@ -258,8 +339,8 @@ definition {
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
-				objectLabel = "Custom Layout");
+				kebabOption = "Edit",
+				objectLabel = "Custom Layout 171629");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -267,7 +348,7 @@ definition {
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldList = "Custom Field",
 				tabName = "Field Tab");
 
@@ -308,14 +389,17 @@ definition {
 				key_fieldLabel = "Entry Test",
 				locator1 = "ObjectAdmin#VIEW_OBJECT_FIELD_LABEL");
 
-			ObjectAdmin.assertNoResultsWereFound();
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_STATE_INFO",
+				value1 = "No Results Found");
 		}
 	}
 
 	@description = "LPS-161884 - Verify that it's possible to create an object with a categorization section in the layout"
-	@priority = "3"
+	@priority = 3
 	test CanCreateObjectWithCategorizationSection {
-		property test.name.skip.portal.instance = "ObjectCustomLayouts#CanCreateObjectWithCategorizationSection";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 200",
@@ -340,7 +424,7 @@ definition {
 
 		ObjectAdmin.goToLayoutsTab();
 
-		ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+		ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 		ObjectAdmin.markLayoutAsDefault();
 
@@ -348,7 +432,7 @@ definition {
 
 		ObjectAdmin.addTabFieldsOnLayout(
 			blockName = "Block 1",
-			columnsNumber = "1",
+			columnsNumber = 1,
 			fieldLabelName = "Custom Field",
 			tabName = "Field Tab");
 
@@ -368,9 +452,10 @@ definition {
 	}
 
 	@description = "LPS-161886 - Verify that it's possible to delete a categorization section"
-	@priority = "3"
+	@priority = 3
 	test CanDeleteCategorizationSection {
-		property test.name.skip.portal.instance = "ObjectCustomLayouts#CanDeleteCategorizationSection";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: An object with the layout categorization section") {
 			ObjectAdmin.addObjectViaAPI(
@@ -396,13 +481,13 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.goToLayoutTabOnLayouts();
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldLabelName = "Custom Field",
 				tabName = "Field Tab");
 
@@ -420,7 +505,7 @@ definition {
 
 			ObjectAdmin.goToLayoutsTab();
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.goToLayoutTabOnLayouts();
 
@@ -430,7 +515,7 @@ definition {
 		}
 
 		task ("Then: The object layout is updated successfully") {
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 			ObjectAdmin.goToLayoutTabOnLayouts();
 
@@ -439,8 +524,10 @@ definition {
 	}
 
 	@description = "LPS-165850 - Verify when a new entry is created, it is possible to delete this entry"
-	@priority = "4"
+	@priority = 4
 	test CanDeleteNewEntryAddedOnRelationshipTab {
+		property ci.retries.disabled = "true";
+
 		task ("Given a related object with Custom Layout and Relationship tab") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 171632",
@@ -463,7 +550,7 @@ definition {
 				relationshipType = "oneToMany");
 
 			ObjectAdmin.addObjectLayoutViaAPI(
-				layoutName = "Custom Layout",
+				layoutName = "Custom Layout 171632",
 				objectName = "CustomObject171632");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject171632");
@@ -479,8 +566,8 @@ definition {
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
-				objectLabel = "Custom Layout");
+				kebabOption = "Edit",
+				objectLabel = "Custom Layout 171632");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -488,7 +575,7 @@ definition {
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldList = "Custom Field",
 				tabName = "Field Tab");
 
@@ -520,6 +607,8 @@ definition {
 			ObjectAdmin.selectSpecificKebabMenuOption(
 				kebabOption = "Delete",
 				objectLabel = "Entry Test B");
+
+			Refresh();
 		}
 
 		task ("Then the entry is no longer present") {
@@ -530,9 +619,10 @@ definition {
 	}
 
 	@description = "LPS-161885 - Verify that it's possible to edit a categorization section"
-	@priority = "3"
+	@priority = 3
 	test CanEditCategorizationSection {
-		property test.name.skip.portal.instance = "ObjectCustomLayouts#CanEditCategorizationSection";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 200",
@@ -557,7 +647,7 @@ definition {
 
 		ObjectAdmin.goToLayoutsTab();
 
-		ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+		ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
 
 		ObjectAdmin.markLayoutAsDefault();
 
@@ -565,7 +655,7 @@ definition {
 
 		ObjectAdmin.addTabFieldsOnLayout(
 			blockName = "Block 1",
-			columnsNumber = "1",
+			columnsNumber = 1,
 			fieldLabelName = "Custom Field",
 			tabName = "Field Tab");
 
@@ -577,27 +667,22 @@ definition {
 
 		Navigator.openURL();
 
-		JSONCategory.addCategory(
-			groupName = "Global",
-			title = "Category 1",
-			vocabularyName = "Topic");
-
-		JSONCategory.addCategory(
-			groupName = "Global",
-			title = "Category 2",
-			vocabularyName = "Stage");
+		for (var categories : list "Category 1,Category 2") {
+			JSONCategory.addCategory(
+				groupName = "Global",
+				title = ${categories},
+				vocabularyName = "Topic");
+		}
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject200");
 
 		LexiconEntry.gotoAdd();
 
-		ObjectAdmin.selectCategoryInObjectEntry(
-			categoryNameList = "Category 1",
-			vocabularyName = "Topic");
-
-		ObjectAdmin.selectCategoryInObjectEntry(
-			categoryNameList = "Category 2",
-			vocabularyName = "Stage");
+		for (var categories : list "Category 1,Category 2") {
+			ObjectAdmin.selectCategoryInObjectEntry(
+				categoryNameList = ${categories},
+				vocabularyName = "Topic");
+		}
 
 		PortletEntry.save();
 
@@ -607,9 +692,11 @@ definition {
 	}
 
 	@description = "LPS-165850 - Verify the user can edit the entry when there is permission to edit"
-	@priority = "5"
+	@priority = 5
 	test CanEditEntryWhenAllowedToEdit {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a related object with Custom Layout and Relationship tab") {
 			ObjectAdmin.addObjectViaAPI(
@@ -633,7 +720,7 @@ definition {
 				relationshipType = "oneToMany");
 
 			ObjectAdmin.addObjectLayoutViaAPI(
-				layoutName = "Custom Layout",
+				layoutName = "Custom Layout 171630",
 				objectName = "CustomObject");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
@@ -644,13 +731,13 @@ definition {
 
 			CreateObject.selectTitleField(fieldLabel = "Custom Field");
 
-			PortletEntry.save();
+			CreateObject.saveObject();
 
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
-				objectLabel = "Custom Layout");
+				kebabOption = "Edit",
+				objectLabel = "Custom Layout 171630");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -658,7 +745,7 @@ definition {
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldList = "Custom Field",
 				tabName = "Field Tab");
 
@@ -688,7 +775,7 @@ definition {
 
 			for (var resourceActionIndex : list "VIEW,UPDATE") {
 				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
+					resourceAction = ${resourceActionIndex},
 					resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
 					roleTitle = "Regular Role",
 					roleType = "regular");
@@ -734,9 +821,11 @@ definition {
 	}
 
 	@description = "LPS-165850 - Verify user cannot edit an entry without permissions"
-	@priority = "5"
+	@priority = 5
 	test CannotEditEntryWhenNotAllowedToEdit {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a related object with Custom Layout and Relationship tab") {
 			ObjectAdmin.addObjectViaAPI(
@@ -760,7 +849,7 @@ definition {
 				relationshipType = "oneToMany");
 
 			ObjectAdmin.addObjectLayoutViaAPI(
-				layoutName = "Custom Layout",
+				layoutName = "Custom Layout 171631",
 				objectName = "CustomObject");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
@@ -771,13 +860,13 @@ definition {
 
 			CreateObject.selectTitleField(fieldLabel = "Custom Field");
 
-			PortletEntry.save();
+			CreateObject.saveObject();
 
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
-				objectLabel = "Custom Layout");
+				kebabOption = "Edit",
+				objectLabel = "Custom Layout 171631");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -785,7 +874,7 @@ definition {
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldList = "Custom Field",
 				tabName = "Field Tab");
 
@@ -846,7 +935,9 @@ definition {
 
 			ObjectPortlet.viewEntryDetails(entry = "Entry Test");
 
-			ObjectAdmin.viewFieldValueDisabled(fieldValue = "Entry Test");
+			AssertElementPresent(
+				key_fieldValue = "Entry Test",
+				locator1 = "ObjectAdmin#VIEW_FIELD_VALUE_DISABLED");
 
 			AssertElementNotPresent(locator1 = "Button#SAVE");
 
@@ -854,14 +945,16 @@ definition {
 
 			ObjectPortlet.viewEntryDetails(entry = "New entry related");
 
-			ObjectAdmin.viewFieldValueDisabled(fieldValue = "New entry related");
+			AssertElementPresent(
+				key_fieldValue = "New entry related",
+				locator1 = "ObjectAdmin#VIEW_FIELD_VALUE_DISABLED");
 
 			AssertElementNotPresent(locator1 = "Button#SAVE");
 		}
 	}
 
 	@description = "LPS-135397 - Verify that it is not possible to save another Layout as default"
-	@priority = "4"
+	@priority = 4
 	test CannotSaveAnotherLayoutAsDefault {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 200",
@@ -889,7 +982,7 @@ definition {
 		ObjectAdmin.goToLayoutsTab();
 
 		ObjectAdmin.selectSpecificKebabMenuOption(
-			kebabOption = "View",
+			kebabOption = "Edit",
 			objectLabel = "Layout A");
 
 		ObjectAdmin.markLayoutAsDefault();
@@ -898,7 +991,7 @@ definition {
 
 		ObjectAdmin.addTabFieldsOnLayout(
 			blockName = "Block 1",
-			columnsNumber = "1",
+			columnsNumber = 1,
 			fieldLabelName = "Custom Field",
 			tabName = "Field Tab");
 
@@ -907,7 +1000,7 @@ definition {
 		Refresh();
 
 		ObjectAdmin.selectSpecificKebabMenuOption(
-			kebabOption = "View",
+			kebabOption = "Edit",
 			objectLabel = "Layout B");
 
 		ObjectAdmin.markLayoutAsDefault();
@@ -916,25 +1009,26 @@ definition {
 
 		ObjectAdmin.addTabFieldsOnLayout(
 			blockName = "Block 2",
-			columnsNumber = "1",
+			columnsNumber = 1,
 			fieldLabelName = "Custom Field",
 			tabName = "Field Tab");
 
-		PortletEntry.save();
+		Click(locator1 = "Button#SAVE");
 
 		SelectFrame(locator1 = "Message#ERROR");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#ERROR",
-			value1 = "Error:There can only be one default object layout");
+			value1 = "There can only be one default object layout");
 	}
 
 	@description = "LPS-165850 - Verify if you can 'select existing one' and add existing entries"
-	@priority = "5"
+	@priority = 5
 	test CanSelectExistingEntriesOnRelationshipTab {
+		property ci.retries.disabled = "true";
 		property portal.acceptance = "true";
 
-		task ("Given a related object with Custom Layout and Relationship tab") {
+		task ("Given a custom object that contains a text field and a relationship with itself") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 171628",
 				objectName = "CustomObject171628",
@@ -955,8 +1049,12 @@ definition {
 				relationshipName = "relationship",
 				relationshipType = "oneToMany");
 
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject171628");
+		}
+
+		task ("And given a custom layout for the custom object") {
 			ObjectAdmin.addObjectLayoutViaAPI(
-				layoutName = "Custom Layout",
+				layoutName = "Custom Layout 171628",
 				objectName = "CustomObject171628");
 
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject171628");
@@ -972,8 +1070,8 @@ definition {
 			ObjectAdmin.goToLayoutsTab();
 
 			ObjectAdmin.selectSpecificKebabMenuOption(
-				kebabOption = "View",
-				objectLabel = "Custom Layout");
+				kebabOption = "Edit",
+				objectLabel = "Custom Layout 171628");
 
 			ObjectAdmin.markLayoutAsDefault();
 
@@ -981,7 +1079,7 @@ definition {
 
 			ObjectAdmin.addTabFieldsOnLayout(
 				blockName = "Block 1",
-				columnsNumber = "1",
+				columnsNumber = 1,
 				fieldList = "Custom Field",
 				tabName = "Field Tab");
 
@@ -990,8 +1088,10 @@ definition {
 				tabName = "Relationship Tab");
 
 			PortletEntry.save();
+		}
 
-			for (var letter : list "A,B,C,D,E") {
+		task ("And given several object entries") {
+			for (var letter : list "A,B,C") {
 				ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 					fieldName = "customField",
 					objectName = "CustomObject171628",
@@ -999,33 +1099,21 @@ definition {
 			}
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject171628");
-
-			ObjectPortlet.viewEntryDetails(entry = "Entry Test A");
 		}
 
-		task ("When selecting existing entries from the Relationship Tab") {
+		task ("When an entry is added on the Relationship Tab") {
+			ObjectPortlet.viewEntryDetails(entry = "Entry Test A");
+
 			ObjectAdmin.gotoRelationshipsTab();
 
-			LexiconEntry.gotoAdd();
+			ObjectCustomLayouts.addEntryOnRelationshipTab(selectEntry = "Entry Test C");
 
-			Click(
-				key_kebabOption = "Select Existing One",
-				locator1 = "ObjectAdmin#KEBAB_MENU_OPTION");
-
-			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+			WaitForElementPresent(
+				key_fieldLabel = "Entry Test C",
+				locator1 = "ObjectAdmin#VIEW_OBJECT_FIELD_LABEL");
 		}
 
-		task ("Then all entries created show on Select Existing One and the entry selected is saved on the Relationship Tab") {
-			for (var letter : list "B,C,D,E") {
-				AssertElementPresent(
-					key_titleFieldName = "Entry Test ${letter}",
-					locator1 = "CreateObject#SELECT_ENTRY_IN_RELATIONSHIP_TAB");
-			}
-
-			ClickNoError(
-				key_titleFieldName = "Entry Test C",
-				locator1 = "CreateObject#SELECT_ENTRY_IN_RELATIONSHIP_TAB");
-
+		task ("Then the related entry is present on the Relationship Tab") {
 			AssertElementPresent(
 				key_fieldLabel = "Entry Test C",
 				locator1 = "ObjectAdmin#VIEW_OBJECT_FIELD_LABEL");
@@ -1033,7 +1121,7 @@ definition {
 	}
 
 	@description = "LPS-146808 - Verify it is possibel to view a Date entry and label"
-	@priority = "4"
+	@priority = 4
 	test CanViewDateEntry {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 200",
@@ -1063,9 +1151,13 @@ definition {
 
 		ObjectPortlet.viewEntryDetails(entry = "Jan 1, 2022");
 
-		ObjectPortlet.assertEntryDetailsLabelPresent(entryLabel = "Custom Field");
+		AssertElementPresent(
+			key_entryLabel = "Custom Field",
+			locator1 = "ObjectPortlet#VIEW_ENTRY_DETAILS_LABEL");
 
-		ObjectPortlet.assertEntryDetailsValuePresent(entryValue = "01/01/2022");
+		AssertElementPresent(
+			key_entryValue = "01/01/2022",
+			locator1 = "ObjectPortlet#VIEW_ENTRY_DETAILS_VALUE");
 	}
 
 }

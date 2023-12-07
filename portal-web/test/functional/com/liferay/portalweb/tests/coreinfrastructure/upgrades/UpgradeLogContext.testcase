@@ -1,6 +1,7 @@
 @component-name = "portal-database-upgrade-framework"
 definition {
 
+	property ci.retries.disabled = "true";
 	property data.archive.type = "data-archive-portal";
 	property database.types = "mysql";
 	property log.context.enabled = "true";
@@ -8,6 +9,8 @@ definition {
 	property portal.upstream = "true";
 	property portal.version = "7.3.10";
 	property skip.upgrade-legacy-database = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.main.component.name = "Database Upgrade Framework";
 
 	setUp {
@@ -15,28 +18,44 @@ definition {
 	}
 
 	@description = "LPS-158742. Given custom log4j is added to portal and log context is enabled. Then log lines will be marked with custom context name."
-	@priority = "3"
-	test LogOutputReturnsMarkedWithCustomName {
-		property custom.properties = "upgrade.log.context.enabled=true${line.separator}upgrade.log.context.name=ExampleText${line.separator}upgrade.database.auto.run=true";
+	@priority = 3
+	test LogOutputReturnsKeyValueWithExpectedNames {
+		property custom.properties = "upgrade.database.auto.run=true${line.separator}upgrade.log.context.enabled=true";
 
-		Log.viewLogFileContentPresent(logContent = "ExampleText=ExampleText");
-	}
+		task ("Verify that marks related to upgrades/verifiers in the scope of portal-kernel/impl are present") {
+			Log.viewLogFileContentPresent(logContent = "upgrade.component=portal");
+		}
 
-	@description = "LPS-158742. Given custom log4j is added to portal and log context is enabled. Then log lines will be marked with default context name."
-	@priority = "4"
-	test LogOutputReturnsMarkedWithDefaultName {
-		property custom.properties = "upgrade.log.context.enabled=true${line.separator}upgrade.database.auto.run=true";
+		task ("Verify that marks related to the upgrade framework but it is not in the scope of any upgrade nor verify process are present") {
+			Log.viewLogFileContentPresent(logContent = "upgrade.component=framework");
+		}
 
-		Log.viewLogFileContentPresent(logContent = "UpgradeLog=UpgradeLog");
+		task ("Verify that marks related to upgrades/verifiers in the scope of a specific module are present") {
+			Log.viewLogFileContentPresent(logContent = "upgrade.component=com.liferay.portal.workflow.kaleo.service");
+		}
+
+		task ("Verify that no key-value mark is printed when it's not related with Upgrade Framework") {
+			Log.viewLogFileContentPresent(logContent = "{}");
+		}
+
+		task ("Verify upgrade report is not generated in console output") {
+			AssertConsoleTextNotPresent(value1 = "Upgrade report generated in");
+		}
 	}
 
 	@description = "LPS-158742. Given custom log4j is not added to portal and log context is enabled. Then log lines will not be marked."
-	@priority = "3"
+	@priority = 3
 	test LogOutputReturnsUnmarkedWithoutCustomLog4j {
-		property custom.properties = "upgrade.log.context.enabled=true${line.separator}upgrade.database.auto.run=true";
+		property custom.properties = "upgrade.database.auto.run=true${line.separator}upgrade.log.context.enabled=true";
 		property log.context.enabled = "false";
 
-		Log.viewLogFileContentNotPresent(logContent = "UpgradeLog=UpgradeLog");
+		task ("Verify that mark related to upgrades/verifiers are not present") {
+			Log.viewLogFileContentNotPresent(logContent = "upgrade.component=");
+		}
+
+		task ("Verify that no log context is printed") {
+			Log.viewLogFileContentNotPresent(logContent = "{}");
+		}
 	}
 
 }

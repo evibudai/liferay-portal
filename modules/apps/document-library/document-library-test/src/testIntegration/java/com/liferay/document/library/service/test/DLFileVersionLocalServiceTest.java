@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
@@ -86,10 +78,12 @@ public class DLFileVersionLocalServiceTest {
 		DLFileEntry dlFileEntry = _dlFileEntryLocalService.getDLFileEntry(
 			fileEntry.getFileEntryId());
 
+		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion("1.0");
+
 		Assert.assertTrue(
 			DLStoreUtil.hasFile(
 				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-				dlFileEntry.getName(), "1.0"));
+				dlFileEntry.getName(), dlFileVersion.getStoreFileName()));
 
 		_dlFileEntryLocalService.deleteFileVersion(
 			TestPropsValues.getUserId(), fileEntry.getFileEntryId(), "1.0");
@@ -97,7 +91,7 @@ public class DLFileVersionLocalServiceTest {
 		Assert.assertFalse(
 			DLStoreUtil.hasFile(
 				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-				dlFileEntry.getName(), "1.0"));
+				dlFileEntry.getName(), dlFileVersion.getStoreFileName()));
 	}
 
 	@Inject

@@ -1,27 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
 
 import java.io.CharArrayWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.Writer;
 
+import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -289,6 +284,10 @@ public class Dom4JUtil {
 	}
 
 	public static Document parse(String xml) throws DocumentException {
+		if (xml != null) {
+			xml = xml.trim();
+		}
+
 		try {
 			SAXReader saxReader = new SAXReader();
 
@@ -306,18 +305,27 @@ public class Dom4JUtil {
 
 				org.w3c.dom.Document orgW3CDomDocument = null;
 
-				if (!xml.contains("<!DOCTYPE definition")) {
-					String documentTypeDefinition =
-						"<!DOCTYPE definition [\n<!ENTITY micro" +
-							"  \"&#181;\">\n]>\n";
+				try {
+					String processedXML = JenkinsResultsParserUtil.combine(
+						"<!DOCTYPE definition [", _getEntities(), "]>\n",
+						xml.replaceAll("<\\?xml[^\\n]+\\n", ""));
 
 					orgW3CDomDocument = documentBuilder.parse(
-						new InputSource(
-							new StringReader(documentTypeDefinition + xml)));
+						new InputSource(new StringReader(processedXML)));
 				}
-				else {
-					orgW3CDomDocument = documentBuilder.parse(
-						new InputSource(new StringReader(xml)));
+				catch (Exception exception2) {
+					try {
+						String processedXML = JenkinsResultsParserUtil.combine(
+							"<!DOCTYPE definition [", _getEntities(), "]>\n",
+							xml);
+
+						orgW3CDomDocument = documentBuilder.parse(
+							new InputSource(new StringReader(processedXML)));
+					}
+					catch (Exception exception3) {
+						orgW3CDomDocument = documentBuilder.parse(
+							new InputSource(new StringReader(xml)));
+					}
 				}
 
 				return domReader.read(orgW3CDomDocument);
@@ -404,6 +412,27 @@ public class Dom4JUtil {
 
 			truncateElement(iterator.next(), size);
 		}
+	}
+
+	private static String _getEntities() throws IOException, TimeoutException {
+		URL url = new URL(
+			"http://mirrors.lax.liferay.com/www.w3.org/TR/html5-author" +
+				"/entities.json");
+
+		File entitiesFile = new File("entities.html");
+
+		JenkinsResultsParserUtil.toFile(url, entitiesFile);
+
+		String entities = JenkinsResultsParserUtil.read(entitiesFile);
+
+		entities = entities.replaceAll(
+			"\\\"\\&([\\w]+);?\\\": \\{ \\\"[\\w]+\\\": \\[(\\d+)(, " +
+				"\\d+)?\\], \\\"[\\w]+\\\": \\\"[\\\\\\w\\d]+\\\" },?",
+			"<!ENTITY $1 \"\\&#$2;\">");
+
+		entities = entities.replaceAll("([{|}])", "");
+
+		return entities;
 	}
 
 }

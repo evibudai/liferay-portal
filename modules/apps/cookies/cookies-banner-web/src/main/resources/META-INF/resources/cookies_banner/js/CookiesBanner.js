@@ -1,18 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {getOpener, openModal} from 'frontend-js-web';
+import {checkConsent, getOpener, openModal} from 'frontend-js-web';
 
 import {
 	acceptAllCookies,
@@ -23,7 +14,14 @@ import {
 	userConfigCookieName,
 } from '../../js/CookiesUtil';
 
+let openCookieConsentModal = () => {
+	console.warn(
+		'OpenCookieConsentModal was called, but cookie feature is not enabled'
+	);
+};
+
 export default function ({
+	configurationNamespace,
 	configurationURL,
 	includeDeclineAllButton,
 	namespace,
@@ -70,7 +68,22 @@ export default function ({
 			setUserConfigCookie();
 		});
 
-		configurationButton.addEventListener('click', () => {
+		openCookieConsentModal = ({
+			alertDisplayType,
+			alertMessage,
+			customTitle,
+			onCloseFunction,
+		}) => {
+			let url = configurationURL;
+
+			if (alertDisplayType) {
+				url = `${url}&_${configurationNamespace}_alertDisplayType=${alertDisplayType}`;
+			}
+
+			if (alertMessage) {
+				url = `${url}&_${configurationNamespace}_alertMessage=${alertMessage}`;
+			}
+
 			openModal({
 				buttons: [
 					{
@@ -136,10 +149,15 @@ export default function ({
 				displayType: 'primary',
 				height: '70vh',
 				id: 'cookiesBannerConfiguration',
+				onClose: onCloseFunction || undefined,
 				size: 'lg',
-				title,
-				url: configurationURL,
+				title: customTitle || title,
+				url,
 			});
+		};
+
+		configurationButton.addEventListener('click', () => {
+			openCookieConsentModal({});
 		});
 
 		declineAllButton.addEventListener('click', () => {
@@ -155,6 +173,31 @@ export default function ({
 	}
 }
 
+function checkCookieConsentForTypes(cookieTypes, modalOptions) {
+	return new Promise((resolve, reject) => {
+		if (isCookieTypesAccepted(cookieTypes)) {
+			resolve();
+		}
+		else {
+			openCookieConsentModal({
+				alertDisplayType: modalOptions?.alertDisplayType || 'info',
+				alertMessage: modalOptions?.alertMessage || null,
+				customTitle: modalOptions?.customTitle || null,
+				onCloseFunction: () =>
+					isCookieTypesAccepted(cookieTypes) ? resolve() : reject(),
+			});
+		}
+	});
+}
+
+function isCookieTypesAccepted(cookieTypes) {
+	if (!Array.isArray(cookieTypes)) {
+		cookieTypes = [cookieTypes];
+	}
+
+	return cookieTypes.every((cookieType) => checkConsent(cookieType));
+}
+
 function setBannerVisibility(cookieBanner) {
 	if (getCookie(userConfigCookieName)) {
 		cookieBanner.style.display = 'none';
@@ -163,3 +206,5 @@ function setBannerVisibility(cookieBanner) {
 		cookieBanner.style.display = 'block';
 	}
 }
+
+export {checkCookieConsentForTypes, openCookieConsentModal};

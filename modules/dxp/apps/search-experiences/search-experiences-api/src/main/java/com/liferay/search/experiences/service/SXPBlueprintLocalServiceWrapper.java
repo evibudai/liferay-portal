@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link SXPBlueprintLocalService}.
@@ -387,6 +379,13 @@ public class SXPBlueprintLocalServiceWrapper
 		return _sxpBlueprintLocalService.getSXPBlueprints(start, end);
 	}
 
+	@Override
+	public java.util.List<com.liferay.search.experiences.model.SXPBlueprint>
+		getSXPBlueprints(long companyId) {
+
+		return _sxpBlueprintLocalService.getSXPBlueprints(companyId);
+	}
+
 	/**
 	 * Returns the number of sxp blueprints.
 	 *
@@ -414,7 +413,8 @@ public class SXPBlueprintLocalServiceWrapper
 
 	@Override
 	public com.liferay.search.experiences.model.SXPBlueprint updateSXPBlueprint(
-			long userId, long sxpBlueprintId, String configurationJSON,
+			String externalReferenceCode, long userId, long sxpBlueprintId,
+			String configurationJSON,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			String elementInstancesJSON, String schemaVersion,
 			java.util.Map<java.util.Locale, String> titleMap,
@@ -422,8 +422,9 @@ public class SXPBlueprintLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _sxpBlueprintLocalService.updateSXPBlueprint(
-			userId, sxpBlueprintId, configurationJSON, descriptionMap,
-			elementInstancesJSON, schemaVersion, titleMap, serviceContext);
+			externalReferenceCode, userId, sxpBlueprintId, configurationJSON,
+			descriptionMap, elementInstancesJSON, schemaVersion, titleMap,
+			serviceContext);
 	}
 
 	/**
@@ -441,6 +442,11 @@ public class SXPBlueprintLocalServiceWrapper
 		com.liferay.search.experiences.model.SXPBlueprint sxpBlueprint) {
 
 		return _sxpBlueprintLocalService.updateSXPBlueprint(sxpBlueprint);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _sxpBlueprintLocalService.getBasePersistence();
 	}
 
 	@Override

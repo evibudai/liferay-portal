@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,12 +15,7 @@ CommerceShipmentItem commerceShipmentItem = commerceShipmentItemDisplayContext.g
 CommerceOrderItem commerceOrderItem = commerceShipmentItemDisplayContext.getCommerceOrderItem();
 
 portletDisplay.setShowBackIcon(true);
-
-if (Validator.isNull(redirect)) {
-	redirect = currentURL;
-}
-
-portletDisplay.setURLBack(redirect);
+portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 %>
 
 <portlet:actionURL name="/commerce_shipment/edit_commerce_shipment_item" var="editCommerceShipmentItemActionURL" />
@@ -57,7 +43,7 @@ portletDisplay.setURLBack(redirect);
 		>
 			<div class="row text-center">
 				<div class="col-sm-6">
-					<liferay-ui:message key="outstanding-quantity" />: <%= commerceOrderItem.getQuantity() - commerceOrderItem.getShippedQuantity() %>
+					<liferay-ui:message key="outstanding-quantity" />: <%= commerceShipmentItemDisplayContext.getOutstandingQuantity() %>
 				</div>
 
 				<div class="col-sm-6">

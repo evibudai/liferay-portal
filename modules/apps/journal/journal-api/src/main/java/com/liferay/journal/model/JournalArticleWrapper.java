@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.model;
@@ -64,7 +55,7 @@ public class JournalArticleWrapper
 		attributes.put("articleId", getArticleId());
 		attributes.put("version", getVersion());
 		attributes.put("urlTitle", getUrlTitle());
-		attributes.put("DDMStructureKey", getDDMStructureKey());
+		attributes.put("DDMStructureId", getDDMStructureId());
 		attributes.put("DDMTemplateKey", getDDMTemplateKey());
 		attributes.put("defaultLanguageId", getDefaultLanguageId());
 		attributes.put("layoutUuid", getLayoutUuid());
@@ -74,6 +65,7 @@ public class JournalArticleWrapper
 		attributes.put("indexable", isIndexable());
 		attributes.put("smallImage", isSmallImage());
 		attributes.put("smallImageId", getSmallImageId());
+		attributes.put("smallImageSource", getSmallImageSource());
 		attributes.put("smallImageURL", getSmallImageURL());
 		attributes.put("lastPublishDate", getLastPublishDate());
 		attributes.put("status", getStatus());
@@ -201,10 +193,10 @@ public class JournalArticleWrapper
 			setUrlTitle(urlTitle);
 		}
 
-		String DDMStructureKey = (String)attributes.get("DDMStructureKey");
+		Long DDMStructureId = (Long)attributes.get("DDMStructureId");
 
-		if (DDMStructureKey != null) {
-			setDDMStructureKey(DDMStructureKey);
+		if (DDMStructureId != null) {
+			setDDMStructureId(DDMStructureId);
 		}
 
 		String DDMTemplateKey = (String)attributes.get("DDMTemplateKey");
@@ -259,6 +251,12 @@ public class JournalArticleWrapper
 
 		if (smallImageId != null) {
 			setSmallImageId(smallImageId);
+		}
+
+		Integer smallImageSource = (Integer)attributes.get("smallImageSource");
+
+		if (smallImageSource != null) {
+			setSmallImageSource(smallImageSource);
 		}
 
 		String smallImageURL = (String)attributes.get("smallImageURL");
@@ -436,6 +434,13 @@ public class JournalArticleWrapper
 	}
 
 	@Override
+	public com.liferay.dynamic.data.mapping.storage.DDMFormValues
+		getDDMFormValues(boolean addMissingDDMFormFieldValues) {
+
+		return model.getDDMFormValues(addMissingDDMFormFieldValues);
+	}
+
+	@Override
 	public com.liferay.dynamic.data.mapping.model.DDMStructure
 		getDDMStructure() {
 
@@ -443,10 +448,15 @@ public class JournalArticleWrapper
 	}
 
 	/**
-	 * Returns the ddm structure key of this journal article.
+	 * Returns the ddm structure ID of this journal article.
 	 *
-	 * @return the ddm structure key of this journal article
+	 * @return the ddm structure ID of this journal article
 	 */
+	@Override
+	public long getDDMStructureId() {
+		return model.getDDMStructureId();
+	}
+
 	@Override
 	public String getDDMStructureKey() {
 		return model.getDDMStructureKey();
@@ -530,6 +540,13 @@ public class JournalArticleWrapper
 	@Override
 	public com.liferay.portal.kernel.xml.Document getDocument() {
 		return model.getDocument();
+	}
+
+	@Override
+	public com.liferay.portal.kernel.xml.Document getDocumentByLocale(
+		String languageId) {
+
+		return model.getDocumentByLocale(languageId);
 	}
 
 	/**
@@ -746,6 +763,16 @@ public class JournalArticleWrapper
 	@Override
 	public long getSmallImageId() {
 		return model.getSmallImageId();
+	}
+
+	/**
+	 * Returns the small image source of this journal article.
+	 *
+	 * @return the small image source of this journal article
+	 */
+	@Override
+	public int getSmallImageSource() {
+		return model.getSmallImageSource();
 	}
 
 	@Override
@@ -1133,13 +1160,13 @@ public class JournalArticleWrapper
 	}
 
 	/**
-	 * Sets the ddm structure key of this journal article.
+	 * Sets the ddm structure ID of this journal article.
 	 *
-	 * @param DDMStructureKey the ddm structure key of this journal article
+	 * @param DDMStructureId the ddm structure ID of this journal article
 	 */
 	@Override
-	public void setDDMStructureKey(String DDMStructureKey) {
-		model.setDDMStructureKey(DDMStructureKey);
+	public void setDDMStructureId(long DDMStructureId) {
+		model.setDDMStructureId(DDMStructureId);
 	}
 
 	/**
@@ -1337,6 +1364,16 @@ public class JournalArticleWrapper
 	@Override
 	public void setSmallImageId(long smallImageId) {
 		model.setSmallImageId(smallImageId);
+	}
+
+	/**
+	 * Sets the small image source of this journal article.
+	 *
+	 * @param smallImageSource the small image source of this journal article
+	 */
+	@Override
+	public void setSmallImageSource(int smallImageSource) {
+		model.setSmallImageSource(smallImageSource);
 	}
 
 	@Override

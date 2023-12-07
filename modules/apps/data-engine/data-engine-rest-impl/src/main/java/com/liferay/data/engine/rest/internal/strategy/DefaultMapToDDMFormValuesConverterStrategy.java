@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.internal.strategy;
@@ -25,6 +16,7 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDMFormFieldParameterNameUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesFactoryUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -35,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Jeyvison Nascimento
@@ -67,12 +58,23 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 	private DefaultMapToDDMFormValuesConverterStrategy() {
 	}
 
+	private void _addString(Locale locale, Object object, Value value) {
+		if (object == null) {
+			value.addString(locale, null);
+		}
+		else if (object instanceof List) {
+			value.addString(locale, JSONFactoryUtil.looseSerializeDeep(object));
+		}
+		else {
+			value.addString(locale, String.valueOf(object));
+		}
+	}
+
 	private void _createDDMFormFieldValues(
 		Map<String, Object> dataRecordValues, DDMFormField ddmFormField,
 		Map<String, DDMFormFieldValue> ddmFormFieldValues, Locale defaultLocale,
 		Locale locale, String parentDataRecordValueKey) {
 
-		DDMFormFieldValue ddmFormFieldValue = null;
 		boolean hasDataRecordValue = false;
 
 		for (Map.Entry<String, Object> entry : dataRecordValues.entrySet()) {
@@ -85,91 +87,58 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 			String dataRecordValueFieldName = dataRecordValueKeyParts
 				[DDMFormFieldParameterNameUtil.DDM_FORM_FIELD_NAME_INDEX];
 
-			if (_isDataRecordValueFromDDMFormField(
+			if (!_isDataRecordValueFromDDMFormField(
 					dataRecordValueFieldName, dataRecordValueKey,
 					ddmFormField.getName(), parentDataRecordValueKey)) {
 
-				String instanceId = dataRecordValueKeyParts
-					[DDMFormFieldParameterNameUtil.
-						DDM_FORM_FIELD_INSTANCE_ID_INDEX];
-
-				ddmFormFieldValue = new DDMFormFieldValue() {
-					{
-						setInstanceId(instanceId);
-						setName(dataRecordValueFieldName);
-					}
-				};
-
-				Value value = null;
-
-				if (entry.getValue() != null) {
-					if (ddmFormField.isLocalizable() &&
-						!ddmFormField.isTransient()) {
-
-						value = new LocalizedValue();
-
-						Map<String, Object> localizedValues =
-							(Map<String, Object>)entry.getValue();
-
-						if (locale == null) {
-							for (Map.Entry<String, Object> localizedValue :
-									localizedValues.entrySet()) {
-
-								value.addString(
-									LocaleUtil.fromLanguageId(
-										localizedValue.getKey()),
-									Objects.toString(
-										localizedValues.get(
-											localizedValue.getKey()),
-										null));
-							}
-						}
-						else {
-							value.addString(
-								locale,
-								Objects.toString(
-									GetterUtil.getObject(
-										localizedValues.get(
-											LocaleUtil.toLanguageId(locale)),
-										localizedValues.get(
-											LocaleUtil.toLanguageId(
-												defaultLocale))),
-									null));
-						}
-					}
-					else {
-						value = new UnlocalizedValue((String)entry.getValue());
-					}
-				}
-
-				ddmFormFieldValue.setValue(value);
-
-				ddmFormFieldValues.put(dataRecordValueKey, ddmFormFieldValue);
-
-				if (ListUtil.isNotEmpty(
-						ddmFormField.getNestedDDMFormFields())) {
-
-					_createDDMFormFieldValues(
-						dataRecordValues, ddmFormField.getNestedDDMFormFields(),
-						ddmFormFieldValues, defaultLocale, locale,
-						dataRecordValueKey);
-				}
-
-				hasDataRecordValue = true;
+				continue;
 			}
-		}
 
-		if (!hasDataRecordValue) {
-			ddmFormFieldValue = new DDMFormFieldValue() {
+			DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue() {
 				{
-					setName(ddmFormField.getName());
+					setInstanceId(
+						dataRecordValueKeyParts
+							[DDMFormFieldParameterNameUtil.
+								DDM_FORM_FIELD_INSTANCE_ID_INDEX]);
+					setName(dataRecordValueFieldName);
 				}
 			};
 
-			String dataRecordValueKey =
-				DataRecordValueKeyUtil.createDataRecordValueKey(
-					ddmFormField.getName(), ddmFormFieldValue.getInstanceId(),
-					parentDataRecordValueKey, 0);
+			if ((entry.getValue() != null) && ddmFormField.isLocalizable() &&
+				!ddmFormField.isTransient()) {
+
+				Value value = new LocalizedValue();
+
+				Map<String, Object> localizedValues =
+					(Map<String, Object>)entry.getValue();
+
+				if (locale == null) {
+					for (Map.Entry<String, Object> localizedValue :
+							localizedValues.entrySet()) {
+
+						_addString(
+							LocaleUtil.fromLanguageId(localizedValue.getKey()),
+							localizedValues.get(localizedValue.getKey()),
+							value);
+					}
+				}
+				else {
+					_addString(
+						locale,
+						GetterUtil.getObject(
+							localizedValues.get(
+								LocaleUtil.toLanguageId(locale)),
+							localizedValues.get(
+								LocaleUtil.toLanguageId(defaultLocale))),
+						value);
+				}
+
+				ddmFormFieldValue.setValue(value);
+			}
+			else if (entry.getValue() != null) {
+				ddmFormFieldValue.setValue(
+					new UnlocalizedValue((String)entry.getValue()));
+			}
 
 			ddmFormFieldValues.put(dataRecordValueKey, ddmFormFieldValue);
 
@@ -179,6 +148,31 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 					ddmFormFieldValues, defaultLocale, locale,
 					dataRecordValueKey);
 			}
+
+			hasDataRecordValue = true;
+		}
+
+		if (hasDataRecordValue) {
+			return;
+		}
+
+		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue() {
+			{
+				setName(ddmFormField.getName());
+			}
+		};
+
+		String dataRecordValueKey =
+			DataRecordValueKeyUtil.createDataRecordValueKey(
+				ddmFormField.getName(), ddmFormFieldValue.getInstanceId(),
+				parentDataRecordValueKey, 0);
+
+		ddmFormFieldValues.put(dataRecordValueKey, ddmFormFieldValue);
+
+		if (ListUtil.isNotEmpty(ddmFormField.getNestedDDMFormFields())) {
+			_createDDMFormFieldValues(
+				dataRecordValues, ddmFormField.getNestedDDMFormFields(),
+				ddmFormFieldValues, defaultLocale, locale, dataRecordValueKey);
 		}
 	}
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.document.library.thumbnails.internal.osgi.commands;
@@ -21,13 +12,14 @@ import com.liferay.adaptive.media.image.mime.type.AMImageMimeTypeProvider;
 import com.liferay.adaptive.media.image.model.AMImageEntry;
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.document.library.kernel.store.DLStoreUtil;
-import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.document.library.kernel.store.Store;
+import com.liferay.document.library.preview.processor.BasePreviewableDLProcessor;
+import com.liferay.osgi.util.osgi.commands.OSGiCommands;
+import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.image.ImageTool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -46,7 +38,6 @@ import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -61,9 +52,9 @@ import org.osgi.service.component.annotations.Reference;
 		"osgi.command.function=check", "osgi.command.function=cleanUp",
 		"osgi.command.function=migrate", "osgi.command.scope=thumbnails"
 	},
-	service = AMThumbnailsOSGiCommands.class
+	service = OSGiCommands.class
 )
-public class AMThumbnailsOSGiCommands {
+public class AMThumbnailsOSGiCommands implements OSGiCommands {
 
 	public void check(String... companyIds) {
 		System.out.println("Company ID\t# of thumbnails pending migration");
@@ -88,73 +79,61 @@ public class AMThumbnailsOSGiCommands {
 	}
 
 	private void _cleanUp(long companyId) {
-		try {
-			String[] fileNames = DLStoreUtil.getFileNames(
-				companyId, DLPreviewableProcessor.REPOSITORY_ID,
-				DLPreviewableProcessor.THUMBNAIL_PATH);
+		String[] fileNames = _store.getFileNames(
+			companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+			BasePreviewableDLProcessor.THUMBNAIL_PATH);
 
-			for (String fileName : fileNames) {
+		for (String fileName : fileNames) {
 
-				// See LPS-70788
+			// See LPS-70788
 
-				String actualFileName = StringUtil.replace(
-					fileName, "//", StringPool.SLASH);
+			String actualFileName = StringUtil.replace(
+				fileName, "//", StringPool.SLASH);
 
-				for (ThumbnailConfiguration thumbnailConfiguration :
-						_getThumbnailConfigurations()) {
+			for (ThumbnailConfiguration thumbnailConfiguration :
+					_getThumbnailConfigurations()) {
 
-					FileVersion fileVersion = _getFileVersion(
-						thumbnailConfiguration.getFileVersionId(
-							actualFileName));
+				FileVersion fileVersion = _getFileVersion(
+					thumbnailConfiguration.getFileVersionId(actualFileName));
 
-					if (fileVersion != null) {
-						DLStoreUtil.deleteFile(
-							companyId, DLPreviewableProcessor.REPOSITORY_ID,
-							actualFileName);
-					}
+				if (fileVersion != null) {
+					_store.deleteDirectory(
+						companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+						actualFileName);
 				}
 			}
-		}
-		catch (PortalException portalException) {
-			_processException(companyId, portalException);
 		}
 	}
 
 	private void _countPendingThumbnails(Long companyId, AtomicInteger count) {
-		try {
-			String[] fileNames = DLStoreUtil.getFileNames(
-				companyId, DLPreviewableProcessor.REPOSITORY_ID,
-				DLPreviewableProcessor.THUMBNAIL_PATH);
+		String[] fileNames = _store.getFileNames(
+			companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+			BasePreviewableDLProcessor.THUMBNAIL_PATH);
 
-			int companyTotal = 0;
+		int companyTotal = 0;
 
-			for (String fileName : fileNames) {
+		for (String fileName : fileNames) {
 
-				// See LPS-70788
+			// See LPS-70788
 
-				String actualFileName = StringUtil.replace(
-					fileName, StringPool.DOUBLE_SLASH, StringPool.SLASH);
+			String actualFileName = StringUtil.replace(
+				fileName, StringPool.DOUBLE_SLASH, StringPool.SLASH);
 
-				for (ThumbnailConfiguration thumbnailConfiguration :
-						_getThumbnailConfigurations()) {
+			for (ThumbnailConfiguration thumbnailConfiguration :
+					_getThumbnailConfigurations()) {
 
-					FileVersion fileVersion = _getFileVersion(
-						thumbnailConfiguration.getFileVersionId(
-							actualFileName));
+				FileVersion fileVersion = _getFileVersion(
+					thumbnailConfiguration.getFileVersionId(actualFileName));
 
-					if (fileVersion != null) {
-						companyTotal = +1;
-					}
+				if (fileVersion != null) {
+					companyTotal = +1;
 				}
 			}
-
-			System.out.printf("%d\t\t%d%n", companyId, companyTotal);
-
-			count.addAndGet(companyTotal);
 		}
-		catch (PortalException portalException) {
-			_processException(companyId, portalException);
-		}
+
+		System.out.printf("%d\t\t%d%n", companyId, companyTotal);
+
+		count.addAndGet(companyTotal);
 	}
 
 	private long[] _getCompanyIds(String... companyIds) {
@@ -196,7 +175,7 @@ public class AMThumbnailsOSGiCommands {
 				PrefsPropsUtil.getInteger(
 					PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT),
 				Pattern.compile(
-					DLPreviewableProcessor.THUMBNAIL_PATH +
+					BasePreviewableDLProcessor.THUMBNAIL_PATH +
 						"\\d+/\\d+(?:/\\d+)+/(\\d+)(?:\\..+)?$")),
 			new ThumbnailConfiguration(
 				PrefsPropsUtil.getInteger(
@@ -204,7 +183,7 @@ public class AMThumbnailsOSGiCommands {
 				PrefsPropsUtil.getInteger(
 					PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT),
 				Pattern.compile(
-					DLPreviewableProcessor.THUMBNAIL_PATH +
+					BasePreviewableDLProcessor.THUMBNAIL_PATH +
 						"\\d+/\\d+(?:/\\d+)+/(\\d+)-1(?:\\..+)?$")),
 			new ThumbnailConfiguration(
 				PrefsPropsUtil.getInteger(
@@ -212,7 +191,7 @@ public class AMThumbnailsOSGiCommands {
 				PrefsPropsUtil.getInteger(
 					PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_HEIGHT),
 				Pattern.compile(
-					DLPreviewableProcessor.THUMBNAIL_PATH +
+					BasePreviewableDLProcessor.THUMBNAIL_PATH +
 						"\\d+/\\d+(?:/\\d+)+/(\\d+)-2(?:\\..+)?$"))
 		};
 	}
@@ -252,36 +231,30 @@ public class AMThumbnailsOSGiCommands {
 					"to the upgrade documentation for the details.");
 		}
 
-		try {
-			String[] fileNames = DLStoreUtil.getFileNames(
-				companyId, DLPreviewableProcessor.REPOSITORY_ID,
-				DLPreviewableProcessor.THUMBNAIL_PATH);
+		String[] fileNames = _store.getFileNames(
+			companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+			BasePreviewableDLProcessor.THUMBNAIL_PATH);
 
-			for (String fileName : fileNames) {
+		for (String fileName : fileNames) {
 
-				// See LPS-70788
+			// See LPS-70788
 
-				String actualFileName = StringUtil.replace(
-					fileName, "//", StringPool.SLASH);
+			String actualFileName = StringUtil.replace(
+				fileName, "//", StringPool.SLASH);
 
-				for (ThumbnailConfiguration thumbnailConfiguration :
-						_getThumbnailConfigurations()) {
+			for (ThumbnailConfiguration thumbnailConfiguration :
+					_getThumbnailConfigurations()) {
 
-					Optional<AMImageConfigurationEntry>
-						amImageConfigurationEntryOptional =
-							thumbnailConfiguration.
-								selectMatchingConfigurationEntry(
-									amImageConfigurationEntries);
+				AMImageConfigurationEntry amImageConfigurationEntry =
+					thumbnailConfiguration.selectMatchingConfigurationEntry(
+						amImageConfigurationEntries);
 
-					amImageConfigurationEntryOptional.ifPresent(
-						amImageConfigurationEntry -> _migrate(
-							actualFileName, amImageConfigurationEntry,
-							thumbnailConfiguration));
+				if (amImageConfigurationEntry != null) {
+					_migrate(
+						actualFileName, amImageConfigurationEntry,
+						thumbnailConfiguration);
 				}
 			}
-		}
-		catch (PortalException portalException) {
-			_processException(companyId, portalException);
 		}
 	}
 
@@ -306,11 +279,13 @@ public class AMThumbnailsOSGiCommands {
 				return;
 			}
 
-			byte[] bytes = DLStoreUtil.getFileAsBytes(
-				fileVersion.getCompanyId(),
-				DLPreviewableProcessor.REPOSITORY_ID, fileName);
+			byte[] bytes = StreamUtil.toByteArray(
+				_store.getFileAsStream(
+					fileVersion.getCompanyId(),
+					BasePreviewableDLProcessor.REPOSITORY_ID, fileName,
+					StringPool.BLANK));
 
-			ImageBag imageBag = _imageTool.read(bytes);
+			ImageBag imageBag = ImageToolUtil.read(bytes);
 
 			RenderedImage renderedImage = imageBag.getRenderedImage();
 
@@ -322,16 +297,6 @@ public class AMThumbnailsOSGiCommands {
 		catch (IOException | PortalException exception) {
 			_log.error(exception);
 		}
-	}
-
-	private void _processException(
-		Long companyId, PortalException portalException) {
-
-		_log.error(
-			StringBundler.concat(
-				"Processing company ", companyId, " failed with: ",
-				portalException.getMessage()),
-			portalException);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -352,7 +317,7 @@ public class AMThumbnailsOSGiCommands {
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
-	@Reference
-	private ImageTool _imageTool;
+	@Reference(target = "(default=true)")
+	private Store _store;
 
 }

@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.shipment.content.web.internal.display.context;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShipment;
@@ -72,10 +63,10 @@ public class CommerceShipmentContentDisplayContext {
 		ThemeDisplay themeDisplay =
 			_commerceShipmentContentRequestHelper.getThemeDisplay();
 
-		_commerceShipmentDateFormatDate = FastDateFormatFactoryUtil.getDate(
+		_commerceShipmentDateFormat = FastDateFormatFactoryUtil.getDate(
 			DateFormat.MEDIUM, themeDisplay.getLocale(),
 			themeDisplay.getTimeZone());
-		_commerceShipmentDateFormatTime = FastDateFormatFactoryUtil.getTime(
+		_commerceShipmentTimeFormat = FastDateFormatFactoryUtil.getTime(
 			DateFormat.MEDIUM, themeDisplay.getLocale(),
 			themeDisplay.getTimeZone());
 
@@ -123,9 +114,9 @@ public class CommerceShipmentContentDisplayContext {
 			CommerceShipment commerceShipment)
 		throws PortalException {
 
-		CommerceAccount commerceAccount = commerceShipment.getCommerceAccount();
+		AccountEntry accountEntry = commerceShipment.getAccountEntry();
 
-		return commerceAccount.getName();
+		return accountEntry.getName();
 	}
 
 	public String getCommerceShipmentExpectedDate(
@@ -135,7 +126,7 @@ public class CommerceShipmentContentDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		return _commerceShipmentDateFormatDate.format(
+		return _commerceShipmentDateFormat.format(
 			commerceShipment.getExpectedDate());
 	}
 
@@ -146,7 +137,7 @@ public class CommerceShipmentContentDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		return _commerceShipmentDateFormatTime.format(
+		return _commerceShipmentTimeFormat.format(
 			commerceShipment.getExpectedDate());
 	}
 
@@ -180,7 +171,7 @@ public class CommerceShipmentContentDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		return _commerceShipmentDateFormatDate.format(
+		return _commerceShipmentDateFormat.format(
 			commerceShipment.getShippingDate());
 	}
 
@@ -206,7 +197,7 @@ public class CommerceShipmentContentDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		return _commerceShipmentDateFormatTime.format(
+		return _commerceShipmentTimeFormat.format(
 			commerceShipment.getShippingDate());
 	}
 
@@ -285,14 +276,14 @@ public class CommerceShipmentContentDisplayContext {
 	private CommerceShipment _commerceShipment;
 	private final CommerceShipmentContentRequestHelper
 		_commerceShipmentContentRequestHelper;
-	private final Format _commerceShipmentDateFormatDate;
-	private final Format _commerceShipmentDateFormatTime;
+	private final Format _commerceShipmentDateFormat;
 	private final long _commerceShipmentId;
 	private final CommerceShipmentItemLocalService
 		_commerceShipmentItemLocalService;
 	private SearchContainer<CommerceShipmentItem>
 		_commerceShipmentItemSearchContainer;
 	private final CommerceShipmentLocalService _commerceShipmentLocalService;
+	private final Format _commerceShipmentTimeFormat;
 	private final CommerceShippingEngineRegistry
 		_commerceShippingEngineRegistry;
 	private SearchContainer<CommerceShipment> _searchContainer;

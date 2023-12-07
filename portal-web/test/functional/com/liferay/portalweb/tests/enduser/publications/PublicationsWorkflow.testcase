@@ -1,11 +1,11 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property testray.component.names = "Workflow";
 	property testray.main.component.name = "Publications";
 
 	setUp {
@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,7 +26,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-170104."
-	@priority = "3"
+	@priority = 3
 	test CanApproveContentPage {
 		task ("Add new Content Page and enable workflow for Content Pages") {
 			JSONLayout.addPublicLayout(
@@ -54,7 +54,7 @@ definition {
 
 			PageEditor.addWidget(portletName = "Asset Publisher");
 
-			PortletEntry.submitForPublication();
+			PortletEntry.submitForWorkflow();
 		}
 
 		task ("Approve modifications and assert that it is approved") {
@@ -82,11 +82,12 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-159649."
-	@priority = "4"
-	test CannotPublishPublicationWithPendingAssetEntries {
+	@description = "This is a use case for LPS-173968. As a publications user, I should be able to configure if unapproved changes should be publishable."
+	@priority = 4
+	test CanConfigureUnapprovedChangesToBePublishable {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "PublicationsWorkflow#CannotPublishPublicationWithPendingAssetEntries";
+
+		Publications.enableAllowUnapprovedChanges();
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -113,10 +114,157 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Web Content");
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		Workflow.openWorkflowAdmin(siteURLKey = "site-name");
+
+		Workflow.configureWorkflow(
+			workflowDefinition = "Single Approver",
+			workflowResourceValue = "Web Content Article");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		if (IsElementPresent(key_publicationName = "Production", locator1 = "Publications#PUBLICATIONS_INDICATOR_TITLE")) {
+			Publications.selectPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+		}
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+		WebContentNavigator.gotoAddCP();
+
+		WebContent.addCP(
+			webContentContent = "WC WebContent Content",
+			webContentTitle = "WC WebContent Title");
+
+		PortletEntry.submitForWorkflow();
+
+		WebContentNavigator.gotoViewStatus(
+			webContentStatus = "PENDING",
+			webContentTitle = "WC WebContent Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		if (IsElementPresent(key_publicationName = "Production", locator1 = "Publications#PUBLICATIONS_INDICATOR_TITLE")) {
+			Publications.selectPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication Name");
+		}
+
+		UserBar.gotoDropdownItem(dropdownItem = "Notifications");
+
+		WorkflowAsset.gotoViaNotification(
+			assetType = "Web Content Article",
+			user = "userfn userln");
+
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+
+		Workflow.confirmWorkflowAction();
+
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Reject");
+
+		Workflow.confirmWorkflowAction();
+
+		PublicationsNavigator.gotoReviewChanges(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		// Workaround LPS-177895
+
+		/*PublicationsChanges.viewChanges(
+			changeCategory = "Web Content Article",
+			changeSite = "Site Name",
+			changeStatus = "Pending",
+			changeTitle = "WC WebContent Title",
+			changeType = "Added",
+			changeUser = "userfn userln");*/
+
+		Button.clickPublish();
+
+		AssertTextEquals.assertPartialText(
+			key_warningMessage = "This publication contains unapproved changes.",
+			locator1 = "Message#WARNING_SPECIFIC",
+			value1 = "This publication contains unapproved changes.");
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@description = "This is a use case for LPS-198982."
+	@priority = 3
+	test CannotPublishDraftsOfWorkflowEnabledEntities {
+		task ("Enable workflow for any change tracking enabled entity") {
+			Workflow.openWorkflowProcessBuilderConfiguration();
+
+			Workflow.configureWorkflow(
+				workflowDefinition = "Single Approver",
+				workflowResourceValue = "Web Content Article");
+		}
+
+		task ("Add and select a new publication") {
+			JSONPublications.addPublication(publicationName = "Test Publication");
+
+			JSONPublications.selectPublication(publicationName = "Test Publication");
+		}
+
+		task ("Create the entity and save it as a draft") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addDraft(
+				webContentContent = "Web Content Content",
+				webContentTitle = "Web Content Title");
+		}
+
+		task ("Attempt to publish the publication and assert it is blocked with an error message") {
+			PublicationsNavigator.gotoPublish(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+
+			Publications.viewConflictingChangesWarning(warningMessage = "This publication contains unapproved changes that must be approved before publishing.");
+		}
+	}
+
+	@description = "This is a use case for LPS-159649."
+	@priority = 4
+	test CannotPublishPublicationWithPendingAssetEntries {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "Administrator",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		Workflow.openWorkflowAdmin(siteURLKey = "site-name");
+
+		Workflow.configureWorkflow(
+			workflowDefinition = "Single Approver",
+			workflowResourceValue = "Web Content Article");
+
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
 		WebContentNavigator.gotoAddCP();
 
@@ -124,7 +272,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title 1");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		WebContentNavigator.gotoViewStatus(
 			webContentStatus = "PENDING",
@@ -140,12 +288,7 @@ definition {
 				publicationName = "Publication Name");
 		}
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Web Content");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
 
 		WebContentNavigator.gotoAddCP();
 
@@ -153,7 +296,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title 2");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		WebContentNavigator.gotoViewStatus(
 			webContentStatus = "PENDING",
@@ -189,20 +332,21 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Web Content Article",
-			changeSite = "Guest",
+			changeSite = "Site Name",
 			changeStatus = "Pending",
 			changeTitle = "WC WebContent Title 1",
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		PublicationsChanges.viewChanges(
+		// Workaround LPS-177895
+
+		/*PublicationsChanges.viewChanges(
 			changeCategory = "Web Content Article",
-			changeOrder = "2",
-			changeSite = "Guest",
+			changeSite = "Site Name",
 			changeStatus = "Approved",
 			changeTitle = "WC WebContent Title 2",
 			changeType = "Added",
-			changeUser = "userfn userln");
+			changeUser = "userfn userln");*/
 
 		PublicationsNavigator.gotoPublish(publicationName = "Publication Name");
 
@@ -210,10 +354,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-117628."
-	@priority = "4"
+	@priority = 4
 	test CanPublishPublicationWithApprovedAssetEntries {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "PublicationsWorkflow#CanPublishPublicationWithApprovedAssetEntries";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -234,7 +379,7 @@ definition {
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Workflow.openWorkflowAdmin(siteURLKey = "site-name");
 
@@ -258,7 +403,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
@@ -286,24 +431,25 @@ definition {
 
 		PublicationsNavigator.gotoReviewChanges();
 
-		PublicationsChanges.viewChanges(
+		// Workaround LPS-177895
+
+		/*PublicationsChanges.viewChanges(
 			changeCategory = "Web Content Article",
 			changeSite = "Site Name",
 			changeStatus = "Approved",
 			changeTitle = "WC WebContent Title",
 			changeType = "Added",
-			changeUser = "userfn userln");
-
-		PublicationsNavigator.gotoPublish(publicationName = "Publication Name");
+			changeUser = "userfn userln");*/
 
 		Publications.publishPublication(publicationName = "Publication Name");
 	}
 
 	@description = "This is a use case for LPS-159649. Need to show proper notification message for changes in production while in a publication."
-	@priority = "4"
+	@priority = 4
 	test NotificationCanInformUserToSwitchToRelevantPublication {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "PublicationsWorkflow#NotificationCanInformUserToSwitchToRelevantPublication";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -337,7 +483,7 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title 1");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		JSONPublications.addPublication(publicationName = "Publication 1 Name");
 
@@ -372,7 +518,7 @@ definition {
 			webContentContent = "WC WebContent Content 2",
 			webContentTitle = "WC WebContent Title 2");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",

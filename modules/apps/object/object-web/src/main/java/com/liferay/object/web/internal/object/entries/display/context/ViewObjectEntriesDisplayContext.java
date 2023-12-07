@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.entries.display.context;
@@ -22,6 +13,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -31,7 +23,6 @@ import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
-import com.liferay.object.web.internal.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.object.web.internal.object.entries.frontend.data.set.filter.factory.ObjectFieldFDSFilterFactory;
 import com.liferay.object.web.internal.object.entries.frontend.data.set.filter.factory.ObjectFieldFDSFilterFactoryRegistry;
@@ -46,19 +37,17 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletException;
@@ -96,6 +85,10 @@ public class ViewObjectEntriesDisplayContext {
 
 	public String getAPIURL() {
 		return _apiURL + _getQueryString();
+	}
+
+	public String getByExternalReferenceCodePath() {
+		return _apiURL + "/by-external-reference-code";
 	}
 
 	public CreationMenu getCreationMenu() throws Exception {
@@ -146,22 +139,14 @@ public class ViewObjectEntriesDisplayContext {
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "view"),
 				"get", null, null),
 			new FDSActionDropdownItem(
-				LanguageUtil.get(
-					_objectRequestHelper.getRequest(),
-					"are-you-sure-you-want-to-delete-this-entry"),
-				_apiURL + "/by-external-reference-code/{externalReferenceCode}",
-				"trash", "delete",
+				null, "trash", "deleteObjectEntry",
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "delete"),
-				"delete", "delete", "async"),
+				"delete", "delete", null),
 			new FDSActionDropdownItem(
-				_getPermissionsURL(), null, "permissions",
+				_getPermissionsURL(), "password-policies", "permissions",
 				LanguageUtil.get(
 					_objectRequestHelper.getRequest(), "permissions"),
 				"get", "permissions", "modal-permissions"));
-
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-148804"))) {
-			return fdsActionDropdownItems;
-		}
 
 		ObjectDefinition objectDefinition = getObjectDefinition();
 
@@ -295,29 +280,29 @@ public class ViewObjectEntriesDisplayContext {
 	}
 
 	private String _getNestedFieldsQueryString() {
-		List<ObjectField> objectFields =
-			_objectFieldLocalService.getObjectFields(
-				_objectDefinition.getObjectDefinitionId());
+		Set<String> strings = new LinkedHashSet<>();
 
-		Stream<ObjectField> stream = objectFields.stream();
+		for (ObjectField objectField :
+				_objectFieldLocalService.getObjectFields(
+					_objectDefinition.getObjectDefinitionId())) {
 
-		String queryString = stream.filter(
-			objectField -> Objects.equals(
-				objectField.getRelationshipType(),
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY)
-		).map(
-			objectField -> {
-				String fieldName = objectField.getName();
+			if (!Objects.equals(
+					ObjectRelationshipConstants.TYPE_ONE_TO_MANY,
+					objectField.getRelationshipType())) {
 
-				return StringUtil.replaceLast(
+				continue;
+			}
+
+			String fieldName = objectField.getName();
+
+			strings.add(
+				StringUtil.replaceLast(
 					fieldName.substring(
 						fieldName.lastIndexOf(StringPool.UNDERLINE) + 1),
-					"Id", "");
-			}
-		).distinct(
-		).collect(
-			Collectors.joining(StringPool.COMMA)
-		);
+					"Id", ""));
+		}
+
+		String queryString = StringUtil.merge(strings, StringPool.COMMA);
 
 		if (Validator.isNull(queryString)) {
 			return StringPool.BLANK;

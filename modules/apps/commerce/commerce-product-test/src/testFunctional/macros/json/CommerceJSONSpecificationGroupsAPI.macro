@@ -1,27 +1,76 @@
 definition {
 
-	macro _deleteAllCommerceSpecificationGroups {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _addCommerceSpecificationGroup() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
+		}
+
+		if (!(isSet(specificationGroupDescription))) {
+			var specificationGroupDescription = "";
+		}
+
+		if (!(isSet(specificationGroupKey))) {
+			var specificationGroupKey = CommerceUtilities.convertStringToKey(string = ${specificationGroupTitle});
+		}
+
+		if (!(isSet(specificationGroupPriority))) {
+			var specificationGroupPriority = 0;
+		}
+
+		if (isSet(specificationGroupTitle)) {
+			var specificationGroupTitle = ${specificationGroupTitle};
+		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		var curl = '''
+			${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
+				-H 'Content-Type: application/json' \
+				-d '{
+					"description": {
+						"en_US": "${specificationGroupDescription}"
+					},
+					"key": "${specificationGroupKey}",
+					"priority": ${specificationGroupPriority},
+					"title": {
+						"en_US": "${specificationGroupTitle}"
+					}
+				}'
+		''';
+
+		JSONCurlUtil.post(${curl});
+	}
+
+	@summary = "Default summary"
+	macro _deleteAllCommerceSpecificationGroups() {
+		var baseURL = ${baseURL};
+
+		if (!(isSet(baseURL))) {
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var specificationGroupsCount = CommerceJSONSpecificationGroupsAPI._getCommerceSpecificationGroupsCount();
 
-		if ("${specificationGroupsCount}" != "0") {
-			var specificationGroupIds = CommerceJSONSpecificationGroupsAPI._getCommerceSpecificationGroupIds(specificationGroupsCount = "${specificationGroupsCount}");
+		if (${specificationGroupsCount} != 0) {
+			var specificationGroupIds = CommerceJSONSpecificationGroupsAPI._getCommerceSpecificationGroupIds(specificationGroupsCount = ${specificationGroupsCount});
 
-			for (var specificationGroupId : list "${specificationGroupIds}") {
+			for (var specificationGroupId : list ${specificationGroupIds}) {
 				echo("Deleting Commerce specification group with id: ${specificationGroupId}");
+
+				var userLoginInfo = JSONUtil2.formatJSONUser();
 
 				var curl = '''
 					${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories/${specificationGroupId} \
-					-u test@liferay.com:test \
-					-H 'accept: application/json' \
+						-u ${userLoginInfo} \
+						-H 'accept: application/json' \
 				''';
 
-				JSONCurlUtil.delete("${curl}");
+				JSONCurlUtil.delete(${curl});
 			}
 		}
 		else {
@@ -29,49 +78,55 @@ definition {
 		}
 	}
 
-	macro _getCommerceSpecificationGroupIds {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceSpecificationGroupIds(specificationGroupCount = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		if (isSet(specificationGroupsCount)) {
-			var specificationGroupsCount = "${specificationGroupCount}";
+			var specificationGroupsCount = ${specificationGroupCount};
 		}
 		else {
-			var specificationGroupsCount = "100";
+			var specificationGroupsCount = 100;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories?pageSize=${specificationGroupsCount} \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var specificationGroupIds = JSONCurlUtil.get("${curl}", "$..['id']");
+		var specificationGroupIds = JSONCurlUtil.get(${curl}, "$..['id']");
 
-		return "${specificationGroupIds}";
+		return ${specificationGroupIds};
 	}
 
-	macro _getCommerceSpecificationGroupsCount {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getCommerceSpecificationGroupsCount() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-catalog/v1.0/optionCategories \
-			-u test@liferay.com:test \
-			-H 'accept: application/json' \
+				-u ${userLoginInfo} \
+				-H 'accept: application/json' \
 		''';
 
-		var specificationGroupsCount = JSONCurlUtil.get("${curl}", "$['totalCount']");
+		var specificationGroupsCount = JSONCurlUtil.get(${curl}, "$['totalCount']");
 
 		echo("The Commerce specification groups count is: ${specificationGroupsCount}");
 
-		return "${specificationGroupsCount}";
+		return ${specificationGroupsCount};
 	}
 
 }

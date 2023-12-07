@@ -1,21 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.admin.web.internal.portlet;
 
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -26,35 +20,36 @@ import com.liferay.portal.search.admin.web.internal.display.context.builder.Fiel
 import com.liferay.portal.search.admin.web.internal.display.context.builder.IndexActionsDisplayContextBuilder;
 import com.liferay.portal.search.admin.web.internal.display.context.builder.SearchAdminDisplayContextBuilder;
 import com.liferay.portal.search.admin.web.internal.display.context.builder.SearchEngineDisplayContextBuilder;
+import com.liferay.portal.search.capabilities.SearchCapabilities;
+import com.liferay.portal.search.cluster.StatsInformationFactory;
+import com.liferay.portal.search.configuration.ReindexConfiguration;
 import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.index.IndexInformation;
-import com.liferay.portal.search.spi.reindexer.IndexReindexer;
+import com.liferay.portal.search.spi.reindexer.IndexReindexerRegistry;
 
 import java.io.IOException;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Adam Brandizzi
  */
 @Component(
+	configurationPid = "com.liferay.portal.search.configuration.ReindexConfiguration",
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-search-admin",
 		"com.liferay.portlet.display-category=category.hidden",
-		"com.liferay.portlet.footer-portlet-javascript=/js/main.js",
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/search.png",
 		"com.liferay.portlet.layout-cacheable=true",
@@ -84,12 +79,16 @@ public class SearchAdminPortlet extends MVCPortlet {
 			new SearchAdminDisplayContextBuilder(
 				_language, _portal, renderRequest, renderResponse);
 
-		searchAdminDisplayContextBuilder.setIndexInformation(indexInformation);
+		searchAdminDisplayContextBuilder.setIndexInformation(
+			_indexInformationSnapshot.get());
 
-		Collections.sort(_indexReindexerClassNames);
+		List<String> indexReindexerClassNames = ListUtil.fromCollection(
+			_indexReindexerRegistry.getIndexReindexerClassNames());
+
+		Collections.sort(indexReindexerClassNames);
 
 		searchAdminDisplayContextBuilder.setIndexReindexerClassNames(
-			_indexReindexerClassNames);
+			indexReindexerClassNames);
 
 		SearchAdminDisplayContext searchAdminDisplayContext =
 			searchAdminDisplayContextBuilder.build();
@@ -105,7 +104,7 @@ public class SearchAdminPortlet extends MVCPortlet {
 					new SearchEngineDisplayContextBuilder();
 
 			searchEngineDisplayContextBuilder.setSearchEngineInformation(
-				searchEngineInformation);
+				_searchEngineInformationSnapshot.get());
 
 			renderRequest.setAttribute(
 				SearchAdminWebKeys.SEARCH_ENGINE_DISPLAY_CONTEXT,
@@ -121,7 +120,7 @@ public class SearchAdminPortlet extends MVCPortlet {
 			fieldMappingsDisplayContextBuilder.setCurrentURL(
 				_portal.getCurrentURL(renderRequest));
 			fieldMappingsDisplayContextBuilder.setIndexInformation(
-				indexInformation);
+				_indexInformationSnapshot.get());
 			fieldMappingsDisplayContextBuilder.setNamespace(
 				renderResponse.getNamespace());
 			fieldMappingsDisplayContextBuilder.setSelectedIndexName(
@@ -135,7 +134,13 @@ public class SearchAdminPortlet extends MVCPortlet {
 			IndexActionsDisplayContextBuilder
 				indexActionsDisplayContextBuilder =
 					new IndexActionsDisplayContextBuilder(
-						_language, _portal, renderRequest, renderResponse);
+						_language, _portal, _reindexConfiguration,
+						renderRequest, _searchCapabilities);
+
+			indexActionsDisplayContextBuilder.setIndexReindexerClassNames(
+				indexReindexerClassNames);
+			indexActionsDisplayContextBuilder.setStatsInformationFactory(
+				_statsInformationFactorySnapshot.get());
 
 			renderRequest.setAttribute(
 				SearchAdminWebKeys.INDEX_ACTIONS_DISPLAY_CONTEXT,
@@ -145,44 +150,36 @@ public class SearchAdminPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void addIndexReindexer(IndexReindexer indexReindexer) {
-		Class<?> clazz = indexReindexer.getClass();
-
-		_indexReindexerClassNames.add(clazz.getName());
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		_reindexConfiguration = ConfigurableUtil.createConfigurable(
+			ReindexConfiguration.class, properties);
 	}
 
-	protected void removeIndexReindexer(IndexReindexer indexReindexer) {
-		Class<?> clazz = indexReindexer.getClass();
+	private static final Snapshot<IndexInformation> _indexInformationSnapshot =
+		new Snapshot<>(
+			SearchAdminPortlet.class, IndexInformation.class, null, true);
+	private static final Snapshot<SearchEngineInformation>
+		_searchEngineInformationSnapshot = new Snapshot<>(
+			SearchAdminPortlet.class, SearchEngineInformation.class, null,
+			true);
+	private static final Snapshot<StatsInformationFactory>
+		_statsInformationFactorySnapshot = new Snapshot<>(
+			SearchAdminPortlet.class, StatsInformationFactory.class, null,
+			true);
 
-		_indexReindexerClassNames.remove(clazz.getName());
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected volatile IndexInformation indexInformation;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected volatile SearchEngineInformation searchEngineInformation;
-
-	private final List<String> _indexReindexerClassNames =
-		new CopyOnWriteArrayList<>();
+	@Reference
+	private IndexReindexerRegistry _indexReindexerRegistry;
 
 	@Reference
 	private Language _language;
 
 	@Reference
 	private Portal _portal;
+
+	private volatile ReindexConfiguration _reindexConfiguration;
+
+	@Reference
+	private SearchCapabilities _searchCapabilities;
 
 }

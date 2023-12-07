@@ -1,17 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {getSpritemap} from '@liferay/frontend-icons-web';
 import {
 	openConfirmModal,
 	openModal,
@@ -19,9 +11,56 @@ import {
 	openSimpleInputModal,
 } from 'frontend-js-web';
 
-import openDeletePageTemplateModal from '../modal/openDeletePageTemplateModal';
+import openContentTypeModal from '../commands/openContentTypeModal';
+import openDeletePageTemplateModal from '../commands/openDeletePageTemplateModal';
+import openInUseModal from '../commands/openInUseModal';
+import {MODAL_TYPES} from '../constants/modalTypes';
 
 const ACTIONS = {
+	changeContentType(
+		{
+			assetType,
+			changeContentTypeURL,
+			classNameId,
+			classTypeId,
+			hasMissingType,
+			mappingTypes,
+			viewUsagesURL,
+		},
+		namespace
+	) {
+		if (viewUsagesURL) {
+			openInUseModal({assetType, status: 'info', viewUsagesURL});
+		}
+		else {
+			openContentTypeModal({
+				description: hasMissingType
+					? Liferay.Language.get(
+							'this-display-page-template-does-not-have-any-content-type-assigned-you-must-select-one-to-edit-it'
+					  )
+					: '',
+				disableWarning: Boolean(hasMissingType) || !assetType,
+				formSubmitURL: changeContentTypeURL,
+				mappingTypes,
+				namespace,
+				selectedSubtype: classTypeId,
+				selectedType: classNameId,
+				spritemap: getSpritemap(),
+				title: hasMissingType
+					? Liferay.Language.get('select-content-type')
+					: Liferay.Language.get('change-content-type'),
+				type: MODAL_TYPES.edit,
+				warningMessage: Liferay.Language.get(
+					'changing-the-content-type-may-cause-some-elements-of-the-display-page-template-to-lose-their-previous-mapping'
+				),
+			});
+		}
+	},
+
+	copyDisplayPage({copyDisplayPageURL}) {
+		send(copyDisplayPageURL);
+	},
+
 	deleteDisplayPage({deleteDisplayPageMessage, deleteDisplayPageURL}) {
 		openDeletePageTemplateModal({
 			message: deleteDisplayPageMessage,
@@ -142,30 +181,36 @@ function send(url) {
 
 export default function DisplayPageDropdownPropsTransformer({
 	actions,
+	additionalProps,
 	portletNamespace,
 	...otherProps
 }) {
+	const updateItem = (item) => {
+		const newItem = {
+			...item,
+			onClick(event) {
+				const action = item.data?.action;
+
+				if (action) {
+					event.preventDefault();
+
+					ACTIONS[action](
+						{...item.data, ...additionalProps},
+						portletNamespace
+					);
+				}
+			},
+		};
+
+		if (Array.isArray(item.items)) {
+			newItem.items = newItem.items.map(updateItem);
+		}
+
+		return newItem;
+	};
+
 	return {
 		...otherProps,
-		actions: actions?.map((item) => {
-			return {
-				...item,
-				items: item.items?.map((child) => {
-					return {
-						...child,
-						onClick(event) {
-							const action = child.data?.action;
-
-							if (action) {
-								event.preventDefault();
-
-								ACTIONS[action](child.data, portletNamespace);
-							}
-						},
-					};
-				}),
-			};
-		}),
-		portletNamespace,
+		actions: actions?.map(updateItem),
 	};
 }

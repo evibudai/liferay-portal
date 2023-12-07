@@ -1,20 +1,22 @@
 definition {
 
-	macro setGroupId {
-		Variables.assertDefined(parameterList = "${groupName}");
+	@summary = "Default summary"
+	macro setGroupId(groupName = null) {
+		Variables.assertDefined(parameterList = ${groupName});
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 
-		return "${groupId}";
+		return ${groupId};
 	}
 
-	macro setNodeId {
+	@summary = "Default summary"
+	macro setNodeId(noSelenium = null, groupName = null, name = null) {
 		Variables.assertDefined(parameterList = "${name},${groupName}");
 
 		if (!(isSet(site))) {
@@ -22,17 +24,19 @@ definition {
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			noSelenium = ${noSelenium},
+			site = ${site});
 
 		var nodeId = JSONWikiAPI._getNodeIdByName(
-			groupId = "${groupId}",
-			name = "${name}");
+			groupId = ${groupId},
+			name = ${name});
 
-		return "${nodeId}";
+		return ${nodeId};
 	}
 
-	macro setPageId {
+	@summary = "Default summary"
+	macro setPageId(groupName = null, name = null, title = null) {
 		Variables.assertDefined(parameterList = "${title},${groupName},${name}");
 
 		if (!(isSet(site))) {
@@ -40,21 +44,22 @@ definition {
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 
 		var nodeId = JSONWikiAPI._getNodeIdByName(
-			groupId = "${groupId}",
-			name = "${name}");
+			groupId = ${groupId},
+			name = ${name});
 
 		var pageId = JSONWikiAPI._getPageIdByName(
-			nodeId = "${nodeId}",
-			title = "${title}");
+			nodeId = ${nodeId},
+			title = ${title});
 
-		return "${pageId}";
+		return ${pageId};
 	}
 
-	macro setResourcePrimKey {
+	@summary = "Default summary"
+	macro setResourcePrimKey(groupName = null, name = null, title = null) {
 		Variables.assertDefined(parameterList = "${title},${groupName},${name}");
 
 		if (!(isSet(site))) {
@@ -62,27 +67,28 @@ definition {
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 
 		var nodeId = JSONWikiAPI._getNodeIdByName(
-			groupId = "${groupId}",
-			name = "${name}");
+			groupId = ${groupId},
+			name = ${name});
 
 		var resourcePrimKey = JSONWikiAPI._getPageResourcePrimKey(
-			nodeId = "${nodeId}",
-			title = "${title}");
+			nodeId = ${nodeId},
+			title = ${title});
 
-		return "${resourcePrimKey}";
+		return ${resourcePrimKey};
 	}
 
-	macro setServiceContext {
+	@summary = "Default summary"
+	macro setServiceContext(groupName = null, assetCategoryIds = null, assetTagNames = null) {
 		var serviceContext = JSONServiceContextUtil.setServiceContext(
-			assetCategoryIds = "${assetCategoryIds}",
-			assetTagNames = "${assetTagNames}",
-			groupName = "${groupName}");
+			assetCategoryIds = ${assetCategoryIds},
+			assetTagNames = ${assetTagNames},
+			groupName = ${groupName});
 
-		return "${serviceContext}";
+		return ${serviceContext};
 	}
 
 }

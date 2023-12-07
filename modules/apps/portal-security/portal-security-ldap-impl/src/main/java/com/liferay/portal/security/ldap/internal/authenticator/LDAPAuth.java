@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.security.ldap.internal.authenticator;
 
-import com.liferay.admin.kernel.util.Omniadmin;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -28,6 +18,7 @@ import com.liferay.portal.kernel.security.auth.Authenticator;
 import com.liferay.portal.kernel.security.auth.PasswordModificationThreadLocal;
 import com.liferay.portal.kernel.security.ldap.LDAPSettings;
 import com.liferay.portal.kernel.security.pwd.PasswordEncryptor;
+import com.liferay.portal.kernel.security.pwd.PasswordEncryptorUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -48,6 +39,7 @@ import com.liferay.portal.security.ldap.exportimport.LDAPUserImporter;
 import com.liferay.portal.security.ldap.exportimport.configuration.LDAPImportConfiguration;
 import com.liferay.portal.security.ldap.util.LDAPUtil;
 import com.liferay.portal.security.ldap.validator.LDAPFilterValidator;
+import com.liferay.portlet.admin.util.OmniadminUtil;
 
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -254,7 +246,7 @@ public class LDAPAuth implements Authenticator {
 
 					ldapPassword = _removeEncryptionAlgorithm(ldapPassword);
 
-					encryptedPassword = _passwordEncryptor.encrypt(
+					encryptedPassword = PasswordEncryptorUtil.encrypt(
 						ldapAuthConfiguration.passwordEncryptionAlgorithm(),
 						password, ldapPassword);
 				}
@@ -429,6 +421,19 @@ public class LDAPAuth implements Authenticator {
 				return FAILURE;
 			}
 
+			if (user == null) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						StringBundler.concat(
+							"Rejecting authenticated user ", fullUserDN,
+							" because of failed import from LDAP server ",
+							ldapServerId, ", company ", companyId,
+							", and LDAP context ", safeLdapContext));
+				}
+
+				return FAILURE;
+			}
+
 			// Process LDAP success codes
 
 			String resultCode = ldapAuthResult.getResponseControl();
@@ -595,7 +600,7 @@ public class LDAPAuth implements Authenticator {
 		}
 
 		if (userId > 0) {
-			if (_omniadmin.isOmniadmin(userId)) {
+			if (OmniadminUtil.isOmniadmin(userId)) {
 				return SUCCESS;
 			}
 		}
@@ -603,7 +608,7 @@ public class LDAPAuth implements Authenticator {
 			User user = _userLocalService.fetchUserByEmailAddress(
 				companyId, emailAddress);
 
-			if ((user != null) && _omniadmin.isOmniadmin(user)) {
+			if ((user != null) && OmniadminUtil.isOmniadmin(user)) {
 				return SUCCESS;
 			}
 		}
@@ -611,7 +616,7 @@ public class LDAPAuth implements Authenticator {
 			User user = _userLocalService.fetchUserByScreenName(
 				companyId, screenName);
 
-			if ((user != null) && _omniadmin.isOmniadmin(user)) {
+			if ((user != null) && OmniadminUtil.isOmniadmin(user)) {
 				return SUCCESS;
 			}
 		}
@@ -780,12 +785,6 @@ public class LDAPAuth implements Authenticator {
 		policyOption = ReferencePolicyOption.GREEDY
 	)
 	private volatile LDAPUserImporter _ldapUserImporter;
-
-	@Reference
-	private Omniadmin _omniadmin;
-
-	@Reference
-	private PasswordEncryptor _passwordEncryptor;
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,

@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.preview.image.internal;
 
 import com.liferay.document.library.constants.DLFileVersionPreviewConstants;
-import com.liferay.document.library.kernel.util.DLProcessorRegistryUtil;
-import com.liferay.document.library.kernel.util.ImageProcessor;
+import com.liferay.document.library.kernel.model.DLProcessorConstants;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessorHelperUtil;
+import com.liferay.document.library.kernel.processor.ImageProcessor;
 import com.liferay.document.library.preview.DLPreviewRenderer;
 import com.liferay.document.library.preview.DLPreviewRendererProvider;
 import com.liferay.document.library.preview.exception.DLFileEntryPreviewGenerationException;
@@ -34,7 +27,6 @@ import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Alejandro Tardín
@@ -45,21 +37,20 @@ public class ImageDLPreviewRendererProvider
 
 	@Override
 	public Set<String> getMimeTypes() {
-		return _imageProcessor.getImageMimeTypes();
+		ImageProcessor imageProcessor = (ImageProcessor)_dlProcessor;
+
+		return imageProcessor.getImageMimeTypes();
 	}
 
 	@Override
 	public DLPreviewRenderer getPreviewDLPreviewRenderer(
 		FileVersion fileVersion) {
 
-		if (!DLProcessorRegistryUtil.isPreviewableSize(fileVersion)) {
-			return (httpServletRequest, httpServletResponse) -> {
-				throw new DLPreviewSizeException();
-			};
-		}
+		ImageProcessor imageProcessor = (ImageProcessor)_dlProcessor;
 
-		if (!_imageProcessor.hasImages(fileVersion) &&
-			!_imageProcessor.isImageSupported(fileVersion)) {
+		if ((fileVersion == null) || (fileVersion.getSize() == 0) ||
+			(!imageProcessor.hasImages(fileVersion) &&
+			 !imageProcessor.isImageSupported(fileVersion.getMimeType()))) {
 
 			return null;
 		}
@@ -94,7 +85,15 @@ public class ImageDLPreviewRendererProvider
 			throw new DLFileEntryPreviewGenerationException();
 		}
 
-		if (!_imageProcessor.hasImages(fileVersion)) {
+		ImageProcessor imageProcessor = (ImageProcessor)_dlProcessor;
+
+		if (!imageProcessor.hasImages(fileVersion)) {
+			if (!DLProcessorHelperUtil.isPreviewableSize(fileVersion)) {
+				throw new DLPreviewSizeException(
+					DLProcessorHelperUtil.getPreviewableProcessorMaxSize(
+						fileVersion.getGroupId()));
+			}
+
 			throw new DLPreviewGenerationInProcessException();
 		}
 	}
@@ -102,8 +101,8 @@ public class ImageDLPreviewRendererProvider
 	@Reference
 	private DLFileVersionPreviewLocalService _dlFileVersionPreviewLocalService;
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private ImageProcessor _imageProcessor;
+	@Reference(target = "(type=" + DLProcessorConstants.IMAGE_PROCESSOR + ")")
+	private DLProcessor _dlProcessor;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.document.library.preview.image)"

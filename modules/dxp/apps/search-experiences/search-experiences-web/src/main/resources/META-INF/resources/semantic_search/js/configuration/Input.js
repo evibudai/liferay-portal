@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm, {ClayInput, ClaySelect, ClaySelectBox} from '@clayui/form';
@@ -22,6 +16,7 @@ const SELECT_BOX_SHOW_ITEMS_COUNT = 6;
 function Input({
 	error,
 	children,
+	disabled,
 	helpText,
 	label,
 	name,
@@ -43,6 +38,7 @@ function Input({
 			case 'model':
 				return (
 					<ModelAutocomplete
+						disabled={disabled}
 						label={label}
 						name={name}
 						onBlur={onBlur}
@@ -56,6 +52,7 @@ function Input({
 					<ClaySelectBox
 						aria-label={label}
 						className="mb-0" // Suppress extra margin from ClaySelectBox
+						disabled={disabled}
 						items={items}
 						multiple
 						name={name}
@@ -70,6 +67,7 @@ function Input({
 				return (
 					<ClayInput
 						aria-label={label}
+						disabled={disabled}
 						id={name}
 						max={options.max}
 						min={options.min}
@@ -85,6 +83,7 @@ function Input({
 				return (
 					<ClaySelect
 						aria-label={label}
+						disabled={disabled}
 						id={name}
 						name={name}
 						onBlur={onBlur}
@@ -105,6 +104,7 @@ function Input({
 				return (
 					<ClayInput
 						aria-label={label}
+						disabled={disabled}
 						id={name}
 						name={name}
 						onBlur={onBlur}

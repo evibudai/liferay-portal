@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.reading.time.internal.calculator;
@@ -27,7 +18,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -45,13 +35,13 @@ import org.osgi.service.component.annotations.Deactivate;
 public class ReadingTimeCalculatorImpl implements ReadingTimeCalculator {
 
 	@Override
-	public Optional<Duration> calculate(GroupedModel groupedModel) {
+	public Duration calculate(GroupedModel groupedModel) {
 		ReadingTimeModelInfo<GroupedModel> readingTimeModelInfo =
 			(ReadingTimeModelInfo<GroupedModel>)_serviceTrackerMap.getService(
 				groupedModel.getModelClassName());
 
 		if (readingTimeModelInfo == null) {
-			return Optional.empty();
+			return null;
 		}
 
 		return calculate(
@@ -61,15 +51,15 @@ public class ReadingTimeCalculatorImpl implements ReadingTimeCalculator {
 	}
 
 	@Override
-	public Optional<Duration> calculate(
+	public Duration calculate(
 		String content, String contentType, Locale locale) {
 
 		if (!_supportedContentTypes.contains(contentType)) {
-			return Optional.empty();
+			return null;
 		}
 
 		if (Validator.isNull(content)) {
-			return Optional.of(Duration.ZERO);
+			return Duration.ZERO;
 		}
 
 		Document document = Jsoup.parseBodyFragment(content);
@@ -83,10 +73,7 @@ public class ReadingTimeCalculatorImpl implements ReadingTimeCalculator {
 
 		List<Element> images = document.getElementsByTag("img");
 
-		readingTimeDuration = readingTimeDuration.plus(
-			Duration.ofSeconds(3 * images.size()));
-
-		return Optional.of(readingTimeDuration);
+		return readingTimeDuration.plus(Duration.ofSeconds(3 * images.size()));
 	}
 
 	@Activate

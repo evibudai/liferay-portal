@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.site.setting.internal.resource.v1_0;
 
+import com.liferay.commerce.product.service.CPTaxCategoryService;
 import com.liferay.headless.commerce.admin.site.setting.dto.v1_0.TaxCategory;
-import com.liferay.headless.commerce.admin.site.setting.internal.helper.v1_0.TaxCategoryHelper;
+import com.liferay.headless.commerce.admin.site.setting.internal.mapper.v1_0.util.DTOMapperUtil;
 import com.liferay.headless.commerce.admin.site.setting.resource.v1_0.TaxCategoryResource;
 
 import javax.ws.rs.core.Response;
@@ -35,7 +27,7 @@ public class TaxCategoryResourceImpl extends BaseTaxCategoryResourceImpl {
 
 	@Override
 	public Response deleteTaxCategory(Long id) throws Exception {
-		_taxCategoryHelper.deleteTaxCategory(id);
+		_cpTaxCategoryService.deleteCPTaxCategory(id);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -44,10 +36,11 @@ public class TaxCategoryResourceImpl extends BaseTaxCategoryResourceImpl {
 
 	@Override
 	public TaxCategory getTaxCategory(Long id) throws Exception {
-		return _taxCategoryHelper.getTaxCategory(id);
+		return DTOMapperUtil.modelToDTO(
+			_cpTaxCategoryService.getCPTaxCategory(id));
 	}
 
 	@Reference
-	private TaxCategoryHelper _taxCategoryHelper;
+	private CPTaxCategoryService _cpTaxCategoryService;
 
 }

@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.image.internal;
 
+import com.liferay.image.ImageMagick;
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.configuration.Filter;
-import com.liferay.portal.kernel.image.ImageMagick;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.NamedThreadFactory;
@@ -27,6 +19,9 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsUtil;
 
+import java.io.File;
+
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +31,7 @@ import java.util.concurrent.Future;
 import javax.portlet.PortletPreferences;
 
 import org.im4java.process.ArrayListOutputConsumer;
+import org.im4java.process.ProcessEvent;
 import org.im4java.process.ProcessExecutor;
 import org.im4java.process.ProcessTask;
 
@@ -60,7 +56,9 @@ public class ImageMagickImpl implements ImageMagick {
 			reset();
 		}
 
-		ProcessExecutor processExecutor = _getProcessExecutor();
+		ProcessExecutor processExecutor =
+			_processExecutorDCLSingleton.getSingleton(
+				ImageMagickImpl::_createProcessExecutor);
 
 		LiferayConvertCmd liferayConvertCmd = new LiferayConvertCmd();
 
@@ -74,22 +72,14 @@ public class ImageMagickImpl implements ImageMagick {
 
 	@Override
 	public void destroy() {
-		if (_processExecutor == null) {
-			return;
-		}
-
-		synchronized (ProcessExecutor.class) {
-			_processExecutor.shutdownNow();
-		}
-
-		_processExecutor = null;
+		_processExecutorDCLSingleton.destroy(ProcessExecutor::shutdownNow);
 	}
 
 	@Override
-	public String getGlobalSearchPath() throws Exception {
-		PortletPreferences preferences = _prefsProps.getPreferences();
+	public String getGlobalSearchPath() {
+		PortletPreferences portletPreferences = _prefsProps.getPreferences();
 
-		String globalSearchPath = preferences.getValue(
+		String globalSearchPath = portletPreferences.getValue(
 			PropsKeys.IMAGEMAGICK_GLOBAL_SEARCH_PATH, null);
 
 		if (Validator.isNotNull(globalSearchPath)) {
@@ -113,7 +103,7 @@ public class ImageMagickImpl implements ImageMagick {
 	}
 
 	@Override
-	public Properties getResourceLimitsProperties() throws Exception {
+	public Properties getResourceLimitsProperties() {
 		Properties resourceLimitsProperties = _prefsProps.getProperties(
 			PropsKeys.IMAGEMAGICK_RESOURCE_LIMIT, true);
 
@@ -132,7 +122,9 @@ public class ImageMagickImpl implements ImageMagick {
 				"Cannot call \"identify\" when ImageMagick is disabled");
 		}
 
-		ProcessExecutor processExecutor = _getProcessExecutor();
+		ProcessExecutor processExecutor =
+			_processExecutorDCLSingleton.getSingleton(
+				ImageMagickImpl::_createProcessExecutor);
 
 		LiferayIdentifyCmd liferayIdentifyCmd = new LiferayIdentifyCmd();
 
@@ -201,6 +193,61 @@ public class ImageMagickImpl implements ImageMagick {
 		}
 	}
 
+	@Override
+	public byte[] scale(byte[] bytes, String mimeType, int width, int height)
+		throws Exception {
+
+		if ((width == 0) && (height == 0)) {
+			return bytes;
+		}
+
+		File imageFile = null;
+		File scaledImageFile = null;
+
+		try {
+			imageFile = _file.createTempFile(bytes);
+
+			scaledImageFile = _file.createTempFile(mimeType);
+
+			List<String> arguments = new ArrayList<>();
+
+			arguments.add(imageFile.getAbsolutePath());
+			arguments.add("-resize");
+
+			if (height == 0) {
+				height = width;
+			}
+
+			if (width == 0) {
+				width = height;
+			}
+
+			arguments.add(StringBundler.concat(width, "x", height, ">"));
+			arguments.add(scaledImageFile.getAbsolutePath());
+
+			Future<?> future = convert(arguments);
+
+			ProcessEvent processEvent = (ProcessEvent)future.get();
+
+			if (_log.isDebugEnabled() &&
+				(processEvent.getException() != null)) {
+
+				_log.debug(processEvent.getException());
+			}
+
+			return _file.getBytes(scaledImageFile);
+		}
+		finally {
+			if (imageFile != null) {
+				imageFile.delete();
+			}
+
+			if (scaledImageFile != null) {
+				scaledImageFile.delete();
+			}
+		}
+	}
+
 	protected LinkedList<String> getResourceLimits() {
 		LinkedList<String> resourceLimits = new LinkedList<>();
 
@@ -225,34 +272,30 @@ public class ImageMagickImpl implements ImageMagick {
 		return resourceLimits;
 	}
 
-	private ProcessExecutor _getProcessExecutor() {
-		if (_processExecutor != null) {
-			return _processExecutor;
-		}
+	private static ProcessExecutor _createProcessExecutor() {
+		ProcessExecutor processExecutor = new ProcessExecutor();
 
-		synchronized (ProcessExecutor.class) {
-			if (_processExecutor == null) {
-				_processExecutor = new ProcessExecutor();
+		processExecutor.setThreadFactory(
+			new NamedThreadFactory(
+				ImageMagickImpl.class.getName(), Thread.MIN_PRIORITY,
+				PortalClassLoaderUtil.getClassLoader()));
 
-				_processExecutor.setThreadFactory(
-					new NamedThreadFactory(
-						ImageMagickImpl.class.getName(), Thread.MIN_PRIORITY,
-						PortalClassLoaderUtil.getClassLoader()));
-			}
-		}
-
-		return _processExecutor;
+		return processExecutor;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ImageMagickImpl.class);
+
+	@Reference
+	private com.liferay.portal.kernel.util.File _file;
 
 	private String _globalSearchPath;
 
 	@Reference
 	private PrefsProps _prefsProps;
 
-	private volatile ProcessExecutor _processExecutor;
+	private final DCLSingleton<ProcessExecutor> _processExecutorDCLSingleton =
+		new DCLSingleton<>();
 	private Properties _resourceLimitsProperties;
 	private boolean _warned;
 

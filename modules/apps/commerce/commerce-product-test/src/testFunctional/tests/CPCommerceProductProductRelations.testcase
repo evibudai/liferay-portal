@@ -15,13 +15,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6062. AddAProductRelations"
-	@priority = "3"
+	@priority = 3
 	test AddAProductRelations {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -50,19 +48,66 @@ definition {
 
 			AssertElementPresent(
 				key_productName = "Shoes",
-				key_value = "${valueList}",
+				key_value = ${valueList},
 				locator1 = "CommerceEntry#VALUE_PRODUCT_RELATIONS");
 		}
 	}
 
+	@description = "This is a test for COMMERCE-11085. Can delete a product related to another product"
+	@priority = 3
+	test CanDeleteProductWithRelations {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium Site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a product is related to another product") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Product Relations");
+
+			CommerceRelations.addAnyProductRelation(
+				key_product = "U-Joint",
+				key_relation = "Up-Sell Product");
+
+			AssertElementPresent(
+				key_productName = "U-Joint",
+				key_value = "Up-Sell",
+				locator1 = "CommerceEntry#VALUE_PRODUCT_RELATIONS");
+		}
+
+		task ("When the admin deletes the related product") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceNavigator.searchEntry(entryName = "U-Joint");
+
+			Click.clickNoMouseOverNoWaitForVisible(
+				key_productName = "U-Joint",
+				locator1 = "CommerceEntry#PRODUCT_ENTRY_CHECKBOX");
+
+			AssertElementPresent(locator1 = "Button#TRASH_ENABLED");
+		}
+
+		task ("Then the product is successfully deleted") {
+			ClickNoError(locator1 = "Button#TRASH_ENABLED");
+
+			CommerceNavigator.searchEntry(entryName = "U-Joint");
+
+			AssertElementNotPresent(
+				key_entryName = "U-Joint",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-6064. EditAProductRelations"
-	@priority = "3"
+	@priority = 5
 	test EditAProductRelations {
 		property portal.acceptance = "true";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		WaitForElementPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER");
 
@@ -86,26 +131,26 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Product Relations");
 
-		CommerceRelations.addProductRelation(productNameRelation = "Shoes");
+		CommerceRelations.addAnyProductRelation(
+			key_product = "Shoes",
+			key_relation = "Up-Sell Product");
 
 		CommerceRelations.productRelationSetPriority(
-			priorityValue = "1",
+			priorityValue = 1,
 			productNameRelation = "Shoes");
 
 		AssertElementPresent(
 			key_productName = "Shoes",
-			key_value = "1",
+			key_value = 1,
 			locator1 = "CommerceEntry#VALUE_PRODUCT_RELATIONS");
 	}
 
 	@description = "This is a test for COMMERCE-6063. RemoveAProductRelations"
-	@priority = "3"
+	@priority = 3
 	test RemoveAProductRelations {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -146,21 +191,19 @@ definition {
 		for (var valueList : list "Up-Sell,Cross-Sell,Related,Accessories,Spare") {
 			AssertElementNotPresent(
 				key_productName = "Shoes",
-				key_value = "${valueList}",
+				key_value = ${valueList},
 				locator1 = "CommerceEntry#VALUE_PRODUCT_RELATIONS");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8308. SearchProductRelations"
-	@priority = "4"
+	@priority = 5
 	test SearchProductRelations {
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		AppBuilderAdmin.searchByItem(itemName = "Turbocharger");
 
@@ -175,7 +218,7 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Visibility");
 
 		for (var nameList : list "Channels,Account Groups") {
-			CommerceEntry.assertCheckedSpecificToggle(name = "${nameList}");
+			CommerceEntry.assertCheckedSpecificToggle(name = ${nameList});
 		}
 
 		CommerceEntry.gotoMenuTab(menuTab = "Product Relations");
@@ -201,7 +244,7 @@ definition {
 			locator1 = "CommerceNavigation#TD_ANY_ENTRY_NAME");
 
 		Click(
-			key_pageNumber = "3",
+			key_pageNumber = 3,
 			locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
 
 		AssertElementPresent(

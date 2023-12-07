@@ -1,4 +1,0 @@
-${id}:
-    name: ${name}
-    type: globalJS
-    url: global.js

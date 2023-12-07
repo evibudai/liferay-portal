@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.internal.resource.v1_0;
@@ -17,8 +8,8 @@ package com.liferay.headless.commerce.admin.channel.internal.resource.v1_0;
 import com.liferay.commerce.product.model.CPTaxCategory;
 import com.liferay.commerce.product.service.CPTaxCategoryService;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.TaxCategory;
-import com.liferay.headless.commerce.admin.channel.internal.dto.v1_0.converter.TaxCategoryDTOConverter;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.TaxCategoryResource;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -79,7 +70,9 @@ public class TaxCategoryResourceImpl extends BaseTaxCategoryResourceImpl {
 	@Reference
 	private CPTaxCategoryService _cpTaxCategoryService;
 
-	@Reference
-	private TaxCategoryDTOConverter _taxCategoryDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.channel.internal.dto.v1_0.converter.TaxCategoryDTOConverter)"
+	)
+	private DTOConverter<CPTaxCategory, TaxCategory> _taxCategoryDTOConverter;
 
 }

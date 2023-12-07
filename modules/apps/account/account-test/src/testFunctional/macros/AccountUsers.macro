@@ -1,36 +1,37 @@
 definition {
 
-	macro addUser {
+	@summary = "Default summary"
+	macro addUser(accountName = null, userLastName = null, userScreenName = null, userEmailAddress = null, userFirstName = null) {
 		LexiconEntry.gotoAdd();
 
 		SelectFrame(locator1 = "IFrame#SELECT_ACCOUNT");
 
 		AssertClick(
-			key_accountName = "${accountName}",
+			key_accountName = ${accountName},
 			locator1 = "AccountUsers#SELECT_AN_ACCOUNT_CHOOSE_BUTTON",
 			value1 = "Choose");
 
 		SelectFrame(value1 = "relative=top");
 
 		WaitForElementPresent(
-			key_accountName = "${accountName}",
+			key_accountName = ${accountName},
 			locator1 = "AccountUsers#ADD_NEW_USER_HEADER");
 
 		Type(
 			locator1 = "UsersAndOrganizationsEditUser#DETAILS_SCREEN_NAME_FIELD",
-			value1 = "${userScreenName}");
+			value1 = ${userScreenName});
 
 		Type(
 			locator1 = "UsersAndOrganizationsEditUser#DETAILS_EMAIL_ADDRESS_FIELD",
-			value1 = "${userEmailAddress}");
+			value1 = ${userEmailAddress});
 
 		Type(
 			locator1 = "UsersAndOrganizationsEditUser#DETAILS_FIRST_NAME_FIELD",
-			value1 = "${userFirstName}");
+			value1 = ${userFirstName});
 
 		Type(
 			locator1 = "UsersAndOrganizationsEditUser#DETAILS_LAST_NAME_FIELD",
-			value1 = "${userLastName}");
+			value1 = ${userLastName});
 
 		AssertClick(
 			locator1 = "Button#SAVE",
@@ -39,24 +40,26 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro deactivateUser {
+	@summary = "Default summary"
+	macro deactivateUser(userFirstName = null) {
 		LexiconEntry.gotoEntryMenuItemNoError(
 			menuItem = "Deactivate",
-			rowEntry = "${userFirstName}");
+			rowEntry = ${userFirstName});
 
 		AssertConfirm(value1 = "Are you sure you want to deactivate this user?");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro editUser {
-		if ("${accountManagementWidget}" == "true") {
-			LexiconEntry.gotoEntry(rowEntry = "${accountUser}");
+	@summary = "Default summary"
+	macro editUser(password = null, editFirstName = null, accountUser = null, editScreenName = null, editEmailAddress = null, accountManagementWidget = null) {
+		if (${accountManagementWidget} == "true") {
+			LexiconEntry.gotoEntry(rowEntry = ${accountUser});
 		}
 		else {
 			LexiconEntry.gotoEntryMenuItem(
 				menuItem = "Edit",
-				rowEntry = "${accountUser}");
+				rowEntry = ${accountUser});
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Portlet#HEADER",
@@ -66,57 +69,60 @@ definition {
 		if (isSet(editScreenName)) {
 			Type(
 				locator1 = "UsersAndOrganizationsEditUser#DETAILS_SCREEN_NAME_FIELD",
-				value1 = "${editScreenName}");
+				value1 = ${editScreenName});
 		}
 
 		if (isSet(editEmailAddress)) {
 			Type(
 				locator1 = "UsersAndOrganizationsEditUser#DETAILS_EMAIL_ADDRESS_FIELD",
-				value1 = "${editEmailAddress}");
+				value1 = ${editEmailAddress});
 		}
 
 		if (isSet(editFirstName)) {
 			Type(
 				locator1 = "UsersAndOrganizationsEditUser#DETAILS_FIRST_NAME_FIELD",
-				value1 = "${editFirstName}");
+				value1 = ${editFirstName});
 		}
 
 		Button.clickSave();
 
 		if (IsElementPresent(locator1 = "IFrame#CONFIRM_PASSWORD")) {
-			User.confirmPassword(password = "${password}");
+			User.confirmPassword(password = ${password});
 		}
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro openAccountUsersAdmin {
+	@summary = "Default summary"
+	macro openAccountUsersAdmin() {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_account_admin_web_internal_portlet_AccountUsersAdminPortlet");
 	}
 
-	macro removeAccount {
-		LexiconEntry.gotoEntry(rowEntry = "${accountUser}");
+	@summary = "Default summary"
+	macro removeAccount(accountName = null, accountUser = null) {
+		LexiconEntry.gotoEntry(rowEntry = ${accountUser});
 
 		Navigator.gotoNavUnderline(navUnderline = "General");
 
 		Navigator.gotoNavNested(navNested = "Accounts");
 
-		LexiconEntry.viewEntryName(rowEntry = "${accountName}");
+		LexiconEntry.viewEntryName(rowEntry = ${accountName});
 
 		Click(
-			key_entryName = "${accountName}",
+			key_entryName = ${accountName},
 			locator1 = "LexiconTable#TABLE_ENTRY_DELETE");
 
 		PortletEntry.save();
 
-		LexiconEntry.viewNoEntry(rowEntry = "${accountName}");
+		LexiconEntry.viewNoEntry(rowEntry = ${accountName});
 	}
 
-	macro selectAccounts {
+	@summary = "Default summary"
+	macro selectAccounts(accountName = null) {
 		SelectFrame(locator1 = "IFrame#SELECT_ACCOUNTS");
 
 		Check(
-			key_tableEntry = "${accountName}",
+			key_tableEntry = ${accountName},
 			locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
 
 		SelectFrame(value1 = "relative=top");
@@ -126,10 +132,11 @@ definition {
 		AssertElementPresent(locator1 = "Search#SEARCH_INFO");
 	}
 
-	macro setUserPassword {
+	@summary = "Default summary"
+	macro setUserPassword(accountUser = null, accountUserPassword = null) {
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
-			rowEntry = "${accountUser}");
+			rowEntry = ${accountUser});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Portlet#HEADER",
@@ -139,26 +146,28 @@ definition {
 
 		Type(
 			locator1 = "TextInput#NEW_PASSWORD",
-			value1 = "${accountUserPassword}");
+			value1 = ${accountUserPassword});
 
 		Type(
-			locator1 = "TextInput#ENTER_AGAIN",
-			value1 = "${accountUserPassword}");
+			locator1 = "TextInput#REENTER_PASSWORD",
+			value1 = ${accountUserPassword});
 
 		Button.clickSave();
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro viewEntryAccounts {
+	@summary = "Default summary"
+	macro viewEntryAccounts(accountUserName = null, accountName = null) {
 		AssertElementPresent(
 			key_columnName = "lfr-accounts-column",
-			key_rowEntry = "${accountUserName}",
+			key_rowEntry = ${accountUserName},
 			locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER_TD",
-			value1 = "${accountName}");
+			value1 = ${accountName});
 	}
 
-	macro viewValidDomains {
+	@summary = "Default summary"
+	macro viewValidDomains(validDomainNames = null) {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		AssertClick(
@@ -172,8 +181,8 @@ definition {
 			locator1 = "Message#INFO",
 			value1 = "Info:The following email domains are shared across all of this user's accounts.");
 
-		for (var validDomainName : list "${validDomainNames}") {
-			LexiconEntry.viewEntryName(rowEntry = "${validDomainName}");
+		for (var validDomainName : list ${validDomainNames}) {
+			LexiconEntry.viewEntryName(rowEntry = ${validDomainName});
 		}
 
 		SelectFrame.selectFrameTop();

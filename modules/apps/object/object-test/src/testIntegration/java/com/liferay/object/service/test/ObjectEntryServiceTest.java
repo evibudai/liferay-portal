@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.test;
@@ -25,14 +16,22 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
-import com.liferay.object.util.LocalizedMapUtil;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.TreeTestUtil;
+import com.liferay.object.tree.Edge;
+import com.liferay.object.tree.Node;
+import com.liferay.object.tree.Tree;
+import com.liferay.object.tree.TreeFactory;
+import com.liferay.object.tree.constants.TreeConstants;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.NoSuchResourceActionException;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -48,6 +47,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -56,13 +56,17 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -77,6 +81,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Marco Leo
  */
+@FeatureFlags("LPS-187142")
 @RunWith(Arquillian.class)
 public class ObjectEntryServiceTest {
 
@@ -88,11 +93,11 @@ public class ObjectEntryServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		_adminUser = TestPropsValues.getUser();
-		_defaultUser = _userLocalService.getDefaultUser(
+		_guestUser = _userLocalService.getGuestUser(
 			TestPropsValues.getCompanyId());
 
-		_objectDefinition = ObjectDefinitionTestUtil.addObjectDefinition(
-			_objectDefinitionLocalService,
+		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
+			false, _objectDefinitionLocalService,
 			Arrays.asList(
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -110,12 +115,29 @@ public class ObjectEntryServiceTest {
 
 		_originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
+		_tree = TreeTestUtil.createObjectDefinitionTree(
+			_objectDefinitionLocalService, _objectRelationshipLocalService,
+			_treeFactory);
 		_user = UserTestUtil.addUser();
+
+		ObjectDefinition rootObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_A");
+
+		_rootObjectDefinition =
+			_objectDefinitionLocalService.publishCustomObjectDefinition(
+				_adminUser.getUserId(),
+				rootObjectDefinition.getObjectDefinitionId());
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws Exception {
 		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
+
+		TreeTestUtil.deleteObjectDefinitionHierarchy(
+			_objectDefinitionLocalService,
+			new String[] {"C_A", "C_AA", "C_AB", "C_AAA", "C_AAB"},
+			_objectEntryLocalService);
 	}
 
 	@Test
@@ -131,15 +153,33 @@ public class ObjectEntryServiceTest {
 				ServiceContextTestUtil.getServiceContext(
 					TestPropsValues.getGroupId(), _adminUser.getUserId())));
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
-		_assertPrincipalException(ObjectActionKeys.ADD_OBJECT_ENTRY, null);
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _guestUser.getUserId(), " must have ADD_OBJECT_ENTRY ",
+				"permission for ", _objectDefinition.getResourceName(), " "),
+			() -> _objectEntryService.addObjectEntry(
+				0, _objectDefinition.getObjectDefinitionId(),
+				Collections.emptyMap(),
+				ServiceContextTestUtil.getServiceContext(
+					TestPropsValues.getGroupId(), _guestUser.getUserId())));
 
 		_setUser(_user);
 
-		_assertPrincipalException(ObjectActionKeys.ADD_OBJECT_ENTRY, null);
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have ADD_OBJECT_ENTRY ",
+				"permission for ", _objectDefinition.getResourceName(), " "),
+			() -> _objectEntryService.addObjectEntry(
+				0, _objectDefinition.getObjectDefinitionId(),
+				Collections.emptyMap(),
+				ServiceContextTestUtil.getServiceContext(
+					TestPropsValues.getGroupId(), _user.getUserId())));
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
 		Role guestRole = _roleLocalService.getRole(
 			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
@@ -157,7 +197,14 @@ public class ObjectEntryServiceTest {
 					"firstName", RandomStringUtils.randomAlphabetic(5)
 				).build(),
 				ServiceContextTestUtil.getServiceContext(
-					TestPropsValues.getGroupId(), _defaultUser.getUserId())));
+					TestPropsValues.getGroupId(), _guestUser.getUserId())));
+
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getResourceName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()),
+			guestRole.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY);
 
 		_setUser(_user);
 
@@ -168,7 +215,95 @@ public class ObjectEntryServiceTest {
 					"firstName", RandomStringUtils.randomAlphabetic(5)
 				).build(),
 				ServiceContextTestUtil.getServiceContext(
-					TestPropsValues.getGroupId(), _defaultUser.getUserId())));
+					TestPropsValues.getGroupId(), _guestUser.getUserId())));
+	}
+
+	@Test
+	public void testAddObjectEntryHierarchy() throws Exception {
+
+		// Root company permissions must be inherited
+
+		_setUser(_user);
+
+		Role role = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.USER);
+
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getResourceName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
+			ObjectActionKeys.ADD_OBJECT_ENTRY);
+
+		Iterator<Node> iterator = _tree.iterator();
+
+		Node rootNode = iterator.next();
+
+		Map<Long, ObjectEntry> objectEntries =
+			HashMapBuilder.<Long, ObjectEntry>put(
+				rootNode.getPrimaryKey(),
+				_objectEntryService.addObjectEntry(
+					0, rootNode.getPrimaryKey(), Collections.emptyMap(),
+					ServiceContextTestUtil.getServiceContext(
+						TestPropsValues.getGroupId(), _adminUser.getUserId()))
+			).build();
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			objectEntries.put(
+				node.getPrimaryKey(),
+				_objectEntryService.addObjectEntry(
+					0, node.getPrimaryKey(),
+					HashMapBuilder.<String, Serializable>put(
+						() -> {
+							Edge edge = node.getEdge();
+
+							ObjectRelationship objectRelationship =
+								_objectRelationshipLocalService.
+									getObjectRelationship(
+										edge.getObjectRelationshipId());
+
+							ObjectField objectField =
+								_objectFieldLocalService.getObjectField(
+									objectRelationship.getObjectFieldId2());
+
+							return objectField.getName();
+						},
+						() -> {
+							Node parentNode = node.getParentNode();
+
+							ObjectEntry objectEntry = objectEntries.get(
+								parentNode.getPrimaryKey());
+
+							return objectEntry.getObjectEntryId();
+						}
+					).build(),
+					ServiceContextTestUtil.getServiceContext(
+						TestPropsValues.getGroupId(), _adminUser.getUserId())));
+		}
+
+		// Root descendant must not have ADD_OBJECT_ENTRY resource action
+
+		TreeTestUtil.forEachNodeObjectDefinition(
+			_tree.iterator(), _objectDefinitionLocalService,
+			objectDefinition -> {
+				if (objectDefinition.isRootNode()) {
+					return;
+				}
+
+				AssertUtils.assertFailure(
+					NoSuchResourceActionException.class,
+					"com.liferay.object#" +
+						objectDefinition.getObjectDefinitionId() +
+							"#ADD_OBJECT_ENTRY",
+					() -> _resourcePermissionLocalService.addResourcePermission(
+						TestPropsValues.getCompanyId(),
+						objectDefinition.getResourceName(),
+						ResourceConstants.SCOPE_COMPANY,
+						String.valueOf(TestPropsValues.getCompanyId()),
+						role.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY));
+			});
 	}
 
 	@Test
@@ -192,6 +327,90 @@ public class ObjectEntryServiceTest {
 	}
 
 	@Test
+	public void testDeleteObjectEntryHierarchy() throws Exception {
+
+		// Root company permissions must be inherited
+
+		Node objectDefinitionRootNode = _tree.getRootNode();
+
+		Tree objectEntryTree = TreeTestUtil.createObjectEntryTree(
+			"1", _objectEntryLocalService, _objectFieldLocalService,
+			objectDefinitionRootNode.getPrimaryKey(),
+			_objectRelationshipLocalService, _treeFactory);
+
+		_setUser(_user);
+
+		Role role = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.USER);
+
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getClassName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
+			ActionKeys.DELETE);
+
+		TreeTestUtil.forEachNodeObjectEntry(
+			objectEntryTree.iterator(TreeConstants.ITERATOR_TYPE_POST_ORDER),
+			_objectEntryLocalService,
+			objectEntry -> Assert.assertNotNull(
+				_objectEntryService.deleteObjectEntry(
+					objectEntry.getObjectEntryId())));
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getClassName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
+			ActionKeys.DELETE);
+
+		// Root descendant must not have DELETE resource action
+
+		TreeTestUtil.forEachNodeObjectDefinition(
+			_tree.iterator(TreeConstants.ITERATOR_TYPE_POST_ORDER),
+			_objectDefinitionLocalService,
+			objectDefinition -> {
+				if (objectDefinition.isRootNode()) {
+					return;
+				}
+
+				AssertUtils.assertFailure(
+					NoSuchResourceActionException.class,
+					"com.liferay.object.model.ObjectDefinition#" +
+						objectDefinition.getObjectDefinitionId() + "#DELETE",
+					() -> _resourcePermissionLocalService.addResourcePermission(
+						TestPropsValues.getCompanyId(),
+						objectDefinition.getClassName(),
+						ResourceConstants.SCOPE_COMPANY,
+						String.valueOf(TestPropsValues.getCompanyId()),
+						role.getRoleId(), ActionKeys.DELETE));
+			});
+
+		// Root individual permissions must be inherited
+
+		objectEntryTree = TreeTestUtil.createObjectEntryTree(
+			"1", _objectEntryLocalService, _objectFieldLocalService,
+			objectDefinitionRootNode.getPrimaryKey(),
+			_objectRelationshipLocalService, _treeFactory);
+
+		Node objectEntryRootNode = objectEntryTree.getRootNode();
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getClassName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectEntryRootNode.getPrimaryKey()),
+			role.getRoleId(), new String[] {ActionKeys.DELETE});
+
+		TreeTestUtil.forEachNodeObjectEntry(
+			objectEntryTree.iterator(TreeConstants.ITERATOR_TYPE_POST_ORDER),
+			_objectEntryLocalService,
+			objectEntry -> Assert.assertNotNull(
+				_objectEntryService.deleteObjectEntry(
+					objectEntry.getObjectEntryId())));
+	}
+
+	@Test
 	public void testGetObjectEntry() throws Exception {
 		_setUser(_adminUser);
 
@@ -209,15 +428,36 @@ public class ObjectEntryServiceTest {
 			_objectEntryService.getObjectEntry(
 				userObjectEntry.getObjectEntryId()));
 
-		_assertPrincipalException(ActionKeys.VIEW, adminObjectEntry);
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have VIEW permission for ",
+				_objectDefinition.getClassName(), " ",
+				adminObjectEntry.getObjectEntryId()),
+			() -> _objectEntryService.getObjectEntry(
+				adminObjectEntry.getObjectEntryId()));
 
-		_setUser(_defaultUser);
+		_setUser(_guestUser);
 
-		_assertPrincipalException(ActionKeys.VIEW, adminObjectEntry);
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _guestUser.getUserId(), " must have VIEW permission ",
+				"for ", _objectDefinition.getClassName(), " ",
+				adminObjectEntry.getObjectEntryId()),
+			() -> _objectEntryService.getObjectEntry(
+				adminObjectEntry.getObjectEntryId()));
 
-		ObjectEntry defaultUserObjectEntry = _addObjectEntry(_defaultUser);
+		ObjectEntry guestUserObjectEntry = _addObjectEntry(_guestUser);
 
-		_assertPrincipalException(ActionKeys.VIEW, defaultUserObjectEntry);
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _guestUser.getUserId(), " must have VIEW permission ",
+				"for ", _objectDefinition.getClassName(), " ",
+				guestUserObjectEntry.getObjectEntryId()),
+			() -> _objectEntryService.getObjectEntry(
+				guestUserObjectEntry.getObjectEntryId()));
 
 		Role guestRole = _roleLocalService.getRole(
 			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
@@ -234,6 +474,83 @@ public class ObjectEntryServiceTest {
 	}
 
 	@Test
+	public void testGetObjectEntryHierarchy() throws Exception {
+
+		// Root company permissions must be inherited
+
+		Node objectDefinitionRootNode = _tree.getRootNode();
+
+		Tree objectEntryTree = TreeTestUtil.createObjectEntryTree(
+			"1", _objectEntryLocalService, _objectFieldLocalService,
+			objectDefinitionRootNode.getPrimaryKey(),
+			_objectRelationshipLocalService, _treeFactory);
+
+		_setUser(_user);
+
+		Role role = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.USER);
+
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getClassName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
+			ActionKeys.VIEW);
+
+		TreeTestUtil.forEachNodeObjectEntry(
+			objectEntryTree.iterator(), _objectEntryLocalService,
+			objectEntry -> Assert.assertNotNull(
+				_objectEntryService.getObjectEntry(
+					objectEntry.getObjectEntryId())));
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getClassName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
+			ActionKeys.VIEW);
+
+		// Root descendant must not have VIEW resource action
+
+		TreeTestUtil.forEachNodeObjectDefinition(
+			_tree.iterator(TreeConstants.ITERATOR_TYPE_POST_ORDER),
+			_objectDefinitionLocalService,
+			objectDefinition -> {
+				if (objectDefinition.isRootNode()) {
+					return;
+				}
+
+				AssertUtils.assertFailure(
+					NoSuchResourceActionException.class,
+					"com.liferay.object.model.ObjectDefinition#" +
+						objectDefinition.getObjectDefinitionId() + "#VIEW",
+					() -> _resourcePermissionLocalService.addResourcePermission(
+						TestPropsValues.getCompanyId(),
+						objectDefinition.getClassName(),
+						ResourceConstants.SCOPE_COMPANY,
+						String.valueOf(TestPropsValues.getCompanyId()),
+						role.getRoleId(), ActionKeys.VIEW));
+			});
+
+		// Root individual permissions must be inherited
+
+		Node objectEntryRootNode = objectEntryTree.getRootNode();
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(),
+			_rootObjectDefinition.getClassName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectEntryRootNode.getPrimaryKey()),
+			role.getRoleId(), new String[] {ActionKeys.VIEW});
+
+		TreeTestUtil.forEachNodeObjectEntry(
+			objectEntryTree.iterator(), _objectEntryLocalService,
+			objectEntry -> Assert.assertNotNull(
+				_objectEntryService.getObjectEntry(
+					objectEntry.getObjectEntryId())));
+	}
+
+	@Test
 	public void testGetOrDeleteObjectEntryWithAccountEntryRestricted()
 		throws Exception {
 
@@ -245,17 +562,20 @@ public class ObjectEntryServiceTest {
 
 		ObjectRelationship objectRelationship =
 			_objectRelationshipLocalService.addObjectRelationship(
-				TestPropsValues.getUserId(),
+				null, TestPropsValues.getUserId(),
 				accountEntryObjectDefinition.getObjectDefinitionId(),
 				_objectDefinition.getObjectDefinitionId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"relationship", ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				"relationship", false,
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_objectDefinition.setAccountEntryRestrictedObjectFieldId(
 			objectRelationship.getObjectFieldId2());
 
-		_objectDefinitionLocalService.updateObjectDefinition(_objectDefinition);
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
 			TestPropsValues.getUserId(),
@@ -332,42 +652,6 @@ public class ObjectEntryServiceTest {
 				TestPropsValues.getGroupId(), user.getUserId()));
 	}
 
-	private void _assertPrincipalException(
-			String action, ObjectEntry objectEntry)
-		throws Exception {
-
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		try {
-			if (Objects.equals(action, ActionKeys.VIEW)) {
-				_objectEntryService.getObjectEntry(
-					objectEntry.getObjectEntryId());
-			}
-			else {
-				_objectEntryService.addObjectEntry(
-					0, _objectDefinition.getObjectDefinitionId(),
-					HashMapBuilder.<String, Serializable>put(
-						"firstName", RandomStringUtils.randomAlphabetic(5)
-					).build(),
-					ServiceContextTestUtil.getServiceContext(
-						TestPropsValues.getGroupId(),
-						permissionChecker.getUserId()));
-			}
-
-			Assert.fail();
-		}
-		catch (PrincipalException.MustHavePermission principalException) {
-			String message = principalException.getMessage();
-
-			Assert.assertTrue(
-				message.contains(
-					StringBundler.concat(
-						"User ", permissionChecker.getUserId(), " must have ",
-						action, " permission for")));
-		}
-	}
-
 	private void _setUser(User user) throws Exception {
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(user));
@@ -403,7 +687,7 @@ public class ObjectEntryServiceTest {
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	private User _adminUser;
-	private User _defaultUser;
+	private User _guestUser;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;
@@ -418,6 +702,9 @@ public class ObjectEntryServiceTest {
 	private ObjectEntryService _objectEntryService;
 
 	@Inject
+	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Inject
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	private PermissionChecker _originalPermissionChecker;
@@ -427,6 +714,12 @@ public class ObjectEntryServiceTest {
 
 	@Inject
 	private RoleLocalService _roleLocalService;
+
+	private ObjectDefinition _rootObjectDefinition;
+	private Tree _tree;
+
+	@Inject
+	private TreeFactory _treeFactory;
 
 	private User _user;
 

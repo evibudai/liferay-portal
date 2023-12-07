@@ -1,25 +1,29 @@
 {
-	"DBType": "String",
-	"businessType": "Aggregation",
-	"externalReferenceCode": "TOTAL-CASE-RESULTS",
-	"indexed": true,
-	"indexedAsKeyword": false,
-	"label": {
-		"en_US": "Total Case Results"
-	},
-	"name": "totalCaseResults",
-	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:Subtask$]",
-	"objectFieldSettings": [
+	"object-fields": [
 		{
-			"name": "objectRelationshipName",
-			"value": "subtaskToSubtasksCasesResults"
-		},
-		{
-			"name": "function",
-			"value": "COUNT"
+			"DBType": "String",
+			"businessType": "Aggregation",
+			"externalReferenceCode": "TOTAL-CASE-RESULTS",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Total Case Results"
+			},
+			"name": "totalCaseResults",
+			"objectFieldSettings": [
+				{
+					"name": "objectRelationshipName",
+					"value": "subtaskToSubtasksCasesResults"
+				},
+				{
+					"name": "function",
+					"value": "COUNT"
+				}
+			],
+			"required": false,
+			"state": false,
+			"system": false
 		}
 	],
-	"required": false,
-	"state": false,
-	"system": false
+	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:Subtask$]"
 }

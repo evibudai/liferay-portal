@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,19 +34,24 @@ definition {
 	}
 
 	@description = "LPS-144591 - Verify that I was redirected to the 'Congrats' page after PayPal payment"
-	@priority = "5"
+	@priority = 5
 	test CanReachPolicyDeclarationPageByTheForm {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		RaylifePaymentMethod.configurationPaypal();
 
 		RaylifePaymentMethod.enablePricingPaypal();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -63,17 +71,22 @@ definition {
 	}
 
 	@description = "LPS-144592 - Verify if the policy number is generated"
-	@priority = "5"
+	@priority = 5
 	test IsPolicyNumberGenerated {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -93,17 +106,22 @@ definition {
 	}
 
 	@description = "LPS-144593 - Verify if the product is the same as the one chosen at the beginning of the form"
-	@priority = "5"
+	@priority = 5
 	test IsProductTheSameAsTheForm {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",

@@ -1,18 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useRef} from 'react';
+import {BuildStatuses} from '~/util/statuses';
 
 import useFormActions from '../../../../../hooks/useFormActions';
 import useFormModal from '../../../../../hooks/useFormModal';
@@ -30,30 +22,38 @@ const useBuildTemplateActions = () => {
 		{
 			action: (build, mutate) => {
 				testrayBuildImpl
-					.update(build.id, {active: !build.active})
-					.then(() =>
+					.update(build.id, {
+						dueStatus:
+							build.dueStatus.key === BuildStatuses.ACTIVATED
+								? BuildStatuses.DEACTIVATED
+								: BuildStatuses.ACTIVATED,
+					})
+					.then((templateResponse) =>
 						updateItemFromList(mutate, build.id, {
-							active: !build.active,
+							dueStatus: templateResponse.dueStatus,
 						})
 					)
-					.then(() => removeItemFromList(mutate, build.id))
 					.then(form.onSuccess)
 					.catch(form.onError);
 			},
 			icon: 'logout',
-			name: (build) =>
-				i18n.translate(build.active ? 'deactivate' : 'active'),
+			name: ({dueStatus}) =>
+				i18n.translate(
+					dueStatus.key === BuildStatuses.ACTIVATED
+						? 'deactivate'
+						: 'activate'
+				),
 			permission: 'UPDATE',
 		},
 		{
 			action: (build, mutate) => {
 				testrayBuildImpl
-					.remove(build.id)
-					.then(() => removeItemFromList(mutate, build.id))
+					.removeResource(build.id)
+					?.then(() => removeItemFromList(mutate, build.id))
 					.then(form.onSuccess)
 					.catch(form.onError);
 			},
-			hidden: (build) => build.active,
+			hidden: (build) => build.dueStatus.key === BuildStatuses.ACTIVATED,
 			icon: 'trash',
 			name: i18n.translate('delete'),
 			permission: 'DELETE',

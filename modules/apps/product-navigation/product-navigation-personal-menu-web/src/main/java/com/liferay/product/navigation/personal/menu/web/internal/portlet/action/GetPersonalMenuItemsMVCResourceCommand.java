@@ -1,19 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.product.navigation.personal.menu.web.internal.portlet.action;
 
+import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -29,7 +23,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -38,11 +32,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.personal.menu.PersonalMenuEntry;
 import com.liferay.product.navigation.personal.menu.constants.PersonalMenuPortletKeys;
 import com.liferay.product.navigation.personal.menu.util.PersonalApplicationURLUtil;
-import com.liferay.product.navigation.personal.menu.web.internal.PersonalMenuEntryRegistry;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.TreeSet;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.ResourceRequest;
@@ -50,6 +45,8 @@ import javax.portlet.ResourceResponse;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -65,6 +62,20 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class GetPersonalMenuItemsMVCResourceCommand
 	extends BaseMVCResourceCommand {
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
+			bundleContext, PersonalMenuEntry.class,
+			"(product.navigation.personal.menu.group=*)",
+			(serviceReference, emitter) -> emitter.emit(
+				String.valueOf(
+					serviceReference.getProperty(
+						"product.navigation.personal.menu.group"))),
+			Collections.reverseOrder(
+				new PropertyServiceReferenceComparator<>(
+					"product.navigation.personal.menu.entry.order")));
+	}
 
 	@Override
 	protected void doServeResource(
@@ -127,6 +138,8 @@ public class GetPersonalMenuItemsMVCResourceCommand
 
 		JSONArray jsonArray = JSONUtil.put(
 			JSONUtil.put(
+				"data-senna-off", true
+			).put(
 				"href", realUserURL
 			).put(
 				"label",
@@ -152,7 +165,7 @@ public class GetPersonalMenuItemsMVCResourceCommand
 				changeLanguageLabel = _language.format(
 					realUserLocale, "use-x's-preferred-language-(x)",
 					new String[] {
-						_html.escape(user.getFullName()),
+						HtmlUtil.escape(user.getFullName()),
 						userLocale.getDisplayLanguage(realUserLocale)
 					},
 					false);
@@ -220,7 +233,11 @@ public class GetPersonalMenuItemsMVCResourceCommand
 					jsonObject.put(
 						"jsOnClickConfig",
 						personalMenuEntry.getJSOnClickConfigJSONObject(
-							_portal.getHttpServletRequest(portletRequest)));
+							_portal.getHttpServletRequest(portletRequest))
+					).put(
+						"onClickJSModuleURL",
+						personalMenuEntry.getOnClickJSModuleURL()
+					);
 				}
 			}
 			catch (PortalException portalException) {
@@ -244,9 +261,6 @@ public class GetPersonalMenuItemsMVCResourceCommand
 		throws PortalException {
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
-
-		List<List<PersonalMenuEntry>> groupedPersonalMenuEntries =
-			_personalMenuEntryRegistry.getGroupedPersonalMenuEntries();
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -274,27 +288,35 @@ public class GetPersonalMenuItemsMVCResourceCommand
 
 		JSONObject dividerJSONObject = JSONUtil.put("type", "divider");
 
-		for (List<PersonalMenuEntry> groupedPersonalMenuEntry :
-				groupedPersonalMenuEntries) {
+		for (String personalMenuGroup :
+				new TreeSet<>(_serviceTrackerMap.keySet())) {
 
-			JSONArray personalMenuEntriesJSONArray =
-				_getPersonalMenuEntriesJSONArray(
-					portletRequest, groupedPersonalMenuEntry);
+			try {
+				JSONArray personalMenuEntriesJSONArray =
+					_getPersonalMenuEntriesJSONArray(
+						portletRequest,
+						_serviceTrackerMap.getService(personalMenuGroup));
 
-			if (personalMenuEntriesJSONArray.length() == 0) {
-				continue;
+				if (personalMenuEntriesJSONArray.length() == 0) {
+					continue;
+				}
+
+				if (jsonArray.length() > 0) {
+					jsonArray.put(dividerJSONObject);
+				}
+
+				jsonArray.put(
+					JSONUtil.put(
+						"items", personalMenuEntriesJSONArray
+					).put(
+						"type", "group"
+					));
 			}
-
-			if (jsonArray.length() > 0) {
-				jsonArray.put(dividerJSONObject);
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
-
-			jsonArray.put(
-				JSONUtil.put(
-					"items", personalMenuEntriesJSONArray
-				).put(
-					"type", "group"
-				));
 		}
 
 		if ((jsonArray.length() > 0) && !themeDisplay.isImpersonated()) {
@@ -312,18 +334,15 @@ public class GetPersonalMenuItemsMVCResourceCommand
 		GetPersonalMenuItemsMVCResourceCommand.class);
 
 	@Reference
-	private Html _html;
-
-	@Reference
 	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;
 
 	@Reference
-	private PersonalMenuEntryRegistry _personalMenuEntryRegistry;
-
-	@Reference
 	private Portal _portal;
+
+	private ServiceTrackerMap<String, List<PersonalMenuEntry>>
+		_serviceTrackerMap;
 
 }

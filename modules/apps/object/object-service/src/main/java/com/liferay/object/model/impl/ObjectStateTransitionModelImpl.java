@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model.impl;
@@ -244,103 +235,121 @@ public class ObjectStateTransitionModelImpl
 	public Map<String, Function<ObjectStateTransition, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ObjectStateTransition, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ObjectStateTransition, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ObjectStateTransition, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ObjectStateTransition, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<ObjectStateTransition, Object>>();
-		Map<String, BiConsumer<ObjectStateTransition, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<ObjectStateTransition, ?>>();
+		private static final Map
+			<String, Function<ObjectStateTransition, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", ObjectStateTransition::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<ObjectStateTransition, Long>)
-				ObjectStateTransition::setMvccVersion);
-		attributeGetterFunctions.put("uuid", ObjectStateTransition::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<ObjectStateTransition, String>)
-				ObjectStateTransition::setUuid);
-		attributeGetterFunctions.put(
-			"objectStateTransitionId",
-			ObjectStateTransition::getObjectStateTransitionId);
-		attributeSetterBiConsumers.put(
-			"objectStateTransitionId",
-			(BiConsumer<ObjectStateTransition, Long>)
-				ObjectStateTransition::setObjectStateTransitionId);
-		attributeGetterFunctions.put(
-			"companyId", ObjectStateTransition::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ObjectStateTransition, Long>)
-				ObjectStateTransition::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", ObjectStateTransition::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<ObjectStateTransition, Long>)
-				ObjectStateTransition::setUserId);
-		attributeGetterFunctions.put(
-			"userName", ObjectStateTransition::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<ObjectStateTransition, String>)
-				ObjectStateTransition::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", ObjectStateTransition::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<ObjectStateTransition, Date>)
-				ObjectStateTransition::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", ObjectStateTransition::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<ObjectStateTransition, Date>)
-				ObjectStateTransition::setModifiedDate);
-		attributeGetterFunctions.put(
-			"objectStateFlowId", ObjectStateTransition::getObjectStateFlowId);
-		attributeSetterBiConsumers.put(
-			"objectStateFlowId",
-			(BiConsumer<ObjectStateTransition, Long>)
-				ObjectStateTransition::setObjectStateFlowId);
-		attributeGetterFunctions.put(
-			"sourceObjectStateId",
-			ObjectStateTransition::getSourceObjectStateId);
-		attributeSetterBiConsumers.put(
-			"sourceObjectStateId",
-			(BiConsumer<ObjectStateTransition, Long>)
-				ObjectStateTransition::setSourceObjectStateId);
-		attributeGetterFunctions.put(
-			"targetObjectStateId",
-			ObjectStateTransition::getTargetObjectStateId);
-		attributeSetterBiConsumers.put(
-			"targetObjectStateId",
-			(BiConsumer<ObjectStateTransition, Long>)
-				ObjectStateTransition::setTargetObjectStateId);
+		static {
+			Map<String, Function<ObjectStateTransition, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<ObjectStateTransition, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", ObjectStateTransition::getMvccVersion);
+			attributeGetterFunctions.put(
+				"uuid", ObjectStateTransition::getUuid);
+			attributeGetterFunctions.put(
+				"objectStateTransitionId",
+				ObjectStateTransition::getObjectStateTransitionId);
+			attributeGetterFunctions.put(
+				"companyId", ObjectStateTransition::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", ObjectStateTransition::getUserId);
+			attributeGetterFunctions.put(
+				"userName", ObjectStateTransition::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", ObjectStateTransition::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", ObjectStateTransition::getModifiedDate);
+			attributeGetterFunctions.put(
+				"objectStateFlowId",
+				ObjectStateTransition::getObjectStateFlowId);
+			attributeGetterFunctions.put(
+				"sourceObjectStateId",
+				ObjectStateTransition::getSourceObjectStateId);
+			attributeGetterFunctions.put(
+				"targetObjectStateId",
+				ObjectStateTransition::getTargetObjectStateId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<ObjectStateTransition, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ObjectStateTransition, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<ObjectStateTransition, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<ObjectStateTransition, Long>)
+					ObjectStateTransition::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<ObjectStateTransition, String>)
+					ObjectStateTransition::setUuid);
+			attributeSetterBiConsumers.put(
+				"objectStateTransitionId",
+				(BiConsumer<ObjectStateTransition, Long>)
+					ObjectStateTransition::setObjectStateTransitionId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ObjectStateTransition, Long>)
+					ObjectStateTransition::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<ObjectStateTransition, Long>)
+					ObjectStateTransition::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<ObjectStateTransition, String>)
+					ObjectStateTransition::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<ObjectStateTransition, Date>)
+					ObjectStateTransition::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<ObjectStateTransition, Date>)
+					ObjectStateTransition::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"objectStateFlowId",
+				(BiConsumer<ObjectStateTransition, Long>)
+					ObjectStateTransition::setObjectStateFlowId);
+			attributeSetterBiConsumers.put(
+				"sourceObjectStateId",
+				(BiConsumer<ObjectStateTransition, Long>)
+					ObjectStateTransition::setSourceObjectStateId);
+			attributeSetterBiConsumers.put(
+				"targetObjectStateId",
+				(BiConsumer<ObjectStateTransition, Long>)
+					ObjectStateTransition::setTargetObjectStateId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -900,7 +909,8 @@ public class ObjectStateTransitionModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<ObjectStateTransition, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

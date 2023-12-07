@@ -1,24 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.internal.upgrade.registry;
 
-import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
+import com.liferay.comment.upgrade.DiscussionSubscriptionClassNameUpgradeProcess;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.settings.SettingsFactory;
+import com.liferay.portal.kernel.settings.SettingsLocatorHelper;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
@@ -56,17 +48,18 @@ public class WikiServiceUpgradeStepRegistrator
 		registry.register(
 			"0.0.3", "1.0.0", new UpgradeCompanyId(),
 			new UpgradeLastPublishDate(), new UpgradePortletPreferences(),
-			new UpgradePortletSettings(_settingsFactory),
+			new UpgradePortletSettings(_settingsLocatorHelper),
 			new WikiPageResourceUpgradeProcess(), new WikiPageUpgradeProcess());
 
 		registry.register("1.0.0", "1.1.0", new WikiNodeUpgradeProcess());
 
 		registry.register(
 			"1.1.0", "1.1.1",
-			new UpgradeDiscussionSubscriptionClassName(
+			new DiscussionSubscriptionClassNameUpgradeProcess(
 				_classNameLocalService, _subscriptionLocalService,
 				WikiPage.class.getName(),
-				UpgradeDiscussionSubscriptionClassName.DeletionMode.ADD_NEW));
+				DiscussionSubscriptionClassNameUpgradeProcess.DeletionMode.
+					ADD_NEW));
 
 		registry.register(
 			"1.1.1", "2.0.0",
@@ -102,13 +95,18 @@ public class WikiServiceUpgradeStepRegistrator
 				}
 
 			});
+
+		registry.register(
+			"2.3.0", "2.4.0",
+			new CTModelUpgradeProcess(
+				"WikiNode", "WikiPage", "WikiPageResource"));
 	}
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
-	private SettingsFactory _settingsFactory;
+	private SettingsLocatorHelper _settingsLocatorHelper;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

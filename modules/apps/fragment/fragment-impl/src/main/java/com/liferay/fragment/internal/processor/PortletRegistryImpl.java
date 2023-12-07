@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.internal.processor;
 
-import com.liferay.fragment.contributor.PortletAliasRegistration;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.petra.string.StringPool;
@@ -28,18 +18,19 @@ import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.render.PortletRenderParts;
 import com.liferay.portal.kernel.portlet.render.PortletRenderUtil;
 import com.liferay.portal.kernel.service.PortletLocalService;
-import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -48,14 +39,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * @author Pavel Savinov
@@ -122,17 +107,56 @@ public class PortletRegistryImpl implements PortletRegistry {
 			portletIds.add(portletId);
 		}
 
+		Matcher liferayPortletRuntimeMatcher =
+			_liferayPortletRuntimePattern.matcher(fragmentEntryLink.getHtml());
+
+		while (liferayPortletRuntimeMatcher.find()) {
+			String portletName = _getAttributeValue(
+				"portletName", liferayPortletRuntimeMatcher.group(2));
+
+			if (Validator.isNull(portletName)) {
+				continue;
+			}
+
+			String instanceId = _getAttributeValue(
+				"instanceId", liferayPortletRuntimeMatcher.group(1));
+
+			if (Validator.isNull(instanceId)) {
+				instanceId = _getAttributeValue(
+					"instanceId", liferayPortletRuntimeMatcher.group(3));
+			}
+
+			String portletId = PortletIdCodec.encode(
+				PortletIdCodec.decodePortletName(portletName),
+				PortletIdCodec.decodeUserId(portletName),
+				StringUtil.replace(
+					instanceId, "fragmentEntryLinkNamespace",
+					fragmentEntryLink.getNamespace()));
+
+			portletIds.add(portletId);
+		}
+
 		return portletIds;
 	}
 
 	@Override
 	public List<String> getPortletAliases() {
-		return new ArrayList<>(_portletNames.keySet());
+		return new ArrayList<>(_aliasPortletNames.keySet());
 	}
 
 	@Override
 	public String getPortletName(String alias) {
-		return _portletNames.get(alias);
+		return _aliasPortletNames.get(alias);
+	}
+
+	@Override
+	public void registerAlias(String alias, String portletName) {
+		_aliasPortletNames.put(alias, portletName);
+	}
+
+	@Override
+	public void unregisterAlias(String alias) {
+		_aliasPortletNames.remove(alias);
 	}
 
 	@Override
@@ -149,25 +173,20 @@ public class PortletRegistryImpl implements PortletRegistry {
 			return;
 		}
 
-		Stream<String> stream = fragmentEntryLinkPortletIds.stream();
+		Set<Portlet> portlets = new HashSet<>();
 
-		List<Portlet> portlets = stream.map(
-			fragmentEntryLinkPortletId -> _portletLocalService.getPortletById(
-				fragmentEntryLinkPortletId)
-		).filter(
-			portlet -> {
-				if ((portlet == null) || !portlet.isActive() ||
-					portlet.isUndeployedPortlet()) {
+		for (String fragmentEntryLinkPortletId : fragmentEntryLinkPortletIds) {
+			Portlet portlet = _portletLocalService.getPortletById(
+				fragmentEntryLinkPortletId);
 
-					return false;
-				}
+			if ((portlet == null) || !portlet.isActive() ||
+				portlet.isUndeployedPortlet()) {
 
-				return true;
+				continue;
 			}
-		).distinct(
-		).collect(
-			Collectors.toList()
-		);
+
+			portlets.add(portlet);
+		}
 
 		for (Portlet portlet : portlets) {
 			try {
@@ -189,63 +208,42 @@ public class PortletRegistryImpl implements PortletRegistry {
 		}
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		target = "(com.liferay.fragment.entry.processor.portlet.alias=*)"
-	)
-	protected void setPortlet(
-		javax.portlet.Portlet jxPortlet, Map<String, Object> properties) {
+	private String _getAttributeValue(String attributeName, String string) {
+		String s = StringUtil.extractLast(
+			string, attributeName + StringPool.EQUAL);
 
-		String alias = MapUtil.getString(
-			properties, "com.liferay.fragment.entry.processor.portlet.alias");
-		String portletName = MapUtil.getString(
-			properties, "javax.portlet.name");
+		if (Validator.isNull(s)) {
+			return s;
+		}
 
-		_portletNames.put(alias, portletName);
+		if (s.startsWith(StringPool.QUOTE)) {
+			return StringUtil.extractFirst(s.substring(1), StringPool.QUOTE);
+		}
 
-		Bundle bundle = FrameworkUtil.getBundle(jxPortlet.getClass());
+		String[] strings = s.split("\\s+");
 
-		BundleContext bundleContext = bundle.getBundleContext();
+		if (!ArrayUtil.isEmpty(strings)) {
+			return strings[0];
+		}
 
-		_serviceRegistrations.put(
-			alias,
-			bundleContext.registerService(
-				PortletAliasRegistration.class,
-				new PortletAliasRegistration() {
-				},
-				HashMapDictionaryBuilder.<String, Object>put(
-					"com.liferay.fragment.entry.processor.portlet.alias", alias
-				).build()));
-	}
-
-	protected void unsetPortlet(
-		javax.portlet.Portlet jxPortlet, Map<String, Object> properties) {
-
-		String alias = MapUtil.getString(
-			properties, "com.liferay.fragment.entry.processor.portlet.alias");
-		String portletName = MapUtil.getString(
-			properties, "javax.portlet.name");
-
-		_portletNames.remove(alias, portletName);
-
-		ServiceRegistration<PortletAliasRegistration> serviceRegistration =
-			_serviceRegistrations.remove(alias);
-
-		serviceRegistration.unregister();
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortletRegistryImpl.class);
+
+	private static final Pattern _liferayPortletRuntimePattern =
+		Pattern.compile(
+			"\\[@liferay_portlet\\[\"runtime\"\\]([\\s\\S]*)?" +
+				"(portletName=\"\\w+\")([\\s\\S]*)?\\/\\]");
+
+	private final Map<String, String> _aliasPortletNames =
+		new ConcurrentHashMap<>();
 
 	@Reference
 	private JSONFactory _jsonFactory;
 
 	@Reference
 	private PortletLocalService _portletLocalService;
-
-	private final Map<String, String> _portletNames = new ConcurrentHashMap<>();
-	private final Map<String, ServiceRegistration<PortletAliasRegistration>>
-		_serviceRegistrations = new ConcurrentHashMap<>();
 
 }

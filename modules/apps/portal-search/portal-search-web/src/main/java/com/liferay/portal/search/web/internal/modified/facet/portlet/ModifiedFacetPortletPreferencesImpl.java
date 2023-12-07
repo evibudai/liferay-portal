@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.portlet;
@@ -22,9 +13,8 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.search.web.internal.helper.PortletPreferencesHelper;
-
-import java.util.Optional;
+import com.liferay.portal.search.web.internal.portlet.preferences.BasePortletPreferences;
+import com.liferay.portal.search.web.internal.user.facet.portlet.UserFacetPortletPreferences;
 
 import javax.portlet.PortletPreferences;
 
@@ -32,18 +22,31 @@ import javax.portlet.PortletPreferences;
  * @author Lino Alves
  */
 public class ModifiedFacetPortletPreferencesImpl
-	implements ModifiedFacetPortletPreferences {
+	extends BasePortletPreferences implements ModifiedFacetPortletPreferences {
 
 	public ModifiedFacetPortletPreferencesImpl(
-		Optional<PortletPreferences> portletPreferencesOptional) {
+		PortletPreferences portletPreferences) {
 
-		_portletPreferencesHelper = new PortletPreferencesHelper(
-			portletPreferencesOptional);
+		super(portletPreferences);
+	}
+
+	@Override
+	public int getFrequencyThreshold() {
+		return getInteger(
+			ModifiedFacetPortletPreferences.PREFERENCE_KEY_FREQUENCY_THRESHOLD,
+			0);
+	}
+
+	@Override
+	public String getOrder() {
+		return getString(
+			ModifiedFacetPortletPreferences.PREFERENCE_KEY_ORDER,
+			"rangesConfiguration");
 	}
 
 	@Override
 	public String getParameterName() {
-		return _portletPreferencesHelper.getString(
+		return getString(
 			ModifiedFacetPortletPreferences.PREFERENCE_KEY_PARAMETER_NAME,
 			"modified");
 	}
@@ -70,9 +73,16 @@ public class ModifiedFacetPortletPreferencesImpl
 
 	@Override
 	public String getRangesString() {
-		return _portletPreferencesHelper.getString(
+		return getString(
 			ModifiedFacetPortletPreferences.PREFERENCE_KEY_RANGES,
 			StringPool.BLANK);
+	}
+
+	@Override
+	public boolean isFrequenciesVisible() {
+		return getBoolean(
+			UserFacetPortletPreferences.PREFERENCE_KEY_FREQUENCIES_VISIBLE,
+			true);
 	}
 
 	private JSONArray _getDefaultRangesJSONArray() {
@@ -101,7 +111,5 @@ public class ModifiedFacetPortletPreferencesImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ModifiedFacetPortletPreferencesImpl.class);
-
-	private final PortletPreferencesHelper _portletPreferencesHelper;
 
 }

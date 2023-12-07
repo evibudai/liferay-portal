@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.item.selector.web.internal.display.context;
@@ -33,7 +24,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
@@ -71,24 +61,22 @@ public class LayoutItemSelectorViewDisplayContext {
 			return _itemSelectedReturnType;
 		}
 
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			_layoutItemSelectorCriterion.getDesiredItemSelectorReturnTypes();
+		_itemSelectedReturnType = URLItemSelectorReturnType.class.getName();
 
-		Stream<ItemSelectorReturnType> desiredItemSelectorReturnTypesStream =
-			desiredItemSelectorReturnTypes.stream();
+		for (ItemSelectorReturnType itemSelectorReturnType :
+				_layoutItemSelectorCriterion.
+					getDesiredItemSelectorReturnTypes()) {
 
-		_itemSelectedReturnType = desiredItemSelectorReturnTypesStream.map(
-			itemSelectorReturnType -> {
-				Class<?> clazz = itemSelectorReturnType.getClass();
+			Class<?> clazz = itemSelectorReturnType.getClass();
 
-				return clazz.getName();
+			if (_supportedItemSelectorReturnTypesClassNames.contains(
+					clazz.getName())) {
+
+				_itemSelectedReturnType = clazz.getName();
+
+				break;
 			}
-		).filter(
-			_supportedItemSelectorReturnTypesClassNames::contains
-		).findFirst(
-		).orElse(
-			URLItemSelectorReturnType.class.getName()
-		);
+		}
 
 		return _itemSelectedReturnType;
 	}
@@ -109,10 +97,6 @@ public class LayoutItemSelectorViewDisplayContext {
 		return _layoutItemSelectorCriterion.isEnableCurrentPage();
 	}
 
-	public boolean isFollowURLOnTitleClick() {
-		return _layoutItemSelectorCriterion.isFollowURLOnTitleClick();
-	}
-
 	public boolean isMultiSelection() {
 		return _layoutItemSelectorCriterion.isMultiSelection();
 	}
@@ -123,14 +107,6 @@ public class LayoutItemSelectorViewDisplayContext {
 
 	public boolean isShowBreadcrumb() {
 		return _layoutItemSelectorCriterion.isShowBreadcrumb();
-	}
-
-	public boolean isShowDraftPages() {
-		return _layoutItemSelectorCriterion.isShowDraftPages();
-	}
-
-	public boolean isShowHiddenPages() {
-		return _layoutItemSelectorCriterion.isShowHiddenPages();
 	}
 
 	private BreadcrumbEntry _getHomeBreadcrumbEntry() throws PortalException {

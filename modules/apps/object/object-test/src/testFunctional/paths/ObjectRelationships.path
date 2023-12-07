@@ -17,12 +17,12 @@
 	</tr>
 	<tr>
 		<td>SELECT_PARAMETER_OPTION</td>
-		<td>//button[@class = 'dropdown-item']//div[contains(text(),'${key_parameterOption}')]</td>
+		<td>//button[@class = 'dropdown-item']//div[contains(@class, 'd-flex')][contains(text(),'${key_parameterOption}')]</td>
 		<td></td>
 	</tr>
 	<tr>
-		<td>OPTIONS_TAB_RELATIONSHIPS</td>
-		<td>//button[@role='menuitem']//div[contains(.,'Relationship')]//span[contains(@class,'label-item') and contains(.,'${key_relationType}')]</td>
+		<td>OPTIONS_TAB_RELATIONSHIPS_LABEL_AND_RELATED_OBJECT</td>
+		<td>//div[contains(@class,'dnd-tr') and contains(.,'${key_label}')and contains(.,'${key_relatedObject}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -31,8 +31,13 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>SELECT_RELATIONSHIP_DETAILS_HIERARCHY_AND_LABEL</td>
+		<td>//div[contains(@class, 'dnd-td') and contains(., '${key_relationHierarchy}')]//preceding-sibling::div//*[contains(text(), '${key_labelName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>OPTIONS_TAB_RELATIONSHIPS_DISABLED_NAME_OR_TYPE</td>
-		<td>//input[@disabled][contains(@class,'form-control') and contains(@value,'${key_relation}')]</td>
+		<td>//button[@disabled][contains(@class,'form-control') and contains(.,'${key_relation}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -46,8 +51,28 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>OPTIONS_TAB_EXPANDED_RELATIONSHIPS_HIERARCHY</td>
+		<td>//div[contains(@class, 'lfr-objects')]//span[contains(text(), '${key_relationHierarchy}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>OPTIONS_TAB_RELATIONSHIPS_LAYOUT_TAB</td>
 		<td>//div[contains(@class,'object-admin-panel__header') and contains(.,'${key_layout}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>RELATIONSHIPS_FIELD</td>
+		<td>//*[contains(text(),'${field} Type')]/..//input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SELECTED_OBJECT_IN_MODAL</td>
+		<td>//div[@class='form-group']//label[contains(.,'${key_relationType}')]/../input[contains(@value,'${key_relationObject}')] | //div[@class='form-group']//label[contains(.,'${key_relationType}')]/../div[contains(.,'${key_relationObject}')] </td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>VIEW_VALUE_DISABLED</td>
+		<td>//input[@disabled and contains(@value,'${key_valueName}')]</td>
 		<td></td>
 	</tr>
 </tbody>

@@ -1,26 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.renderer.react.internal.renderer;
 
-import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.renderer.constants.FragmentRendererConstants;
+import com.liferay.fragment.renderer.react.internal.helper.FragmentEntryLinkJSModuleInitializerHelper;
 import com.liferay.fragment.renderer.react.internal.util.FragmentEntryFragmentRendererReactUtil;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.frontend.js.loader.modules.extender.npm.JSPackage;
@@ -96,6 +87,8 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
+		_fragmentEntryLinkJSModuleInitializerHelper.ensureInitialized();
+
 		try {
 			PrintWriter printWriter = httpServletResponse.getWriter();
 
@@ -132,6 +125,8 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 	@Activate
 	protected void activate() {
 		_jsPackage = _npmResolver.getJSPackage();
+
+		_fragmentEntryLinkJSModuleInitializerHelper.ensureInitialized();
 	}
 
 	private FragmentEntry _getContributedFragmentEntry(
@@ -193,12 +188,8 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 		sb.append("</div>");
 
 		if (Validator.isNotNull(fragmentEntryLink.getCss())) {
-			if (Objects.equals(
-					fragmentRendererContext.getMode(),
-					FragmentEntryLinkConstants.EDIT) ||
-				Objects.equals(
-					fragmentRendererContext.getMode(),
-					FragmentEntryLinkConstants.INDEX)) {
+			if (fragmentRendererContext.isEditMode() ||
+				fragmentRendererContext.isIndexMode()) {
 
 				sb.append("<style>");
 				sb.append(fragmentEntryLink.getCss());
@@ -257,6 +248,10 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private FragmentEntryLinkJSModuleInitializerHelper
+		_fragmentEntryLinkJSModuleInitializerHelper;
 
 	@Reference
 	private JSONFactory _jsonFactory;

@@ -1,9 +1,10 @@
 definition {
 
-	macro addWithWorkflowPG {
-		PageComment.reply(commentBody = "${commentBody}");
+	@summary = "Default summary"
+	macro addWithWorkflowPG(commentAuthor = null, commentBody = null) {
+		PageComment.reply(commentBody = ${commentBody});
 
-		var key_commentBody = "${commentBody}";
+		var key_commentBody = ${commentBody};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#SUCCESS",
@@ -11,32 +12,35 @@ definition {
 
 		AssertElementPresent(locator1 = "Comments#WORKFLOW_STATUS");
 
-		var key_entryComment = "${commentBody}";
-		var key_userFullName = "${commentAuthor}";
+		var key_entryComment = ${commentBody};
+		var key_userFullName = ${commentAuthor};
 
 		AssertTextEquals(
 			locator1 = "Comments#COMMENT_BODY_SPECIFIC",
-			value1 = "${commentBody}");
+			value1 = ${commentBody});
 
 		AssertTextEquals(
 			locator1 = "Comments#USER_NAME",
-			value1 = "${commentAuthor}");
+			value1 = ${commentAuthor});
 	}
 
-	macro editCommentField {
-		CKEditor.addContent(content = "${commentBody}");
+	@summary = "Default summary"
+	macro editCommentField(commentBody = null) {
+		CKEditor.addContent(content = ${commentBody});
 	}
 
-	macro reply {
-		PageComment.editCommentField(commentBody = "${commentBody}");
+	@summary = "Default summary"
+	macro reply(commentBody = null) {
+		PageComment.editCommentField(commentBody = ${commentBody});
 
 		AssertClick(
 			locator1 = "Button#REPLY",
 			value1 = "Reply");
 	}
 
-	macro tearDownPG {
-		Navigator.gotoPage(pageName = "${pageName}");
+	@summary = "Default summary"
+	macro tearDownPG(pageName = null) {
+		Navigator.gotoPage(pageName = ${pageName});
 
 		while (IsElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS")) {
 			MouseOver(locator1 = "Comments#COMMENT_BODY");
@@ -51,50 +55,53 @@ definition {
 		}
 	}
 
-	macro viewAsWorkflowAsset {
-		SiteAdmin.viewPortletTitle(portletTitle = "${commentBody}");
+	@summary = "Default summary"
+	macro viewAsWorkflowAsset(commentBody = null) {
+		SiteAdmin.viewPortletTitle(portletTitle = ${commentBody});
 
-		var key_commentBody = "${commentBody}";
+		var key_commentBody = ${commentBody};
 
 		AssertTextEquals(
 			locator1 = "Comments#COMMENT_BODY_ASSET",
-			value1 = "${commentBody}");
+			value1 = ${commentBody});
 	}
 
-	macro viewPG {
-		var key_commentBody = "${commentBody}";
+	@summary = "Default summary"
+	macro viewPG(commentAuthor = null, commentBody = null) {
+		var key_commentBody = ${commentBody};
 
 		AssertElementNotPresent(locator1 = "Comments#WORKFLOW_STATUS");
 
-		var key_entryComment = "${commentBody}";
-		var key_userFullName = "${commentAuthor}";
+		var key_entryComment = ${commentBody};
+		var key_userFullName = ${commentAuthor};
 
 		AssertTextEquals(
 			locator1 = "Comments#COMMENT_BODY_SPECIFIC",
-			value1 = "${commentBody}");
+			value1 = ${commentBody});
 
 		AssertTextEquals(
 			locator1 = "Comments#USER_NAME",
-			value1 = "${commentAuthor}");
+			value1 = ${commentAuthor});
 	}
 
-	macro viewWithWorkflowPG {
-		var key_commentBody = "${commentBody}";
+	@summary = "Default summary"
+	macro viewWithWorkflowPG(commentAuthor = null, commentBody = null, commentStatus = null) {
+		var key_commentBody = ${commentBody};
 
 		AssertTextEquals(
 			locator1 = "Comments#WORKFLOW_STATUS",
-			value1 = "${commentStatus}");
+			value1 = ${commentStatus});
 
-		var key_entryComment = "${commentBody}";
-		var key_userFullName = "${commentAuthor}";
+		var key_entryComment = ${commentBody};
+		var key_userFullName = ${commentAuthor};
 
 		AssertTextEquals(
 			locator1 = "Comments#COMMENT_BODY_SPECIFIC",
-			value1 = "${commentBody}");
+			value1 = ${commentBody});
 
 		AssertTextEquals(
 			locator1 = "Comments#USER_NAME",
-			value1 = "${commentAuthor}");
+			value1 = ${commentAuthor});
 	}
 
 }

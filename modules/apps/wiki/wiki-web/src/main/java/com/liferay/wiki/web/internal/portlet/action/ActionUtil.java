@@ -1,29 +1,24 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.web.internal.portlet.action;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -150,12 +145,15 @@ public class ActionUtil {
 			themeDisplay.getScopeGroupId());
 
 		if (nodesCount == 0) {
-			Layout layout = themeDisplay.getLayout();
+			Group group = GroupLocalServiceUtil.fetchGroup(
+				themeDisplay.getScopeGroupId());
 
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				WikiNode.class.getName(), portletRequest);
 
 			serviceContext.setAddGroupPermissions(true);
+
+			Layout layout = themeDisplay.getLayout();
 
 			if (layout.isPublicLayout() || layout.isTypeControlPanel()) {
 				serviceContext.setAddGuestPermissions(true);
@@ -164,8 +162,13 @@ public class ActionUtil {
 				serviceContext.setAddGuestPermissions(false);
 			}
 
-			node = WikiNodeLocalServiceUtil.addDefaultNode(
-				themeDisplay.getDefaultUserId(), serviceContext);
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						group.getCtCollectionId())) {
+
+				node = WikiNodeLocalServiceUtil.addDefaultNode(
+					themeDisplay.getGuestUserId(), serviceContext);
+			}
 		}
 		else {
 			node = getFirstNode(portletRequest);
@@ -194,6 +197,8 @@ public class ActionUtil {
 			nodeId, wikiGroupServiceConfiguration.frontPageName(), 0);
 
 		if (page == null) {
+			WikiNode node = WikiNodeLocalServiceUtil.getNode(nodeId);
+
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)portletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
@@ -206,11 +211,14 @@ public class ActionUtil {
 
 			boolean workflowEnabled = WorkflowThreadLocal.isEnabled();
 
-			try {
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						node.getCtCollectionId())) {
+
 				WorkflowThreadLocal.setEnabled(false);
 
 				page = WikiPageLocalServiceUtil.addPage(
-					themeDisplay.getDefaultUserId(), nodeId,
+					themeDisplay.getGuestUserId(), nodeId,
 					wikiGroupServiceConfiguration.frontPageName(), null,
 					WikiPageConstants.NEW, true, serviceContext);
 			}

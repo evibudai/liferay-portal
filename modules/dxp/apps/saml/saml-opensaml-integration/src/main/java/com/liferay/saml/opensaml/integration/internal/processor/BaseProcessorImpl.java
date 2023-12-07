@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.processor;
@@ -30,7 +21,6 @@ import com.liferay.saml.opensaml.integration.processor.context.ProcessorContext;
 import java.io.Serializable;
 
 import java.util.AbstractMap;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,7 +29,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * @author Stian Sigvartsen
@@ -106,12 +95,12 @@ public abstract class BaseProcessorImpl
 			String fieldExpression, Class<V> clazz,
 			UnsafeBiConsumer<T, V[], ?> unsafeBiConsumer) {
 
-			V[] values = _processorContext.getValueArray(
-				clazz, fieldExpression);
-
-			if ((values == null) || (values.length == 0)) {
+			if (!_processorContext.isDefined(clazz, fieldExpression)) {
 				return;
 			}
+
+			V[] values = _processorContext.getValueArray(
+				clazz, fieldExpression);
 
 			_patchingQueue.add(
 				object -> unsafeBiConsumer.accept(object, values));
@@ -132,11 +121,8 @@ public abstract class BaseProcessorImpl
 
 			handleUnsafeStringArray(
 				fieldExpression,
-				(object, values) -> {
-					for (String value : values) {
-						biConsumer.accept(object, GetterUtil.getBoolean(value));
-					}
-				});
+				(object, values) -> biConsumer.accept(
+					object, GetterUtil.getBoolean(_head(values))));
 		}
 
 		@Override
@@ -145,15 +131,8 @@ public abstract class BaseProcessorImpl
 
 			handleUnsafeStringArray(
 				fieldExpression,
-				(object, value) -> {
-					boolean[] booleanArray = new boolean[value.length];
-
-					for (int i = 0; i < booleanArray.length; i++) {
-						booleanArray[i] = GetterUtil.getBoolean(value[i]);
-					}
-
-					biConsumer.accept(object, booleanArray);
-				});
+				(object, value) -> biConsumer.accept(
+					object, GetterUtil.getBooleanValues(value)));
 		}
 
 		@Override
@@ -163,13 +142,11 @@ public abstract class BaseProcessorImpl
 			handleUnsafeStringArray(
 				fieldExpression,
 				(object, values) -> {
-					for (String value : values) {
-						try {
-							biConsumer.accept(object, Long.parseLong(value));
-						}
-						catch (NumberFormatException numberFormatException) {
-							throw numberFormatException;
-						}
+					try {
+						biConsumer.accept(object, Long.parseLong(values[0]));
+					}
+					catch (NumberFormatException numberFormatException) {
+						throw numberFormatException;
 					}
 				});
 		}
@@ -181,13 +158,18 @@ public abstract class BaseProcessorImpl
 			handleUnsafeStringArray(
 				fieldExpression,
 				(object, value) -> {
-					Stream<String> stream = Arrays.stream(value);
+					try {
+						long[] longArray = new long[value.length];
 
-					biConsumer.accept(
-						object,
-						stream.mapToLong(
-							Long::parseLong
-						).toArray());
+						for (int i = 0; i < longArray.length; i++) {
+							longArray[i] = Long.parseLong(value[i]);
+						}
+
+						biConsumer.accept(object, longArray);
+					}
+					catch (NumberFormatException numberFormatException) {
+						throw numberFormatException;
+					}
 				});
 		}
 
@@ -197,16 +179,14 @@ public abstract class BaseProcessorImpl
 
 			handleUnsafeStringArray(
 				fieldExpression,
-				(object, values) -> biConsumer.accept(object, values[0]));
+				(object, values) -> biConsumer.accept(object, _head(values)));
 		}
 
 		@Override
 		public void mapStringArray(
 			String fieldExpression, BiConsumer<T, String[]> biConsumer) {
 
-			handleUnsafeStringArray(
-				fieldExpression,
-				(object, values) -> biConsumer.accept(object, values));
+			handleUnsafeStringArray(fieldExpression, biConsumer::accept);
 		}
 
 		@Override
@@ -216,7 +196,16 @@ public abstract class BaseProcessorImpl
 
 			handleUnsafeStringArray(
 				fieldExpression,
-				(object, values) -> unsafeBiConsumer.accept(object, values[0]));
+				(object, values) -> unsafeBiConsumer.accept(
+					object, _head(values)));
+		}
+
+		private <V> V _head(V[] values) {
+			if ((values == null) || (values.length == 0)) {
+				return null;
+			}
+
+			return values[0];
 		}
 
 		private final Queue<UnsafeConsumer<T, ?>> _patchingQueue =
@@ -274,6 +263,20 @@ public abstract class BaseProcessorImpl
 			}
 
 			return (V[])map.get(fieldExpression);
+		}
+
+		public boolean isDefined(Class<?> clazz, String fieldExpression) {
+			if (!Validator.isBlank(_prefix)) {
+				fieldExpression = _prefix + ':' + fieldExpression;
+			}
+
+			Map<String, Object[]> map = _maps.get(clazz);
+
+			if (map == null) {
+				return false;
+			}
+
+			return map.containsKey(fieldExpression);
 		}
 
 		private final String _prefix;

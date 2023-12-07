@@ -1,24 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.sort;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.search.elasticsearch7.internal.geolocation.DistanceUnitTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.geolocation.GeoDistanceTypeTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.geolocation.GeoLocationPointTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.script.ScriptTranslator;
-import com.liferay.portal.search.geolocation.GeoLocationPoint;
 import com.liferay.portal.search.query.QueryTranslator;
 import com.liferay.portal.search.sort.FieldSort;
 import com.liferay.portal.search.sort.GeoDistanceSort;
@@ -30,9 +21,6 @@ import com.liferay.portal.search.sort.SortFieldTranslator;
 import com.liferay.portal.search.sort.SortMode;
 import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.SortVisitor;
-
-import java.util.List;
-import java.util.stream.Stream;
 
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -53,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "search.engine.impl=Elasticsearch",
-	service = {SortFieldTranslator.class, SortVisitor.class}
+	service = SortFieldTranslator.class
 )
 public class ElasticsearchSortFieldTranslator
 	implements SortFieldTranslator<SortBuilder<?>>,
@@ -89,19 +77,12 @@ public class ElasticsearchSortFieldTranslator
 
 	@Override
 	public SortBuilder<?> visit(GeoDistanceSort geoDistanceSort) {
-		List<GeoLocationPoint> geoLocationPoints =
-			geoDistanceSort.getGeoLocationPoints();
-
-		Stream<GeoLocationPoint> stream = geoLocationPoints.stream();
-
 		GeoDistanceSortBuilder geoDistanceSortBuilder =
 			SortBuilders.geoDistanceSort(
 				geoDistanceSort.getField(),
-				stream.map(
-					GeoLocationPointTranslator::translate
-				).toArray(
-					GeoPoint[]::new
-				));
+				TransformUtil.transformToArray(
+					geoDistanceSort.getGeoLocationPoints(),
+					GeoLocationPointTranslator::translate, GeoPoint.class));
 
 		geoDistanceSortBuilder.order(translate(geoDistanceSort.getSortOrder()));
 
@@ -209,10 +190,8 @@ public class ElasticsearchSortFieldTranslator
 		else if (sortMode == SortMode.SUM) {
 			return org.elasticsearch.search.sort.SortMode.SUM;
 		}
-		else {
-			throw new IllegalArgumentException(
-				"Invalid sort mode: " + sortMode);
-		}
+
+		throw new IllegalArgumentException("Invalid sort mode: " + sortMode);
 	}
 
 	protected org.elasticsearch.search.sort.SortOrder translate(
@@ -224,10 +203,8 @@ public class ElasticsearchSortFieldTranslator
 		else if (sortOrder == SortOrder.DESC) {
 			return org.elasticsearch.search.sort.SortOrder.DESC;
 		}
-		else {
-			throw new IllegalArgumentException(
-				"Invalid sort order: " + sortOrder);
-		}
+
+		throw new IllegalArgumentException("Invalid sort order: " + sortOrder);
 	}
 
 	private final DistanceUnitTranslator _distanceUnitTranslator =

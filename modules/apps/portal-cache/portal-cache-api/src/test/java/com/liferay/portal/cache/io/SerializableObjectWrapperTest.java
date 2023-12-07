@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.cache.io;
@@ -17,6 +8,8 @@ package com.liferay.portal.cache.io;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.lang.ClassLoaderPool;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.test.log.LogCapture;
@@ -116,30 +109,25 @@ public class SerializableObjectWrapperTest {
 	public void testWithBrokenClassLoader() throws Exception {
 		ClassLoaderPool.unregister(ClassLoaderPool.class.getClassLoader());
 
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
 		ClassNotFoundException classNotFoundException =
 			new ClassNotFoundException();
 
-		currentThread.setContextClassLoader(
-			new ClassLoader() {
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				new ClassLoader() {
 
-				@Override
-				public Class<?> loadClass(String name)
-					throws ClassNotFoundException {
+					@Override
+					public Class<?> loadClass(String name)
+						throws ClassNotFoundException {
 
-					if (name.equals(TestSerializable.class.getName())) {
-						throw classNotFoundException;
+						if (name.equals(TestSerializable.class.getName())) {
+							throw classNotFoundException;
+						}
+
+						return super.loadClass(name);
 					}
 
-					return super.loadClass(name);
-				}
-
-			});
-
-		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
+				});
+			LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
 				SerializableObjectWrapper.class.getName(), Level.ALL)) {
 
 			// Test unwrap
@@ -157,9 +145,6 @@ public class SerializableObjectWrapperTest {
 			Assert.assertEquals(
 				"Unable to deserialize object", logEntry.getMessage());
 			Assert.assertSame(classNotFoundException, logEntry.getThrowable());
-		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 

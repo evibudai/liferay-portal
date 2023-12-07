@@ -1,6 +1,7 @@
 @component-name = "portal-database-upgrade-framework"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Database Upgrade Framework";
@@ -16,12 +17,13 @@ definition {
 	}
 
 	@description = "LPS-163807 This is a test to cover LPS-158824 | Data cleanup does not remove portlet preferences"
-	@priority = "4"
+	@priority = 4
 	test CanCleanupHelloWorldDataAfterUpgrade {
 		property data.archive.type = "data-archive-portal";
 		property database.types = "mysql";
 		property portal.version = "6.2.10.21";
-		property test.name.skip.portal.instance = "DataCleanup#CanCleanupHelloWorldDataAfterUpgrade";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var classNameQuery = "SELECT * FROM ClassName_ WHERE value LIKE '%com.liferay.hello.world.web%';";
 		var releaseQuery = "SELECT * FROM Release_ WHERE servletContextName LIKE '%com.liferay.hello.world.web%';";
@@ -29,19 +31,19 @@ definition {
 
 		AssertConsoleTextNotPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.UpgradeHelloWorld");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
 
-		if (!(contains("${classNameTable}", "com.liferay.hello.world.web"))) {
+		if (!(contains(${classNameTable}, "com.liferay.hello.world.web"))) {
 			echo("${classNameTable} - Failed to find Hello World in ClassName_ table.");
 		}
-		else if (!(contains("${releaseTable}", "com.liferay.hello.world.web"))) {
-			echo("${releaseTable}");
+		else if (!(contains(${releaseTable}, "com.liferay.hello.world.web"))) {
+			echo(${releaseTable});
 
 			fail("Failed to find Hello World in Release_ table.");
 		}
-		else if (!(contains("${resourceActionTable}", "com.liferay.hello.world.web"))) {
+		else if (!(contains(${resourceActionTable}, "com.liferay.hello.world.web"))) {
 			echo("${resourceActionTable} - Failed to find Hello World in ResourceAction table.");
 		}
 
@@ -63,33 +65,34 @@ definition {
 
 		AssertConsoleTextPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.UpgradeHelloWorld");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
 
-		if (contains("${classNameTable}", "com.liferay.hello.world.web")) {
-			echo("${classNameTable}");
+		if (contains(${classNameTable}, "com.liferay.hello.world.web")) {
+			echo(${classNameTable});
 
 			fail("Failed: Hello World data still present in ClassName_ table.");
 		}
-		else if (contains("${releaseTable}", "com.liferay.hello.world.web")) {
-			echo("${releaseTable}");
+		else if (contains(${releaseTable}, "com.liferay.hello.world.web")) {
+			echo(${releaseTable});
 
 			fail("Failed: Hello World data still present in Release_ table.");
 		}
-		else if (contains("${resourceActionTable}", "com.liferay.hello.world.web")) {
-			echo("${resourceActionTable}");
+		else if (contains(${resourceActionTable}, "com.liferay.hello.world.web")) {
+			echo(${resourceActionTable});
 
 			fail("Failed: Hello World data still present in ResourceAction table.");
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test CanCleanupOpensocialDataAfterUpgrade {
 		property data.archive.type = "data-archive-opensocial";
 		property database.types = "mysql";
 		property portal.version = "6.2.10.21";
-		property test.name.skip.portal.instance = "DataCleanup#CanCleanupOpensocialDataAfterUpgrade";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var classNameQuery = "SELECT * FROM ClassName_ WHERE value LIKE '%com.liferay.opensocial.model.%';";
 		var releaseQuery = "SELECT * FROM Release_ WHERE servletContextName LIKE '%opensocial-portlet%';";
@@ -98,28 +101,28 @@ definition {
 
 		AssertConsoleTextNotPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.OpenSocialUpgradeProcess");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
-		var expandoTable = SQL.executeMySQLStatement(mysqlStatement = "${expandoTableQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
+		var expandoTable = SQL.executeMySQLStatement(mysqlStatement = ${expandoTableQuery});
 
-		if (!(contains("${classNameTable}", "com.liferay.opensocial.model."))) {
-			echo("${classNameTable}");
+		if (!(contains(${classNameTable}, "com.liferay.opensocial.model."))) {
+			echo(${classNameTable});
 
 			fail("Failed to find opensocial portlet in ClassName_ table.");
 		}
-		else if (!(contains("${releaseTable}", "opensocial-portlet"))) {
-			echo("${releaseTable}");
+		else if (!(contains(${releaseTable}, "opensocial-portlet"))) {
+			echo(${releaseTable});
 
 			fail("Failed to find opensocial portlet in Release_ table.");
 		}
-		else if (!(contains("${resourceActionTable}", "com.liferay.opensocial"))) {
-			echo("${resourceActionTable}");
+		else if (!(contains(${resourceActionTable}, "com.liferay.opensocial"))) {
+			echo(${resourceActionTable});
 
 			fail("Failed to find opensocial portlet in ResourceAction table.");
 		}
-		else if (!(contains("${expandoTable}", "OPEN_SOCIAL_DATA_"))) {
-			echo("${expandoTable}");
+		else if (!(contains(${expandoTable}, "OPEN_SOCIAL_DATA_"))) {
+			echo(${expandoTable});
 
 			fail("Failed to find opensocial portlet in expandoTable table.");
 		}
@@ -142,39 +145,40 @@ definition {
 
 		AssertConsoleTextPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.OpenSocialUpgradeProcess");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
-		var expandoTable = SQL.executeMySQLStatement(mysqlStatement = "${expandoTableQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
+		var expandoTable = SQL.executeMySQLStatement(mysqlStatement = ${expandoTableQuery});
 
-		if (contains("${classNameTable}", "com.liferay.opensocial.model.")) {
-			echo("${classNameTable}");
+		if (contains(${classNameTable}, "com.liferay.opensocial.model.")) {
+			echo(${classNameTable});
 
 			fail("Failed: opensocial data still present in ClassName_ table.");
 		}
-		else if (contains("${releaseTable}", "opensocial-portlet")) {
-			echo("${releaseTable}");
+		else if (contains(${releaseTable}, "opensocial-portlet")) {
+			echo(${releaseTable});
 
 			fail("Failed: opensocial data still present in Release_ table.");
 		}
-		else if (contains("${resourceActionTable}", "com.liferay.opensocial")) {
-			echo("${resourceActionTable}");
+		else if (contains(${resourceActionTable}, "com.liferay.opensocial")) {
+			echo(${resourceActionTable});
 
 			fail("Failed: opensocial data still present in ResourceAction table.");
 		}
-		else if (contains("${expandoTable}", "OPEN_SOCIAL_DATA_")) {
-			echo("${expandoTable}");
+		else if (contains(${expandoTable}, "OPEN_SOCIAL_DATA_")) {
+			echo(${expandoTable});
 
 			fail("Failed: opensocial data still present in expandoTable table.");
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test CanCleanupShoppingDataAfterUpgrade {
 		property data.archive.type = "data-archive-portal";
 		property database.types = "mysql";
 		property portal.version = "6.2.10.21";
-		property test.name.skip.portal.instance = "DataCleanup#CanCleanupShoppingDataAfterUpgrade";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var classNameQuery = "SELECT * FROM ClassName_ WHERE value LIKE '%com.liferay.portlet.shopping%';";
 		var releaseQuery = "SELECT * FROM Release_ WHERE servletContextName LIKE '%com.liferay.shopping.service%';";
@@ -182,22 +186,22 @@ definition {
 
 		AssertConsoleTextNotPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.ShoppingUpgradeProcess");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
 
-		if (!(contains("${classNameTable}", "com.liferay.portlet.shopping"))) {
-			echo("${classNameTable}");
+		if (!(contains(${classNameTable}, "com.liferay.portlet.shopping"))) {
+			echo(${classNameTable});
 
 			fail("Failed to find shopping in ClassName_ table.");
 		}
-		else if (!(contains("${releaseTable}", "com.liferay.shopping.service"))) {
-			echo("${releaseTable}");
+		else if (!(contains(${releaseTable}, "com.liferay.shopping.service"))) {
+			echo(${releaseTable});
 
 			fail("Failed to find shopping in Release_ table.");
 		}
-		else if (!(contains("${resourceActionTable}", "com.liferay.portlet.shopping"))) {
-			echo("${resourceActionTable}");
+		else if (!(contains(${resourceActionTable}, "com.liferay.portlet.shopping"))) {
+			echo(${resourceActionTable});
 
 			fail("Failed to find shopping in ResourceAction table.");
 		}
@@ -220,33 +224,34 @@ definition {
 
 		AssertConsoleTextPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.ShoppingUpgradeProcess");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
 
-		if (contains("${classNameTable}", "com.liferay.portlet.shopping")) {
-			echo("${classNameTable}");
+		if (contains(${classNameTable}, "com.liferay.portlet.shopping")) {
+			echo(${classNameTable});
 
 			fail("Failed: Shopping data still present in ClassName_ table.");
 		}
-		else if (contains("${releaseTable}", "com.liferay.shopping.service")) {
-			echo("${releaseTable}");
+		else if (contains(${releaseTable}, "com.liferay.shopping.service")) {
+			echo(${releaseTable});
 
 			fail("Failed: Shopping data still present in Release_ table.");
 		}
-		else if (contains("${resourceActionTable}", "com.liferay.portlet.shopping")) {
-			echo("${resourceActionTable}");
+		else if (contains(${resourceActionTable}, "com.liferay.portlet.shopping")) {
+			echo(${resourceActionTable});
 
 			fail("Failed: Shopping data still present in ResourceAction table.");
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test CanCleanupSoftwareCatalogDataAfterUpgrade {
 		property data.archive.type = "data-archive-portal";
 		property database.types = "mysql";
 		property portal.version = "6.2.10.21";
-		property test.name.skip.portal.instance = "DataCleanup#CanCleanupSoftwareCatalogDataAfterUpgrade";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var classNameQuery = "SELECT * FROM ClassName_ WHERE value LIKE '%com.liferay.portlet.softwarecatalog%';";
 		var releaseQuery = "SELECT * FROM Release_ WHERE servletContextName LIKE '%com.liferay.softwarecatalog.service%';";
@@ -254,22 +259,22 @@ definition {
 
 		AssertConsoleTextNotPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.SoftwareCatalogUpgradeProcess");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
 
-		if (!(contains("${classNameTable}", "com.liferay.portlet.softwarecatalog"))) {
-			echo("${classNameTable}");
+		if (!(contains(${classNameTable}, "com.liferay.portlet.softwarecatalog"))) {
+			echo(${classNameTable});
 
 			fail("Failed to find software catalog in ClassName_ table.");
 		}
-		else if (!(contains("${releaseTable}", "com.liferay.softwarecatalog.service"))) {
-			echo("${releaseTable}");
+		else if (!(contains(${releaseTable}, "com.liferay.softwarecatalog.service"))) {
+			echo(${releaseTable});
 
 			fail("Failed to find software catalog in Release_ table.");
 		}
-		else if (!(contains("${resourceActionTable}", "com.liferay.portlet.softwarecatalog"))) {
-			echo("${resourceActionTable}");
+		else if (!(contains(${resourceActionTable}, "com.liferay.portlet.softwarecatalog"))) {
+			echo(${resourceActionTable});
 
 			fail("Failed to find software catalog in ResourceAction table.");
 		}
@@ -292,31 +297,32 @@ definition {
 
 		AssertConsoleTextPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.SoftwareCatalogUpgradeProcess");
 
-		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = "${classNameQuery}");
-		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = "${releaseQuery}");
-		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = "${resourceActionQuery}");
+		var classNameTable = SQL.executeMySQLStatement(mysqlStatement = ${classNameQuery});
+		var releaseTable = SQL.executeMySQLStatement(mysqlStatement = ${releaseQuery});
+		var resourceActionTable = SQL.executeMySQLStatement(mysqlStatement = ${resourceActionQuery});
 
-		if (contains("${classNameTable}", "com.liferay.portlet.softwarecatalog")) {
-			echo("${classNameTable}");
+		if (contains(${classNameTable}, "com.liferay.portlet.softwarecatalog")) {
+			echo(${classNameTable});
 
 			fail("Failed: Software catalog data still present in ClassName_ table.");
 		}
-		else if (contains("${releaseTable}", "com.liferay.softwarecatalog.service")) {
-			echo("${releaseTable}");
+		else if (contains(${releaseTable}, "com.liferay.softwarecatalog.service")) {
+			echo(${releaseTable});
 
 			fail("Failed: Software catalog data still present in Release_ table.");
 		}
-		else if (contains("${resourceActionTable}", "com.liferay.portlet.softwarecatalog")) {
-			echo("${resourceActionTable}");
+		else if (contains(${resourceActionTable}, "com.liferay.portlet.softwarecatalog")) {
+			echo(${resourceActionTable});
 
 			fail("Failed: Software catalog data still present in ResourceAction table.");
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanRemoveExpiredJournalArticle {
 		property database.types = "mysql";
-		property test.name.skip.portal.instance = "DataCleanup#CanRemoveExpiredJournalArticle";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var journalArticleQuery = "SELECT * FROM JournalArticle WHERE urlTitle LIKE '%wc-webcontent-title%';";
 
@@ -336,10 +342,10 @@ definition {
 			webContentStatus = "Expired",
 			webContentTitle = "WC WebContent Title");
 
-		var journalArticleTable = SQL.executeMySQLStatement(mysqlStatement = "${journalArticleQuery}");
+		var journalArticleTable = SQL.executeMySQLStatement(mysqlStatement = ${journalArticleQuery});
 
-		if (!(contains("${journalArticleTable}", "wc-webcontent-title"))) {
-			echo("${journalArticleTable}");
+		if (!(contains(${journalArticleTable}, "wc-webcontent-title"))) {
+			echo(${journalArticleTable});
 
 			fail("Failed to find expired journal article in JournalArticle table.");
 		}
@@ -368,16 +374,16 @@ definition {
 
 		WebContent.viewNotPresentCP(webContentTitle = "WC WebContent Title");
 
-		var journalArticleTable = SQL.executeMySQLStatement(mysqlStatement = "${journalArticleQuery}");
+		var journalArticleTable = SQL.executeMySQLStatement(mysqlStatement = ${journalArticleQuery});
 
-		if (contains("${journalArticleTable}", "wc-webcontent-title")) {
-			echo("${journalArticleTable}");
+		if (contains(${journalArticleTable}, "wc-webcontent-title")) {
+			echo(${journalArticleTable});
 
 			fail("Failed: Expired journal article data still present in JournalArticle table.");
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test FileConfigsWillTriggerDataCleanup {
 		property data.archive.type = "data-archive-portal";
 		property osgi.module.configuration.file.names = "com.liferay.data.cleanup.internal.configuration.DataCleanupConfiguration.config:com.liferay.data.cleanup.internal.configuration.DataRemovalConfiguration.config";
@@ -389,10 +395,12 @@ definition {
 		AssertConsoleTextPresent(value1 = "Completed upgrade process com.liferay.data.cleanup.internal.upgrade.SoftwareCatalogUpgradeProcess");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test UIConfigsWillTriggerCleanupAndBeSetToFalseAfterExecution {
 		property data.archive.type = "data-archive-portal";
 		property portal.version = "6.2.10.21";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.asset.model;
@@ -56,16 +47,8 @@ public class LayoutRevisionAssetRendererFactory
 	}
 
 	@Override
-	public AssetEntry getAssetEntry(long assetEntryId) throws PortalException {
-		return getAssetEntry(getClassName(), assetEntryId);
-	}
-
-	@Override
-	public AssetEntry getAssetEntry(String className, long classPK)
+	public AssetEntry getAssetEntry(LayoutRevision layoutRevision)
 		throws PortalException {
-
-		LayoutRevision layoutRevision =
-			_layoutRevisionLocalService.getLayoutRevision(classPK);
 
 		LayoutSetBranch layoutSetBranch =
 			_layoutSetBranchLocalService.getLayoutSetBranch(
@@ -74,7 +57,7 @@ public class LayoutRevisionAssetRendererFactory
 		User user = _userLocalService.getUserById(layoutRevision.getUserId());
 
 		AssetEntry assetEntry = _assetEntryLocalService.createAssetEntry(
-			classPK);
+			layoutRevision.getLayoutRevisionId());
 
 		assetEntry.setGroupId(layoutRevision.getGroupId());
 		assetEntry.setCompanyId(user.getCompanyId());
@@ -84,13 +67,25 @@ public class LayoutRevisionAssetRendererFactory
 		assetEntry.setClassNameId(
 			_portal.getClassNameId(LayoutRevision.class.getName()));
 		assetEntry.setClassPK(layoutRevision.getLayoutRevisionId());
-
 		assetEntry.setTitle(
 			StringBundler.concat(
 				layoutRevision.getHTMLTitle(LocaleUtil.getSiteDefault()), " [",
 				layoutSetBranch.getName(), "]"));
 
 		return assetEntry;
+	}
+
+	@Override
+	public AssetEntry getAssetEntry(long assetEntryId) throws PortalException {
+		return getAssetEntry(getClassName(), assetEntryId);
+	}
+
+	@Override
+	public AssetEntry getAssetEntry(String className, long classPK)
+		throws PortalException {
+
+		return getAssetEntry(
+			_layoutRevisionLocalService.getLayoutRevision(classPK));
 	}
 
 	@Override

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.type.virtual.order.content.web.internal.portlet.action;
@@ -17,14 +8,16 @@ package com.liferay.commerce.product.type.virtual.order.content.web.internal.por
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.type.virtual.order.constants.CommerceVirtualOrderPortletKeys;
 import com.liferay.commerce.product.type.virtual.order.content.web.internal.display.context.CommerceVirtualOrderItemContentDisplayContext;
+import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemLocalService;
-import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingService;
+import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -59,7 +52,9 @@ public class ViewCommerceVirtualOrderItemTermsOfUseMVCRenderCommand
 					new CommerceVirtualOrderItemContentDisplayContext(
 						_commerceChannelLocalService,
 						_commerceVirtualOrderItemLocalService,
-						_cpDefinitionHelper, _cpDefinitionVirtualSettingService,
+						_commerceVirtualOrderItemModelResourcePermission,
+						_cpDefinitionHelper,
+						_cpDefinitionVirtualSettingLocalService,
 						_cpInstanceHelper,
 						_portal.getHttpServletRequest(renderRequest));
 
@@ -84,12 +79,18 @@ public class ViewCommerceVirtualOrderItemTermsOfUseMVCRenderCommand
 	private CommerceVirtualOrderItemLocalService
 		_commerceVirtualOrderItemLocalService;
 
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem)"
+	)
+	private ModelResourcePermission<CommerceVirtualOrderItem>
+		_commerceVirtualOrderItemModelResourcePermission;
+
 	@Reference
 	private CPDefinitionHelper _cpDefinitionHelper;
 
 	@Reference
-	private CPDefinitionVirtualSettingService
-		_cpDefinitionVirtualSettingService;
+	private CPDefinitionVirtualSettingLocalService
+		_cpDefinitionVirtualSettingLocalService;
 
 	@Reference
 	private CPInstanceHelper _cpInstanceHelper;

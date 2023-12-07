@@ -2,6 +2,8 @@ components:
     schemas:
         DSDocument:
             properties:
+                assignTabsToDSRecipientId:
+                    type: string
                 data:
                     type: string
                 fileEntryExternalReferenceCode:
@@ -12,6 +14,8 @@ components:
                     type: string
                 name:
                     type: string
+                transformPDFFields:
+                    type: boolean
                 uri:
                     type: string
         DSEnvelope:
@@ -64,6 +68,8 @@ components:
                     type: string
                 status:
                     type: string
+                tabs:
+                    type: object
         DSRecipientViewDefinition:
             properties:
                 authenticationMethod:
@@ -79,7 +85,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.digital.signature.rest.client', and version '1.0.9'."
+        'com.liferay.digital.signature.rest.client', and version '1.0.19'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

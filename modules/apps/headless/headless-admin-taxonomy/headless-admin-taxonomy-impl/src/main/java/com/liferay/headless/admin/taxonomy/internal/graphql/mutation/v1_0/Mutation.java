@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.internal.graphql.mutation.v1_0;
@@ -23,9 +14,11 @@ import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyVocabularyResou
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
@@ -74,6 +67,28 @@ public class Mutation {
 
 		_taxonomyVocabularyResourceComponentServiceObjects =
 			taxonomyVocabularyResourceComponentServiceObjects;
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryKeywordsPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_keywordResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			keywordResource ->
+				keywordResource.postAssetLibraryKeywordsPageExportBatch(
+					Long.valueOf(assetLibraryId), search,
+					_filterBiFunction.apply(keywordResource, filterString),
+					_sortsBiFunction.apply(keywordResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -203,6 +218,27 @@ public class Mutation {
 				keywordId));
 
 		return true;
+	}
+
+	@GraphQLField
+	public Response createSiteKeywordsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_keywordResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			keywordResource -> keywordResource.postSiteKeywordsPageExportBatch(
+				Long.valueOf(siteKey), search,
+				_filterBiFunction.apply(keywordResource, filterString),
+				_sortsBiFunction.apply(keywordResource, sortsString),
+				callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(description = "Inserts a new keyword in a Site.")
@@ -366,6 +402,31 @@ public class Mutation {
 			});
 	}
 
+	@GraphQLField
+	public Response createTaxonomyVocabularyTaxonomyCategoriesPageExportBatch(
+			@GraphQLName("taxonomyVocabularyId") Long taxonomyVocabularyId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_taxonomyCategoryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			taxonomyCategoryResource ->
+				taxonomyCategoryResource.
+					postTaxonomyVocabularyTaxonomyCategoriesPageExportBatch(
+						taxonomyVocabularyId, search,
+						_filterBiFunction.apply(
+							taxonomyCategoryResource, filterString),
+						_sortsBiFunction.apply(
+							taxonomyCategoryResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
 	@GraphQLField(
 		description = "Inserts a new taxonomy category in a taxonomy vocabulary."
 	)
@@ -439,6 +500,31 @@ public class Mutation {
 					putTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode(
 						taxonomyVocabularyId, externalReferenceCode,
 						taxonomyCategory));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryTaxonomyVocabulariesPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_taxonomyVocabularyResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			taxonomyVocabularyResource ->
+				taxonomyVocabularyResource.
+					postAssetLibraryTaxonomyVocabulariesPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							taxonomyVocabularyResource, filterString),
+						_sortsBiFunction.apply(
+							taxonomyVocabularyResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -533,6 +619,31 @@ public class Mutation {
 
 				return paginationPage.getItems();
 			});
+	}
+
+	@GraphQLField
+	public Response createSiteTaxonomyVocabulariesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_taxonomyVocabularyResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			taxonomyVocabularyResource ->
+				taxonomyVocabularyResource.
+					postSiteTaxonomyVocabulariesPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							taxonomyVocabularyResource, filterString),
+						_sortsBiFunction.apply(
+							taxonomyVocabularyResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField(description = "Inserts a new taxonomy vocabulary in a Site.")
@@ -779,6 +890,9 @@ public class Mutation {
 		keywordResource.setGroupLocalService(_groupLocalService);
 		keywordResource.setRoleLocalService(_roleLocalService);
 
+		keywordResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		keywordResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -797,6 +911,9 @@ public class Mutation {
 		taxonomyCategoryResource.setContextUser(_user);
 		taxonomyCategoryResource.setGroupLocalService(_groupLocalService);
 		taxonomyCategoryResource.setRoleLocalService(_roleLocalService);
+
+		taxonomyCategoryResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		taxonomyCategoryResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -817,6 +934,9 @@ public class Mutation {
 		taxonomyVocabularyResource.setGroupLocalService(_groupLocalService);
 		taxonomyVocabularyResource.setRoleLocalService(_roleLocalService);
 
+		taxonomyVocabularyResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		taxonomyVocabularyResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -830,6 +950,7 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
+	private BiFunction<Object, String, Filter> _filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
@@ -837,6 +958,8 @@ public class Mutation {
 	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
+	private VulcanBatchEngineExportTaskResource
+		_vulcanBatchEngineExportTaskResource;
 	private VulcanBatchEngineImportTaskResource
 		_vulcanBatchEngineImportTaskResource;
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -215,61 +206,82 @@ public class PasswordTrackerModelImpl
 	public Map<String, Function<PasswordTracker, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<PasswordTracker, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<PasswordTracker, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<PasswordTracker, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<PasswordTracker, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<PasswordTracker, Object>>();
-		Map<String, BiConsumer<PasswordTracker, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<PasswordTracker, ?>>();
+		private static final Map<String, Function<PasswordTracker, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", PasswordTracker::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<PasswordTracker, Long>)PasswordTracker::setMvccVersion);
-		attributeGetterFunctions.put(
-			"passwordTrackerId", PasswordTracker::getPasswordTrackerId);
-		attributeSetterBiConsumers.put(
-			"passwordTrackerId",
-			(BiConsumer<PasswordTracker, Long>)
-				PasswordTracker::setPasswordTrackerId);
-		attributeGetterFunctions.put(
-			"companyId", PasswordTracker::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<PasswordTracker, Long>)PasswordTracker::setCompanyId);
-		attributeGetterFunctions.put("userId", PasswordTracker::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<PasswordTracker, Long>)PasswordTracker::setUserId);
-		attributeGetterFunctions.put(
-			"createDate", PasswordTracker::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<PasswordTracker, Date>)PasswordTracker::setCreateDate);
-		attributeGetterFunctions.put("password", PasswordTracker::getPassword);
-		attributeSetterBiConsumers.put(
-			"password",
-			(BiConsumer<PasswordTracker, String>)PasswordTracker::setPassword);
+		static {
+			Map<String, Function<PasswordTracker, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<PasswordTracker, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", PasswordTracker::getMvccVersion);
+			attributeGetterFunctions.put(
+				"passwordTrackerId", PasswordTracker::getPasswordTrackerId);
+			attributeGetterFunctions.put(
+				"companyId", PasswordTracker::getCompanyId);
+			attributeGetterFunctions.put("userId", PasswordTracker::getUserId);
+			attributeGetterFunctions.put(
+				"createDate", PasswordTracker::getCreateDate);
+			attributeGetterFunctions.put(
+				"password", PasswordTracker::getPassword);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<PasswordTracker, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<PasswordTracker, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<PasswordTracker, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<PasswordTracker, Long>)
+					PasswordTracker::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"passwordTrackerId",
+				(BiConsumer<PasswordTracker, Long>)
+					PasswordTracker::setPasswordTrackerId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<PasswordTracker, Long>)
+					PasswordTracker::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<PasswordTracker, Long>)PasswordTracker::setUserId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<PasswordTracker, Date>)
+					PasswordTracker::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"password",
+				(BiConsumer<PasswordTracker, String>)
+					PasswordTracker::setPassword);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -660,7 +672,8 @@ public class PasswordTrackerModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<PasswordTracker, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

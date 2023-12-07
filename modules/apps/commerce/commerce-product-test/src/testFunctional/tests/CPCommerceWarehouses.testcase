@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -16,7 +16,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6207. UI inventory items lifecycle"
-	@priority = "3"
+	@priority = 5
 	test AddEditAndRemoveItemToWarehouse {
 		property portal.acceptance = "true";
 
@@ -37,18 +37,16 @@ definition {
 		Type(
 			key_fieldLabel = "Latitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "12345");
+			value1 = 12345);
 
 		Type(
 			key_fieldLabel = "Longitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "12345");
+			value1 = 12345);
 
 		Button.clickSave();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Inventory");
+		CommerceInventory.openInventoryAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -67,7 +65,7 @@ definition {
 		Type(
 			key_fieldLabel = "Quantity",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "50");
+			value1 = 50);
 
 		Button.click(button = "Submit");
 
@@ -82,9 +80,9 @@ definition {
 			value1 = "TestWH");
 
 		AssertTextEquals(
-			key_columnNumber = "4",
+			key_columnNumber = 4,
 			locator1 = "CommerceEntry#INVENTORY_COLUMN",
-			value1 = "50");
+			value1 = 50);
 
 		Click(
 			key_entryName = "TestWH",
@@ -95,7 +93,7 @@ definition {
 		Type(
 			key_fieldLabel = "Safety Stock Quantity",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "20");
+			value1 = 20);
 
 		Button.clickSave();
 
@@ -104,14 +102,14 @@ definition {
 		Refresh();
 
 		AssertTextEquals(
-			key_columnNumber = "3",
+			key_columnNumber = 3,
 			locator1 = "CommerceEntry#INVENTORY_COLUMN",
-			value1 = "20");
+			value1 = 20);
 
 		AssertTextEquals(
-			key_columnNumber = "4",
+			key_columnNumber = 4,
 			locator1 = "CommerceEntry#INVENTORY_COLUMN",
-			value1 = "30");
+			value1 = 30);
 
 		Click(
 			key_currentLocale = "ellipsis-v",
@@ -131,7 +129,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6206. Add income items"
-	@priority = "3"
+	@priority = 5
 	test AddIncomeItems {
 		property portal.acceptance = "true";
 
@@ -139,9 +137,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Inventory");
+		CommerceInventory.openInventoryAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "MIN00673");
 
@@ -154,7 +150,7 @@ definition {
 		Type(
 			key_text = "Quantity",
 			locator1 = "TextInput#ANY",
-			value1 = "10");
+			value1 = 10);
 
 		Select(
 			key_fieldLabel = "Destination",
@@ -181,7 +177,7 @@ definition {
 		Type(
 			key_text = "Quantity",
 			locator1 = "TextInput#ANY",
-			value1 = "15");
+			value1 = 15);
 
 		Type(
 			inputFieldId = "date",
@@ -201,7 +197,7 @@ definition {
 		AssertTextEquals(
 			key_text = "Quantity",
 			locator1 = "TextInput#ANY",
-			value1 = "15");
+			value1 = 15);
 
 		AssertTextEquals(
 			inputFieldId = "date",
@@ -225,10 +221,211 @@ definition {
 			locator1 = "CommerceNavigation#ENTRY_NAME");
 	}
 
-	@description = "COMMERCE-5979. As a user of the storefront, I should be able to see the stock quantity value of the Warehouses based on the View permission of my role"
-	@priority = "4"
-	test CanSFUsersSeeStockQuantityBasedOnViewPermissionForWarehouse {
+	@description = "COMMERCE-10640. As a buyer user I can verify that a product has unavailable tag and 0 stock once No Channel option is selected as Channel eligibility for warehouses."
+	@priority = 3
+	test CanAssertProductIsUnavailableWithoutWarehouseChannelEligibility {
 		property portal.acceptance = "false";
+
+		task ("Given a Minium site with a buyer user") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And warehouse eligibility is set to No Channel for Minium Portal Channel") {
+			CommerceNavigator.goToWarehousesAdmin();
+
+			for (var warehouseName : list "Italy,United States - Northeast,United States - Southwest") {
+				CommerceNavigator.gotoEntry(entryName = ${warehouseName});
+
+				Navigator.gotoNavTab(navTab = "Eligibility");
+
+				Click(
+					locator1 = "Radio#ANY",
+					radioLabel = "No Channel");
+
+				Button.clickSave();
+
+				Navigator.gotoBack();
+			}
+		}
+
+		task ("And a second Minium site is created and buyer user is associated with it") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(
+				siteName = "Minium 2",
+				siteTemplateName = "Minium");
+
+			JSONUser.addUserToSite(
+				groupName = "Minium 2",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And Minium 2 Portal Channel is eligible by default for the warehouses while Minium Portal Channel is not listed as eligible") {
+			CommerceNavigator.goToWarehousesAdmin();
+
+			for (var warehouseName : list "Italy,United States - Northeast,United States - Southwest") {
+				CommerceNavigator.gotoEntry(entryName = ${warehouseName});
+
+				Navigator.gotoNavTab(navTab = "Eligibility");
+
+				AssertChecked(
+					locator1 = "Radio#ANY",
+					radioLabel = "Specific Channels");
+
+				AssertElementPresent(
+					key_entryName = "Minium 2 Portal",
+					key_table = "Channels",
+					locator1 = "CommerceEntry#TABLE_ENTRY_NAME");
+
+				AssertElementNotPresent(
+					key_entryName = "Minium Portal",
+					key_table = "Channels",
+					locator1 = "CommerceEntry#TABLE_ENTRY_NAME");
+
+				Navigator.gotoBack();
+			}
+		}
+
+		task ("When buyer user logs in to Minium and navigates to a product details page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
+		}
+
+		task ("Then the product has Unavailable tag with 0 stock quantity") {
+			AssertElementPresent(
+				key_availability = "Unavailable",
+				locator1 = "CommerceFrontStore#FS_PRODUCT_AVAILABILITY");
+
+			AssertElementPresent(
+				locator1 = "CommerceFrontStore#FS_PRODUCT_STOCK_QUANTITY",
+				value1 = 0);
+
+			AssertElementPresent(
+				key_productName = "U-Joint",
+				locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE_DISABLED");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_QUANTITY_SELECTOR_INPUT_FIELD_ENABLED");
+		}
+
+		task ("And the product(U-Joint) has Available tag with 120 stock quantity in Minium 2") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium-2/catalog");
+
+			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
+
+			AssertElementPresent(
+				key_availability = "Available",
+				locator1 = "CommerceFrontStore#FS_PRODUCT_AVAILABILITY");
+
+			AssertElementPresent(
+				locator1 = "CommerceFrontStore#FS_PRODUCT_STOCK_QUANTITY",
+				value1 = 120);
+
+			AssertElementPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+
+			AssertElementPresent(locator1 = "CommerceAccelerators#GENERAL_QUANTITY_SELECTOR_INPUT_FIELD_ENABLED");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10308. It's not possible to use the Geolocate option for the Warehouses"
+	@priority = 5
+	test CanGeolocateWarehouse {
+		property portal.acceptance = "true";
+
+		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+		CommerceNavigator.goToWarehousesAdmin();
+
+		CommerceNavigator.gotoEntry(entryName = "Italy");
+
+		AssertElementPresent(
+			key_text = "Geolocate",
+			locator1 = "Button#ANY");
+
+		AssertTextEquals(
+			key_text = "Latitude",
+			locator1 = "TextInput#ANY",
+			value1 = "42.214601");
+
+		AssertTextEquals(
+			key_text = "Longitude",
+			locator1 = "TextInput#ANY",
+			value1 = "12.796434");
+
+		AssertTextEquals(
+			key_text = "Street 1",
+			locator1 = "TextInput#ANY",
+			value1 = "Via delle Coste 24");
+
+		AssertSelectedLabel(
+			key_fieldLabel = "Country",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "Italy");
+
+		AssertSelectedLabel(
+			key_fieldLabel = "Region",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "Rieti");
+
+		AssertTextEquals(
+			key_text = "Postal Code",
+			locator1 = "TextInput#ANY",
+			value1 = 2021);
+
+		AssertTextEquals(
+			key_text = "City",
+			locator1 = "TextInput#ANY",
+			value1 = "Borgorose");
+	}
+
+	@description = "This is a test for COMMERCE-10053. An error message shows up when the eligibility element is already linked"
+	@priority = 3
+	test CannotSelectWarehouseEligibilityTwice {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("When the admin navigates into a warehouse entry") {
+			CommerceNavigator.goToWarehousesAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Italy");
+		}
+
+		task ("And selects an already present channel eligibility for that warehouse") {
+			CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
+
+			CommerceEntry.setEntryEligibility(
+				channelsEligibility = "Minium Portal",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The channel relation already exists.");
+		}
+	}
+
+	@description = "COMMERCE-5979. As a user of the storefront, I should be able to see the stock quantity value of the Warehouses based on the View permission of my role"
+	@priority = 5
+	test CanSFUsersSeeStockQuantityBasedOnViewPermissionForWarehouse {
+		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -254,9 +451,7 @@ definition {
 		}
 
 		task ("And on Italy Warehouse, View permission is removed for User and Guest, given to Power User") {
-			CommerceNavigator.gotoPortlet(
-				category = "Inventory Management",
-				portlet = "Warehouses");
+			CommerceNavigator.goToWarehousesAdmin();
 
 			Click(
 				key_value = "Italy",
@@ -291,12 +486,12 @@ definition {
 		task ("Then sees the exact number of the stock quantity value (120)") {
 			AssertElementPresent(
 				locator1 = "CommerceFrontStore#FS_PRODUCT_STOCK_QUANTITY",
-				value1 = "120");
+				value1 = 120);
 		}
 	}
 
 	@description = "COMMERCE-5979. As a user of the storefront, I should be able to see a decreased stock quantity value of the Warehouses when my role does not have permission to View Warehouses"
-	@priority = "4"
+	@priority = 4
 	test CanSFUsersWithoutWarehouseViewPermissionSeeDecreasedStockQuantity {
 		property portal.acceptance = "false";
 
@@ -324,9 +519,7 @@ definition {
 		}
 
 		task ("And on Italy Warehouse, View permission is removed for User and Guest, and verify Power User does not have it") {
-			CommerceNavigator.gotoPortlet(
-				category = "Inventory Management",
-				portlet = "Warehouses");
+			CommerceNavigator.goToWarehousesAdmin();
 
 			Click(
 				key_value = "Italy",
@@ -362,20 +555,20 @@ definition {
 		task ("Then sees a decreased number of the stock quantity value (80)") {
 			AssertElementPresent(
 				locator1 = "CommerceFrontStore#FS_PRODUCT_STOCK_QUANTITY",
-				value1 = "80");
+				value1 = 80);
 		}
 	}
 
 	@description = "This is a test for COMMERCE-6200. Consume booked quantities of one item in multiple warehouses"
-	@priority = "3"
+	@priority = 5
 	test ConsumeBookedQuantitiesFromMultipleWarehouses {
 		property portal.acceptance = "true";
 
 		// TODO Review
 
-		var previousTotal = "0";
-		var newTotal = "0";
-		var newTotalExpected = "0";
+		var previousTotal = 0;
+		var newTotal = 0;
+		var newTotalExpected = 0;
 
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "User Authentication",
@@ -386,9 +579,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "ABS Sensor");
 
@@ -401,7 +592,7 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Inventory");
 
 		for (var option : list "0,1,2") {
-			var key_value1 = "${option}";
+			var key_value1 = ${option};
 
 			WaitForElementPresent(locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY");
 
@@ -410,7 +601,7 @@ definition {
 			var previousTotal = ${previousTotal} + ${aux};
 		}
 
-		echo("${previousTotal}");
+		echo(${previousTotal});
 
 		Refresh();
 
@@ -428,10 +619,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -450,7 +638,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -461,8 +649,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "ABS Sensor",
-			productQuantity = "1",
-			productUnitPrice = "50",
+			productQuantity = 1,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -472,9 +660,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -503,15 +689,13 @@ definition {
 		Type(
 			key_warehouseName = "Italy",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "ABS Sensor");
 
@@ -524,7 +708,7 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Inventory");
 
 		for (var option : list "0,1,2") {
-			var key_value1 = "${option}";
+			var key_value1 = ${option};
 
 			WaitForElementPresent(locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY");
 
@@ -533,28 +717,28 @@ definition {
 			var newTotal = ${newTotal} + ${aux};
 		}
 
-		echo("${newTotal}");
+		echo(${newTotal});
 
 		var newTotalExpected = ${previousTotal} - 1;
 
-		echo("${newTotalExpected}");
+		echo(${newTotalExpected});
 
-		if ("${newTotal}" == "${newTotalExpected}") {
+		if (${newTotal} == ${newTotalExpected}) {
 			AssertTextEquals(
-				key_value1 = "0",
+				key_value1 = 0,
 				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
-				value1 = "19");
+				value1 = 19);
 		}
 		else {
 			AssertTextNotEquals(
-				key_value1 = "0",
+				key_value1 = 0,
 				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
-				value1 = "19");
+				value1 = 19);
 		}
 	}
 
 	@description = "This is a test for COMMERCE-6201. Consume quantities of one item in multiple warehouses"
-	@priority = "3"
+	@priority = 5
 	test ConsumeQuantitiesFromMultipleWarehouses {
 		property portal.acceptance = "true";
 
@@ -583,10 +767,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -603,7 +784,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -614,8 +795,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "2",
-			productUnitPrice = "24",
+			productQuantity = 2,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -625,9 +806,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -656,12 +835,12 @@ definition {
 		Type(
 			key_warehouseName = "Italy",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Type(
 			key_warehouseName = "United States - Southwest",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -669,25 +848,25 @@ definition {
 
 		for (var warehouse : list "Italy,United States - Southwest") {
 			AssertTextEquals(
-				key_warehouseName = "${warehouse}",
+				key_warehouseName = ${warehouse},
 				locator1 = "CommerceEntry#QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 		}
 	}
 
 	@description = "This is a test for COMMERCE-5706. As a system admin i want to be able to create / update and delete a new warehouse"
-	@priority = "3"
+	@priority = 5
 	test CreateEditAndDeleteWarehouseEntry {
 		property portal.acceptance = "true";
 
 		// TODO Review
 
 		var fieldDescription = "Test Warehouse Description";
-		var fieldLatitudeNumber = "12345";
-		var fieldLongitudeNumber = "12345";
+		var fieldLatitudeNumber = 12345;
+		var fieldLongitudeNumber = 12345;
 		var fieldName = "Test Warehouse";
 		var fieldCity = "Test City";
-		var fieldPostalCode = "12345";
+		var fieldPostalCode = 12345;
 		var fieldStreet1 = "Test Address";
 		var fieldStreet2 = "Test Street";
 		var fieldStreet3 = "";
@@ -696,9 +875,7 @@ definition {
 		var fieldLatitudeNumber = "12345.0";
 		var fieldLongitudeNumber = "12345.0";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		Click(locator1 = "AnalyticsCloudConnection#ADD_NEW_PROPERTY_BUTTON");
 
@@ -706,7 +883,7 @@ definition {
 
 		Type(
 			locator1 = "TextArea#DESCRIPTION",
-			value1 = "${fieldDescription}");
+			value1 = ${fieldDescription});
 
 		Check.checkToggleSwitch(
 			key_toggleSwitchLabel = "Active",
@@ -715,12 +892,12 @@ definition {
 		Type(
 			key_fieldLabel = "Latitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldLatitudeNumber}");
+			value1 = ${fieldLatitudeNumber});
 
 		Type(
 			key_fieldLabel = "Longitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldLongitudeNumber}");
+			value1 = ${fieldLongitudeNumber});
 
 		Button.clickSave();
 
@@ -731,37 +908,37 @@ definition {
 		Type(
 			key_fieldLabel = "Street 1",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldStreet1}");
+			value1 = ${fieldStreet1});
 
 		Type(
 			key_fieldLabel = "Street 2",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldStreet2}");
+			value1 = ${fieldStreet2});
 
 		Type(
 			key_fieldLabel = "Street 3",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldStreet3}");
+			value1 = ${fieldStreet3});
 
 		Select(
 			key_fieldLabel = "Country",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${selectorCountry}");
+			value1 = ${selectorCountry});
 
 		Select(
 			key_fieldLabel = "Region",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${selectorRegion}");
+			value1 = ${selectorRegion});
 
 		Type(
 			key_fieldLabel = "Postal Code",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldPostalCode}");
+			value1 = ${fieldPostalCode});
 
 		Type(
 			key_fieldLabel = "City",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldCity}");
+			value1 = ${fieldCity});
 
 		Button.clickSave();
 
@@ -772,11 +949,11 @@ definition {
 		AssertTextEquals(
 			key_fieldLabel = "Name",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldName}");
+			value1 = ${fieldName});
 
 		AssertTextEquals(
 			locator1 = "TextArea#DESCRIPTION",
-			value1 = "${fieldDescription}");
+			value1 = ${fieldDescription});
 
 		AssertChecked.assertCheckedNotVisible(
 			key_toggleSwitchLabel = "Active",
@@ -785,47 +962,47 @@ definition {
 		AssertTextEquals(
 			key_fieldLabel = "Street 1",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldStreet1}");
+			value1 = ${fieldStreet1});
 
 		AssertTextEquals(
 			key_fieldLabel = "Street 2",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldStreet2}");
+			value1 = ${fieldStreet2});
 
 		AssertTextEquals(
 			key_fieldLabel = "Street 3",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldStreet3}");
+			value1 = ${fieldStreet3});
 
 		AssertSelectedLabel(
 			key_fieldLabel = "Country",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${selectorCountry}");
+			value1 = ${selectorCountry});
 
 		AssertSelectedLabel(
 			key_fieldLabel = "Region",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${selectorRegion}");
+			value1 = ${selectorRegion});
 
 		AssertTextEquals(
 			key_fieldLabel = "Postal Code",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldPostalCode}");
+			value1 = ${fieldPostalCode});
 
 		AssertTextEquals(
 			key_fieldLabel = "City",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldCity}");
+			value1 = ${fieldCity});
 
 		AssertTextEquals(
 			key_fieldLabel = "Latitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldLatitudeNumber}");
+			value1 = ${fieldLatitudeNumber});
 
 		AssertTextEquals(
 			key_fieldLabel = "Longitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${fieldLongitudeNumber}");
+			value1 = ${fieldLongitudeNumber});
 
 		Button.clickSave();
 
@@ -844,16 +1021,15 @@ definition {
 
 	@description = "This is a test for COMMERCE-5707. As a product specialist i want to be able to deactivate a warehouse"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test DeactivateWarehouse {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-5707 DeactivateWarehouse Pending Implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6199. Get available quantities of one item in multiple warehouses"
-	@priority = "3"
+	@priority = 5
 	test GetAvailableQuantityFromMultipleWarehouses {
 		property portal.acceptance = "true";
 
@@ -861,9 +1037,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "ABS Sensor");
 
@@ -877,10 +1051,10 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Inventory");
 
-		var quantity = "0";
+		var quantity = 0;
 
 		for (var warehouse : list "Italy,United States - Northeast,United States - Southwest") {
-			var key_inventoryName = "${warehouse}";
+			var key_inventoryName = ${warehouse};
 			var inventoryValue = selenium.getElementValue("CommerceEntry#INVENTORY_INPUT");
 
 			var quantity = ${quantity} + ${inventoryValue};
@@ -891,7 +1065,7 @@ definition {
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		Type(
-			locator1 = "Search#EMBEDDED_SEARCH_BAR",
+			locator1 = "Search#SEARCH_BAR_WIDGET",
 			value1 = "ABS Sensor");
 
 		Button.clickSubmitButton();
@@ -906,7 +1080,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6204. Get stock quantity of a SKU for specific channel"
-	@priority = "3"
+	@priority = 5
 	test GetChannelSKUStockQuantity {
 		property portal.acceptance = "true";
 
@@ -918,9 +1092,7 @@ definition {
 			siteName = "Minium2",
 			siteTemplateName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		AppBuilderAdmin.searchByItem(itemName = "ABS Sensor");
 
@@ -938,22 +1110,20 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Inventory");
 
-		var key_value1 = "0";
+		var key_value1 = 0;
 
 		for (var value1 : list "20,60,60") {
 			AssertTextEquals(
-				key_value1 = "${key_value1}",
+				key_value1 = ${key_value1},
 				locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
-				value1 = "${value1}");
+				value1 = ${value1});
 
 			var key_value1 = ${key_value1} + 1;
 		}
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Italy");
 
@@ -1009,7 +1179,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6203. Get stock quantity of a SKU"
-	@priority = "3"
+	@priority = 5
 	test GetSKUStockQuantity {
 		property portal.acceptance = "true";
 
@@ -1017,9 +1187,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		AppBuilderAdmin.searchByItem(itemName = "ABS Sensor");
 
@@ -1037,10 +1205,10 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Inventory");
 
-		var count1 = "0";
-		var amount = "0";
+		var count1 = 0;
+		var amount = 0;
 
-		while (IsElementPresent(key_value1 = "${count1}", locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY")) {
+		while (IsElementPresent(key_value1 = ${count1}, locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY")) {
 			var temp1 = selenium.getAttribute("//input[contains(@id,'_com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet_commerceInventoryWarehouseItemQuantity${count1}')]@value");
 
 			var amount = ${temp1} + ${amount};
@@ -1049,27 +1217,23 @@ definition {
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Inventory");
+		CommerceInventory.openInventoryAdmin();
 
 		AppBuilderAdmin.searchByItem(itemName = "MIN93015");
 
 		AssertTextEquals(
 			locator1 = "CommerceEntry#INVENTORY_BY_WAREHOUSE_AVAILABLE_LABEL",
-			value1 = "${amount}");
+			value1 = ${amount});
 	}
 
 	@description = "This is a test for COMMERCE-6205. Get warehouse names given a SKU"
-	@priority = "3"
+	@priority = 5
 	test GetWarehouseNameGivenChannel {
 		property portal.acceptance = "true";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1077,9 +1241,7 @@ definition {
 
 		Button.clickSave();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -1102,19 +1264,17 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Inventory");
 
 		Type(
-			key_value1 = "0",
+			key_value1 = 0,
 			locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_ITEM_QUANTITY",
-			value1 = "45");
+			value1 = 45);
 
 		Click(
-			key_value1 = "0",
+			key_value1 = 0,
 			locator1 = "CommerceEntry#WAREHOUSE_INVENTORY_SAVE_BUTTON");
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Inventory");
+		CommerceInventory.openInventoryAdmin();
 
 		Click(
 			key_entryName = "MIN00000",
@@ -1126,7 +1286,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6202. It should be possible to limit the warehouse stock quantity by channel"
-	@priority = "3"
+	@priority = 5
 	test LimitWarehouseStockQuantityByChannel {
 		property portal.acceptance = "true";
 
@@ -1134,9 +1294,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Italy");
 
@@ -1148,7 +1306,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6208. Concurrency management for inventory entities"
-	@priority = "3"
+	@priority = 3
 	test ManageInventoryEntityConcurrency {
 		property portal.acceptance = "false";
 
@@ -1158,17 +1316,13 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Italy");
 
-		Open.openInTheNewTab(locator1 = "${portalURL}");
+		Open.openInTheNewTab(value1 = ${portalURL});
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Italy");
 
@@ -1188,11 +1342,13 @@ definition {
 
 		Button.clickSave();
 
-		Alert.viewErrorMessage(errorMessage = "This item is no longer valid. Please try again.");
+		AssertTextEquals.assertText(
+			locator1 = "Message#ERROR",
+			value1 = "Close Error:This item is no longer valid. Please try again.");
 	}
 
 	@description = "This is a test for COMMERCE-5708. As a product specialist i want to update the quantity of a product inside a warehouse"
-	@priority = "3"
+	@priority = 3
 	test UpdateInventorySKUQuantity {
 		property portal.acceptance = "false";
 
@@ -1200,10 +1356,7 @@ definition {
 
 		var key_inventoryName = "test new warehouse";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Inventory Management",
-			panel = "Commerce",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1216,19 +1369,16 @@ definition {
 		Type(
 			key_fieldLabel = "Latitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "50");
+			value1 = 50);
 
 		Type(
 			key_fieldLabel = "Longitude",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "50");
+			value1 = 50);
 
 		Button.clickSave();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Product Management",
-			panel = "Commerce",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -1247,7 +1397,7 @@ definition {
 
 		Type(
 			locator1 = "CommerceEntry#INVENTORY_INPUT",
-			value1 = "50");
+			value1 = 50);
 
 		Button.clickSave();
 
@@ -1255,20 +1405,17 @@ definition {
 
 		SelectFrame.selectFrameTop();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Inventory Management",
-			panel = "Commerce",
-			portlet = "Inventory");
+		CommerceInventory.openInventoryAdmin();
 
 		Search.searchCP(searchTerm = "default");
 
 		AssertElementPresent(
-			key_quantity = "50",
+			key_quantity = 50,
 			key_sku = "default",
 			locator1 = "CommerceInventory#INVENTORY_SKU_ON_HAND_QUANTITY");
 
 		AssertElementPresent(
-			key_quantity = "50",
+			key_quantity = 50,
 			key_sku = "default",
 			locator1 = "CommerceInventory#INVENTORY_SKU_AVAILABLE_QUANTITY");
 	}

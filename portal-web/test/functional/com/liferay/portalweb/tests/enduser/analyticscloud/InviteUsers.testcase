@@ -15,20 +15,24 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Automation ID: LRAC-9072 | Test Summary: Admin can invite users"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test AdminCanInviteUsers {
+
+		// The default AC users do not appear in Users and Organizations. The bug will be resolved after LRAC-14468
+
 		task ("sign out and login as member") {
 			ACWorkspace.signOut();
 
@@ -77,7 +81,7 @@ definition {
 	}
 
 	@description = "Automation ID: LRAC-9070 | Test Summary: Invite multiple users at a time"
-	@priority = "3"
+	@priority = 3
 	test CanInviteMultipleUsers {
 		var emailList = "user1@liferay.com,user2@liferay.com,user3@liferay.com";
 
@@ -86,12 +90,12 @@ definition {
 
 			ACSettings.goToUserManagement();
 
-			ACSettings.addUser(userInvite = "${emailList}");
+			ACSettings.addUser(userInvite = ${emailList});
 
-			for (var n : list "${emailList}") {
-				ACUtils.searchBar(searchItem = "${n}");
+			for (var n : list ${emailList}) {
+				ACUtils.searchBar(searchItem = ${n});
 
-				ACSettings.assertUserListEmail(userEmail = "${n}");
+				ACSettings.assertUserListEmail(userEmail = ${n});
 			}
 		}
 
@@ -101,7 +105,7 @@ definition {
 	}
 
 	@description = "Automation ID: LRAC-9069 | Test Summary: Invite a single user"
-	@priority = "5"
+	@priority = 5
 	test CanInviteSingleUser {
 		task ("go to user management and add user") {
 			ACNavigation.goToSettings();
@@ -121,8 +125,12 @@ definition {
 	}
 
 	@description = "Automation ID: LRAC-9073 | Test Summary: Member cannot invite users"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test MemberCannotInviteUsers {
+
+		// The default AC users do not appear in Users and Organizations. The bug will be resolved after LRAC-14468
+
 		task ("sign out and login as member") {
 			ACWorkspace.signOut();
 
@@ -143,8 +151,12 @@ definition {
 	}
 
 	@description = "Automation ID: LRAC-9071 | Test Summary: Owner can invite users"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test OwnerCanInviteUsers {
+
+		// The default AC users do not appear in Users and Organizations. The bug will be resolved after LRAC-14468
+
 		task ("sign out and login as member") {
 			ACWorkspace.signOut();
 

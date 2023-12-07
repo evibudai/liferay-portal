@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.commerce.delivery.catalog.client.pagination.Paginati
 import com.liferay.headless.commerce.delivery.catalog.client.resource.v1_0.PinResource;
 import com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0.PinSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -42,6 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -64,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -206,7 +197,7 @@ public abstract class BasePinResourceTestCase {
 		Page<Pin> page = pinResource.getChannelProductPinsPage(
 			channelId, productId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if ((irrelevantChannelId != null) && (irrelevantProductId != null)) {
 			Pin irrelevantPin = testGetChannelProductPinsPage_addPin(
@@ -215,13 +206,15 @@ public abstract class BasePinResourceTestCase {
 
 			page = pinResource.getChannelProductPinsPage(
 				irrelevantChannelId, irrelevantProductId, null, null,
-				Pagination.of(1, 2), null);
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantPin), (List<Pin>)page.getItems());
-			assertValid(page);
+			assertContains(irrelevantPin, (List<Pin>)page.getItems());
+			assertValid(
+				page,
+				testGetChannelProductPinsPage_getExpectedActions(
+					irrelevantChannelId, irrelevantProductId));
 		}
 
 		Pin pin1 = testGetChannelProductPinsPage_addPin(
@@ -233,17 +226,35 @@ public abstract class BasePinResourceTestCase {
 		page = pinResource.getChannelProductPinsPage(
 			channelId, productId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(pin1, pin2), (List<Pin>)page.getItems());
-		assertValid(page);
+		assertContains(pin1, (List<Pin>)page.getItems());
+		assertContains(pin2, (List<Pin>)page.getItems());
+		assertValid(
+			page,
+			testGetChannelProductPinsPage_getExpectedActions(
+				channelId, productId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelProductPinsPage_getExpectedActions(
+				Long channelId, Long productId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
 	public void testGetChannelProductPinsPageWithPagination() throws Exception {
 		Long channelId = testGetChannelProductPinsPage_getChannelId();
 		Long productId = testGetChannelProductPinsPage_getProductId();
+
+		Page<Pin> pinPage = pinResource.getChannelProductPinsPage(
+			channelId, productId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(pinPage.getTotalCount());
 
 		Pin pin1 = testGetChannelProductPinsPage_addPin(
 			channelId, productId, randomPin());
@@ -255,26 +266,30 @@ public abstract class BasePinResourceTestCase {
 			channelId, productId, randomPin());
 
 		Page<Pin> page1 = pinResource.getChannelProductPinsPage(
-			channelId, productId, null, null, Pagination.of(1, 2), null);
+			channelId, productId, null, null, Pagination.of(1, totalCount + 2),
+			null);
 
 		List<Pin> pins1 = (List<Pin>)page1.getItems();
 
-		Assert.assertEquals(pins1.toString(), 2, pins1.size());
+		Assert.assertEquals(pins1.toString(), totalCount + 2, pins1.size());
 
 		Page<Pin> page2 = pinResource.getChannelProductPinsPage(
-			channelId, productId, null, null, Pagination.of(2, 2), null);
+			channelId, productId, null, null, Pagination.of(2, totalCount + 2),
+			null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<Pin> pins2 = (List<Pin>)page2.getItems();
 
 		Assert.assertEquals(pins2.toString(), 1, pins2.size());
 
 		Page<Pin> page3 = pinResource.getChannelProductPinsPage(
-			channelId, productId, null, null, Pagination.of(1, 3), null);
+			channelId, productId, null, null,
+			Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(pin1, pin2, pin3), (List<Pin>)page3.getItems());
+		assertContains(pin1, (List<Pin>)page3.getItems());
+		assertContains(pin2, (List<Pin>)page3.getItems());
+		assertContains(pin3, (List<Pin>)page3.getItems());
 	}
 
 	@Test
@@ -389,20 +404,25 @@ public abstract class BasePinResourceTestCase {
 
 		pin2 = testGetChannelProductPinsPage_addPin(channelId, productId, pin2);
 
+		Page<Pin> page = pinResource.getChannelProductPinsPage(
+			channelId, productId, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<Pin> ascPage = pinResource.getChannelProductPinsPage(
-				channelId, productId, null, null, Pagination.of(1, 2),
+				channelId, productId, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(pin1, pin2), (List<Pin>)ascPage.getItems());
+			assertContains(pin1, (List<Pin>)ascPage.getItems());
+			assertContains(pin2, (List<Pin>)ascPage.getItems());
 
 			Page<Pin> descPage = pinResource.getChannelProductPinsPage(
-				channelId, productId, null, null, Pagination.of(1, 2),
+				channelId, productId, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(pin2, pin1), (List<Pin>)descPage.getItems());
+			assertContains(pin2, (List<Pin>)descPage.getItems());
+			assertContains(pin1, (List<Pin>)descPage.getItems());
 		}
 	}
 
@@ -551,6 +571,12 @@ public abstract class BasePinResourceTestCase {
 	}
 
 	protected void assertValid(Page<Pin> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Pin> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Pin> pins = page.getItems();
@@ -565,6 +591,25 @@ public abstract class BasePinResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -718,14 +763,16 @@ public abstract class BasePinResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -742,6 +789,10 @@ public abstract class BasePinResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -751,18 +802,18 @@ public abstract class BasePinResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -801,9 +852,47 @@ public abstract class BasePinResourceTestCase {
 		}
 
 		if (entityFieldName.equals("sequence")) {
-			sb.append("'");
-			sb.append(String.valueOf(pin.getSequence()));
-			sb.append("'");
+			Object object = pin.getSequence();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

@@ -1,6 +1,7 @@
 definition {
 
-	macro assertAssetTypeUnselectable {
+	@summary = "Default summary"
+	macro assertAssetTypeUnselectable() {
 		PageEditor.gotoTab(tabName = "Mapping");
 
 		AssertElementNotPresent(
@@ -9,23 +10,24 @@ definition {
 			locator1 = "Icon#ANY_ITEM_SELECTOR");
 	}
 
-	macro gotoEditableFieldMapping {
+	@summary = "Default summary"
+	macro gotoEditableFieldMapping(fragmentName = null, className = null, id = null, contributed = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		PageEditor.clickEditableField(
-			className = "${className}",
-			contributed = "${contributed}",
-			fragmentName = "${fragmentName}",
-			id = "${id}",
-			index = "${index}");
+			className = ${className},
+			contributed = ${contributed},
+			fragmentName = ${fragmentName},
+			id = ${id},
+			index = ${index});
 
 		if (IsElementPresent(key_sidebarButton = "Comments", locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE")) {
 			PageEditor.gotoTab(tabName = "Browser");
 		}
 
-		if (contains("${id}", "image") || contains("${id}", "img")) {
+		if (contains(${id}, "image") || contains(${id}, "img")) {
 			Navigator.gotoNavTab(navTab = "Image Source");
 
 			if (!(IsSelectedLabel(key_fieldLabel = "Source Selection", locator1 = "Select#GENERIC_SELECT_FIELD", value1 = "Mapping"))) {
@@ -45,7 +47,8 @@ definition {
 		}
 	}
 
-	macro mapEditableFieldToAsset {
+	@summary = "Default summary"
+	macro mapEditableFieldToAsset(uploadFileName = null, navItem = null, contentItem = null, entryTitle = null, rowItem = null) {
 		if (IsTextEqual(key_fieldLabel = "Item", locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT", value1 = "")) {
 			Click(
 				key_fieldLabel = "Item",
@@ -61,7 +64,7 @@ definition {
 
 		if (IsElementPresent(key_menuItem = "Select Item...", locator1 = "MenuItem#ANY_MENU_ITEM")) {
 			if (isSet(contentItem)) {
-				MenuItem.click(menuItem = "${contentItem}");
+				MenuItem.click(menuItem = ${contentItem});
 			}
 			else {
 				MenuItem.click(menuItem = "Select Item...");
@@ -70,14 +73,19 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		NavItem.click(navItem = "${navItem}");
+		if (IsElementPresent(locator1 = "MenuBar#MENU_BAR")) {
+			MenuBar.click(menuBar = ${navItem});
+		}
+		else {
+			Navigator.gotoNavTab(navTab = ${navItem});
+		}
 
 		if (isSet(uploadFileName)) {
 			WaitForEditable(locator1 = "TextInput#FILE");
 
 			UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 				locator1 = "TextInput#FILE",
-				value1 = "${uploadFileName}");
+				value1 = ${uploadFileName});
 
 			WaitForElementPresent(
 				key_text = "Add",
@@ -87,25 +95,25 @@ definition {
 				locator1 = "ItemSelector#ADD_BUTTON",
 				value1 = "Add");
 		}
-		else if ("${navItem}" == "Web Content") {
+		else if (${navItem} == "Web Content") {
 			LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
 			Click(
-				key_card = "${entryTitle}",
+				key_card = ${entryTitle},
 				locator1 = "Card#CARD_TITLE");
 		}
-		else if ("${navItem}" == "Knowledge Base Articles") {
+		else if (${navItem} == "Knowledge Base Articles") {
 			AssertClick.assertPartialTextClickAt(
-				key_listEntry = "${entryTitle}",
+				key_listEntry = ${entryTitle},
 				locator1 = "LexiconList#LIST_ENTRY",
-				value1 = "${entryTitle}");
+				value1 = ${entryTitle});
 		}
 		else if (isSet(rowItem)) {
-			Click(locator1 = "${rowItem}");
+			Click(locator1 = ${rowItem});
 		}
 		else {
 			Click(
-				key_card = "${entryTitle}",
+				key_card = ${entryTitle},
 				locator1 = "Card#CARD_TITLE");
 		}
 
@@ -114,27 +122,28 @@ definition {
 		AssertTextEquals(
 			key_fieldLabel = "Item",
 			locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT",
-			value1 = "${entryTitle}");
+			value1 = ${entryTitle});
 	}
 
-	macro mapEditableFieldToCollectionItems {
+	@summary = "Default summary"
+	macro mapEditableFieldToCollectionItems(field = null, fragmentName = null, id = null) {
 		Click(locator1 = "PageEditor#CONTENT_PAGE_DISABLED_HEADER");
 
 		Click.clickNoWaitForVisible(
-			key_colPosition = "1",
+			key_colPosition = 1,
 			key_element = "//div[@aria-label='${fragmentName}']",
 			key_fragmentName = "Collection Display",
-			key_rowPosition = "1",
+			key_rowPosition = 1,
 			locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT");
 
 		Click(
-			key_colPosition = "1",
+			key_colPosition = 1,
 			key_element = "//div[@aria-label='${fragmentName}']//div[contains(@class,'page-editor__topper__content')]//*[contains(@data-lfr-editable-id,'${id}')]",
 			key_fragmentName = "Collection Display",
-			key_rowPosition = "1",
+			key_rowPosition = 1,
 			locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT");
 
-		if (contains("${id}", "image") || contains("${id}", "img")) {
+		if (contains(${id}, "image") || contains(${id}, "img")) {
 			Navigator.gotoNavTab(navTab = "Image Source");
 
 			if (!(IsSelectedLabel(key_fieldLabel = "Source Selection", locator1 = "Select#GENERIC_SELECT_FIELD", value1 = "Mapping"))) {
@@ -156,29 +165,30 @@ definition {
 		Select(
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${field}");
+			value1 = ${field});
 
 		PageEditor.waitForAutoSave();
 
 		AssertSelectedLabel(
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${field}");
+			value1 = ${field});
 	}
 
-	macro mapEditableTextToField {
+	@summary = "Default summary"
+	macro mapEditableTextToField(field = null, fragmentName = null, index = null, className = null, id = null, source = null, contributed = null) {
 		PageEditorMapping.gotoEditableFieldMapping(
-			className = "${className}",
-			contributed = "${contributed}",
-			fragmentName = "${fragmentName}",
-			id = "${id}",
-			index = "${index}");
+			className = ${className},
+			contributed = ${contributed},
+			fragmentName = ${fragmentName},
+			id = ${id},
+			index = ${index});
 
 		if (isSet(source)) {
 			Select(
 				key_fieldLabel = "Source",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "${source}");
+				value1 = ${source});
 		}
 
 		WaitForEditable(
@@ -188,7 +198,7 @@ definition {
 		Select(
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${field}");
+			value1 = ${field});
 
 		PageEditor.waitForAutoSave();
 	}

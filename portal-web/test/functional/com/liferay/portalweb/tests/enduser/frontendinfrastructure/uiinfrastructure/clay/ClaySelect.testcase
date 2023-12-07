@@ -5,7 +5,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Clay";
-	property testray.main.component.name = "User Interface";
+	property testray.main.component.name = "Clay";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -30,9 +30,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -42,8 +42,8 @@ definition {
 		}
 	}
 
-	@description = "Verify clay multiple select API options can be configured"
-	@priority = "5"
+	@description = "LPS-121932. Verify clay multiple select API options can be configured"
+	@priority = 5
 	@refactordone
 	test MultipleCanBeConfigured {
 		Navigator.gotoNavTab(navTab = "Form Elements");
@@ -57,7 +57,9 @@ definition {
 			key_option = "Sample 1",
 			locator1 = "ClaySamplePortlet#SELECTOR_OPTION");
 
-		RobotType.robotTypeShortcut(locator1 = "Ctrl");
+		Type.sendKeys(
+			locator1 = "//body",
+			value1 = "Ctrl");
 
 		Click(
 			key_label = "Multiple Select Element",
@@ -73,8 +75,8 @@ definition {
 			locator1 = "ClaySamplePortlet#SELECTOR");
 	}
 
-	@description = "Verify clay regular select API options can be configured"
-	@priority = "5"
+	@description = "LPS-121932. Verify clay regular select API options can be configured"
+	@priority = 5
 	@refactordone
 	test RegularCanBeConfigured {
 		Navigator.gotoNavTab(navTab = "Form Elements");

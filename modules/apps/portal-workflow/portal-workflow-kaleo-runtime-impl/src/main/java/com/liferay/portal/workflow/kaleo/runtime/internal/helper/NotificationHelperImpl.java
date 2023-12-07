@@ -1,29 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.internal.helper;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFactory;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.workflow.kaleo.definition.ExecutionType;
 import com.liferay.portal.workflow.kaleo.model.KaleoNotification;
 import com.liferay.portal.workflow.kaleo.model.KaleoNotificationRecipient;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
-import com.liferay.portal.workflow.kaleo.runtime.internal.notification.NotificationMessageGeneratorFactory;
-import com.liferay.portal.workflow.kaleo.runtime.internal.notification.NotificationSenderFactory;
 import com.liferay.portal.workflow.kaleo.runtime.notification.NotificationHelper;
 import com.liferay.portal.workflow.kaleo.runtime.notification.NotificationMessageGenerator;
 import com.liferay.portal.workflow.kaleo.runtime.notification.NotificationSender;
@@ -32,7 +25,10 @@ import com.liferay.portal.workflow.kaleo.service.KaleoNotificationRecipientLocal
 
 import java.util.List;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -56,15 +52,51 @@ public class NotificationHelperImpl implements NotificationHelper {
 		}
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_notificationMessageGeneratorServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext, NotificationMessageGenerator.class, null,
+				ServiceReferenceMapperFactory.create(
+					bundleContext,
+					(notificationMessageGenerator, emitter) -> {
+						for (String templateLanguage :
+								notificationMessageGenerator.
+									getTemplateLanguages()) {
+
+							emitter.emit(templateLanguage);
+						}
+					}));
+		_notificationSenderServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext, NotificationSender.class, null,
+				ServiceReferenceMapperFactory.create(
+					bundleContext,
+					(notificationSender, emitter) -> emitter.emit(
+						notificationSender.getNotificationType())));
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_notificationMessageGeneratorServiceTrackerMap.close();
+
+		_notificationSenderServiceTrackerMap.close();
+	}
+
 	private void _sendKaleoNotification(
 			KaleoNotification kaleoNotification,
 			ExecutionContext executionContext)
 		throws PortalException {
 
 		NotificationMessageGenerator notificationMessageGenerator =
-			_notificationMessageGeneratorFactory.
-				getNotificationMessageGenerator(
+			_notificationMessageGeneratorServiceTrackerMap.getService(
+				kaleoNotification.getTemplateLanguage());
+
+		if (notificationMessageGenerator == null) {
+			throw new WorkflowException(
+				"Invalid template language " +
 					kaleoNotification.getTemplateLanguage());
+		}
 
 		String notificationMessage =
 			notificationMessageGenerator.generateMessage(
@@ -95,8 +127,13 @@ public class NotificationHelperImpl implements NotificationHelper {
 
 		for (String notificationType : notificationTypes) {
 			NotificationSender notificationSender =
-				_notificationSenderFactory.getNotificationSender(
+				_notificationSenderServiceTrackerMap.getService(
 					notificationType);
+
+			if (notificationSender == null) {
+				throw new WorkflowException(
+					"Invalid notification type " + notificationType);
+			}
 
 			notificationSender.sendNotification(
 				kaleoNotificationRecipient, notificationSubject,
@@ -111,11 +148,9 @@ public class NotificationHelperImpl implements NotificationHelper {
 	private KaleoNotificationRecipientLocalService
 		_kaleoNotificationRecipientLocalService;
 
-	@Reference
-	private NotificationMessageGeneratorFactory
-		_notificationMessageGeneratorFactory;
-
-	@Reference
-	private NotificationSenderFactory _notificationSenderFactory;
+	private ServiceTrackerMap<String, NotificationMessageGenerator>
+		_notificationMessageGeneratorServiceTrackerMap;
+	private ServiceTrackerMap<String, NotificationSender>
+		_notificationSenderServiceTrackerMap;
 
 }

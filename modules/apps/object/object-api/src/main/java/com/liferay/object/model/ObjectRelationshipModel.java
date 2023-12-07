@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model;
@@ -17,6 +8,7 @@ package com.liferay.object.model;
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
@@ -41,8 +33,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface ObjectRelationshipModel
-	extends BaseModel<ObjectRelationship>, LocalizedModel, MVCCModel,
-			ShardedModel, StagedAuditedModel {
+	extends BaseModel<ObjectRelationship>, ExternalReferenceCodeModel,
+			LocalizedModel, MVCCModel, ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -96,6 +88,23 @@ public interface ObjectRelationshipModel
 	 */
 	@Override
 	public void setUuid(String uuid);
+
+	/**
+	 * Returns the external reference code of this object relationship.
+	 *
+	 * @return the external reference code of this object relationship
+	 */
+	@AutoEscape
+	@Override
+	public String getExternalReferenceCode();
+
+	/**
+	 * Sets the external reference code of this object relationship.
+	 *
+	 * @param externalReferenceCode the external reference code of this object relationship
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode);
 
 	/**
 	 * Returns the object relationship ID of this object relationship.
@@ -295,6 +304,27 @@ public interface ObjectRelationshipModel
 	public void setDBTableName(String dbTableName);
 
 	/**
+	 * Returns the edge of this object relationship.
+	 *
+	 * @return the edge of this object relationship
+	 */
+	public boolean getEdge();
+
+	/**
+	 * Returns <code>true</code> if this object relationship is edge.
+	 *
+	 * @return <code>true</code> if this object relationship is edge; <code>false</code> otherwise
+	 */
+	public boolean isEdge();
+
+	/**
+	 * Sets whether this object relationship is edge.
+	 *
+	 * @param edge the edge of this object relationship
+	 */
+	public void setEdge(boolean edge);
+
+	/**
 	 * Returns the label of this object relationship.
 	 *
 	 * @return the label of this object relationship
@@ -428,6 +458,27 @@ public interface ObjectRelationshipModel
 	 * @param reverse the reverse of this object relationship
 	 */
 	public void setReverse(boolean reverse);
+
+	/**
+	 * Returns the system of this object relationship.
+	 *
+	 * @return the system of this object relationship
+	 */
+	public boolean getSystem();
+
+	/**
+	 * Returns <code>true</code> if this object relationship is system.
+	 *
+	 * @return <code>true</code> if this object relationship is system; <code>false</code> otherwise
+	 */
+	public boolean isSystem();
+
+	/**
+	 * Sets whether this object relationship is system.
+	 *
+	 * @param system the system of this object relationship
+	 */
+	public void setSystem(boolean system);
 
 	/**
 	 * Returns the type of this object relationship.

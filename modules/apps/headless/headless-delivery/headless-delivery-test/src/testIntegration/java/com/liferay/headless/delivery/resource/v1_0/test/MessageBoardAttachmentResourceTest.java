@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
@@ -20,7 +11,6 @@ import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.test.util.MBTestUtil;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -33,6 +23,7 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -47,16 +38,57 @@ public class MessageBoardAttachmentResourceTest
 	public void setUp() throws Exception {
 		super.setUp();
 
-		ServiceContext serviceContext = new ServiceContext();
-
-		serviceContext.setScopeGroupId(testGroup.getGroupId());
-
-		MBMessage mbMessage = MBTestUtil.addMessage(
-			testGroup.getGroupId(),
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+		MBMessage mbMessage = _addMBMessage();
 
 		_mbThread = mbMessage.getThread();
+	}
+
+	@Override
+	@Test
+	public void testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode()
+		throws Exception {
+
+		super.
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode();
+
+		MessageBoardAttachment messageBoardAttachment =
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment();
+
+		// Message board attachment associated to a different message board
+		// message
+
+		MBMessage mbMessage = _mbMessage;
+
+		MessageBoardAttachment newMessageBoardAttachment =
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment();
+
+		assertHttpResponseStatusCode(
+			404,
+			messageBoardAttachmentResource.
+				deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
+					mbMessage.getExternalReferenceCode(),
+					newMessageBoardAttachment.getExternalReferenceCode()));
+
+		// Nonexistent message board message
+
+		assertHttpResponseStatusCode(
+			404,
+			messageBoardAttachmentResource.
+				deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
+					RandomTestUtil.randomString(),
+					messageBoardAttachment.getExternalReferenceCode()));
+
+		// Nonexistent message board message attachment
+
+		assertHttpResponseStatusCode(
+			404,
+			messageBoardAttachmentResource.
+				deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCodeHttpResponse(
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId(),
+					testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode(),
+					RandomTestUtil.randomString()));
 	}
 
 	@Override
@@ -120,6 +152,35 @@ public class MessageBoardAttachmentResourceTest
 
 	@Override
 	protected MessageBoardAttachment
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment()
+		throws Exception {
+
+		_mbMessage = _addMBMessage();
+
+		return messageBoardAttachmentResource.
+			postMessageBoardMessageMessageBoardAttachment(
+				_mbMessage.getMessageId(), randomMessageBoardAttachment(),
+				getMultipartFiles());
+	}
+
+	@Override
+	protected String
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode()
+		throws Exception {
+
+		return _mbMessage.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+			testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		return testGroup.getGroupId();
+	}
+
+	@Override
+	protected MessageBoardAttachment
 			testGetMessageBoardAttachment_addMessageBoardAttachment()
 		throws Exception {
 
@@ -145,10 +206,70 @@ public class MessageBoardAttachmentResourceTest
 
 	@Override
 	protected MessageBoardAttachment
+			testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment()
+		throws Exception {
+
+		_mbMessage = _addMBMessage();
+
+		return messageBoardAttachmentResource.
+			postMessageBoardMessageMessageBoardAttachment(
+				_mbMessage.getMessageId(), randomMessageBoardAttachment(),
+				getMultipartFiles());
+	}
+
+	@Override
+	protected String
+			testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode()
+		throws Exception {
+
+		return _mbMessage.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+			testGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		return testGroup.getGroupId();
+	}
+
+	@Override
+	protected MessageBoardAttachment
+			testGraphQLGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment()
+		throws Exception {
+
+		return testDeleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_addMessageBoardAttachment();
+	}
+
+	@Override
+	protected String
+			testGraphQLGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getMessageBoardMessageExternalReferenceCode()
+		throws Exception {
+
+		return _mbMessage.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+			testGraphQLGetSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		return testGroup.getGroupId();
+	}
+
+	@Override
+	protected MessageBoardAttachment
 			testGraphQLMessageBoardAttachment_addMessageBoardAttachment()
 		throws Exception {
 
 		return testDeleteMessageBoardAttachment_addMessageBoardAttachment();
+	}
+
+	private MBMessage _addMBMessage() throws Exception {
+		return MBTestUtil.addMessage(
+			testGroup.getGroupId(),
+			UserLocalServiceUtil.getGuestUserId(testGroup.getCompanyId()),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString());
 	}
 
 	private String _read(String url) throws Exception {
@@ -163,6 +284,7 @@ public class MessageBoardAttachmentResourceTest
 		return httpResponse.getContent();
 	}
 
+	private MBMessage _mbMessage;
 	private MBThread _mbThread;
 	private String _tempFileName;
 

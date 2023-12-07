@@ -20,32 +20,32 @@ definition {
 		}
 
 		task ("Create a new Customer Portal Site") {
-			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+			CustomerPortal.addCustomerPortalSite(siteName = ${testSiteName});
 		}
 
 		task ("Add test user access to all Accounts") {
 			CustomerPortal.assignUserToOrganization();
 
-			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = "${testAccount}");
+			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = ${testAccount});
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		CustomerPortal.customerPortalTearDown();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			JSONGroup.deleteGroupByName(groupName = "${testSiteName}");
+			JSONGroup.deleteGroupByName(groupName = ${testSiteName});
 		}
 	}
 
 	@description = "Automation ID: LPS-146189 | Test Summary: Verify that clicking the 'Download Key' button downloads an xml file."
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanViewDownloadsXmlFile {
 
 		// Needs refactor since it depends on example FIFA account
@@ -55,7 +55,7 @@ definition {
 
 			Navigator.openURL();
 
-			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 		}
 
 		task ("Select a project and go to activation page") {
@@ -82,34 +82,57 @@ definition {
 	}
 
 	@description = "Automation ID: LPS-146187 | Test Summary: Check that the dropdown list contains 5 DXP versions for the user to choose from."
-	@priority = "4"
+	@priority = 4
 	test CanViewQuantityDxpVersionsDropDownList {
-		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		task ("Given that the user is given the administrator role in the project") {
+			Account.openAccountsAdmin();
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
+			CustomerPortal.accountTableProject(title = ${testAccount});
+
+			Account.addAssigneeToRoleViaUsersTab(
+				accountRoleTitle = "Account Administrator",
+				accountUserName = "Test Test");
 		}
 
-		task ("Go to the product activation page") {
+		task ("And access a project") {
+			ApplicationsMenu.gotoSite(key_site = ${testSiteName});
+
+			CustomerPortal.enterOnProject(title = ${testAccount});
+
+			CP2Utils.onboardingFlow();
+		}
+
+		task ("When go to the product activation page") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "${testProduct}");
+			CP2NavigationMenu.clickOnProductButton(product = ${testProduct});
 		}
 
-		task ("Open the dropdown and verify that there are 5 DXP versions") {
-			CustomerPortal.viewVersions(dropDownItems = "7.4,7.3,7.2,7.1,7.0");
+		task ("And verify that are 5 DXP versions") {
+			CustomerPortal.viewVersions(
+				dropDownItems = "7.4,7.3,7.2,7.1,7.0",
+				dropDownLabel = "Developer Keys");
+		}
+
+		task ("And click on finish activation") {
+			CustomerPortal.clickOnFinishActivationButton();
+		}
+
+		task ("Then verify that are 5 DXP versions") {
+			CustomerPortal.viewVersions(
+				dropDownItems = "7.4,7.3,7.2,7.1,7.0",
+				dropDownLabel = "Liferay DXP Version",
+				modalVersion = "modalVersion");
 		}
 	}
 
 	@description = "Automation ID: LPS-151404 | Test Summary: Verify that the drop-down list contains 4 Portal versions for the user to choose from."
-	@priority = "3"
+	@priority = 3
 	test CanViewThePortalVersionsDropDownList {
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
-			CustomerPortal.enterOnProject(
-				status = "Future",
-				title = "Test Account Portal");
+			CustomerPortal.enterOnProject(title = "Test Account Portal");
 		}
 
 		task ("Go to the product activation page and Portal product") {
@@ -119,19 +142,19 @@ definition {
 		}
 
 		task ("Open the dropdown and assert if have 4 versions of Portal") {
-			CustomerPortal.viewVersions(dropDownItems = "6.2,6.1 GA3,6.1 GA2,6.1 GA1");
+			CustomerPortal.viewVersions(
+				dropDownItems = "6.2,6.1 GA3,6.1 GA2,6.1 GA1",
+				dropDownLabel = "Developer Keys");
 		}
 	}
 
 	@description = "Automation ID: LPS-151407 | Test Summary: Verify if the text 'Select the Liferay Portal version for which you want to download a developer key.' above the drop-down menu is present."
-	@priority = "3"
+	@priority = 3
 	test CanViewTheProductSubtitle {
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
-			CustomerPortal.enterOnProject(
-				status = "Future",
-				title = "Test Account Portal");
+			CustomerPortal.enterOnProject(title = "Test Account Portal");
 		}
 
 		task ("Go to the product activation page and Portal product") {
@@ -146,10 +169,10 @@ definition {
 	}
 
 	@description = "Automation ID:LPS-146192 | Test Summary: Verify that clicking on the link 'Deploying Activation Keys article.' redirects you to another page (Deploying Activation Keys)"
-	@priority = "3"
+	@priority = 3
 	test ConfirmRedirectionToAnotherPage {
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
 		}
@@ -157,7 +180,7 @@ definition {
 		task ("Go to the product activation page") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "${testProduct}");
+			CP2NavigationMenu.clickOnProductButton(product = ${testProduct});
 		}
 
 		task ("Click in the link 'deploying activation keys article' and go to the page") {
@@ -175,7 +198,7 @@ definition {
 
 	@description = "Automation ID: LPS-151406 | Test Summary: Verify that if the user clicks the Download Key button an xml file is downloaded."
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test ConfirmTheDownloadKeyFromPortal {
 
 		// Needs refactor since it depends on real projects Portals account
@@ -185,13 +208,11 @@ definition {
 
 			Navigator.openURL();
 
-			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 		}
 
 		task ("Selects a project in Customer Portal") {
-			CustomerPortal.enterOnProject(
-				status = "Future",
-				title = "Test Account Portal");
+			CustomerPortal.enterOnProject(title = "Test Account Portal");
 		}
 
 		task ("Go to the product activation page and Download Key") {

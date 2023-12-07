@@ -1,6 +1,7 @@
 definition {
 
-	macro initializeNewSiteViaAccelerator {
+	@summary = "Default summary"
+	macro initializeNewSiteViaAccelerator(siteName = null, siteTemplateName = null) {
 		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
@@ -9,26 +10,28 @@ definition {
 		if (isSet(siteTemplateName)) {
 			Site.addCP(
 				membershipType = "Private",
-				siteName = "${siteName}",
-				siteTemplateName = "${siteTemplateName}");
+				siteName = ${siteName},
+				siteTemplateName = ${siteTemplateName});
 		}
 		else {
 			Site.addCP(
 				membershipType = "Private",
-				siteName = "${siteName}",
-				siteTemplateName = "${siteName}");
+				siteName = ${siteName},
+				siteTemplateName = ${siteName});
 		}
 	}
 
-	macro removeSingleItemViaMiniCart {
+	@summary = "Default summary"
+	macro removeSingleItemViaMiniCart(key_cartItemSku = null) {
 		Click(
-			key_cartItemSku = "${key_cartItemSku}",
+			key_cartItemSku = ${key_cartItemSku},
 			locator1 = "CommerceAccelerators#MINI_CART_REMOVE_ITEM");
 	}
 
-	macro viewAllVariants {
+	@summary = "Default summary"
+	macro viewAllVariants(productName = null) {
 		Click(
-			key_productName = "${productName}",
+			key_productName = ${productName},
 			locator1 = "CommerceAccelerators#PRODUCT_CARD_VIEW_ALL_VARIANTS");
 	}
 

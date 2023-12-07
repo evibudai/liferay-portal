@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.lists.internal.change.tracking.spi.reference;
@@ -24,6 +15,8 @@ import com.liferay.dynamic.data.lists.model.DDLRecordSetTable;
 import com.liferay.dynamic.data.lists.model.DDLRecordTable;
 import com.liferay.dynamic.data.lists.model.DDLRecordVersionTable;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordPersistence;
+import com.liferay.dynamic.data.mapping.model.DDMFieldTable;
+import com.liferay.dynamic.data.mapping.model.DDMStorageLinkTable;
 import com.liferay.portal.kernel.model.ClassNameTable;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
@@ -58,6 +51,38 @@ public class DDLRecordTableReferenceDefinition
 				).and(
 					ClassNameTable.INSTANCE.classNameId.eq(
 						AssetEntryTable.INSTANCE.classNameId)
+				)
+			)
+		).referenceInnerJoin(
+			fromStep -> fromStep.from(
+				DDMFieldTable.INSTANCE
+			).innerJoinON(
+				DDLRecordTable.INSTANCE,
+				DDLRecordTable.INSTANCE.companyId.eq(
+					DDMFieldTable.INSTANCE.companyId)
+			).innerJoinON(
+				DDLRecordVersionTable.INSTANCE,
+				DDLRecordVersionTable.INSTANCE.recordId.eq(
+					DDLRecordTable.INSTANCE.recordId
+				).and(
+					DDLRecordTable.INSTANCE.DDMStorageId.eq(
+						DDMFieldTable.INSTANCE.storageId)
+				)
+			)
+		).referenceInnerJoin(
+			fromStep -> fromStep.from(
+				DDMStorageLinkTable.INSTANCE
+			).innerJoinON(
+				DDLRecordTable.INSTANCE,
+				DDLRecordTable.INSTANCE.companyId.eq(
+					DDMStorageLinkTable.INSTANCE.companyId)
+			).innerJoinON(
+				DDLRecordVersionTable.INSTANCE,
+				DDLRecordVersionTable.INSTANCE.recordId.eq(
+					DDLRecordTable.INSTANCE.recordId
+				).and(
+					DDLRecordTable.INSTANCE.DDMStorageId.eq(
+						DDMStorageLinkTable.INSTANCE.classPK)
 				)
 			)
 		).singleColumnReference(

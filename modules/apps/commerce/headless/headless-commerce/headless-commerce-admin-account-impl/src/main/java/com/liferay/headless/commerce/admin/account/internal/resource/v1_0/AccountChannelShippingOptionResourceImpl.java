@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
+import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
-import com.liferay.commerce.account.exception.NoSuchAccountException;
 import com.liferay.commerce.exception.DuplicateCommerceShippingOptionAccountEntryRelException;
 import com.liferay.commerce.exception.NoSuchShippingMethodException;
 import com.liferay.commerce.model.CommerceShippingMethod;
@@ -30,13 +21,13 @@ import com.liferay.commerce.shipping.engine.fixed.exception.NoSuchShippingFixedO
 import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOption;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionLocalService;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountChannelShippingOption;
-import com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountChannelShippingOptionDTOConverter;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AccountChannelShippingOptionResource;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -78,7 +69,7 @@ public class AccountChannelShippingOptionResourceImpl
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
-			throw new NoSuchAccountException();
+			throw new NoSuchEntryException();
 		}
 
 		return _getPage(
@@ -120,7 +111,7 @@ public class AccountChannelShippingOptionResourceImpl
 			id);
 
 		if (accountEntry == null) {
-			throw new NoSuchAccountException();
+			throw new NoSuchEntryException();
 		}
 
 		return _getPage(
@@ -227,7 +218,7 @@ public class AccountChannelShippingOptionResourceImpl
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
-			throw new NoSuchAccountException();
+			throw new NoSuchEntryException();
 		}
 
 		return postAccountIdAccountChannelShippingOption(
@@ -246,7 +237,7 @@ public class AccountChannelShippingOptionResourceImpl
 			id);
 
 		if (accountEntry == null) {
-			throw new NoSuchAccountException();
+			throw new NoSuchEntryException();
 		}
 
 		CommerceChannel commerceChannel =
@@ -429,9 +420,12 @@ public class AccountChannelShippingOptionResourceImpl
 			commerceShippingOptionAccountEntryRel);
 	}
 
-	@Reference
-	private AccountChannelShippingOptionDTOConverter
-		_accountChannelShippingOptionDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountChannelShippingOptionDTOConverter)"
+	)
+	private DTOConverter
+		<CommerceShippingOptionAccountEntryRel, AccountChannelShippingOption>
+			_accountChannelShippingOptionDTOConverter;
 
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;

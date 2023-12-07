@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.repository.liferayrepository.model;
@@ -26,6 +17,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
 import com.liferay.portal.kernel.repository.capabilities.Capability;
@@ -37,9 +29,9 @@ import com.liferay.portal.kernel.repository.model.RepositoryModelOperation;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionRegistryUtil;
 import com.liferay.portal.kernel.trash.helper.TrashHelper;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portlet.documentlibrary.util.RepositoryModelUtil;
 
 import java.io.InputStream;
@@ -74,7 +66,12 @@ public class LiferayFileEntry extends LiferayModel implements FileEntry {
 			PermissionChecker permissionChecker, String actionId)
 		throws PortalException {
 
-		return _dlFileEntryModelResourcePermission.contains(
+		ModelResourcePermission<DLFileEntry>
+			dlFileEntryModelResourcePermission =
+				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+					DLFileEntry.class.getName());
+
+		return dlFileEntryModelResourcePermission.contains(
 			permissionChecker, _dlFileEntry, actionId);
 	}
 
@@ -448,7 +445,9 @@ public class LiferayFileEntry extends LiferayModel implements FileEntry {
 	@Override
 	public boolean isInTrashContainer() {
 		try {
-			return _trashHelper.isInTrashContainer(_dlFileEntry);
+			TrashHelper trashHelper = _trashHelperSnapshot.get();
+
+			return trashHelper.isInTrashContainer(_dlFileEntry);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -583,15 +582,8 @@ public class LiferayFileEntry extends LiferayModel implements FileEntry {
 	private static final Log _log = LogFactoryUtil.getLog(
 		LiferayFileEntry.class);
 
-	private static volatile ModelResourcePermission<DLFileEntry>
-		_dlFileEntryModelResourcePermission =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				ModelResourcePermission.class, LiferayFileEntry.class,
-				"_dlFileEntryModelResourcePermission",
-				"(model.class.name=" + DLFileEntry.class.getName() + ")", true);
-	private static volatile TrashHelper _trashHelper =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			TrashHelper.class, LiferayFileEntry.class, "_trashHelper", false);
+	private static final Snapshot<TrashHelper> _trashHelperSnapshot =
+		new Snapshot<>(LiferayFileEntry.class, TrashHelper.class);
 
 	private final DLFileEntry _dlFileEntry;
 	private DLFileVersion _dlFileVersion;

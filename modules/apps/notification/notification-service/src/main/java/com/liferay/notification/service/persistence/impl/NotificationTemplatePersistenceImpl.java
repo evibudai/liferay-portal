@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.service.persistence.impl;
@@ -48,11 +39,10 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -2367,6 +2357,7 @@ public class NotificationTemplatePersistenceImpl
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("uuid", "uuid_");
+		dbColumnNames.put("system", "system_");
 		dbColumnNames.put("type", "type_");
 
 		setDBColumnNames(dbColumnNames);
@@ -2502,7 +2493,7 @@ public class NotificationTemplatePersistenceImpl
 		notificationTemplate.setNew(true);
 		notificationTemplate.setPrimaryKey(notificationTemplateId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		notificationTemplate.setUuid(uuid);
 
@@ -2627,7 +2618,7 @@ public class NotificationTemplatePersistenceImpl
 			(NotificationTemplateModelImpl)notificationTemplate;
 
 		if (Validator.isNull(notificationTemplate.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			notificationTemplate.setUuid(uuid);
 		}
@@ -2645,7 +2636,9 @@ public class NotificationTemplatePersistenceImpl
 				if (ercNotificationTemplate != null) {
 					throw new DuplicateNotificationTemplateExternalReferenceCodeException(
 						"Duplicate notification template with external reference code " +
-							notificationTemplate.getExternalReferenceCode());
+							notificationTemplate.getExternalReferenceCode() +
+								" and company " +
+									notificationTemplate.getCompanyId());
 				}
 			}
 			else {
@@ -2655,7 +2648,9 @@ public class NotificationTemplatePersistenceImpl
 
 					throw new DuplicateNotificationTemplateExternalReferenceCodeException(
 						"Duplicate notification template with external reference code " +
-							notificationTemplate.getExternalReferenceCode());
+							notificationTemplate.getExternalReferenceCode() +
+								" and company " +
+									notificationTemplate.getCompanyId());
 				}
 			}
 		}
@@ -3045,30 +3040,14 @@ public class NotificationTemplatePersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, false);
 
-		_setNotificationTemplateUtilPersistence(this);
+		NotificationTemplateUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setNotificationTemplateUtilPersistence(null);
+		NotificationTemplateUtil.setPersistence(null);
 
 		entityCache.removeCache(NotificationTemplateImpl.class.getName());
-	}
-
-	private void _setNotificationTemplateUtilPersistence(
-		NotificationTemplatePersistence notificationTemplatePersistence) {
-
-		try {
-			Field field = NotificationTemplateUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, notificationTemplatePersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -3152,14 +3131,11 @@ public class NotificationTemplatePersistenceImpl
 		NotificationTemplatePersistenceImpl.class);
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
-		new String[] {"uuid", "type"});
+		new String[] {"uuid", "system", "type"});
 
 	@Override
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

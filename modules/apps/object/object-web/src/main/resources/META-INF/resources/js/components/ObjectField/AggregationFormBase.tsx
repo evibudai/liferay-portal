@@ -1,39 +1,32 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {
 	API,
-	AutoComplete,
 	SingleSelect,
-	filterArrayByQuery,
+	getLocalizableLabel,
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
 import {normalizeFieldSettings} from '../../utils/fieldSettings';
 import {ObjectFieldErrors} from './ObjectFieldFormBase';
 
-interface IAggregationSourcePropertyProps {
+interface AggregationFormBaseProps {
+	creationLanguageId2: Liferay.Language.Locale;
 	disabled?: boolean;
-	editingField?: boolean;
+	editingObjectField?: boolean;
 	errors: ObjectFieldErrors;
 	objectDefinitionExternalReferenceCode: string;
 	objectFieldSettings: ObjectFieldSetting[];
 	onAggregationFilterChange?: (aggregationFilterArray: []) => void;
-	onRelationshipChange?: (
+	onObjectRelationshipChange?: (
 		objectDefinitionExternalReferenceCode2: string
 	) => void;
+	onSubmit?: (values?: Partial<ObjectField>) => void;
 	setValues: (values: Partial<ObjectField>) => void;
+	values: Partial<ObjectField>;
 }
 
 type TObjectRelationship = {
@@ -41,8 +34,6 @@ type TObjectRelationship = {
 	name: string;
 	objectDefinitionExternalReferenceCode2: string;
 };
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 const aggregationFunctions = [
 	{
@@ -68,30 +59,30 @@ const aggregationFunctions = [
 ];
 
 export function AggregationFormBase({
+	creationLanguageId2,
 	disabled,
 	errors,
-	editingField,
+	editingObjectField,
 	onAggregationFilterChange,
-	onRelationshipChange,
+	onObjectRelationshipChange,
+	onSubmit,
 	objectDefinitionExternalReferenceCode,
 	objectFieldSettings = [],
 	setValues,
-}: IAggregationSourcePropertyProps) {
-	const [relationshipsQuery, setRelationshipsQuery] = useState<string>('');
-	const [relationshipFieldsQuery, setRelationshipFieldsQuery] = useState<
-		string
-	>('');
+	values,
+}: AggregationFormBaseProps) {
 	const [
 		selectedRelatedObjectRelationship,
 		setSelectRelatedObjectRelationship,
 	] = useState<TObjectRelationship>();
-	const [selectedSummarizeField, setSelectedSummarizeField] = useState<
-		string
-	>();
 	const [
-		selectedAggregationFunction,
-		setSelectedAggregationFunction,
-	] = useState<{label: string; value: string}>();
+		selectedSummarizeFieldName,
+		setSelectedSummarizeFieldName,
+	] = useState<string>();
+	const [
+		selectedAggregationFunctionValue,
+		setSelectedAggregationFunctionValue,
+	] = useState<string>();
 	const [objectRelationships, setObjectRelationships] = useState<
 		TObjectRelationship[]
 	>();
@@ -100,28 +91,30 @@ export function AggregationFormBase({
 	>();
 
 	const filteredObjectRelationships = useMemo(() => {
-		if (objectRelationships) {
-			return filterArrayByQuery(
-				objectRelationships,
-				'label',
-				relationshipsQuery
-			);
-		}
-	}, [objectRelationships, relationshipsQuery]);
+		return objectRelationships?.map(({label, name}) => ({
+			label: getLocalizableLabel(
+				creationLanguageId2 as Liferay.Language.Locale,
+				label,
+				name
+			),
+			value: name,
+		})) as LabelValueObject[];
+	}, [creationLanguageId2, objectRelationships]);
 
 	const filteredObjectRelationshipFields = useMemo(() => {
-		if (objectRelationshipFields) {
-			return filterArrayByQuery(
-				objectRelationshipFields,
-				'label',
-				relationshipFieldsQuery
-			);
-		}
-	}, [objectRelationshipFields, relationshipFieldsQuery]);
+		return objectRelationshipFields?.map(({label, name}) => ({
+			label: getLocalizableLabel(
+				creationLanguageId2 as Liferay.Language.Locale,
+				label,
+				name
+			),
+			value: name,
+		}));
+	}, [creationLanguageId2, objectRelationshipFields]);
 
 	useEffect(() => {
 		const makeFetch = async () => {
-			const objectRelationshipsData = await API.getObjectRelationshipsByExternalReferenceCode(
+			const objectRelationshipsData = await API.getObjectDefinitionByExternalReferenceCodeObjectRelationships(
 				objectDefinitionExternalReferenceCode
 			);
 
@@ -142,7 +135,7 @@ export function AggregationFormBase({
 	}, [objectDefinitionExternalReferenceCode]);
 
 	useEffect(() => {
-		if (editingField && objectRelationships) {
+		if (editingObjectField && objectRelationships) {
 			const makeFetch = async () => {
 				const settings = normalizeFieldSettings(objectFieldSettings);
 
@@ -156,61 +149,68 @@ export function AggregationFormBase({
 						aggregationFunction.value === settings.function
 				);
 
-				const relatedFields = await API.getObjectFieldsByExternalReferenceCode(
-					currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
-				);
-
-				const currentSummarizeField = relatedFields.find(
-					(relatedField) =>
-						relatedField.name === settings.objectFieldName
-				) as ObjectField;
-
-				if (onRelationshipChange) {
-					onRelationshipChange(
+				if (currentRelatedObjectRelationship) {
+					const relatedFields = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
 						currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
 					);
-				}
 
-				setObjectRelationshipFields(
-					relatedFields.filter(
-						(objectField) =>
-							objectField.businessType === 'Integer' ||
-							objectField.businessType === 'LongInteger' ||
-							objectField.businessType === 'Decimal' ||
-							objectField.businessType === 'PrecisionDecimal'
-					)
-				);
+					const currentSummarizeField = relatedFields.find(
+						(relatedField) =>
+							relatedField.name === settings.objectFieldName
+					) as ObjectField;
 
-				setSelectRelatedObjectRelationship(
-					currentRelatedObjectRelationship
-				);
+					if (onObjectRelationshipChange) {
+						onObjectRelationshipChange(
+							currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
+						);
+					}
 
-				setSelectedAggregationFunction(currentFunction);
-
-				if (currentSummarizeField) {
-					setSelectedSummarizeField(
-						currentSummarizeField.label[defaultLanguageId]
+					setObjectRelationshipFields(
+						relatedFields.filter(
+							(objectField) =>
+								objectField.businessType === 'Integer' ||
+								objectField.businessType === 'LongInteger' ||
+								objectField.businessType === 'Decimal' ||
+								objectField.businessType === 'PrecisionDecimal'
+						)
 					);
+
+					setSelectRelatedObjectRelationship(
+						currentRelatedObjectRelationship
+					);
+
+					setSelectedAggregationFunctionValue(currentFunction?.value);
+
+					if (currentSummarizeField) {
+						setSelectedSummarizeFieldName(
+							currentSummarizeField.name
+						);
+					}
 				}
 			};
 
 			makeFetch();
 		}
 	}, [
-		editingField,
+		creationLanguageId2,
+		editingObjectField,
 		objectRelationships,
 		objectFieldSettings,
-		onRelationshipChange,
+		onObjectRelationshipChange,
 	]);
 
 	const handleChangeRelatedObjectRelationship = async (
-		objectRelationship: TObjectRelationship
+		objectRelationshipName: string
 	) => {
-		setSelectRelatedObjectRelationship(objectRelationship);
-		setSelectedSummarizeField('');
+		const selectedObjectRelationship = objectRelationships?.find(
+			({name}) => name === objectRelationshipName
+		);
 
-		const relatedFields = await API.getObjectFieldsByExternalReferenceCode(
-			objectRelationship.objectDefinitionExternalReferenceCode2
+		setSelectRelatedObjectRelationship(selectedObjectRelationship);
+		setSelectedSummarizeFieldName('');
+
+		const relatedFields = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
+			selectedObjectRelationship?.objectDefinitionExternalReferenceCode2 as string
 		);
 
 		const numericFields = relatedFields.filter(
@@ -234,7 +234,7 @@ export function AggregationFormBase({
 			...fieldSettingWithoutSummarizeField,
 			{
 				name: 'objectRelationshipName',
-				value: objectRelationship.name,
+				value: selectedObjectRelationship?.name as string,
 			},
 			{
 				name: 'filters',
@@ -250,26 +250,31 @@ export function AggregationFormBase({
 			objectFieldSettings: newObjectFieldSettings,
 		});
 
-		if (onRelationshipChange) {
-			onRelationshipChange(
-				objectRelationship.objectDefinitionExternalReferenceCode2
+		if (onObjectRelationshipChange) {
+			onObjectRelationshipChange(
+				selectedObjectRelationship?.objectDefinitionExternalReferenceCode2 as string
 			);
+		}
+
+		if (onSubmit) {
+			onSubmit({
+				...values,
+				objectFieldSettings: newObjectFieldSettings,
+			});
 		}
 	};
 
-	const handleAggregationFunctionChange = ({
-		label,
-		value,
-	}: {
-		label: string;
-		value: string;
-	}) => {
-		setSelectedAggregationFunction({label, value});
+	const handleAggregationFunctionChange = (value: string) => {
+		const aggregationFunction = aggregationFunctions.find(
+			(aggregationFunction) => aggregationFunction.value === value
+		);
+
+		setSelectedAggregationFunctionValue(aggregationFunction?.value);
 
 		let newObjectFieldSettings: ObjectFieldSetting[] | undefined;
 
 		if (value === 'COUNT') {
-			setSelectedSummarizeField('');
+			setSelectedSummarizeFieldName('');
 
 			const fieldSettingWithoutSummarizeField = objectFieldSettings.filter(
 				(fieldSettings) => fieldSettings.name !== 'objectFieldName'
@@ -289,6 +294,13 @@ export function AggregationFormBase({
 				objectFieldSettings: newObjectFieldSettings,
 			});
 
+			if (onSubmit) {
+				onSubmit({
+					...values,
+					objectFieldSettings: newObjectFieldSettings,
+				});
+			}
+
 			return;
 		}
 
@@ -305,10 +317,21 @@ export function AggregationFormBase({
 		setValues({
 			objectFieldSettings: newObjectFieldSettings,
 		});
+
+		if (onSubmit) {
+			onSubmit({
+				...values,
+				objectFieldSettings: newObjectFieldSettings,
+			});
+		}
 	};
 
-	const handleSummarizeFieldChange = (objectField: ObjectField) => {
-		setSelectedSummarizeField(objectField.label[defaultLanguageId]);
+	const handleSummarizeFieldChange = (objectFieldName: string) => {
+		const selectedObjectField = objectRelationshipFields?.find(
+			({name}) => name === objectFieldName
+		);
+
+		setSelectedSummarizeFieldName(selectedObjectField?.name);
 
 		const newObjectFieldSettings: ObjectFieldSetting[] | undefined = [
 			...objectFieldSettings.filter(
@@ -316,73 +339,59 @@ export function AggregationFormBase({
 			),
 			{
 				name: 'objectFieldName',
-				value: objectField.name as string,
+				value: selectedObjectField?.name as string,
 			},
 		];
 
 		setValues({
 			objectFieldSettings: newObjectFieldSettings,
 		});
+
+		if (onSubmit) {
+			onSubmit({
+				objectFieldSettings: newObjectFieldSettings,
+			});
+		}
 	};
 
 	return (
 		<>
-			<AutoComplete<TObjectRelationship>
-				emptyStateMessage={Liferay.Language.get(
-					'no-relationships-were-found'
-				)}
+			<SingleSelect
 				error={errors.objectRelationshipName}
+				id="objectFieldAggregationRelationship"
 				items={filteredObjectRelationships ?? []}
 				label={Liferay.Language.get('relationship')}
-				onChangeQuery={setRelationshipsQuery}
-				onSelectItem={(item) => {
-					handleChangeRelatedObjectRelationship(item);
+				onSelectionChange={(value) => {
+					handleChangeRelatedObjectRelationship(value as string);
 				}}
-				query={relationshipsQuery}
 				required
-				value={
-					selectedRelatedObjectRelationship?.label[defaultLanguageId]
-				}
-			>
-				{({label}) => (
-					<div className="d-flex justify-content-between">
-						<div>{label[defaultLanguageId]}</div>
-					</div>
-				)}
-			</AutoComplete>
+				selectedKey={selectedRelatedObjectRelationship?.name}
+			/>
 
 			<SingleSelect
 				disabled={disabled}
 				error={errors.function}
+				items={aggregationFunctions}
 				label={Liferay.Language.get('function')}
-				onChange={handleAggregationFunctionChange}
-				options={aggregationFunctions}
+				onSelectionChange={(value) =>
+					handleAggregationFunctionChange(value as string)
+				}
 				required
-				value={selectedAggregationFunction?.label}
+				selectedKey={selectedAggregationFunctionValue}
 			/>
 
-			{selectedAggregationFunction?.value !== 'COUNT' && (
-				<AutoComplete<ObjectField>
-					emptyStateMessage={Liferay.Language.get(
-						'no-fields-were-found'
-					)}
+			{selectedAggregationFunctionValue !== 'COUNT' && (
+				<SingleSelect
 					error={errors.objectFieldName}
+					id="objectFieldAggregationField"
 					items={filteredObjectRelationshipFields ?? []}
 					label={Liferay.Language.get('field')}
-					onChangeQuery={setRelationshipFieldsQuery}
-					onSelectItem={(item) => {
-						handleSummarizeFieldChange(item);
+					onSelectionChange={(value) => {
+						handleSummarizeFieldChange(value as string);
 					}}
-					query={relationshipFieldsQuery}
 					required
-					value={selectedSummarizeField}
-				>
-					{({label}) => (
-						<div className="d-flex justify-content-between">
-							<div>{label[defaultLanguageId]}</div>
-						</div>
-					)}
-				</AutoComplete>
+					selectedKey={selectedSummarizeFieldName}
+				/>
 			)}
 		</>
 	);

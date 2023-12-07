@@ -1,74 +1,85 @@
 definition {
 
-	macro addColumnByDoubleClick {
-		var key_fieldLabel = "${fieldType}";
+	@summary = "Default summary"
+	macro addColumnByDoubleClick(fieldType = null) {
+		var key_fieldLabel = ${fieldType};
 
 		DoubleClick(locator1 = "FormViewBuilder#SIDEBAR_FIELD_LABEL");
 
-		TableViewBuilder.validateColumnLabel(columnLabel = "${fieldType}");
+		TableViewBuilder.validateColumnLabel(columnLabel = ${fieldType});
 
-		TableViewBuilder.validateColumnLabelAtSidebar(columnLabel = "${fieldType}");
+		TableViewBuilder.validateColumnLabelAtSidebar(columnLabel = ${fieldType});
 	}
 
-	macro assertMessageNoResultsWereFoundIsShown {
+	@summary = "Default summary"
+	macro assertMessageNoResultsWereFoundIsShown() {
 		AssertElementPresent(locator1 = "TableViewBuilder#NO_RESULTS_WERE_FOUND_MESSAGE");
 	}
 
-	macro assertMessageThereAreNoResultsForIsShown {
+	@summary = "Default summary"
+	macro assertMessageThereAreNoResultsForIsShown() {
 		AssertElementPresent(locator1 = "TableViewBuilder#THERE_ARE_NO_RESULTS_FOR");
 	}
 
-	macro clearSearch {
+	@summary = "Default summary"
+	macro clearSearch() {
 		Click(locator1 = "TableViewBuilder#CLEAR_SEARCH");
 	}
 
-	macro clickOnClearFilters {
-		TableViewBuilder.openFilterDropdown(columnLabel = "${columnLabel}");
+	@summary = "Default summary"
+	macro clickOnClearFilters(columnLabel = null) {
+		TableViewBuilder.openFilterDropdown(columnLabel = ${columnLabel});
 
 		Click(locator1 = "TableViewBuilder#FILTER_CLEAR");
 
 		TableViewBuilder.selectTab(tabName = "Filters");
 	}
 
-	macro clickOnSelectAllFilters {
-		TableViewBuilder.openFilterDropdown(columnLabel = "${columnLabel}");
+	@summary = "Default summary"
+	macro clickOnSelectAllFilters(columnLabel = null) {
+		TableViewBuilder.openFilterDropdown(columnLabel = ${columnLabel});
 
 		Click(locator1 = "TableViewBuilder#FILTER_SELECT_ALL");
 
 		TableViewBuilder.selectTab(tabName = "Filters");
 	}
 
-	macro closeColumnSidebar {
+	@summary = "Default summary"
+	macro closeColumnSidebar() {
 		Click(locator1 = "TableViewBuilder#CLOSE_COLUMN_SIDEBAR");
 	}
 
-	macro deleteSelectedColumnByName {
+	@summary = "Default summary"
+	macro deleteSelectedColumnByName(columnLabel = null) {
 		Click(locator1 = "TableViewBuilder#COLUMN_LABEL");
 
 		Click(locator1 = "TableViewBuilder#DELETE_COLUMN_BY_NAME");
 
 		AssertElementNotPresent(
 			locator1 = "TableViewBuilder#COLUMN_LABEL",
-			value1 = "${columnLabel}");
+			value1 = ${columnLabel});
 	}
 
-	macro openFilterDropdown {
+	@summary = "Default summary"
+	macro openFilterDropdown(columnLabel = null) {
 		Click(
-			key_columnLabel = "${columnLabel}",
+			key_columnLabel = ${columnLabel},
 			locator1 = "TableViewBuilder#FILTER_DROPDOWN");
 	}
 
-	macro searchByItem {
+	@summary = "Default summary"
+	macro searchByItem(itemName = null) {
 		Type(
 			locator1 = "AppBuilder#SEARCH_BAR_INPUT",
-			value1 = "${itemName}");
+			value1 = ${itemName});
 	}
 
-	macro selectFilterDropdownItem {
-		TableViewBuilder.openFilterDropdown(columnLabel = "${columnLabel}");
+	@summary = "Default summary"
+	macro selectFilterDropdownItem(columnLabel = null, dropdownItemList = null) {
+		TableViewBuilder.openFilterDropdown(columnLabel = ${columnLabel});
 
-		for (var dropdownItem : list "${dropdownItemList}") {
-			var key_dropdownItem = "${dropdownItem}";
+		for (var dropdownItem : list ${dropdownItemList}) {
+			var key_dropdownItem = ${dropdownItem};
 
 			Click(locator1 = "TableViewBuilder#FILTER_DROPDOWN_ITEM");
 		}
@@ -76,51 +87,59 @@ definition {
 		TableViewBuilder.selectTab(tabName = "Filters");
 	}
 
-	macro selectTab {
+	@summary = "Default summary"
+	macro selectTab(tabName = null) {
 		Click(
-			key_tabName = "${tabName}",
+			key_tabName = ${tabName},
 			locator1 = "TableViewBuilder#TAB_LABEL");
 	}
 
-	macro setName {
-		AppBuilderAdmin.setName(title = "${tableViewName}");
+	@summary = "Default summary"
+	macro setName(tableViewName = null) {
+		AppBuilderAdmin.setName(title = ${tableViewName});
 	}
 
-	macro validateColumnLabel {
+	@summary = "Default summary"
+	macro validateColumnLabel(columnLabel = null) {
 		AssertTextEquals(
 			locator1 = "TableViewBuilder#COLUMN_LABEL",
-			value1 = "${columnLabel}");
+			value1 = ${columnLabel});
 	}
 
-	macro validateColumnLabelAtSidebar {
+	@summary = "Default summary"
+	macro validateColumnLabelAtSidebar(columnLabel = null) {
 		AssertTextEquals(
 			locator1 = "TableViewBuilder#COLUMN_LABEL_AT_SIDEBAR",
-			value1 = "${columnLabel}");
+			value1 = ${columnLabel});
 	}
 
-	macro validateDisabledField {
+	@summary = "Default summary"
+	macro validateDisabledField(fieldType = null) {
 		AssertElementPresent(
 			locator1 = "TableViewBuilder#DISABLED_COLUMN",
-			value1 = "${fieldType}");
+			value1 = ${fieldType});
 	}
 
-	macro validateFilterDropdownList {
+	@summary = "Default summary"
+	macro validateFilterDropdownList(columnLabel = null, itemList = null) {
 		AssertTextEquals(
-			key_columnLabel = "${columnLabel}",
+			key_columnLabel = ${columnLabel},
 			locator1 = "TableViewBuilder#FILTER_DROPDOWN",
-			value1 = "${itemList}");
+			value1 = ${itemList});
 	}
 
-	macro validateNoColumnLabel {
+	@summary = "Default summary"
+	macro validateNoColumnLabel(columnLabel = null) {
 		AssertElementNotPresent(
 			locator1 = "TableViewBuilder#COLUMN_LABEL",
-			value1 = "${columnLabel}");
+			value1 = ${columnLabel});
 	}
 
-	macro validateNoColumnLabelAtSidebar {
+	@summary = "Default summary"
+	macro validateNoColumnLabelAtSidebar(columnLabel = null) {
 		AssertElementNotPresent(
 			locator1 = "TableViewBuilder#COLUMN_LABEL_AT_SIDEBAR",
-			value1 = "${columnLabel}");
+			value1 = ${columnLabel});
 	}
 
 }

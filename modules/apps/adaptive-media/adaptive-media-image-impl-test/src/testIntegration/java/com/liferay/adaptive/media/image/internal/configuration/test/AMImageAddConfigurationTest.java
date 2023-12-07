@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.configuration.test;
@@ -19,7 +10,6 @@ import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -29,9 +19,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -83,14 +71,11 @@ public class AMImageAddConfigurationTest
 				"max-width", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
+		Assert.assertNotNull(amImageConfigurationEntry);
 
 		Assert.assertEquals(
 			StringPool.BLANK, amImageConfigurationEntry.getDescription());
@@ -106,14 +91,11 @@ public class AMImageAddConfigurationTest
 				"max-width", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
+		Assert.assertNotNull(amImageConfigurationEntry);
 
 		Map<String, String> actualProperties =
 			amImageConfigurationEntry.getProperties();
@@ -175,14 +157,11 @@ public class AMImageAddConfigurationTest
 				"max-width", ""
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
+		Assert.assertNotNull(amImageConfigurationEntry);
 
 		Map<String, String> actualProperties =
 			amImageConfigurationEntry.getProperties();
@@ -236,15 +215,11 @@ public class AMImageAddConfigurationTest
 				"max-height", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
-
+		Assert.assertNotNull(amImageConfigurationEntry);
 		Assert.assertEquals(
 			"desc:;desc", amImageConfigurationEntry.getDescription());
 	}
@@ -259,15 +234,11 @@ public class AMImageAddConfigurationTest
 				"max-height", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
-
+		Assert.assertNotNull(amImageConfigurationEntry);
 		Assert.assertEquals("one:;one", amImageConfigurationEntry.getName());
 	}
 
@@ -323,14 +294,11 @@ public class AMImageAddConfigurationTest
 				"max-height", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
+		Assert.assertNotNull(amImageConfigurationEntry);
 
 		Map<String, String> actualProperties =
 			amImageConfigurationEntry.getProperties();
@@ -347,14 +315,11 @@ public class AMImageAddConfigurationTest
 				"max-width", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
+		Assert.assertNotNull(amImageConfigurationEntry);
 
 		Map<String, String> actualProperties =
 			amImageConfigurationEntry.getProperties();
@@ -442,14 +407,11 @@ public class AMImageAddConfigurationTest
 				"max-width", "100"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
+		Assert.assertNotNull(amImageConfigurationEntry);
 
 		Map<String, String> actualProperties =
 			amImageConfigurationEntry.getProperties();
@@ -511,14 +473,11 @@ public class AMImageAddConfigurationTest
 				"max-width", "0"
 			).build());
 
-		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
+		AMImageConfigurationEntry amImageConfigurationEntry =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				TestPropsValues.getCompanyId(), "1");
 
-		Assert.assertTrue(amImageConfigurationEntryOptional.isPresent());
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			amImageConfigurationEntryOptional.get();
+		Assert.assertNotNull(amImageConfigurationEntry);
 
 		Map<String, String> actualProperties =
 			amImageConfigurationEntry.getProperties();
@@ -580,34 +539,6 @@ public class AMImageAddConfigurationTest
 			).put(
 				"max-width", "200"
 			).build());
-	}
-
-	@Test
-	public void testSendsAMessageToTheMessageBus() throws Exception {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
-
-		List<Message> messages = collectConfigurationMessages(
-			() -> _amImageConfigurationHelper.addAMImageConfigurationEntry(
-				TestPropsValues.getCompanyId(), "one", "onedesc", "1",
-				properties));
-
-		Assert.assertEquals(messages.toString(), 1, messages.size());
-
-		Message message = messages.get(0);
-
-		AMImageConfigurationEntry amImageConfigurationEntry =
-			(AMImageConfigurationEntry)message.getPayload();
-
-		Assert.assertEquals("one", amImageConfigurationEntry.getName());
-		Assert.assertEquals(
-			"onedesc", amImageConfigurationEntry.getDescription());
-		Assert.assertEquals("1", amImageConfigurationEntry.getUUID());
-		Assert.assertEquals(
-			properties, amImageConfigurationEntry.getProperties());
 	}
 
 	@Override

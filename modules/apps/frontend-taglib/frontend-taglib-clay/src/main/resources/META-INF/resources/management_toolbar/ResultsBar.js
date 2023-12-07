@@ -1,30 +1,70 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayLabel from '@clayui/label';
+import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import {ManagementToolbar} from 'frontend-js-components-web';
 import {navigate, sub} from 'frontend-js-web';
 import React, {useEffect, useRef} from 'react';
 
+/**
+ * @see {ManagementToolbarTag._getResultsLanguageKey} It should have the exact
+ * 	same logic than the corresponding Java method.
+ */
+function getResultText(searchValue, itemTotal, filterTotal) {
+	if (!searchValue) {
+		if (filterTotal) {
+			if (itemTotal === 1) {
+				return Liferay.Language.get('x-result-found-with-filters');
+			}
+
+			return Liferay.Language.get('x-results-found-with-filters');
+		}
+
+		if (itemTotal === 1) {
+			return Liferay.Language.get('x-result-found');
+		}
+
+		return Liferay.Language.get('x-results-found');
+	}
+
+	if (filterTotal) {
+		if (itemTotal === 1) {
+			return Liferay.Language.get('x-result-found-for-x-with-filters');
+		}
+
+		return Liferay.Language.get('x-results-found-for-x-with-filters');
+	}
+
+	if (itemTotal === 1) {
+		return Liferay.Language.get('x-result-found-for-x');
+	}
+
+	return Liferay.Language.get('x-results-found-for-x');
+}
+
 const ResultsBar = ({
 	clearResultsURL,
 	filterLabelItems,
 	itemsTotal,
+	searchContainerId,
 	searchValue,
+	title,
 }) => {
 	const resultsBarRef = useRef();
+
+	const searchContainerRef = useRef();
+
+	useEffect(() => {
+		Liferay.componentReady(searchContainerId).then((searchContainer) => {
+			searchContainerRef.current = searchContainer;
+		});
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	useEffect(() => {
 		resultsBarRef.current?.focus();
@@ -37,20 +77,27 @@ const ResultsBar = ({
 					expand={!(filterLabelItems?.length > 0)}
 				>
 					<span
+						aria-label={sub(
+							getResultText(
+								itemsTotal,
+								filterLabelItems?.length || 0
+							),
+							itemsTotal,
+							`"${searchValue}"`
+						)}
 						className="component-text text-truncate-inline"
 						ref={resultsBarRef}
-						tabIndex={0}
+						tabIndex={-1}
 					>
 						<span className="text-truncate">
 							{sub(
-								itemsTotal === 1
-									? Liferay.Language.get('x-result-for')
-									: Liferay.Language.get('x-results-for'),
-								itemsTotal
-							)}
-
-							{searchValue && (
-								<strong>{` "${searchValue}"`}</strong>
+								getResultText(
+									searchValue,
+									itemsTotal,
+									filterLabelItems?.length || 0
+								),
+								itemsTotal,
+								<strong>{`"${searchValue}"`}</strong>
 							)}
 						</span>
 					</span>
@@ -64,7 +111,14 @@ const ResultsBar = ({
 						<ClayLabel
 							className="component-label tbar-label"
 							closeButtonProps={{
+								['aria-label']: sub(
+									Liferay.Language.get('remove-x-filter'),
+									item.label
+								),
 								onClick: () => {
+									searchContainerRef.current?.fire(
+										'clearFilter'
+									);
 									navigate(item.data?.removeLabelURL);
 								},
 							}}
@@ -84,15 +138,29 @@ const ResultsBar = ({
 								? Liferay.Language.get('clear-x-result-for-x')
 								: Liferay.Language.get('clear-x-results-for-x'),
 							itemsTotal,
-							searchValue
+							searchValue !== null
+								? searchValue
+								: filterLabelItems?.map((item) => item.label)
 						)}
 						className="component-link tbar-link"
-						href={clearResultsURL}
+						onClick={(event) => {
+							event.preventDefault();
+
+							searchContainerRef.current?.fire('clearFilter');
+
+							navigate(clearResultsURL);
+						}}
 					>
 						{Liferay.Language.get('clear')}
 					</ClayLink>
 				</ManagementToolbar.ResultsBarItem>
 			</ManagementToolbar.ResultsBar>
+
+			{Boolean(title) && (
+				<ClayLayout.ContainerFluid className="c-mt-4" size="xl">
+					<h3>{title}</h3>
+				</ClayLayout.ContainerFluid>
+			)}
 		</>
 	);
 };

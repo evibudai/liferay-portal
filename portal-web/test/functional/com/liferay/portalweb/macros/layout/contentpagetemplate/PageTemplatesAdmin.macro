@@ -1,24 +1,25 @@
 definition {
 
-	macro _addPageTemplate {
+	@summary = "Default summary"
+	macro _addPageTemplate(siteTemplate = null, pageTemplateName = null, menuItem = null, masterLayoutName = null) {
 		if (!(isSet(pageTemplateType))) {
 			var pageTemplateType = "Content Page Template";
 		}
 
-		if ("${siteTemplate}" == "true") {
+		if (${siteTemplate} == "true") {
 			LexiconEntry.gotoAdd();
 
 			LexiconCard.clickCard(card = "Blank");
 		}
 		else {
-			LexiconEntry.gotoAddMenuItem(menuItem = "${pageTemplateType}");
+			LexiconEntry.gotoAddMenuItem(menuItem = ${pageTemplateType});
 		}
 
-		if ("${pageTemplateType}" == "Content Page Template") {
+		if (${pageTemplateType} == "Content Page Template") {
 			if (isSet(masterLayoutName)) {
 				WaitForPageLoad();
 
-				LexiconCard.clickCard(card = "${masterLayoutName}");
+				LexiconCard.clickCard(card = ${masterLayoutName});
 			}
 			else {
 				WaitForPageLoad();
@@ -27,20 +28,21 @@ definition {
 			}
 		}
 
-		if ("${menuItem}" == "Content Page Template") {
+		if (${menuItem} == "Content Page Template") {
 			LexiconCard.clickCard(card = "Blank");
 		}
 
-		PortletEntry.inputName(name = "${pageTemplateName}");
+		PortletEntry.inputName(name = ${pageTemplateName});
 
 		Button.clickSave();
 
-		if (("${pageTemplateType}" == "Content Page Template") && !(isSet(duplicatePageTemplate))) {
+		if ((${pageTemplateType} == "Content Page Template") && !(isSet(duplicatePageTemplate))) {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 	}
 
-	macro _gotoAddCollection {
+	@summary = "Default summary"
+	macro _gotoAddCollection() {
 		if (IsElementPresent(locator1 = "NavNested#NAV_NESTED_PLUS")) {
 			Click(locator1 = "NavNested#NAV_NESTED_PLUS");
 		}
@@ -49,64 +51,70 @@ definition {
 		}
 	}
 
-	macro addCollection {
+	@summary = "Default summary"
+	macro addCollection(collectionDescription = null, collectionName = null) {
 		PageTemplatesAdmin._gotoAddCollection();
 
 		Collection.editCollection(
-			collectionDescription = "${collectionDescription}",
-			collectionName = "${collectionName}");
+			collectionDescription = ${collectionDescription},
+			collectionName = ${collectionName});
 
 		Button.clickSave();
 	}
 
-	macro addDuplicatePageTemplate {
+	@summary = "Default summary"
+	macro addDuplicatePageTemplate(pageTemplateType = null, duplicatePageTemplate = null, siteTemplate = null, pageTemplateName = null, menuItem = null) {
 		PageTemplatesAdmin._addPageTemplate(
-			duplicatePageTemplate = "${duplicatePageTemplate}",
-			menuItem = "${menuItem}",
-			pageTemplateName = "${pageTemplateName}",
-			pageTemplateType = "${pageTemplateType}",
-			siteTemplate = "${siteTemplate}");
+			duplicatePageTemplate = ${duplicatePageTemplate},
+			menuItem = ${menuItem},
+			pageTemplateName = ${pageTemplateName},
+			pageTemplateType = ${pageTemplateType},
+			siteTemplate = ${siteTemplate});
 
 		AssertTextEquals(
 			locator1 = "Message#ERROR_MODAL_CONTENT",
 			value1 = "A page template entry with that name already exists.");
 	}
 
-	macro addMastersPageTemplate {
+	@summary = "Default summary"
+	macro addMastersPageTemplate(pageTemplateName = null) {
 		LexiconEntry.gotoAdd();
 
-		PortletEntry.inputName(name = "${pageTemplateName}");
+		PortletEntry.inputName(name = ${pageTemplateName});
 
 		Button.clickSave();
 
 		PageEditor.publish();
 	}
 
-	macro addPageTemplate {
+	@summary = "Default summary"
+	macro addPageTemplate(pageTemplateType = null, siteTemplate = null, pageTemplateName = null, menuItem = null, masterLayoutName = null) {
 		PageTemplatesAdmin._addPageTemplate(
-			masterLayoutName = "${masterLayoutName}",
-			menuItem = "${menuItem}",
-			pageTemplateName = "${pageTemplateName}",
-			pageTemplateType = "${pageTemplateType}",
-			siteTemplate = "${siteTemplate}");
+			masterLayoutName = ${masterLayoutName},
+			menuItem = ${menuItem},
+			pageTemplateName = ${pageTemplateName},
+			pageTemplateType = ${pageTemplateType},
+			siteTemplate = ${siteTemplate});
 	}
 
-	macro configureWidgetPageTemplateLayout {
+	@summary = "Default summary"
+	macro configureWidgetPageTemplateLayout(columnName = null) {
 		WaitForPageLoad();
 
 		Click(locator1 = "ControlMenu#EDIT_COG");
 
 		Click(
-			key_card = "${columnName}",
+			key_card = ${columnName},
 			locator1 = "Card#CARD");
 
 		PortletEntry.save();
 	}
 
-	macro deletePageTemplate {
+	@summary = "Default summary"
+	macro deletePageTemplate(pageTemplateName = null) {
 		PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
 			item = "Delete",
-			pageTemplateName = "${pageTemplateName}");
+			pageTemplateName = ${pageTemplateName});
 
 		AssertTextEquals(
 			locator1 = "Modal#BODY",
@@ -117,11 +125,12 @@ definition {
 			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 	}
 
-	macro deletePageTemplateSet {
-		Navigator.gotoNavNested(navNested = "${setName}");
+	@summary = "Default summary"
+	macro deletePageTemplateSet(setName = null) {
+		Navigator.gotoNavNested(navNested = ${setName});
 
 		Click.waitForMenuToggleJSClick(
-			key_headerName = "${setName}",
+			key_headerName = ${setName},
 			locator1 = "Portlet#H2_HEADER_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Delete");
@@ -135,87 +144,111 @@ definition {
 			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 	}
 
-	macro gotoPageTemplate {
-		LexiconCard.clickCardTitleLink(card = "${pageTemplateName}");
+	@summary = "Default summary"
+	macro gotoPageTemplate(pageTemplateName = null) {
+		LexiconCard.clickCardTitleLink(card = ${pageTemplateName});
 	}
 
-	macro gotoPageTemplateEllipsisItem {
+	@summary = "Default summary"
+	macro gotoPageTemplateEllipsisItem(item = null, pageTemplateName = null) {
 		Click.waitForMenuToggleJSClick(
-			key_card = "${pageTemplateName}",
+			key_card = ${pageTemplateName},
 			locator1 = "Card#CARD_ELLIPSIS");
 
-		MenuItem.click(menuItem = "${item}");
+		MenuItem.click(menuItem = ${item});
 	}
 
-	macro importPageTemplatesFromTempFolder {
+	@summary = "Default summary"
+	macro importPageTemplatesFromTempFolder(importOption = null) {
 		Click.waitForMenuToggleJSClick(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Import");
 
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		WaitForPageLoad();
 
 		var pageTemplateZipFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "page-template-*.zip");
 
-		UploadTempFile(
+		UploadTempFile.uploadTempFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
-			value1 = "${pageTemplateZipFileName}");
+			value1 = ${pageTemplateZipFileName});
 
 		Button.clickImport();
 
-		Alert.viewSuccessMessage();
+		if (isSet(importOption)) {
+			WaitForVisible(locator1 = "Modal#HEADER");
 
-		IFrame.closeFrame();
+			Check.checkNotVisible(
+				locator1 = "Radio#ANY",
+				radioLabel = ${importOption});
+
+			Click(
+				key_text = "Import",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
+		}
+
+		AssertVisible(locator1 = "Message#SUCCESS_IMPORT");
+
+		Button.clickDone();
 	}
 
-	macro openPageTemplatesAdmin {
+	@summary = "Default summary"
+	macro openPageTemplatesAdmin(siteURLKey = null) {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=page-templates");
 	}
 
-	macro openPageTemplatesMenuAdmin {
+	@summary = "Default summary"
+	macro openPageTemplatesMenuAdmin(siteURLKey = null) {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet");
 	}
 
-	macro renamePageTemplate {
+	@summary = "Default summary"
+	macro renamePageTemplate(newPageTemplateName = null, pageTemplateName = null) {
 		PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
 			item = "Rename",
-			pageTemplateName = "${pageTemplateName}");
+			pageTemplateName = ${pageTemplateName});
 
-		PortletEntry.inputName(name = "${newPageTemplateName}");
+		PortletEntry.inputName(name = ${newPageTemplateName});
 
 		Modal.save();
 	}
 
-	macro selectPageTemplate {
-		LexiconCard.viewCardTitle(card = "${pageTemplateName}");
+	@summary = "Default summary"
+	macro selectPageTemplate(pageTemplateName = null) {
+		LexiconCard.viewCardTitle(card = ${pageTemplateName});
 
 		Check.checkNotVisible(
-			key_card = "${pageTemplateName}",
+			key_card = ${pageTemplateName},
 			locator1 = "Card#CARD_CHECKBOX");
 	}
 
-	macro viewEntryWorkflowStatus {
+	@summary = "Default summary"
+	macro viewEntryWorkflowStatus(entry = null, workflowStatus = null) {
 		LexiconCard.viewCardLabel(
-			card = "${entry}",
-			cardLabel = "${workflowStatus}");
+			card = ${entry},
+			cardLabel = ${workflowStatus});
 	}
 
-	macro viewPageTemplateNotPresent {
-		LexiconCard.viewCardNotPresent(card = "${pageTemplateName}");
+	@summary = "Default summary"
+	macro viewPageTemplateNotPresent(pageTemplateName = null) {
+		LexiconCard.viewCardNotPresent(card = ${pageTemplateName});
 	}
 
-	macro viewPageTemplatePresent {
-		LexiconCard.viewCardPresent(card = "${pageTemplateName}");
+	@summary = "Default summary"
+	macro viewPageTemplatePresent(pageTemplateName = null) {
+		LexiconCard.viewCardPresent(card = ${pageTemplateName});
 	}
 
-	macro viewPageTemplateSetNotPresent {
+	@summary = "Default summary"
+	macro viewPageTemplateSetNotPresent(setName = null) {
 		AssertElementNotPresent(
-			key_navNested = "${setName}",
+			key_navNested = ${setName},
 			locator1 = "NavNested#NAV_NESTED_LINK");
 	}
 
-	macro viewPageTemplateSetPresent {
+	@summary = "Default summary"
+	macro viewPageTemplateSetPresent(setName = null) {
 		AssertElementPresent(
-			key_navNested = "${setName}",
+			key_navNested = ${setName},
 			locator1 = "NavNested#NAV_NESTED_LINK");
 	}
 

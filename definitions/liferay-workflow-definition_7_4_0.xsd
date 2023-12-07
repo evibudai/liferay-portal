@@ -35,9 +35,14 @@
 		<xs:sequence>
 			<xs:element name="name" type="xs:string" />
 			<xs:element minOccurs="0" name="description" type="xs:string" />
-			<xs:element name="script" type="xs:string" />
-			<xs:element name="script-language" type="script-language-type" />
-			<xs:element minOccurs="0" name="script-required-contexts" type="xs:string" />
+			<xs:choice maxOccurs="1" minOccurs="1">
+				<xs:sequence>
+					<xs:element name="script" type="xs:string" />
+					<xs:element name="script-language" type="script-language-type" />
+					<xs:element minOccurs="0" name="script-required-contexts" type="xs:string" />
+				</xs:sequence>
+				<xs:element name="status" type="xs:int" />
+			</xs:choice>
 			<xs:element minOccurs="0" name="priority" type="xs:int" />
 		</xs:sequence>
 	</xs:complexType>
@@ -475,7 +480,7 @@
 	</xs:simpleType>
 	<xs:simpleType name="script-language-type">
 		<xs:restriction base="xs:string">
-			<xs:pattern value="(beanshell|drl|function#[a-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*|groovy|java|javascript|python|ruby)" />
+			<xs:pattern value="(drl|function#[a-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*|groovy|java)" />
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="task-execution-type">

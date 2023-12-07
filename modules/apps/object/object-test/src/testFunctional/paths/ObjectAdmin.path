@@ -46,6 +46,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>LAYOUT_FIELD_NAME</td>
+		<td>//div[contains(@class,'layout-tab')]//*[contains(text(),'${key_fieldName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>ADD_FIELD_ON_BLOCK</td>
 		<td>//button[contains(@class,'btn-secondary') and contains (text(),'Add Field')]</td>
 		<td></td>
@@ -57,7 +62,7 @@
 	</tr>
 	<tr>
 		<td>DETAILS_NAME_CUSTOM_OBJECT</td>
-		<td>//input[@id='_com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_shortName']</td>
+		<td>//label[text()='Name']/following-sibling::input[@name='name']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -67,22 +72,22 @@
 	</tr>
 	<tr>
 		<td>DETAILS_LABEL_CUSTOM_OBJECT</td>
-		<td>//input[@id='_com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_label']</td>
+		<td>//label[text()='Label']/following-sibling::div//input</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>DETAILS_PLURAL_LABEL_CUSTOM_OBJECT</td>
-		<td>//input[@id='_com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_pluralLabel']</td>
+		<td>//label[text()='Plural Label']/following-sibling::div//input</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>DROPDOWN_LANGUAGEM</td>
-		<td>//button[contains(@class,'input-localized-trigger') and contains(@id,'labelMenu')] | //button[contains(@class,'dropdown-toggle btn btn-monospaced btn-secondary')]</td>
+		<td>//label[text()='Label']/following-sibling::div//button | //button[@title='Open Localizations']</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>DROPDOWN_LANGUAGEM_PLURAL_LABEL</td>
-		<td>//button[contains(@class,'input-localized-trigger') and contains(@id,'pluralLabelMenu')]</td>
+		<td>//label[text()='Plural Label']/following-sibling::div//button</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -117,7 +122,7 @@
 	</tr>
 	<tr>
 		<td>ENTRY_CHOOSE_OPTION</td>
-		<td>//div[contains(text(),'Choose an Option') or contains(text(),'Escolha uma Opção')]</td>
+		<td>//button[contains(text(),'Choose an Option') or contains(text(),'Escolha uma Opção')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -138,6 +143,11 @@
 	<tr>
 		<td>ENTRY_RELATIONSHIP_TAB</td>
 		<td>//*[contains(@class,'nav-link')]//span[contains(text(),'${key_tabName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>EXTERNAL_REFERENCE_CODE_HEADER</td>
+		<td>//ul[contains(@class,'navbar')]//strong[contains(text(),'${key_externalReferenceCode}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -227,7 +237,7 @@
 	</tr>
 	<tr>
 		<td>VIEW_OBJECT</td>
-		<td>//div[(@class='table-list-title') and contains (.,'${key_name}')]/../../div[contains(text(),'${key_system}')]</td>
+		<td>//div[contains(@class,'table-list-title') and contains (.,'${key_name}')]/../../div[contains(text(),'${key_system}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -248,6 +258,11 @@
 	<tr>
 		<td>SEARCHABLE_SECTION_TITLE</td>
 		<td>//h3[(@class='lfr-objects__card-title') and text()='Searchable']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SIDEBAR_ITEM</td>
+		<td>//*[contains(@class,'list-group-item')]//*[normalize-space(text())='${folderLabel}']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -276,8 +291,8 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>RELATIONSHIPS_TYPE_DESCRIPTION</td>
-		<td>//div[text() = '${key_type}']/..//span[@class = 'text-small']</td>
+		<td>FIELD_DESCRIPTION</td>
+		<td>//span[contains(.,'${key_fieldLabel}')]//following-sibling::span[contains(.,'${key_descriptionLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -307,7 +322,7 @@
 	</tr>
 	<tr>
 		<td>OBJECT_STATUS</td>
-		<td>//a[text() = '${key_label}']/../../following-sibling::div//span[contains(@class,'workflow-status')]//strong[contains(text(),'${key_status}')]</td>
+		<td>//*[@class='dnd-tr'][contains(.,'${key_label}')] //*[contains(@class,'label')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -316,8 +331,8 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>OBJECT_LABEL_COLUMN</td>
-		<td>//div[contains(@class,'dnd-th') and contains(text(),'Label')]</td>
+		<td>GENERIC_LABEL_COLUMN</td>
+		<td>//div[contains(@class,'dnd-th')]//button[contains(text(),'Label')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -342,12 +357,7 @@
 	</tr>
 	<tr>
 		<td>SELECT_OBJECT_SCOPE</td>
-		<td>//select[@id = '_com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_scope']</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>SELECT_LANGUAGE</td>
-		<td>//span[contains(text(),'${key_newLanguage}')] | //button[contains(@class,'dropdown-item')]//div[text()='${key_newLanguage}']</td>
+		<td>//label[contains(.,'Scope')]/following-sibling::div//input</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -367,7 +377,12 @@
 	</tr>
 	<tr>
 		<td>TABLE_LIST_TITLE</td>
-		<td>//div[(@class='table-list-title') and contains (.,'${key_name}')]</td>
+		<td>//div[contains(@class,'table-list-title') and contains (.,'${key_name}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SIDEBAR_ADVANCED_TAB</td>
+		<td>//div[contains(@class,'lfr-objects')]//button[contains(text(),'Advanced')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -386,11 +401,6 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>FIELDS_LABEL_COLUMN</td>
-		<td>//div[contains(@class,'dnd-th') and contains(text(),'Label')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>FIELDS_RADIO_OPTION</td>
 		<td>//label[contains(.,'${key_radioOption}')]/input[@type='radio']</td>
 		<td></td>
@@ -398,6 +408,11 @@
 	<tr>
 		<td>FIELDS_TYPE_COLUMN</td>
 		<td>//div[contains(@class,'dnd-th') and contains(text(),'Type')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>FOLDER_LABEL</td>
+		<td>//span[contains(@class,'view-object-definitions-title') and contains(text(),'${folderLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -432,12 +447,17 @@
 	</tr>
 	<tr>
 		<td>KEBAB_MENU_OPTION</td>
-		<td>//*[@class = 'dropdown-item' and contains(text(), '${key_kebabOption}')]</td>
+		<td>//*[@class='dropdown-menu show']//*[(@class='dropdown-item' and @role='menuitem') and contains(text(),'${key_kebabOption}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>KEBAB_MENU_OPTION_BY_INDEX</td>
+		<td>xpath=(//*[@class='dropdown-menu show']//*[(@class='dropdown-item' and @role='menuitem')])[${index}]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>BODY_VERTICAL_ELLIPSIS</td>
-		<td>//div[@class='table-list-title']/../../../*[contains(.,'${key_value}')]//*[name()='svg'][contains(@class,'icon-ellipsis')]</td>
+		<td>//div[contains(@class,'table-list-title')]/../../../*[contains(.,'${key_value}')]//*[name()='svg'][contains(@class,'icon-ellipsis')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -448,6 +468,11 @@
 	<tr>
 		<td>OBJECT_ACTIONS_TAB</td>
 		<td>//*[contains(@class,'nav-link')]//span[contains(text(),'Actions')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ACTION_LABEL_FIELD</td>
+		<td>//input[@name='label']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -467,7 +492,7 @@
 	</tr>
 	<tr>
 		<td>VIEW_ACTIONS_LABEL</td>
-		<td>//div[contains(@class, 'dnd-td') and contains(., '${key_actionName}')]</td>
+		<td>//div[contains(@class, 'dnd-td') and contains(., '${key_actionLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -482,7 +507,7 @@
 	</tr>
 	<tr>
 		<td>VIEW_CLOB_TYPE_TEXT_ENTRY</td>
-		<td>//textarea[contains(@type,'text') and contains(text(),'${key_clobType}')]</td>
+		<td>//textarea[contains(@class,'ddm-field-text') and contains(text(),'${key_clobType}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -511,13 +536,18 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>VIEW_FIELD_LONG_TEXT_DISABLED</td>
+		<td>//textarea[@disabled][contains(@class, 'ddm-field-text')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>VIEW_OPTION_TITLE_FIELD</td>
 		<td>//*[contains(@id,'titleObjectFieldId')]//option[contains(text(),'${key_optionName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>VIEW_PICKLIST_OPTIONS</td>
-		<td>//div[@class='dropdown-menu show']//.//ul//button[contains(@class, 'dropdown-item')]//div[contains(text(), '${key_optionName}')]</td>
+		<td>//div[contains(@class, 'content')]//div[text()='${key_optionName}']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -527,7 +557,7 @@
 	</tr>
 	<tr>
 		<td>VIEW_SELECTED_TAB_ON_OBJECT</td>
-		<td>//*[contains(@class,'nav-link active link-unstyled')]//span[contains(@class,'navbar-text-truncate') and (contains(text(),'${key_selectedTab}'))]</td>
+		<td>//*[contains(@class,'nav-link')]//span[contains(@class,'navbar-text-truncate') and (contains(text(),'${key_selectedTab}'))]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -538,11 +568,6 @@
 	<tr>
 		<td>PLACEHOLDER_DELETE_RELATIONSHIP</td>
 		<td>//input[contains(@placeholder,'Confirm Relationship Name')]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>DROPDOWN_DEFAULT_VALUE</td>
-		<td>//div[contains(@class,'form-group')]//label[contains(text(),'Default Value')]//..//div[contains(@class,'dropdown')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -566,16 +591,6 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>CHOOSE_AN_OBJECT</td>
-		<td>//select[@class="form-control"]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>CHOOSE_OBJECT_LABEL</td>
-		<td>//*[contains(@label,'Unrelated Objects')]//..//option[contains(.,'${key_objectLabel}')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>TAB_NAME_ON_LAYOUT</td>
 		<td>//h3[@class = 'object-admin-panel__title' and contains(text(),'${key_tabName}')]/../..//button[@class = 'dropdown-toggle btn btn-monospaced btn-unstyled']</td>
 		<td></td>
@@ -591,8 +606,53 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>FORMULA_BUILDER_OPERATORS</td>
+		<td>//div[contains(@class, 'code-editor-sidebar')]//span[contains(text(), '${key_tabName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>VIEW_SEARCHABLE_SECTION_ENABLED</td>
 		<td>//h3[(@class='lfr-objects__card-title') and text()='Searchable']/../..//label[contains(@class,'toggle-switch simple-toggle-switch')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ENTRY_CHOOSE_OPTIONS_MULTIPICKLIST</td>
+		<td>//div[contains(text(),'Choose Options')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>PICKLIST_INPUT_AS_VALUE_OR_EXPRESSION</td>
+		<td>//div[contains(@class,'card-body')]//button[contains(text(), '${key_optionDefaulValue}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_GENERIC_BUTTON</td>
+		<td>//div[contains(@class,'form-group')][.//label[normalize-space(text())='${key_labelName}']]//button[@role='combobox']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_GENERIC_DROPDOWN_ITEM</td>
+		<td>//button[contains(@class,'dropdown-item') and contains(@role,'option') and contains(.,'${key_optionName}') or contains(@role,'menuitem') and contains(.,'${key_optionName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_GENERIC_SELECT_OPTION</td>
+		<td>//div[contains(@class,'card-body')]//button[contains(text(), '${key_currentOption}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SELECT_MOVE_FOLDER</td>
+		<td>//span[contains(@class,'move-object-definition-list-item-label') and contains(text(),'${key_folderLabel}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>GO_TO_FOLDER</td>
+		<td>//div[contains(@class, 'autofit-col-expand') and contains(., 'key_folderName')]//*[contains(@title, 'Go to Folder')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_MULTI_SELECT_INPUT</td>
+		<td>//label[contains(.,'${key_labelName}')]//..//div[contains(@class,'input-group-item')]//input</td>
 		<td></td>
 	</tr>
 </tbody>

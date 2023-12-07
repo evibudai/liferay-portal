@@ -1,25 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.model.impl;
 
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelTitleComparator;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
+import com.liferay.knowledge.base.exception.NoSuchArticleException;
 import com.liferay.knowledge.base.model.KBArticle;
+import com.liferay.knowledge.base.model.KBArticleModel;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.service.KBArticleLocalServiceUtil;
 import com.liferay.knowledge.base.service.KBArticleServiceUtil;
@@ -42,6 +36,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 
 /**
  * @author Peter Shin
@@ -81,22 +76,28 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 	}
 
 	@Override
+	public List<KBArticle> getAncestorKBArticles() throws PortalException {
+		return _getAncestors(Function.identity());
+	}
+
+	@Override
 	public List<Long> getAncestorResourcePrimaryKeys() throws PortalException {
 		List<Long> ancestorResourcePrimaryKeys = new ArrayList<>();
 
 		ancestorResourcePrimaryKeys.add(getResourcePrimKey());
+		ancestorResourcePrimaryKeys.addAll(
+			_getAncestors(KBArticleModel::getResourcePrimKey));
 
-		KBArticle kbArticle = this;
-
-		while (!kbArticle.isRoot()) {
-			kbArticle = kbArticle.getParentKBArticle();
-
-			if (kbArticle == null) {
-				break;
-			}
-
-			ancestorResourcePrimaryKeys.add(kbArticle.getResourcePrimKey());
+		if (getKbFolderId() == KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			return ancestorResourcePrimaryKeys;
 		}
+
+		ancestorResourcePrimaryKeys.add(getKbFolderId());
+
+		KBFolder kbFolder = KBFolderLocalServiceUtil.getKBFolder(
+			getKbFolderId());
+
+		ancestorResourcePrimaryKeys.addAll(kbFolder.getAncestorKBFolderIds());
 
 		return ancestorResourcePrimaryKeys;
 	}
@@ -107,6 +108,26 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 			getGroupId(), getAttachmentsFolderId(),
 			WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, new RepositoryModelTitleComparator<>(true));
+	}
+
+	@Override
+	public FileEntry getAttachmentsFileEntryByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		FileEntry fileEntry =
+			PortletFileRepositoryUtil.
+				getPortletFileEntryByExternalReferenceCode(
+					externalReferenceCode, getGroupId());
+
+		if (getAttachmentsFolderId() == fileEntry.getFolderId()) {
+			return fileEntry;
+		}
+
+		throw new NoSuchFileEntryException(
+			StringBundler.concat(
+				"No FileEntry exists with the key {externalReferenceCode=",
+				externalReferenceCode, ", groupId=", getGroupId(), "}"));
 	}
 
 	@Override
@@ -155,16 +176,12 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 
 	@Override
 	public KBArticle getParentKBArticle() throws PortalException {
-		long parentResourcePrimKey = getParentResourcePrimKey();
-
-		if ((parentResourcePrimKey <= 0) ||
-			(getParentResourceClassNameId() != getClassNameId())) {
-
+		if (!hasParentKBArticle()) {
 			return null;
 		}
 
 		return KBArticleLocalServiceUtil.getLatestKBArticle(
-			parentResourcePrimKey, WorkflowConstants.STATUS_APPROVED);
+			getParentResourcePrimKey(), WorkflowConstants.STATUS_APPROVED);
 	}
 
 	@Override
@@ -189,11 +206,27 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 	}
 
 	@Override
+	public long getTrashEntryClassPK() {
+		return getResourcePrimKey();
+	}
+
+	@Override
 	public long getViewCount() {
 		return ViewCountManagerUtil.getViewCount(
 			getCompanyId(),
 			ClassNameLocalServiceUtil.getClassNameId(KBArticle.class),
 			getPrimaryKey());
+	}
+
+	@Override
+	public boolean hasParentKBArticle() {
+		if ((getParentResourcePrimKey() <= 0) ||
+			(getParentResourceClassNameId() != getClassNameId())) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
@@ -219,6 +252,31 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 		}
 
 		return false;
+	}
+
+	private <T> List<T> _getAncestors(Function<KBArticle, T> function)
+		throws PortalException {
+
+		List<T> ancestors = new ArrayList<>();
+
+		KBArticle kbArticle = this;
+
+		while (kbArticle.hasParentKBArticle()) {
+			try {
+				kbArticle = kbArticle.getParentKBArticle();
+
+				ancestors.add(function.apply(kbArticle));
+			}
+			catch (NoSuchArticleException noSuchArticleException) {
+				if (kbArticle.isInTrash()) {
+					break;
+				}
+
+				throw noSuchArticleException;
+			}
+		}
+
+		return ancestors;
 	}
 
 	private long _attachmentsFolderId;

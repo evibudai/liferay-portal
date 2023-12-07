@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.select;
@@ -20,20 +11,35 @@ import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTy
 import com.liferay.dynamic.data.mapping.form.field.type.internal.util.DDMFormFieldTypeUtil;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
+import com.liferay.list.type.model.ListTypeEntry;
+import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.list.type.util.comparator.ListTypeEntryNameComparator;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectField;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.CollatorUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
@@ -53,10 +59,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.SELECT,
-	service = {
-		DDMFormFieldTemplateContextContributor.class,
-		SelectDDMFormFieldTemplateContextContributor.class
-	}
+	service = DDMFormFieldTemplateContextContributor.class
 )
 public class SelectDDMFormFieldTemplateContextContributor
 	implements DDMFormFieldTemplateContextContributor {
@@ -137,6 +140,27 @@ public class SelectDDMFormFieldTemplateContextContributor
 		Locale locale,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
+		boolean alphabeticalOrder = GetterUtil.getBoolean(
+			ddmFormField.getProperty("alphabeticalOrder"));
+
+		List<Map<String, String>> objectFieldOptions = _getObjectFieldOptions(
+			ddmFormField, ddmFormFieldOptions, ddmFormFieldRenderingContext);
+
+		if (ListUtil.isNotEmpty(objectFieldOptions)) {
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			Locale serviceContextLocale = LocaleUtil.fromLanguageId(
+				serviceContext.getLanguageId());
+
+			if (alphabeticalOrder && (locale != serviceContextLocale)) {
+				return _getSortedOptions(
+					serviceContextLocale, objectFieldOptions);
+			}
+
+			return objectFieldOptions;
+		}
+
 		List<Map<String, String>> options = new ArrayList<>();
 
 		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
@@ -161,19 +185,8 @@ public class SelectDDMFormFieldTemplateContextContributor
 				).build());
 		}
 
-		boolean alphabeticalOrder = GetterUtil.getBoolean(
-			ddmFormField.getProperty("alphabeticalOrder"));
-
 		if (alphabeticalOrder) {
-			Collator collator = CollatorUtil.getInstance(locale);
-
-			options.sort(
-				(map1, map2) -> {
-					String label1 = map1.get("label");
-					String label2 = map2.get("label");
-
-					return collator.compare(label1, label2);
-				});
+			return _getSortedOptions(locale, options);
 		}
 
 		return options;
@@ -223,6 +236,99 @@ public class SelectDDMFormFieldTemplateContextContributor
 	@Reference
 	protected Portal portal;
 
+	private List<Map<String, String>> _getObjectFieldOptions(
+		DDMFormField ddmFormField, DDMFormFieldOptions ddmFormFieldOptions,
+		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
+
+		DDMFormInstance ddmFormInstance =
+			_ddmFormInstanceLocalService.fetchDDMFormInstance(
+				ddmFormFieldRenderingContext.getDDMFormInstanceId());
+
+		if (ddmFormInstance == null) {
+			return null;
+		}
+
+		try {
+			ObjectDefinition objectDefinition =
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					ddmFormInstance.getObjectDefinitionId());
+
+			if (objectDefinition == null) {
+				return null;
+			}
+
+			JSONArray jsonArray = jsonFactory.createJSONArray(
+				GetterUtil.getString(
+					ddmFormField.getProperty("objectFieldName")));
+
+			ObjectField objectField = _objectFieldLocalService.getObjectField(
+				objectDefinition.getObjectDefinitionId(),
+				jsonArray.getString(0));
+
+			OrderByComparator<ListTypeEntry> orderByComparator = null;
+
+			Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
+
+			if (GetterUtil.getBoolean(
+					ddmFormField.getProperty("alphabeticalOrder"))) {
+
+				orderByComparator = new ListTypeEntryNameComparator(
+					true, locale);
+			}
+
+			List<Map<String, String>> options = new ArrayList<>();
+
+			for (ListTypeEntry listTypeEntry :
+					_listTypeEntryLocalService.getListTypeEntries(
+						objectField.getListTypeDefinitionId(),
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+						orderByComparator)) {
+
+				Map<Locale, String> nameMap = listTypeEntry.getNameMap();
+
+				if (!nameMap.containsKey(locale)) {
+					continue;
+				}
+
+				options.add(
+					HashMapBuilder.put(
+						"label", nameMap.get(locale)
+					).put(
+						"reference", listTypeEntry.getKey()
+					).put(
+						"value",
+						ddmFormFieldOptions.getOptionValue(
+							listTypeEntry.getKey())
+					).build());
+			}
+
+			return options;
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			return null;
+		}
+	}
+
+	private List<Map<String, String>> _getSortedOptions(
+		Locale locale, List<Map<String, String>> options) {
+
+		Collator collator = CollatorUtil.getInstance(locale);
+
+		options.sort(
+			(map1, map2) -> {
+				String label1 = map1.get("label");
+				String label2 = map2.get("label");
+
+				return collator.compare(label1, label2);
+			});
+
+		return options;
+	}
+
 	private Map<String, String> _getStrings(
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
@@ -252,6 +358,18 @@ public class SelectDDMFormFieldTemplateContextContributor
 		SelectDDMFormFieldTemplateContextContributor.class);
 
 	@Reference
+	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
+
+	@Reference
 	private Language _language;
+
+	@Reference
+	private ListTypeEntryLocalService _listTypeEntryLocalService;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 }

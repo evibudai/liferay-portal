@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.portlet;
@@ -30,8 +21,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
-import java.util.Optional;
-
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -40,7 +29,6 @@ import javax.portlet.RenderResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -48,7 +36,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sarai Díaz
  */
 @Component(
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.display-category=category.hidden",
@@ -127,25 +114,26 @@ public class AnalyticsReportsPortlet extends MVCPortlet {
 	private InfoItemReference _getInfoItemReference(
 		HttpServletRequest httpServletRequest) {
 
-		return Optional.ofNullable(
+		InfoItemReference infoItemReference =
 			(InfoItemReference)httpServletRequest.getAttribute(
-				AnalyticsReportsWebKeys.ANALYTICS_INFO_ITEM_REFERENCE)
-		).orElseGet(
-			() -> Optional.ofNullable(
-				_getClassTypeName(httpServletRequest)
-			).filter(
-				Validator::isNotNull
-			).map(
-				classTypeName -> new InfoItemReference(
-					_getClassName(httpServletRequest),
-					new ClassNameClassPKInfoItemIdentifier(
-						classTypeName, _getClassPK(httpServletRequest)))
-			).orElseGet(
-				() -> new InfoItemReference(
-					_getClassName(httpServletRequest),
-					_getClassPK(httpServletRequest))
-			)
-		);
+				AnalyticsReportsWebKeys.ANALYTICS_INFO_ITEM_REFERENCE);
+
+		if (infoItemReference != null) {
+			return infoItemReference;
+		}
+
+		String classTypeName = _getClassTypeName(httpServletRequest);
+
+		if (Validator.isNull(classTypeName)) {
+			return new InfoItemReference(
+				_getClassName(httpServletRequest),
+				_getClassPK(httpServletRequest));
+		}
+
+		return new InfoItemReference(
+			_getClassName(httpServletRequest),
+			new ClassNameClassPKInfoItemIdentifier(
+				classTypeName, _getClassPK(httpServletRequest)));
 	}
 
 	@Reference

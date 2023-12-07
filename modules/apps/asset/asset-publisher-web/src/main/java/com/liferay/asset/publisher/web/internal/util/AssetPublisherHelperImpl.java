@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.publisher.web.internal.util;
@@ -42,6 +33,7 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManager;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -75,7 +67,6 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.segments.SegmentsEntryRetriever;
 import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.context.RequestContextMapper;
-import com.liferay.sites.kernel.util.Sites;
 
 import java.io.Serializable;
 
@@ -347,7 +338,8 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 					SegmentsWebKeys.SEGMENTS_ANONYMOUS_USER_ID));
 
 			return _assetListAssetEntryProvider.getAssetEntries(
-				assetListEntry, segmentsEntryIds, acClientUserId);
+				assetListEntry, segmentsEntryIds, null, null, StringPool.BLANK,
+				acClientUserId, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 		}
 
 		List<AssetEntry> assetEntries = getAssetEntries(
@@ -805,7 +797,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 
 			Group parentGroup = _groupLocalService.getGroup(parentGroupId);
 
-			if (!_sites.isContentSharingWithChildrenEnabled(parentGroup)) {
+			if (!parentGroup.isContentSharingWithChildrenEnabled()) {
 				throw new PrincipalException();
 			}
 
@@ -817,9 +809,8 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 
 			return parentGroupId;
 		}
-		else {
-			throw new IllegalArgumentException("Invalid scope ID " + scopeId);
-		}
+
+		throw new IllegalArgumentException("Invalid scope ID " + scopeId);
 	}
 
 	@Override
@@ -898,7 +889,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 			Group scopeGroup = _groupLocalService.fetchGroup(scopeGroupId);
 
 			if (scopeGroup.hasAncestor(group.getGroupId()) &&
-				_sites.isContentSharingWithChildrenEnabled(group)) {
+				group.isContentSharingWithChildrenEnabled()) {
 
 				key = SCOPE_ID_PARENT_GROUP_PREFIX + group.getGroupId();
 			}
@@ -1090,7 +1081,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 
 		List<AssetEntry> assetEntries = baseModelSearchResult.getBaseModels();
 
-		if (!assetEntries.isEmpty() && (start < total)) {
+		if (!assetEntries.isEmpty()) {
 			assetEntryResults.add(new AssetEntryResult(assetEntries));
 		}
 
@@ -1225,8 +1216,11 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 		}
 
 		for (int i = 0; i < assetTagNames.length; i++) {
-			assetTagNames[i] = StringUtil.toLowerCase(
-				StringUtil.trim(assetTagNames[i]));
+			assetTagNames[i] = StringUtil.trim(assetTagNames[i]);
+
+			if (!_featureFlagManager.isEnabled("LPS-194362")) {
+				assetTagNames[i] = StringUtil.toLowerCase(assetTagNames[i]);
+			}
 		}
 
 		return assetTagNames;
@@ -1446,6 +1440,9 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 	private AssetTagLocalService _assetTagLocalService;
 
 	@Reference
+	private FeatureFlagManager _featureFlagManager;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
@@ -1459,8 +1456,5 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 
 	@Reference
 	private SegmentsEntryRetriever _segmentsEntryRetriever;
-
-	@Reference
-	private Sites _sites;
 
 }

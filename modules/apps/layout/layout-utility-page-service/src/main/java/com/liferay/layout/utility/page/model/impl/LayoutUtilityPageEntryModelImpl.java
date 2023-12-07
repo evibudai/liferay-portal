@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.utility.page.model.impl;
@@ -161,13 +152,19 @@ public class LayoutUtilityPageEntryModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long TYPE_COLUMN_BITMASK = 32L;
+	public static final long PLID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 64L;
+	public static final long TYPE_COLUMN_BITMASK = 64L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 128L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -260,137 +257,157 @@ public class LayoutUtilityPageEntryModelImpl
 	public Map<String, Function<LayoutUtilityPageEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<LayoutUtilityPageEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<LayoutUtilityPageEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<LayoutUtilityPageEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<LayoutUtilityPageEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String, Function<LayoutUtilityPageEntry, Object>>();
-		Map<String, BiConsumer<LayoutUtilityPageEntry, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String, BiConsumer<LayoutUtilityPageEntry, ?>>();
+		private static final Map
+			<String, Function<LayoutUtilityPageEntry, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", LayoutUtilityPageEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", LayoutUtilityPageEntry::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", LayoutUtilityPageEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<LayoutUtilityPageEntry, String>)
-				LayoutUtilityPageEntry::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode",
-			LayoutUtilityPageEntry::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<LayoutUtilityPageEntry, String>)
-				LayoutUtilityPageEntry::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"LayoutUtilityPageEntryId",
-			LayoutUtilityPageEntry::getLayoutUtilityPageEntryId);
-		attributeSetterBiConsumers.put(
-			"LayoutUtilityPageEntryId",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setLayoutUtilityPageEntryId);
-		attributeGetterFunctions.put(
-			"groupId", LayoutUtilityPageEntry::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", LayoutUtilityPageEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", LayoutUtilityPageEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setUserId);
-		attributeGetterFunctions.put(
-			"userName", LayoutUtilityPageEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<LayoutUtilityPageEntry, String>)
-				LayoutUtilityPageEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", LayoutUtilityPageEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<LayoutUtilityPageEntry, Date>)
-				LayoutUtilityPageEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", LayoutUtilityPageEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<LayoutUtilityPageEntry, Date>)
-				LayoutUtilityPageEntry::setModifiedDate);
-		attributeGetterFunctions.put("plid", LayoutUtilityPageEntry::getPlid);
-		attributeSetterBiConsumers.put(
-			"plid",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setPlid);
-		attributeGetterFunctions.put(
-			"previewFileEntryId",
-			LayoutUtilityPageEntry::getPreviewFileEntryId);
-		attributeSetterBiConsumers.put(
-			"previewFileEntryId",
-			(BiConsumer<LayoutUtilityPageEntry, Long>)
-				LayoutUtilityPageEntry::setPreviewFileEntryId);
-		attributeGetterFunctions.put(
-			"defaultLayoutUtilityPageEntry",
-			LayoutUtilityPageEntry::getDefaultLayoutUtilityPageEntry);
-		attributeSetterBiConsumers.put(
-			"defaultLayoutUtilityPageEntry",
-			(BiConsumer<LayoutUtilityPageEntry, Boolean>)
-				LayoutUtilityPageEntry::setDefaultLayoutUtilityPageEntry);
-		attributeGetterFunctions.put("name", LayoutUtilityPageEntry::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<LayoutUtilityPageEntry, String>)
-				LayoutUtilityPageEntry::setName);
-		attributeGetterFunctions.put("type", LayoutUtilityPageEntry::getType);
-		attributeSetterBiConsumers.put(
-			"type",
-			(BiConsumer<LayoutUtilityPageEntry, String>)
-				LayoutUtilityPageEntry::setType);
-		attributeGetterFunctions.put(
-			"lastPublishDate", LayoutUtilityPageEntry::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<LayoutUtilityPageEntry, Date>)
-				LayoutUtilityPageEntry::setLastPublishDate);
+		static {
+			Map<String, Function<LayoutUtilityPageEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<LayoutUtilityPageEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", LayoutUtilityPageEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", LayoutUtilityPageEntry::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"uuid", LayoutUtilityPageEntry::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				LayoutUtilityPageEntry::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"LayoutUtilityPageEntryId",
+				LayoutUtilityPageEntry::getLayoutUtilityPageEntryId);
+			attributeGetterFunctions.put(
+				"groupId", LayoutUtilityPageEntry::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", LayoutUtilityPageEntry::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", LayoutUtilityPageEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", LayoutUtilityPageEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", LayoutUtilityPageEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", LayoutUtilityPageEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"plid", LayoutUtilityPageEntry::getPlid);
+			attributeGetterFunctions.put(
+				"previewFileEntryId",
+				LayoutUtilityPageEntry::getPreviewFileEntryId);
+			attributeGetterFunctions.put(
+				"defaultLayoutUtilityPageEntry",
+				LayoutUtilityPageEntry::getDefaultLayoutUtilityPageEntry);
+			attributeGetterFunctions.put(
+				"name", LayoutUtilityPageEntry::getName);
+			attributeGetterFunctions.put(
+				"type", LayoutUtilityPageEntry::getType);
+			attributeGetterFunctions.put(
+				"lastPublishDate", LayoutUtilityPageEntry::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<LayoutUtilityPageEntry, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<LayoutUtilityPageEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<LayoutUtilityPageEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<LayoutUtilityPageEntry, String>)
+					LayoutUtilityPageEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<LayoutUtilityPageEntry, String>)
+					LayoutUtilityPageEntry::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"LayoutUtilityPageEntryId",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setLayoutUtilityPageEntryId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<LayoutUtilityPageEntry, String>)
+					LayoutUtilityPageEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<LayoutUtilityPageEntry, Date>)
+					LayoutUtilityPageEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<LayoutUtilityPageEntry, Date>)
+					LayoutUtilityPageEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"plid",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setPlid);
+			attributeSetterBiConsumers.put(
+				"previewFileEntryId",
+				(BiConsumer<LayoutUtilityPageEntry, Long>)
+					LayoutUtilityPageEntry::setPreviewFileEntryId);
+			attributeSetterBiConsumers.put(
+				"defaultLayoutUtilityPageEntry",
+				(BiConsumer<LayoutUtilityPageEntry, Boolean>)
+					LayoutUtilityPageEntry::setDefaultLayoutUtilityPageEntry);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<LayoutUtilityPageEntry, String>)
+					LayoutUtilityPageEntry::setName);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<LayoutUtilityPageEntry, String>)
+					LayoutUtilityPageEntry::setType);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<LayoutUtilityPageEntry, Date>)
+					LayoutUtilityPageEntry::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -645,6 +662,15 @@ public class LayoutUtilityPageEntryModelImpl
 		}
 
 		_plid = plid;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public long getOriginalPlid() {
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("plid"));
 	}
 
 	@JSON
@@ -1156,7 +1182,8 @@ public class LayoutUtilityPageEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<LayoutUtilityPageEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

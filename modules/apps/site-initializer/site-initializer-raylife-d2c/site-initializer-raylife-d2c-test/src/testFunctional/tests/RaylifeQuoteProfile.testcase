@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,9 +34,14 @@ definition {
 	}
 
 	@description = "LPS-144329 - Verify if clicking on the button to go back and edit information returns you to the property page"
-	@priority = "4"
+	@priority = 4
 	test CanGoToPropertyPageByEditButton {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -65,9 +73,14 @@ definition {
 	}
 
 	@description = "LPS-142603 - Verify if Quote Profile Info panel is shown"
-	@priority = "4"
+	@priority = 4
 	test CanViewQuoteProfileInfoPanel {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -101,9 +114,14 @@ definition {
 	}
 
 	@description = "LPS-143049 - Verify if the quote profile information panel has the information about Estimated Annual Gross Revenue previously entered by the user on Employee page"
-	@priority = "4"
+	@priority = 4
 	test CanViewUserDataAnnualRevenue {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -137,9 +155,14 @@ definition {
 	}
 
 	@description = "LPS-143058 - Verify if the quote profile information panel has the information about City previously entered by the user on Basics - Contact Info page"
-	@priority = "4"
+	@priority = 4
 	test CanViewUserDataCity {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -173,9 +196,14 @@ definition {
 	}
 
 	@description = "LPS-142604 - Verify if the quote profile information panel has the information about Primary Industry previously entered by the user on the Basics - Primary Industry page"
-	@priority = "4"
+	@priority = 4
 	test CanViewUserDataPrimaryIndustry {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -209,9 +237,14 @@ definition {
 	}
 
 	@description = "LPS-143059 - Verify if the quote profile information panel has the information about State previously entered by the user on Basics - Contact Info page"
-	@priority = "4"
+	@priority = 4
 	test CanViewUserDataState {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -245,9 +278,14 @@ definition {
 	}
 
 	@description = "LPS-143057 - Verify if the quote profile information panel has the information about Street Address previously entered by the user on Basics - Contact Info page"
-	@priority = "4"
+	@priority = 4
 	test CanViewUserDataStreetAddress {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -281,9 +319,14 @@ definition {
 	}
 
 	@description = "LPS-143061 - Verify if the quote profile information panel has the information about Total Employees previously entered by the user on Employee page"
-	@priority = "4"
+	@priority = 4
 	test CanViewUserDataTotalEmployees {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -305,7 +348,7 @@ definition {
 
 		AssertElementPresent(
 			locator1 = "Raylife#TIP_INFO_PANEL",
-			value1 = "200");
+			value1 = 200);
 
 		Click(locator1 = "Raylife#BTN_BACK_TO_EDIT_INFO_QUOTE_PAGE");
 
@@ -317,9 +360,14 @@ definition {
 	}
 
 	@description = "LPS-143060 - Verify if the quote profile information panel has the information about ZipCode previously entered by the user on Basics - Contact Info page"
-	@priority = "4"
+	@priority = 4
 	test CanViewUserDataZipCode {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -341,7 +389,7 @@ definition {
 
 		AssertElementPresent(
 			locator1 = "Raylife#TIP_INFO_PANEL",
-			value1 = "12345");
+			value1 = 12345);
 
 		Click(locator1 = "Raylife#BTN_BACK_TO_EDIT_INFO_QUOTE_PAGE");
 

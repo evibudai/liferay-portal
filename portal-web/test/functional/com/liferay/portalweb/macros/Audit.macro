@@ -1,61 +1,78 @@
 definition {
 
-	@description = "Go to System settings"
-	macro gotoSystemSettings {
-		Variables.assertDefined(parameterList = "${portlet}");
+	@summary = "Default summary"
+	macro exportAuditEvents() {
+		MouseOver.mouseOverNotVisible(locator1 = "Portlet#OPTIONS_ICON");
 
-		var baseURL = "${baseURL}";
+		Click.waitForMenuToggleJSClick(locator1 = "Portlet#OPTIONS_ICON");
+
+		ClickNoError(
+			key_menuItem = "Export Audit Events",
+			locator1 = "MenuItem#MENU_ITEM_SPECIFIC");
+	}
+
+	@description = "Go to System settings"
+	@summary = "Default summary"
+	macro gotoSystemSettings(portlet = null) {
+		Variables.assertDefined(parameterList = ${portlet});
+
+		var baseURL = ${baseURL};
 		var portletId = "";
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		if ("${portlet}" == "Logging Message Audit") {
+		if (${portlet} == "Logging Message Audit") {
 			var portletId = "com.liferay.portal.security.audit.router.configuration.LoggingAuditMessageProcessorConfiguration";
 		}
 
-		if ("${portlet}" == "Audit Log Context") {
+		if (${portlet} == "Audit Log Context") {
 			var portletId = "com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration";
 		}
 
-		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=${portletId}&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
+		Open(value1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=${portletId}&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
 	}
 
-	macro openAuditAdmin {
+	@summary = "Default summary"
+	macro openAuditAdmin() {
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
-		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_portal_security_audit_web_portlet_AuditPortlet");
+		Open(value1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_portal_security_audit_web_portlet_AuditPortlet");
 	}
 
-	macro searchCP {
-		if ("${searchTerm}" == "${resourceAction}") {
+	@summary = "Default summary"
+	macro searchCP(resourceAction = null, resourceId = null, searchTerm = null, groupId = null, match = null, resourceName = null, userName = null, userId = null) {
+		if (${searchTerm} == ${resourceAction}) {
 			var reportFieldKey = "RESOURCE_ACTION";
 		}
-		else if ("${searchTerm}" == "${resourceId}") {
+		else if (${searchTerm} == ${resourceId}) {
 			var reportFieldKey = "RESOURCE_ID";
 		}
-		else if ("${searchTerm}" == "${resourceName}") {
+		else if (${searchTerm} == ${resourceName}) {
 			var reportFieldKey = "RESOURCE_NAME";
 		}
-		else if ("${searchTerm}" == "${userId}") {
+		else if (${searchTerm} == ${userId}) {
 			var reportFieldKey = "USER_ID";
 		}
-		else if ("${searchTerm}" == "${userName}") {
+		else if (${searchTerm} == ${userName}) {
 			var reportFieldKey = "USER_NAME";
+		}
+		else if (${searchTerm} == ${groupId}) {
+			var reportFieldKey = "GROUP_ID";
 		}
 
 		Click(locator1 = "Icon#ADVANCED_SEARCH");
 
 		Select(
 			locator1 = "AuditReports#ADVANCED_SEARCH_MATCH_SELECT",
-			value1 = "${match}");
+			value1 = ${match});
 
 		Type(
 			locator1 = "AuditReports#ADVANCED_SEARCH_${reportFieldKey}_FIELD",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
 
 		Click(locator1 = "Icon#BASIC_SEARCH");
 
@@ -64,131 +81,141 @@ definition {
 		// Workaround for LPS-148998
 
 		while (IsElementPresent(locator1 = "Message#INFO")) {
-			Navigator.openURL();
-
-			ApplicationsMenu.gotoPortlet(
-				category = "Security",
-				panel = "Control Panel",
-				portlet = "Audit");
+			Audit.openAuditAdmin();
 
 			Click(locator1 = "Icon#ADVANCED_SEARCH");
 
 			Type(
 				locator1 = "AuditReports#ADVANCED_SEARCH_${reportFieldKey}_FIELD",
-				value1 = "${searchTerm}");
+				value1 = ${searchTerm});
 
 			Click(locator1 = "Icon#BASIC_SEARCH");
 		}
 
-		AssertTextEquals(
-			locator1 = "AuditReports#REPORTS_TABLE_${reportFieldKey}_1",
-			value1 = "${searchTerm}");
+		if (${searchTerm} != ${groupId}) {
+			AssertTextEquals(
+				locator1 = "AuditReports#REPORTS_TABLE_${reportFieldKey}_1",
+				value1 = ${searchTerm});
+		}
 	}
 
-	macro searchViaKeywords {
+	@summary = "Default summary"
+	macro searchViaKeywords(searchTerm = null, resourceName = null) {
 		WaitForElementPresent(locator1 = "TextInput#SITE_SEARCH_KEYWORDS");
 
 		Type(
 			locator1 = "TextInput#SITE_SEARCH_KEYWORDS",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
 
 		Click(locator1 = "Button#SUBMIT");
 
 		WaitForElementPresent(
-			key_resourceAction = "${searchTerm}",
-			key_resourceName = "${resourceName}",
+			key_resourceAction = ${searchTerm},
+			key_resourceName = ${resourceName},
 			locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_NAME");
 	}
 
-	macro verifyConfigurationElementIsConfigured {
-		Audit.gotoSystemSettings(portlet = "${portlet}");
+	@summary = "Default summary"
+	macro verifyConfigurationElementIsConfigured(portlet = null, text = null, element = null) {
+		Audit.gotoSystemSettings(portlet = ${portlet});
 
-		while ((IsTextNotEqual(locator1 = "${element}", value1 = "${text}")) && (maxIterations = "10")) {
+		while ((IsTextNotEqual(locator1 = ${element}, value1 = ${text})) && (maxIterations = "10")) {
 			Refresh();
 		}
 	}
 
-	macro viewAuditDetails {
-		var key_resourceAction = "${resourceAction}";
-		var key_resourceName = "${resourceName}";
+	@summary = "Default summary"
+	macro viewAuditDetails(resourceAction = null, additionalInformation = null, clientIp = null, groupId = null, resourceName = null, userName = null) {
+		var key_resourceAction = ${resourceAction};
+		var key_resourceName = ${resourceName};
 
 		WaitForElementPresent(
 			locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
-			value1 = "${resourceAction}");
+			value1 = ${resourceAction});
 
 		AssertClick(
 			locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
-			value1 = "${resourceAction}");
+			value1 = ${resourceAction});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AuditReports#REPORTS_DETAIL_RESOURCE_NAME",
-			value1 = "${resourceName}");
+			value1 = ${resourceName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AuditReports#REPORTS_DETAIL_RESOURCE_ACTION",
-			value1 = "${resourceAction}");
+			value1 = ${resourceAction});
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "AuditReports#REPORTS_DETAIL_USER_NAME",
-			value1 = "${userName}");
+		if (isSet(userName)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "AuditReports#REPORTS_DETAIL_USER_NAME",
+				value1 = ${userName});
+		}
 
-		for (var additionalInformationList : list "${additionalInformation}") {
+		for (var additionalInformationList : list ${additionalInformation}) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "AuditReports#REPORTS_DETAIL_ADDITIONAL_INFORMATION",
-				value1 = "${additionalInformationList}");
+				value1 = ${additionalInformationList});
 		}
 
 		if (isSet(clientIp)) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "AuditReports#REPORTS_DETAIL_CLIENT_IP",
-				value1 = "${clientIp}");
+				value1 = ${clientIp});
+		}
+
+		if (isSet(groupId)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "AuditReports#REPORTS_DETAIL_GROUP_ID",
+				value1 = ${groupId});
 		}
 	}
 
-	macro viewAuditDetailsByPosition {
-		var key_resourceAction = "${resourceAction}";
-		var key_resourceName = "${resourceName}";
+	@summary = "Default summary"
+	macro viewAuditDetailsByPosition(resourceAction = null, additionalInformation = null, clientIp = null, resourceName = null, userName = null, nameByPosition = null) {
+		var key_resourceAction = ${resourceAction};
+		var key_resourceName = ${resourceName};
 
 		AssertClick(
 			locator1 = "AuditReports#REPORTS_DETAIL_RESOURCE_NAME_BY_POSITION",
-			resourceNameByPosition = "${nameByPosition}",
-			value1 = "${resourceAction}");
+			resourceNameByPosition = ${nameByPosition},
+			value1 = ${resourceAction});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AuditReports#REPORTS_DETAIL_RESOURCE_NAME",
-			value1 = "${resourceName}");
+			value1 = ${resourceName});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AuditReports#REPORTS_DETAIL_RESOURCE_ACTION",
-			value1 = "${resourceAction}");
+			value1 = ${resourceAction});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AuditReports#REPORTS_DETAIL_USER_NAME",
-			value1 = "${userName}");
+			value1 = ${userName});
 
-		for (var additionalInformationList : list "${additionalInformation}") {
+		for (var additionalInformationList : list ${additionalInformation}) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "AuditReports#REPORTS_DETAIL_ADDITIONAL_INFORMATION",
-				value1 = "${additionalInformationList}");
+				value1 = ${additionalInformationList});
 		}
 
 		if (isSet(clientIp)) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "AuditReports#REPORTS_DETAIL_CLIENT_IP",
-				value1 = "${clientIp}");
+				value1 = ${clientIp});
 		}
 	}
 
-	macro viewAuditEntries {
+	@summary = "Default summary"
+	macro viewAuditEntries(resourceAction = null, resourceID = null, clientIP = null, resourceName = null, id = null, position = null, userName = null, createDate = null) {
 		AssertElementPresent(
-			key_clientIP = "${clientIP}",
-			key_createDate = "${createDate}",
-			key_id = "${id}",
-			key_position = "${position}",
-			key_resourceAction = "${resourceAction}",
-			key_resourceID = "${resourceID}",
-			key_resourceName = "${resourceName}",
-			key_userName = "${userName}",
+			key_clientIP = ${clientIP},
+			key_createDate = ${createDate},
+			key_id = ${id},
+			key_position = ${position},
+			key_resourceAction = ${resourceAction},
+			key_resourceID = ${resourceID},
+			key_resourceName = ${resourceName},
+			key_userName = ${userName},
 			locator1 = "AuditReports#REPORTS_TABLE_ENTRIES");
 	}
 

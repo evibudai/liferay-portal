@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.extension.v1_0;
@@ -17,31 +8,37 @@ package com.liferay.object.rest.internal.vulcan.extension.v1_0;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.internal.util.ServiceContextUtil;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
+import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
-import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.rest.manager.v1_0.ObjectRelationshipElementsParser;
+import com.liferay.object.rest.manager.v1_0.ObjectRelationshipElementsParserRegistry;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.service.ObjectRelationshipService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.extension.ExtensionProvider;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
-import com.liferay.portal.vulcan.extension.validation.PropertyValidator;
-import com.liferay.portal.vulcan.fields.NestedFieldsContext;
-import com.liferay.portal.vulcan.fields.NestedFieldsContextThreadLocal;
+import com.liferay.portal.vulcan.extension.validation.DefaultPropertyValidator;
+import com.liferay.portal.vulcan.fields.NestedFieldsSupplier;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -62,47 +59,73 @@ public class ObjectRelationshipExtensionProvider
 
 	@Override
 	public Map<String, Serializable> getExtendedProperties(
-			long companyId, String className, Object entity)
+			long companyId, long userId, String className, Object entity)
 		throws Exception {
 
-		NestedFieldsContext nestedFieldsContext =
-			NestedFieldsContextThreadLocal.getNestedFieldsContext();
-
-		if (nestedFieldsContext == null) {
-			return Collections.emptyMap();
-		}
-
-		ObjectDefinition objectDefinition = getObjectDefinition(
+		ObjectDefinition objectDefinition = fetchObjectDefinition(
 			companyId, className);
 
-		List<ObjectRelationship> objectRelationships = _getObjectRelationships(
-			nestedFieldsContext.getFieldNames(), objectDefinition);
+		return NestedFieldsSupplier.supply(
+			nestedFieldName -> {
+				ObjectRelationship objectRelationship =
+					_objectRelationshipLocalService.
+						fetchObjectRelationshipByObjectDefinitionId(
+							objectDefinition.getObjectDefinitionId(),
+							nestedFieldName);
 
-		if (objectRelationships.isEmpty()) {
-			return Collections.emptyMap();
-		}
+				if ((objectRelationship == null) ||
+					!objectRelationship.isAllowedObjectRelationshipType(
+						objectRelationship.getType())) {
 
-		Map<String, Serializable> extendedProperties = new HashMap<>();
+					return null;
+				}
 
-		ObjectEntryManager objectEntryManager =
-			_objectEntryManagerRegistry.getObjectEntryManager(
-				objectDefinition.getStorageType());
-		long primaryKey = getPrimaryKey(entity);
+				ObjectDefinition relatedObjectDefinition =
+					ObjectRelationshipUtil.getRelatedObjectDefinition(
+						objectDefinition, objectRelationship);
 
-		for (ObjectRelationship objectRelationship : objectRelationships) {
-			Page<ObjectEntry> relatedObjectEntriesPage =
-				objectEntryManager.getObjectEntryRelatedObjectEntries(
-					_getDefaultDTOConverterContext(
-						objectDefinition, primaryKey, null),
-					objectDefinition, primaryKey, objectRelationship.getName(),
-					Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS));
+				if (!relatedObjectDefinition.isActive() ||
+					relatedObjectDefinition.isUnmodifiableSystemObject()) {
 
-			extendedProperties.put(
-				objectRelationship.getName(),
-				(Serializable)relatedObjectEntriesPage.getItems());
-		}
+					return null;
+				}
 
-		return extendedProperties;
+				long primaryKey = getPrimaryKey(entity);
+
+				if (_isManyToOneObjectRelationship(
+						objectDefinition, objectRelationship,
+						relatedObjectDefinition)) {
+
+					DefaultObjectEntryManager defaultObjectEntryManager =
+						DefaultObjectEntryManagerProvider.provide(
+							_objectEntryManagerRegistry.getObjectEntryManager(
+								objectDefinition.getStorageType()));
+
+					return defaultObjectEntryManager.
+						fetchRelatedManyToOneObjectEntry(
+							_getDefaultDTOConverterContext(
+								objectDefinition, primaryKey, null, userId),
+							objectDefinition, primaryKey,
+							objectRelationship.getName());
+				}
+
+				DefaultObjectEntryManager defaultObjectEntryManager =
+					DefaultObjectEntryManagerProvider.provide(
+						_objectEntryManagerRegistry.getObjectEntryManager(
+							objectDefinition.getStorageType()));
+
+				Page<ObjectEntry> relatedObjectEntriesPage =
+					defaultObjectEntryManager.
+						getObjectEntryRelatedObjectEntries(
+							_getDefaultDTOConverterContext(
+								objectDefinition, primaryKey, null, userId),
+							objectDefinition, primaryKey,
+							objectRelationship.getName(),
+							Pagination.of(
+								QueryUtil.ALL_POS, QueryUtil.ALL_POS));
+
+				return (Serializable)relatedObjectEntriesPage.getItems();
+			});
 	}
 
 	@Override
@@ -113,28 +136,26 @@ public class ObjectRelationshipExtensionProvider
 		Map<String, PropertyDefinition> extendedPropertyDefinitions =
 			new HashMap<>();
 
-		ObjectDefinition objectDefinition = getObjectDefinition(
+		ObjectDefinition objectDefinition = fetchObjectDefinition(
 			companyId, className);
 
 		for (ObjectRelationship objectRelationship :
-				_objectRelationshipLocalService.getObjectRelationships(
+				_objectRelationshipLocalService.getAllObjectRelationships(
 					objectDefinition.getObjectDefinitionId())) {
 
-			if (!Objects.equals(
-					objectRelationship.getType(),
-					ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
-				!Objects.equals(
-					objectRelationship.getType(),
-					ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+			if (!objectRelationship.isAllowedObjectRelationshipType(
+					objectRelationship.getType())) {
 
 				continue;
 			}
 
 			ObjectDefinition relatedObjectDefinition =
-				_getRelatedObjectDefinition(
+				ObjectRelationshipUtil.getRelatedObjectDefinition(
 					objectDefinition, objectRelationship);
 
-			if (relatedObjectDefinition.isSystem()) {
+			if (!relatedObjectDefinition.isActive() ||
+				relatedObjectDefinition.isUnmodifiableSystemObject()) {
+
 				continue;
 			}
 
@@ -149,124 +170,188 @@ public class ObjectRelationshipExtensionProvider
 						objectRelationship.getName(),
 						" can be embedded with \"nestedFields\"."),
 					objectRelationship.getName(),
-					PropertyDefinition.PropertyType.MULTIPLE_ELEMENT,
-					new UnsupportedOperationPropertyValidator(), false));
+					_getPropertyType(objectDefinition, objectRelationship),
+					new DefaultPropertyValidator(), false));
 		}
 
 		return extendedPropertyDefinitions;
 	}
 
 	@Override
-	public boolean isApplicableExtension(long companyId, String className) {
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-162964"))) {
-			return false;
+	public void setExtendedProperties(
+			long companyId, long userId, String className, Object entity,
+			Map<String, Serializable> extendedProperties)
+		throws Exception {
+
+		ObjectDefinition objectDefinition = fetchObjectDefinition(
+			companyId, className);
+
+		if (objectDefinition == null) {
+			throw new IllegalStateException(
+				"No object definition exists with class name " + className);
 		}
 
-		return super.isApplicableExtension(companyId, className);
-	}
+		long primaryKey = getPrimaryKey(entity);
 
-	@Override
-	public void setExtendedProperties(
-		long companyId, long userId, String className, Object entity,
-		Map<String, Serializable> extendedProperties) {
+		for (Map.Entry<String, Serializable> entry :
+				extendedProperties.entrySet()) {
+
+			ObjectRelationship objectRelationship =
+				_objectRelationshipLocalService.
+					getObjectRelationshipByObjectDefinitionId(
+						objectDefinition.getObjectDefinitionId(),
+						entry.getKey());
+
+			ObjectDefinition relatedObjectDefinition =
+				ObjectRelationshipUtil.getRelatedObjectDefinition(
+					objectDefinition, objectRelationship);
+
+			ObjectEntryManager objectEntryManager =
+				_objectEntryManagerRegistry.getObjectEntryManager(
+					relatedObjectDefinition.getStorageType());
+
+			ObjectRelationshipElementsParser objectRelationshipElementsParser =
+				_objectRelationshipElementsParserRegistry.
+					getObjectRelationshipElementsParser(
+						relatedObjectDefinition.getClassName(),
+						relatedObjectDefinition.getCompanyId(),
+						objectRelationship.getType());
+
+			List<ObjectEntry> nestedObjectEntries =
+				objectRelationshipElementsParser.parse(
+					objectRelationship, entry.getValue());
+
+			DefaultObjectEntryManager defaultObjectEntryManager =
+				DefaultObjectEntryManagerProvider.provide(
+					_objectEntryManagerRegistry.getObjectEntryManager(
+						objectDefinition.getStorageType()));
+
+			defaultObjectEntryManager.disassociateRelatedModels(
+				_getDefaultDTOConverterContext(
+					objectDefinition, primaryKey, null, userId),
+				objectDefinition, objectRelationship, primaryKey,
+				relatedObjectDefinition, userId);
+
+			for (ObjectEntry nestedObjectEntry : nestedObjectEntries) {
+				nestedObjectEntry = objectEntryManager.updateObjectEntry(
+					objectDefinition.getCompanyId(),
+					_getDefaultDTOConverterContext(
+						objectDefinition, primaryKey, null, userId),
+					nestedObjectEntry.getExternalReferenceCode(),
+					relatedObjectDefinition, nestedObjectEntry,
+					relatedObjectDefinition.getScope());
+
+				_relateNestedObjectEntry(
+					objectDefinition, objectRelationship, primaryKey,
+					nestedObjectEntry.getId(),
+					ServiceContextUtil.createServiceContext(
+						nestedObjectEntry, userId));
+			}
+
+			NestedFieldsSupplier.addFieldName(entry.getKey());
+		}
 	}
 
 	private DefaultDTOConverterContext _getDefaultDTOConverterContext(
-		ObjectDefinition objectDefinition, Long objectEntryId,
-		UriInfo uriInfo) {
+			ObjectDefinition objectDefinition, Long objectEntryId,
+			UriInfo uriInfo, Long userId)
+		throws Exception {
+
+		User user = null;
+
+		if (Validator.isNotNull(userId)) {
+			user = _userLocalService.getUser(userId);
+		}
 
 		DefaultDTOConverterContext defaultDTOConverterContext =
 			new DefaultDTOConverterContext(
 				false, null, _dtoConverterRegistry, objectEntryId,
 				LocaleUtil.fromLanguageId(
 					objectDefinition.getDefaultLanguageId(), true, false),
-				uriInfo, null);
+				uriInfo, user);
 
 		defaultDTOConverterContext.setAttribute("addActions", Boolean.FALSE);
 
 		return defaultDTOConverterContext;
 	}
 
-	private List<ObjectRelationship> _getObjectRelationships(
-			List<String> fieldNames, ObjectDefinition objectDefinition)
-		throws Exception {
+	private PropertyDefinition.PropertyType _getPropertyType(
+		ObjectDefinition objectDefinition,
+		ObjectRelationship objectRelationship) {
 
-		List<ObjectRelationship> objectRelationships = new ArrayList<>();
+		if (Objects.equals(
+				objectRelationship.getType(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY) &&
+			(objectDefinition.getObjectDefinitionId() ==
+				objectRelationship.getObjectDefinitionId2())) {
 
-		for (String fieldName : fieldNames) {
-			ObjectRelationship objectRelationship =
-				_objectRelationshipLocalService.
-					fetchObjectRelationshipByObjectDefinitionId(
-						objectDefinition.getObjectDefinitionId(), fieldName);
-
-			if ((objectRelationship == null) ||
-				(!Objects.equals(
-					objectRelationship.getType(),
-					ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
-				 !Objects.equals(
-					 objectRelationship.getType(),
-					 ObjectRelationshipConstants.TYPE_ONE_TO_MANY))) {
-
-				continue;
-			}
-
-			ObjectDefinition relatedObjectDefinition =
-				_getRelatedObjectDefinition(
-					objectDefinition, objectRelationship);
-
-			if (relatedObjectDefinition.isSystem()) {
-				continue;
-			}
-
-			objectRelationships.add(objectRelationship);
+			return PropertyDefinition.PropertyType.SINGLE_ELEMENT;
 		}
 
-		return objectRelationships;
+		return PropertyDefinition.PropertyType.MULTIPLE_ELEMENT;
 	}
 
-	private ObjectDefinition _getRelatedObjectDefinition(
-			ObjectDefinition objectDefinition,
-			ObjectRelationship objectRelationship)
-		throws Exception {
+	private boolean _isManyToOneObjectRelationship(
+		ObjectDefinition objectDefinition,
+		ObjectRelationship objectRelationship,
+		ObjectDefinition relatedObjectDefinition) {
 
-		long objectDefinitionId1 = objectRelationship.getObjectDefinitionId1();
+		if (Objects.equals(
+				objectRelationship.getType(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY) &&
+			(objectRelationship.getObjectDefinitionId1() ==
+				relatedObjectDefinition.getObjectDefinitionId()) &&
+			(objectRelationship.getObjectDefinitionId2() ==
+				objectDefinition.getObjectDefinitionId())) {
 
-		if (objectDefinitionId1 != objectDefinition.getObjectDefinitionId()) {
-			return _objectDefinitionLocalService.getObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
+			return true;
 		}
 
-		return _objectDefinitionLocalService.getObjectDefinition(
-			objectRelationship.getObjectDefinitionId2());
+		return false;
+	}
+
+	private void _relateNestedObjectEntry(
+			ObjectDefinition objectDefinition,
+			ObjectRelationship objectRelationship, long primaryKey,
+			long relatedPrimaryKey, ServiceContext serviceContext)
+		throws Exception {
+
+		long primaryKey1 = relatedPrimaryKey;
+		long primaryKey2 = primaryKey;
+
+		if (objectDefinition.getObjectDefinitionId() ==
+				objectRelationship.getObjectDefinitionId1()) {
+
+			primaryKey1 = primaryKey;
+			primaryKey2 = relatedPrimaryKey;
+		}
+
+		_objectRelationshipService.addObjectRelationshipMappingTableValues(
+			objectRelationship.getObjectRelationshipId(), primaryKey1,
+			primaryKey2, serviceContext);
 	}
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
-	private ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Reference
-	private ObjectEntryLocalService _objectEntryLocalService;
-
-	@Reference
 	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
+
+	@Reference
+	private ObjectRelatedModelsProviderRegistry
+		_objectRelatedModelsProviderRegistry;
+
+	@Reference
+	private ObjectRelationshipElementsParserRegistry
+		_objectRelationshipElementsParserRegistry;
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
-	private class UnsupportedOperationPropertyValidator
-		implements PropertyValidator {
+	@Reference
+	private ObjectRelationshipService _objectRelationshipService;
 
-		@Override
-		public void validate(
-			PropertyDefinition propertyDefinition, Object propertyValue) {
-
-			throw new UnsupportedOperationException(
-				"The property " + propertyDefinition.getPropertyName() +
-					" cannot be set");
-		}
-
-	}
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

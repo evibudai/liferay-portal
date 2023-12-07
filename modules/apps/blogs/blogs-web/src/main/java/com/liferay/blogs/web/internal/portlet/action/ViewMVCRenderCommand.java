@@ -1,30 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.web.internal.portlet.action;
 
-import com.liferay.blogs.constants.BlogsConstants;
 import com.liferay.blogs.constants.BlogsPortletKeys;
-import com.liferay.blogs.web.internal.display.context.BlogEntriesDisplayContext;
-import com.liferay.blogs.web.internal.display.context.BlogImagesDisplayContext;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.blogs.web.internal.display.context.BlogsViewEntriesDisplayContext;
+import com.liferay.blogs.web.internal.display.context.BlogsViewImagesDisplayContext;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
-import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlParser;
@@ -65,19 +49,14 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 		}
 
 		renderRequest.setAttribute(
-			BlogEntriesDisplayContext.class.getName(),
-			new BlogEntriesDisplayContext(
+			BlogsViewEntriesDisplayContext.class.getName(),
+			new BlogsViewEntriesDisplayContext(
 				_htmlParser, _portal, renderRequest, renderResponse,
 				_trashHelper));
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		renderRequest.setAttribute(
-			BlogImagesDisplayContext.class.getName(),
-			new BlogImagesDisplayContext(
-				_portal.getLiferayPortletRequest(renderRequest),
-				new BlogsFileEntryModelResourcePermission(themeDisplay)));
+			BlogsViewImagesDisplayContext.class.getName(),
+			new BlogsViewImagesDisplayContext(
+				_portal.getHttpServletRequest(renderRequest)));
 
 		return "/blogs_admin/view.jsp";
 	}
@@ -94,117 +73,10 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 	@Reference
 	private HtmlParser _htmlParser;
 
-	@Reference(
-		target = "(model.class.name=com.liferay.portal.kernel.repository.model.FileEntry)"
-	)
-	private ModelResourcePermission<FileEntry> _modelResourcePermission;
-
 	@Reference
 	private Portal _portal;
 
-	@Reference(target = "(resource.name=" + BlogsConstants.RESOURCE_NAME + ")")
-	private PortletResourcePermission _portletResourcePermission;
-
 	@Reference
 	private TrashHelper _trashHelper;
-
-	private class BlogsFileEntryModelResourcePermission
-		implements ModelResourcePermission<FileEntry> {
-
-		public BlogsFileEntryModelResourcePermission(
-			ThemeDisplay themeDisplay) {
-
-			_themeDisplay = themeDisplay;
-		}
-
-		@Override
-		public void check(
-				PermissionChecker permissionChecker, FileEntry fileEntry,
-				String actionId)
-			throws PortalException {
-
-			if (_isActionDelegable(actionId)) {
-				_portletResourcePermission.check(
-					permissionChecker, _themeDisplay.getSiteGroupId(),
-					ActionKeys.ADD_ENTRY);
-			}
-			else {
-				_modelResourcePermission.check(
-					permissionChecker, fileEntry, actionId);
-			}
-		}
-
-		@Override
-		public void check(
-				PermissionChecker permissionChecker, long primaryKey,
-				String actionId)
-			throws PortalException {
-
-			if (_isActionDelegable(actionId)) {
-				_portletResourcePermission.check(
-					permissionChecker, _themeDisplay.getSiteGroupId(),
-					ActionKeys.ADD_ENTRY);
-			}
-			else {
-				_modelResourcePermission.check(
-					permissionChecker, primaryKey, actionId);
-			}
-		}
-
-		@Override
-		public boolean contains(
-				PermissionChecker permissionChecker, FileEntry fileEntry,
-				String actionId)
-			throws PortalException {
-
-			if (_isActionDelegable(actionId)) {
-				return _portletResourcePermission.contains(
-					permissionChecker, fileEntry.getGroupId(),
-					ActionKeys.ADD_ENTRY);
-			}
-
-			return _modelResourcePermission.contains(
-				permissionChecker, fileEntry, actionId);
-		}
-
-		@Override
-		public boolean contains(
-				PermissionChecker permissionChecker, long primaryKey,
-				String actionId)
-			throws PortalException {
-
-			if (_isActionDelegable(actionId)) {
-				return _portletResourcePermission.contains(
-					permissionChecker, _themeDisplay.getSiteGroupId(),
-					ActionKeys.ADD_ENTRY);
-			}
-
-			return _modelResourcePermission.contains(
-				permissionChecker, primaryKey, actionId);
-		}
-
-		@Override
-		public String getModelName() {
-			return _modelResourcePermission.getModelName();
-		}
-
-		@Override
-		public PortletResourcePermission getPortletResourcePermission() {
-			return _modelResourcePermission.getPortletResourcePermission();
-		}
-
-		private boolean _isActionDelegable(String actionId) {
-			if (actionId.equals(ActionKeys.DELETE) ||
-				actionId.equals(ActionKeys.UPDATE)) {
-
-				return true;
-			}
-
-			return false;
-		}
-
-		private final ThemeDisplay _themeDisplay;
-
-	}
 
 }

@@ -1,6 +1,7 @@
 @component-name = "portal-wcd"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Content Display";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a widget page") {
@@ -30,17 +31,18 @@ definition {
 		}
 
 		task ("Activate local live staging with page versioning enabled") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "true",
-				branchingPublic = "true",
-				groupName = "Test Site Name");
+			Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+			Staging.activateStagingCP(
+				pageVersioningEnabled = "true",
+				siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -49,7 +51,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-127658. Verified that the last portlet configuration can be restorable after deleting portlet."
-	@priority = "3"
+	@priority = 3
 	test RollBackToPreviousConfigurationViaHistoryAfterDeletingPortlet {
 		task ("Add a web content via Web Content Display") {
 			Navigator.gotoStagedSitePage(

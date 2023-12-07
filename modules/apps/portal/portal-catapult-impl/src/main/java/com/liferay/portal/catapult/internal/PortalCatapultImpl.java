@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.catapult.internal;
@@ -29,6 +20,10 @@ import com.liferay.portal.kernel.util.Http;
 
 import java.io.IOException;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -39,8 +34,9 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = PortalCatapult.class)
 public class PortalCatapultImpl implements PortalCatapult {
 
-	public byte[] launch(
-			long companyId, String oAuth2ApplicationExternalReferenceCode,
+	public Future<byte[]> launch(
+			long companyId, Http.Method method,
+			String oAuth2ApplicationExternalReferenceCode,
 			JSONObject payloadJSONObject, String resourcePath, long userId)
 		throws PortalException {
 
@@ -48,9 +44,12 @@ public class PortalCatapultImpl implements PortalCatapult {
 
 		options.addHeader(
 			HttpHeaders.CONTENT_TYPE, ContentTypes.APPLICATION_JSON);
-		options.setBody(
-			payloadJSONObject.toString(), ContentTypes.APPLICATION_JSON,
-			StringPool.UTF8);
+
+		if (payloadJSONObject != null) {
+			options.setBody(
+				payloadJSONObject.toString(), ContentTypes.APPLICATION_JSON,
+				StringPool.UTF8);
+		}
 
 		OAuth2Application oAuth2Application =
 			_oAuth2ApplicationLocalService.
@@ -59,19 +58,24 @@ public class PortalCatapultImpl implements PortalCatapult {
 
 		options.setLocation(_getLocation(oAuth2Application, resourcePath));
 
-		options.setMethod(Http.Method.POST);
+		options.setMethod(method);
 
 		_localOAuthClient.consumeAccessToken(
 			accessToken -> options.addHeader(
 				"Authorization", "Bearer " + accessToken),
 			oAuth2Application, userId);
 
-		try {
-			return _http.URLtoByteArray(options);
-		}
-		catch (IOException ioException) {
-			return ReflectionUtil.throwException(ioException);
-		}
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+		return executorService.submit(
+			() -> {
+				try {
+					return _http.URLtoByteArray(options);
+				}
+				catch (IOException ioException) {
+					return ReflectionUtil.throwException(ioException);
+				}
+			});
 	}
 
 	private String _getLocation(

@@ -1,14 +1,15 @@
 definition {
 
-	@summary = "Sign out of Liferay Portal"
-	macro signOut {
+	@summary = "Default summary"
+	macro signOut() {
 		Navigator.openURL();
 
 		UserBar.signOut();
 	}
 
-	macro signOutOfSpecificURL {
-		Navigator.openSpecificURL(url = "${url}");
+	@summary = "Default summary"
+	macro signOutOfSpecificURL(url = null) {
+		Navigator.openSpecificURL(url = ${url});
 
 		UserBar.signOut();
 	}

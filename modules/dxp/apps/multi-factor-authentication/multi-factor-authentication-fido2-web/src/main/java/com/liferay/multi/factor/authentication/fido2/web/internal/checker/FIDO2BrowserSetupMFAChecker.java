@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.fido2.web.internal.checker;
@@ -31,10 +22,10 @@ import com.liferay.multi.factor.authentication.spi.checker.browser.BrowserMFAChe
 import com.liferay.multi.factor.authentication.spi.checker.setup.SetupMFAChecker;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.audit.AuditMessage;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -68,7 +59,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -83,7 +73,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 
 /**
  * @author Arthur Chan
@@ -249,11 +238,16 @@ public class FIDO2BrowserSetupMFAChecker
 						userId);
 			}
 
-			_routeAuditMessage(
-				_mfaFIDO2AuditMessageBuilder.
-					buildNonexistentUserVerificationFailureAuditMessage(
-						CompanyThreadLocal.getCompanyId(), userId,
-						_getClassName()));
+			MFAFIDO2AuditMessageBuilder mfaFIDO2AuditMessageBuilder =
+				_mfaFIDO2AuditMessageBuilderSnapshot.get();
+
+			if (mfaFIDO2AuditMessageBuilder != null) {
+				mfaFIDO2AuditMessageBuilder.routeAuditMessage(
+					mfaFIDO2AuditMessageBuilder.
+						buildNonexistentUserVerificationFailureAuditMessage(
+							CompanyThreadLocal.getCompanyId(), userId,
+							_getClassName()));
+			}
 
 			return false;
 		}
@@ -265,11 +259,16 @@ public class FIDO2BrowserSetupMFAChecker
 						" with incomplete configuration");
 			}
 
-			_routeAuditMessage(
-				_mfaFIDO2AuditMessageBuilder.
-					buildUnconfiguredUserVerificationFailureAuditMessage(
-						CompanyThreadLocal.getCompanyId(), user,
-						_getClassName()));
+			MFAFIDO2AuditMessageBuilder mfaFIDO2AuditMessageBuilder =
+				_mfaFIDO2AuditMessageBuilderSnapshot.get();
+
+			if (mfaFIDO2AuditMessageBuilder != null) {
+				mfaFIDO2AuditMessageBuilder.routeAuditMessage(
+					mfaFIDO2AuditMessageBuilder.
+						buildUnconfiguredUserVerificationFailureAuditMessage(
+							CompanyThreadLocal.getCompanyId(), user,
+							_getClassName()));
+			}
 
 			return false;
 		}
@@ -284,11 +283,16 @@ public class FIDO2BrowserSetupMFAChecker
 				_mfaFIDO2CredentialEntryLocalService.updateAttempts(
 					userId, credentialIdByteArray.getBase64(), 0);
 
-				_routeAuditMessage(
-					_mfaFIDO2AuditMessageBuilder.
-						buildVerificationFailureAuditMessage(
-							user, _getClassName(),
-							"Incorrect FIDO2 verification"));
+				MFAFIDO2AuditMessageBuilder mfaFIDO2AuditMessageBuilder =
+					_mfaFIDO2AuditMessageBuilderSnapshot.get();
+
+				if (mfaFIDO2AuditMessageBuilder != null) {
+					mfaFIDO2AuditMessageBuilder.routeAuditMessage(
+						mfaFIDO2AuditMessageBuilder.
+							buildVerificationFailureAuditMessage(
+								user, _getClassName(),
+								"Incorrect FIDO2 verification"));
+				}
 
 				return false;
 			}
@@ -316,9 +320,14 @@ public class FIDO2BrowserSetupMFAChecker
 		httpSession.setAttribute(
 			MFAFIDO2WebKeys.MFA_FIDO2_VALIDATED_USER_ID, userId);
 
-		_routeAuditMessage(
-			_mfaFIDO2AuditMessageBuilder.buildVerifiedAuditMessage(
-				user, _getClassName()));
+		MFAFIDO2AuditMessageBuilder mfaFIDO2AuditMessageBuilder =
+			_mfaFIDO2AuditMessageBuilderSnapshot.get();
+
+		if (mfaFIDO2AuditMessageBuilder != null) {
+			mfaFIDO2AuditMessageBuilder.routeAuditMessage(
+				mfaFIDO2AuditMessageBuilder.buildVerifiedAuditMessage(
+					user, _getClassName()));
+		}
 
 		return true;
 	}
@@ -410,7 +419,7 @@ public class FIDO2BrowserSetupMFAChecker
 		return _relyingParty.startAssertion(
 			StartAssertionOptions.builder(
 			).username(
-				Optional.of(user.getScreenName())
+				user.getScreenName()
 			).build());
 	}
 
@@ -505,19 +514,29 @@ public class FIDO2BrowserSetupMFAChecker
 						userId);
 			}
 
-			_routeAuditMessage(
-				_mfaFIDO2AuditMessageBuilder.
-					buildNonexistentUserVerificationFailureAuditMessage(
-						CompanyThreadLocal.getCompanyId(), userId,
-						_getClassName()));
+			MFAFIDO2AuditMessageBuilder mfaFIDO2AuditMessageBuilder =
+				_mfaFIDO2AuditMessageBuilderSnapshot.get();
+
+			if (mfaFIDO2AuditMessageBuilder != null) {
+				mfaFIDO2AuditMessageBuilder.routeAuditMessage(
+					mfaFIDO2AuditMessageBuilder.
+						buildNonexistentUserVerificationFailureAuditMessage(
+							CompanyThreadLocal.getCompanyId(), userId,
+							_getClassName()));
+			}
 
 			return false;
 		}
 
 		if (httpSession == null) {
-			_routeAuditMessage(
-				_mfaFIDO2AuditMessageBuilder.buildNotVerifiedAuditMessage(
-					user, _getClassName(), "Empty session"));
+			MFAFIDO2AuditMessageBuilder mfaFIDO2AuditMessageBuilder =
+				_mfaFIDO2AuditMessageBuilderSnapshot.get();
+
+			if (mfaFIDO2AuditMessageBuilder != null) {
+				mfaFIDO2AuditMessageBuilder.routeAuditMessage(
+					mfaFIDO2AuditMessageBuilder.buildNotVerifiedAuditMessage(
+						user, _getClassName(), "Empty session"));
+			}
 
 			return false;
 		}
@@ -528,17 +547,13 @@ public class FIDO2BrowserSetupMFAChecker
 			userId);
 	}
 
-	private void _routeAuditMessage(AuditMessage auditMessage) {
-		if (_mfaFIDO2AuditMessageBuilder != null) {
-			_mfaFIDO2AuditMessageBuilder.routeAuditMessage(auditMessage);
-		}
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		FIDO2BrowserSetupMFAChecker.class);
 
-	@Reference(cardinality = ReferenceCardinality.OPTIONAL)
-	private MFAFIDO2AuditMessageBuilder _mfaFIDO2AuditMessageBuilder;
+	private static final Snapshot<MFAFIDO2AuditMessageBuilder>
+		_mfaFIDO2AuditMessageBuilderSnapshot = new Snapshot<>(
+			FIDO2BrowserSetupMFAChecker.class,
+			MFAFIDO2AuditMessageBuilder.class);
 
 	private MFAFIDO2Configuration _mfaFIDO2Configuration;
 

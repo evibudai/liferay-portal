@@ -8,11 +8,16 @@ api.version=${openAPIYAML.info.version}
 	javaMethodSignatures = freeMarkerTool.getResourceJavaMethodSignatures(configYAML, openAPIYAML, schemaName)
 	generateBatch = freeMarkerTool.generateBatch(configYAML, javaDataType, javaMethodSignatures, schemaName)
 />
-<#if !stringUtil.equals(schemaName, "openapi") && generateBatch>
+<#if stringUtil.equals(schemaName, "openapi")>
+openapi.resource=true
+<#if configYAML.application??>
+openapi.resource.path=${configYAML.application.baseURI}
+</#if>
+<#elseif generateBatch>
 batch.engine.entity.class.name=${javaDataType}
 batch.engine.task.item.delegate=true
 batch.planner.export.enabled=${freeMarkerTool.hasReadVulcanBatchImplementation(javaMethodSignatures)?c}
-batch.planner.import.enabled=${freeMarkerTool.getVulcanBatchImplementationCreateStrategies(javaMethodSignatures, freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema))?has_content?c}
+batch.planner.import.enabled=${freeMarkerTool.getVulcanBatchImplementationCreateStrategies(javaMethodSignatures, freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema, allSchemas))?has_content?c}
 </#if>
 <#if javaDataType?has_content>
 entity.class.name=${javaDataType}

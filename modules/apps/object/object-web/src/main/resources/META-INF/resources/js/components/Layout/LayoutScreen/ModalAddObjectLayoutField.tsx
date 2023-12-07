@@ -1,33 +1,26 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
+import {Option} from '@clayui/core';
 import ClayForm from '@clayui/form';
 import ClayLabel from '@clayui/label';
 import ClayModal from '@clayui/modal';
 import {Observer} from '@clayui/modal/lib/types';
 import {
-	AutoComplete,
 	FormError,
-	stringIncludesQuery,
+	REQUIRED_MSG,
+	SingleSelect,
+	getLocalizableLabel,
 	useForm,
 } from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React, {useMemo, useState} from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
-import {TObjectField} from '../types';
 
 import './ModalAddObjectLayoutField.scss';
 
@@ -41,8 +34,6 @@ type TInitialValues = {
 interface IBoxBtnColumnsProps {
 	setValues: (values: Partial<TInitialValues>) => void;
 }
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 function BoxBtnColumns({setValues}: IBoxBtnColumnsProps) {
 	const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -87,6 +78,14 @@ interface IProps extends React.HTMLAttributes<HTMLElement> {
 	tabIndex: number;
 }
 
+interface ObjectFieldItem {
+	businessType: ObjectFieldBusinessType;
+	label: string;
+	readOnly: string;
+	required: boolean;
+	value: number;
+}
+
 export default function ModalAddObjectLayoutField({
 	boxIndex,
 	observer,
@@ -94,25 +93,33 @@ export default function ModalAddObjectLayoutField({
 	tabIndex,
 }: IProps) {
 	const [{objectFields}, dispatch] = useLayoutContext();
-	const [query, setQuery] = useState<string>('');
-	const [selectedObjectField, setSelectedObjectField] = useState<
-		TObjectField
+	const [selectedObjectFieldId, setSelectedObjectFieldId] = useState<
+		string
 	>();
 
-	const [readOnlyField, setReadOnlyField] = useState<ObjectFieldSetting>({
-		name: 'readOnly',
-		value: 'false',
-	});
+	const objectFieldItems = useMemo(() => {
+		const availableObjectFields: ObjectFieldItem[] = [];
 
-	const filteredObjectFields = useMemo(() => {
-		return objectFields.filter(
-			({inLayout, label}) =>
-				stringIncludesQuery(
-					label[defaultLanguageId] as string,
-					query
-				) && !inLayout
+		objectFields.map(
+			({businessType, id, inLayout, label, name, readOnly, required}) => {
+				if (!inLayout) {
+					availableObjectFields.push({
+						businessType,
+						label: getLocalizableLabel(
+							defaultLanguageId,
+							label,
+							name
+						),
+						readOnly,
+						required,
+						value: id,
+					});
+				}
+			}
 		);
-	}, [objectFields, query]);
+
+		return availableObjectFields;
+	}, [objectFields]);
 
 	const onSubmit = (values: TInitialValues) => {
 		dispatch({
@@ -132,7 +139,7 @@ export default function ModalAddObjectLayoutField({
 		const errors: FormError<TInitialValues> = {};
 
 		if (!values.objectFieldName) {
-			errors.objectFieldName = Liferay.Language.get('required');
+			errors.objectFieldName = REQUIRED_MSG;
 		}
 
 		return errors;
@@ -157,89 +164,65 @@ export default function ModalAddObjectLayoutField({
 				</ClayModal.Header>
 
 				<ClayModal.Body>
-					<AutoComplete<TObjectField>
-						contentRight={
-							<>
-								<ClayLabel
-									className="label-inside-custom-select"
-									displayType={
-										selectedObjectField?.required
-											? 'warning'
-											: 'success'
-									}
-								>
-									{selectedObjectField?.required
-										? Liferay.Language.get('mandatory')
-										: Liferay.Language.get('optional')}
-								</ClayLabel>
-
-								{(readOnlyField.value === 'true' ||
-									readOnlyField.value === 'conditional') && (
-									<ClayLabel
-										className="label-inside-custom-select"
-										displayType="secondary"
-									>
-										{Liferay.Language.get('read-only')}
-									</ClayLabel>
-								)}
-							</>
-						}
-						emptyStateMessage={Liferay.Language.get(
-							'there-are-no-fields-for-this-object'
-						)}
+					<SingleSelect
 						error={errors.objectFieldName}
-						items={filteredObjectFields}
+						id="modalAddObjectLayoutField"
+						items={objectFieldItems}
 						label={Liferay.Language.get('field')}
-						onChangeQuery={setQuery}
-						onSelectItem={(item: ObjectField) => {
-							const readOnlySetting = item.objectFieldSettings?.find(
-								(fieldSetting) =>
-									fieldSetting.name === 'readOnly'
+						onSelectionChange={(value) => {
+							const selectedObjectField = objectFields.find(
+								({id}) => id.toString() === value
 							);
-							if (readOnlySetting) {
-								setReadOnlyField(readOnlySetting);
-							}
-							setSelectedObjectField(item);
-							setValues({objectFieldName: item.name});
+
+							setSelectedObjectFieldId(
+								selectedObjectField?.id.toString()
+							);
+
+							setValues({
+								objectFieldName: selectedObjectField?.name,
+							});
 						}}
-						query={query}
 						required
-						value={selectedObjectField?.label[defaultLanguageId]}
+						selectedKey={selectedObjectFieldId}
 					>
-						{({label, objectFieldSettings, required}) => (
-							<div className="d-flex justify-content-between">
-								<div className="lfr__object-web-layout-modal-add-field-label">
-									{label[defaultLanguageId]}
-								</div>
+						{({businessType, label, readOnly, required, value}) => (
+							<Option key={value} textValue={label}>
+								<div className="lfr__object-web-layout-modal-add-field-option">
+									{label}
 
-								<div>
-									<ClayLabel
-										className="label-inside-custom-select"
-										displayType={
-											required ? 'warning' : 'success'
-										}
-									>
-										{required
-											? Liferay.Language.get('mandatory')
-											: Liferay.Language.get('optional')}
-									</ClayLabel>
-
-									{objectFieldSettings?.find(
-										(fieldSetting: ObjectFieldSetting) =>
-											fieldSetting.value === 'true' ||
-											fieldSetting.value === 'conditional'
-									) && (
+									<div>
 										<ClayLabel
 											className="label-inside-custom-select"
-											displayType="secondary"
+											displayType={
+												required ? 'warning' : 'success'
+											}
 										>
-											{Liferay.Language.get('read-only')}
+											{required
+												? Liferay.Language.get(
+														'mandatory'
+												  )
+												: Liferay.Language.get(
+														'optional'
+												  )}
 										</ClayLabel>
-									)}
+
+										{(businessType === 'AutoIncrement' ||
+											readOnly === 'conditional' ||
+											readOnly === 'true') && (
+											<ClayLabel
+												className="label-inside-custom-select"
+												displayType="secondary"
+											>
+												{Liferay.Language.get(
+													'read-only'
+												)}
+											</ClayLabel>
+										)}
+									</div>
 								</div>
-							</div>
+							</Option>
 						)}
-					</AutoComplete>
+					</SingleSelect>
 
 					<BoxBtnColumns setValues={setValues} />
 				</ClayModal.Body>

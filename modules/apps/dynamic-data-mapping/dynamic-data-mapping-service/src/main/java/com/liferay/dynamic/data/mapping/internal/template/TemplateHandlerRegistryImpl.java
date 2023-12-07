@@ -1,26 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.template;
 
-import com.liferay.dynamic.data.mapping.internal.util.ResourceBundleLoaderProvider;
-import com.liferay.dynamic.data.mapping.kernel.DDMTemplateManager;
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
+import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomizer;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
@@ -31,6 +21,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.resource.bundle.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ClassResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -63,7 +54,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Michael C. Han
@@ -112,8 +102,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 					bundleContext.ungetService(serviceReference);
 				});
 
-		_ddmTemplateMapsThreadLocal.set(new HashMap<>());
-
 		_classNameTemplateHandlersServiceTrackerMap =
 			ServiceTrackerMapFactory.openSingleValueMap(
 				bundleContext, TemplateHandler.class, null,
@@ -126,8 +114,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 					bundleContext.ungetService(serviceReference);
 				},
 				new TemplateHandlerServiceTrackerCustomizer());
-
-		_ddmTemplateMapsThreadLocal.remove();
 	}
 
 	@Deactivate
@@ -138,14 +124,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 
 		_bundleContext = null;
 	}
-
-	@Reference
-	protected ResourceBundleLoaderProvider resourceBundleLoaderProvider;
-
-	private static final ThreadLocal<Map<Long, Map<String, DDMTemplate>>>
-		_ddmTemplateMapsThreadLocal = new CentralizedThreadLocal<>(
-			TemplateHandlerRegistryImpl.class.getName() +
-				"._ddmTemplateMapsThreadLocal");
 
 	private BundleContext _bundleContext;
 	private ServiceTrackerMap<Long, TemplateHandler>
@@ -180,6 +158,16 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 		extends BasePortalInstanceLifecycleListener {
 
 		@Override
+		public long getLastModifiedTime() {
+			return _lastModifiedTime;
+		}
+
+		@Override
+		public String getName() {
+			return _name;
+		}
+
+		@Override
 		public void portalInstanceRegistered(Company company) throws Exception {
 			List<Element> templateElements =
 				_templateHandler.getDefaultTemplateElements();
@@ -200,56 +188,18 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 
 			serviceContext.setScopeGroupId(group.getGroupId());
 
-			long userId = _userLocalService.getDefaultUserId(
+			long userId = _userLocalService.getGuestUserId(
 				company.getCompanyId());
 
 			serviceContext.setUserId(userId);
-
-			Map<Long, Map<String, DDMTemplate>> ddmTemplateMaps =
-				_ddmTemplateMapsThreadLocal.get();
-
-			Map<String, DDMTemplate> ddmTemplateMap = null;
-
-			if (ddmTemplateMaps != null) {
-				ddmTemplateMap = ddmTemplateMaps.computeIfAbsent(
-					group.getGroupId(),
-					groupId -> {
-						Map<String, DDMTemplate> ddmTemplates = new HashMap<>();
-
-						for (DDMTemplate ddmTemplate :
-								_ddmTemplateLocalService.getTemplatesByGroupId(
-									groupId)) {
-
-							ddmTemplates.put(
-								StringBundler.concat(
-									ddmTemplate.getClassNameId(),
-									StringPool.POUND,
-									StringUtil.toUpperCase(
-										ddmTemplate.getTemplateKey())),
-								ddmTemplate);
-						}
-
-						return ddmTemplates;
-					});
-			}
 
 			for (Element templateElement : templateElements) {
 				String templateKey = templateElement.elementText(
 					"template-key");
 
-				DDMTemplate ddmTemplate = null;
-
-				if (ddmTemplateMap != null) {
-					ddmTemplate = ddmTemplateMap.get(
-						StringBundler.concat(
-							classNameId, StringPool.POUND,
-							StringUtil.toUpperCase(templateKey)));
-				}
-
-				if (ddmTemplate == null) {
-					ddmTemplate = _ddmTemplateLocalService.fetchTemplate(
+				DDMTemplate ddmTemplate =
+					_ddmTemplateLocalService.fetchTemplate(
 						group.getGroupId(), classNameId, templateKey);
-				}
 
 				if ((ddmTemplate != null) &&
 					((ddmTemplate.getUserId() != userId) ||
@@ -277,9 +227,8 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 				Bundle bundle = FrameworkUtil.getBundle(clazz);
 
 				if (bundle != null) {
-					resourceBundleLoader =
-						resourceBundleLoaderProvider.getResourceBundleLoader(
-							bundle.getSymbolicName());
+					resourceBundleLoader = _getResourceBundleLoader(
+						bundle.getSymbolicName());
 				}
 				else {
 					resourceBundleLoader = new AggregateResourceBundleLoader(
@@ -298,7 +247,7 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 				String type = templateElement.elementText("type");
 
 				if (type == null) {
-					type = DDMTemplateManager.TEMPLATE_TYPE_DISPLAY;
+					type = DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY;
 				}
 
 				String language = templateElement.elementText("language");
@@ -349,17 +298,46 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 			TemplateHandler templateHandler) {
 
 			_templateHandler = templateHandler;
+
+			Class<?> clazz = templateHandler.getClass();
+
+			Bundle bundle = FrameworkUtil.getBundle(clazz);
+
+			_lastModifiedTime = bundle.getLastModified();
+
+			_name = StringBundler.concat(
+				super.getName(), StringPool.POUND, clazz.getName());
+		}
+
+		private ResourceBundleLoader _getResourceBundleLoader(
+			String bundleSymbolicName) {
+
+			ResourceBundleLoader resourceBundleLoader =
+				ResourceBundleLoaderUtil.
+					getResourceBundleLoaderByBundleSymbolicName(
+						bundleSymbolicName);
+
+			if (resourceBundleLoader == null) {
+				return ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
+			}
+
+			return new AggregateResourceBundleLoader(
+				resourceBundleLoader,
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 		}
 
 		private static final String _CLASS_NAME_PORTLET_DISPLAY_TEMPLATE =
 			"com.liferay.portlet.display.template.PortletDisplayTemplate";
 
+		private final long _lastModifiedTime;
+		private final String _name;
 		private final TemplateHandler _templateHandler;
 
 	}
 
 	private class TemplateHandlerServiceTrackerCustomizer
-		implements ServiceTrackerCustomizer<TemplateHandler, TemplateHandler> {
+		implements EagerServiceTrackerCustomizer
+			<TemplateHandler, TemplateHandler> {
 
 		@Override
 		public TemplateHandler addingService(

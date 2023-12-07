@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton from '@clayui/button';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classnames from 'classnames';
+import {sub} from 'frontend-js-web';
 import React, {useContext, useEffect, useState} from 'react';
 
 import ServiceProvider from '../../ServiceProvider/index';
@@ -32,7 +25,7 @@ import {
 	REMOVAL_TIMEOUT,
 	UNEXPECTED_ERROR,
 } from './util/constants';
-import {generateProductPageURL, parseOptions} from './util/index';
+import {filterOptions, generateProductPageURL, hasOptions} from './util/index';
 
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
@@ -44,8 +37,20 @@ const deboncedUpdateItemQuantity = debouncePromise(
 
 		return CartResource.updateItemById(cartItemId, {
 			quantity,
-		}).catch(() => {
-			throw UNEXPECTED_ERROR;
+		}).catch((error) => {
+			let errorMessage;
+
+			if (error.message) {
+				errorMessage = error.message;
+			}
+			else if (error.detail) {
+				errorMessage = error.detail;
+			}
+			else {
+				errorMessage = UNEXPECTED_ERROR;
+			}
+
+			throw errorMessage;
 		});
 	},
 	1000
@@ -66,11 +71,16 @@ function CartItem({
 	sku,
 	skuId,
 	updateCartItem,
+	replacedSku,
+	skuUnitOfMeasure,
+	productId,
 }) {
 	const [itemState, setItemState] = useState(INITIAL_ITEM_STATE);
 	const [selectorQuantity, setSelectorQuantity] = useState(cartItemQuantity);
+	const hasChildItems = !!childItems?.length;
+	const hasSkuUnitOfMeasure = !!skuUnitOfMeasure?.key;
 	const isMounted = useIsMounted();
-	const options = parseOptions(rawOptions);
+	const options = filterOptions(rawOptions);
 
 	useEffect(() => {
 		setSelectorQuantity(cartItemQuantity);
@@ -80,6 +90,7 @@ function CartItem({
 		actionURLs,
 		cartState,
 		displayDiscountLevels,
+		setEditedItem,
 		setIsUpdating,
 		updateCartModel,
 	} = useContext(MiniCartContext);
@@ -158,37 +169,97 @@ function CartItem({
 
 	const {isGettingRemoved, isRemovalCanceled, isRemoved} = itemState;
 
+	const getClassName = (className) => {
+		return classnames(className, {
+			'mini-cart-item-alignment':
+				Liferay.FeatureFlags['COMMERCE-9599'] ||
+				Liferay.FeatureFlags['COMMERCE-11287'],
+		});
+	};
+
 	return (
 		<div
 			className={classnames('mini-cart-item', {
+				'align-items-start':
+					Liferay.FeatureFlags['COMMERCE-9599'] && hasChildItems,
 				'is-removed': isRemoved,
 			})}
 		>
-			<a className="mini-cart-item-anchor" href={productPageUrl}>
-				{!!adaptiveMediaImageHTMLTag && (
+			{Liferay.FeatureFlags['COMMERCE-9599'] ||
+			Liferay.FeatureFlags['COMMERCE-11287'] ? (
+				<div className="mini-cart-item-details position-relative">
+					<a
+						className="h-100 mini-cart-item-anchor position-absolute w-100"
+						data-senna-off="true"
+						href={productPageUrl}
+					>
+						<span className="sr-only">
+							{sub(Liferay.Language.get('go-to-x'), name)}
+						</span>
+					</a>
+
+					{!!adaptiveMediaImageHTMLTag && (
+						<div
+							className="mini-cart-item-thumbnail"
+							dangerouslySetInnerHTML={{
+								__html: adaptiveMediaImageHTMLTag,
+							}}
+						/>
+					)}
+
 					<div
-						className="mini-cart-item-thumbnail"
-						dangerouslySetInnerHTML={{
-							__html: adaptiveMediaImageHTMLTag,
-						}}
-					/>
-				)}
-
-				<div
-					className={classnames('mini-cart-item-info ml-3', {
-						options: Boolean(options),
-					})}
-				>
-					<ItemInfoView
-						childItems={childItems}
-						name={name}
-						options={options}
-						sku={sku}
-					/>
+						className={classnames(
+							'mini-cart-item-info ml-3 w-100',
+							{
+								options: Boolean(options),
+							}
+						)}
+					>
+						<ItemInfoView
+							childItems={childItems}
+							name={name}
+							options={options}
+							replacedSku={replacedSku}
+							sku={sku}
+						/>
+					</div>
 				</div>
-			</a>
+			) : (
+				<a
+					className="mini-cart-item-details"
+					data-senna-off="true"
+					href={productPageUrl}
+				>
+					{!!adaptiveMediaImageHTMLTag && (
+						<div
+							className="mini-cart-item-thumbnail"
+							dangerouslySetInnerHTML={{
+								__html: adaptiveMediaImageHTMLTag,
+							}}
+						/>
+					)}
 
-			<div className="mini-cart-item-quantity">
+					<div
+						className={classnames('mini-cart-item-info ml-3', {
+							options: Boolean(options),
+						})}
+					>
+						<ItemInfoView
+							childItems={childItems}
+							name={name}
+							options={options}
+							replacedSku={replacedSku}
+							sku={sku}
+						/>
+					</div>
+				</a>
+			)}
+
+			<div
+				className={getClassName(
+					'align-items-center d-flex mini-cart-item-quantity'
+				)}
+			>
 				<QuantitySelector
 					alignment={index > 0 ? 'top' : 'bottom'}
 					allowedQuantities={settings.allowedQuantities}
@@ -229,12 +300,18 @@ function CartItem({
 							});
 					}}
 					quantity={selectorQuantity}
-					step={settings.multipleQuantity}
+					step={
+						skuUnitOfMeasure?.incrementalOrderQuantity ||
+						settings.multipleQuantity
+					}
 					{...settings}
+					unitOfMeasure={skuUnitOfMeasure}
 				/>
+
+				<div className="ml-2">{skuUnitOfMeasure?.key}</div>
 			</div>
 
-			<div className="mini-cart-item-price">
+			<div className={getClassName('mini-cart-item-price')}>
 				<Price
 					compact={true}
 					displayDiscountLevels={displayDiscountLevels}
@@ -242,14 +319,60 @@ function CartItem({
 				/>
 			</div>
 
-			<div className="mini-cart-item-delete">
-				<button
-					className="btn btn-unstyled"
-					onClick={removeItem}
-					type="button"
-				>
-					<ClayIcon symbol="times-circle-full" />
-				</button>
+			<div className={getClassName('mini-cart-item-actions')}>
+				{(Liferay.FeatureFlags['COMMERCE-9599'] &&
+					hasOptions(rawOptions)) ||
+				(Liferay.FeatureFlags['COMMERCE-11287'] &&
+					hasSkuUnitOfMeasure) ? (
+					<ClayDropDown
+						closeOnClick
+						trigger={
+							<ClayButtonWithIcon
+								aria-label={sub(
+									Liferay.Language.get('actions-for-x'),
+									name
+								)}
+								className="d-inline-flex"
+								displayType="unstyled"
+								symbol="ellipsis-v"
+								title={sub(
+									Liferay.Language.get('actions-for-x'),
+									name
+								)}
+							/>
+						}
+					>
+						<ClayDropDown.ItemList>
+							<ClayDropDown.Item
+								onClick={() =>
+									setEditedItem({
+										cartItemId,
+										name,
+										productId,
+										type: hasSkuUnitOfMeasure
+											? 'uom'
+											: 'options',
+									})
+								}
+							>
+								{Liferay.Language.get('edit')}
+							</ClayDropDown.Item>
+
+							<ClayDropDown.Item onClick={removeItem}>
+								{Liferay.Language.get('delete')}
+							</ClayDropDown.Item>
+						</ClayDropDown.ItemList>
+					</ClayDropDown>
+				) : (
+					<ClayButtonWithIcon
+						aria-label={sub(Liferay.Language.get('delete-x'), name)}
+						className="d-inline-flex"
+						displayType="unstyled"
+						onClick={removeItem}
+						symbol="times-circle-full"
+						title={sub(Liferay.Language.get('delete-x'), name)}
+					/>
+				)}
 			</div>
 
 			{!!errorMessages.length && (

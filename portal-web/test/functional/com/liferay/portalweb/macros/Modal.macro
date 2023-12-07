@@ -1,7 +1,8 @@
 definition {
 
-	macro gotoNavTab {
-		var key_tab = "${navTab}";
+	@summary = "Default summary"
+	macro gotoNavTab(navTab = null) {
+		var key_tab = ${navTab};
 
 		if (IsElementNotPresent(locator1 = "Modal#ACTIVE_TAB_LINK")) {
 			Click(locator1 = "Modal#TAB_LINK");
@@ -10,17 +11,23 @@ definition {
 		AssertElementPresent(locator1 = "Modal#ACTIVE_TAB_LINK");
 	}
 
-	macro publish {
-		AssertTextEquals(
-			locator1 = "Modal#BODY_MESSAGE",
-			value1 = "${warningMessage}");
+	@summary = "Default summary"
+	macro publish(warningMessage = null, action = null) {
+		if (!(isSet(index))) {
+			var index = 1;
+		}
 
-		if ("${action}" == "Cancel") {
+		AssertTextEquals(
+			index = ${index},
+			locator1 = "Modal#BODY_MESSAGE",
+			value1 = ${warningMessage});
+
+		if (${action} == "Cancel") {
 			Click(
 				key_text = "Cancel",
 				locator1 = "Modal#MODAL_FOOTER_BUTTON");
 		}
-		else if ("${action}" == "Continue") {
+		else if (${action} == "Continue") {
 			Click(
 				key_text = "Continue",
 				locator1 = "Modal#MODAL_FOOTER_BUTTON");
@@ -36,8 +43,11 @@ definition {
 		}
 	}
 
-	macro save {
-		Click(locator1 = "Modal#SAVE_BUTTON");
+	@summary = "Default summary"
+	macro save() {
+		Click(
+			key_text = "Save",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 		Alert.viewSuccessMessage();
 	}

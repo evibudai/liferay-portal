@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -22,7 +13,9 @@ DLSizeLimitConfigurationDisplayContext dlSizeLimitConfigurationDisplayContext = 
 
 <aui:form action="<%= dlSizeLimitConfigurationDisplayContext.getEditDLSizeLimitConfigurationURL() %>" method="post" name="fm">
 	<clay:sheet>
-		<clay:sheet-header>
+		<clay:sheet-header
+			cssClass="c-mb-4"
+		>
 			<liferay-ui:error exception="<%= ConfigurationModelListenerException.class %>" message="mime-type-size-limit-error" />
 
 			<h2>
@@ -30,16 +23,24 @@ DLSizeLimitConfigurationDisplayContext dlSizeLimitConfigurationDisplayContext = 
 			</h2>
 		</clay:sheet-header>
 
-		<clay:sheet-section>
-			<aui:input label="file-max-size" name="fileMaxSize" value="<%= dlSizeLimitConfigurationDisplayContext.getFileMaxSize() %>" />
+		<clay:alert
+			dismissible="<%= true %>"
+			displayType="info"
+			message="changes-will-only-apply-to-new-documents-uploaded"
+		/>
 
-			<p class="text-muted">
-				<liferay-ui:message key="file-max-size-help" />
+		<clay:sheet-section>
+			<h3 class="c-mb-2 sheet-subtitle text-secondary"><liferay-ui:message key="upload-limit" /></h3>
+
+			<p class="c-mb-4 text-3 text-secondary">
+				<liferay-ui:message arguments="<%= dlSizeLimitConfigurationDisplayContext.getFileMaxSizeHelpArguments() %>" key="maximum-file-upload-size-help" />
 			</p>
+
+			<aui:input label="maximum-file-upload-size" name="fileMaxSize" type="number" value="<%= dlSizeLimitConfigurationDisplayContext.getFileMaxSize() %>" />
 		</clay:sheet-section>
 
 		<clay:sheet-section>
-			<h3 class="sheet-subtitle"><liferay-ui:message key="maximum-file-size-and-mimetypes" /></h3>
+			<h3 class="c-mb-2 sheet-subtitle text-secondary"><liferay-ui:message key="mime-type-limit" /></h3>
 
 			<div>
 				<span aria-hidden="true" class="loading-animation"></span>
@@ -49,6 +50,16 @@ DLSizeLimitConfigurationDisplayContext dlSizeLimitConfigurationDisplayContext = 
 					props="<%= dlSizeLimitConfigurationDisplayContext.getFileSizePerMimeTypeData() %>"
 				/>
 			</div>
+		</clay:sheet-section>
+
+		<clay:sheet-section>
+			<h3 class="c-mb-2 sheet-subtitle text-secondary"><liferay-ui:message key="copy-limit-title" /></h3>
+
+			<p class="c-mb-4 text-3 text-secondary">
+				<liferay-ui:message key="copy-limit-help" />
+			</p>
+
+			<aui:input label="size-limit-copy-files" name="maxSizeToCopy" type="number" value="<%= dlSizeLimitConfigurationDisplayContext.getMaxSizeToCopy() %>" />
 		</clay:sheet-section>
 
 		<clay:sheet-footer>

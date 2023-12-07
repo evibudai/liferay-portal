@@ -8,141 +8,131 @@ definition {
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Testray";
 
+	var projectName = "Project 1";
+	var testSiteName = "Testray 2";
+
 	setUp {
-		TestCase.setUpPortalInstance();
+		task ("Set up instance and sign in") {
+			TestCase.setUpPortalInstance();
 
-		User.firstLoginPG();
+			User.firstLoginPG();
+		}
 
-		Testray.addTestraySite();
+		task ("Create a new Testray Site") {
+			HeadlessSite.addSite(
+				siteName = ${testSiteName},
+				templateName = "Testray",
+				templateType = "Site Initializer");
+		}
 
-		Refresh();
+		task ("Go to Testray Site") {
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
+		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		TestrayRoutines.deleteRoutineSetup();
+		task ("Delete project via API, Testray Site and Client Extensions") {
+			JSONTestrayAPI.deleteProject(projectName = ${projectName});
 
-		Testray.deleteAllProjects();
+			Testray.testrayApisTearDown();
+		}
 
-		Testray.tearDownCP();
-
-		ObjectAdmin.deleteAllCustomObjectsViaAPI();
-
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@description = "This is a test for LPS-160539. Verify if as an Administrator I am able to add a Project"
-	@priority = "5"
+	@description = "Story ID: LPS-165583 | Test Summary: Verify if as an Administrator I am able to add a Project"
+	@priority = 5
 	test AdminCanAddProject {
-		task ("Go to Testray and Create Project") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
-
-			Testray.createProjectTestray(
-				description = "Projects_1 Project Description",
-				key_name = "Projects_1 Project");
+		task ("When the administrator Create a Project") {
+			TestrayProject.createProject(
+				description = "Project Description",
+				projectName = "Project 1");
 		}
 
-		task ("Change pagination and Assert it the project was created") {
-			Testray.changePagination(
-				numberItems = "20",
-				valuePagination = "150");
+		task ("Then the administrator can see the project in the list") {
+			Testray.changePagination(quantity = 150);
 
-			Testray.assertItemName(key_name = "Projects_1 Project");
+			Testray.viewTableEntryList(listEntry = "Project 1");
 		}
 	}
 
-	@description = "This is a test for LPS-160536. Verify that as an Administrator I am able to add a Project from the dropdown"
-	@priority = "4"
+	@description = "Story ID: LPS-146927 | Test Summary: Verify that as an Administrator I am able to add a Project from the dropdown"
+	@priority = 3
 	test AdminCanAddProjectFromDropdown {
-		task ("Go to Testray and Create Project") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
-
-			Testray.createProjectByDropdown(
-				description = "Projects_1 Description",
-				key_name = "Projects_1 Project");
+		task ("When the administrator create a Project from the dropdown") {
+			TestrayProject.createProjectByDropdown(
+				description = "Project Description",
+				projectName = "Project 1");
 		}
 
-		task ("Change pagination, go to project and Assert project title") {
-			Testray.changePagination(
-				numberItems = "20",
-				valuePagination = "150");
+		task ("Then the administrator can see the project in the list") {
+			Testray.changePagination(quantity = 150);
 
-			Testray.assertItemName(key_name = "Projects_1 Project");
+			Testray.viewTableEntryList(listEntry = "Project 1");
 		}
 	}
 
-	@description = "This is a test for LPS-160538. Verify if as an Administrator I am able to delete a Project"
-	@priority = "5"
+	@description = "Story ID: LPS-146927 | Test Summary: Verify if as an Administrator I am able to delete a Project"
+	@priority = 5
 	test AdminCanDeleteProject {
-		task ("Go to Testray and Create Project") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
-
-			Testray.createProjectTestray(
-				description = "Projects_1 Description",
-				key_name = "Projects_1 Project");
+		task ("Given that the Project is create via API") {
+			JSONTestray.addProject(
+				projectDescription = "Project Description 1",
+				projectName = ${projectName});
 		}
 
-		task ("Delete the project and assert has been deleted") {
-			Testray.deleteProject(nameProject = "Projects_1 Project");
+		task ("When the project is deleted") {
+			TestrayProject.deleteProject(projectName = "Project 1");
+		}
 
-			Testray.assertItemNotPresent(key_name = "Projects_1 Project");
+		task ("Then the project is not displayed anymore") {
+			Testray.viewTableEntryListNotPresent(listEntry = "Project 1");
 		}
 	}
 
-	@description = "This is a test for LPS-160537. Verify if as an Administrator I am able to edit a Project name and description"
-	@priority = "5"
+	@description = "Story ID: LPS-146927 | Test Summary: Verify if as an Administrator I am able to edit a Project"
+	@priority = 5
 	test AdminCanEditProject {
-		task ("Go to Testray, Create Project and change pagination") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
-
-			Testray.createProjectTestray(
-				description = "Projects_1 Description",
-				key_name = "Projects_1 Project");
-
-			Testray.changePagination(
-				numberItems = "20",
-				valuePagination = "150");
+		task ("Given that the administrator create a Project") {
+			TestrayProject.createProject(
+				description = "Project Description",
+				projectName = "Project one");
 		}
 
-		task ("Edit Project name and description and change pagination") {
-			TestrayContextMenu.clickContextMenuProjects(name = "Projects_1 Project");
+		task ("When the administrator edits the created project") {
+			Testray.changePagination(quantity = 150);
 
-			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Edit");
+			TestrayManage.selectTableRowOption(
+				rowOption = "Edit",
+				tableEntry = "Project one");
 
-			Testray.editProjectTestray(
-				description = "Projects_1 Project Description Edited",
-				name = "Projects_1 Project Edited");
+			TestrayProject.editProject(
+				newDescription = "Project Description Edited",
+				newName = "Project 1");
 
-			Testray.changePagination(
-				numberItems = "20",
-				valuePagination = "150");
+			Testray.changePagination(quantity = 150);
 		}
 
-		task ("Go to Home Page and Assert it the name and description has been edited") {
-			TestrayLayout.clickResultsOnSidebar();
-
-			Testray.assertItemName(key_name = "Projects_1 Project Edited");
-
-			Testray.assertProjectDescription(value = "Projects_1 Project Description Edited");
+		task ("Then the project are presented with details edited") {
+			Testray.viewTableEntryList(listEntry = "Project 1");
 		}
 	}
 
-	@description = "This is a test for LPS-160541. Verify if as an Administrator I should not be able to add a duplicate Project"
-	@priority = "5"
+	@description = "Story ID: LPS-146927 | Test Summary: Verify if as an Administrator I should not be able to add a duplicate Project"
+	@priority = 3
 	test AdminCanNotAddDuplicateProject {
-		task ("Go to Testray, Create Project duplicate") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
+		task ("When the administrator create a duplicate project") {
+			JSONTestray.addProject(
+				projectDescription = "Project Description 1",
+				projectName = ${projectName});
 
-			Testray.createProjectTestray(
-				description = "Projects_1 Description",
-				key_name = "Projects_1 Project");
-
-			Testray.createProjectTestray(
-				description = "Projects_1 Description",
-				key_name = "Projects_1 Project");
+			TestrayProject.createProject(
+				description = "Project Description",
+				projectName = ${projectName});
 		}
 
 		task ("Then an error message is displayed") {
@@ -150,141 +140,136 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-164076 Verify that the user can not create a project if all the required fields are not filled in"
-	@priority = "3"
+	@description = "Story ID: LPS-146927 | Test Summary: Verify that the user can not create a project if all the required fields are not filled in"
+	@priority = 2
 	test AdminCanViewWarningMessage {
-		task ("Go to Testray, Create Project and create product version") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
-
-			Testray.createProjectTestray(
-				description = "",
-				key_name = "");
+		task ("When the administrator tries to create a project without a name") {
+			TestrayProject.createProject();
 		}
 
-		task ("Assert a warning message is displayed") {
+		task ("Then an error message is displayed") {
 			Testray.viewErrorMessage(
 				fieldLabel = "Name",
 				warningMessage = "name is a required field");
 		}
 	}
 
-	@description = "This is a test for LPS-160898. Verify if as an Administrator I should be able to delete a project that contains routines without associated builds"
-	@priority = "5"
+	@description = "Story ID: LPS-146927 | Test Summary: Verify if as an Administrator I should be able to delete a project that contains routines without associated builds"
+	@priority = 3
 	test CanDeleteProjectsThatContainRoutinesWithoutAssociatedBuilds {
-		task ("Create project, change pagination and create Routine") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
+		task ("Given that the administrator create a Project without associated builds") {
+			JSONTestray.addProject(
+				projectDescription = "Project Description 1",
+				projectName = ${projectName});
 
-			Testray.createProjectTestray(
-				description = "Projects_1 Description",
-				key_name = "Projects_1 Project");
+			Testray.changePagination(quantity = 150);
 
-			Testray.changePagination(
-				numberItems = "20",
-				valuePagination = "150");
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			Testray.goToProjectPage(projectName = "Projects_1 Project");
-
-			TestrayRoutines.createRoutine(key_name = "Projects_1 Routine");
+			TestrayRoutines.createRoutine(routineName = "Routine 1");
 		}
 
-		task ("Delete the project and assert it was deleted") {
-			Testray.deleteProject(nameProject = "Projects_1 Project");
+		task ("And the administrator does not see any associated build") {
+			Testray.clickTableEntry(tableEntry = "Routine 1");
 
-			Testray.assertItemNotPresent(key_name = "Projects_1 Project");
+			Testray.viewTableEntryListNotPresent(listEntry = "Build 1");
+
+			Testray.clickBreadcrumb(text = ${projectName});
+		}
+
+		task ("When the project is deleted") {
+			TestrayProject.deleteProject(projectName = "Project 1");
+		}
+
+		task ("Then the project is not displayed anymore") {
+			Testray.viewTableEntryListNotPresent(listEntry = "Project 1");
 		}
 	}
 
-	@description = "This is a test for LPS-160897. Verify if as an Administrator I should not be able to delete a project that contains routines with associated builds"
-	@priority = "5"
+	@description = "Story ID: LPS-146927 | Test Summary: Verify if as an Administrator I should not be able to delete a project that contains routines with associated builds"
+	@priority = 4
 	test CannotDeleteProjectsThatContainRoutinesWithAssociatedBuilds {
-		task ("Go to Testray and create a Project") {
-			ApplicationsMenu.gotoSite(site = "Testray 2");
+		task ("Given that the Project is create via API") {
+			JSONTestray.addProject(
+				projectDescription = "Project Description 1",
+				projectName = ${projectName});
 
-			Testray.createProjectTestray(
-				description = "Projects_1 Description",
-				key_name = "Projects_1 Project");
-
-			Testray.changePagination(
-				numberItems = "20",
-				valuePagination = "150");
+			Testray.changePagination(quantity = 150);
 		}
 
-		task ("Go to created project and add a new team") {
-			TestrayContextMenu.clickContextMenuProjects(name = "Projects_1 Project");
+		task ("And add a new team") {
+			TestrayManage.selectTableRowOption(
+				rowOption = "Manage Teams",
+				tableEntry = ${projectName});
 
-			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Manage Teams");
+			TestrayManage.createTeam(teamName = "Team 1");
 
-			TestrayManage.createTeam(teamName = "Components_1 Team");
-
-			TestrayManage.closeModalInOptions();
+			Testray.closeModal(modalTitle = "Teams - Project 1");
 		}
 
-		task ("Go to created project and add a component") {
-			TestrayContextMenu.clickContextMenuProjects(name = "Projects_1 Project");
+		task ("And add a new component") {
+			TestrayManage.selectTableRowOption(
+				rowOption = "Manage Components",
+				tableEntry = ${projectName});
 
-			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Manage Components");
+			TestrayManage.createComponent(
+				componentName = "Component 1",
+				teamName = "Team 1");
 
-			Testray.addNewComponent(
-				componentName = "Components_1 Project 1",
-				teamName = "Components_1 Team");
-
-			Refresh();
+			Testray.closeModal(modalTitle = "Components - Project 1");
 		}
 
-		task ("Create a new Routine and a new Case") {
-			Testray.changePagination(
-				numberItems = "20",
-				valuePagination = "150");
+		task ("And create a new Routine and a new Case") {
+			Testray.clickTableEntry(tableEntry = ${projectName});
 
-			Testray.goToProjectPage(projectName = "Projects_1 Project");
+			TestrayRoutines.createRoutine(routineName = "Routine 1");
 
-			TestrayRoutines.createRoutine(key_name = "Routines_1 Routine");
+			Navigator.gotoNavTab(navTab = "Cases");
 
-			Testray.projectTabNavigator(navTabName = "Cases");
-
-			TestrayCases.typeCasesField(
-				caseName = "Cases_1 Case",
-				caseTypeId = "Manual Test",
-				componentId = "Components_1 Project 1",
-				description = "Cases_1 Case Description",
-				duration = "40",
-				priority = "5",
+			TestrayCases.createCases(
+				caseName = "Case 1",
+				caseType = "Manual Test",
+				component = "Component 1",
+				description = "Case Description",
+				duration = 40,
+				priority = 5,
 				steps = "Auto Test Steps");
 
-			Testray.projectTabNavigator(navTabName = "Routine");
+			Navigator.gotoNavTab(navTab = "Routines");
 		}
 
-		task ("Add a new build with enviroments") {
-			TestrayContextMenu.clickContextMenuProjects(name = "Routines_1 Routine");
+		task ("And add a new build with enviroments") {
+			TestrayManage.selectTableRowOption(
+				rowOption = "Select Default Environment Factors",
+				tableEntry = "Routine 1");
 
-			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Select Default Environment Factors");
+			Testray.selectDefaultEnvironmentFactors(
+				applicationServer = "Tomcat 6.0",
+				arrowDirection = "Right",
+				browser = "Chrome 57",
+				listCategory = "Application Server,Browser");
 
-			TestrayBuild.selectDefaultEnvironmentFactors(
-				label = "Application Server",
-				label1 = "Browser",
-				listCategory = "Application Server,Browser",
-				listOption = "Tomcat 6.0",
-				listOption1 = "Chrome 57");
+			Testray.clickTableEntry(tableEntry = "Routine 1");
 
-			TestrayRoutines.goToRoutine(routineName = "Routines_1 Routine");
-
-			TestrayBuild.createBuild(
+			TestrayBuild.addBuildViaUI(
 				addVersion = "1.2",
-				caseName = "Cases_1 Case",
-				description = "Builds_1 Project Description",
+				buildFieldName = "Build 1",
+				caseList = "Case 1",
+				description = "Build Description",
 				dropdownItem = "New Build",
-				fieldName = "Builds_1 Project",
-				gitHash = "12345",
-				productVersion = "1.2",
-				routine = "Routines_1 Routine");
+				gitHash = 12345,
+				productVersionOption = "1.2",
+				routine = "Routine 1");
 
-			Testray.assertItemName(key_name = "Builds_1 Project");
+			Testray.viewTableEntryList(listEntry = "Build 1");
 		}
 
-		task ("Delete project and assert a warning message is displayed") {
-			Testray.deleteProject(nameProject = "Projects_1 Project");
+		task ("When the administrator delete a project with associated build") {
+			TestrayProject.deleteProject(projectName = ${projectName});
+		}
 
-			Alert.viewErrorMessage(errorMessage = "The Project cannot be deleted because it has associated builds");
+		task ("Then an error message is displayed") {
+			Alert.viewErrorMessage(errorMessage = "The Project cannot be deleted because it has associated build");
 		}
 	}
 

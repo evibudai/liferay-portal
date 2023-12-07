@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.account.resource.v1_0.test;
@@ -28,6 +19,7 @@ import com.liferay.headless.commerce.admin.account.client.pagination.Page;
 import com.liferay.headless.commerce.admin.account.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.account.client.resource.v1_0.AccountChannelEntryResource;
 import com.liferay.headless.commerce.admin.account.client.serdes.v1_0.AccountChannelEntrySerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -41,6 +33,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -55,6 +48,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,8 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -766,6 +758,148 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteAccountChannelPaymentMethodId() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry accountChannelEntry =
+			testDeleteAccountChannelPaymentMethodId_addAccountChannelEntry();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountChannelEntryResource.
+				deleteAccountChannelPaymentMethodIdHttpResponse(
+					accountChannelEntry.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountChannelEntryResource.
+				getAccountChannelPaymentMethodIdHttpResponse(
+					accountChannelEntry.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountChannelEntryResource.
+				getAccountChannelPaymentMethodIdHttpResponse(
+					accountChannelEntry.getId()));
+	}
+
+	protected AccountChannelEntry
+			testDeleteAccountChannelPaymentMethodId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetAccountChannelPaymentMethodId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testGetAccountChannelPaymentMethodId_addAccountChannelEntry();
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPaymentMethodId(
+				postAccountChannelEntry.getId());
+
+		assertEquals(postAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testGetAccountChannelPaymentMethodId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPaymentMethodId() throws Exception {
+		AccountChannelEntry accountChannelEntry =
+			testGraphQLGetAccountChannelPaymentMethodId_addAccountChannelEntry();
+
+		Assert.assertTrue(
+			equals(
+				accountChannelEntry,
+				AccountChannelEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountChannelPaymentMethodId",
+								new HashMap<String, Object>() {
+									{
+										put("id", accountChannelEntry.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountChannelPaymentMethodId"))));
+	}
+
+	@Test
+	public void testGraphQLGetAccountChannelPaymentMethodIdNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountChannelPaymentMethodId",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected AccountChannelEntry
+			testGraphQLGetAccountChannelPaymentMethodId_addAccountChannelEntry()
+		throws Exception {
+
+		return testGraphQLAccountChannelEntry_addAccountChannelEntry();
+	}
+
+	@Test
+	public void testPatchAccountChannelPaymentMethodId() throws Exception {
+		AccountChannelEntry postAccountChannelEntry =
+			testPatchAccountChannelPaymentMethodId_addAccountChannelEntry();
+
+		AccountChannelEntry randomPatchAccountChannelEntry =
+			randomPatchAccountChannelEntry();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountChannelEntry patchAccountChannelEntry =
+			accountChannelEntryResource.patchAccountChannelPaymentMethodId(
+				postAccountChannelEntry.getId(),
+				randomPatchAccountChannelEntry);
+
+		AccountChannelEntry expectedPatchAccountChannelEntry =
+			postAccountChannelEntry.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAccountChannelEntry, expectedPatchAccountChannelEntry);
+
+		AccountChannelEntry getAccountChannelEntry =
+			accountChannelEntryResource.getAccountChannelPaymentMethodId(
+				patchAccountChannelEntry.getId());
+
+		assertEquals(expectedPatchAccountChannelEntry, getAccountChannelEntry);
+		assertValid(getAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPatchAccountChannelPaymentMethodId_addAccountChannelEntry()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testDeleteAccountChannelPaymentTermId() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		AccountChannelEntry accountChannelEntry =
@@ -1343,7 +1477,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -1354,14 +1488,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelBillingAddressesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -1377,12 +1515,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelBillingAddressesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelBillingAddressesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1391,6 +1543,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelBillingAddressesPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelBillingAddressesPage_addAccountChannelEntry(
@@ -1407,21 +1567,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -1433,13 +1593,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelBillingAddressesPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -1505,7 +1667,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -1516,14 +1678,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -1539,12 +1705,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1553,6 +1733,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelCurrenciesPage_addAccountChannelEntry(
@@ -1569,21 +1757,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -1595,13 +1783,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelCurrenciesPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -1667,7 +1857,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -1678,14 +1868,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -1701,12 +1895,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1715,6 +1923,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage_addAccountChannelEntry(
@@ -1731,21 +1947,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -1757,13 +1973,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDeliveryTermsPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -1829,7 +2047,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -1840,14 +2058,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -1863,12 +2085,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1877,6 +2113,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelDiscountsPage_addAccountChannelEntry(
@@ -1893,21 +2137,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -1919,13 +2163,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelDiscountsPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -1978,6 +2224,196 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
+	public void testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getIrrelevantExternalReferenceCode();
+
+		Page<AccountChannelEntry> page =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			AccountChannelEntry irrelevantAccountChannelEntry =
+				testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantAccountChannelEntry());
+
+			page =
+				accountChannelEntryResource.
+					getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantAccountChannelEntry,
+				(List<AccountChannelEntry>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		AccountChannelEntry accountChannelEntry1 =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				externalReferenceCode, randomAccountChannelEntry());
+
+		AccountChannelEntry accountChannelEntry2 =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				externalReferenceCode, randomAccountChannelEntry());
+
+		page =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
+					externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
+
+		AccountChannelEntry accountChannelEntry1 =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				externalReferenceCode, randomAccountChannelEntry());
+
+		AccountChannelEntry accountChannelEntry2 =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				externalReferenceCode, randomAccountChannelEntry());
+
+		AccountChannelEntry accountChannelEntry3 =
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				externalReferenceCode, randomAccountChannelEntry());
+
+		Page<AccountChannelEntry> page1 =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
+
+		List<AccountChannelEntry> accountChannelEntries1 =
+			(List<AccountChannelEntry>)page1.getItems();
+
+		Assert.assertEquals(
+			accountChannelEntries1.toString(), totalCount + 2,
+			accountChannelEntries1.size());
+
+		Page<AccountChannelEntry> page2 =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
+
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+		List<AccountChannelEntry> accountChannelEntries2 =
+			(List<AccountChannelEntry>)page2.getItems();
+
+		Assert.assertEquals(
+			accountChannelEntries2.toString(), 1,
+			accountChannelEntries2.size());
+
+		Page<AccountChannelEntry> page3 =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage(
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
+
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
+	}
+
+	protected AccountChannelEntry
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				String externalReferenceCode,
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentMethodsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountByExternalReferenceCodeAccountChannelPaymentMethod_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage()
 		throws Exception {
 
@@ -1991,7 +2427,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -2002,14 +2438,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -2025,12 +2465,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -2039,6 +2493,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelPaymentTermsPage_addAccountChannelEntry(
@@ -2055,21 +2517,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -2081,13 +2543,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPaymentTermsPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -2153,7 +2617,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -2164,14 +2628,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -2187,12 +2655,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -2201,6 +2683,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelPriceListsPage_addAccountChannelEntry(
@@ -2217,21 +2707,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -2243,13 +2733,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelPriceListsPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -2315,7 +2807,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -2326,14 +2818,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -2349,12 +2845,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -2363,6 +2873,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelShippingAddressesPage_addAccountChannelEntry(
@@ -2379,21 +2897,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -2405,13 +2923,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelShippingAddressesPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -2477,7 +2997,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelUsersPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -2488,14 +3008,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountByExternalReferenceCodeAccountChannelUsersPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountChannelUsersPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -2511,12 +3035,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountByExternalReferenceCodeAccountChannelUsersPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountChannelUsersPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountChannelUsersPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -2525,6 +3063,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountChannelUsersPage_getExternalReferenceCode();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountByExternalReferenceCodeAccountChannelUsersPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountByExternalReferenceCodeAccountChannelUsersPage_addAccountChannelEntry(
@@ -2541,21 +3087,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelUsersPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelUsersPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -2567,13 +3113,15 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountByExternalReferenceCodeAccountChannelUsersPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -2638,7 +3186,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelBillingAddressesPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -2648,14 +3196,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountIdAccountChannelBillingAddressesPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelBillingAddressesPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -2671,12 +3222,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelBillingAddressesPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelBillingAddressesPage_getExpectedActions(
+				id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelBillingAddressesPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -2684,6 +3249,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelBillingAddressesPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelBillingAddressesPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelBillingAddressesPage_addAccountChannelEntry(
@@ -2700,21 +3272,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelBillingAddressesPage(
-					id, Pagination.of(1, 2));
+					id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelBillingAddressesPage(
-					id, Pagination.of(2, 2));
+					id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -2726,13 +3298,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelBillingAddressesPage(
-					id, Pagination.of(1, 3));
+					id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -2795,7 +3368,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelCurrenciesPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -2805,14 +3378,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountIdAccountChannelCurrenciesPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelCurrenciesPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -2828,12 +3404,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelCurrenciesPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelCurrenciesPage_getExpectedActions(
+				id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelCurrenciesPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -2841,6 +3431,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelCurrenciesPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelCurrenciesPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelCurrenciesPage_addAccountChannelEntry(
@@ -2857,21 +3454,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelCurrenciesPage(
-					id, Pagination.of(1, 2));
+					id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelCurrenciesPage(
-					id, Pagination.of(2, 2));
+					id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -2883,13 +3480,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelCurrenciesPage(
-					id, Pagination.of(1, 3));
+					id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -2950,7 +3548,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelDeliveryTermsPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -2960,14 +3558,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountIdAccountChannelDeliveryTermsPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelDeliveryTermsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -2983,12 +3584,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelDeliveryTermsPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelDeliveryTermsPage_getExpectedActions(
+				id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelDeliveryTermsPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -2996,6 +3611,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelDeliveryTermsPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelDeliveryTermsPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelDeliveryTermsPage_addAccountChannelEntry(
@@ -3012,21 +3634,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelDeliveryTermsPage(
-					id, Pagination.of(1, 2));
+					id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelDeliveryTermsPage(
-					id, Pagination.of(2, 2));
+					id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -3038,13 +3660,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelDeliveryTermsPage(
-					id, Pagination.of(1, 3));
+					id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -3102,7 +3725,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.getAccountIdAccountChannelDiscountsPage(
 				id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -3112,14 +3735,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountIdAccountChannelDiscountsPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelDiscountsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -3134,12 +3760,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.getAccountIdAccountChannelDiscountsPage(
 				id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelDiscountsPage_getExpectedActions(id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelDiscountsPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -3147,6 +3786,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelDiscountsPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.getAccountIdAccountChannelDiscountsPage(
+				id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelDiscountsPage_addAccountChannelEntry(
@@ -3162,20 +3808,20 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.getAccountIdAccountChannelDiscountsPage(
-				id, Pagination.of(1, 2));
+				id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.getAccountIdAccountChannelDiscountsPage(
-				id, Pagination.of(2, 2));
+				id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -3186,13 +3832,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.getAccountIdAccountChannelDiscountsPage(
-				id, Pagination.of(1, 3));
+				id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -3240,6 +3887,188 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	@Test
+	public void testGetAccountIdAccountChannelPaymentMethodsPage()
+		throws Exception {
+
+		Long id = testGetAccountIdAccountChannelPaymentMethodsPage_getId();
+		Long irrelevantId =
+			testGetAccountIdAccountChannelPaymentMethodsPage_getIrrelevantId();
+
+		Page<AccountChannelEntry> page =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPaymentMethodsPage(
+					id, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantId != null) {
+			AccountChannelEntry irrelevantAccountChannelEntry =
+				testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+					irrelevantId, randomIrrelevantAccountChannelEntry());
+
+			page =
+				accountChannelEntryResource.
+					getAccountIdAccountChannelPaymentMethodsPage(
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantAccountChannelEntry,
+				(List<AccountChannelEntry>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelPaymentMethodsPage_getExpectedActions(
+					irrelevantId));
+		}
+
+		AccountChannelEntry accountChannelEntry1 =
+			testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				id, randomAccountChannelEntry());
+
+		AccountChannelEntry accountChannelEntry2 =
+			testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				id, randomAccountChannelEntry());
+
+		page =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPaymentMethodsPage(
+					id, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelPaymentMethodsPage_getExpectedActions(
+				id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelPaymentMethodsPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetAccountIdAccountChannelPaymentMethodsPageWithPagination()
+		throws Exception {
+
+		Long id = testGetAccountIdAccountChannelPaymentMethodsPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPaymentMethodsPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
+
+		AccountChannelEntry accountChannelEntry1 =
+			testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				id, randomAccountChannelEntry());
+
+		AccountChannelEntry accountChannelEntry2 =
+			testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				id, randomAccountChannelEntry());
+
+		AccountChannelEntry accountChannelEntry3 =
+			testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				id, randomAccountChannelEntry());
+
+		Page<AccountChannelEntry> page1 =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPaymentMethodsPage(
+					id, Pagination.of(1, totalCount + 2));
+
+		List<AccountChannelEntry> accountChannelEntries1 =
+			(List<AccountChannelEntry>)page1.getItems();
+
+		Assert.assertEquals(
+			accountChannelEntries1.toString(), totalCount + 2,
+			accountChannelEntries1.size());
+
+		Page<AccountChannelEntry> page2 =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPaymentMethodsPage(
+					id, Pagination.of(2, totalCount + 2));
+
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+		List<AccountChannelEntry> accountChannelEntries2 =
+			(List<AccountChannelEntry>)page2.getItems();
+
+		Assert.assertEquals(
+			accountChannelEntries2.toString(), 1,
+			accountChannelEntries2.size());
+
+		Page<AccountChannelEntry> page3 =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPaymentMethodsPage(
+					id, Pagination.of(1, (int)totalCount + 3));
+
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
+	}
+
+	protected AccountChannelEntry
+			testGetAccountIdAccountChannelPaymentMethodsPage_addAccountChannelEntry(
+				Long id, AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountIdAccountChannelPaymentMethodsPage_getId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testGetAccountIdAccountChannelPaymentMethodsPage_getIrrelevantId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testPostAccountIdAccountChannelPaymentMethod()
+		throws Exception {
+
+		AccountChannelEntry randomAccountChannelEntry =
+			randomAccountChannelEntry();
+
+		AccountChannelEntry postAccountChannelEntry =
+			testPostAccountIdAccountChannelPaymentMethod_addAccountChannelEntry(
+				randomAccountChannelEntry);
+
+		assertEquals(randomAccountChannelEntry, postAccountChannelEntry);
+		assertValid(postAccountChannelEntry);
+	}
+
+	protected AccountChannelEntry
+			testPostAccountIdAccountChannelPaymentMethod_addAccountChannelEntry(
+				AccountChannelEntry accountChannelEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetAccountIdAccountChannelPaymentTermsPage()
 		throws Exception {
 
@@ -3252,7 +4081,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelPaymentTermsPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -3262,14 +4091,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountIdAccountChannelPaymentTermsPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelPaymentTermsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -3285,12 +4117,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelPaymentTermsPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelPaymentTermsPage_getExpectedActions(
+				id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelPaymentTermsPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -3298,6 +4144,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelPaymentTermsPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPaymentTermsPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelPaymentTermsPage_addAccountChannelEntry(
@@ -3314,21 +4167,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPaymentTermsPage(
-					id, Pagination.of(1, 2));
+					id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPaymentTermsPage(
-					id, Pagination.of(2, 2));
+					id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -3340,13 +4193,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPaymentTermsPage(
-					id, Pagination.of(1, 3));
+					id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -3407,7 +4261,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelPriceListsPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -3417,14 +4271,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountIdAccountChannelPriceListsPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelPriceListsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -3440,12 +4297,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelPriceListsPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelPriceListsPage_getExpectedActions(
+				id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelPriceListsPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -3453,6 +4324,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelPriceListsPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelPriceListsPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelPriceListsPage_addAccountChannelEntry(
@@ -3469,21 +4347,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPriceListsPage(
-					id, Pagination.of(1, 2));
+					id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPriceListsPage(
-					id, Pagination.of(2, 2));
+					id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -3495,13 +4373,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelPriceListsPage(
-					id, Pagination.of(1, 3));
+					id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -3562,7 +4441,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelShippingAddressesPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -3572,14 +4451,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			page =
 				accountChannelEntryResource.
 					getAccountIdAccountChannelShippingAddressesPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelShippingAddressesPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -3595,12 +4477,26 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				getAccountIdAccountChannelShippingAddressesPage(
 					id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelShippingAddressesPage_getExpectedActions(
+				id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelShippingAddressesPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -3608,6 +4504,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelShippingAddressesPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.
+				getAccountIdAccountChannelShippingAddressesPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelShippingAddressesPage_addAccountChannelEntry(
@@ -3624,21 +4527,21 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelShippingAddressesPage(
-					id, Pagination.of(1, 2));
+					id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelShippingAddressesPage(
-					id, Pagination.of(2, 2));
+					id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -3650,13 +4553,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.
 				getAccountIdAccountChannelShippingAddressesPage(
-					id, Pagination.of(1, 3));
+					id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -3716,7 +4620,7 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 			accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
 				id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			AccountChannelEntry irrelevantAccountChannelEntry =
@@ -3725,14 +4629,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 			page =
 				accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
-					irrelevantId, Pagination.of(1, 2));
+					irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAccountChannelEntry),
+			assertContains(
+				irrelevantAccountChannelEntry,
 				(List<AccountChannelEntry>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountChannelUsersPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountChannelEntry accountChannelEntry1 =
@@ -3746,12 +4653,24 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		page = accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
 			id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(accountChannelEntry1, accountChannelEntry2),
-			(List<AccountChannelEntry>)page.getItems());
-		assertValid(page);
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountIdAccountChannelUsersPage_getExpectedActions(id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountChannelUsersPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -3759,6 +4678,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		throws Exception {
 
 		Long id = testGetAccountIdAccountChannelUsersPage_getId();
+
+		Page<AccountChannelEntry> accountChannelEntryPage =
+			accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
+				id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			accountChannelEntryPage.getTotalCount());
 
 		AccountChannelEntry accountChannelEntry1 =
 			testGetAccountIdAccountChannelUsersPage_addAccountChannelEntry(
@@ -3774,20 +4700,20 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Page<AccountChannelEntry> page1 =
 			accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
-				id, Pagination.of(1, 2));
+				id, Pagination.of(1, totalCount + 2));
 
 		List<AccountChannelEntry> accountChannelEntries1 =
 			(List<AccountChannelEntry>)page1.getItems();
 
 		Assert.assertEquals(
-			accountChannelEntries1.toString(), 2,
+			accountChannelEntries1.toString(), totalCount + 2,
 			accountChannelEntries1.size());
 
 		Page<AccountChannelEntry> page2 =
 			accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
-				id, Pagination.of(2, 2));
+				id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AccountChannelEntry> accountChannelEntries2 =
 			(List<AccountChannelEntry>)page2.getItems();
@@ -3798,13 +4724,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 
 		Page<AccountChannelEntry> page3 =
 			accountChannelEntryResource.getAccountIdAccountChannelUsersPage(
-				id, Pagination.of(1, 3));
+				id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				accountChannelEntry1, accountChannelEntry2,
-				accountChannelEntry3),
-			(List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry1, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry2, (List<AccountChannelEntry>)page3.getItems());
+		assertContains(
+			accountChannelEntry3, (List<AccountChannelEntry>)page3.getItems());
 	}
 
 	protected AccountChannelEntry
@@ -3974,6 +4901,14 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (accountChannelEntry.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"channelExternalReferenceCode",
 					additionalAssertFieldName)) {
@@ -4042,6 +4977,13 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	}
 
 	protected void assertValid(Page<AccountChannelEntry> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<AccountChannelEntry> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<AccountChannelEntry> accountChannelEntries =
@@ -4057,6 +4999,25 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -4147,6 +5108,17 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				if (!Objects.deepEquals(
 						accountChannelEntry1.getAccountId(),
 						accountChannelEntry2.getAccountId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)accountChannelEntry1.getActions(),
+						(Map)accountChannelEntry2.getActions())) {
 
 					return false;
 				}
@@ -4276,14 +5248,16 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -4300,6 +5274,10 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -4309,18 +5287,18 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -4338,11 +5316,48 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		sb.append(" ");
 
 		if (entityFieldName.equals("accountExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					accountChannelEntry.getAccountExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				accountChannelEntry.getAccountExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -4352,12 +5367,54 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("channelExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					accountChannelEntry.getChannelExternalReferenceCode()));
-			sb.append("'");
+			Object object =
+				accountChannelEntry.getChannelExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -4368,11 +5425,47 @@ public abstract class BaseAccountChannelEntryResourceTestCase {
 		}
 
 		if (entityFieldName.equals("classExternalReferenceCode")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(
-					accountChannelEntry.getClassExternalReferenceCode()));
-			sb.append("'");
+			Object object = accountChannelEntry.getClassExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

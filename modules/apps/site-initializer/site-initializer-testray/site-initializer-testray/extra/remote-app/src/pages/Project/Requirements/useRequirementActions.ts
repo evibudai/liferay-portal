@@ -1,32 +1,61 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import useFormModal from '~/hooks/useFormModal';
+import usePusher from '~/hooks/usePusher';
+import {Liferay} from '~/services/liferay';
+import {JiraClientExtensionRestImpl} from '~/services/rest/JiraClientExtension';
 
-import useFormActions from '../../../hooks/useFormActions';
 import useMutate from '../../../hooks/useMutate';
 import i18n from '../../../i18n';
-import {TestrayRequirement, deleteResource} from '../../../services/rest';
+import {
+	TestrayRequirement,
+	testrayRequirementsImpl,
+} from '../../../services/rest';
 import {Action, ActionsHookParameter} from '../../../types';
 
 const useRequirementActions = ({
 	isHeaderActions = false,
 }: ActionsHookParameter = {}) => {
-	const {form} = useFormActions();
+	const [forceRefetch, setForceRefetch] = useState(0);
+	const {
+		modal: {onError, onSave},
+	} = useFormModal();
 	const {removeItemFromList} = useMutate();
 	const navigate = useNavigate();
+
+	const resyncWithJira = async (testrayRequirement: TestrayRequirement) => {
+		await JiraClientExtensionRestImpl.resyncWithJira(testrayRequirement);
+	};
+
+	const pusher = usePusher();
+
+	useEffect(() => {
+		if (!pusher) {
+			return;
+		}
+
+		const channel = pusher.subscribe(
+			`${Liferay.ThemeDisplay.getUserId()}-requirements`
+		);
+
+		channel.bind('processed', ({message}: {message: string}) => {
+			setForceRefetch(new Date().getTime());
+
+			Liferay.Util.openToast({
+				message,
+			});
+		});
+
+		return () =>
+			pusher.unsubscribe(
+				`${Liferay.ThemeDisplay.getUserId()}-requirements`
+			);
+	}, [pusher]);
 
 	const actionsRef = useRef([
 		{
@@ -37,26 +66,34 @@ const useRequirementActions = ({
 			permission: 'UPDATE',
 		},
 		{
-			action: ({id}) => alert(id),
+			action: (testrayRequirement) =>
+				resyncWithJira(testrayRequirement).then(() => {
+					Liferay.Util.openToast({
+						message: `${testrayRequirement.key} Started Jira Sync Asynchronous`,
+					});
+				}),
 			icon: 'reload',
 			name: i18n.translate('resync-with-jira'),
+			permission: 'UPDATE',
 		},
 		{
 			action: ({id}) => navigate(`${id}`),
 			icon: 'list-ul',
 			name: i18n.translate('link-cases'),
-			permission: !isHeaderActions,
+			permission: 'UPDATE',
 		},
 		{
 			action: ({id}, mutate) =>
-				deleteResource(`/requirements/${id}`)
-					?.then(() => {
-						navigate(-1);
-
-						return removeItemFromList(mutate, id);
+				testrayRequirementsImpl
+					.removeResource(id)
+					?.then(() => removeItemFromList(mutate, id))
+					.then(onSave)
+					.then(() => {
+						if (isHeaderActions) {
+							navigate('../');
+						}
 					})
-					.then(form.onSuccess)
-					.catch(form.onError),
+					.catch(onError),
 			icon: 'trash',
 			name: i18n.translate(
 				isHeaderActions ? 'delete-requirement' : 'delete'
@@ -67,6 +104,7 @@ const useRequirementActions = ({
 
 	return {
 		actions: actionsRef.current,
+		forceRefetch,
 		navigate,
 	};
 };

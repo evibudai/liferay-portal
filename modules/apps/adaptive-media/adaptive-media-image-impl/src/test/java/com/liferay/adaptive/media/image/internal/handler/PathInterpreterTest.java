@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.handler;
@@ -23,12 +14,10 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -50,11 +39,8 @@ public class PathInterpreterTest {
 
 	@Before
 	public void setUp() {
-		ReflectionTestUtil.setFieldValue(
-			_pathInterpreter, "_amImageConfigurationHelper",
-			_amImageConfigurationHelper);
-		ReflectionTestUtil.setFieldValue(
-			_pathInterpreter, "_dlAppService", _dlAppService);
+		_pathInterpreter = new PathInterpreter(
+			_amImageConfigurationHelper, _dlAppService);
 	}
 
 	@Test
@@ -75,7 +61,7 @@ public class PathInterpreterTest {
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				Mockito.anyLong(), Mockito.eq("x"))
 		).thenReturn(
-			Optional.of(_amImageConfigurationEntry)
+			_amImageConfigurationEntry
 		);
 
 		_pathInterpreter.interpretPath("/image/0/x/foo.jpg");
@@ -145,7 +131,7 @@ public class PathInterpreterTest {
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				Mockito.anyLong(), Mockito.eq("x"))
 		).thenReturn(
-			Optional.of(_amImageConfigurationEntry)
+			_amImageConfigurationEntry
 		);
 
 		_pathInterpreter.interpretPath("/image/0/x/foo.jpg?t=12345");
@@ -181,7 +167,7 @@ public class PathInterpreterTest {
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
 				Mockito.anyLong(), Mockito.eq("x"))
 		).thenReturn(
-			Optional.of(_amImageConfigurationEntry)
+			_amImageConfigurationEntry
 		);
 
 		_pathInterpreter.interpretPath("/image/0/1/x/foo.jpg");
@@ -224,10 +210,10 @@ public class PathInterpreterTest {
 
 	@Test
 	public void testNonmatchingPathInfo() {
-		Optional<Tuple<FileVersion, Map<String, String>>> resultOptional =
+		Tuple<FileVersion, Map<String, String>> tuple =
 			_pathInterpreter.interpretPath("/" + RandomTestUtil.randomString());
 
-		Assert.assertFalse(resultOptional.isPresent());
+		Assert.assertNull(tuple);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -242,6 +228,6 @@ public class PathInterpreterTest {
 	private final DLAppService _dlAppService = Mockito.mock(DLAppService.class);
 	private final FileEntry _fileEntry = Mockito.mock(FileEntry.class);
 	private final FileVersion _fileVersion = Mockito.mock(FileVersion.class);
-	private final PathInterpreter _pathInterpreter = new PathInterpreter();
+	private PathInterpreter _pathInterpreter;
 
 }

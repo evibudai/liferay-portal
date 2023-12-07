@@ -1,0 +1,123 @@
+@component-name = "portal-object"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Object";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+	}
+
+	tearDown {
+		JSONObjectFolder.tearDown();
+
+		ObjectAdmin.deleteAllCustomObjectsViaAPI();
+
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		if (${testLiferayVirtualInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "LPS-185681 - Verify Object definitions can be moved to the current folder when the user is in the model buider view"
+	@priority = 5
+	test CanMoveObjectDefinitionToCurrentFolder {
+		property custom.properties = "feature.flag.LPS-148856=true";
+
+		task ("Given two object folders titled Folder A and Folder B") {
+			JSONObjectFolder.addFolder(
+				folderLabel = "Folder A",
+				folderName = "FolderA");
+
+			JSONObjectFolder.addFolder(
+				folderLabel = "Folder B",
+				folderName = "FolderB");
+		}
+
+		task ("and Given an object definition in Folder A") {
+			ObjectAdmin.addObjectViaAPI(
+				folderName = "FolderA",
+				labelName = "Custom Object 185681",
+				objectName = "CustomObject185681",
+				pluralLabelName = "Custom Objects 185681");
+		}
+
+		task ("When the user navigates to Folder B and moves the object definition to the current folder") {
+			ObjectAdmin.openObjectAdmin();
+
+			Click.javaScriptClick(
+				folderLabel = "Folder A",
+				locator1 = "ObjectAdmin#SIDEBAR_ITEM");
+
+			ObjectModelBuilder.openObjectFolderInModelBuilder(objectFolderName = "FolderA");
+
+			Click(
+				key_folderName = "Folder B",
+				locator1 = "ObjectAdmin#GO_TO_FOLDER");
+
+			Click(
+				locator1 = "Treeview#NODE_COLLAPSED",
+				value1 = "Folder A");
+
+			ObjectAdmin.moveDefinitionFolder(
+				definitionName = "Custom Object 185681",
+				folderLabel = "Folder B");
+		}
+
+		task ("Then the object definition is moved from Folder A to the current folder, Folder B") {
+			Click.javaScriptClick(
+				folderLabel = "Folder B",
+				locator1 = "ObjectAdmin#SIDEBAR_ITEM");
+
+			AssertElementPresent(
+				key_label = "Custom Object 185681",
+				locator1 = "ObjectPortlet#SELECT_CUSTOM_OBJECT");
+		}
+	}
+
+	@description = "LPS-185675 Verify that when deleting a object folder with object definitions inside, the object definitions will be moved to the uncategorized folder"
+	@priority = 4
+	test ObjectDefinitionsAreMovedAfterFolderDeletion {
+		property custom.properties = "feature.flag.LPS-148856=true";
+
+		task ("Given an object folder with object definitions inside") {
+			JSONObjectFolder.addFolder(
+				folderLabel = "Custom Folder 194540",
+				folderName = "CustomFolder194540");
+
+			ObjectAdmin.openObjectAdmin();
+
+			Click.javaScriptClick(
+				folderLabel = "Custom Folder 194540",
+				locator1 = "ObjectAdmin#SIDEBAR_ITEM");
+
+			ObjectAdmin.addNewObject(
+				fieldLabelName = "Custom Object 194540",
+				fieldName = "CustomObject194540",
+				pluralLabelName = "Custom Objects 194540");
+
+			CreateObject.saveObject();
+		}
+
+		task ("When the user deletes the object folder") {
+			JSONObjectFolder.deleteObjectFolder(folderName = "CustomFolder194540");
+		}
+
+		task ("Then the object definitions are moved to the uncategorized folder") {
+			ObjectAdmin.openObjectAdmin();
+
+			Click.javaScriptClick(
+				folderLabel = "Uncategorized",
+				locator1 = "ObjectAdmin#SIDEBAR_ITEM");
+
+			AssertVisible(
+				key_itemName = "Custom Object 194540",
+				locator1 = "DataSet#TABLE_CELL");
+		}
+	}
+
+}

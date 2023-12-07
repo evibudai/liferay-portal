@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.web.internal.object.entries.portlet.action;
 
-import com.liferay.object.web.internal.object.entries.upload.AttachmentUploadFileEntryHandler;
-import com.liferay.object.web.internal.object.entries.upload.AttachmentUploadResponseHandler;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.upload.UploadFileEntryHandler;
 import com.liferay.upload.UploadHandler;
+import com.liferay.upload.UploadResponseHandler;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -28,12 +19,12 @@ import javax.portlet.ActionResponse;
 public class UploadAttachmentMVCActionCommand extends BaseMVCActionCommand {
 
 	public UploadAttachmentMVCActionCommand(
-		AttachmentUploadFileEntryHandler attachmentUploadFileEntryHandler,
-		AttachmentUploadResponseHandler attachmentUploadResponseHandler,
+		UploadFileEntryHandler uploadFileEntryHandler,
+		UploadResponseHandler uploadResponseHandler,
 		UploadHandler uploadHandler) {
 
-		_attachmentUploadFileEntryHandler = attachmentUploadFileEntryHandler;
-		_attachmentUploadResponseHandler = attachmentUploadResponseHandler;
+		_uploadFileEntryHandler = uploadFileEntryHandler;
+		_uploadResponseHandler = uploadResponseHandler;
 		_uploadHandler = uploadHandler;
 	}
 
@@ -43,16 +34,14 @@ public class UploadAttachmentMVCActionCommand extends BaseMVCActionCommand {
 		throws Exception {
 
 		_uploadHandler.upload(
-			_attachmentUploadFileEntryHandler, _attachmentUploadResponseHandler,
-			actionRequest, actionResponse);
+			_uploadFileEntryHandler, _uploadResponseHandler, actionRequest,
+			actionResponse);
 
 		hideDefaultSuccessMessage(actionRequest);
 	}
 
-	private final AttachmentUploadFileEntryHandler
-		_attachmentUploadFileEntryHandler;
-	private final AttachmentUploadResponseHandler
-		_attachmentUploadResponseHandler;
+	private final UploadFileEntryHandler _uploadFileEntryHandler;
 	private final UploadHandler _uploadHandler;
+	private final UploadResponseHandler _uploadResponseHandler;
 
 }

@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Web Content Administration";
@@ -14,23 +15,12 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	@description = "This is a test for LPS-81244. The web content can be assigned to the default display page."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentAssignedToDefaultDisplayPage {
 		task ("Add a display page template for Web Content Article and Basic Web Content") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
@@ -90,7 +80,7 @@ definition {
 	}
 
 	@description = "The user can add the web content with an expiration date."
-	@priority = "3"
+	@priority = 3
 	@uitest
 	test AddWebContentExpirationDate {
 		task ("Add a web content with an experation date") {
@@ -118,69 +108,131 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-125458. The web content created via Headless should be assigned to the default display page."
-	@priority = "4"
-	test AddWebContentViaHeadlessAssignedToDefaultDisplayPage {
-		task ("Add a web content folder") {
-			JSONWebcontent.addFolder(
-				folderName = "WC Folder Name",
-				groupName = "Test Site Name");
-		}
-
-		task ("Add a display page template for Web Content Article and Basic Web Content") {
-			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
-				contentType = "Web Content Article",
-				displayPageTemplateEntryName = "Display Page Name",
+	@description = "This is a use case for LPS-195345. Verify that the order of the categories remains as previously selected after publishing a web content."
+	@priority = 4
+	test AddWebContentWithCategoryHiearchy {
+		task ("Given the user has a category hiearchy") {
+			JSONCategory.addVocabulary(
 				groupName = "Test Site Name",
-				subType = "Basic Web Content");
+				title = "Vocabulary Name");
+
+			JSONCategory.addCategory(
+				groupName = "Test Site Name",
+				title = "Category Name 1",
+				vocabularyName = "Vocabulary Name");
+
+			var parentCategoryNumber = 1;
+
+			for (var subCategoryNumber : list "2,3,4,5,6") {
+				JSONCategory.addSubcategory(
+					groupName = "Test Site Name",
+					parentCategoryName = "Category Name ${parentCategoryNumber}",
+					title = "Category Name ${subCategoryNumber}",
+					vocabularyName = "Vocabulary Name");
+
+				var parentCategoryNumber = ${parentCategoryNumber} + 1;
+			}
 		}
 
-		task ("Add a Display Page Content fragment to display page template") {
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Display Page Content");
-
-			PageEditor.publish();
-		}
-
-		task ("Mark the display page as default") {
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
-		}
-
-		task ("Add a web content based on Basic Web Content via Headless") {
-			HeadlessWebcontent.addBasicWebContent(
+		task ("When the user adds a web content with the category hiearchy") {
+			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
-				folderName = "WC Folder Name",
 				groupName = "Test Site Name",
 				title = "Web Content Title");
-		}
 
-		task ("View the web content assigned to the default display page") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
-			WebContentFolder.gotoCP(
-				folderName = "WC Folder Name",
-				webContentTitle = "WC Folder Name");
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
-			WebContentNavigator.gotoEntryMenuItem(
-				entry = "Web Content Title",
-				menuItem = "View Content");
+			WebContent.addWithMultipleCategories(
+				categoryNameList = "Category Name 1,Category Name 2,Category Name 3,Category Name 4,Category Name 5,Category Name 6",
+				vocabularyName = "Vocabulary Name",
+				webContentContent = "Web Content Content",
+				webContentTitle = "Web Content Title");
+		}
 
-			ControlMenu.viewHeaderTitle(headerTitle = "Web Content Title");
+		task ("Then the added categories should keep the same order with hiearchy") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+			WebContent.viewCategorizationCategoriesOrderCP(
+				categoryNameList = "Category Name 1,Category Name 2,Category Name 3,Category Name 4,Category Name 5,Category Name 6",
+				vocabularyName = "Vocabulary Name");
+		}
+	}
+
+	@description = "This is a test for LPS-192836. Assert can select feature image from Document and Media in web content creation."
+	@priority = 5
+	test AddWebContentWithFeaturedImageFromDocumentsAndMedia {
+		property portal.acceptance = "true";
+
+		task ("Given a user accesses to the web content editor") {
+			HeadlessSite.addSite(
+				siteName = "Site Name",
+				templateName = "Welcome",
+				templateType = "Site Initializer");
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addCP(webContentTitle = "Web Content Title");
+		}
+
+		task ("When the user selects the From Documents and Media as Featured Image") {
+			Panel.expandPanel(panel = "Featured Image");
+
+			Select(
+				locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_TYPE",
+				value1 = "From Documents and Media");
+		}
+
+		task ("Then the user cannot publish the web content without select an existing small image") {
+			Button.clickPublish();
+
+			Alert.viewErrorMessage(errorMessage = "Please select an existing small image.");
+		}
+
+		task ("When the user selects an image from Documents and Media") {
+			WebContent.addFeaturedImageFromDocumentsAndMedia(
+				dmFolderName = "Provided by Liferay",
+				imageFileName = "earth.png");
+		}
+
+		task ("Then the user could publish the web content") {
+			PortletEntry.publish();
+
+			LexiconEntry.changeDisplayStyle(displayStyle = "cards");
+
+			LexiconCard.viewSpecificCardThumbnail(
+				card = "Web Content Title",
+				imageFileName = "earth.png");
+		}
+
+		task ("When the user edits the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
 			AssertTextEquals(
-				index = "1",
-				locator1 = "WCD#WEB_CONTENT_CONTENT",
-				value1 = "Web Content Content");
+				locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_INPUT",
+				value1 = "earth.png");
+		}
+
+		task ("Then the user could change the selected featured image") {
+			WebContent.addFeaturedImageFromDocumentsAndMedia(
+				dmFolderName = "Provided by Liferay",
+				imageFileName = "moon.png");
+
+			PortletEntry.publish();
+
+			LexiconEntry.changeDisplayStyle(displayStyle = "cards");
+
+			LexiconCard.viewSpecificCardThumbnail(
+				card = "Web Content Title",
+				imageFileName = "moon.png");
 		}
 	}
 
 	@description = "The user cannot republish an expired web content."
-	@priority = "4"
+	@priority = 4
 	test CannotRepublishExpiredWebContent {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -222,7 +274,7 @@ definition {
 	}
 
 	@description = "The user can compare the web content history in web content admin."
-	@priority = "4"
+	@priority = 4
 	test CompareWebContentVersionsHistory {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -259,7 +311,7 @@ definition {
 	}
 
 	@description = "Delete a web content in web content admin."
-	@priority = "5"
+	@priority = 5
 	test DeleteWebContent {
 		property portal.acceptance = "true";
 
@@ -282,7 +334,7 @@ definition {
 	}
 
 	@description = "The user can edit the global basic strucutre and template in web content admin."
-	@priority = "4"
+	@priority = 4
 	test EditBasicWebContentStructureAndTemplate {
 		task ("Edit basic strucutre in global site") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "global");
@@ -315,8 +367,8 @@ definition {
 
 			for (var structureFieldName : list "Date,Image") {
 				DataEngine.viewField(
-					fieldFieldLabel = "${structureFieldName}",
-					fieldName = "${structureFieldName}");
+					fieldFieldLabel = ${structureFieldName},
+					fieldName = ${structureFieldName});
 			}
 		}
 
@@ -334,7 +386,7 @@ definition {
 	}
 
 	@description = "The user can edit a web content."
-	@priority = "5"
+	@priority = 5
 	test EditWebContent {
 		property portal.acceptance = "true";
 		property testray.component.names = "Web Content Administration,WYSIWYG";
@@ -367,7 +419,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-141842. View Error message when editing web contents concurrently."
-	@priority = "4"
+	@priority = 4
 	test EditWebContentConcurrently {
 		property portal.acceptance = "true";
 
@@ -387,7 +439,7 @@ definition {
 		task ("Open a second tab and select it") {
 			var baseURL = PropsUtil.get("portal.url");
 
-			Open.openInTheNewTab(locator1 = "${baseURL}/group/test-site-name/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet");
+			Open.openInTheNewTab(value1 = "${baseURL}/group/test-site-name/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet");
 		}
 
 		task ("Edit Web Content article in the second tab") {
@@ -400,7 +452,7 @@ definition {
 		}
 
 		task ("Select the first tab and edit Web Content Title") {
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			WebContent.addCP(webContentTitle = "WC WebContent Title Edit");
 		}
@@ -413,7 +465,7 @@ definition {
 	}
 
 	@description = "The user can edit a web content clicking in the article title in the serach result."
-	@priority = "5"
+	@priority = 5
 	test EditWebContentViaArticleTitle {
 		property portal.acceptance = "true";
 
@@ -450,7 +502,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-129096. The user can edit and save a web content after upload a featured image."
-	@priority = "4"
+	@priority = 4
 	test EditWebContentWithUploadedFeaturedImage {
 		task ("Add a web content with a featured image") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -485,7 +537,7 @@ definition {
 	}
 
 	@description = "The user can edit an expired web content."
-	@priority = "3"
+	@priority = 3
 	test ExpireEditedWebContent {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -522,7 +574,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-80208. The user can expire the latest web content version and view the previous."
-	@priority = "4"
+	@priority = 4
 	test ExpireLastestVersion {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -589,7 +641,7 @@ definition {
 	}
 
 	@description = "The user can expire multiple web contents in web content admin."
-	@priority = "4"
+	@priority = 4
 	test ExpireMultipleWebContents {
 		task ("Add three web contents") {
 			for (var i : list "1,2,3") {
@@ -621,7 +673,7 @@ definition {
 	}
 
 	@description = "The user can expire a web content."
-	@priority = "4"
+	@priority = 4
 	test ExpireWebContent {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -646,8 +698,178 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-182417. Can map date-time field to editable field and customize date-time format on content page"
+	@priority = 3
+	test MapDateAndTimeFieldOnContentPage {
+		task ("Given a web content with a date and time field") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Date and Time",
+				fieldName = "Date and Time");
+
+			WebContentStructures.saveCP();
+
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(
+				webContentDate = "08/06/2021 10:00 AM",
+				webContentDateFieldLabel = "Date and Time",
+				webContentTitle = "Web Content Title");
+
+			PageEditor.publish();
+		}
+
+		task ("When we have a content page with a date fragment") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Content Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Date");
+		}
+
+		task ("Then you can map the date and time field to an editable field and customize the date and time format") {
+			PageEditorMapping.gotoEditableFieldMapping(
+				className = "",
+				fragmentName = "Date",
+				id = "element-date");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Web Content Title",
+				navItem = "Web Content");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Date and Time");
+
+			Select(
+				key_fieldLabel = "Date Format",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Custom");
+
+			Type(
+				key_fieldLabel = "Custom Format",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "dd-MM-YYYY HH:mm a");
+
+			PageEditor.clickManagementBar();
+
+			PageEditor.waitForAutoSave();
+
+			PageEditor.publish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "",
+				id = "element-date",
+				text = "06-08-2021 10:00 AM");
+		}
+	}
+
+	@description = "This is a test for LPS-182417. Can map date-time field to editable field and configure date-time format on display page"
+	@priority = 3
+	test MapDateAndTimeFieldOnDisplayPage {
+		task ("Given a web content with a date and time field") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Date and Time",
+				fieldName = "Date and Time");
+
+			WebContentStructures.saveCP();
+
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(
+				webContentDate = "08/06/2021 10:00 AM",
+				webContentDateFieldLabel = "Date and Time",
+				webContentTitle = "Web Content Title");
+
+			PortletEntry.publish();
+		}
+
+		task ("When we have a display page with a date fragment") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Web Content Article",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = "Test Site Name",
+				subType = "WC Structure Name");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Date");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Date");
+		}
+
+		task ("Then you can map the date and time field to an editable field and customize the date and time format") {
+			PageEditorMapping.gotoEditableFieldMapping(
+				className = "",
+				fragmentName = "Date",
+				id = "element-date");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Date and Time");
+
+			Select(
+				key_fieldLabel = "Date Format",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Custom");
+
+			Type(
+				key_fieldLabel = "Custom Format",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "dd-MM-YYYY HH:mm a");
+
+			PageEditor.clickManagementBar();
+
+			PageEditor.waitForAutoSave();
+
+			PageEditor.publish();
+
+			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+			WebContent.previewDisplayPageTemplate(webContentContent = "06-08-2021 10:00 AM");
+		}
+	}
+
 	@description = "Can move multiple web contents via icon to a new folder."
-	@priority = "4"
+	@priority = 4
 	test MoveMultipleWebContentsToFolder {
 		task ("Add a folder") {
 			JSONWebcontent.addFolder(
@@ -678,13 +900,13 @@ definition {
 				webContentTitle = "WC Folder Name");
 
 			for (var webContentTitle : list "Web Content Title 1,Web Content Title 2,Web Content Title 3") {
-				WebContent.viewTitle(webContentTitle = "${webContentTitle}");
+				WebContent.viewTitle(webContentTitle = ${webContentTitle});
 			}
 		}
 	}
 
 	@description = "Can move a single web content to a new folder via menu item."
-	@priority = "5"
+	@priority = 5
 	test MoveWebContentToFolder {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
@@ -722,7 +944,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162071. Verify that updating web content not will add unnecessary UUID value to web content references."
-	@priority = "3"
+	@priority = 3
 	test NotShownUUIDInWebContentReferencesWhenEditingWebContent {
 		task ("Given: Add new web content and a new WC structure with a web content field") {
 			JSONWebcontent.addWebContent(
@@ -814,7 +1036,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-86845. A user can preview a draft or pending status Web Content article through the 'View Usages' screen."
-	@priority = "5"
+	@priority = 5
 	test PreviewDraftWebContentInWCD {
 		property portal.acceptance = "true";
 
@@ -867,7 +1089,7 @@ definition {
 		}
 
 		task ("Assert the user is taken to the Web Content Display Page and the draft version of the Web Content article displays in the Web Content Display widget") {
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			WebContentDisplayPortlet.viewContent(
 				webContentContent = "Web Content Content Edit",
@@ -876,7 +1098,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-86845. A user can preview a draft or pending status Web Content article through the 'View Usages' screen."
-	@priority = "5"
+	@priority = 5
 	test PreviewPendingWebContentInWCD {
 		property portal.acceptance = "true";
 
@@ -921,7 +1143,7 @@ definition {
 				webContentContent = "Web Content Content Edit",
 				webContentTitle = "Web Content Title Edit");
 
-			Button.clickSubmitForPublication();
+			Button.clickSubmitForWorkflow();
 
 			Alert.viewSuccessMessage();
 		}
@@ -939,7 +1161,7 @@ definition {
 		}
 
 		task ("Assert the user is taken to the Web Content Display Page and the pending version of the Web Content article displays in the Web Content Display widget") {
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			WebContentDisplayPortlet.viewContent(
 				webContentContent = "Web Content Content Edit",
@@ -948,7 +1170,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-90066 and LPS-127728. A user can preview a scheduled web content via View Usage. The warning message should have link in Web Content Display."
-	@priority = "5"
+	@priority = 5
 	test PreviewScheduledWebContentInWCD {
 		property portal.acceptance = "true";
 
@@ -1014,7 +1236,7 @@ definition {
 		}
 
 		task ("Assert the user is taken to the Web Content Display Page and the scheduled Web Content article displays in the Web Content Display widget") {
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			WebContentDisplayPortlet.viewContent(
 				webContentContent = "Web Content Content",
@@ -1023,7 +1245,7 @@ definition {
 	}
 
 	@description = "The user can publish a draft web content in web content admin."
-	@priority = "4"
+	@priority = 4
 	test PublishDraftWebContent {
 		task ("Add a draft web content") {
 			JSONWebcontent.addWebContent(
@@ -1060,7 +1282,7 @@ definition {
 	}
 
 	@description = "The user can search for a specific web content in web content admin."
-	@priority = "5"
+	@priority = 5
 	test SearchWebContent {
 		property portal.acceptance = "true";
 
@@ -1100,13 +1322,13 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-98669. The user could select the 12th page in Link to Page field."
-	@priority = "4"
+	@priority = 4
 	test SelectThe12thPageInLinkToPage {
 		task ("Add 12 pages") {
 			for (var pageName : list "P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12") {
 				JSONLayout.addPublicLayout(
 					groupName = "Test Site Name",
-					layoutName = "${pageName}");
+					layoutName = ${pageName});
 			}
 		}
 
@@ -1153,7 +1375,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-141766. The user could view associated display page from copy of web content."
-	@priority = "4"
+	@priority = 4
 	test ViewAssociatedDisplayPageFromCopyOfWebContent {
 		task ("Add two Public Pages and Add an Asset Publisher to each page") {
 			for (var i : list "1,2") {
@@ -1195,7 +1417,7 @@ definition {
 		task ("Copy the Web Content") {
 			WebContentNavigator.gotoEntryMenuItem(
 				entry = "WC WebContent 1",
-				menuItem = "Copy");
+				menuItem = "Make a Copy");
 		}
 
 		task ("Add the second web content and select the display page template in web content") {
@@ -1217,16 +1439,18 @@ definition {
 				pageName = "Test Page Name 1",
 				siteName = "Test Site Name");
 
-			AssetPublisherPortlet.clickAssetTitle(assetTitle = "WC WebContent 1 Duplicate 2");
+			AssetPublisherPortlet.clickAssetTitle(assetTitle = "WC WebContent 1 (Copy)");
 
-			AssertLocation.assertPartialLocation(value1 = "web/test-site-name/-/wc-webcontent-1-duplicate-2");
+			AssertLocation.assertPartialLocation(value1 = "web/test-site-name/-/wc-webcontent-1-copy");
 		}
 	}
 
 	@description = "This is a use case for LPS-80445. View the categorization settings after delete the category of web content."
-	@priority = "5"
+	@priority = 5
 	test ViewCategorizationSettingsAfterDeleteCategoryOfWebContent {
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a vocabulary") {
 			JSONCategory.addVocabulary(
@@ -1243,7 +1467,7 @@ definition {
 
 		task ("Add a web content with the category") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${categoryId}",
+				assetCategoryIds = ${categoryId},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "Web Content Title");
@@ -1269,7 +1493,7 @@ definition {
 	}
 
 	@description = "The content cannot be lost after try to publish a web content without title."
-	@priority = "4"
+	@priority = 4
 	test ViewContentNotLostWithBlankTitle {
 		task ("View cannot add a web content without title") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -1295,7 +1519,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-138504. Assert display page is still selected after adding a web content without adding required category."
-	@priority = "4"
+	@priority = 4
 	test ViewDisplayPageAfterAddingWebContentWithoutAddingRequiredCategory {
 		property testray.component.names = "Asset Publisher";
 
@@ -1365,7 +1589,7 @@ definition {
 	}
 
 	@description = "View web content title with cards, list and table display styles in web content admin."
-	@priority = "3"
+	@priority = 3
 	test ViewDisplayStyles {
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -1382,7 +1606,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-134566. View doAsUserId parameter not shown in URL field after add page link to text."
-	@priority = "4"
+	@priority = 4
 	test ViewDoAsUserIdNotShownInURLFieldAfterAddPageLinkToText {
 		task ("Add new user") {
 			JSONUser.addUser(
@@ -1411,10 +1635,7 @@ definition {
 		}
 
 		task ("Impersonate the user") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			User.impersonateCP(userName = "userfn1");
 		}
@@ -1439,7 +1660,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-145292. The user could view new icons on dropdown menu of web content admin."
-	@priority = "4"
+	@priority = 4
 	test ViewDropdownMenuIconsInWebContentAdmin {
 		task ("Given a Web Content creator has a new web content") {
 			JSONWebcontent.addWebContent(
@@ -1546,7 +1767,7 @@ definition {
 	}
 
 	@description = "The user can add multiple categories wihtin web content."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test ViewMultipleCategoriesInWebContentEditor {
 		property testray.component.names = "Categories,Web Content Administration";
@@ -1584,7 +1805,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-103344. View the same name categorization of web content."
-	@priority = "4"
+	@priority = 4
 	test ViewMultipleCategoriesWithSameNameInWebContentEditor {
 		task ("Add two categories") {
 			JSONCategory.addVocabulary(
@@ -1630,7 +1851,7 @@ definition {
 	}
 
 	@description = "View available vocabularies within a web content."
-	@priority = "4"
+	@priority = 4
 	test ViewMultipleVocabulariesInWebContentEditor {
 		property testray.component.names = "Categories,Web Content Administration";
 
@@ -1659,7 +1880,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-140253. View no private page in web content."
-	@priority = "4"
+	@priority = 4
 	test ViewNoPrivatePageInWebContent {
 		task ("Add a content page and add Asset Publisher in it") {
 			JSONLayout.addPublicLayout(
@@ -1699,9 +1920,9 @@ definition {
 		task ("Assert no public pages displayed in ckeditor link > Broswer Server") {
 			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME_2");
 
-			Click(locator1 = "CKEditor#BODY");
-
-			RobotType.robotTypeShortcut(locator1 = "Ctrl + k");
+			Type.sendKeys(
+				locator1 = "CKEditor#BODY",
+				value1 = "keys=CONTROL,k");
 
 			SelectFrameTop();
 
@@ -1735,8 +1956,553 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-172129. reserved-article-id is missing from templates."
+	@priority = 4
+	test ViewReservedVariablesDisplayOnWebContent {
+		task ("Given add a web content structure and a template with reserved-article-id") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "HTML",
+				fieldName = "Rich Text");
+
+			WebContentStructures.saveCP();
+
+			NavItem.gotoTemplates();
+
+			WebContentTemplates.addCP(
+				structureName = "WC Structure Name",
+				templateFile = "freemarker template.ftl",
+				templateName = "WC Template Name");
+		}
+
+		task ("When create a web content using the new structure and template") {
+			NavItem.gotoWebContent();
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(
+				webContentRichText = "This is a Rich Text field",
+				webContentRichTextFieldLabel = "HTML",
+				webContentTitle = "Web Content Title");
+
+			PageEditor.publish();
+		}
+
+		task ("Then the reserved-article-id should be available on web content") {
+			task ("Add a page with a Web Content Display widget and display the Web Content article in the Web Content Display widget") {
+				JSONLayout.addPublicLayout(
+					groupName = "Test Site Name",
+					layoutName = "Web Content Display Page");
+
+				Navigator.gotoSitePage(
+					pageName = "Web Content Display Page",
+					siteName = "Test Site Name");
+
+				WidgetPages.addRecentContentWithoutSearch(assetTitle = "Web Content Title");
+			}
+
+			task ("View reserved-article-id is available on web content") {
+				for (var reservedVariables : list "reserved-article-asset-tag-names,reserved-article-author-comments,reserved-article-author-email-address,reserved-article-author-id,reserved-article-author-job-title,reserved-article-author-name,reserved-article-create-date,reserved-article-description,reserved-article-display-date,reserved-article-id, reserved-article-modified-date,reserved-article-small-image-url,reserved-article-title,reserved-article-url-title, reserved-article-version") {
+					AssertElementPresent(locator1 = "//li[contains(.,'${reservedVariables}')]//*[name()='svg'][contains(@class,'check')]");
+				}
+			}
+		}
+	}
+
+	@description = "This is a test for LPS-172561. View warning of duplicated friendly URL in web content from a site."
+	@priority = 4
+	test ViewWarningOfDuplicatedFriendlyURLInWebContentFromASite {
+		task ("Given some web contents with duplicated friendly URLs") {
+			task ("Add a web content with five friendly URLs") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name",
+					title = "Web Content Title");
+
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
+
+				PortletEntry.changeLocale(locale = "zh-CN");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
+
+				PortletEntry.changeLocale(locale = "ja-JP");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
+
+				PortletEntry.changeLocale(locale = "de-DE");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
+
+				PortletEntry.changeLocale(locale = "es-ES");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
+
+				PortletEntry.publish();
+			}
+
+			task ("Add another site") {
+				HeadlessSite.addSite(siteName = "Test Site Name 2");
+			}
+
+			task ("Add a web content with one friendly URL") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content 2",
+					groupName = "Test Site Name 2",
+					title = "Web Content Title 2");
+
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-2");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
+			}
+		}
+
+		task ("When publish the web content with one duplicated friendly URL") {
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States) already exists in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content ") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in English (United States) already exists in other sites or asset libraries.");
+		}
+
+		task ("When publish the web content with three duplicated friendly URLs") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-2");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+
+			PortletEntry.changeLocale(locale = "zh-CN");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
+
+			PortletEntry.changeLocale(locale = "ja-JP");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
+
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States), Chinese (China) and Japanese (Japan) already exists in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in English (United States), Chinese (China) and Japanese (Japan) already exists in other sites or asset libraries.");
+		}
+
+		task ("When publish the web content with four duplicated friendly URLs") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-2");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+
+			PortletEntry.changeLocale(locale = "de-DE");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
+
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States), Chinese (China), Japanese (Japan) and 1 more translations already exist in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in English (United States), Chinese (China), Japanese (Japan) and 1 more translations already exist in other sites or asset libraries.");
+		}
+
+		task ("When publish the web content with five duplicated friendly URLs") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-2");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+
+			PortletEntry.changeLocale(locale = "es-ES");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
+
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States), Chinese (China), Spanish (Spain) and 2 more translations already exist in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in English (United States), Chinese (China), Spanish (Spain) and 2 more translations already exist in other sites or asset libraries.");
+		}
+	}
+
+	@description = "This is a test for LPS-172561. View warning of duplicated friendly URL in web content from sites."
+	@priority = 4
+	test ViewWarningOfDuplicatedFriendlyURLInWebContentFromSites {
+		task ("Given web content has duplicated friendly URLs in sites") {
+			task ("Add a web content with one friendly URL") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name",
+					title = "Web Content Title");
+
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
+
+				PortletEntry.publish();
+			}
+
+			task ("Add another site") {
+				HeadlessSite.addSite(siteName = "Test Site Name 2");
+			}
+
+			task ("Add a web content with three friendly URLs") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content 2",
+					groupName = "Test Site Name 2",
+					title = "Web Content Title 2");
+
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-2");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc2");
+
+				PortletEntry.changeLocale(locale = "zh-CN");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
+
+				PortletEntry.changeLocale(locale = "ja-JP");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
+
+				Button.clickPublish();
+			}
+
+			task ("Add a third site") {
+				HeadlessSite.addSite(siteName = "Test Site Name 3");
+			}
+
+			task ("Add a web content with four friendly URLs") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content 3",
+					groupName = "Test Site Name 3",
+					title = "Web Content Title 3");
+
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-3");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 3");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc3");
+
+				PortletEntry.changeLocale(locale = "de-DE");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
+
+				PortletEntry.changeLocale(locale = "fr-FR");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-fr");
+
+				PortletEntry.changeLocale(locale = "es-ES");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
+
+				Button.clickPublish();
+			}
+
+			task ("Add a forth site") {
+				HeadlessSite.addSite(siteName = "Test Site Name 4");
+			}
+
+			task ("Add a web content with four friendly URLs") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name 4",
+					title = "Web Content Title");
+
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-4");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
+
+				PortletEntry.changeLocale(locale = "zh-CN");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
+
+				PortletEntry.changeLocale(locale = "de-DE");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
+			}
+		}
+
+		task ("When publish the web content with three duplicated friendly URLs") {
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States), Chinese (China) and German (Germany) already exists in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in English (United States), Chinese (China) and German (Germany) already exists in other sites or asset libraries.");
+		}
+
+		task ("When add three duplicated friendly URLs and remove a duplicated friendly URL") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-4");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+			PortletEntry.changeLocale(locale = "ja-JP");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
+
+			PortletEntry.changeLocale(locale = "zh-CN");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "");
+
+			PortletEntry.changeLocale(locale = "fr-FR");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-fr");
+
+			PortletEntry.changeLocale(locale = "es-ES");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
+
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States), Spanish (Spain), Japanese (Japan) and 2 more translations already exist in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in English (United States), Spanish (Spain), Japanese (Japan) and 2 more translations already exist in other sites or asset libraries.");
+		}
+	}
+
+	@description = "This is a test for LPS-172561. View warning of duplicated friendly URL in web content from sites and asset libraries."
+	@priority = 3
+	test ViewWarningOfDuplicatedFriendlyURLInWebContentFromSitesAndAssetLibraries {
+		task ("Given some web contents with one duplicated friendly URL") {
+			task ("Add a web content with 3 friendly URLs") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name",
+					title = "Web Content Title");
+
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc");
+
+				PortletEntry.changeLocale(locale = "zh-CN");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
+
+				PortletEntry.changeLocale(locale = "ja-JP");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
+
+				PortletEntry.publish();
+			}
+
+			task ("Add a web content with 3 friendly URLs in asset library") {
+				JSONDepot.addDepot(depotName = "Test Depot Name");
+
+				DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+
+				WebContentNavigator.gotoAddCP();
+
+				WebContent.addCP(webContentTitle = "Web Content Title 2");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc2");
+
+				PortletEntry.changeLocale(locale = "de-DE");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
+
+				PortletEntry.changeLocale(locale = "es-ES");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc-es");
+
+				Button.clickPublish();
+			}
+
+			task ("Add a second site and connect it to asset library") {
+				HeadlessSite.addSite(siteName = "Test Site Name 2");
+
+				JSONDepot.connectSite(
+					depotName = "Test Depot Name",
+					groupName = "Test Site Name 2");
+			}
+
+			task ("Go to edit the created web content in the first site") {
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+				WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+				WebContent.editFriendlyURL(webContentFriendlyURL = "wc2");
+			}
+		}
+
+		task ("When publish the web content with one duplicated friendly URL") {
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States) already exists in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in English (United States) already exists in other sites or asset libraries.");
+		}
+
+		task ("When add 2 more duplicated friendly URLs to the web content in asset library and publish") {
+			DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 2");
+
+			PortletEntry.changeLocale(locale = "zh-CN");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
+
+			PortletEntry.changeLocale(locale = "ja-JP");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
+
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in English (United States), Chinese (China) and Japanese (Japan) already exists in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content ") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The content has been published but might cause errors. The URL used in English (United States), Chinese (China) and Japanese (Japan) already exists in other sites or asset libraries.");
+		}
+
+		task ("When add three duplicated friendly URLs to the web content created in a new asset library and publish") {
+			JSONDepot.addDepot(depotName = "Test Depot Name 2");
+
+			DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name 2");
+
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addCP(webContentTitle = "Web Content Title 3");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc3");
+
+			PortletEntry.changeLocale(locale = "zh-CN");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-zh");
+
+			PortletEntry.changeLocale(locale = "ja-JP");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-ja");
+
+			PortletEntry.changeLocale(locale = "de-DE");
+
+			WebContent.editFriendlyURL(webContentFriendlyURL = "wc-de");
+
+			Button.clickPublish();
+		}
+
+		task ("Then there's warning message in pop up") {
+			Alert.viewWarningSpecific(warningMessage = "Warning:The content has been published but might cause errors. The URL used in Chinese (China), Japanese (Japan) and German (Germany) already exists in other sites or asset libraries.");
+
+			Alert.closeMessage(messageType = "WARNING");
+		}
+
+		task ("When go to view the web content") {
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title 3");
+		}
+
+		task ("Then there's warning message inside Friendly URL section") {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "Warning:The URL used in Chinese (China), Japanese (Japan) and German (Germany) already exists in other sites or asset libraries.");
+		}
+	}
+
 	@description = "This is a test for LPS-88500. At any given time, a user can view all the places a web content article is displayed through a Web Content Display widget or an Asset Publisher widget with manual selection."
-	@priority = "5"
+	@priority = 5
 	test ViewWebContentArticleUsages {
 		property portal.acceptance = "true";
 
@@ -1752,16 +2518,11 @@ definition {
 				groupName = "Test Site Name",
 				layoutName = "Web Content Display Page");
 
-			JSONLayout.addWidgetToPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Web Content Display Page",
-				widgetName = "Web Content Display");
-
 			Navigator.gotoSitePage(
 				pageName = "Web Content Display Page",
 				siteName = "Test Site Name");
 
-			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
+			WidgetPages.addRecentContentWithoutSearch(assetTitle = "WC WebContent Title");
 		}
 
 		task ("Add a page with an Asset Publisher widget and display the Web Content article in the Asset Publisher Widget") {
@@ -1791,20 +2552,13 @@ definition {
 			JSONLayout.addWidgetToPublicLayout(
 				groupName = "Test Site Name",
 				layoutName = "Web Content Display and Asset Publisher Page",
-				widgetName = "Web Content Display");
-
-			JSONLayout.addWidgetToPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Web Content Display and Asset Publisher Page",
 				widgetName = "Asset Publisher");
 
 			Navigator.gotoSitePage(
 				pageName = "Web Content Display and Asset Publisher Page",
 				siteName = "Test Site Name");
 
-			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
-
-			IFrame.closeFrame();
+			WidgetPages.addRecentContentWithoutSearch(assetTitle = "WC WebContent Title");
 
 			AssetPublisherPortlet.configureManualAssetSelectionPG(
 				assetTitle = "WC WebContent Title",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -17,7 +8,6 @@ import ClayCard from '@clayui/card';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayProgressBar from '@clayui/progress-bar';
-import axios from 'axios';
 import {
 	PagesVisitor,
 	convertToFormData,
@@ -61,26 +51,27 @@ const getValue = (value) => {
 	return JSON.stringify(value);
 };
 
-function transformFileEntryProperties({fileEntryTitle, fileEntryURL, value}) {
+function transformFileEntryProperties({fileEntryTitle, value}) {
 	if (value && typeof value === 'string') {
 		try {
 			const fileEntry = JSON.parse(value);
 
 			fileEntryTitle = fileEntry.title;
-
-			if (fileEntry.url) {
-				fileEntryURL = fileEntry.url;
-			}
 		}
 		catch (error) {
 			console.warn('Unable to parse JSON', value);
 		}
 	}
 
-	return value ? [fileEntryTitle, fileEntryURL] : [];
+	return value && fileEntryTitle !== ''
+		? [fileEntryTitle]
+		: fileEntryTitle === ''
+		? [value.title]
+		: [];
 }
 
 const DocumentLibrary = ({
+	accessibleProps,
 	editingLanguageId,
 	fileEntryTitle = '',
 	fileEntryURL = '',
@@ -93,27 +84,27 @@ const DocumentLibrary = ({
 	readOnly,
 	value,
 }) => {
-	const [transformedFileEntryTitle, transformedFileEntryURL] = useMemo(
+	const [transformedFileEntryTitle] = useMemo(
 		() =>
 			transformFileEntryProperties({
 				fileEntryTitle,
-				fileEntryURL,
 				value,
 			}),
-		[fileEntryTitle, fileEntryURL, value]
+		[fileEntryTitle, value]
 	);
 
 	return (
 		<div className="liferay-ddm-form-field-document-library">
-			{transformedFileEntryURL && readOnly ? (
+			{transformedFileEntryTitle && readOnly ? (
 				<CardItem
 					fileEntryTitle={transformedFileEntryTitle}
-					fileEntryURL={transformedFileEntryURL}
+					fileEntryURL={fileEntryURL}
 				/>
 			) : (
 				<ClayInput.Group>
 					<ClayInput.GroupItem prepend>
 						<ClayInput
+							{...accessibleProps}
 							aria-label={Liferay.Language.get('file')}
 							className="bg-light field"
 							dir={Liferay.Language.direction[editingLanguageId]}
@@ -121,6 +112,8 @@ const DocumentLibrary = ({
 							id={`${name}inputFile`}
 							lang={editingLanguageId}
 							onClick={onSelectButtonClicked}
+							readonly="true"
+							tabindex="-1"
 							value={transformedFileEntryTitle || ''}
 						/>
 					</ClayInput.GroupItem>
@@ -130,6 +123,7 @@ const DocumentLibrary = ({
 							className="select-button"
 							disabled={readOnly}
 							displayType="secondary"
+							id={name}
 							onClick={onSelectButtonClicked}
 						>
 							<span className="lfr-btn-label">
@@ -170,7 +164,6 @@ const DocumentLibrary = ({
 
 const GuestUploadFile = ({
 	fileEntryTitle = '',
-	fileEntryURL = '',
 	id,
 	message,
 	name,
@@ -185,10 +178,9 @@ const GuestUploadFile = ({
 		() =>
 			transformFileEntryProperties({
 				fileEntryTitle,
-				fileEntryURL,
 				value,
 			}),
-		[fileEntryTitle, fileEntryURL, value]
+		[fileEntryTitle, value]
 	);
 
 	return (
@@ -198,6 +190,7 @@ const GuestUploadFile = ({
 					<ClayInput
 						className="bg-light"
 						disabled={readOnly}
+						id={name}
 						onClick={onUploadSelectButtonClicked}
 						type="text"
 						value={transformedFileEntryTitle || ''}
@@ -493,50 +486,53 @@ const Main = ({
 			return;
 		}
 
-		const data = {
-			[`${portletNamespace}file`]: file,
-		};
+		const request = new XMLHttpRequest();
 
-		axios
-			.post(guestUploadURL, convertToFormData(data), {
-				onUploadProgress: (event) => {
-					const progress = Math.round(
-						(event.loaded * 100) / event.total
-					);
+		request.upload.addEventListener('progress', (event) => {
+			disableSubmitButton();
 
-					setCurrentValue(null);
+			setCurrentValue(null);
 
-					setProgress(progress);
-
-					disableSubmitButton();
-				},
-			})
-			.then((response) => {
-				const {error, file} = response.data;
-
+			setProgress(Math.round((event.loaded * 100) / event.total));
+		});
+		request.addEventListener('readystatechange', (event) => {
+			if (request.readyState === 4) {
 				disableSubmitButton(false);
 
-				if (error) {
-					handleGuestUploadFileChanged(error.message, event, null);
+				let response;
+
+				try {
+					response = JSON.parse(request.responseText);
 				}
-				else {
+				catch (error) {
+					response = request.responseText;
+				}
+
+				if (response.success) {
 					handleGuestUploadFileChanged(
 						'',
 						event,
-						JSON.stringify(file)
+						JSON.stringify(response.file)
+					);
+				}
+				else {
+					handleGuestUploadFileChanged(
+						response.error.message,
+						event,
+						null
 					);
 				}
 
 				setProgress(0);
-			})
-			.catch(() => {
-				disableSubmitButton(false);
+			}
+		});
 
-				setProgress(0);
+		request.open('POST', guestUploadURL);
+		request.send(
+			convertToFormData({
+				[`${portletNamespace}file`]: file,
 			})
-			.finally(() => {
-				onBlur(event);
-			});
+		);
 	};
 
 	const hasCustomError =
@@ -560,7 +556,6 @@ const Main = ({
 			{allowGuestUsers && !isSignedIn ? (
 				<GuestUploadFile
 					fileEntryTitle={fileEntryTitle}
-					fileEntryURL={fileEntryURL}
 					id={id}
 					message={message}
 					name={name}
@@ -593,6 +588,9 @@ const Main = ({
 				/>
 			) : (
 				<DocumentLibrary
+					accessibleProps={{
+						'aria-required': otherProps.required,
+					}}
 					editingLanguageId={editingLanguageId}
 					fileEntryTitle={fileEntryTitle}
 					fileEntryURL={fileEntryURL}

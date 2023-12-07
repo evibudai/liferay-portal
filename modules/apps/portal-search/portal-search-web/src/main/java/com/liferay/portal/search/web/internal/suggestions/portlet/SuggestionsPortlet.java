@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.suggestions.portlet;
 
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.portlet.shared.task.helper.PortletSharedRequestHelper;
@@ -27,10 +17,6 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRe
 import com.liferay.portal.search.web.search.request.SearchSettings;
 
 import java.io.IOException;
-
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -77,7 +63,7 @@ public class SuggestionsPortlet extends MVCPortlet {
 
 		SuggestionsPortletPreferences suggestionsPortletPreferences =
 			new SuggestionsPortletPreferencesImpl(
-				Optional.ofNullable(renderRequest.getPreferences()));
+				renderRequest.getPreferences());
 
 		PortletSharedSearchResponse portletSharedSearchResponse =
 			portletSharedSearchRequest.search(renderRequest);
@@ -101,9 +87,6 @@ public class SuggestionsPortlet extends MVCPortlet {
 	}
 
 	@Reference
-	protected Html html;
-
-	@Reference
 	protected Portal portal;
 
 	@Reference
@@ -119,18 +102,24 @@ public class SuggestionsPortlet extends MVCPortlet {
 
 		SuggestionsPortletDisplayContextBuilder
 			suggestionsPortletDisplayContextBuilder =
-				new SuggestionsPortletDisplayContextBuilder(html);
+				new SuggestionsPortletDisplayContextBuilder();
 
-		_copy(
-			portletSharedSearchResponse::getKeywordsOptional,
-			suggestionsPortletDisplayContextBuilder::setKeywords);
+		String keywords = portletSharedSearchResponse.getKeywords();
+
+		if (keywords != null) {
+			suggestionsPortletDisplayContextBuilder.setKeywords(keywords);
+		}
 
 		SearchSettings searchSettings =
 			portletSharedSearchResponse.getSearchSettings();
 
-		_copy(
-			searchSettings::getKeywordsParameterName,
-			suggestionsPortletDisplayContextBuilder::setKeywordsParameterName);
+		String keywordsParameterName =
+			searchSettings.getKeywordsParameterName();
+
+		if (keywordsParameterName != null) {
+			suggestionsPortletDisplayContextBuilder.setKeywordsParameterName(
+				keywordsParameterName);
+		}
 
 		suggestionsPortletDisplayContextBuilder.setRelatedQueriesSuggestions(
 			portletSharedSearchResponse.getRelatedQueriesSuggestions());
@@ -141,20 +130,18 @@ public class SuggestionsPortlet extends MVCPortlet {
 		suggestionsPortletDisplayContextBuilder.setSearchURL(
 			portletSharedRequestHelper.getCompleteURL(renderRequest));
 
-		_copy(
-			portletSharedSearchResponse::getSpellCheckSuggestionOptional,
-			suggestionsPortletDisplayContextBuilder::setSpellCheckSuggestion);
+		String spellCheckSuggestion =
+			portletSharedSearchResponse.getSpellCheckSuggestion();
+
+		if (spellCheckSuggestion != null) {
+			suggestionsPortletDisplayContextBuilder.setSpellCheckSuggestion(
+				spellCheckSuggestion);
+		}
 
 		suggestionsPortletDisplayContextBuilder.setSpellCheckSuggestionEnabled(
 			suggestionsPortletPreferences.isSpellCheckSuggestionEnabled());
 
 		return suggestionsPortletDisplayContextBuilder.build();
-	}
-
-	private <T> void _copy(Supplier<Optional<T>> from, Consumer<T> to) {
-		Optional<T> optional = from.get();
-
-		optional.ifPresent(to);
 	}
 
 }

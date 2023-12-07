@@ -1,0 +1,233 @@
+@component-name = "portal-wcm"
+definition {
+
+	property ci.retries.disabled = "true";
+	property custom.properties = "feature.flag.LPS-169837=true";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Page Editor";
+
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
+			User.firstLoginPG();
+		}
+
+		task ("Add a site") {
+			HeadlessSite.addSite(siteName = "Test Site Name");
+		}
+	}
+
+	@description = "This is a test for LPS-196462. The New Rule Modal allows the user to create new rules."
+	@priority = 3
+	test AddPageRule {
+		task ("Given a page designer has a Button fragment on a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("When the page designer navigates to the Page Ruls panel") {
+			PageEditor.gotoTab(tabName = "Page Rules");
+		}
+
+		task ("Then the page designer could add a page rule") {
+			PageEditor.addPageRule(
+				ruleName = "Test Page Rule",
+				selectAction = "Hide",
+				selectActionValue = "Button",
+				selectCondition = "Is the User",
+				selectConditionValue = "test",
+				selectItemForTheAction = "Fragment",
+				selectItemForTheCondition = "User");
+
+			AssertVisible(
+				key_rule = "Test Page RuleIfUserIs the UsertestHideFragmentButton",
+				key_ruleName = "Test Page Rule",
+				locator1 = "PageEditor#PAGE_RULE_LIST_ITEM");
+		}
+	}
+
+	@description = "This is a test for LPS-196462. More rules can be added to the page and the input Rule is filled by default."
+	@priority = 3
+	test AddPageRulesWithDefaultName {
+		task ("Given a page designer has fragments on a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading",
+				targetFragmentName = "Button");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Paragraph",
+				targetFragmentName = "Heading");
+		}
+
+		task ("When the page designer navigates to the Page Ruls panel") {
+			PageEditor.gotoTab(tabName = "Page Rules");
+		}
+
+		task ("Then the page designer could add page rules with default name") {
+			for (var fragmentName : list "Button,Heading,Paragraph") {
+				PageEditor.addPageRule(
+					selectAction = "Hide",
+					selectActionValue = ${fragmentName},
+					selectCondition = "Is the User",
+					selectConditionValue = "test",
+					selectItemForTheAction = "Fragment",
+					selectItemForTheCondition = "User");
+			}
+
+			AssertVisible(
+				key_rule = "RuleIfUserIs the UsertestHideFragmentButton",
+				key_ruleName = "Rule",
+				locator1 = "PageEditor#PAGE_RULE_LIST_ITEM");
+
+			AssertVisible(
+				key_rule = "Rule 1IfUserIs the UsertestHideFragmentHeading",
+				key_ruleName = "Rule 1",
+				locator1 = "PageEditor#PAGE_RULE_LIST_ITEM");
+
+			AssertVisible(
+				key_rule = "Rule 2IfUserIs the UsertestHideFragmentParagraph",
+				key_ruleName = "Rule 2",
+				locator1 = "PageEditor#PAGE_RULE_LIST_ITEM");
+		}
+	}
+
+	@description = "This is a test for LPS-196462. Rules can be edited and deleted from the ellipsis button of the list of rules in the sidebar."
+	@priority = 3
+	test EditAndDeletePageRule {
+		task ("Given a page designer has a page rule on a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading",
+				targetFragmentName = "Button");
+
+			PageEditor.gotoTab(tabName = "Page Rules");
+
+			PageEditor.addPageRule(
+				selectAction = "Hide",
+				selectActionValue = "Button",
+				selectCondition = "Is the User",
+				selectConditionValue = "test",
+				selectItemForTheAction = "Fragment",
+				selectItemForTheCondition = "User");
+		}
+
+		task ("When the page designer accesses to the Page Rules panel") {
+			PageEditor.gotoTab(tabName = "Page Rules");
+		}
+
+		task ("Then the page designer could edit the page rule") {
+			PageEditor.editPageRule(
+				newRuleName = "Test Page Rule",
+				ruleName = "Rule",
+				selectAction = "Show",
+				selectActionValue = "Heading",
+				selectCondition = "Has the Role Of",
+				selectConditionValue = "Power User");
+
+			AssertVisible(
+				key_rule = "Test Page RuleIfUserHas the Role OfPower UserShowFragmentHeading",
+				key_ruleName = "Test Page Rule",
+				locator1 = "PageEditor#PAGE_RULE_LIST_ITEM");
+		}
+
+		task ("When the page designer accesses to the Page Rules panel") {
+			PageEditor.gotoTab(tabName = "Page Rules");
+
+			PageEditor.deletePageRule(ruleName = "Test Page Rule");
+		}
+
+		task ("Then the page designer could delete the page rule") {
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_STATE_INFO",
+				value1 = "No Rules Yet");
+
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_STATE_TEXT",
+				value1 = "Fortunately, it is very easy to add new ones.");
+		}
+	}
+
+	@description = "This is a test for LPS-196461. There is a new section for Page Rules in the left side bar."
+	@priority = 3
+	test OpenPageRulesPanel {
+		task ("Given a page designer has a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+		}
+
+		task ("When the page designer navigates to the page editor") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+		}
+
+		task ("Then the page designer could open the Page Rules panel") {
+			MouseOver(
+				key_text = "rules",
+				locator1 = "Icon#ANY");
+
+			AssertVisible(
+				key_content = "Page Rules",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+
+			PageEditor.gotoTab(tabName = "Page Rules");
+
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_STATE_INFO",
+				value1 = "No Rules Yet");
+
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_STATE_TEXT",
+				value1 = "Fortunately, it is very easy to add new ones.");
+
+			AssertVisible(
+				key_text = "New Rule",
+				locator1 = "Button#ANY");
+		}
+	}
+
+}

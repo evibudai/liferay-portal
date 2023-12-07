@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.internal;
 
-import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.change.tracking.CTAware;
@@ -23,6 +13,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -55,10 +46,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author Michael C. Han
@@ -405,7 +394,7 @@ public class DefaultTaskManagerImpl
 	}
 
 	private FormDefinitionRetriever _getFormDefinitionRetriever() {
-		return _serviceTracker.getService();
+		return _formDefinitionRetrieverSnapshot.get();
 	}
 
 	private Map<String, Serializable> _updateWorkflowContext(
@@ -442,11 +431,9 @@ public class DefaultTaskManagerImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		DefaultTaskManagerImpl.class);
 
-	private static final ServiceTracker
-		<FormDefinitionRetriever, FormDefinitionRetriever> _serviceTracker =
-			ServiceTrackerFactory.open(
-				FrameworkUtil.getBundle(DefaultTaskManagerImpl.class),
-				FormDefinitionRetriever.class);
+	private static final Snapshot<FormDefinitionRetriever>
+		_formDefinitionRetrieverSnapshot = new Snapshot<>(
+			DefaultTaskManagerImpl.class, FormDefinitionRetriever.class);
 
 	@Reference
 	private KaleoActionExecutor _kaleoActionExecutor;

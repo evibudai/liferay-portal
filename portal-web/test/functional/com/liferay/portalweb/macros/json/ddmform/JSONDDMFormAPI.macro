@@ -1,46 +1,50 @@
 definition {
 
-	macro _getFormInstanceId {
+	@summary = "Default summary"
+	macro _getFormInstanceId(groupName = null, formName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${formName}");
 
 		var portalURL = JSONCompany.getPortalURL();
 		var companyId = JSONCompany.getCompanyId();
-		var groupId = JSONDDMFormSetter.setGroupId(groupName = "${groupName}");
+		var groupId = JSONDDMFormSetter.setGroupId(groupName = ${groupName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/ddm.ddmforminstance/get-form-instances \
-			  -u test@liferay.com:test \
-			  -d companyId=${companyId} \
-			  -d groupId=${groupId} \
-			  -d "start=-1" \
-			  -d "end=-1"
+				-u ${userLoginInfo} \
+				-d companyId=${companyId} \
+				-d groupId=${groupId} \
+				-d "start=-1" \
+				-d "end=-1"
 		''';
 
-		var formInstanceId = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${formName}')]['formInstanceId']");
+		var formInstanceId = JSONCurlUtil.post(${curl}, "$.[?(@['nameCurrentValue'] == '${formName}')]['formInstanceId']");
 
-		if ("${formInstanceId}" == "") {
+		if (${formInstanceId} == "") {
 			fail("FAIL. Cannot find formInstanceId.");
 		}
 
-		return "${formInstanceId}";
+		return ${formInstanceId};
 	}
 
-	macro _getFormInstanceRecordId {
+	@summary = "Default summary"
+	macro _getFormInstanceRecordId(formInstanceId = null) {
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/ddm.ddmforminstancerecord/get-form-instance-records \
-			  -u test@liferay.com:test \
-			  -d ddmFormInstanceId=${formInstanceId}
+				-u ${userLoginInfo} \
+				-d ddmFormInstanceId=${formInstanceId}
 		''';
 
-		var formInstanceRecordId = JSONCurlUtil.post("${curl}", "$.[?(@['formInstanceId'] == '${formInstanceId}')]['formInstanceRecordId']");
+		var formInstanceRecordId = JSONCurlUtil.post(${curl}, "$.[?(@['formInstanceId'] == '${formInstanceId}')]['formInstanceRecordId']");
 
-		if ("${formInstanceRecordId}" == "") {
+		if (${formInstanceRecordId} == "") {
 			fail("FAIL. Cannot find formInstanceRecordId.");
 		}
 
-		return "${formInstanceRecordId}";
+		return ${formInstanceRecordId};
 	}
 
 }

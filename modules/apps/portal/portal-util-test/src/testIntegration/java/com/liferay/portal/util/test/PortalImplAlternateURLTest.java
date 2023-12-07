@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.util.test;
@@ -19,6 +10,8 @@ import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
@@ -255,6 +248,12 @@ public class PortalImplAlternateURLTest {
 	}
 
 	@Test
+	public void testAlternateURLWithUrlSeparator() throws Exception {
+		_testAlternateURLWithUrlSeparator("/g/");
+		_testAlternateURLWithUrlSeparator("/p/");
+	}
+
+	@Test
 	public void testAlternativeVirtualHostDefaultPortalLocaleAlternateURL()
 		throws Exception {
 
@@ -340,10 +339,11 @@ public class PortalImplAlternateURLTest {
 
 	private String _generateAssetDisplayPageEntryURL(
 		Locale defaultLocale, String friendlyURL, String groupFriendlyURL,
-		Locale locale, String portalURL, PortletPreferences preferences) {
+		Locale locale, String portalURL,
+		PortletPreferences portletPreferences) {
 
 		return StringBundler.concat(
-			portalURL, _getI18nPath(defaultLocale, locale, preferences),
+			portalURL, _getI18nPath(defaultLocale, locale, portletPreferences),
 			PropsValues.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING,
 			groupFriendlyURL,
 			FriendlyURLResolverConstants.URL_SEPARATOR_JOURNAL_ARTICLE,
@@ -362,10 +362,11 @@ public class PortalImplAlternateURLTest {
 
 	private String _generateLayoutURL(
 		Locale defaultLocale, String friendlyURL, String groupFriendlyURL,
-		Locale locale, String portalURL, PortletPreferences preferences) {
+		Locale locale, String portalURL,
+		PortletPreferences portletPreferences) {
 
 		return StringBundler.concat(
-			portalURL, _getI18nPath(defaultLocale, locale, preferences),
+			portalURL, _getI18nPath(defaultLocale, locale, portletPreferences),
 			PropsValues.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING,
 			groupFriendlyURL, friendlyURL);
 	}
@@ -395,8 +396,8 @@ public class PortalImplAlternateURLTest {
 				TestPropsValues.getUserId(), journalArticle.getGroupId(), 0,
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				ddmStructure.getStructureId(), RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0, true,
-				0, 0, 0, 0, serviceContext);
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
+				0, 0, 0, serviceContext);
 
 		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
 			TestPropsValues.getUserId(), journalArticle.getGroupId(),
@@ -409,12 +410,13 @@ public class PortalImplAlternateURLTest {
 	}
 
 	private String _getI18nPath(
-		Locale defaultLocale, Locale locale, PortletPreferences preferences) {
+		Locale defaultLocale, Locale locale,
+		PortletPreferences portletPreferences) {
 
 		String i18nPath = StringPool.BLANK;
 
 		int localePrependFriendlyURLStyle = PrefsPropsUtil.getInteger(
-			preferences, PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
+			portletPreferences, PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
 
 		if ((localePrependFriendlyURLStyle == 2) ||
 			((localePrependFriendlyURLStyle != 0) &&
@@ -459,7 +461,6 @@ public class PortalImplAlternateURLTest {
 
 		themeDisplay.setCompany(
 			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
-
 		themeDisplay.setLayoutSet(group.getPublicLayoutSet());
 		themeDisplay.setPortalDomain(HttpComponentsUtil.getDomain(portalURL));
 		themeDisplay.setPortalURL(portalURL);
@@ -595,25 +596,27 @@ public class PortalImplAlternateURLTest {
 			long resourcePrimKey, ThemeDisplay themeDisplay)
 		throws Exception {
 
-		PortletPreferences preferences = PrefsPropsUtil.getPreferences(
+		PortletPreferences portletPreferences = PrefsPropsUtil.getPreferences(
 			themeDisplay.getCompanyId());
 
 		try {
-			preferences.setValue(
+			portletPreferences.setValue(
 				PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE,
 				String.valueOf(prependFriendlyURLStyle));
 
-			preferences.store();
+			portletPreferences.store();
 
 			for (Locale alternateLocale : availableLocales) {
 				String expectedAlternateURL = _generateAssetDisplayPageEntryURL(
 					defaultLocale, friendlyURLMap.get(alternateLocale),
 					_group.getFriendlyURL(), alternateLocale,
-					themeDisplay.getPortalURL(), preferences);
+					themeDisplay.getPortalURL(), portletPreferences);
 
 				String canonicalURL =
 					_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-						JournalArticle.class.getName(), resourcePrimKey,
+						new InfoItemReference(
+							JournalArticle.class.getName(),
+							new ClassPKInfoItemIdentifier(resourcePrimKey)),
 						alternateLocale, themeDisplay);
 
 				Assert.assertEquals(
@@ -624,7 +627,8 @@ public class PortalImplAlternateURLTest {
 			}
 		}
 		finally {
-			preferences.reset(PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
+			portletPreferences.reset(
+				PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
 		}
 	}
 
@@ -704,26 +708,26 @@ public class PortalImplAlternateURLTest {
 			ThemeDisplay themeDisplay)
 		throws Exception {
 
-		PortletPreferences preferences = PrefsPropsUtil.getPreferences(
+		PortletPreferences portletPreferences = PrefsPropsUtil.getPreferences(
 			themeDisplay.getCompanyId());
 
 		try {
-			preferences.setValue(
+			portletPreferences.setValue(
 				PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE,
 				String.valueOf(prependFriendlyURLStyle));
 
-			preferences.store();
+			portletPreferences.store();
 
 			String canonicalURL = _generateLayoutURL(
 				defaultLocale, friendlyURLMap.get(defaultLocale),
 				_group.getFriendlyURL(), defaultLocale,
-				themeDisplay.getPortalURL(), preferences);
+				themeDisplay.getPortalURL(), portletPreferences);
 
 			for (Locale alternateLocale : availableLocales) {
 				String expectedAlternateURL = _generateLayoutURL(
 					defaultLocale, friendlyURLMap.get(alternateLocale),
 					_group.getFriendlyURL(), alternateLocale,
-					themeDisplay.getPortalURL(), preferences);
+					themeDisplay.getPortalURL(), portletPreferences);
 
 				Assert.assertEquals(
 					expectedAlternateURL,
@@ -733,8 +737,29 @@ public class PortalImplAlternateURLTest {
 			}
 		}
 		finally {
-			preferences.reset(PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
+			portletPreferences.reset(
+				PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
 		}
+	}
+
+	private void _testAlternateURLWithUrlSeparator(String urlSeparator)
+		throws Exception {
+
+		_group = GroupTestUtil.addGroup();
+
+		Locale locale = LocaleUtil.SPAIN;
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertEquals(
+			_generateURL(
+				"localhost", StringPool.SLASH + locale.getLanguage(),
+				_group.getFriendlyURL(), urlSeparator),
+			_portal.getAlternateURL(
+				_generateURL(
+					"localhost", StringPool.BLANK, _group.getFriendlyURL(),
+					urlSeparator),
+				_getThemeDisplay(_group, layout), locale, layout));
 	}
 
 	private void _testAlternateURLWithVirtualHosts(

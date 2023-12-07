@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -27,7 +18,6 @@ import com.liferay.portal.kernel.model.PasswordPolicyRel;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.ldap.LDAPSettingsUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.PasswordPolicyRelLocalService;
@@ -41,6 +31,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.service.base.PasswordPolicyLocalServiceBaseImpl;
+import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.List;
@@ -114,7 +105,7 @@ public class PasswordPolicyLocalServiceImpl
 
 		long ownerId = userId;
 
-		if (user.isDefaultUser()) {
+		if (user.isGuestUser()) {
 			ownerId = 0;
 		}
 
@@ -141,7 +132,7 @@ public class PasswordPolicyLocalServiceImpl
 		}
 
 		addPasswordPolicy(
-			_userLocalService.getDefaultUserId(companyId), true,
+			_userLocalService.getGuestUserId(companyId), true,
 			defaultPasswordPolicyName, defaultPasswordPolicyName,
 			PropsValues.PASSWORDS_DEFAULT_POLICY_CHANGEABLE,
 			PropsValues.PASSWORDS_DEFAULT_POLICY_CHANGE_REQUIRED,
@@ -202,7 +193,7 @@ public class PasswordPolicyLocalServiceImpl
 		throws PortalException {
 
 		if (passwordPolicy.isDefaultPolicy() &&
-			!CompanyThreadLocal.isDeleteInProcess()) {
+			!PortalInstances.isCurrentCompanyInDeletionProcess()) {
 
 			throw new RequiredPasswordPolicyException();
 		}

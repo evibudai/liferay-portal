@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action.test;
@@ -26,10 +17,13 @@ import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.LongTextInfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.info.item.capability.InfoItemCapability;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.info.test.util.MockInfoServiceRegistrationHolder;
 import com.liferay.info.test.util.model.MockObject;
@@ -99,6 +93,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.util.promise.Promise;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -259,7 +254,7 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 	}
 
 	@Test
-	public void testUpdateFormItemConfigMVCActionCommandMappingFormFFEnabled()
+	public void testUpdateFormItemConfigMVCActionCommandMappingForm()
 		throws Exception {
 
 		try (ComponentEnablerTemporarySwapper componentEnablerTemporarySwapper =
@@ -566,8 +561,7 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 							childrenItemIds.get(i));
 
 			_assertFragmentEntry(
-				infoField.getUniqueId(),
-				_getExpectedRendererKey(infoField.getInfoFieldType()),
+				infoField.getUniqueId(), _getExpectedRendererKey(infoField),
 				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId(),
 				assertRendererKey);
 		}
@@ -644,7 +638,9 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 			expectedErrorMessage, jsonObject.getString("errorMessage"));
 	}
 
-	private String _getExpectedRendererKey(InfoFieldType infoFieldType) {
+	private String _getExpectedRendererKey(InfoField infoField) {
+		InfoFieldType infoFieldType = infoField.getInfoFieldType();
+
 		if (infoFieldType instanceof BooleanInfoFieldType) {
 			return "INPUTS-checkbox";
 		}
@@ -655,6 +651,14 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 
 		if (infoFieldType instanceof FileInfoFieldType) {
 			return "INPUTS-file-upload";
+		}
+
+		if (infoFieldType instanceof LongTextInfoFieldType) {
+			return "INPUTS-textarea";
+		}
+
+		if (infoFieldType instanceof MultiselectInfoFieldType) {
+			return "INPUTS-multiselect-list";
 		}
 
 		if (infoFieldType instanceof NumberInfoFieldType) {
@@ -741,8 +745,10 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 	@Inject
 	private CompanyLocalService _companyLocalService;
 
-	@Inject
-	private EditPageInfoItemCapability _editPageInfoItemCapability;
+	@Inject(
+		filter = "info.item.capability.key=" + EditPageInfoItemCapability.KEY
+	)
+	private InfoItemCapability _editPageInfoItemCapability;
 
 	@Inject
 	private FragmentCollectionContributorRegistry
@@ -790,8 +796,9 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 	private class ComponentEnablerTemporarySwapper implements AutoCloseable {
 
 		public ComponentEnablerTemporarySwapper(
-			String bundleSymbolicName, String componentClassName,
-			boolean enabled) {
+				String bundleSymbolicName, String componentClassName,
+				boolean enabled)
+			throws Exception {
 
 			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
@@ -817,12 +824,16 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 				_componentDescriptionDTO);
 
 			if (enabled) {
-				_serviceComponentRuntime.enableComponent(
+				Promise<?> promise = _serviceComponentRuntime.enableComponent(
 					_componentDescriptionDTO);
+
+				promise.getValue();
 			}
 			else {
-				_serviceComponentRuntime.disableComponent(
+				Promise<?> promise = _serviceComponentRuntime.disableComponent(
 					_componentDescriptionDTO);
+
+				promise.getValue();
 			}
 		}
 
@@ -833,12 +844,16 @@ public class UpdateFormItemConfigMVCActionCommandTest {
 			}
 
 			if (_componentEnabled) {
-				_serviceComponentRuntime.enableComponent(
+				Promise<?> promise = _serviceComponentRuntime.enableComponent(
 					_componentDescriptionDTO);
+
+				promise.getValue();
 			}
 			else {
-				_serviceComponentRuntime.disableComponent(
+				Promise<?> promise = _serviceComponentRuntime.disableComponent(
 					_componentDescriptionDTO);
+
+				promise.getValue();
 			}
 		}
 

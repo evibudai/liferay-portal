@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.resource.v1_0.test;
@@ -32,6 +23,7 @@ import com.liferay.headless.delivery.client.pagination.Pagination;
 import com.liferay.headless.delivery.client.resource.v1_0.ContentElementResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.ContentElementSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -47,6 +39,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -70,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -225,7 +216,7 @@ public abstract class BaseContentElementResourceTestCase {
 			contentElementResource.getAssetLibraryContentElementsPage(
 				assetLibraryId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantAssetLibraryId != null) {
 			ContentElement irrelevantContentElement =
@@ -233,15 +224,18 @@ public abstract class BaseContentElementResourceTestCase {
 					irrelevantAssetLibraryId, randomIrrelevantContentElement());
 
 			page = contentElementResource.getAssetLibraryContentElementsPage(
-				irrelevantAssetLibraryId, null, null, null, Pagination.of(1, 2),
-				null);
+				irrelevantAssetLibraryId, null, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantContentElement),
+			assertContains(
+				irrelevantContentElement,
 				(List<ContentElement>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAssetLibraryContentElementsPage_getExpectedActions(
+					irrelevantAssetLibraryId));
 		}
 
 		ContentElement contentElement1 =
@@ -255,12 +249,24 @@ public abstract class BaseContentElementResourceTestCase {
 		page = contentElementResource.getAssetLibraryContentElementsPage(
 			assetLibraryId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2),
-			(List<ContentElement>)page.getItems());
-		assertValid(page);
+		assertContains(contentElement1, (List<ContentElement>)page.getItems());
+		assertContains(contentElement2, (List<ContentElement>)page.getItems());
+		assertValid(
+			page,
+			testGetAssetLibraryContentElementsPage_getExpectedActions(
+				assetLibraryId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAssetLibraryContentElementsPage_getExpectedActions(
+				Long assetLibraryId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -300,44 +306,39 @@ public abstract class BaseContentElementResourceTestCase {
 	public void testGetAssetLibraryContentElementsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetAssetLibraryContentElementsPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetAssetLibraryContentElementsPageWithFilterStringContains()
+		throws Exception {
 
-		Long assetLibraryId =
-			testGetAssetLibraryContentElementsPage_getAssetLibraryId();
-
-		ContentElement contentElement1 =
-			testGetAssetLibraryContentElementsPage_addContentElement(
-				assetLibraryId, randomContentElement());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ContentElement contentElement2 =
-			testGetAssetLibraryContentElementsPage_addContentElement(
-				assetLibraryId, randomContentElement());
-
-		for (EntityField entityField : entityFields) {
-			Page<ContentElement> page =
-				contentElementResource.getAssetLibraryContentElementsPage(
-					assetLibraryId, null, null,
-					getFilterString(entityField, "eq", contentElement1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(contentElement1),
-				(List<ContentElement>)page.getItems());
-		}
+		testGetAssetLibraryContentElementsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetAssetLibraryContentElementsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetAssetLibraryContentElementsPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetAssetLibraryContentElementsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetAssetLibraryContentElementsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetAssetLibraryContentElementsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -359,7 +360,7 @@ public abstract class BaseContentElementResourceTestCase {
 			Page<ContentElement> page =
 				contentElementResource.getAssetLibraryContentElementsPage(
 					assetLibraryId, null, null,
-					getFilterString(entityField, "eq", contentElement1),
+					getFilterString(entityField, operator, contentElement1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -375,6 +376,13 @@ public abstract class BaseContentElementResourceTestCase {
 		Long assetLibraryId =
 			testGetAssetLibraryContentElementsPage_getAssetLibraryId();
 
+		Page<ContentElement> contentElementPage =
+			contentElementResource.getAssetLibraryContentElementsPage(
+				assetLibraryId, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			contentElementPage.getTotalCount());
+
 		ContentElement contentElement1 =
 			testGetAssetLibraryContentElementsPage_addContentElement(
 				assetLibraryId, randomContentElement());
@@ -389,19 +397,22 @@ public abstract class BaseContentElementResourceTestCase {
 
 		Page<ContentElement> page1 =
 			contentElementResource.getAssetLibraryContentElementsPage(
-				assetLibraryId, null, null, null, Pagination.of(1, 2), null);
+				assetLibraryId, null, null, null,
+				Pagination.of(1, totalCount + 2), null);
 
 		List<ContentElement> contentElements1 =
 			(List<ContentElement>)page1.getItems();
 
 		Assert.assertEquals(
-			contentElements1.toString(), 2, contentElements1.size());
+			contentElements1.toString(), totalCount + 2,
+			contentElements1.size());
 
 		Page<ContentElement> page2 =
 			contentElementResource.getAssetLibraryContentElementsPage(
-				assetLibraryId, null, null, null, Pagination.of(2, 2), null);
+				assetLibraryId, null, null, null,
+				Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<ContentElement> contentElements2 =
 			(List<ContentElement>)page2.getItems();
@@ -411,11 +422,12 @@ public abstract class BaseContentElementResourceTestCase {
 
 		Page<ContentElement> page3 =
 			contentElementResource.getAssetLibraryContentElementsPage(
-				assetLibraryId, null, null, null, Pagination.of(1, 3), null);
+				assetLibraryId, null, null, null,
+				Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2, contentElement3),
-			(List<ContentElement>)page3.getItems());
+		assertContains(contentElement1, (List<ContentElement>)page3.getItems());
+		assertContains(contentElement2, (List<ContentElement>)page3.getItems());
+		assertContains(contentElement3, (List<ContentElement>)page3.getItems());
 	}
 
 	@Test
@@ -544,24 +556,32 @@ public abstract class BaseContentElementResourceTestCase {
 			testGetAssetLibraryContentElementsPage_addContentElement(
 				assetLibraryId, contentElement2);
 
+		Page<ContentElement> page =
+			contentElementResource.getAssetLibraryContentElementsPage(
+				assetLibraryId, null, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ContentElement> ascPage =
 				contentElementResource.getAssetLibraryContentElementsPage(
-					assetLibraryId, null, null, null, Pagination.of(1, 2),
+					assetLibraryId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(contentElement1, contentElement2),
-				(List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)ascPage.getItems());
 
 			Page<ContentElement> descPage =
 				contentElementResource.getAssetLibraryContentElementsPage(
-					assetLibraryId, null, null, null, Pagination.of(1, 2),
+					assetLibraryId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(contentElement2, contentElement1),
-				(List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)descPage.getItems());
 		}
 	}
 
@@ -597,7 +617,7 @@ public abstract class BaseContentElementResourceTestCase {
 			contentElementResource.getSiteContentElementsPage(
 				siteId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantSiteId != null) {
 			ContentElement irrelevantContentElement =
@@ -605,14 +625,18 @@ public abstract class BaseContentElementResourceTestCase {
 					irrelevantSiteId, randomIrrelevantContentElement());
 
 			page = contentElementResource.getSiteContentElementsPage(
-				irrelevantSiteId, null, null, null, Pagination.of(1, 2), null);
+				irrelevantSiteId, null, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantContentElement),
+			assertContains(
+				irrelevantContentElement,
 				(List<ContentElement>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteContentElementsPage_getExpectedActions(
+					irrelevantSiteId));
 		}
 
 		ContentElement contentElement1 =
@@ -626,12 +650,21 @@ public abstract class BaseContentElementResourceTestCase {
 		page = contentElementResource.getSiteContentElementsPage(
 			siteId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2),
-			(List<ContentElement>)page.getItems());
-		assertValid(page);
+		assertContains(contentElement1, (List<ContentElement>)page.getItems());
+		assertContains(contentElement2, (List<ContentElement>)page.getItems());
+		assertValid(
+			page, testGetSiteContentElementsPage_getExpectedActions(siteId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteContentElementsPage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -669,43 +702,37 @@ public abstract class BaseContentElementResourceTestCase {
 	public void testGetSiteContentElementsPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetSiteContentElementsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetSiteContentElementsPageWithFilterStringContains()
+		throws Exception {
 
-		Long siteId = testGetSiteContentElementsPage_getSiteId();
-
-		ContentElement contentElement1 =
-			testGetSiteContentElementsPage_addContentElement(
-				siteId, randomContentElement());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ContentElement contentElement2 =
-			testGetSiteContentElementsPage_addContentElement(
-				siteId, randomContentElement());
-
-		for (EntityField entityField : entityFields) {
-			Page<ContentElement> page =
-				contentElementResource.getSiteContentElementsPage(
-					siteId, null, null,
-					getFilterString(entityField, "eq", contentElement1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(contentElement1),
-				(List<ContentElement>)page.getItems());
-		}
+		testGetSiteContentElementsPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetSiteContentElementsPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetSiteContentElementsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSiteContentElementsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetSiteContentElementsPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSiteContentElementsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -726,7 +753,7 @@ public abstract class BaseContentElementResourceTestCase {
 			Page<ContentElement> page =
 				contentElementResource.getSiteContentElementsPage(
 					siteId, null, null,
-					getFilterString(entityField, "eq", contentElement1),
+					getFilterString(entityField, operator, contentElement1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -740,6 +767,13 @@ public abstract class BaseContentElementResourceTestCase {
 		throws Exception {
 
 		Long siteId = testGetSiteContentElementsPage_getSiteId();
+
+		Page<ContentElement> contentElementPage =
+			contentElementResource.getSiteContentElementsPage(
+				siteId, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			contentElementPage.getTotalCount());
 
 		ContentElement contentElement1 =
 			testGetSiteContentElementsPage_addContentElement(
@@ -755,19 +789,22 @@ public abstract class BaseContentElementResourceTestCase {
 
 		Page<ContentElement> page1 =
 			contentElementResource.getSiteContentElementsPage(
-				siteId, null, null, null, Pagination.of(1, 2), null);
+				siteId, null, null, null, Pagination.of(1, totalCount + 2),
+				null);
 
 		List<ContentElement> contentElements1 =
 			(List<ContentElement>)page1.getItems();
 
 		Assert.assertEquals(
-			contentElements1.toString(), 2, contentElements1.size());
+			contentElements1.toString(), totalCount + 2,
+			contentElements1.size());
 
 		Page<ContentElement> page2 =
 			contentElementResource.getSiteContentElementsPage(
-				siteId, null, null, null, Pagination.of(2, 2), null);
+				siteId, null, null, null, Pagination.of(2, totalCount + 2),
+				null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<ContentElement> contentElements2 =
 			(List<ContentElement>)page2.getItems();
@@ -777,11 +814,12 @@ public abstract class BaseContentElementResourceTestCase {
 
 		Page<ContentElement> page3 =
 			contentElementResource.getSiteContentElementsPage(
-				siteId, null, null, null, Pagination.of(1, 3), null);
+				siteId, null, null, null, Pagination.of(1, (int)totalCount + 3),
+				null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2, contentElement3),
-			(List<ContentElement>)page3.getItems());
+		assertContains(contentElement1, (List<ContentElement>)page3.getItems());
+		assertContains(contentElement2, (List<ContentElement>)page3.getItems());
+		assertContains(contentElement3, (List<ContentElement>)page3.getItems());
 	}
 
 	@Test
@@ -907,24 +945,32 @@ public abstract class BaseContentElementResourceTestCase {
 		contentElement2 = testGetSiteContentElementsPage_addContentElement(
 			siteId, contentElement2);
 
+		Page<ContentElement> page =
+			contentElementResource.getSiteContentElementsPage(
+				siteId, null, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ContentElement> ascPage =
 				contentElementResource.getSiteContentElementsPage(
-					siteId, null, null, null, Pagination.of(1, 2),
+					siteId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(contentElement1, contentElement2),
-				(List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)ascPage.getItems());
 
 			Page<ContentElement> descPage =
 				contentElementResource.getSiteContentElementsPage(
-					siteId, null, null, null, Pagination.of(1, 2),
+					siteId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(contentElement2, contentElement1),
-				(List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)descPage.getItems());
 		}
 	}
 
@@ -967,7 +1013,7 @@ public abstract class BaseContentElementResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/contentElements");
 
-		Assert.assertEquals(0, contentElementsJSONObject.get("totalCount"));
+		long totalCount = contentElementsJSONObject.getLong("totalCount");
 
 		ContentElement contentElement1 =
 			testGraphQLGetSiteContentElementsPage_addContentElement();
@@ -978,10 +1024,16 @@ public abstract class BaseContentElementResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/contentElements");
 
-		Assert.assertEquals(2, contentElementsJSONObject.getLong("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, contentElementsJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2),
+		assertContains(
+			contentElement1,
+			Arrays.asList(
+				ContentElementSerDes.toDTOs(
+					contentElementsJSONObject.getString("items"))));
+		assertContains(
+			contentElement2,
 			Arrays.asList(
 				ContentElementSerDes.toDTOs(
 					contentElementsJSONObject.getString("items"))));
@@ -1125,6 +1177,13 @@ public abstract class BaseContentElementResourceTestCase {
 	}
 
 	protected void assertValid(Page<ContentElement> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<ContentElement> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<ContentElement> contentElements = page.getItems();
@@ -1139,6 +1198,25 @@ public abstract class BaseContentElementResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1300,14 +1378,16 @@ public abstract class BaseContentElementResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1324,6 +1404,10 @@ public abstract class BaseContentElementResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1333,18 +1417,18 @@ public abstract class BaseContentElementResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1367,9 +1451,47 @@ public abstract class BaseContentElementResourceTestCase {
 		}
 
 		if (entityFieldName.equals("contentType")) {
-			sb.append("'");
-			sb.append(String.valueOf(contentElement.getContentType()));
-			sb.append("'");
+			Object object = contentElement.getContentType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1380,9 +1502,47 @@ public abstract class BaseContentElementResourceTestCase {
 		}
 
 		if (entityFieldName.equals("title")) {
-			sb.append("'");
-			sb.append(String.valueOf(contentElement.getTitle()));
-			sb.append("'");
+			Object object = contentElement.getTitle();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

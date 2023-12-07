@@ -1,22 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.context.provider;
 
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.pagination.provider.PaginationProvider;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,21 +23,37 @@ import org.apache.cxf.message.Message;
 @Provider
 public class PaginationContextProvider implements ContextProvider<Pagination> {
 
+	public PaginationContextProvider(
+		PaginationProvider paginationProvider, Portal portal) {
+
+		_paginationProvider = paginationProvider;
+		_portal = portal;
+	}
+
 	@Override
 	public Pagination createContext(Message message) {
 		HttpServletRequest httpServletRequest =
 			ContextProviderUtil.getHttpServletRequest(message);
 
-		String page = httpServletRequest.getParameter("page");
-		String pageSize = httpServletRequest.getParameter("pageSize");
+		return _paginationProvider.getPagination(
+			_portal.getCompanyId(httpServletRequest),
+			_getIntegerValue(httpServletRequest, "page"),
+			_getIntegerValue(httpServletRequest, "pageSize"));
+	}
 
-		if (StringUtil.equals(page, "0") || StringUtil.equals(pageSize, "0")) {
-			return null;
+	private Integer _getIntegerValue(
+		HttpServletRequest httpServletRequest, String key) {
+
+		String value = httpServletRequest.getParameter(key);
+
+		if (Validator.isNotNull(value)) {
+			return Integer.valueOf(value);
 		}
 
-		return Pagination.of(
-			GetterUtil.getInteger(page, 1),
-			GetterUtil.getInteger(pageSize, 20));
+		return null;
 	}
+
+	private final PaginationProvider _paginationProvider;
+	private final Portal _portal;
 
 }

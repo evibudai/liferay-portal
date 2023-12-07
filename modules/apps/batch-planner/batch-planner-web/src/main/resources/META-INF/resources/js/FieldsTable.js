@@ -1,23 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
 import {ClayCheckbox} from '@clayui/form';
 import ClayTable from '@clayui/table';
+import {sub} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
 
 import {
+	EXPORT_FILE_FORMAT_SELECTED_EVENT,
+	OBJECT_DEFINITION,
 	SCHEMA_SELECTED_EVENT,
 	TEMPLATE_SELECTED_EVENT,
 	TEMPLATE_SOILED_EVENT,
@@ -73,11 +67,32 @@ function FieldsTable({portletNamespace}) {
 			useTemplateMappingRef.current = false;
 		};
 
+		const handleExportFileFormatUpdated = ({
+			selectedExportFileFormat,
+			selectedSchema,
+		}) => {
+			if (
+				selectedExportFileFormat === 'CSV' &&
+				selectedSchema === OBJECT_DEFINITION
+			) {
+				setFields([]);
+				setSelectedFields([]);
+			}
+		};
+
+		Liferay.on(
+			EXPORT_FILE_FORMAT_SELECTED_EVENT,
+			handleExportFileFormatUpdated
+		);
 		Liferay.on(SCHEMA_SELECTED_EVENT, handleSchemaUpdated);
 		Liferay.on(TEMPLATE_SELECTED_EVENT, handleTemplateUpdate);
 		Liferay.on(TEMPLATE_SOILED_EVENT, handleTemplateSoiled);
 
 		return () => {
+			Liferay.detach(
+				EXPORT_FILE_FORMAT_SELECTED_EVENT,
+				handleExportFileFormatUpdated
+			);
 			Liferay.detach(SCHEMA_SELECTED_EVENT, handleSchemaUpdated);
 			Liferay.detach(TEMPLATE_SELECTED_EVENT, handleTemplateUpdate);
 			Liferay.detach(TEMPLATE_SOILED_EVENT, handleTemplateSoiled);
@@ -142,7 +157,7 @@ function FieldsTable({portletNamespace}) {
 						</ClayTable.Row>
 					</ClayTable.Head>
 
-					<ClayTable.Body>
+					<ClayTable.Body id="fieldsTableBody">
 						{fields.map((field) => {
 							const included = selectedFields.some(
 								(selectedField) =>
@@ -153,6 +168,12 @@ function FieldsTable({portletNamespace}) {
 								<ClayTable.Row key={field.name}>
 									<ClayTable.Cell>
 										<ClayCheckbox
+											aria-label={sub(
+												Liferay.Language.get(
+													'select-x'
+												),
+												field.name
+											)}
 											checked={included}
 											id={`${portletNamespace}fieldName_${field.name}`}
 											name={`${portletNamespace}fieldName`}

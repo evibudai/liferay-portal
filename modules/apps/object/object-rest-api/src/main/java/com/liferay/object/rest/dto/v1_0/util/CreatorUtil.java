@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.dto.v1_0.util;
@@ -21,8 +12,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.Optional;
-
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -30,10 +20,8 @@ import javax.ws.rs.core.UriInfo;
  */
 public class CreatorUtil {
 
-	public static Creator toCreator(
-		Portal portal, Optional<UriInfo> uriInfoOptional, User user) {
-
-		if ((user == null) || user.isDefaultUser()) {
+	public static Creator toCreator(Portal portal, UriInfo uriInfo, User user) {
+		if ((user == null) || user.isGuestUser()) {
 			return null;
 		}
 
@@ -62,30 +50,32 @@ public class CreatorUtil {
 					});
 				setProfileURL(
 					() -> {
-						if (uriInfoOptional.map(
-								UriInfo::getQueryParameters
-							).map(
-								parameters -> parameters.getFirst(
-									"nestedFields")
-							).map(
-								fields -> fields.contains("profileURL")
-							).orElse(
-								false
-							)) {
-
-							Group group = user.getGroup();
-
-							ThemeDisplay themeDisplay = new ThemeDisplay() {
-								{
-									setPortalURL(StringPool.BLANK);
-									setSiteGroupId(group.getGroupId());
-								}
-							};
-
-							return group.getDisplayURL(themeDisplay);
+						if (uriInfo == null) {
+							return null;
 						}
 
-						return null;
+						MultivaluedMap<String, String> queryParameters =
+							uriInfo.getQueryParameters();
+
+						String nestedFields = queryParameters.getFirst(
+							"nestedFields");
+
+						if ((nestedFields == null) ||
+							!nestedFields.contains("profileURL")) {
+
+							return null;
+						}
+
+						Group group = user.getGroup();
+
+						ThemeDisplay themeDisplay = new ThemeDisplay() {
+							{
+								setPortalURL(StringPool.BLANK);
+								setSiteGroupId(group.getGroupId());
+							}
+						};
+
+						return group.getDisplayURL(themeDisplay);
 					});
 			}
 		};

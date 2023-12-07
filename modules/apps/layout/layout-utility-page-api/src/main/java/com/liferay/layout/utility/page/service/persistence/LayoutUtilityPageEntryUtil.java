@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.utility.page.service.persistence;
@@ -803,6 +794,66 @@ public class LayoutUtilityPageEntryUtil {
 	 */
 	public static int filterCountByGroupId(long groupId) {
 		return getPersistence().filterCountByGroupId(groupId);
+	}
+
+	/**
+	 * Returns the layout utility page entry where plid = &#63; or throws a <code>NoSuchLayoutUtilityPageEntryException</code> if it could not be found.
+	 *
+	 * @param plid the plid
+	 * @return the matching layout utility page entry
+	 * @throws NoSuchLayoutUtilityPageEntryException if a matching layout utility page entry could not be found
+	 */
+	public static LayoutUtilityPageEntry findByPlid(long plid)
+		throws com.liferay.layout.utility.page.exception.
+			NoSuchLayoutUtilityPageEntryException {
+
+		return getPersistence().findByPlid(plid);
+	}
+
+	/**
+	 * Returns the layout utility page entry where plid = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param plid the plid
+	 * @return the matching layout utility page entry, or <code>null</code> if a matching layout utility page entry could not be found
+	 */
+	public static LayoutUtilityPageEntry fetchByPlid(long plid) {
+		return getPersistence().fetchByPlid(plid);
+	}
+
+	/**
+	 * Returns the layout utility page entry where plid = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param plid the plid
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching layout utility page entry, or <code>null</code> if a matching layout utility page entry could not be found
+	 */
+	public static LayoutUtilityPageEntry fetchByPlid(
+		long plid, boolean useFinderCache) {
+
+		return getPersistence().fetchByPlid(plid, useFinderCache);
+	}
+
+	/**
+	 * Removes the layout utility page entry where plid = &#63; from the database.
+	 *
+	 * @param plid the plid
+	 * @return the layout utility page entry that was removed
+	 */
+	public static LayoutUtilityPageEntry removeByPlid(long plid)
+		throws com.liferay.layout.utility.page.exception.
+			NoSuchLayoutUtilityPageEntryException {
+
+		return getPersistence().removeByPlid(plid);
+	}
+
+	/**
+	 * Returns the number of layout utility page entries where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @return the number of matching layout utility page entries
+	 */
+	public static int countByPlid(long plid) {
+		return getPersistence().countByPlid(plid);
 	}
 
 	/**
@@ -1701,6 +1752,12 @@ public class LayoutUtilityPageEntryUtil {
 
 	public static LayoutUtilityPageEntryPersistence getPersistence() {
 		return _persistence;
+	}
+
+	public static void setPersistence(
+		LayoutUtilityPageEntryPersistence persistence) {
+
+		_persistence = persistence;
 	}
 
 	private static volatile LayoutUtilityPageEntryPersistence _persistence;

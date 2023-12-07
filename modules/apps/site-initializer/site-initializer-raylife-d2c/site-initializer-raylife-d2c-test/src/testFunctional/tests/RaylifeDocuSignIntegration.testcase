@@ -14,10 +14,7 @@ definition {
 
 		User.firstLoginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
+		PortalSettings.openInstanceSettingsAdmin();
 
 		SystemSettings.gotoConfiguration(
 			configurationCategory = "Digital Signature",
@@ -26,17 +23,22 @@ definition {
 
 		FormFields.enableCheckbox(fieldName = "enabled");
 
-		DigitalSignature.enableDigitalSignature(siteStrategy = "Always Inherit");
+		DigitalSignature.enableDigitalSignature(
+			environment = "Sandbox",
+			siteStrategy = "Always Inherit");
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -45,17 +47,20 @@ definition {
 	}
 
 	@description = "LPS-144501 - Verify that after payment by PayPal, an email from Docusign is sent with the signature document"
-	@priority = "5"
+	@priority = 5
 	test CanViewSentEmail {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -83,17 +88,20 @@ definition {
 	}
 
 	@description = "LPS-144505 - Check if the email address of the envelope is the same as the one on the form"
-	@priority = "3"
+	@priority = 3
 	test EmailOnTheEnvelopeEqualOnTheForm {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -123,17 +131,20 @@ definition {
 	}
 
 	@description = "LPS-144503 - Check that the first name on the envelope is the same as on the form"
-	@priority = "3"
+	@priority = 3
 	test FirstNameOnEnvelopeSameAsForm {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -159,17 +170,20 @@ definition {
 	}
 
 	@description = "LPS-144504 - Check that the last name on the envelope is the same as on the form"
-	@priority = "3"
+	@priority = 3
 	test LastNameOnEnvelopeSameAsForm {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		RaylifePaymentMethod.enablePayPalPayment();
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",

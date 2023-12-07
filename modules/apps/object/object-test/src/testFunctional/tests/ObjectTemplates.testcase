@@ -14,15 +14,15 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-148544 - Verify it's possible to create a template with an object as an item type"
-	@priority = "5"
+	@priority = 5
 	test CanCreateTemplateWithObject {
 		property portal.acceptance = "true";
 
@@ -59,7 +59,7 @@ definition {
 	}
 
 	@description = "LPS-148544 - Verify it's possible to map a boolean field for a template on the content page and view the entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewBooleanField {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 149241",
@@ -76,20 +76,20 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject149241");
 
-		Navigator.openURL();
-
 		ObjectAdmin.openObjectAdmin();
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 149241");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
-		CreateObject.saveObject();
+		PortletEntry.save();
 
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
 			objectName = "CustomObject149241",
-			value = "149241");
+			value = 149241);
 
 		InformationTemplates.openInformationTemplatesAdmin(siteURLKey = "guest");
 
@@ -132,12 +132,16 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "149241");
+		AssertElementPresent(
+			key_entry = 149241,
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-148544 - Verify it's possible to map a Date field for a template on the content page and view the entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewDateField {
+		property portal.upstream = "quarantine";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 149245",
 			objectName = "CustomObject149245",
@@ -153,15 +157,15 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject149245");
 
-		Navigator.openURL();
-
 		ObjectAdmin.openObjectAdmin();
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 149245");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
-		CreateObject.saveObject();
+		PortletEntry.save();
 
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
@@ -209,11 +213,13 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "1/1/21");
+		AssertElementPresent(
+			key_entry = "Jan 1, 2021",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-148544 - Verify it's possible to map a Decimal field for a template on the content page and view the entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewDecimalField {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 149246",
@@ -230,20 +236,20 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject149246");
 
-		Navigator.openURL();
-
 		ObjectAdmin.openObjectAdmin();
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 149246");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
-		CreateObject.saveObject();
+		PortletEntry.save();
 
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
 			objectName = "CustomObject149246",
-			value = "149246");
+			value = 149246);
 
 		InformationTemplates.openInformationTemplatesAdmin(siteURLKey = "guest");
 
@@ -286,11 +292,13 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "149246.0");
+		AssertElementPresent(
+			key_entry = "149246.0",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-148544 - Verify it's possible to map an integer field for a template on the content page and view the entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewIntegerField {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 149242",
@@ -307,20 +315,20 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject149242");
 
-		Navigator.openURL();
-
 		ObjectAdmin.openObjectAdmin();
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 149242");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
-		CreateObject.saveObject();
+		PortletEntry.save();
 
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
 			objectName = "CustomObject149242",
-			value = "149242");
+			value = 149242);
 
 		InformationTemplates.openInformationTemplatesAdmin(siteURLKey = "guest");
 
@@ -363,11 +371,13 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "149242");
+		AssertElementPresent(
+			key_entry = 149242,
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-148544 - Verify it's possible to map a Long text field for a template on the content page and view the entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewLongField {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 149244",
@@ -384,15 +394,15 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject149244");
 
-		Navigator.openURL();
-
 		ObjectAdmin.openObjectAdmin();
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 149244");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
-		CreateObject.saveObject();
+		PortletEntry.save();
 
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
@@ -440,16 +450,18 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.");
+		AssertElementPresent(
+			key_entry = "By building a vibrant business, making technology useful, and investing in communities, we make it possible for people to reach their full potential to serve others.",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-148544 - Verify it's possible to map a picklist field for a template on the content page and view the entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewPicklistField {
 		Picklist.addPicklistViaAPI(picklistName = "Custom Picklist");
 
 		Picklist.addPicklistItemViaAPI(
-			itemKey = "0",
+			itemKey = 0,
 			itemName = "Item Test",
 			picklistName = "Custom Picklist");
 
@@ -462,7 +474,9 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 149243");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
 		ObjectAdmin.goToFieldsTab();
 
@@ -478,7 +492,9 @@ definition {
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject149243");
 
-		ObjectAdmin.addObjectPicklistFieldEntryViaUI(picklistOption = "Item Test");
+		ObjectAdmin.addObjectPicklistFieldEntryViaUI(
+			labelName = "Field Picklist",
+			picklistOption = "Item Test");
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject149243");
 
@@ -523,11 +539,13 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "Item Test");
+		AssertElementPresent(
+			key_entry = "Item Test",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 	@description = "LPS-148544 - Verify it's possible to map a text field for a template on the content page and view the entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewTextField {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 149240",
@@ -544,15 +562,15 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject149240");
 
-		Navigator.openURL();
-
 		ObjectAdmin.openObjectAdmin();
 
 		ObjectPortlet.selectCustomObject(label = "Custom Object 149240");
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
-		CreateObject.saveObject();
+		PortletEntry.save();
 
 		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
 			fieldName = "customObjectField",
@@ -600,7 +618,9 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Content Page Name");
 
-		VisualizeObjectDisplayPage.assertDisplayEntry(entry = "Custom Entry A");
+		AssertElementPresent(
+			key_entry = "Custom Entry A",
+			locator1 = "VisualizeObjectDisplayPage#DISPLAY_ENTRY");
 	}
 
 }

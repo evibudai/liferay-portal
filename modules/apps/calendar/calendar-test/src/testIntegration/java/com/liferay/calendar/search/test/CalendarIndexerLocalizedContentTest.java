@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.calendar.search.test;
@@ -27,8 +18,8 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 
+import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -90,31 +81,20 @@ public class CalendarIndexerLocalizedContentTest
 			"description_ja_JP", description
 		).build();
 
-		String word1 = "新規";
-		String word2 = "作成";
-		String prefix1 = "新";
-		String prefix2 = "作";
+		for (String keyword : Arrays.asList("新規", "作成", "新", "作")) {
+			Document document = searchOnlyOne(keyword, LocaleUtil.JAPAN);
 
-		Stream.of(
-			word1, word2, prefix1, prefix2
-		).forEach(
-			keywords -> {
-				Document document = searchOnlyOne(keywords, LocaleUtil.JAPAN);
+			FieldValuesAssert.assertFieldValues(
+				nameMap, "name", document, keyword);
 
-				FieldValuesAssert.assertFieldValues(
-					nameMap, "name", document, keywords);
-
-				FieldValuesAssert.assertFieldValues(
-					descriptionMap, "description", document, keywords);
-			}
-		);
+			FieldValuesAssert.assertFieldValues(
+				descriptionMap, "description", document, keyword);
+		}
 	}
 
 	@Test
 	public void testJapaneseNameFullWordOnly() throws Exception {
 		String full = "新規作成";
-		String partial1 = "新大阪";
-		String partial2 = "作戦大成功";
 
 		String originalName = StringUtil.toLowerCase(
 			RandomTestUtil.randomString());
@@ -122,10 +102,8 @@ public class CalendarIndexerLocalizedContentTest
 		String description = StringUtil.toLowerCase(
 			RandomTestUtil.randomString());
 
-		Stream.of(
-			full, partial1, partial2
-		).forEach(
-			name -> addCalendar(
+		for (String name : Arrays.asList(full, "新大阪", "作戦大成功")) {
+			addCalendar(
 				new LocalizedValuesMap() {
 					{
 						put(LocaleUtil.US, originalName);
@@ -137,8 +115,8 @@ public class CalendarIndexerLocalizedContentTest
 						put(LocaleUtil.US, description);
 						put(LocaleUtil.JAPAN, description);
 					}
-				})
-		);
+				});
+		}
 
 		Map<String, String> nameMap = HashMapBuilder.put(
 			"name", originalName
@@ -148,19 +126,12 @@ public class CalendarIndexerLocalizedContentTest
 			"name_ja_JP", full
 		).build();
 
-		String word1 = "新規";
-		String word2 = "作成";
+		for (String keyword : Arrays.asList("新規", "作成")) {
+			Document document = searchOnlyOne(keyword, LocaleUtil.JAPAN);
 
-		Stream.of(
-			word1, word2
-		).forEach(
-			keywords -> {
-				Document document = searchOnlyOne(keywords, LocaleUtil.JAPAN);
-
-				FieldValuesAssert.assertFieldValues(
-					nameMap, "name", document, keywords);
-			}
-		);
+			FieldValuesAssert.assertFieldValues(
+				nameMap, "name", document, keyword);
+		}
 	}
 
 	protected Calendar addCalendar(

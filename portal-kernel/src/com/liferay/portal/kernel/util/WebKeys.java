@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -65,6 +56,8 @@ public interface WebKeys {
 	public static final String BEAN_FILTER_NAMES = "BEAN_FILTER_NAMES";
 
 	public static final String BEAN_PORTLET_IDS = "BEAN_PORTLET_IDS";
+
+	public static final String BLOCK_LOGIN_PROMPT = "BLOCK_LOGIN_PROMPT";
 
 	public static final String BLOGS_CATEGORY = "BLOGS_CATEGORY";
 
@@ -330,6 +323,8 @@ public interface WebKeys {
 
 	public static final String LOCALE = "LOCALE";
 
+	public static final String LOGIN_REQUEST = "LOGIN_REQUEST";
+
 	public static final String LOGOUT = "LOGOUT";
 
 	public static final String MAIL_CURRENT_ACCOUNT = "MAIL_CURRENT_ACCOUNT";
@@ -401,6 +396,8 @@ public interface WebKeys {
 
 	public static final String MESSAGE_BOARDS_TREE_WALKER_VIEWABLE_THREAD =
 		"MESSAGE_BOARDS_TREE_WALKER_VIEWABLE_THREAD";
+
+	public static final String MFA_ENABLED = "MFA_ENABLED";
 
 	public static final String NETVIBES = "NETVIBES";
 
@@ -653,6 +650,8 @@ public interface WebKeys {
 
 	public static final String TITLE = "TITLE";
 
+	public static final String TITLE_SET_PASSWORD = "TITLE_SET_PASSWORD";
+
 	public static final String TRANSLATOR_TRANSLATION =
 		"TRANSLATOR_TRANSLATION";
 
@@ -690,7 +689,13 @@ public interface WebKeys {
 
 	public static final String USER_PASSWORD = "USER_PASSWORD";
 
+	public static final String USER_PASSWORD_MODIFIED_TIME =
+		"USER_PASSWORD_MODIFIED_TIME";
+
 	public static final String USERS_NOTIFIED = "USERS_NOTIFIED";
+
+	public static final String VIRTUAL_HOST_LANGUAGE_ID =
+		"VIRTUAL_HOST_LANGUAGE_ID";
 
 	public static final String VIRTUAL_HOST_LAYOUT_SET =
 		"VIRTUAL_HOST_LAYOUT_SET";

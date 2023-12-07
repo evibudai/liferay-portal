@@ -1,299 +1,326 @@
 definition {
 
-	macro addBoldContentonRichText {
+	@summary = "Default summary"
+	macro addBoldContentonRichText() {
 		Click(locator1 = "DataEngineRenderer#TOOLBAR_BOLD_BUTTON");
 	}
 
-	macro addSourceContentonRichText {
+	@summary = "Default summary"
+	macro addSourceContentonRichText(content = null) {
 		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
 		Type.typeCodeMirrorEditorNoError(
 			locator1 = "CKEditor#BODY_FIELD_SOURCE_ON",
-			value1 = "${content}");
+			value1 = ${content});
 	}
 
-	macro assertBoldContentonRichText {
+	@summary = "Default summary"
+	macro assertBoldContentonRichText() {
 		AssertElementPresent(locator1 = "DataEngineRenderer#TOOLBAR_BOLD_BUTTON_ON");
 	}
 
-	macro assertContent {
+	@summary = "Default summary"
+	macro assertContent(linkToPageFieldLabel = null, linkToPageContent = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals(
-			key_fieldLabel = "${linkToPageFieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${linkToPageFieldLabel},
+			key_index = ${index},
 			locator1 = "DataEngineRenderer#SELECTOR_INPUT_INDEXED",
-			value1 = "${linkToPageContent}");
+			value1 = ${linkToPageContent});
 	}
 
-	macro assertContentInLinktoPageField {
+	@summary = "Default summary"
+	macro assertContentInLinktoPageField(linkToPageFieldLabel = null, index = null, linkToPageContent = null) {
 		DERenderer.assertContent(
-			index = "${index}",
-			linkToPageContent = "${linkToPageContent}",
-			linkToPageFieldLabel = "${linkToPageFieldLabel}");
+			index = ${index},
+			linkToPageContent = ${linkToPageContent},
+			linkToPageFieldLabel = ${linkToPageFieldLabel});
 	}
 
-	macro assertDataInColorField {
+	@summary = "Default summary"
+	macro assertDataInColorField(fieldLabel = null, value = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals.assertValue(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#COLOR_PICKER_GENERAL_INPUT_INDEXED",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro assertDataInDateField {
+	@summary = "Default summary"
+	macro assertDataInDateField(fieldLabel = null, value = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals.assertValue(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#DATE_INPUT_INDEXED",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro assertDataInGridField {
+	@summary = "Default summary"
+	macro assertDataInGridField(fieldLabel = null, row = null) {
 		if (!(isSet(fieldIndex))) {
-			var fieldIndex = "1";
+			var fieldIndex = 1;
 		}
 
 		var column = ${column} + 1;
 
 		AssertChecked.assertCheckedNotVisible(
-			fieldIndex = "${fieldIndex}",
-			key_column = "${column}",
-			key_fieldLabel = "${fieldLabel}",
-			key_row = "${row}",
+			fieldIndex = ${fieldIndex},
+			key_column = ${column},
+			key_fieldLabel = ${fieldLabel},
+			key_row = ${row},
 			locator1 = "DataEngineRenderer#GRID_OPTION_INDEXED");
 	}
 
-	macro assertDataInImageField {
+	@summary = "Default summary"
+	macro assertDataInImageField(imageFile = null, fieldLabel = null, imageDescription = null, imageTitle = null) {
 		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#IMAGE_INPUT_INDEXED",
-			value1 = "${imageTitle}");
+			value1 = ${imageTitle});
 
 		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
-			key_image = "${imageFile}",
+			key_fieldLabel = ${fieldLabel},
+			key_image = ${imageFile},
 			locator1 = "DataEngineRenderer#IMAGE_PICKER_PREVIEW_INDEXED");
 
 		if (isSet(imageDescription)) {
 			AssertTextEquals(
-				key_fieldLabel = "${fieldLabel}",
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineRenderer#IMAGE_DESCRIPTION_INDEXED",
-				value1 = "${imageDescription}");
+				value1 = ${imageDescription});
 		}
 	}
 
-	macro assertDataInMultipleSelectionField {
+	@summary = "Default summary"
+	macro assertDataInMultipleSelectionField(fieldLabel = null, optionValue = null) {
 		if (!(isSet(fieldIndex))) {
-			var fieldIndex = "1";
+			var fieldIndex = 1;
 		}
 
 		if (!(isSet(optionIndex))) {
-			var optionIndex = "1";
+			var optionIndex = 1;
 		}
 
 		AssertChecked.assertCheckedNotVisible(
-			fieldIndex = "${fieldIndex}",
-			key_fieldLabel = "${fieldLabel}",
-			key_optionValue = "${optionValue}",
+			fieldIndex = ${fieldIndex},
+			key_fieldLabel = ${fieldLabel},
+			key_optionValue = ${optionValue},
 			locator1 = "DataEngineRenderer#MULTIPLE_SELECTION_OPTION_INDEXED",
-			optionIndex = "${optionIndex}");
+			optionIndex = ${optionIndex});
 	}
 
-	macro assertDataInNumericField {
+	@summary = "Default summary"
+	macro assertDataInNumericField(fieldLabel = null, value = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals.assertValue(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#TEXT_INPUT_INDEXED",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro assertDataInRichTextField {
+	@summary = "Default summary"
+	macro assertDataInRichTextField(fieldLabel = null, index = null, content = null) {
 		DERenderer.selectCKEditorByIndex(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
 		AssertTextEquals(
 			locator1 = "CKEditor#BODY",
-			value1 = "${content}");
+			value1 = ${content});
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro assertDataInSelectFromListField {
+	@summary = "Default summary"
+	macro assertDataInSelectFromListField(fieldLabel = null, optionValue = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#SELECT_FROM_LIST_SELECTED_OPTION_INDEXED",
-			value1 = "${optionValue}");
+			value1 = ${optionValue});
 	}
 
-	macro assertDataInSingleSelectionField {
+	@summary = "Default summary"
+	macro assertDataInSingleSelectionField(fieldLabel = null, optionValue = null) {
 		if (!(isSet(fieldIndex))) {
-			var fieldIndex = "1";
+			var fieldIndex = 1;
 		}
 
 		if (!(isSet(optionIndex))) {
-			var optionIndex = "1";
+			var optionIndex = 1;
 		}
 
 		AssertChecked.assertCheckedNotVisible(
-			fieldIndex = "${fieldIndex}",
-			key_fieldLabel = "${fieldLabel}",
-			key_optionValue = "${optionValue}",
+			fieldIndex = ${fieldIndex},
+			key_fieldLabel = ${fieldLabel},
+			key_optionValue = ${optionValue},
 			locator1 = "DataEngineRenderer#SINGLE_SELECTION_OPTION_INDEXED",
-			optionIndex = "${optionIndex}");
+			optionIndex = ${optionIndex});
 	}
 
-	macro assertDataInTextField {
+	@summary = "Default summary"
+	macro assertDataInTextField(fieldLabel = null, value = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals.assertValue(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#TEXT_INPUT_INDEXED",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro assertDataInUploadField {
+	@summary = "Default summary"
+	macro assertDataInUploadField(webContentUpload = null, fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals(
-			key_fieldLabel = "${fieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_index = ${index},
 			locator1 = "DataEngineRenderer#SELECTOR_INPUT_INDEXED",
-			value1 = "${webContentUpload}");
+			value1 = ${webContentUpload});
 	}
 
-	macro assertDataInWebContentField {
+	@summary = "Default summary"
+	macro assertDataInWebContentField(fieldLabel = null, contentName = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		AssertTextEquals(
-			key_fieldLabel = "${fieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_index = ${index},
 			locator1 = "DataEngineRenderer#SELECTOR_INPUT_INDEXED",
-			value1 = "${contentName}");
+			value1 = ${contentName});
 	}
 
-	macro assertImageNotPresent {
+	@summary = "Default summary"
+	macro assertImageNotPresent(imageField = null, fieldLabel = null) {
 		AssertElementNotPresent(
-			key_fieldLabel = "${fieldLabel}",
-			key_image = "${imageField}",
+			key_fieldLabel = ${fieldLabel},
+			key_image = ${imageField},
 			locator1 = "DataEngineRenderer#IMAGE_PICKER_PREVIEW_INDEXED");
 	}
 
-	macro assertLinktoPageIsClear {
+	@summary = "Default summary"
+	macro assertLinktoPageIsClear(linkToPageFieldLabel = null, index = null) {
 		DERenderer.assertContent(
-			index = "${index}",
+			index = ${index},
 			linkToPageContent = "",
-			linkToPageFieldLabel = "${linkToPageFieldLabel}");
+			linkToPageFieldLabel = ${linkToPageFieldLabel});
 	}
 
-	macro assertMultipleSelectionOptionIsUnchecked {
+	@summary = "Default summary"
+	macro assertMultipleSelectionOptionIsUnchecked(fieldLabel = null, optionValue = null) {
 		if (!(isSet(fieldIndex))) {
-			var fieldIndex = "1";
+			var fieldIndex = 1;
 		}
 
 		if (!(isSet(optionIndex))) {
-			var optionIndex = "1";
+			var optionIndex = 1;
 		}
 
 		AssertNotChecked.assertNotCheckedNotVisible(
-			fieldIndex = "${fieldIndex}",
-			key_fieldLabel = "${fieldLabel}",
-			key_optionValue = "${optionValue}",
+			fieldIndex = ${fieldIndex},
+			key_fieldLabel = ${fieldLabel},
+			key_optionValue = ${optionValue},
 			locator1 = "DataEngineRenderer#MULTIPLE_SELECTION_OPTION_INDEXED",
-			optionIndex = "${optionIndex}");
+			optionIndex = ${optionIndex});
 	}
 
-	macro assertUploadData {
+	@summary = "Default summary"
+	macro assertUploadData(fileName = null) {
 		AssertElementPresent(
-			key_fileName = "${fileName}",
+			key_fileName = ${fileName},
 			locator1 = "DataEngineRenderer#UPLOAD_FIELD_VALUE");
 	}
 
-	macro assertUploadDataIsEmpty {
+	@summary = "Default summary"
+	macro assertUploadDataIsEmpty() {
 		AssertElementPresent(
 			key_fileName = "",
 			locator1 = "DataEngineRenderer#UPLOAD_FIELD_VALUE");
 	}
 
-	macro assertWebContentNotPresent {
+	@summary = "Default summary"
+	macro assertWebContentNotPresent(fieldLabel = null, contentName = null) {
 		AssertElementNotPresent(
-			key_contentName = "${contentName}",
-			key_fieldLabel = "${fieldLabel}",
+			key_contentName = ${contentName},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#SELECTOR_INPUT_BY_CONTENT_NAME");
 	}
 
-	macro clearDataOnField {
+	@summary = "Default summary"
+	macro clearDataOnField(fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		Click(
-			index = "${index}",
+			index = ${index},
 			key_buttonName = "Clear",
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#FIELD_BUTTON_INDEXED");
 	}
 
-	macro clickCollapseFieldsGroup {
+	@summary = "Default summary"
+	macro clickCollapseFieldsGroup() {
 		Click(locator1 = "Form#COLLAPSE_BUTTON");
 	}
 
-	macro clickOnPreviewSourceContent {
+	@summary = "Default summary"
+	macro clickOnPreviewSourceContent(content = null) {
 		Click(locator1 = "CKEditor#TOOLBAR_PREVIEW_BUTTON");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
-			value1 = "${content}");
+			value1 = ${content});
 	}
 
-	macro inputDataInColorField {
+	@summary = "Default summary"
+	macro inputDataInColorField(valueRed = null, valueGreen = null, fieldLabel = null, value = null, valueBlue = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
-		var colorSelectionMethod = "${colorSelectionMethod}";
+		var colorSelectionMethod = ${colorSelectionMethod};
 
-		if ("${colorSelectionMethod}" == "Swatch") {
+		if (${colorSelectionMethod} == "Swatch") {
 			Click(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineRenderer#COLOR_PICKER_INDEXED");
 
 			Click(
-				key_colorSwatchItem = "${value}",
+				key_colorSwatchItem = ${value},
 				locator1 = "Button#COLOR_SWATCH_ITEM");
 		}
-		else if ("${colorSelectionMethod}" == "RGB") {
+		else if (${colorSelectionMethod} == "RGB") {
 			Click(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineRenderer#COLOR_PICKER_INDEXED");
 
 			Click(locator1 = "DataEngineRenderer#COLOR_PICKER_CUSTOM_COLOR_BUTTON");
@@ -302,24 +329,24 @@ definition {
 
 			Type.sendKeys(
 				locator1 = "DataEngineRenderer#COLOR_PICKER_RGB_RED_INPUT",
-				value1 = "${valueRed}");
+				value1 = ${valueRed});
 
 			DoubleClick(locator1 = "DataEngineRenderer#COLOR_PICKER_RGB_GREEN_INPUT");
 
 			Type.sendKeys(
 				locator1 = "DataEngineRenderer#COLOR_PICKER_RGB_GREEN_INPUT",
-				value1 = "${valueGreen}");
+				value1 = ${valueGreen});
 
 			DoubleClick(locator1 = "DataEngineRenderer#COLOR_PICKER_RGB_BLUE_INPUT");
 
 			Type.sendKeys(
 				locator1 = "DataEngineRenderer#COLOR_PICKER_RGB_BLUE_INPUT",
-				value1 = "${valueBlue}");
+				value1 = ${valueBlue});
 		}
-		else if ("${colorSelectionMethod}" == "HEX") {
+		else if (${colorSelectionMethod} == "HEX") {
 			Click(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineRenderer#COLOR_PICKER_INDEXED");
 
 			Click(locator1 = "DataEngineRenderer#COLOR_PICKER_CUSTOM_COLOR_BUTTON");
@@ -328,101 +355,105 @@ definition {
 
 			Type(
 				locator1 = "DataEngineRenderer#COLOR_PICKER_HEX_INPUT",
-				value1 = "${value}");
+				value1 = ${value});
 		}
 		else {
 			Type(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineRenderer#COLOR_PICKER_GENERAL_INPUT_INDEXED",
-				value1 = "${value}");
+				value1 = ${value});
 		}
 	}
 
-	macro inputDataInDateField {
+	@summary = "Default summary"
+	macro inputDataInDateField(fieldLabel = null, value = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		Type(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#DATE_INPUT_INDEXED",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro inputDataInGridField {
+	@summary = "Default summary"
+	macro inputDataInGridField(fieldLabel = null, row = null) {
 		if (!(isSet(fieldIndex))) {
-			var fieldIndex = "1";
+			var fieldIndex = 1;
 		}
 
 		var column = ${column} + 1;
 
 		Check.checkNotVisible(
-			fieldIndex = "${fieldIndex}",
-			key_column = "${column}",
-			key_fieldLabel = "${fieldLabel}",
-			key_row = "${row}",
+			fieldIndex = ${fieldIndex},
+			key_column = ${column},
+			key_fieldLabel = ${fieldLabel},
+			key_row = ${row},
 			locator1 = "DataEngineRenderer#GRID_OPTION_INDEXED");
 	}
 
-	macro inputDataInImageField {
+	@summary = "Default summary"
+	macro inputDataInImageField(navTab = null, depotName = null, fieldLabel = null, imageDescription = null, webContentImage = null, folderName = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		Click(
-			index = "${index}",
+			index = ${index},
 			key_buttonName = "Select",
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#FIELD_BUTTON_INDEXED");
 
-		if ("${navTab}" == "Documents and Media") {
+		if (${navTab} == "Documents and Media") {
 			if (isSet(depotName)) {
 				ItemSelector.selectRepositoryImage(
-					depotName = "${depotName}",
-					folderName = "${folderName}",
-					imageFileName = "${webContentImage}",
-					navTab = "${navTab}");
+					depotName = ${depotName},
+					folderName = ${folderName},
+					imageFileName = ${webContentImage},
+					navTab = ${navTab});
 			}
 			else if (isSet(imageFileName)) {
 				ItemSelector.selectDMImage(
-					imageFileName = "${webContentImage}",
-					navTab = "${navTab}");
+					imageFileName = ${webContentImage},
+					navTab = ${navTab});
 			}
 			else {
 				ItemSelector.uploadFile(
-					navTab = "${navTab}",
-					uploadFileName = "${webContentImage}");
+					navTab = ${navTab},
+					uploadFileName = ${webContentImage});
 			}
 		}
-		else if ("${navTab}" == "Web Content Images") {
+		else if (${navTab} == "Web Content Images") {
 			ItemSelector.uploadFile(
-				navTab = "${navTab}",
-				uploadFileName = "${webContentImage}");
+				navTab = ${navTab},
+				uploadFileName = ${webContentImage});
 		}
 
 		if (isSet(imageDescription)) {
 			Type(
-				index = "${index}",
-				key_fieldLabel = "${fieldLabel}",
+				index = ${index},
+				key_fieldLabel = ${fieldLabel},
 				locator1 = "DataEngineRenderer#IMAGE_DESCRIPTION_INDEXED",
-				value1 = "${imageDescription}");
+				value1 = ${imageDescription});
 		}
 	}
 
-	macro inputDataInLinkToPageField {
+	@summary = "Default summary"
+	macro inputDataInLinkToPageField(linkToPageFieldLabel = null, linkToPageContent = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		Click(
-			key_fieldLabel = "${linkToPageFieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${linkToPageFieldLabel},
+			key_index = ${index},
 			key_text = "Select",
 			locator1 = "DataEngineRenderer#BUTTON_LABEL_INDEXED");
 
@@ -431,191 +462,201 @@ definition {
 		Portlet.expandTree();
 
 		AssertClick.assertPartialTextClickAt(
-			key_nodeName = "${linkToPageContent}",
+			key_nodeName = ${linkToPageContent},
 			locator1 = "Treeview#NODE_UNSELECTED",
-			value1 = "${linkToPageContent}");
+			value1 = ${linkToPageContent});
 
 		SelectFrameTop();
 	}
 
-	macro inputDataInMultipleSelectionField {
+	@summary = "Default summary"
+	macro inputDataInMultipleSelectionField(fieldLabel = null, optionValue = null) {
 		if (!(isSet(fieldIndex))) {
-			var fieldIndex = "1";
+			var fieldIndex = 1;
 		}
 
 		if (!(isSet(optionIndex))) {
-			var optionIndex = "1";
+			var optionIndex = 1;
 		}
 
-		Click.clickAtNotVisible(
-			fieldIndex = "${fieldIndex}",
-			key_fieldLabel = "${fieldLabel}",
-			key_optionValue = "${optionValue}",
+		Click.javaScriptClick(
+			fieldIndex = ${fieldIndex},
+			key_fieldLabel = ${fieldLabel},
+			key_optionValue = ${optionValue},
 			locator1 = "DataEngineRenderer#MULTIPLE_SELECTION_OPTION_INDEXED",
-			optionIndex = "${optionIndex}");
+			optionIndex = ${optionIndex});
 	}
 
-	macro inputDataInNumericField {
+	@summary = "Default summary"
+	macro inputDataInNumericField(fieldLabel = null, value = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		Type(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#TEXT_INPUT_INDEXED",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro inputDataInRichTextField {
+	@summary = "Default summary"
+	macro inputDataInRichTextField(fieldLabel = null, index = null, content = null) {
 		DERenderer.selectCKEditorByIndex(
-			fieldLabel = "${fieldLabel}",
-			index = "${index}");
+			fieldLabel = ${fieldLabel},
+			index = ${index});
 
 		Type(
 			locator1 = "CKEditor#BODY",
-			value1 = "${content}");
+			value1 = ${content});
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro inputDataInSelectFromListField {
+	@summary = "Default summary"
+	macro inputDataInSelectFromListField(fieldLabel = null, optionValue = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		Click(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#SELECT_FROM_LIST_SELECT_OPTION_TRIGGER_INDEXED");
 
-		DropdownMenuItem.click(menuItem = "${optionValue}");
+		DropdownMenuItem.click(menuItem = ${optionValue});
 	}
 
-	macro inputDataInSingleSelectionField {
+	@summary = "Default summary"
+	macro inputDataInSingleSelectionField(fieldLabel = null, optionValue = null) {
 		if (!(isSet(fieldIndex))) {
-			var fieldIndex = "1";
+			var fieldIndex = 1;
 		}
 
 		if (!(isSet(optionIndex))) {
-			var optionIndex = "1";
+			var optionIndex = 1;
 		}
 
 		Check.checkNotVisible(
-			fieldIndex = "${fieldIndex}",
-			key_fieldLabel = "${fieldLabel}",
-			key_optionValue = "${optionValue}",
+			fieldIndex = ${fieldIndex},
+			key_fieldLabel = ${fieldLabel},
+			key_optionValue = ${optionValue},
 			locator1 = "DataEngineRenderer#SINGLE_SELECTION_OPTION_INDEXED",
-			optionIndex = "${optionIndex}");
+			optionIndex = ${optionIndex});
 	}
 
-	macro inputDataInTextField {
+	@summary = "Default summary"
+	macro inputDataInTextField(fieldLabel = null, value = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		Type(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#TEXT_INPUT_INDEXED",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro inputDataInUploadField {
+	@summary = "Default summary"
+	macro inputDataInUploadField(dmDocumentTitle = null, depotName = null, webContentUpload = null, fieldLabel = null, folderName = null, dmNavTab = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		Click(
-			key_fieldLabel = "${fieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_index = ${index},
 			key_text = "Select",
 			locator1 = "DataEngineRenderer#BUTTON_LABEL_INDEXED");
 
-		if ("${dmNavTab}" == "Documents and Media") {
+		if (${dmNavTab} == "Documents and Media") {
 			if (isSet(depotName)) {
 				ItemSelector.selectRepositoryImage(
-					depotName = "${depotName}",
-					folderName = "${folderName}",
-					imageFileName = "${webContentUpload}",
-					navTab = "${dmNavTab}");
+					depotName = ${depotName},
+					folderName = ${folderName},
+					imageFileName = ${webContentUpload},
+					navTab = ${dmNavTab});
 			}
 			else if (isSet(dmDocumentTitle)) {
 				ItemSelector.selectDMImage(
-					imageFileName = "${dmDocumentTitle}",
-					navTab = "${dmNavTab}");
+					imageFileName = ${dmDocumentTitle},
+					navTab = ${dmNavTab});
 			}
 			else {
 				ItemSelector.uploadFile(
-					navTab = "${dmNavTab}",
-					uploadFileName = "${webContentUpload}");
+					navTab = ${dmNavTab},
+					uploadFileName = ${webContentUpload});
 			}
 		}
-		else if ("${dmNavTab}" == "User Personal Folder") {
+		else if (${dmNavTab} == "User Personal Folder") {
 			ItemSelector.uploadFile(
-				navTab = "${dmNavTab}",
-				uploadFileName = "${webContentUpload}");
+				navTab = ${dmNavTab},
+				uploadFileName = ${webContentUpload});
 		}
 	}
 
-	macro inputDataInWebContentField {
+	@summary = "Default summary"
+	macro inputDataInWebContentField(depotName = null, fieldLabel = null, available = null, folderName = null, contentName = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		Click(
-			key_fieldLabel = "${fieldLabel}",
-			key_index = "${index}",
+			key_fieldLabel = ${fieldLabel},
+			key_index = ${index},
 			key_text = "Select",
 			locator1 = "DataEngineRenderer#BUTTON_LABEL_INDEXED");
 
 		if (isSet(depotName)) {
 			WebContent.selectRepositoryWC(
-				available = "${available}",
-				contentName = "${contentName}",
-				depotName = "${depotName}",
-				folderName = "${folderName}");
+				available = ${available},
+				contentName = ${contentName},
+				depotName = ${depotName},
+				folderName = ${folderName});
 		}
 		else {
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			AssertClick.assertPartialTextClickAt(
-				key_listEntry = "${contentName}",
+				key_listEntry = ${contentName},
 				locator1 = "LexiconList#LIST_ENTRY",
-				value1 = "${contentName}");
+				value1 = ${contentName});
 
 			SelectFrame(value1 = "relative=top");
 		}
 	}
 
-	macro removeRepeatableField {
+	@summary = "Default summary"
+	macro removeRepeatableField(fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		WaitForElementPresent(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#REPEATABLE_FIELD_DELETE_BUTTON_INDEXED");
 
 		Click(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "DataEngineRenderer#REPEATABLE_FIELD_DELETE_BUTTON_INDEXED");
 	}
 
-	macro selectCKEditorByIndex {
+	@summary = "Default summary"
+	macro selectCKEditorByIndex(fieldLabel = null) {
 		if (!(isSet(index))) {
-			var index = "1";
+			var index = 1;
 		}
 
 		SelectFrame.selectFrameNoLoading(
-			index = "${index}",
-			key_fieldLabel = "${fieldLabel}",
+			index = ${index},
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "CKEditor#ANY_BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
 	}
 

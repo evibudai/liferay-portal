@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link NotificationRecipientSettingLocalService}.
@@ -253,6 +245,15 @@ public class NotificationRecipientSettingLocalServiceWrapper
 			fetchNotificationRecipientSetting(notificationRecipientSettingId);
 	}
 
+	@Override
+	public com.liferay.notification.model.NotificationRecipientSetting
+		fetchNotificationRecipientSetting(
+			long notificationRecipientId, String name) {
+
+		return _notificationRecipientSettingLocalService.
+			fetchNotificationRecipientSetting(notificationRecipientId, name);
+	}
+
 	/**
 	 * Returns the notification recipient setting with the matching UUID and company.
 	 *
@@ -310,17 +311,6 @@ public class NotificationRecipientSettingLocalServiceWrapper
 
 		return _notificationRecipientSettingLocalService.
 			getNotificationRecipientSetting(notificationRecipientSettingId);
-	}
-
-	@Override
-	public com.liferay.notification.model.NotificationRecipientSetting
-			getNotificationRecipientSetting(
-				long notificationRecipientId, String name)
-		throws com.liferay.notification.exception.
-			NoSuchNotificationRecipientSettingException {
-
-		return _notificationRecipientSettingLocalService.
-			getNotificationRecipientSetting(notificationRecipientId, name);
 	}
 
 	/**
@@ -422,6 +412,11 @@ public class NotificationRecipientSettingLocalServiceWrapper
 
 		return _notificationRecipientSettingLocalService.
 			updateNotificationRecipientSetting(notificationRecipientSetting);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _notificationRecipientSettingLocalService.getBasePersistence();
 	}
 
 	@Override

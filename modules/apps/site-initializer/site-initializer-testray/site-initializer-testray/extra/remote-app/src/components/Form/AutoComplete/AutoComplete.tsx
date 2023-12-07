@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayDropDown from '@clayui/drop-down';
 import {useEffect, useState} from 'react';
+import {Params} from 'react-router-dom';
 
 import useDebounce from '../../../hooks/useDebounce';
 import {useFetch} from '../../../hooks/useFetch';
@@ -22,7 +14,7 @@ import {useFetch} from '../../../hooks/useFetch';
 export type AutoCompleteProps = {
 	label?: string;
 	onSearch: (keyword: string) => any;
-	resource: string;
+	resource?: ((params: Readonly<Params<string>>) => string) | string;
 	transformData?: (item: any) => any;
 };
 
@@ -39,10 +31,13 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
 	const debouncedValue = useDebounce(value, 1000);
 
 	const {called, data, error, isValidating} = useFetch(
-		debouncedValue
-			? `${resource}/?filter=${onSearch(debouncedValue)}`
-			: null,
-		transformData
+		debouncedValue ? ((resource as unknown) as string) : null,
+		{
+			params: {
+				filter: onSearch(debouncedValue),
+			},
+			transformData,
+		}
 	);
 
 	const items = data?.items || [];

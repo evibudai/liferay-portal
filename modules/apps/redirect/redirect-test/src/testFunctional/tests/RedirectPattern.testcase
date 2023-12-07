@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site");
+		HeadlessSite.addSite(siteName = "Test Site");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site",
@@ -36,9 +36,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -49,7 +49,7 @@ definition {
 	}
 
 	@description = "This test checks that an Alias will override a Pattern."
-	@priority = "5"
+	@priority = 5
 	test AliasTakesPrecedenceOverPattern {
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -61,10 +61,10 @@ definition {
 		Redirect.openToPatterns(siteURLKey = "test-site");
 
 		Redirect.addPattern(
-			destinationIndex = "0",
+			destinationIndex = 0,
 			destinationURL = "/web/test-site/$1/child3",
 			pattern = "(.*)/child1$",
-			patternIndex = "0");
+			patternIndex = 0);
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site/parent/child1");
 
@@ -79,54 +79,143 @@ definition {
 		AssertLocation.assertPartialLocation(value1 = "/parent/child3");
 	}
 
-	@description = "This test checks that a Pattern can be updated."
-	@priority = "5"
-	test CanUpdatePattern {
+	@description = "This test checks that the user can redirect to destination URL when the user agent configured as bot."
+	@priority = 5
+	test CanRedirectToDestinationURLWhenUserAgentConfiguredAsBot {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		Redirect.openToPatterns(siteURLKey = "test-site");
 
 		Redirect.addPattern(
-			destinationIndex = "0",
-			destinationURL = "/web/test-site/$1/changethis",
-			pattern = "(.*)/child1$",
-			patternIndex = "0");
-
-		Redirect.addPattern(
-			destinationIndex = "0",
+			destinationIndex = 0,
 			destinationURL = "/web/test-site/$1/child2",
 			pattern = "(.*)/child1$",
-			patternIndex = "0");
+			patternIndex = 0,
+			userAgent = "Bot",
+			userAgentIndex = 0);
+
+		Redirect.addPattern(
+			destinationIndex = 1,
+			destinationURL = "/web/test-site/$1/child3",
+			pattern = "(.*)/child1$",
+			patternIndex = 1,
+			userAgent = "Human",
+			userAgentIndex = 1);
+
+		Redirect.gotoConfigureCrawlerUserAgents(navigateFromJavaScriptSEODynamicRendering = "true");
+
+		Redirect.configureCrawlerUserAgents(removeCrawlerUserAgent = "baiduspider");
+
+		Redirect.configureCrawlerUserAgents(addCrawlerUserAgent = "AppleWebKit");
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site/parent/child1");
 
 		AssertLocation.assertPartialLocation(value1 = "/parent/child2");
 	}
 
+	@description = "This test checks that the user can redirect to destination URL when the user agent configured as human."
+	@priority = 5
+	test CanRedirectToDestinationURLWhenUserAgentConfiguredAsHuman {
+		var portalURL = PropsUtil.get("portal.url");
+
+		Redirect.openToPatterns(siteURLKey = "test-site");
+
+		Redirect.addPattern(
+			destinationIndex = 0,
+			destinationURL = "/web/test-site/$1/child2",
+			pattern = "(.*)/child1$",
+			patternIndex = 0,
+			userAgent = "Bot",
+			userAgentIndex = 0);
+
+		Redirect.addPattern(
+			destinationIndex = 1,
+			destinationURL = "/web/test-site/$1/child3",
+			pattern = "(.*)/child1$",
+			patternIndex = 1,
+			userAgent = "Human",
+			userAgentIndex = 1);
+
+		Navigator.openSpecificURL(url = "${portalURL}/web/test-site/parent/child1");
+
+		AssertLocation.assertPartialLocation(value1 = "/parent/child3");
+	}
+
+	@description = "This test checks that a Pattern can be updated."
+	@priority = 5
+	test CanUpdatePattern {
+		var portalURL = PropsUtil.get("portal.url");
+
+		Redirect.openToPatterns(siteURLKey = "test-site");
+
+		Redirect.addPattern(
+			destinationIndex = 0,
+			destinationURL = "/web/test-site/$1/changethis",
+			pattern = "(.*)/child1$",
+			patternIndex = 0);
+
+		Redirect.addPattern(
+			destinationIndex = 0,
+			destinationURL = "/web/test-site/$1/child2",
+			pattern = "(.*)/child1$",
+			patternIndex = 0);
+
+		Navigator.openSpecificURL(url = "${portalURL}/web/test-site/parent/child1");
+
+		AssertLocation.assertPartialLocation(value1 = "/parent/child2");
+	}
+
+	@description = "This test checks that the long destination URL can be clipped."
+	@priority = 5
+	test CanViewClippedDestinationURL {
+		Redirect.openToPatterns(siteURLKey = "test-site");
+
+		Redirect.addPattern(
+			destinationIndex = 0,
+			destinationURL = "/web/test-site/$1/000000000000000000000000000000000",
+			pattern = "(.*)/child1$",
+			patternIndex = 0);
+
+		Redirect.openToPatterns(siteURLKey = "test-site");
+
+		AssertAttributeValue(
+			locator1 = "TextInput#REDIRECT_DESTINATION_URL",
+			value1 = "value",
+			value2 = "/web/test-site/$1/000000000000000000000000000000000");
+
+		AssertCssValue(
+			locator1 = "TextInput#REDIRECT_DESTINATION_URL",
+			locator2 = "text-overflow",
+			value1 = "ellipsis");
+	}
+
 	@description = "This test checks that when there are multiple Patterns, the first one that matches the URL will be applied."
-	@priority = "5"
+	@priority = 5
 	test FirstMatchingPatternWillBeApplied {
 		var portalURL = PropsUtil.get("portal.url");
 
 		Redirect.openToPatterns(siteURLKey = "test-site");
 
 		Redirect.addPattern(
-			destinationIndex = "0",
+			destinationIndex = 0,
 			destinationURL = "/web/void",
 			pattern = "void",
-			patternIndex = "0");
+			patternIndex = 0);
 
 		Redirect.addPattern(
-			destinationIndex = "1",
+			destinationIndex = 1,
 			destinationURL = "/web/test-site/$1/child2",
 			pattern = "(.*)/child1$",
-			patternIndex = "1");
+			patternIndex = 1);
 
 		Redirect.addPattern(
-			destinationIndex = "2",
+			destinationIndex = 2,
 			destinationURL = "https://www.liferay.com",
 			pattern = "(.*)/child1$",
-			patternIndex = "2");
+			patternIndex = 2);
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site/parent/child1");
 
@@ -136,7 +225,7 @@ definition {
 
 		WaitForPageLoad();
 
-		Redirect.removePattern(index = "2");
+		Redirect.removePattern(index = 2);
 
 		Button.clickSave();
 
@@ -145,9 +234,9 @@ definition {
 		AssertLocation.assertPartialLocation(value1 = "www.liferay.com");
 	}
 
-	@description = "This test checks that when there are multiple Patterns, the first one that matches the URL will be applied."
-	@priority = "5"
-	test WillGenerateErrorIfInvalid {
+	@description = "This test checks that an error appears when an invalid input is typed into the destination field."
+	@priority = 5
+	test WillGenerateErrorIfDestinationInputIsInvalid {
 		var portalURL = PropsUtil.get("portal.url");
 
 		Redirect.openRedirectAdmin(siteURLKey = "test-site");
@@ -159,11 +248,32 @@ definition {
 		Redirect.gotoPatternsTab();
 
 		Redirect.addPattern(
-			destinationIndex = "0",
+			destinationFieldError = "true",
+			destinationIndex = 0,
+			destinationURL = "(",
+			pattern = "(.*)/child1$",
+			patternIndex = 0);
+	}
+
+	@description = "This test checks that an error appears after publishing if there is an invalid input in the pattern field."
+	@priority = 5
+	test WillGenerateErrorIfPatternInputIsInvalid {
+		var portalURL = PropsUtil.get("portal.url");
+
+		Redirect.openRedirectAdmin(siteURLKey = "test-site");
+
+		AssertElementPresent(
+			key_tab = "Aliases",
+			locator1 = "NavTab#ACTIVE_TAB_LINK");
+
+		Redirect.gotoPatternsTab();
+
+		Redirect.addPattern(
+			destinationIndex = 0,
 			destinationURL = "https://www.liferay.com",
-			error = "true",
 			pattern = "(",
-			patternIndex = "0");
+			patternFieldError = "true",
+			patternIndex = 0);
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site/parent/child1");
 

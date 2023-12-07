@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.video.internal.converter;
@@ -20,7 +11,7 @@ import com.liferay.petra.io.AutoDeleteFileInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.image.ImageTool;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -49,14 +40,13 @@ import java.util.concurrent.TimeUnit;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alejandro Tardín
  */
 @Component(
 	configurationPid = "com.liferay.document.library.video.internal.configuration.DLVideoFFMPEGVideoConverterConfiguration",
-	service = {DLVideoFFMPEGVideoConverter.class, VideoConverter.class}
+	service = VideoConverter.class
 )
 public class DLVideoFFMPEGVideoConverter implements VideoConverter {
 
@@ -117,7 +107,7 @@ public class DLVideoFFMPEGVideoConverter implements VideoConverter {
 				try (UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 						new UnsyncByteArrayOutputStream()) {
 
-					_imageTool.write(
+					ImageToolUtil.write(
 						bufferedImage, format, unsyncByteArrayOutputStream);
 
 					return new ByteArrayInputStream(
@@ -240,8 +230,5 @@ public class DLVideoFFMPEGVideoConverter implements VideoConverter {
 
 	private volatile DLVideoFFMPEGVideoConverterConfiguration
 		_dlVideoFFMPEGVideoConverterConfiguration;
-
-	@Reference
-	private ImageTool _imageTool;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.auto.tagger.internal;
@@ -18,7 +9,7 @@ import com.liferay.asset.auto.tagger.AssetAutoTagProvider;
 import com.liferay.asset.auto.tagger.AssetAutoTagger;
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration;
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfigurationFactory;
-import com.liferay.asset.auto.tagger.internal.helper.AssetAutoTaggerHelper;
+import com.liferay.asset.auto.tagger.internal.util.AssetAutoTaggerUtil;
 import com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry;
 import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalService;
 import com.liferay.asset.kernel.exception.AssetTagException;
@@ -47,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alejandro Tardín
  */
 @Component(
-	configurationPid = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerConfiguration",
+	configurationPid = "com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration",
 	service = AopService.class
 )
 public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
@@ -55,12 +46,14 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void tag(AssetEntry assetEntry) throws PortalException {
-		if (!_assetAutoTaggerHelper.isAutoTaggable(assetEntry)) {
-			return;
-		}
-
 		AssetAutoTaggerConfiguration assetAutoTaggerConfiguration =
 			_getAssetAutoTaggerConfiguration(assetEntry);
+
+		if (!AssetAutoTaggerUtil.isAutoTaggable(
+				assetAutoTaggerConfiguration, assetEntry)) {
+
+			return;
+		}
 
 		List<String> assetTagNames = _getAutoAssetTagNames(
 			assetEntry,
@@ -136,7 +129,7 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 		Set<String> assetTagNamesSet = new LinkedHashSet<>();
 
 		for (AssetAutoTagProvider<?> assetAutoTagProvider :
-				_assetAutoTaggerHelper.getAssetEntryAssetAutoTagProviders()) {
+				AssetAutoTaggerUtil.getAssetEntryAssetAutoTagProviders()) {
 
 			AssetAutoTagProvider<AssetEntry> assetEntryAssetAutoTagProvider =
 				(AssetAutoTagProvider<AssetEntry>)assetAutoTagProvider;
@@ -147,7 +140,7 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 
 		if (assetRenderer != null) {
 			List<AssetAutoTagProvider<?>> assetAutoTagProviders =
-				_assetAutoTaggerHelper.getAssetAutoTagProviders(
+				AssetAutoTaggerUtil.getAssetAutoTagProviders(
 					assetEntry.getClassName());
 
 			for (AssetAutoTagProvider<?> assetAutoTagProvider :
@@ -178,9 +171,19 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 		Indexer<Object> indexer = _indexerRegistry.getIndexer(
 			assetEntry.getClassName());
 
-		if (indexer != null) {
-			indexer.reindex(assetEntry.getClassName(), assetEntry.getClassPK());
+		if (indexer == null) {
+			return;
 		}
+
+		AssetRenderer<?> assetRenderer = assetEntry.getAssetRenderer();
+
+		if (assetRenderer == null) {
+			indexer.reindex(assetEntry.getClassName(), assetEntry.getClassPK());
+
+			return;
+		}
+
+		indexer.reindex(assetRenderer.getAssetObject());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -192,9 +195,6 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 
 	@Reference
 	private AssetAutoTaggerEntryLocalService _assetAutoTaggerEntryLocalService;
-
-	@Reference
-	private AssetAutoTaggerHelper _assetAutoTaggerHelper;
 
 	@Reference
 	private AssetTagLocalService _assetTagLocalService;

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -36,6 +27,8 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 			<c:when test="<%= fileEntry != null %>">
 
 				<%
+				row.setPrimaryKey(String.valueOf(fileEntry.getFileEntryId()));
+
 				String dataOptions = StringPool.BLANK;
 
 				FileVersion fileVersion = fileEntry.getFileVersion();
@@ -89,24 +82,30 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 					thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, fileVersion, themeDisplay);
 				}
 
+				String description = fileEntry.getDescription();
+
 				String title = fileEntry.getTitle();
 
-				if (Validator.isNotNull(fileEntry.getDescription())) {
-					title += " - " + fileEntry.getDescription();
+				if (Validator.isNotNull(description)) {
+					title += " - " + description;
 				}
 				%>
 
 				<liferay-ui:search-container-column-text>
-					<div class="image-link preview" <%= (hasAudio || hasVideo) ? "data-options=\"height=" + playerHeight + "&thumbnailURL=" + HtmlUtil.escapeURL(DLURLHelperUtil.getPreviewURL(fileEntry, fileVersion, themeDisplay, "&videoThumbnail=1")) + "&width=640" + dataOptions + "\"" : StringPool.BLANK %> href="<%= imageURL %>" tabindex="0" thumbnailId="<%= thumbnailId %>" title="<%= title %>">
+					<div class="image-link preview" <%= (hasAudio || hasVideo) ? "data-options=\"height=" + playerHeight + "&thumbnailURL=" + HtmlUtil.escapeURL(DLURLHelperUtil.getPreviewURL(fileEntry, fileVersion, themeDisplay, "&videoThumbnail=1")) + "&width=640" + dataOptions + "\"" : StringPool.BLANK %> description="<%= description %>" href="<%= imageURL %>" tabindex="0" thumbnailId="<%= thumbnailId %>" title="<%= title %>">
 						<div class="card-type-asset entry-display-style">
 							<div class="card card-interactive card-interactive-secondary">
 								<div class="aspect-ratio card-item-first">
 									<c:choose>
 										<c:when test="<%= Validator.isNull(thumbnailSrc) %>">
-											<aui:icon cssClass="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon" image="documents-and-media" markupView="lexicon" />
+											<span class="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">
+												<clay:icon
+													symbol="documents-and-media"
+												/>
+											</span>
 										</c:when>
 										<c:otherwise>
-											<img alt="" class="aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="<%= thumbnailSrc %>" />
+											<img alt="<%= description %>" class="aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="<%= thumbnailSrc %>" />
 										</c:otherwise>
 									</c:choose>
 								</div>
@@ -151,6 +150,7 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 
 				<%
 				row.setCssClass("card-page-item card-page-item-directory");
+				row.setPrimaryKey(String.valueOf(curFolder.getPrimaryKey()));
 
 				request.setAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW, row);
 				%>

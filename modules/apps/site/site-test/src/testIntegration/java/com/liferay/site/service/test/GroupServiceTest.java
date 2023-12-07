@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.service.test;
@@ -55,6 +46,7 @@ import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ResourcePermissionTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -72,6 +64,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portlet.documentlibrary.constants.DLConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -332,11 +325,42 @@ public class GroupServiceTest {
 			initialTagsCount + 1,
 			_assetTagLocalService.getGroupTagsCount(group.getGroupId()));
 
+		Assert.assertEquals(
+			1,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), Group.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
+
+		ResourcePermissionTestUtil.addResourcePermission(
+			2L, DLConstants.RESOURCE_NAME, String.valueOf(group.getGroupId()),
+			ResourceConstants.SCOPE_INDIVIDUAL);
+
+		Assert.assertEquals(
+			1,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), DLConstants.RESOURCE_NAME,
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
+
 		_groupService.deleteGroup(group.getGroupId());
 
 		Assert.assertEquals(
 			initialTagsCount,
 			_assetTagLocalService.getGroupTagsCount(group.getGroupId()));
+
+		Assert.assertEquals(
+			0,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), DLConstants.RESOURCE_NAME,
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
+		Assert.assertEquals(
+			0,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), Group.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
 	}
 
 	@Test
@@ -361,7 +385,7 @@ public class GroupServiceTest {
 			RandomTestUtil.randomString() + StringPool.SPACE +
 				RandomTestUtil.randomString());
 
-		_groupLocalService.updateGroup(_group);
+		_group = _groupLocalService.updateGroup(_group);
 
 		Assert.assertEquals(
 			1,
@@ -395,7 +419,7 @@ public class GroupServiceTest {
 			RandomTestUtil.randomString() + StringPool.SPACE +
 				RandomTestUtil.randomString());
 
-		_groupLocalService.updateGroup(_group);
+		_group = _groupLocalService.updateGroup(_group);
 
 		Assert.assertEquals(
 			1,
@@ -447,7 +471,7 @@ public class GroupServiceTest {
 			_groupService.searchCount(
 				TestPropsValues.getCompanyId(), "liferay%", null,
 				new String[] {
-					"manualMembership:true:boolean", "site:true:boolean"
+					"manualMembership:false:boolean", "site:true:boolean"
 				}));
 	}
 
@@ -458,7 +482,7 @@ public class GroupServiceTest {
 			_groupService.searchCount(
 				TestPropsValues.getCompanyId(), "Liferay%", null,
 				new String[] {
-					"manualMembership:true:boolean", "site:true:boolean"
+					"manualMembership:false:boolean", "site:true:boolean"
 				}));
 	}
 
@@ -575,24 +599,23 @@ public class GroupServiceTest {
 		Company company = _companyLocalService.getCompany(
 			_group.getCompanyId());
 
-		User defaultUser = company.getDefaultUser();
+		User guestUser = company.getGuestUser();
 
-		String languageId = defaultUser.getLanguageId();
+		String languageId = guestUser.getLanguageId();
 
 		try {
-			defaultUser.setLanguageId(
-				_language.getLanguageId(LocaleUtil.BRAZIL));
+			guestUser.setLanguageId(_language.getLanguageId(LocaleUtil.BRAZIL));
 
-			defaultUser = _userLocalService.updateUser(defaultUser);
+			guestUser = _userLocalService.updateUser(guestUser);
 
 			Assert.assertEquals(
 				LocaleUtil.BRAZIL,
 				_portal.getSiteDefaultLocale(company.getGroupId()));
 		}
 		finally {
-			defaultUser.setLanguageId(languageId);
+			guestUser.setLanguageId(languageId);
 
-			_userLocalService.updateUser(defaultUser);
+			_userLocalService.updateUser(guestUser);
 		}
 	}
 
@@ -707,25 +730,56 @@ public class GroupServiceTest {
 		Company company = _companyLocalService.getCompany(
 			_group.getCompanyId());
 
-		User defaultUser = company.getDefaultUser();
+		User guestUser = company.getGuestUser();
 
-		String languageId = defaultUser.getLanguageId();
+		String languageId = guestUser.getLanguageId();
 
 		try {
-			defaultUser.setLanguageId(
-				_language.getLanguageId(LocaleUtil.CHINA));
+			guestUser.setLanguageId(_language.getLanguageId(LocaleUtil.CHINA));
 
-			defaultUser = _userLocalService.updateUser(defaultUser);
+			guestUser = _userLocalService.updateUser(guestUser);
 
 			Assert.assertEquals(
 				LocaleUtil.CHINA,
 				_portal.getSiteDefaultLocale(_group.getGroupId()));
 		}
 		finally {
-			defaultUser.setLanguageId(languageId);
+			guestUser.setLanguageId(languageId);
 
-			_userLocalService.updateUser(defaultUser);
+			_userLocalService.updateUser(guestUser);
 		}
+	}
+
+	@Test
+	public void testGroupDefaultLanguageIdRemainsWhenChangingNameMap()
+		throws Exception {
+
+		_group = GroupTestUtil.addGroup();
+
+		_group = GroupTestUtil.updateDisplaySettings(
+			_group.getGroupId(),
+			Arrays.asList(LocaleUtil.GERMANY, LocaleUtil.SPAIN, LocaleUtil.US),
+			LocaleUtil.SPAIN);
+
+		Assert.assertEquals(
+			LocaleUtil.SPAIN,
+			LocaleUtil.fromLanguageId(_group.getDefaultLanguageId()));
+
+		_group = _groupService.updateGroup(
+			_group.getGroupId(), _group.getParentGroupId(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), _group.getGroupKey()
+			).put(
+				LocaleUtil.SPAIN, _group.getGroupKey()
+			).build(),
+			_group.getDescriptionMap(), _group.getType(),
+			_group.isManualMembership(), _group.getMembershipRestriction(),
+			_group.getFriendlyURL(), _group.isInheritContent(),
+			_group.isActive(), ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			LocaleUtil.SPAIN,
+			LocaleUtil.fromLanguageId(_group.getDefaultLanguageId()));
 	}
 
 	@Test

@@ -1,17 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert, {IClayAlertProps} from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import React from 'react';
@@ -19,20 +11,33 @@ import React from 'react';
 import './Card.scss';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+	alert?: {
+		content: string;
+		otherProps: IClayAlertProps;
+		setShowAlert: (value: boolean) => void;
+		showAlert: boolean;
+	};
+	customHeader?: JSX.Element;
 	disabled?: boolean;
-	title: string;
+	title?: string;
 	tooltip?: ITooltip | null;
-	viewMode?: 'inline' | 'no-children' | 'no-margin' | 'no-padding';
+	viewMode?:
+		| 'inline'
+		| 'no-children'
+		| 'no-header-border'
+		| 'no-margin'
+		| 'no-padding';
 }
 
 interface ITooltip {
 	content: string;
 	symbol: string;
 }
-
 export function Card({
+	alert,
 	children,
 	className,
+	customHeader,
 	disabled,
 	title,
 	tooltip,
@@ -41,6 +46,7 @@ export function Card({
 }: CardProps) {
 	const inline = viewMode === 'inline';
 	const noChildren = viewMode === 'no-children';
+	const noHeaderBorder = viewMode === 'no-header-border';
 	const noMargin = viewMode === 'no-margin';
 	const noPadding = viewMode === 'no-padding';
 
@@ -61,31 +67,52 @@ export function Card({
 					{inline ? (
 						title
 					) : (
-						<div className="lfr-objects__card-header">
-							<h3
-								className={classNames(
-									'lfr-objects__card-title',
-									{
-										'lfr-objects__card-title--disabled': disabled,
-									}
-								)}
-							>
-								{title}
-							</h3>
+						<div
+							className={classNames('lfr-objects__card-header', {
+								'lfr-objects__card-header--no-border': noHeaderBorder,
+							})}
+						>
+							{customHeader ? (
+								customHeader
+							) : (
+								<>
+									<h3
+										className={classNames(
+											'lfr-objects__card-title',
+											{
+												'lfr-objects__card-title--disabled': disabled,
+											}
+										)}
+									>
+										{title}
+									</h3>
 
-							{tooltip && (
-								<span
-									className="ml-2"
-									data-tooltip-align="top"
-									title={tooltip.content}
-								>
-									<ClayIcon
-										className="lfr-objects__card-header-tooltip-icon"
-										symbol={tooltip.symbol}
-									/>
-								</span>
+									{tooltip && (
+										<span
+											className="ml-2"
+											data-tooltip-align="top"
+											title={tooltip.content}
+										>
+											<ClayIcon
+												className="lfr-objects__card-header-tooltip-icon"
+												symbol={tooltip.symbol}
+											/>
+										</span>
+									)}
+								</>
 							)}
 						</div>
+					)}
+
+					{alert?.showAlert && (
+						<ClayAlert
+							displayType={alert.otherProps.displayType}
+							onClose={() => alert.setShowAlert(false)}
+							title={alert.otherProps.title}
+							variant={alert.otherProps.variant}
+						>
+							{alert.content}
+						</ClayAlert>
 					)}
 
 					<div

@@ -1,47 +1,52 @@
 definition {
 
-	macro addCP {
+	@summary = "Default summary"
+	macro addCP(pageFriendlyURL = null, structureName = null, feedTitle = null) {
 		LexiconEntry.gotoAdd();
 
 		Type(
 			locator1 = "TextInput#NAME",
-			value1 = "${feedTitle}");
+			value1 = ${feedTitle});
 
 		Type(
 			locator1 = "TextInput#TARGET_PAGE_FRIENDLY_URL",
-			value1 = "${pageFriendlyURL}");
+			value1 = ${pageFriendlyURL});
 
 		Panel.expandPanel(panel = "Web Content Constraints");
 
-		WebContentFeeds.selectStructure(structureName = "${structureName}");
+		WebContentFeeds.selectStructure(structureName = ${structureName});
 
 		SelectFrame(value1 = "relative=top");
 
 		PortletEntry.save();
 	}
 
-	macro selectStructure {
-		var key_ddlDataDefinitionName = "${structureName}";
+	@summary = "Default summary"
+	macro selectStructure(structureName = null) {
+		var key_ddlDataDefinitionName = ${structureName};
 
 		Click(
-			buttonId = "selectDDMStructure",
-			locator1 = "Button#BUTTON_ID");
+			fieldLabel = "Structure",
+			locator1 = "Button#BUTTON_LABEL",
+			text = "Select");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		ClickNoError(
-			locator1 = "DDMSelectFeed#FEED_STRUCTURE_TABLE_NAME",
-			value1 = "${structureName}");
+			key_columnName = "title",
+			key_tableEntry = ${structureName},
+			locator1 = "LexiconTable#TABLE_ENTRY_INFO");
 
 		AssertConfirm(value1 = "Selecting a new structure changes the available templates and available feed item content. Do you want to proceed?");
 	}
 
-	macro viewTableEntryCP {
-		var key_feedName = "${feedName}";
+	@summary = "Default summary"
+	macro viewTableEntryCP(feedName = null) {
+		var key_feedName = ${feedName};
 
 		AssertTextEquals(
 			locator1 = "DDMSelectFeed#FEED_TABLE_NAME",
-			value1 = "${feedName}");
+			value1 = ${feedName});
 	}
 
 }

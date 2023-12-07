@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -25,13 +16,14 @@ userSearchFacetDisplayContextBuilder.setFrequencyThreshold(dataJSONObject.getInt
 userSearchFacetDisplayContextBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));
 userSearchFacetDisplayContextBuilder.setParamName(facet.getFieldId());
 userSearchFacetDisplayContextBuilder.setParamValue(fieldParam);
+userSearchFacetDisplayContextBuilder.setUserLocalService(UserLocalServiceUtil.getService());
 
 UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDisplayContextBuilder.build();
 %>
 
 <c:choose>
 	<c:when test="<%= userSearchFacetDisplayContext.isRenderNothing() %>">
-		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParamName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParamValue() %>" />
+		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParameterValue() %>" />
 	</c:when>
 	<c:otherwise>
 		<div class="panel panel-secondary">
@@ -42,8 +34,8 @@ UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDis
 			</div>
 
 			<div class="panel-body">
-				<div class="<%= cssClass %>" data-facetFieldName="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParamName()) %>" id="<%= randomNamespace %>facet">
-					<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParamName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParamValue() %>" />
+				<div class="<%= cssClass %>" data-facetFieldName="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParameterName()) %>" id="<%= randomNamespace %>facet">
+					<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(userSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= userSearchFacetDisplayContext.getParameterValue() %>" />
 
 					<ul class="list-unstyled users">
 						<li class="default facet-value">
@@ -57,7 +49,7 @@ UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDis
 						%>
 
 							<li class="facet-value">
-								<a class="<%= bucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= HtmlUtil.escapeAttribute(bucketDisplayContext.getBucketText()) %>" href="javascript:void(0);">
+								<a class="<%= bucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= bucketDisplayContext.getFilterValue() %>" href="javascript:void(0);">
 									<%= HtmlUtil.escape(bucketDisplayContext.getBucketText()) %>
 
 									<c:if test="<%= bucketDisplayContext.isFrequencyVisible() %>">

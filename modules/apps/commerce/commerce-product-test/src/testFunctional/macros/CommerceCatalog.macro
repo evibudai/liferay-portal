@@ -1,22 +1,76 @@
 definition {
 
-	macro addEntry {
+	@summary = "Default summary"
+	macro addEntry(productTitle = null, productShortDescription = null, productFullDescription = null, plusMenu = null) {
 		Click(locator1 = "Button#PLUS");
 
 		AssertClick(
-			key_plusMenu = "${plusMenu}",
+			key_plusMenu = ${plusMenu},
 			locator1 = "CommerceEntry#PLUS_MENU",
-			value1 = "${plusMenu}");
+			value1 = ${plusMenu});
 
 		CommerceEntry.addProductsEntry(
-			productFullDescription = "${productFullDescription}",
-			productShortDescription = "${productShortDescription}",
-			productTitle = "${productTitle}");
+			productFullDescription = ${productFullDescription},
+			productShortDescription = ${productShortDescription},
+			productTitle = ${productTitle});
 	}
 
-	macro openCatalogsAdmin {
+	@summary = "Default summary"
+	macro editCatalogEntry(catalogName = null, catalogNewName = null, catalogBasePriceList = null, catalogBasePromotion = null, catalogLanguage = null, catalogCurrency = null) {
+		if (IsElementNotPresent(locator1 = "CommerceEntry#HEADER_ID")) {
+			CommerceEntry.clickTableEntryEditButton(entryName = ${catalogName});
+		}
+
+		if (isSet(catalogNewName)) {
+			Type(
+				key_fieldLabel = "Name",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${catalogNewName});
+		}
+
+		if (isSet(catalogLanguage)) {
+			Select(
+				key_title = "Default Catalog Language",
+				locator1 = "CommerceEntry#CATALOGS_FORM",
+				value1 = ${catalogLanguage});
+		}
+
+		if (isSet(catalogCurrency)) {
+			Select(
+				key_title = "Currency",
+				locator1 = "CommerceEntry#CATALOGS_FORM",
+				value1 = ${catalogCurrency});
+		}
+
+		if (isSet(catalogBasePriceList)) {
+			Type(
+				key_labelName = "Base Price List",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = ${catalogBasePriceList});
+
+			Click(
+				key_menuItem = ${catalogBasePriceList},
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+
+		if (isSet(catalogBasePromotion)) {
+			Type(
+				key_labelName = "Base Promotion",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = ${catalogBasePromotion});
+
+			Click(
+				key_menuItem = ${catalogBasePromotion},
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+
+		Button.clickSave();
+	}
+
+	@summary = "Default summary"
+	macro openCatalogsAdmin(baseURL = null) {
 		Navigator.openWithAppendToBaseURL(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_catalog_web_internal_portlet_CommerceCatalogsPortlet");
 	}
 

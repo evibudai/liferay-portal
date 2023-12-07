@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.resource.v2_0.test;
@@ -30,6 +21,7 @@ import com.liferay.data.engine.rest.client.permission.Permission;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataDefinitionSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -46,6 +38,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -68,8 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -220,7 +211,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 					contentType, RandomTestUtil.randomString(),
 					Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantContentType != null) {
 			DataDefinition irrelevantDataDefinition =
@@ -230,14 +221,18 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			page =
 				dataDefinitionResource.
 					getDataDefinitionByContentTypeContentTypePage(
-						irrelevantContentType, null, Pagination.of(1, 2), null);
+						irrelevantContentType, null,
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDataDefinition),
+			assertContains(
+				irrelevantDataDefinition,
 				(List<DataDefinition>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+					irrelevantContentType));
 		}
 
 		DataDefinition dataDefinition1 =
@@ -253,16 +248,28 @@ public abstract class BaseDataDefinitionResourceTestCase {
 				getDataDefinitionByContentTypeContentTypePage(
 					contentType, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dataDefinition1, dataDefinition2),
-			(List<DataDefinition>)page.getItems());
-		assertValid(page);
+		assertContains(dataDefinition1, (List<DataDefinition>)page.getItems());
+		assertContains(dataDefinition2, (List<DataDefinition>)page.getItems());
+		assertValid(
+			page,
+			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				contentType));
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition1.getId());
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				String contentType)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -271,6 +278,14 @@ public abstract class BaseDataDefinitionResourceTestCase {
 
 		String contentType =
 			testGetDataDefinitionByContentTypeContentTypePage_getContentType();
+
+		Page<DataDefinition> dataDefinitionPage =
+			dataDefinitionResource.
+				getDataDefinitionByContentTypeContentTypePage(
+					contentType, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			dataDefinitionPage.getTotalCount());
 
 		DataDefinition dataDefinition1 =
 			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
@@ -287,20 +302,21 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		Page<DataDefinition> page1 =
 			dataDefinitionResource.
 				getDataDefinitionByContentTypeContentTypePage(
-					contentType, null, Pagination.of(1, 2), null);
+					contentType, null, Pagination.of(1, totalCount + 2), null);
 
 		List<DataDefinition> dataDefinitions1 =
 			(List<DataDefinition>)page1.getItems();
 
 		Assert.assertEquals(
-			dataDefinitions1.toString(), 2, dataDefinitions1.size());
+			dataDefinitions1.toString(), totalCount + 2,
+			dataDefinitions1.size());
 
 		Page<DataDefinition> page2 =
 			dataDefinitionResource.
 				getDataDefinitionByContentTypeContentTypePage(
-					contentType, null, Pagination.of(2, 2), null);
+					contentType, null, Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DataDefinition> dataDefinitions2 =
 			(List<DataDefinition>)page2.getItems();
@@ -311,11 +327,12 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		Page<DataDefinition> page3 =
 			dataDefinitionResource.
 				getDataDefinitionByContentTypeContentTypePage(
-					contentType, null, Pagination.of(1, 3), null);
+					contentType, null, Pagination.of(1, (int)totalCount + 3),
+					null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dataDefinition1, dataDefinition2, dataDefinition3),
-			(List<DataDefinition>)page3.getItems());
+		assertContains(dataDefinition1, (List<DataDefinition>)page3.getItems());
+		assertContains(dataDefinition2, (List<DataDefinition>)page3.getItems());
+		assertContains(dataDefinition3, (List<DataDefinition>)page3.getItems());
 	}
 
 	@Test
@@ -444,26 +461,35 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			testGetDataDefinitionByContentTypeContentTypePage_addDataDefinition(
 				contentType, dataDefinition2);
 
+		Page<DataDefinition> page =
+			dataDefinitionResource.
+				getDataDefinitionByContentTypeContentTypePage(
+					contentType, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<DataDefinition> ascPage =
 				dataDefinitionResource.
 					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null, Pagination.of(1, 2),
+						contentType, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(dataDefinition1, dataDefinition2),
-				(List<DataDefinition>)ascPage.getItems());
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)ascPage.getItems());
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)ascPage.getItems());
 
 			Page<DataDefinition> descPage =
 				dataDefinitionResource.
 					getDataDefinitionByContentTypeContentTypePage(
-						contentType, null, Pagination.of(1, 2),
+						contentType, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(dataDefinition2, dataDefinition1),
-				(List<DataDefinition>)descPage.getItems());
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)descPage.getItems());
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)descPage.getItems());
 		}
 	}
 
@@ -818,7 +844,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 					siteId, contentType, RandomTestUtil.randomString(),
 					Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if ((irrelevantSiteId != null) && (irrelevantContentType != null)) {
 			DataDefinition irrelevantDataDefinition =
@@ -830,14 +856,17 @@ public abstract class BaseDataDefinitionResourceTestCase {
 				dataDefinitionResource.
 					getSiteDataDefinitionByContentTypeContentTypePage(
 						irrelevantSiteId, irrelevantContentType, null,
-						Pagination.of(1, 2), null);
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDataDefinition),
+			assertContains(
+				irrelevantDataDefinition,
 				(List<DataDefinition>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+					irrelevantSiteId, irrelevantContentType));
 		}
 
 		DataDefinition dataDefinition1 =
@@ -853,16 +882,28 @@ public abstract class BaseDataDefinitionResourceTestCase {
 				getSiteDataDefinitionByContentTypeContentTypePage(
 					siteId, contentType, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dataDefinition1, dataDefinition2),
-			(List<DataDefinition>)page.getItems());
-		assertValid(page);
+		assertContains(dataDefinition1, (List<DataDefinition>)page.getItems());
+		assertContains(dataDefinition2, (List<DataDefinition>)page.getItems());
+		assertValid(
+			page,
+			testGetSiteDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				siteId, contentType));
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition1.getId());
 
 		dataDefinitionResource.deleteDataDefinition(dataDefinition2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteDataDefinitionByContentTypeContentTypePage_getExpectedActions(
+				Long siteId, String contentType)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -873,6 +914,14 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			testGetSiteDataDefinitionByContentTypeContentTypePage_getSiteId();
 		String contentType =
 			testGetSiteDataDefinitionByContentTypeContentTypePage_getContentType();
+
+		Page<DataDefinition> dataDefinitionPage =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeContentTypePage(
+					siteId, contentType, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			dataDefinitionPage.getTotalCount());
 
 		DataDefinition dataDefinition1 =
 			testGetSiteDataDefinitionByContentTypeContentTypePage_addDataDefinition(
@@ -889,20 +938,23 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		Page<DataDefinition> page1 =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeContentTypePage(
-					siteId, contentType, null, Pagination.of(1, 2), null);
+					siteId, contentType, null, Pagination.of(1, totalCount + 2),
+					null);
 
 		List<DataDefinition> dataDefinitions1 =
 			(List<DataDefinition>)page1.getItems();
 
 		Assert.assertEquals(
-			dataDefinitions1.toString(), 2, dataDefinitions1.size());
+			dataDefinitions1.toString(), totalCount + 2,
+			dataDefinitions1.size());
 
 		Page<DataDefinition> page2 =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeContentTypePage(
-					siteId, contentType, null, Pagination.of(2, 2), null);
+					siteId, contentType, null, Pagination.of(2, totalCount + 2),
+					null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DataDefinition> dataDefinitions2 =
 			(List<DataDefinition>)page2.getItems();
@@ -913,11 +965,12 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		Page<DataDefinition> page3 =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeContentTypePage(
-					siteId, contentType, null, Pagination.of(1, 3), null);
+					siteId, contentType, null,
+					Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dataDefinition1, dataDefinition2, dataDefinition3),
-			(List<DataDefinition>)page3.getItems());
+		assertContains(dataDefinition1, (List<DataDefinition>)page3.getItems());
+		assertContains(dataDefinition2, (List<DataDefinition>)page3.getItems());
+		assertContains(dataDefinition3, (List<DataDefinition>)page3.getItems());
 	}
 
 	@Test
@@ -1049,26 +1102,35 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			testGetSiteDataDefinitionByContentTypeContentTypePage_addDataDefinition(
 				siteId, contentType, dataDefinition2);
 
+		Page<DataDefinition> page =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeContentTypePage(
+					siteId, contentType, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<DataDefinition> ascPage =
 				dataDefinitionResource.
 					getSiteDataDefinitionByContentTypeContentTypePage(
-						siteId, contentType, null, Pagination.of(1, 2),
+						siteId, contentType, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(dataDefinition1, dataDefinition2),
-				(List<DataDefinition>)ascPage.getItems());
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)ascPage.getItems());
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)ascPage.getItems());
 
 			Page<DataDefinition> descPage =
 				dataDefinitionResource.
 					getSiteDataDefinitionByContentTypeContentTypePage(
-						siteId, contentType, null, Pagination.of(1, 2),
+						siteId, contentType, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(dataDefinition2, dataDefinition1),
-				(List<DataDefinition>)descPage.getItems());
+			assertContains(
+				dataDefinition2, (List<DataDefinition>)descPage.getItems());
+			assertContains(
+				dataDefinition1, (List<DataDefinition>)descPage.getItems());
 		}
 	}
 
@@ -1141,12 +1203,21 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		DataDefinition getDataDefinition =
 			dataDefinitionResource.
 				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
-					postDataDefinition.getSiteId(),
+					testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+						postDataDefinition),
 					postDataDefinition.getContentType(),
 					postDataDefinition.getDataDefinitionKey());
 
 		assertEquals(postDataDefinition, getDataDefinition);
 		assertValid(getDataDefinition);
+	}
+
+	protected Long
+			testGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+				DataDefinition dataDefinition)
+		throws Exception {
+
+		return dataDefinition.getSiteId();
 	}
 
 	protected DataDefinition
@@ -1176,13 +1247,16 @@ public abstract class BaseDataDefinitionResourceTestCase {
 									{
 										put(
 											"siteKey",
-											"\"" + dataDefinition.getSiteId() +
-												"\"");
+											"\"" +
+												testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+													dataDefinition) + "\"");
+
 										put(
 											"contentType",
 											"\"" +
 												dataDefinition.
 													getContentType() + "\"");
+
 										put(
 											"dataDefinitionKey",
 											"\"" +
@@ -1194,6 +1268,14 @@ public abstract class BaseDataDefinitionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/dataDefinitionByContentTypeByDataDefinitionKey"))));
+	}
+
+	protected Long
+			testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKey_getSiteId(
+				DataDefinition dataDefinition)
+		throws Exception {
+
+		return dataDefinition.getSiteId();
 	}
 
 	@Test
@@ -1442,6 +1524,13 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	}
 
 	protected void assertValid(Page<DataDefinition> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<DataDefinition> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<DataDefinition> dataDefinitions = page.getItems();
@@ -1456,6 +1545,25 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1734,14 +1842,16 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1758,6 +1868,10 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1767,18 +1881,18 @@ public abstract class BaseDataDefinitionResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1801,9 +1915,47 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("contentType")) {
-			sb.append("'");
-			sb.append(String.valueOf(dataDefinition.getContentType()));
-			sb.append("'");
+			Object object = dataDefinition.getContentType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1814,9 +1966,47 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("dataDefinitionKey")) {
-			sb.append("'");
-			sb.append(String.valueOf(dataDefinition.getDataDefinitionKey()));
-			sb.append("'");
+			Object object = dataDefinition.getDataDefinitionKey();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1898,9 +2088,47 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("defaultLanguageId")) {
-			sb.append("'");
-			sb.append(String.valueOf(dataDefinition.getDefaultLanguageId()));
-			sb.append("'");
+			Object object = dataDefinition.getDefaultLanguageId();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1926,9 +2154,47 @@ public abstract class BaseDataDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("storageType")) {
-			sb.append("'");
-			sb.append(String.valueOf(dataDefinition.getStorageType()));
-			sb.append("'");
+			Object object = dataDefinition.getStorageType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

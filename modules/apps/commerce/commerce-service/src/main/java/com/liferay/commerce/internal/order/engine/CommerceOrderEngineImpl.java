@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.internal.order.engine;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommerceOrderConstants;
-import com.liferay.commerce.constants.CommercePaymentConstants;
+import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
+import com.liferay.commerce.constants.CommercePaymentMethodConstants;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
@@ -29,11 +21,13 @@ import com.liferay.commerce.discount.service.CommerceDiscountLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountUsageEntryLocalService;
 import com.liferay.commerce.exception.CommerceOrderBillingAddressException;
 import com.liferay.commerce.exception.CommerceOrderGuestCheckoutException;
+import com.liferay.commerce.exception.CommerceOrderPriceException;
 import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
 import com.liferay.commerce.exception.CommerceOrderShippingMethodException;
 import com.liferay.commerce.exception.CommerceOrderStatusException;
 import com.liferay.commerce.exception.CommerceOrderValidatorException;
 import com.liferay.commerce.internal.order.status.CompletedCommerceOrderStatusImpl;
+import com.liferay.commerce.internal.order.status.PartiallyShippedCommerceOrderStatusImpl;
 import com.liferay.commerce.internal.order.status.ShippedCommerceOrderStatusImpl;
 import com.liferay.commerce.inventory.model.CommerceInventoryBookedQuantity;
 import com.liferay.commerce.inventory.service.CommerceInventoryBookedQuantityLocalService;
@@ -41,6 +35,7 @@ import com.liferay.commerce.inventory.type.constants.CommerceInventoryAuditTypeC
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
+import com.liferay.commerce.model.CommerceOrderItemModel;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.model.attributes.provider.CommerceModelAttributesProvider;
 import com.liferay.commerce.notification.util.CommerceNotificationHelper;
@@ -57,6 +52,7 @@ import com.liferay.commerce.service.CommerceShipmentLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodLocalService;
 import com.liferay.commerce.subscription.CommerceSubscriptionEntryHelperUtil;
 import com.liferay.commerce.util.CommerceShippingHelper;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -66,7 +62,6 @@ import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -77,6 +72,7 @@ import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -101,7 +97,7 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 
 	@Override
 	public CommerceOrder checkCommerceOrderShipmentStatus(
-			CommerceOrder commerceOrder)
+			CommerceOrder commerceOrder, boolean secure)
 		throws PortalException {
 
 		return _executeInTransaction(
@@ -109,7 +105,8 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 
 				@Override
 				public CommerceOrder call() throws Exception {
-					return _checkCommerceOrderShipmentStatus(commerceOrder);
+					return _checkCommerceOrderShipmentStatus(
+						commerceOrder, secure);
 				}
 
 			});
@@ -165,7 +162,8 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 		}
 
 		List<CommerceOrderStatus> commerceOrderStatuses =
-			_commerceOrderStatusRegistry.getCommerceOrderStatuses();
+			_commerceOrderStatusRegistry.getCommerceOrderStatuses(
+				commerceOrder);
 
 		int currentOrderStatusIndex = commerceOrderStatuses.indexOf(
 			currentCommerceOrderStatus);
@@ -211,7 +209,8 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 
 	@Override
 	public CommerceOrder transitionCommerceOrder(
-			CommerceOrder commerceOrder, int orderStatus, long userId)
+			CommerceOrder commerceOrder, int orderStatus, long userId,
+			boolean secure)
 		throws PortalException {
 
 		return _executeInTransaction(
@@ -220,7 +219,7 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 				@Override
 				public CommerceOrder call() throws Exception {
 					return _transitionCommerceOrder(
-						commerceOrder, orderStatus, userId);
+						commerceOrder, orderStatus, userId, secure);
 				}
 
 			});
@@ -277,18 +276,19 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 		List<CommerceOrderItem> commerceOrderItems =
 			commerceOrder.getCommerceOrderItems();
 
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
 		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
 			CommerceInventoryBookedQuantity commerceInventoryBookedQuantity =
 				_commerceInventoryBookedQuantityLocalService.
-					addCommerceBookedQuantity(
-						commerceOrderItem.getUserId(),
+					addCommerceInventoryBookedQuantity(
+						commerceOrderItem.getUserId(), null,
+						commerceOrderItem.getQuantity(),
 						commerceOrderItem.getSku(),
-						commerceOrderItem.getQuantity(), null,
+						commerceOrderItem.getUnitOfMeasureKey(),
 						HashMapBuilder.put(
 							CommerceInventoryAuditTypeConstants.ACCOUNT_NAME,
-							commerceAccount.getName()
+							accountEntry.getName()
 						).put(
 							CommerceInventoryAuditTypeConstants.ORDER_ID,
 							String.valueOf(
@@ -307,8 +307,12 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 	}
 
 	private CommerceOrder _checkCommerceOrderShipmentStatus(
-			CommerceOrder commerceOrder)
+			CommerceOrder commerceOrder, boolean secure)
 		throws Exception {
+
+		CommerceOrderStatus partiallyShippedCommerceOrderStatus =
+			_commerceOrderStatusRegistry.getCommerceOrderStatus(
+				PartiallyShippedCommerceOrderStatusImpl.KEY);
 
 		CommerceOrderStatus shippedCommerceOrderStatus =
 			_commerceOrderStatusRegistry.getCommerceOrderStatus(
@@ -330,19 +334,23 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 				CommerceShipmentConstants.SHIPMENT_STATUS_DELIVERED)) {
 
 			commerceOrder = transitionCommerceOrder(
-				commerceOrder, CommerceOrderConstants.ORDER_STATUS_COMPLETED,
-				0);
+				commerceOrder, CommerceOrderConstants.ORDER_STATUS_COMPLETED, 0,
+				secure);
 		}
 		else if (shippedCommerceOrderStatus.isTransitionCriteriaMet(
 					commerceOrder)) {
 
 			commerceOrder = transitionCommerceOrder(
-				commerceOrder, CommerceOrderConstants.ORDER_STATUS_SHIPPED, 0);
+				commerceOrder, CommerceOrderConstants.ORDER_STATUS_SHIPPED, 0,
+				secure);
 		}
-		else {
+		else if (partiallyShippedCommerceOrderStatus.isTransitionCriteriaMet(
+					commerceOrder)) {
+
 			commerceOrder = transitionCommerceOrder(
 				commerceOrder,
-				CommerceOrderConstants.ORDER_STATUS_PARTIALLY_SHIPPED, 0);
+				CommerceOrderConstants.ORDER_STATUS_PARTIALLY_SHIPPED, 0,
+				secure);
 		}
 
 		return commerceOrder;
@@ -380,10 +388,10 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 		serviceContext.setScopeGroupId(commerceOrder.getGroupId());
 
 		if (userId == 0) {
-			User defaultUser = _userLocalService.getDefaultUser(
+			User guestUser = _userLocalService.getGuestUser(
 				commerceOrder.getCompanyId());
 
-			userId = defaultUser.getUserId();
+			userId = guestUser.getUserId();
 		}
 
 		serviceContext.setUserId(userId);
@@ -439,23 +447,22 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 				commerceOrder.getCommercePaymentMethodKey());
 
 		if ((commerceOrder.getPaymentStatus() ==
-				CommerceOrderConstants.PAYMENT_STATUS_PAID) ||
+				CommerceOrderPaymentConstants.STATUS_COMPLETED) ||
 			(commercePaymentMethod == null) ||
 			((commercePaymentMethod != null) &&
 			 (commercePaymentMethod.getPaymentType() ==
-				 CommercePaymentConstants.
-					 COMMERCE_PAYMENT_METHOD_TYPE_OFFLINE) &&
+				 CommercePaymentMethodConstants.TYPE_OFFLINE) &&
 			 (commerceOrder.getPaymentStatus() ==
-				 CommerceOrderConstants.PAYMENT_STATUS_PENDING))) {
+				 CommerceOrderPaymentConstants.STATUS_PENDING))) {
 
 			return transitionCommerceOrder(
 				commerceOrder, CommerceOrderConstants.ORDER_STATUS_PENDING,
-				userId);
+				userId, true);
 		}
 
 		return transitionCommerceOrder(
 			commerceOrder, CommerceOrderConstants.ORDER_STATUS_IN_PROGRESS,
-			userId);
+			userId, true);
 	}
 
 	private CommerceOrder _executeInTransaction(
@@ -475,34 +482,40 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 			DTOConverter<?, ?> commerceOrderDTOConverter)
 		throws Exception {
 
-		Object commerceOrderObject = commerceOrderDTOConverter.toDTO(
+		DefaultDTOConverterContext dtoConverterContext =
 			new DefaultDTOConverterContext(
 				_dtoConverterRegistry, commerceOrder.getCommerceOrderId(),
-				LocaleUtil.getSiteDefault(), null, null));
+				LocaleUtil.getSiteDefault(), null, null);
+
+		dtoConverterContext.setAttribute("secure", Boolean.FALSE);
 
 		JSONObject commerceOrderJSONObject = _jsonFactory.createJSONObject(
-			commerceOrderObject.toString());
+			String.valueOf(
+				commerceOrderDTOConverter.toDTO(dtoConverterContext)));
 
 		JSONArray commerceOrderItemsJSONArray = _jsonFactory.createJSONArray();
 
 		DTOConverter<?, ?> commerceOrderItemDTOConverter =
 			_dtoConverterRegistry.getDTOConverter(
-				CommerceOrderItem.class.getName());
+				"Liferay.Headless.Commerce.Admin.Order",
+				CommerceOrderItem.class.getName(), "v1.0");
 
 		List<CommerceOrderItem> commerceOrderItems =
 			commerceOrder.getCommerceOrderItems();
 
 		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
-			Object commerceOrderItemObject =
-				commerceOrderItemDTOConverter.toDTO(
-					new DefaultDTOConverterContext(
-						_dtoConverterRegistry,
-						commerceOrderItem.getCommerceOrderItemId(),
-						LocaleUtil.getSiteDefault(), null, null));
+			dtoConverterContext = new DefaultDTOConverterContext(
+				_dtoConverterRegistry,
+				commerceOrderItem.getCommerceOrderItemId(),
+				LocaleUtil.getSiteDefault(), null, null);
+
+			dtoConverterContext.setAttribute("secure", Boolean.FALSE);
 
 			JSONObject commerceOrderItemJSONObject =
 				_jsonFactory.createJSONObject(
-					_jsonFactory.looseSerializeDeep(commerceOrderItemObject));
+					_jsonFactory.looseSerializeDeep(
+						commerceOrderItemDTOConverter.toDTO(
+							dtoConverterContext)));
 
 			commerceOrderItemsJSONArray.put(commerceOrderItemJSONObject);
 		}
@@ -525,12 +538,15 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 	private void _sendOrderStatusMessage(
 		CommerceOrder commerceOrder, int orderStatus) {
 
+		CommerceOrder originalCommerceOrder =
+			commerceOrder.cloneWithOriginalValues();
+
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
 				if ((orderStatus ==
 						CommerceOrderConstants.ORDER_STATUS_PENDING) &&
 					(commerceOrder.getPaymentStatus() ==
-						CommerceOrderConstants.PAYMENT_STATUS_PAID)) {
+						CommerceOrderPaymentConstants.STATUS_COMPLETED)) {
 
 					CommerceSubscriptionEntryHelperUtil.
 						checkCommerceSubscriptions(commerceOrder);
@@ -545,10 +561,13 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 
 				DTOConverter<?, ?> commerceOrderDTOConverter =
 					_dtoConverterRegistry.getDTOConverter(
-						CommerceOrder.class.getName());
+						"Liferay.Headless.Commerce.Admin.Order",
+						CommerceOrder.class.getName(), "v1.0");
 
 				message.setPayload(
 					JSONUtil.put(
+						"classPK", commerceOrder.getCommerceOrderId()
+					).put(
 						"commerceOrder",
 						_getCommerceOrderJSONObject(
 							commerceOrder, commerceOrderDTOConverter)
@@ -564,6 +583,9 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 							commerceOrder.getUserId())
 					).put(
 						"orderStatus", commerceOrder.getOrderStatus()
+					).put(
+						"originalCommerceOrder",
+						originalCommerceOrder.getModelAttributes()
 					));
 
 				MessageBusUtil.sendMessage(
@@ -574,7 +596,8 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 	}
 
 	private CommerceOrder _transitionCommerceOrder(
-			CommerceOrder commerceOrder, int orderStatus, long userId)
+			CommerceOrder commerceOrder, int orderStatus, long userId,
+			boolean secure)
 		throws Exception {
 
 		CommerceOrderStatus commerceOrderStatus =
@@ -591,7 +614,8 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 			_sendOrderStatusMessage(
 				commerceOrder, commerceOrderStatus.getKey());
 
-			return commerceOrderStatus.doTransition(commerceOrder, userId);
+			return commerceOrderStatus.doTransition(
+				commerceOrder, userId, secure);
 		}
 
 		CommerceOrderStatus currentCommerceOrderStatus =
@@ -612,7 +636,7 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 
 		_sendOrderStatusMessage(commerceOrder, commerceOrderStatus.getKey());
 
-		return commerceOrderStatus.doTransition(commerceOrder, userId);
+		return commerceOrderStatus.doTransition(commerceOrder, userId, secure);
 	}
 
 	private void _updateCommerceDiscountUsageEntry(
@@ -642,6 +666,13 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 
 	private void _validateCheckout(CommerceOrder commerceOrder)
 		throws Exception {
+
+		if (ListUtil.exists(
+				commerceOrder.getCommerceOrderItems(),
+				CommerceOrderItemModel::isPriceOnApplication)) {
+
+			throw new CommerceOrderPriceException();
+		}
 
 		if (!_commerceOrderValidatorRegistry.isValid(
 				LocaleUtil.getSiteDefault(), commerceOrder)) {

@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.layout.display.page.internal.info.item.test;
 
-import com.liferay.analytics.reports.layout.display.page.info.item.LayoutDisplayPageObjectProviderAnalyticsReportsInfoItem;
+import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItem;
 import com.liferay.analytics.reports.layout.display.page.internal.test.MockObject;
 import com.liferay.analytics.reports.layout.display.page.internal.test.layout.display.page.MockObjectLayoutDisplayPageObjectProvider;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
@@ -205,8 +196,8 @@ public class LayoutDisplayPageObjectProviderAnalyticsReportsInfoItemTest {
 					_group.getCreatorUserId(), _group.getGroupId(), 0,
 					_className.getClassNameId(), 0,
 					RandomTestUtil.randomString(),
-					LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0,
-					true, 0, 0, 0, 0,
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true,
+					0, 0, 0, 0,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId()));
 
@@ -237,6 +228,7 @@ public class LayoutDisplayPageObjectProviderAnalyticsReportsInfoItemTest {
 			themeDisplay.setLayoutSet(layout.getLayoutSet());
 
 			themeDisplay.setRequest(mockHttpServletRequest);
+			themeDisplay.setScopeGroupId(_group.getGroupId());
 			themeDisplay.setSiteGroupId(_group.getGroupId());
 
 			mockHttpServletRequest.setAttribute(
@@ -342,8 +334,8 @@ public class LayoutDisplayPageObjectProviderAnalyticsReportsInfoItemTest {
 					_group.getCreatorUserId(), _group.getGroupId(), 0,
 					_className.getClassNameId(), 0,
 					RandomTestUtil.randomString(),
-					LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0,
-					true, 0, 0, 0, 0,
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true,
+					0, 0, 0, 0,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId()));
 
@@ -418,8 +410,10 @@ public class LayoutDisplayPageObjectProviderAnalyticsReportsInfoItemTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
-	@Inject
-	private LayoutDisplayPageObjectProviderAnalyticsReportsInfoItem
+	@Inject(
+		filter = "model.class.name=com.liferay.layout.display.page.LayoutDisplayPageObjectProvider"
+	)
+	private AnalyticsReportsInfoItem<LayoutDisplayPageObjectProvider>
 		_layoutDisplayPageObjectProviderAnalyticsReportsInfoItem;
 
 	@Inject

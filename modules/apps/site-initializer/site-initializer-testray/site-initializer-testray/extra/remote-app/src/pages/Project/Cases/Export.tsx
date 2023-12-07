@@ -1,25 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the<QA hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayTable from '@clayui/table';
 import React, {useMemo} from 'react';
 import {useParams} from 'react-router-dom';
+import {STORAGE_KEYS} from '~/core/Storage';
+import {CONSENT_TYPE} from '~/util/enum';
 
 import EmptyState from '../../../components/EmptyState';
 import Container from '../../../components/Layout/Container';
 import MarkdownPreview from '../../../components/Markdown';
 import QATable from '../../../components/Table/QATable';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {useFetch} from '../../../hooks/useFetch';
 import useStorage from '../../../hooks/useStorage';
 import i18n from '../../../i18n';
@@ -28,12 +22,10 @@ import {
 	TestrayCase,
 	TestrayRequirement,
 	TestrayRequirementCase,
+	testrayCaseImpl,
 	testrayCaseRequirementsImpl,
-	testrayCaseRest,
 } from '../../../services/rest';
-import {STORAGE_KEYS} from '../../../util/constants';
 import dayjs from '../../../util/date';
-import {searchUtil} from '../../../util/search';
 
 type CaseWithRequirement = {
 	[key: number]: TestrayRequirement[];
@@ -44,11 +36,11 @@ type CaseItemsProps = {
 	cases: TestrayCase[];
 };
 
-const RequirementTable = ({
-	requirements,
-}: {
+type RequirementTableProps = {
 	requirements: TestrayRequirement[];
-}) => (
+};
+
+const RequirementTable: React.FC<RequirementTableProps> = ({requirements}) => (
 	<ClayTable>
 		<ClayTable.Head>
 			<ClayTable.Row>
@@ -67,117 +59,107 @@ const RequirementTable = ({
 		</ClayTable.Head>
 
 		<ClayTable.Body>
-			{requirements.map(
-				(requirement: TestrayRequirement, index: number) => (
-					<ClayTable.Row key={index}>
-						<ClayTable.Cell headingTitle>
-							{requirement?.key}
-						</ClayTable.Cell>
+			{requirements.map((requirement, index) => (
+				<ClayTable.Row key={index}>
+					<ClayTable.Cell headingTitle>
+						{requirement?.key}
+					</ClayTable.Cell>
 
-						<ClayTable.Cell>
-							<a
-								className="cursor-pointer"
-								onClick={() =>
-									window.open(requirement?.linkURL, '_blank')
-								}
-							>
-								{requirement?.linkURL}
-							</a>
-						</ClayTable.Cell>
+					<ClayTable.Cell>
+						<a
+							className="cursor-pointer"
+							onClick={() =>
+								window.open(requirement?.linkURL, '_blank')
+							}
+						>
+							{requirement?.linkURL}
+						</a>
+					</ClayTable.Cell>
 
-						<ClayTable.Cell>{requirement?.summary}</ClayTable.Cell>
-					</ClayTable.Row>
-				)
-			)}
+					<ClayTable.Cell>{requirement?.summary}</ClayTable.Cell>
+				</ClayTable.Row>
+			))}
 		</ClayTable.Body>
 	</ClayTable>
 );
 
-const CaseItems: React.FC<CaseItemsProps> = ({caseWithRequirements, cases}) => {
-	return (
-		<div>
-			<h5>{i18n.translate('case')}</h5>
+const CaseItems: React.FC<CaseItemsProps> = ({caseWithRequirements, cases}) => (
+	<div>
+		<h5>{i18n.translate('case')}</h5>
 
-			{cases?.map((Case, index) => {
-				const requirements = caseWithRequirements[Case?.id] || [];
+		{cases?.map((Case, index) => {
+			const requirements = caseWithRequirements[Case?.id] || [];
 
-				return (
-					<div className="mt-3" key={index}>
-						<Container>
-							<h5>{Case.name}</h5>
+			return (
+				<div className="mt-3" key={index}>
+					<Container>
+						<h5>{Case.name}</h5>
 
-							<QATable
-								items={[
-									{
-										title: i18n.translate('project-name'),
-										value: Case?.project?.name,
-									},
+						<QATable
+							items={[
+								{
+									title: i18n.translate('project-name'),
+									value: Case?.project?.name,
+								},
 
-									{
-										title: i18n.translate('type'),
-										value: Case?.caseType?.name,
-									},
-									{
-										title: i18n.translate('priority'),
-										value: Case?.priority,
-									},
-									{
-										title: i18n.translate('team'),
-										value: Case?.component?.team?.name,
-									},
-									{
-										title: i18n.translate('main-component'),
-										value: Case?.component?.name,
-									},
-									{
-										title: i18n.translate('description'),
-										value: (
-											<MarkdownPreview
-												markdown={Case.description}
-											/>
-										),
-									},
-									{
-										title: i18n.translate(
-											'estimated-duration'
-										),
-										value: Case?.estimatedDuration,
-									},
-									{
-										title: i18n.translate('steps'),
-										value: Case?.steps,
-									},
-									{
-										title: i18n.translate(
-											'date-last-modified'
-										),
-										value: dayjs(Case?.dateModified).format(
-											'lll'
-										),
-									},
-									{
-										title: i18n.translate(
-											'all-issues-found'
-										),
-										value: Case?.name,
-									},
-									{
-										title: i18n.translate('requirements'),
-										value: requirements?.length && (
-											<RequirementTable
-												requirements={requirements}
-											/>
-										),
-									},
-								]}
-							/>
-						</Container>
-					</div>
-				);
-			})}
-		</div>
-	);
-};
+								{
+									title: i18n.translate('type'),
+									value: Case?.caseType?.name,
+								},
+								{
+									title: i18n.translate('priority'),
+									value: Case?.priority,
+								},
+								{
+									title: i18n.translate('team'),
+									value: Case?.component?.team?.name,
+								},
+								{
+									title: i18n.translate('main-component'),
+									value: Case?.component?.name,
+								},
+								{
+									title: i18n.translate('description'),
+									value: (
+										<MarkdownPreview
+											markdown={Case.description}
+										/>
+									),
+								},
+								{
+									title: i18n.translate('estimated-duration'),
+									value: Case?.estimatedDuration,
+								},
+								{
+									title: i18n.translate('steps'),
+									value: Case?.steps,
+								},
+								{
+									title: i18n.translate('date-last-modified'),
+									value: dayjs(Case?.dateModified).format(
+										'lll'
+									),
+								},
+								{
+									title: i18n.translate('all-issues-found'),
+									value: Case?.name,
+								},
+								{
+									title: i18n.translate('requirements'),
+									value: requirements?.length && (
+										<RequirementTable
+											requirements={requirements}
+										/>
+									),
+								},
+							]}
+						/>
+					</Container>
+				</div>
+			);
+		})}
+	</div>
+);
 
 const ExportCaseContainer: React.FC<CaseItemsProps> = ({
 	caseWithRequirements,
@@ -248,28 +230,45 @@ const ExportCaseContainer: React.FC<CaseItemsProps> = ({
 const Export = () => {
 	const {id} = useParams();
 
-	const [caseIds] = useStorage(`${STORAGE_KEYS.EXPORT_CASE_IDS}-${id}`, []);
+	const [caseIds] = useStorage(
+		`${STORAGE_KEYS.EXPORT_CASE_IDS}-${id}` as STORAGE_KEYS,
+		{
+			consentType: CONSENT_TYPE.NECESSARY,
+			initialValue: [],
+			storageType: 'persisted',
+		}
+	);
 
 	const {data: casesData, loading} = useFetch<APIResponse<TestrayCase>>(
-		`/cases?filter=${searchUtil.in(
-			'id',
-			caseIds
-		)}&nestedFields=caseType,component,project,team&nestedFieldsDepth=3&pageSize=1000`,
-		(response) => testrayCaseRest.transformDataFromList(response)
+		'/cases',
+		{
+			params: {
+				filter: SearchBuilder.in('id', caseIds),
+				nestedFields: 'caseType,component,project,team',
+				nestedFieldsDepth: 3,
+				pageSize: 1000,
+			},
+			swrConfig: {shouldFetch: caseIds.length},
+			transformData: (response) =>
+				testrayCaseImpl.transformDataFromList(response),
+		}
 	);
 
 	const {data: requirementCasesData} = useFetch<
 		APIResponse<TestrayRequirementCase>
-	>(
-		loading
-			? null
-			: `/requirementscaseses?filter=${searchUtil.in(
-					'caseId',
-					caseIds
-			  )}&nestedFields=case.component,requirement,team&nestedFieldsDepth=3&pageSize=1000`,
-		(response) =>
-			testrayCaseRequirementsImpl.transformDataFromList(response)
-	);
+	>('/requirementscaseses', {
+		params: {
+			filter: SearchBuilder.in('caseId', caseIds),
+			nestedFields: 'case.component,requirement,team',
+			nestedFieldsDepth: 3,
+			pageSize: 1000,
+		},
+		swrConfig: {
+			shouldFetch: !loading,
+		},
+		transformData: (response) =>
+			testrayCaseRequirementsImpl.transformDataFromList(response),
+	});
 
 	const cases = casesData?.items || [];
 
@@ -301,7 +300,7 @@ const Export = () => {
 	}
 
 	return (
-		<div className="export-case-container p-3">
+		<div className="tr-export-case">
 			<div>
 				<CaseItems
 					caseWithRequirements={casesWithRequirements}

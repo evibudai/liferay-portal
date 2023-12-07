@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -16,8 +16,10 @@ definition {
 	}
 
 	@description = "COMMERCE-5937. As a buyer, I want open Account Selector to close if I open the Global Search"
-	@priority = "3"
+	@priority = 3
 	test AssertAccountSelectorIsClosedAfterGlobalSearchIsOpened {
+		property portal.acceptance = "false";
+
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
 		ApplicationsMenu.gotoSite(site = "Minium");
@@ -38,7 +40,7 @@ definition {
 	}
 
 	@description = "COMMERCE-5938. As a buyer, I want open Account Selector to close if I open the mini-cart"
-	@priority = "3"
+	@priority = 3
 	test AssertAccountSelectorIsClosedAfterMiniCartIsOpened {
 		property portal.acceptance = "false";
 
@@ -64,9 +66,9 @@ definition {
 	}
 
 	@description = "COMMERCE-5925. As a buyer, I want the account I have currently selected to be highlighted in the account selector bar"
-	@priority = "3"
+	@priority = 5
 	test AssertActiveAccountIsVisibleOnAccountSelectorBar {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -86,7 +88,7 @@ definition {
 	}
 
 	@description = "COMMERCE-5924. As a buyer, I want the account I have currently selected to be highlighted in the account selector dropdown"
-	@priority = "3"
+	@priority = 5
 	test AssertActiveAccountIsVisibleOnAccountSelectorDropdown {
 		property portal.acceptance = "true";
 
@@ -108,8 +110,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9022. As a sales agent, I want to be able to cancel the in-flow account creation"
-	@priority = "3"
+	@priority = 3
 	test CanCancelInFlowAccountCreation {
+		property portal.acceptance = "false";
+
 		task ("GIVEN a Minium site is created and the Catalog page is reached") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -127,7 +131,7 @@ definition {
 		}
 
 		task ("AND a modal shows up AND a name is typed") {
-			PortletEntry.inputName(name = "${accountName}");
+			PortletEntry.inputName(name = ${accountName});
 		}
 
 		task ("AND the user clicks 'Cancel'") {
@@ -149,9 +153,87 @@ definition {
 		}
 	}
 
+	@description = "Test for COMMERCE-12909. I want to be able to change the active account while in a pending order's details page"
+	@priority = 5
+	test CanChangeActiveAccountInPendingOrdersPage {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And 2 business accounts linked to the same buyer user") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "AC1",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "AC2",
+				accountType = "Business",
+				createNewAccount = "true",
+				existingUser = "true",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the buyer creates a pending order with AC1") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = "AC1");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			Button.click(button = "Add Order");
+		}
+
+		task ("When the buyer navigates to the order's details page") {
+			var portalURL = JSONCompany.getPortalURL();
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			Button.click(button = "View");
+
+			AssertLocation.assertPartialLocation(value1 = "${portalURL}/web/minium/pending-orders/-/pending-order/");
+		}
+
+		task ("Then the buyer can change the active account in the pending order's details using the account selector") {
+			for (var accountName : list "AC2,AC1") {
+				CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = ${accountName});
+
+				task ("And always get redirected to the Pending Orders page") {
+					AssertElementPresent(
+						key_orderAuthor = "Buyer User",
+						locator1 = "CommerceAccelerators#ORDERS_ENTRY_VIEW_BUTTON");
+
+					AssertLocation.assertPartialLocation(value1 = "${portalURL}/web/minium/pending-orders?p_p_id=com_liferay_commerce_order_content_web_internal_portlet_CommerceOpenOrderContentPortlet");
+				}
+			}
+		}
+	}
+
 	@description = "COMMERCE-9022. As a Sales Agent, I want to be able to select an account from the list (which is not the selected one), and have the selected account change to the newly selected account"
-	@priority = "3"
+	@priority = 3
 	test CanChangeActiveInFlowAccountFromAccountsList {
+		property portal.acceptance = "false";
+
 		task ("WHEN a minium site is created and the catalog page is reached") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -198,7 +280,7 @@ definition {
 	}
 
 	@description = "COMMERCE-9022. As a Sales Agent, I want to be able to create a new Account from the account selector"
-	@priority = "3"
+	@priority = 5
 	test CanCheckoutAfterInFlowAccountCreation {
 		property portal.acceptance = "true";
 
@@ -229,10 +311,7 @@ definition {
 				userLastName = "User",
 				userScreenName = "buyeruser");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			CommerceLogin.editPasswordCP(
 				newPassword = "ttest",
@@ -254,7 +333,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -265,8 +344,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		AssertTextEquals(
@@ -275,7 +354,7 @@ definition {
 	}
 
 	@description = "COMMERCE-9022. As a Sales Agent, I want to be able to create a new Account from the account selector"
-	@priority = "3"
+	@priority = 5
 	test CanCreateNewAccountInFlow {
 		property portal.acceptance = "true";
 
@@ -334,7 +413,7 @@ definition {
 	}
 
 	@description = "COMMERCE-9022. As a Buyer (without manage account permissions), I am not able to create an account"
-	@priority = "3"
+	@priority = 5
 	test CannotCreateAccountInFlowWithoutPermissions {
 		property portal.acceptance = "true";
 
@@ -365,10 +444,7 @@ definition {
 				userLastName = "User",
 				userScreenName = "buyeruser");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			CommerceLogin.editPasswordCP(
 				newPassword = "ttest",
@@ -398,8 +474,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9022. COMMERCE-9022. As a Sales Agent, I get an advice when I try to create an account without the required fields filled"
-	@priority = "3"
+	@priority = 3
 	test CannotSaveInFlowAccountWithoutRequiredField {
+		property portal.acceptance = "false";
+
 		task ("GIVEN a minium site is created and the Catalog page reached") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -421,7 +499,7 @@ definition {
 		}
 
 		task ("THEN a message that asks to fill the required field(s) appear and when the user closes the modal the account has not been created") {
-			AssertElementPresent(locator1 = "//div[@class='modal-content']/div/div[text()='Create New Account']");
+			AssertElementPresent(locator1 = "//div[@class='modal-content']/div/h1[text()='Create New Account']");
 
 			Click(
 				key_text = "Cancel",
@@ -430,7 +508,7 @@ definition {
 	}
 
 	@description = "COMMERCE-9022. As a Sales Agent, I want to search for an account in the accounts list, and select it as active account"
-	@priority = "3"
+	@priority = 5
 	test CanSearchForAnInFlowAccountAndSelectItAsActive {
 		property portal.acceptance = "true";
 
@@ -476,7 +554,7 @@ definition {
 
 		task ("WHEN the user searches for a specific account, the search results shows the right one and it is selectable as current account") {
 			Type(
-				locator1 = "AppBuilder#INPUT_OBJECT_RENAME",
+				locator1 = "Dropdown#SEARCH_FIELD",
 				value1 = "First");
 
 			AssertElementPresent(
@@ -498,7 +576,7 @@ definition {
 	}
 
 	@description = "COMMERCE-5927. As a buyer, I want to be able to select an account from the list (which is not the selected one), and have the selected account change to the newly selected account"
-	@priority = "3"
+	@priority = 5
 	test ChangeActiveAccountFromAccountsList {
 		property portal.acceptance = "true";
 
@@ -512,7 +590,7 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 1");
 
-		Navigator.gotoBack();
+		Click(locator1 = "CommerceNavigation#BACK");
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 2");
 
@@ -542,7 +620,7 @@ definition {
 	}
 
 	@description = "COMMERCE-5929. As a buyer, I want to be able to select an order from the list (which is not the selected one), and have the selected order change to the newly selected order"
-	@priority = "3"
+	@priority = 5
 	test ChangeActiveOrderFromOrdersList {
 		property portal.acceptance = "true";
 
@@ -578,7 +656,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		Click(locator1 = "Button#ANGLE_DOWN");
 
@@ -591,11 +669,11 @@ definition {
 		Click(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
 
 		AssertElementNotPresent(
-			key_filterOption = "${getFirstId}",
+			key_filterOption = ${getFirstId},
 			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
 
 		AssertElementPresent(
-			key_filterOption = "${getSecondId}",
+			key_filterOption = ${getSecondId},
 			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
 
 		Click(locator1 = "CommerceAccelerators#MINI_CART_BUTTON");
@@ -604,9 +682,9 @@ definition {
 	}
 
 	@description = "COMMERCE-5936. As a buyer, I want to be able to create a new order from the account selector dropdown's order list view, The created order should then be the selected order"
-	@priority = "3"
+	@priority = 5
 	test CreateNewOrderFromAccountSelectorDropdown {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -622,7 +700,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		Click(locator1 = "Button#ANGLE_DOWN");
 
@@ -633,12 +711,12 @@ definition {
 		Button.click(button = "Create New Order");
 
 		AssertElementNotPresent(
-			key_filterOption = "${getOrderId}",
+			key_filterOption = ${getOrderId},
 			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
 	}
 
 	@description = "COMMERCE-5956. As a buyer, I want to search for an account in the accounts list, and select it as active account"
-	@priority = "3"
+	@priority = 5
 	test SearchForAnAccountAndSelectItAsActive {
 		property portal.acceptance = "true";
 
@@ -652,7 +730,7 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "First Account");
 
-		Navigator.gotoBack();
+		Click(locator1 = "CommerceNavigation#BACK");
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Second Account");
 
@@ -663,7 +741,7 @@ definition {
 		Click(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN_BACK_BUTTON");
 
 		Type(
-			locator1 = "AppBuilder#INPUT_OBJECT_RENAME",
+			locator1 = "Dropdown#SEARCH_FIELD",
 			value1 = "Second");
 
 		AssertElementPresent(
@@ -684,7 +762,7 @@ definition {
 	}
 
 	@description = "COMMERCE-5957. As a buyer, I want to search for an order in the orders list, and select it as active order"
-	@priority = "3"
+	@priority = 3
 	test SearchForAnOrderAndSelectItAsActive {
 		property portal.acceptance = "false";
 
@@ -714,21 +792,21 @@ definition {
 
 		Type(
 			locator1 = "CommerceEntry#SEARCH_ORDER_ID",
-			value1 = "${firstOrderId}");
+			value1 = ${firstOrderId});
 
 		Click(
-			key_entryName = "${firstOrderId}",
+			key_entryName = ${firstOrderId},
 			locator1 = "CommerceEntry#SEARCH_ORDER_ID_RESULT");
 
 		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
 
 		AssertTextPresent(
 			locator1 = "CommerceEntry#ORDER_ID_FIRST_RESULT",
-			value1 = "${firstOrderId}");
+			value1 = ${firstOrderId});
 	}
 
 	@description = "COMMERCE-5926. As a buyer, I want to be able to see all of the accounts I am a member of in the account selector dropdown"
-	@priority = "3"
+	@priority = 3
 	test ViewAccountSelectorDropdownAccountsList {
 		property portal.acceptance = "false";
 
@@ -742,11 +820,11 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 1");
 
-		Navigator.gotoBack();
+		Click(locator1 = "CommerceNavigation#BACK");
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 2");
 
-		Navigator.gotoBack();
+		Click(locator1 = "CommerceNavigation#BACK");
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 3");
 
@@ -770,9 +848,9 @@ definition {
 	}
 
 	@description = "COMMERCE-5928. As a buyer, I want to be able to switch the account selector dropdown's view from the account list to the order list and I want to be able to see all the orders for the account I have selected"
-	@priority = "3"
+	@priority = 3
 	test ViewAccountSelectorDropdownOrdersList {
-		property portal.acceptance = "Intern Test";
+		property portal.acceptance = "false";
 
 		// TODO Review
 
@@ -797,11 +875,11 @@ definition {
 		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
 
 		AssertElementPresent(
-			key_rowNumber = "1",
+			key_rowNumber = 1,
 			locator1 = "AppBuilder#VALIDATE_LIST_TITLE_NAME_AT_ROW");
 
 		AssertElementPresent(
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "AppBuilder#VALIDATE_LIST_TITLE_NAME_AT_ROW");
 	}
 

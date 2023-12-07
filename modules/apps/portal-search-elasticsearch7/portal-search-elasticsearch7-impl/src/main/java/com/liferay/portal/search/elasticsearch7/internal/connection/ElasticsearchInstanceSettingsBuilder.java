@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.connection;
@@ -20,14 +11,11 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.settings.SettingsBuilder;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
-import com.liferay.portal.search.elasticsearch7.settings.ClientSettingsHelper;
-import com.liferay.portal.search.elasticsearch7.settings.SettingsContributor;
 
 import java.net.InetAddress;
 
 import java.nio.file.Path;
 
-import java.util.Collection;
 import java.util.function.Supplier;
 
 import org.elasticsearch.common.settings.Settings;
@@ -107,14 +95,6 @@ public class ElasticsearchInstanceSettingsBuilder {
 		return this;
 	}
 
-	public ElasticsearchInstanceSettingsBuilder localBindInetAddressSupplier(
-		Supplier<InetAddress> localBindInetAddressSupplier) {
-
-		_localBindInetAddressSupplier = localBindInetAddressSupplier;
-
-		return this;
-	}
-
 	public ElasticsearchInstanceSettingsBuilder networkHost(
 		String networkHost) {
 
@@ -125,14 +105,6 @@ public class ElasticsearchInstanceSettingsBuilder {
 
 	public ElasticsearchInstanceSettingsBuilder nodeName(String nodeName) {
 		_nodeName = nodeName;
-
-		return this;
-	}
-
-	public ElasticsearchInstanceSettingsBuilder settingsContributors(
-		Collection<SettingsContributor> settingsContributors) {
-
-		_settingsContributors = settingsContributors;
 
 		return this;
 	}
@@ -159,8 +131,6 @@ public class ElasticsearchInstanceSettingsBuilder {
 		_loadSidecarConfigurations();
 
 		_loadAdditionalConfigurations();
-
-		_loadSettingsContributors();
 	}
 
 	protected void put(String key, boolean value) {
@@ -221,21 +191,8 @@ public class ElasticsearchInstanceSettingsBuilder {
 		if (!Validator.isBlank(_networkHost)) {
 			put("network.host", _networkHost);
 		}
-		else {
-			if (Validator.isNull(networkBindHost) &&
-				Validator.isNull(networkHost) &&
-				Validator.isNull(networkPublishHost)) {
-
-				InetAddress inetAddress = _localBindInetAddressSupplier.get();
-
-				if (inetAddress != null) {
-					networkHost = inetAddress.getHostAddress();
-				}
-			}
-
-			if (Validator.isNotNull(networkHost)) {
-				put("network.host", networkHost);
-			}
+		else if (Validator.isNotNull(networkHost)) {
+			put("network.host", networkHost);
 		}
 
 		if (Validator.isNotNull(networkPublishHost)) {
@@ -322,26 +279,6 @@ public class ElasticsearchInstanceSettingsBuilder {
 		_disableXpack();
 	}
 
-	private void _loadSettingsContributors() {
-		ClientSettingsHelper clientSettingsHelper = new ClientSettingsHelper() {
-
-			@Override
-			public void put(String setting, String value) {
-				_settingsBuilder.put(setting, value);
-			}
-
-			@Override
-			public void putArray(String setting, String... values) {
-				_settingsBuilder.putList(setting, values);
-			}
-
-		};
-
-		for (SettingsContributor settingsContributor : _settingsContributors) {
-			settingsContributor.populate(clientSettingsHelper);
-		}
-	}
-
 	private void _loadSidecarConfigurations() {
 		put("bootstrap.system_call_filter", false);
 		put("node.store.allow_mmap", false);
@@ -355,11 +292,9 @@ public class ElasticsearchInstanceSettingsBuilder {
 		_elasticsearchConfigurationWrapper;
 	private ElasticsearchInstancePaths _elasticsearchInstancePaths;
 	private HttpPortRange _httpPortRange;
-	private Supplier<InetAddress> _localBindInetAddressSupplier;
 	private String _networkHost;
 	private String _nodeName;
 	private final SettingsBuilder _settingsBuilder = new SettingsBuilder(
 		Settings.builder());
-	private Collection<SettingsContributor> _settingsContributors;
 
 }

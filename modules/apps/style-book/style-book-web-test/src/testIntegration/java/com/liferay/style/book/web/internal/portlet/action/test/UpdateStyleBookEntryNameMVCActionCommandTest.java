@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.style.book.web.internal.portlet.action.test;
@@ -103,22 +94,23 @@ public class UpdateStyleBookEntryNameMVCActionCommandTest {
 				TestPropsValues.getUserId(), _group.getGroupId(), oldName,
 				StringPool.BLANK, _serviceContext);
 
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
 		String newName = RandomTestUtil.randomString();
 
-		actionRequest.addParameter("name", newName);
+		mockLiferayPortletActionRequest.addParameter("name", newName);
 
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		ReflectionTestUtil.invoke(
 			_updateStyleBookEntryNameMVCActionCommandTest,
 			"_updateStyleBookEntry", new Class<?>[] {ActionRequest.class},
-			actionRequest);
+			mockLiferayPortletActionRequest);
 
 		Assert.assertEquals(
 			1,
@@ -144,19 +136,20 @@ public class UpdateStyleBookEntryNameMVCActionCommandTest {
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_serviceContext);
 
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
-		actionRequest.addParameter("name", StringPool.BLANK);
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter("name", StringPool.BLANK);
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		ReflectionTestUtil.invoke(
 			_updateStyleBookEntryNameMVCActionCommandTest,
 			"_updateStyleBookEntry", new Class<?>[] {ActionRequest.class},
-			actionRequest);
+			mockLiferayPortletActionRequest);
 	}
 
 	@Test(expected = StyleBookEntryNameException.class)
@@ -168,19 +161,20 @@ public class UpdateStyleBookEntryNameMVCActionCommandTest {
 				TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_serviceContext);
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
-		actionRequest.addParameter("name", ".");
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter("name", ".");
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		ReflectionTestUtil.invoke(
 			_updateStyleBookEntryNameMVCActionCommandTest,
 			"_updateStyleBookEntry", new Class<?>[] {ActionRequest.class},
-			actionRequest);
+			mockLiferayPortletActionRequest);
 	}
 
 	@Test(expected = StyleBookEntryNameException.class)
@@ -192,19 +186,20 @@ public class UpdateStyleBookEntryNameMVCActionCommandTest {
 				TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_serviceContext);
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
-		actionRequest.addParameter("name", "/");
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter("name", "/");
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		ReflectionTestUtil.invoke(
 			_updateStyleBookEntryNameMVCActionCommandTest,
 			"_updateStyleBookEntry", new Class<?>[] {ActionRequest.class},
-			actionRequest);
+			mockLiferayPortletActionRequest);
 	}
 
 	@Test(expected = StyleBookEntryNameException.class)
@@ -216,19 +211,21 @@ public class UpdateStyleBookEntryNameMVCActionCommandTest {
 				TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_serviceContext);
-		MockLiferayPortletActionRequest actionRequest =
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
-		actionRequest.addParameter("name", RandomTestUtil.randomString(256));
-		actionRequest.addParameter(
+		mockLiferayPortletActionRequest.addParameter(
+			"name", RandomTestUtil.randomString(256));
+		mockLiferayPortletActionRequest.addParameter(
 			"styleBookEntryId",
 			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-		actionRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 
 		ReflectionTestUtil.invoke(
 			_updateStyleBookEntryNameMVCActionCommandTest,
 			"_updateStyleBookEntry", new Class<?>[] {ActionRequest.class},
-			actionRequest);
+			mockLiferayPortletActionRequest);
 	}
 
 	@Inject

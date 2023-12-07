@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.service.persistence.test;
@@ -241,8 +232,8 @@ public class ClientExtensionEntryRelPersistenceTest {
 		ClientExtensionEntryRel newClientExtensionEntryRel =
 			addClientExtensionEntryRel();
 
-		newClientExtensionEntryRel.setCompanyId(
-			clientExtensionEntryRel.getCompanyId());
+		newClientExtensionEntryRel.setGroupId(
+			clientExtensionEntryRel.getGroupId());
 
 		newClientExtensionEntryRel = _persistence.update(
 			newClientExtensionEntryRel);
@@ -312,12 +303,12 @@ public class ClientExtensionEntryRelPersistenceTest {
 	}
 
 	@Test
-	public void testCountByERC_C() throws Exception {
-		_persistence.countByERC_C("", RandomTestUtil.nextLong());
+	public void testCountByERC_G() throws Exception {
+		_persistence.countByERC_G("", RandomTestUtil.nextLong());
 
-		_persistence.countByERC_C("null", 0L);
+		_persistence.countByERC_G("null", 0L);
 
-		_persistence.countByERC_C((String)null, 0L);
+		_persistence.countByERC_G((String)null, 0L);
 	}
 
 	@Test
@@ -669,10 +660,10 @@ public class ClientExtensionEntryRelPersistenceTest {
 				clientExtensionEntryRel, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "externalReferenceCode"));
 		Assert.assertEquals(
-			Long.valueOf(clientExtensionEntryRel.getCompanyId()),
+			Long.valueOf(clientExtensionEntryRel.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
 				clientExtensionEntryRel, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "companyId"));
+				new Class<?>[] {String.class}, "groupId"));
 	}
 
 	protected ClientExtensionEntryRel addClientExtensionEntryRel()

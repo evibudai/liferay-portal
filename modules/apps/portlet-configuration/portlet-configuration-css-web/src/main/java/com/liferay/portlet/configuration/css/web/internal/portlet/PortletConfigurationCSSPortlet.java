@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.configuration.css.web.internal.portlet;
@@ -95,7 +86,7 @@ public class PortletConfigurationCSSPortlet extends MVCPortlet {
 			return;
 		}
 
-		PortletPreferences portletSetup =
+		PortletPreferences portletPreferences =
 			themeDisplay.getStrictLayoutPortletSetup(layout, portletId);
 
 		String css = _getCSS(actionRequest);
@@ -131,27 +122,28 @@ public class PortletConfigurationCSSPortlet extends MVCPortlet {
 			if ((title != null) &&
 				!Objects.equals(defaultPortletTitle, title)) {
 
-				portletSetup.setValue("portletSetupTitle_" + languageId, title);
+				portletPreferences.setValue(
+					"portletSetupTitle_" + languageId, title);
 			}
 			else {
-				portletSetup.reset("portletSetupTitle_" + languageId);
+				portletPreferences.reset("portletSetupTitle_" + languageId);
 			}
 		}
 
-		portletSetup.setValue(
+		portletPreferences.setValue(
 			"portletSetupUseCustomTitle", String.valueOf(useCustomTitle));
 
 		if (Validator.isNotNull(portletDecoratorId)) {
-			portletSetup.setValue(
+			portletPreferences.setValue(
 				"portletSetupPortletDecoratorId", portletDecoratorId);
 		}
 		else {
-			portletSetup.reset("portletSetupPortletDecoratorId");
+			portletPreferences.reset("portletSetupPortletDecoratorId");
 		}
 
-		portletSetup.setValue("portletSetupCss", css);
+		portletPreferences.setValue("portletSetupCss", css);
 
-		portletSetup.store();
+		portletPreferences.store();
 
 		SessionMessages.add(
 			actionRequest,

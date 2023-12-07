@@ -1,25 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.connection;
 
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.cluster.ClusterNode;
+import com.liferay.portal.kernel.concurrent.SystemExecutorServiceUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.ccr.CrossClusterReplicationConfigurationHelper;
@@ -31,10 +25,14 @@ import com.liferay.portal.search.elasticsearch7.internal.helper.SearchLogHelperU
 
 import java.net.InetAddress;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.FutureTask;
+import java.util.function.Supplier;
 
 import org.elasticsearch.client.RestHighLevelClient;
 
@@ -42,9 +40,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -70,28 +65,54 @@ public class ElasticsearchConnectionManager
 			return;
 		}
 
+		Supplier<ElasticsearchConnection> elasticsearchConnectionSupplier;
+
 		if (elasticsearchConnection.isActive()) {
-			try {
-				elasticsearchConnection.connect();
-			}
-			catch (RuntimeException runtimeException) {
-				if (connectionId.equals(
-						ConnectionConstants.SIDECAR_CONNECTION_ID)) {
+			FutureTask<ElasticsearchConnection> futureTask = new FutureTask<>(
+				() -> {
+					try {
+						elasticsearchConnection.connect();
+					}
+					catch (RuntimeException runtimeException) {
+						if (connectionId.equals(
+								ConnectionConstants.SIDECAR_CONNECTION_ID)) {
 
-					_log.error(
-						StringBundler.concat(
-							"Elasticsearch sidecar could not be started. ",
-							"Search will be unavailable. Manual installation ",
-							"of Elasticsearch and activation of remote mode ",
-							"is recommended."),
-						runtimeException);
+							_log.error(
+								StringBundler.concat(
+									"Elasticsearch sidecar could not be ",
+									"started. Search will be unavailable. ",
+									"Manual installation of Elasticsearch and ",
+									"activation of remote mode is ",
+									"recommended."),
+								runtimeException);
+						}
+
+						throw runtimeException;
+					}
+
+					return elasticsearchConnection;
+				});
+
+			ExecutorService executorService =
+				SystemExecutorServiceUtil.getExecutorService();
+
+			executorService.submit(futureTask);
+
+			elasticsearchConnectionSupplier = () -> {
+				try {
+					return futureTask.get();
 				}
-
-				throw runtimeException;
-			}
+				catch (Exception exception) {
+					return ReflectionUtil.throwException(exception);
+				}
+			};
+		}
+		else {
+			elasticsearchConnectionSupplier = () -> elasticsearchConnection;
 		}
 
-		_elasticsearchConnections.put(connectionId, elasticsearchConnection);
+		_elasticsearchConnectionSuppliers.put(
+			connectionId, elasticsearchConnectionSupplier);
 	}
 
 	@Override
@@ -115,11 +136,11 @@ public class ElasticsearchConnectionManager
 	public ElasticsearchConnection getElasticsearchConnection(
 		String connectionId) {
 
-		ElasticsearchConnection elasticsearchConnection =
-			_elasticsearchConnections.get(connectionId);
+		Supplier<ElasticsearchConnection> elasticsearchConnectionSupplier =
+			_elasticsearchConnectionSuppliers.get(connectionId);
 
 		if (_log.isInfoEnabled()) {
-			if (elasticsearchConnection != null) {
+			if (elasticsearchConnectionSupplier != null) {
 				_log.info("Returning connection with ID: " + connectionId);
 			}
 			else {
@@ -129,37 +150,64 @@ public class ElasticsearchConnectionManager
 			}
 		}
 
-		return elasticsearchConnection;
+		if (elasticsearchConnectionSupplier == null) {
+			return null;
+		}
+
+		return elasticsearchConnectionSupplier.get();
 	}
 
 	public Collection<ElasticsearchConnection> getElasticsearchConnections() {
-		return _elasticsearchConnections.values();
+		List<ElasticsearchConnection> elasticsearchConnections =
+			new ArrayList<>();
+
+		for (Supplier<ElasticsearchConnection> supplier :
+				_elasticsearchConnectionSuppliers.values()) {
+
+			elasticsearchConnections.add(supplier.get());
+		}
+
+		return elasticsearchConnections;
 	}
 
 	public String getLocalClusterConnectionId() {
 		ClusterNode localClusterNode = _clusterExecutor.getLocalClusterNode();
 
+		CrossClusterReplicationConfigurationHelper
+			currentCrossClusterReplicationConfigurationHelper =
+				_crossClusterReplicationConfigurationHelperSnapshot.get();
+
 		if (localClusterNode == null) {
+			if (currentCrossClusterReplicationConfigurationHelper == null) {
+				return null;
+			}
+
 			List<String> localClusterConnectionIds =
-				crossClusterReplicationConfigurationHelper.
+				currentCrossClusterReplicationConfigurationHelper.
 					getLocalClusterConnectionIds();
+
+			if (localClusterConnectionIds.isEmpty()) {
+				return null;
+			}
 
 			return localClusterConnectionIds.get(0);
 		}
 
 		InetAddress portalInetAddress = localClusterNode.getPortalInetAddress();
 
-		if (portalInetAddress == null) {
+		if ((portalInetAddress == null) ||
+			(currentCrossClusterReplicationConfigurationHelper == null)) {
+
 			return null;
 		}
+
+		Map<String, String> localClusterConnectionConfigurations =
+			currentCrossClusterReplicationConfigurationHelper.
+				getLocalClusterConnectionIdsMap();
 
 		String localClusterNodeHostName =
 			portalInetAddress.getHostName() + StringPool.COLON +
 				localClusterNode.getPortalPort();
-
-		Map<String, String> localClusterConnectionConfigurations =
-			crossClusterReplicationConfigurationHelper.
-				getLocalClusterConnectionIdsMap();
 
 		return localClusterConnectionConfigurations.get(
 			localClusterNodeHostName);
@@ -211,7 +259,7 @@ public class ElasticsearchConnectionManager
 	public boolean isCrossClusterReplicationEnabled() {
 		CrossClusterReplicationConfigurationHelper
 			currentCrossClusterReplicationConfigurationHelper =
-				crossClusterReplicationConfigurationHelper;
+				_crossClusterReplicationConfigurationHelperSnapshot.get();
 
 		if (currentCrossClusterReplicationConfigurationHelper == null) {
 			return false;
@@ -231,16 +279,19 @@ public class ElasticsearchConnectionManager
 			return;
 		}
 
-		ElasticsearchConnection elasticsearchConnection =
-			_elasticsearchConnections.get(connectionId);
+		Supplier<ElasticsearchConnection> elasticsearchConnectionSupplier =
+			_elasticsearchConnectionSuppliers.get(connectionId);
 
-		if (elasticsearchConnection == null) {
+		if (elasticsearchConnectionSupplier == null) {
 			return;
 		}
 
+		ElasticsearchConnection elasticsearchConnection =
+			elasticsearchConnectionSupplier.get();
+
 		elasticsearchConnection.close();
 
-		_elasticsearchConnections.remove(connectionId);
+		_elasticsearchConnectionSuppliers.remove(connectionId);
 	}
 
 	@Activate
@@ -289,11 +340,10 @@ public class ElasticsearchConnectionManager
 	protected void deactivate() {
 		elasticsearchConfigurationWrapper.unregister(this);
 
-		Collection<ElasticsearchConnection> elasticsearchConnections =
-			_elasticsearchConnections.values();
+		for (Supplier<ElasticsearchConnection> supplier :
+				_elasticsearchConnectionSuppliers.values()) {
 
-		for (ElasticsearchConnection elasticsearchConnection :
-				elasticsearchConnections) {
+			ElasticsearchConnection elasticsearchConnection = supplier.get();
 
 			elasticsearchConnection.close();
 		}
@@ -356,14 +406,6 @@ public class ElasticsearchConnectionManager
 		return getElasticsearchConnection(remoteClusterConnectionId);
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected volatile CrossClusterReplicationConfigurationHelper
-		crossClusterReplicationConfigurationHelper;
-
 	@Reference
 	protected volatile ElasticsearchConfigurationWrapper
 		elasticsearchConfigurationWrapper;
@@ -386,6 +428,10 @@ public class ElasticsearchConnectionManager
 			ConnectionConstants.REMOTE_CONNECTION_ID
 		).httpSSLEnabled(
 			elasticsearchConfigurationWrapper.httpSSLEnabled()
+		).maxConnections(
+			elasticsearchConfigurationWrapper.maxConnections()
+		).maxConnectionsPerRoute(
+			elasticsearchConfigurationWrapper.maxConnectionsPerRoute()
 		).networkHostAddresses(
 			elasticsearchConfigurationWrapper.networkHostAddresses()
 		).password(
@@ -420,10 +466,15 @@ public class ElasticsearchConnectionManager
 	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchConnectionManager.class);
 
+	private static final Snapshot<CrossClusterReplicationConfigurationHelper>
+		_crossClusterReplicationConfigurationHelperSnapshot = new Snapshot<>(
+			ElasticsearchConnectionManager.class,
+			CrossClusterReplicationConfigurationHelper.class, null, true);
+
 	@Reference
 	private ClusterExecutor _clusterExecutor;
 
-	private final Map<String, ElasticsearchConnection>
-		_elasticsearchConnections = new ConcurrentHashMap<>();
+	private final Map<String, Supplier<ElasticsearchConnection>>
+		_elasticsearchConnectionSuppliers = new ConcurrentHashMap<>();
 
 }

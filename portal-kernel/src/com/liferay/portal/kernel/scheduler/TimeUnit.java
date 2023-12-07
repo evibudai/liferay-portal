@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.scheduler;
@@ -21,10 +12,10 @@ import com.liferay.portal.kernel.util.Time;
  */
 public enum TimeUnit {
 
-	DAY("day", Time.DAY), HOUR("hour", Time.DAY), MILLISECOND("millisecond", 1),
-	MINUTE("minute", Time.MINUTE), MONTH("month", Time.MONTH),
-	SECOND("second", Time.SECOND), WEEK("week", Time.WEEK),
-	YEAR("year", Time.YEAR);
+	DAY("day", Time.DAY), HOUR("hour", Time.HOUR),
+	MILLISECOND("millisecond", 1), MINUTE("minute", Time.MINUTE),
+	MONTH("month", Time.MONTH), SECOND("second", Time.SECOND),
+	WEEK("week", Time.WEEK), YEAR("year", Time.YEAR);
 
 	public String getValue() {
 		return _value;
@@ -39,10 +30,9 @@ public enum TimeUnit {
 		return _value;
 	}
 
-	private TimeUnit(String value, long unitMills) {
+	private TimeUnit(String value, long unitMillis) {
 		_value = value;
-
-		_unitMillis = unitMills;
+		_unitMillis = unitMillis;
 	}
 
 	private final long _unitMillis;

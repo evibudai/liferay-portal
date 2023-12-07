@@ -1,0 +1,8 @@
+Bundle-Name: Liferay Headless Builder API
+Bundle-SymbolicName: com.liferay.headless.builder.api
+Bundle-Version: 10.0.0
+Export-Package:\
+	com.liferay.headless.builder.application,\
+	com.liferay.headless.builder.application.provider,\
+	com.liferay.headless.builder.application.publisher,\
+	com.liferay.headless.builder.constants

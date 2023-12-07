@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -18,9 +18,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -37,7 +37,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image can be used through Blogs on a connected site."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanAddImageViaBlogs {
 		DepotNavigator.openDepotAdmin();
@@ -71,7 +71,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image can be used through page creation on a connected site."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanAddImageViaContentPage {
 		JSONDocument.addFileWithUploadedFile(
@@ -97,7 +97,7 @@ definition {
 			backgroundImage = "Direct",
 			depotName = "Test Depot Name",
 			imageFileName = "Document_1.jpeg",
-			paddingTop = "2",
+			paddingTop = 2,
 			panel = "Styles");
 
 		PageEditor.publish();
@@ -108,7 +108,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image can be used through web content on a connected site."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanAddImageViaWebContent {
 		JSONDocument.addFileWithUploadedFile(
@@ -182,8 +182,233 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
+	@description = "This ensures that a document in a connected site can be copied to the depot."
+	@priority = 5
+	test CanCopyDocumentFromConnectedSiteToDepot {
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Site Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_2.jpeg");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		DMDocument.copy(
+			depotName = "Test Depot Name",
+			dmDocumentTitle = "DM Document Title",
+			homeFolder = "true");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a document in a depot can be copied to the connected site."
+	@priority = 5
+	test CanCopyDocumentFromDepotToConnectedSite {
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMDocument.copy(
+			dmDocumentTitle = "DM Document Title",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a folder in a connected site can be copied to the depot."
+	@priority = 5
+	test CanCopyFolderFromConnectedSiteToDepot {
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			folderName = "DM Folder Name",
+			groupName = "Site Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		DMFolder.copy(
+			depotName = "Test Depot Name",
+			dmFolderName = "DM Folder Name",
+			homeFolder = "true");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Folder Name");
+
+		DepotNavigator.openToDMFolder(
+			depotName = "Test Depot Name",
+			folderName = "DM Folder Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a folder in a depot can be copied to the connected site."
+	@priority = 5
+	test CanCopyFolderFromDepotToConnectedSite {
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Test Depot Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			folderName = "DM Folder Name",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMFolder.copy(
+			dmFolderName = "DM Folder Name",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Folder Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Folder Name");
+
+		DMNavigator.openToFolderInAdmin(
+			dmFolderName = "DM Folder Name",
+			groupName = "Site Name",
+			siteURLKey = "site-name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a document in a depot can not be copied to an unconnected site."
+	@priority = 4
+	test CannotCopyDocumentFromDepotToUnconnectedSite {
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMDocument.copy(
+			copyToUnconnectedSite = "true",
+			dmDocumentTitle = "DM Document Title",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Document Title");
+	}
+
+	@description = "This ensures that a document in a site can not be copied to the unconnected depot."
+	@priority = 4
+	test CannotCopyDocumentFromUnconnectedSiteToDepot {
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Site Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_2.jpeg");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Copy To",
+			rowEntry = "DM Document Title");
+
+		Button.clickSelect();
+
+		ItemSelector.changeWorkspaces(workspacesType = "Asset Library");
+
+		LexiconCard.viewCardNotPresent(card = "Test Depot Name");
+	}
+
+	@description = "This ensures that a folder in a depot can not be copied to an unconnected site."
+	@priority = 4
+	test CannotCopyFolderFromDepotToUnconnectedSite {
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Test Depot Name");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMFolder.copy(
+			copyToUnconnectedSite = "true",
+			dmFolderName = "DM Folder Name",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		LexiconEntry.viewNoEntry(rowEntry = "DM Folder Name");
+	}
+
+	@description = "This ensures that a folder in a site can not be copied to the unconnected depot."
+	@priority = 4
+	test CannotCopyFolderFromUnconnectedSiteToDepot {
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Copy To",
+			rowEntry = "DM Folder Nam");
+
+		Button.clickSelect();
+
+		ItemSelector.changeWorkspaces(workspacesType = "Asset Library");
+
+		LexiconCard.viewCardNotPresent(card = "Test Depot Name");
+	}
+
 	@description = "This ensures that a document using a type stored in AL can be removed on a connected site."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanRemoveDMWithDocumentType {
 		DepotNavigator.openDepotDocumentTypeAdmin(depotName = "Test Depot Name");
@@ -232,7 +457,7 @@ definition {
 	}
 
 	@description = "This ensures that a document using a type stored in AL can be viewed on the connected site widgets."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanViewDMwithDocumentTypeOnSiteWidgets {
 		JSONLayout.addPublicLayout(
@@ -293,7 +518,7 @@ definition {
 	}
 
 	@description = "This ensures that a document using a type stored in AL can be viewed in related assets on a connected site."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanViewDocumentTypeInRelatedAssets {
 		JSONDepot.addDepot(
@@ -353,7 +578,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the KB content field can be rendered correctly on a connected site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInKBAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -403,7 +628,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the MB content field can be rendered correctly on a connected site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInMBAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -448,7 +673,7 @@ definition {
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "site-name");
 
 		MessageboardsThread.viewCP(
-			replyCount = "0",
+			replyCount = 0,
 			threadBody = "MB Thread Message Body",
 			threadBodyImage = "dm-document-title",
 			threadSubject = "MB Thread Message Subject",
@@ -456,7 +681,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the MB content field can be rendered correctly on a connected site when publication is enabled."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInMBWithPublication {
 		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 		property osgi.module.configurations = "enabled=B\"true\"";
@@ -494,14 +719,14 @@ definition {
 
 		PortletEntry.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "site-name");
 
 		MessageboardsThread.viewCP(
-			replyCount = "0",
+			replyCount = 0,
 			threadBody = "MB Thread Message Body",
 			threadBodyImage = "dm-document-title",
 			threadSubject = "MB Thread Message Subject",
@@ -509,7 +734,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the WC content field can be rendered correctly on a connected site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInWCAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -576,7 +801,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the WC content field can be rendered correctly on a connected site when publication is enabled."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageInWCWithPublication {
 		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 		property osgi.module.configurations = "enabled=B\"true\"";
@@ -618,9 +843,9 @@ definition {
 
 		PortletEntry.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		Navigator.openSitePage(
 			pageName = "Test Page",
@@ -638,7 +863,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in DM widget can be rendered correctly on a connected site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageViaDMWidgetAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -656,7 +881,7 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
@@ -690,7 +915,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in an image fragment can be rendered correctly on a connect site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageViaImageFragmentAfterMovingToFolder {
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -746,7 +971,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in MG widget can be rendered correctly on a connected site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewImageViaMGAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -764,7 +989,7 @@ definition {
 			layoutName = "Media Gallery Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "2",
+			column = 2,
 			groupName = "Site Name",
 			layoutName = "Media Gallery Page",
 			widgetName = "Media Gallery");
@@ -804,7 +1029,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the Blogs content field can be rendered correctly on a connected site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewInlineImageAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -856,7 +1081,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the Blogs content field can be rendered correctly on a connected site when publication is enabled."
-	@priority = "4"
+	@priority = 4
 	test CanViewInlineImageWithPublication {
 		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 		property osgi.module.configurations = "enabled=B\"true\"";
@@ -895,9 +1120,9 @@ definition {
 
 		PortletEntry.publish();
 
-		JSONPublications.publishPublication(publicationName = "Publication Name");
-
-		Publications.viewPublicationPublished(publicationName = "Publication Name");
+		Publications.publishPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
 		BlogsNavigator.openToEditEntryInSite(
 			entryTitle = "Blogs Entry Title",
@@ -908,7 +1133,7 @@ definition {
 	}
 
 	@description = "This ensures that the depot assets can be used through Related Assets on a connected site."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanViewRelatedAssets {
 		JSONLayout.addPublicLayout(
@@ -968,7 +1193,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image in the Blogs small image can be rendered correctly on a connected site after moving it to a folder."
-	@priority = "4"
+	@priority = 4
 	test CanViewSmallImageAfterMovingToFolder {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -1023,6 +1248,156 @@ definition {
 			siteName = "Site Name");
 
 		BlogsEntry.viewSmallImage(uploadFileName = "Document_1.jpg");
+	}
+
+	@description = "This test makes sure that the connected site assets are not included in filter."
+	@priority = 4
+	test ConnectedSiteAssetsAreNotIncludedInFilter {
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
+
+		JSONCategory.addVocabulary(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Vocabulary Name");
+
+		var depotCategoryId = JSONCategory.addCategory(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Category",
+			vocabularyName = "Depot Vocabulary Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetCategoryIds = ${depotCategoryId},
+			assetTagNames = "depot tag",
+			dmDocumentTitle = "Depot DM Document Title ",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_2.doc");
+
+		JSONCategory.addVocabulary(
+			groupName = "Site Name",
+			title = "DXP Site Vocabulary");
+
+		var siteCategoryId = JSONCategory.addCategory(
+			groupName = "Site Name",
+			title = "Site Category",
+			vocabularyName = "DXP Site Vocabulary");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetCategoryIds = ${siteCategoryId},
+			assetTagNames = "site tag",
+			dmDocumentTitle = "Site DM Document Title",
+			groupName = "Site Name",
+			mimeType = "image/jpg",
+			sourceFileName = "Document_1.jpg");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+
+		DMDocument.viewFilterByDetails(
+			noTagNames = "site tag",
+			tagNames = "depot tag");
+
+		DMDocument.selectTags(tagNameList = "depot tag");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Site DM Document Title");
+
+		LexiconEntry.viewEntryName(rowEntry = "Depot DM Document Title");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+
+		DMDocument.viewFilterByDetails(
+			category = "Depot Category",
+			noCategory = "Site Category");
+
+		DMDocument.selectFilterItems(categories = "Depot Category");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Site DM Document Title");
+
+		LexiconEntry.viewEntryName(rowEntry = "Depot DM Document Title");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+
+		DMDocument.viewFilterByDetails(
+			category = "Text (1 Item)",
+			noCategory = "Image (1 Item)");
+
+		DMDocument.selectFilterItems(categories = "Text (1 Item)");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Site DM Document Title");
+
+		LexiconEntry.viewEntryName(rowEntry = "Depot DM Document Title");
+	}
+
+	@description = "This test makes sure that the unconnected site assets are not included in filter."
+	@priority = 4
+	test UnconnectedSiteAssetsAreNotIncludedInFilter {
+		JSONCategory.addVocabulary(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Vocabulary Name");
+
+		var depotCategoryId = JSONCategory.addCategory(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Category",
+			vocabularyName = "Depot Vocabulary Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetCategoryIds = ${depotCategoryId},
+			assetTagNames = "depot tag",
+			dmDocumentTitle = "Depot DM Document Title ",
+			groupName = "Test Depot Name",
+			mimeType = "application/msword",
+			sourceFileName = "Document_2.doc");
+
+		JSONCategory.addVocabulary(
+			groupName = "Site Name",
+			title = "DXP Site Vocabulary");
+
+		var siteCategoryId = JSONCategory.addCategory(
+			groupName = "Site Name",
+			title = "Site Category",
+			vocabularyName = "DXP Site Vocabulary");
+
+		JSONDocument.addFileWithUploadedFile(
+			assetCategoryIds = ${siteCategoryId},
+			assetTagNames = "site tag",
+			dmDocumentTitle = "Site DM Document Title",
+			groupName = "Site Name",
+			mimeType = "image/jpg",
+			sourceFileName = "Document_1.jpg");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+
+		DMDocument.viewFilterByDetails(
+			noTagNames = "site tag",
+			tagNames = "depot tag");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+
+		DMDocument.viewFilterByDetails(
+			category = "Depot Category",
+			noCategory = "Site Category");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+
+		DMDocument.viewFilterByDetails(
+			category = "Text (1 Item)",
+			noCategory = "Image (1 Item)");
 	}
 
 }

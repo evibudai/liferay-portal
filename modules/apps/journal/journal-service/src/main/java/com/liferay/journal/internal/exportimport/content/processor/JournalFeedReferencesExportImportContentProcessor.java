@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.exportimport.content.processor;
@@ -28,12 +19,12 @@ import com.liferay.journal.service.JournalFeedLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -54,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jorge Díaz
  */
 @Component(
-	immediate = true, property = "content.processor.type=JournalFeedReferences",
+	property = "content.processor.type=JournalFeedReferences",
 	service = ExportImportContentProcessor.class
 )
 public class JournalFeedReferencesExportImportContentProcessor
@@ -152,14 +143,28 @@ public class JournalFeedReferencesExportImportContentProcessor
 		).build();
 	}
 
+	private String _getJournalFeedReferenceURL(
+		String content, int beginPos, int endPos) {
+
+		endPos = StringUtil.indexOfAny(
+			content, _JOURNAL_FEED_REFERENCE_STOP_CHARS, beginPos, endPos);
+
+		if (endPos == -1) {
+			return null;
+		}
+
+		return content.substring(beginPos, endPos);
+	}
+
 	private boolean _isValidateJournalFeedReferences() {
 		try {
-			ExportImportServiceConfiguration configuration =
+			ExportImportServiceConfiguration exportImportServiceConfiguration =
 				_configurationProvider.getCompanyConfiguration(
 					ExportImportServiceConfiguration.class,
 					CompanyThreadLocal.getCompanyId());
 
-			return configuration.validateJournalFeedReferences();
+			return exportImportServiceConfiguration.
+				validateJournalFeedReferences();
 		}
 		catch (Exception exception) {
 			_log.error(exception);
@@ -403,8 +408,13 @@ public class JournalFeedReferencesExportImportContentProcessor
 								class.getName(),
 							new NoSuchFeedException());
 
+				exportImportContentValidationException.setJournalArticleFeedURL(
+					_getJournalFeedReferenceURL(content, beginPos, endPos));
 				exportImportContentValidationException.setStagedModelClassName(
 					JournalFeed.class.getName());
+				exportImportContentValidationException.setType(
+					ExportImportContentValidationException.
+						JOURNAL_FEED_NOT_FOUND);
 
 				throw exportImportContentValidationException;
 			}

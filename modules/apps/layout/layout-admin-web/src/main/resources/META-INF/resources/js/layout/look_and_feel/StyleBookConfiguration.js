@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton from '@clayui/button';
-import {createRenderURL, openSelectionModal} from 'frontend-js-web';
+import {ClayButtonWithIcon} from '@clayui/button';
+import ClayForm, {ClayInput} from '@clayui/form';
+import {openSelectionModal} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 export default function StyleBookConfiguration({
 	changeStyleBookURL,
+	isReadOnly,
 	portletNamespace,
 	styleBookEntryId: initialStyleBookEntryId,
 	styleBookEntryName: initialStyleBookEntryName,
@@ -28,25 +21,25 @@ export default function StyleBookConfiguration({
 	});
 
 	const handleChangeStyleBookClick = () => {
-		const renderURL = createRenderURL(changeStyleBookURL, {
-			styleBookEntryId: styleBookEntry.styleBookEntryId,
-		});
+		if (isReadOnly) {
+			return;
+		}
 
 		openSelectionModal({
-			buttonAddLabel: Liferay.Language.get('done'),
 			iframeBodyCssClass: '',
-			multiple: true,
 			onSelect(selectedItem) {
 				if (selectedItem) {
+					const itemValue = JSON.parse(selectedItem.value);
+
 					setStyleBookEntry({
-						name: selectedItem.name,
-						styleBookEntryId: selectedItem.stylebookentryid,
+						name: itemValue.name,
+						styleBookEntryId: itemValue.styleBookEntryId,
 					});
 				}
 			},
 			selectEventName: `${portletNamespace}selectStyleBook`,
 			title: Liferay.Language.get('select-style-book'),
-			url: renderURL.toString(),
+			url: changeStyleBookURL,
 		});
 	};
 
@@ -58,27 +51,29 @@ export default function StyleBookConfiguration({
 				value={styleBookEntry.styleBookEntryId}
 			/>
 
-			<h3 className="sheet-subtitle">
+			<label htmlFor={`${portletNamespace}styleBookEntry`}>
 				{Liferay.Language.get('style-book')}
-			</h3>
+			</label>
 
-			<p>
-				<strong>{`${Liferay.Language.get(
-					'style-book-name'
-				)}: `}</strong>
+			<div className="d-flex">
+				<ClayForm.Group className="c-mb-0 flex-grow-1">
+					<ClayInput
+						id={`${portletNamespace}styleBookEntry`}
+						onClick={handleChangeStyleBookClick}
+						readOnly
+						value={styleBookEntry.name}
+					/>
+				</ClayForm.Group>
 
-				{styleBookEntry.name}
-			</p>
-
-			<ClayButton.Group spaced>
-				<ClayButton
+				<ClayButtonWithIcon
+					aria-label={Liferay.Language.get('change-style-book')}
+					className="c-ml-2"
+					disabled={isReadOnly}
 					displayType="secondary"
 					onClick={handleChangeStyleBookClick}
-					size="sm"
-				>
-					{Liferay.Language.get('change-style-book')}
-				</ClayButton>
-			</ClayButton.Group>
+					symbol="change"
+				/>
+			</div>
 		</>
 	);
 }

@@ -37,7 +37,7 @@
 </tr>
 <tr>
 	<td>FIELDS_GROUP_EXPANDED</td>
-	<td>//button[contains(@class,'collapse-icon')]//following-sibling::div[contains(@class,'collapse show')]</td>
+	<td>//button[contains(@class,'panel-header') and contains(@class,'show')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -357,7 +357,7 @@
 </tr>
 <tr>
 	<td>PUBLISH_FORM_NAME_FIELD</td>
-	<td>//h1[contains(@class,'lfr-ddm__default-page-header-title') and contains(.,'${key_formName}')]</td>
+	<td>//div[contains(@class,'lfr-ddm__default-page-header-title') and contains(.,'${key_formName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -624,12 +624,12 @@
 </tr>
 <tr>
 	<td>DATA_PROVIDER_INPUT_PARAMETER_TYPE_FIELD</td>
-	<td>//div[contains(@data-field-name,'inputParameters')]//div[contains(@data-field-name,'inputParameterType')]//div[contains(@class,'form-builder-select-field')]</td>
+	<td>//div[contains(@data-field-name, 'inputParameters')]//button[contains(@aria-labelledby, 'inputParameters')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DATA_PROVIDER_INPUT_PARAMETER_TYPE_FIELD_OPTIONS_LIST</td>
-	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//li[contains(.,'${key_inputParameterType}')]</td>
+	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//*//li/button[contains(.,'${key_inputParameterType}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -652,22 +652,17 @@
 </tr>
 <tr>
 	<td>DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD</td>
-	<td>//div[contains(@data-field-name,'outputParameters')]//div[contains(@data-field-name,'outputParameterType')]//div[contains(@class,'form-builder-select-field')]</td>
+	<td>xpath=(//div[contains(@data-field-name, 'outputParameters')]//button[contains(@aria-labelledby, 'outputParameterType')])[1]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD_2</td>
-	<td>//div[contains(@data-field-name,'outputParameters')]/following-sibling::div//div[contains(@data-field-name,'outputParameterType')]//div[contains(@class,'form-builder-select-field')]</td>
+	<td>//div[contains(@data-field-name,'outputParameters')]/following-sibling::div//div[contains(@data-field-name,'outputParameterType')]//button[contains(@class,'form-control')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD_OPTIONS_LIST</td>
-	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//li[contains(.,'${key_outputParameterType}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD_OPTIONS_LIST_2</td>
-	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//li[contains(.,'${key_outputParameterType}')]</td>
+	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//*//li/button[contains(.,'${key_outputParameterType}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -718,7 +713,7 @@
 </tr>
 <tr>
 	<td>PAGE_NAME</td>
-	<td>//div[contains(@class,'ddm-form-page-container wizard')]['${key_pageName}']//h2[contains(text(),'${pageName}')]</td>
+	<td>//div[contains(@class,'ddm-form-page-container wizard')]['${key_pageName}']//div[contains(text(),'${pageName}')]</td>
 	<td></td>
 </tr>
 <tr>

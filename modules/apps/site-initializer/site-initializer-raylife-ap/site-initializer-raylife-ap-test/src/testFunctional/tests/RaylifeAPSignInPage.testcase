@@ -21,18 +21,25 @@ definition {
 		task ("Create a new Raylife AP Site") {
 			Site.openSitesAdmin();
 
-			TeamExtranet.addSiteTemplateCP(
-				siteName = "${testSiteName}",
-				siteTemplateName = "Raylife AP");
+			HeadlessSite.addSite(
+				siteName = "Raylife D2C",
+				templateName = "Raylife D2C",
+				templateType = "Site Initializer");
+
+			Raylife.createRaylifeSite(siteName = "Raylife AP");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "test test");
 
 		RaylifeAP.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,10 +48,15 @@ definition {
 	}
 
 	@description = "LPS-151795 - Verify if user can enter a valid email address"
-	@priority = "5"
+	@priority = 5
 	test CanSignIn {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		task ("Go to Raylife AP and exit Raylife AP") {
-			ApplicationsMenu.gotoSite(site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
 			var portalURL = PropsUtil.get("portal.url");
 
@@ -56,7 +68,9 @@ definition {
 
 			AssertElementPresent(locator1 = "RaylifeAP#LOGIN_PAGE");
 
-			RaylifeAP.signIn();
+			RaylifeAP.signIn(
+				emailAddress = "test@liferay.com",
+				password = "test");
 
 			AssertElementPresent(
 				key_title = "Hi, Test Test.",
@@ -65,10 +79,15 @@ definition {
 	}
 
 	@description = "LPS-151792 - Verify if message 'Please enter a valid email address.' appers when email is not valid"
-	@priority = "5"
+	@priority = 5
 	test CanViewMessageEmailNotValid {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		task ("Go to Raylife AP and exit Raylife AP") {
-			ApplicationsMenu.gotoSite(site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
 			var portalURL = PropsUtil.get("portal.url");
 
@@ -82,17 +101,22 @@ definition {
 				emailAddress = "test",
 				password = "test");
 
-			AssertElementPresent(locator1 = "RaylifeAP#EMAIL_INVALID_MESSAGE");
+			RaylifeAP.assertFieldRequiredMessage(field = "Please enter a valid email address.");
 
 			User.firstLoginPG();
 		}
 	}
 
 	@description = "LPS-151790 - Check that the message 'This field is required' appears when the e-mail field is required"
-	@priority = "5"
+	@priority = 5
 	test CanViewMessageFieldEmailRequired {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		task ("Go to Raylife AP and exit Raylife AP") {
-			ApplicationsMenu.gotoSite(site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
 			var portalURL = PropsUtil.get("portal.url");
 
@@ -106,17 +130,20 @@ definition {
 				emailAddress = "",
 				password = "test");
 
-			AssertElementPresent(locator1 = "RaylifeAP#FIELD_REQUIRED_MESSAGE");
-
-			User.firstLoginPG();
+			RaylifeAP.assertFieldRequiredMessage(field = "The Email Address field is required.");
 		}
 	}
 
 	@description = "LPS-151791 - Check that the message 'This field is required' appears when the password field is required"
-	@priority = "5"
+	@priority = 5
 	test CanViewMessageFieldPasswordRequired {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
 		task ("Go to Raylife AP and exit Raylife AP") {
-			ApplicationsMenu.gotoSite(site = "${testSiteName}");
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
 
 			var portalURL = PropsUtil.get("portal.url");
 
@@ -130,7 +157,7 @@ definition {
 				emailAddress = "test@liferay.com",
 				password = "");
 
-			AssertElementPresent(locator1 = "RaylifeAP#FIELD_REQUIRED_MESSAGE");
+			RaylifeAP.assertFieldRequiredMessage(field = "The Password field is required.");
 
 			User.firstLoginPG();
 		}

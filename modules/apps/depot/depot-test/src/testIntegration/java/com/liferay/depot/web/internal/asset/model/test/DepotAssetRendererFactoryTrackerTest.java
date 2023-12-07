@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.depot.web.internal.asset.model.test;
@@ -37,6 +28,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -45,6 +37,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -123,33 +116,33 @@ public class DepotAssetRendererFactoryTrackerTest {
 					assetRendererFactories.toString(), 4,
 					assetRendererFactories.size());
 
-				AssetRendererFactory<?> journalArticleAssetRendererFactory =
-					assetRendererFactories.get(0);
+				Assert.assertTrue(
+					ListUtil.exists(
+						assetRendererFactories,
+						journalArticleAssetRendererFactory -> Objects.equals(
+							journalArticleAssetRendererFactory.getClassName(),
+							JournalArticle.class.getName())));
 
-				Assert.assertEquals(
-					journalArticleAssetRendererFactory.getClassName(),
-					JournalArticle.class.getName());
+				Assert.assertTrue(
+					ListUtil.exists(
+						assetRendererFactories,
+						dlFileEntryAssetRendererFactory -> Objects.equals(
+							dlFileEntryAssetRendererFactory.getClassName(),
+							DLFileEntry.class.getName())));
 
-				AssetRendererFactory<?> dlFileEntryAssetRendererFactory =
-					assetRendererFactories.get(1);
+				Assert.assertTrue(
+					ListUtil.exists(
+						assetRendererFactories,
+						journalFolderAssetRendererFactory -> Objects.equals(
+							journalFolderAssetRendererFactory.getClassName(),
+							JournalFolder.class.getName())));
 
-				Assert.assertEquals(
-					dlFileEntryAssetRendererFactory.getClassName(),
-					DLFileEntry.class.getName());
-
-				AssetRendererFactory<?> journalFolderAssetRendererFactory =
-					assetRendererFactories.get(2);
-
-				Assert.assertEquals(
-					journalFolderAssetRendererFactory.getClassName(),
-					JournalFolder.class.getName());
-
-				AssetRendererFactory<?> dlFolderAssetRendererFactory =
-					assetRendererFactories.get(3);
-
-				Assert.assertEquals(
-					dlFolderAssetRendererFactory.getClassName(),
-					DLFolder.class.getName());
+				Assert.assertTrue(
+					ListUtil.exists(
+						assetRendererFactories,
+						dlFolderAssetRendererFactory -> Objects.equals(
+							dlFolderAssetRendererFactory.getClassName(),
+							DLFolder.class.getName())));
 			});
 	}
 

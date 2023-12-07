@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property osgi.module.configuration.file.names = "com.liferay.commerce.configuration.CommerceOrderImporterTypeConfiguration.config";
 	property osgi.module.configurations = "enabled=\"true\"";
 	property portal.release = "true";
@@ -33,8 +33,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9323. The 'Checkout Requested Delivery Date' toggle is present and disabled"
-	@priority = "3"
+	@priority = 3
 	test AssertCheckoutRequestDeliveryDateToggleIsPresentAndDisabled {
+		property portal.acceptance = "false";
+
 		task ("When a channel's configuration page is reached") {
 			CommerceChannels.openChannelsAdmin();
 
@@ -55,7 +57,7 @@ definition {
 	}
 
 	@description = "COMMERCE-9324. A buyer user can set the requested delivery date during the checkout process"
-	@priority = "3"
+	@priority = 5
 	test CanSetDeliveryDate {
 		property portal.acceptance = "true";
 
@@ -87,7 +89,7 @@ definition {
 		task ("And when an item is added to cart from Minium site") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 		}
 
 		task ("And when the checkout process is started") {

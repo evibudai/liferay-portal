@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.internal.search.test;
@@ -52,7 +43,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.stream.Stream;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -77,8 +68,8 @@ public class SearchCTTest {
 	@Before
 	public void setUp() throws Exception {
 		_ctCollection1 = _ctCollectionLocalService.addCTCollection(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			SearchCTTest.class.getName(), SearchCTTest.class.getName());
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			0, SearchCTTest.class.getName(), SearchCTTest.class.getName());
 		_group = GroupTestUtil.addGroup();
 	}
 
@@ -132,8 +123,8 @@ public class SearchCTTest {
 		}
 
 		_ctCollection2 = _ctCollectionLocalService.addCTCollection(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-			SearchCTTest.class.getSimpleName(),
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			0, SearchCTTest.class.getSimpleName(),
 			SearchCTTest.class.getSimpleName());
 
 		UserGroup modifiedUserGroup2 = null;
@@ -348,6 +339,36 @@ public class SearchCTTest {
 				modifiedLayout));
 	}
 
+	@Test
+	public void testSearchCTCollection() throws Exception {
+		SearchRequestBuilder searchRequestBuilder =
+			_searchRequestBuilderFactory.builder(
+			).companyId(
+				_group.getCompanyId()
+			).emptySearchEnabled(
+				true
+			).entryClassNames(
+				CTCollection.class.getName()
+			).modelIndexerClasses(
+				CTCollection.class
+			).withSearchContext(
+				searchContext -> {
+				}
+			);
+
+		SearchResponse searchResponse = _searcher.search(
+			searchRequestBuilder.build());
+
+		DocumentsAssert.assertValuesIgnoreRelevance(
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			Field.UID,
+			Arrays.asList(
+				_uidFactory.getUID(
+					CTCollection.class.getName(),
+					_ctCollection1.getCtCollectionId(),
+					CTConstants.CT_COLLECTION_ID_PRODUCTION)));
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
@@ -425,8 +446,7 @@ public class SearchCTTest {
 
 			DocumentsAssert.assertValuesIgnoreRelevance(
 				searchResponse.getRequestString(),
-				searchResponse.getDocumentsStream(), Field.UID,
-				Stream.of(uids));
+				searchResponse.getDocuments(), Field.UID, Arrays.asList(uids));
 		}
 	}
 

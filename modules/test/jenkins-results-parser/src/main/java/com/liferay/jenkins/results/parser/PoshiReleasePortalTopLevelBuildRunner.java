@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -17,7 +8,11 @@ package com.liferay.jenkins.results.parser;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,100 +24,6 @@ import org.apache.commons.io.FileUtils;
  */
 public class PoshiReleasePortalTopLevelBuildRunner
 	extends PortalTopLevelBuildRunner<PortalTopLevelBuildData> {
-
-	public void commitGradlePluginsPoshiRunnerCache(
-			GitWorkingDirectory gitWorkingDirectory)
-		throws IOException {
-
-		File buildTestGradleFile = getBuildTestGradleFile(gitWorkingDirectory);
-
-		gitWorkingDirectory.commitFileToCurrentBranch(
-			buildTestGradleFile.getCanonicalPath(),
-			"POSHI-0 CI TESTING ONLY: Use latest gradle-plugins-poshi-runner");
-
-		gitWorkingDirectory.commitFileToCurrentBranch(
-			".m2-tmp", "POSHI-0 CI TESTING ONLY: FAKE GRADLE CACHE");
-	}
-
-	public LocalGitBranch createLocalGitBranch(
-			GitWorkingDirectory gitWorkingDirectory)
-		throws IOException {
-
-		String upstreamBranchName = gitWorkingDirectory.getUpstreamBranchName();
-
-		LocalGitBranch pullRequestLocalGitBranch =
-			gitWorkingDirectory.createLocalGitBranch(
-				upstreamBranchName + "-temp-pr-" + System.currentTimeMillis(),
-				true,
-				_getDistPortalBundlesBuildSHA(
-					gitWorkingDirectory.getUpstreamBranchName()));
-
-		gitWorkingDirectory.checkoutLocalGitBranch(pullRequestLocalGitBranch);
-
-		gitWorkingDirectory.reset("--hard");
-
-		updateGradlePluginsPoshiRunnerDependency(gitWorkingDirectory);
-
-		commitGradlePluginsPoshiRunnerCache(gitWorkingDirectory);
-
-		return pullRequestLocalGitBranch;
-	}
-
-	public void deleteRemoteGitBranches() {
-		for (Map.Entry<GitWorkingDirectory, RemoteGitBranch> entry :
-				_remoteGitBranches.entrySet()) {
-
-			RemoteGitBranch remoteGitBranch = entry.getValue();
-
-			if (remoteGitBranch != null) {
-				GitWorkingDirectory gitWorkingDirectory = entry.getKey();
-
-				String upstreamBranchName =
-					gitWorkingDirectory.getUpstreamBranchName();
-
-				if (upstreamBranchName.equals("master")) {
-					continue;
-				}
-
-				System.out.println(
-					"Deleting remote git branch: " +
-						gitWorkingDirectory.getGitDirectory());
-
-				gitWorkingDirectory.deleteRemoteGitBranch(remoteGitBranch);
-			}
-		}
-	}
-
-	public File getBuildTestGradleFile(
-		GitWorkingDirectory gitWorkingDirectory) {
-
-		return new File(
-			gitWorkingDirectory.getWorkingDirectory(),
-			"portal-web/build-test.gradle");
-	}
-
-	public RemoteGitRepository getPullRequestRemoteGitRepository(
-		String upstreamBranchName) {
-
-		String portalGitHubURL = _getPortalGitHubURL();
-
-		Matcher matcher = GitRemote.getRemoteURLMatcher(portalGitHubURL);
-
-		if (matcher.find()) {
-			String repositoryName = "liferay-portal";
-
-			if (!upstreamBranchName.equals("master")) {
-				repositoryName = repositoryName + "-ee";
-			}
-
-			return GitRepositoryFactory.getRemoteGitRepository(
-				matcher.group("hostname"), repositoryName,
-				matcher.group("username"));
-		}
-
-		throw new RuntimeException(
-			"Invalid portal GitHub URL: " + portalGitHubURL);
-	}
 
 	@Override
 	public Workspace getWorkspace() {
@@ -151,7 +52,7 @@ public class PoshiReleasePortalTopLevelBuildRunner
 
 		setUpWorkspace();
 
-		preparePoshiPortalPullRequests();
+		_preparePoshiPortalPullRequests();
 
 		invokeDownstreamBuilds();
 
@@ -159,39 +60,7 @@ public class PoshiReleasePortalTopLevelBuildRunner
 
 		publishJenkinsReport();
 
-		deleteRemoteGitBranches();
-	}
-
-	public void updateGradlePluginsPoshiRunnerDependency(
-			GitWorkingDirectory gitWorkingDirectory)
-		throws IOException {
-
-		Workspace workspace = getWorkspace();
-
-		WorkspaceGitRepository workspaceGitRepository =
-			workspace.getPrimaryWorkspaceGitRepository();
-
-		File sourceCacheDir = new File(
-			workspaceGitRepository.getDirectory(),
-			".m2-tmp/com/liferay/com.liferay.gradle.plugins.poshi.runner");
-
-		File targetCacheDir = new File(
-			gitWorkingDirectory.getWorkingDirectory(),
-			".m2-tmp/com/liferay/com.liferay.gradle.plugins.poshi.runner");
-
-		FileUtils.copyDirectory(sourceCacheDir, targetCacheDir);
-
-		File file = getBuildTestGradleFile(gitWorkingDirectory);
-
-		String fileContent = JenkinsResultsParserUtil.read(file);
-
-		JenkinsResultsParserUtil.write(
-			file,
-			fileContent.replaceAll(
-				"([\\s]*)(.*\"com\\.liferay\\.gradle\\.plugins\\.defaults\".*)",
-				"$1$2$1classpath group: \"com.liferay\", name: " +
-					"\"com.liferay.gradle.plugins.poshi.runner\", version: \"" +
-						getGradlePluginsPoshiRunnerVersion() + "\""));
+		_deleteRemoteGitBranches();
 	}
 
 	protected PoshiReleasePortalTopLevelBuildRunner(
@@ -200,7 +69,88 @@ public class PoshiReleasePortalTopLevelBuildRunner
 		super(portalTopLevelBuildData);
 	}
 
-	protected PullRequest createPortalPullRequest(
+	@Override
+	protected void invokeDownstreamBuilds() {
+		TopLevelBuild topLevelBuild = getTopLevelBuild();
+
+		for (Map.Entry<GitWorkingDirectory, PullRequest> entry :
+				_pullRequests.entrySet()) {
+
+			GitWorkingDirectory gitWorkingDirectory = entry.getKey();
+
+			for (String jobName : _getJobNames(gitWorkingDirectory)) {
+				topLevelBuild.addDownstreamBuilds(
+					_getBuildInvocationURL(jobName, entry));
+			}
+		}
+	}
+
+	@Override
+	protected void prepareInvocationBuildDataList() {
+	}
+
+	@Override
+	protected void validateBuildParameters() {
+		_validateBuildParameterPortalGitHubURL();
+	}
+
+	private void _commitGradlePluginsPoshiRunnerCache(
+			GitWorkingDirectory gitWorkingDirectory)
+		throws IOException {
+
+		File buildGradleFile = null;
+
+		if (gitWorkingDirectory instanceof PortalGitWorkingDirectory) {
+			buildGradleFile = _getBuildTestGradleFile(gitWorkingDirectory);
+		}
+
+		if (gitWorkingDirectory instanceof QAWebsitesGitWorkingDirectory) {
+			buildGradleFile = new File(
+				gitWorkingDirectory.getWorkingDirectory(), "lxc");
+		}
+
+		gitWorkingDirectory.commitFileToCurrentBranch(
+			buildGradleFile.getCanonicalPath(),
+			"POSHI-0 CI TESTING ONLY: Use latest gradle-plugins-poshi-runner");
+
+		gitWorkingDirectory.commitFileToCurrentBranch(
+			".m2-tmp", "POSHI-0 CI TESTING ONLY: FAKE GRADLE CACHE");
+	}
+
+	private LocalGitBranch _createLocalGitBranch(
+			GitWorkingDirectory gitWorkingDirectory)
+		throws IOException {
+
+		LocalGitBranch pullRequestLocalGitBranch = null;
+
+		String branchName =
+			gitWorkingDirectory.getUpstreamBranchName() + "-temp-pr-" +
+				System.currentTimeMillis();
+
+		if (gitWorkingDirectory instanceof QAWebsitesGitWorkingDirectory) {
+			pullRequestLocalGitBranch =
+				gitWorkingDirectory.createLocalGitBranch(branchName, true);
+		}
+		else {
+			pullRequestLocalGitBranch =
+				gitWorkingDirectory.createLocalGitBranch(
+					branchName, true,
+					_getDistPortalBundlesBuildSHA(
+						gitWorkingDirectory.getUpstreamBranchName()));
+		}
+
+		gitWorkingDirectory.checkoutLocalGitBranch(pullRequestLocalGitBranch);
+
+		gitWorkingDirectory.reset("--hard");
+
+		_updateGradlePluginsPoshiRunnerDependency(gitWorkingDirectory);
+
+		_commitGradlePluginsPoshiRunnerCache(gitWorkingDirectory);
+
+		return pullRequestLocalGitBranch;
+	}
+
+	private PullRequest _createPortalPullRequest(
 		GitWorkingDirectory gitWorkingDirectory) {
 
 		try {
@@ -210,14 +160,17 @@ public class PoshiReleasePortalTopLevelBuildRunner
 			String upstreamBranchName =
 				gitWorkingDirectory.getUpstreamBranchName();
 
-			if (!upstreamBranchName.equals("master")) {
-				localGitBranch = createLocalGitBranch(gitWorkingDirectory);
+			if ((gitWorkingDirectory instanceof
+					QAWebsitesGitWorkingDirectory) ||
+				!upstreamBranchName.equals("master")) {
+
+				localGitBranch = _createLocalGitBranch(gitWorkingDirectory);
 			}
 
 			RemoteGitBranch remoteGitBranch =
 				gitWorkingDirectory.pushToRemoteGitRepository(
 					true, localGitBranch, localGitBranch.getName(),
-					getPullRequestRemoteGitRepository(upstreamBranchName));
+					_getPullRequestRemoteGitRepository(gitWorkingDirectory));
 
 			_remoteGitBranches.put(gitWorkingDirectory, remoteGitBranch);
 
@@ -237,87 +190,103 @@ public class PoshiReleasePortalTopLevelBuildRunner
 		}
 	}
 
-	protected String getGradlePluginsPoshiRunnerVersion() {
-		if (_gradlePluginsPoshiRunnerVersion != null) {
-			return _gradlePluginsPoshiRunnerVersion;
-		}
+	private void _deleteRemoteGitBranches() {
+		for (Map.Entry<GitWorkingDirectory, RemoteGitBranch> entry :
+				_remoteGitBranches.entrySet()) {
 
-		Workspace workspace = getWorkspace();
+			RemoteGitBranch remoteGitBranch = entry.getValue();
 
-		WorkspaceGitRepository primaryWorkspaceGitRepository =
-			workspace.getPrimaryWorkspaceGitRepository();
+			if (remoteGitBranch != null) {
+				GitWorkingDirectory gitWorkingDirectory = entry.getKey();
 
-		File bndFile = new File(
-			primaryWorkspaceGitRepository.getDirectory(),
-			"modules/sdk/gradle-plugins-poshi-runner/bnd.bnd");
+				String upstreamBranchName =
+					gitWorkingDirectory.getUpstreamBranchName();
 
-		try {
-			String fileContent = JenkinsResultsParserUtil.read(bndFile);
+				if (upstreamBranchName.equals("master")) {
+					continue;
+				}
 
-			Matcher matcher = _bundleVersionPattern.matcher(fileContent);
+				System.out.println(
+					"Deleting remote git branch: " +
+						gitWorkingDirectory.getGitDirectory());
 
-			matcher.find();
-
-			_gradlePluginsPoshiRunnerVersion = matcher.group(1);
-
-			return _gradlePluginsPoshiRunnerVersion;
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
+				gitWorkingDirectory.deleteRemoteGitBranch(remoteGitBranch);
+			}
 		}
 	}
 
-	protected String getJobInvocationURL(String jobName) {
+	private List<File> _getBuildGradleFiles(
+		GitWorkingDirectory gitWorkingDirectory) {
+
+		if (gitWorkingDirectory instanceof PortalGitWorkingDirectory) {
+			return new ArrayList<>(
+				Arrays.asList(
+					new File(
+						gitWorkingDirectory.getWorkingDirectory(),
+						"portal-web/build-test.gradle")));
+		}
+
+		if (gitWorkingDirectory instanceof QAWebsitesGitWorkingDirectory) {
+			return JenkinsResultsParserUtil.findFiles(
+				new File(gitWorkingDirectory.getWorkingDirectory(), "lxc"),
+				"build\\.gradle");
+		}
+
+		return Collections.emptyList();
+	}
+
+	private String _getBuildInvocationURL(
+		String jobName, Map.Entry<GitWorkingDirectory, PullRequest> entry) {
+
+		StringBuilder sb = new StringBuilder();
+
 		BuildData buildData = getBuildData();
 
 		String cohortName = buildData.getCohortName();
 
-		return JenkinsResultsParserUtil.combine(
+		sb.append(
 			JenkinsResultsParserUtil.getMostAvailableMasterURL(
-				"http://" + cohortName + ".liferay.com", 1),
-			"/job/", jobName.replaceAll("-controller\\(.*\\)", ""));
-	}
+				"http://" + cohortName + ".liferay.com", 1));
 
-	protected void invokeDownstreamBuilds() {
-		BuildData buildData = getBuildData();
+		sb.append("/job/");
 
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
+		sb.append(jobName);
 
-		for (Map.Entry<String, PullRequest> entry : _pullRequests.entrySet()) {
-			StringBuilder sb = new StringBuilder();
+		sb.append("/buildWithParameters?token=");
 
-			String jobName =
-				"test-portal-acceptance-pullrequest(" + entry.getKey() + ")";
+		try {
+			sb.append(
+				JenkinsResultsParserUtil.getBuildProperty(
+					"jenkins.authentication.token"));
 
-			sb.append(getJobInvocationURL(jobName));
+			Map<String, String> invocationParameters = new HashMap<>();
 
-			sb.append("/buildWithParameters?");
-			sb.append("token=");
+			invocationParameters.put(
+				"JENKINS_GITHUB_BRANCH_NAME",
+				_getGitHubBranchName("JENKINS_GITHUB_URL"));
+			invocationParameters.put(
+				"JENKINS_GITHUB_BRANCH_USERNAME",
+				_getGitHubBranchUsername("JENKINS_GITHUB_URL"));
+			invocationParameters.put(
+				"JENKINS_TOP_LEVEL_BUILD_URL", buildData.getBuildURL());
 
-			try {
-				sb.append(
-					JenkinsResultsParserUtil.getBuildProperty(
-						"jenkins.authentication.token"));
+			PullRequest pullRequest = entry.getValue();
 
-				Map<String, String> invocationParameters = new HashMap<>();
+			if (jobName.equals("test-qa-websites-source-format") ||
+				jobName.equals("test-portal-source-format")) {
 
-				String upstreamBranchName = entry.getKey();
+				invocationParameters.put("JENKINS_JOB_VARIANT", "sf");
+				invocationParameters.put(
+					"PULL_REQUEST_URL", pullRequest.getHtmlURL());
+			}
+			else if (jobName.startsWith("test-portal-acceptance-pullrequest")) {
+				GitWorkingDirectory gitWorkingDirectory = entry.getKey();
+
+				String upstreamBranchName =
+					gitWorkingDirectory.getUpstreamBranchName();
 
 				invocationParameters.put(
 					"CI_TEST_SUITE", _getCITestSuite(upstreamBranchName));
-				invocationParameters.put(
-					"GITHUB_UPSTREAM_BRANCH_NAME", upstreamBranchName);
-				invocationParameters.put(
-					"GITHUB_UPSTREAM_BRANCH_SHA",
-					_getDistPortalBundlesBuildSHA(upstreamBranchName));
-				invocationParameters.put(
-					"JENKINS_JOB_VARIANT", _getCITestSuite(upstreamBranchName));
-				invocationParameters.put(
-					"PORTAL_BUNDLES_DIST_URL",
-					JenkinsResultsParserUtil.getDistPortalBundlesBuildURL(
-						upstreamBranchName));
-
-				PullRequest pullRequest = entry.getValue();
 
 				invocationParameters.put(
 					"GITHUB_PULL_REQUEST_NUMBER", pullRequest.getNumber());
@@ -331,84 +300,50 @@ public class PoshiReleasePortalTopLevelBuildRunner
 					"GITHUB_SENDER_BRANCH_SHA", pullRequest.getSenderSHA());
 				invocationParameters.put(
 					"GITHUB_SENDER_USERNAME", pullRequest.getSenderUsername());
-
 				invocationParameters.put(
-					"JENKINS_GITHUB_BRANCH_NAME",
-					_getGitHubBranchName("JENKINS_GITHUB_URL"));
+					"GITHUB_UPSTREAM_BRANCH_NAME", upstreamBranchName);
 				invocationParameters.put(
-					"JENKINS_GITHUB_BRANCH_USERNAME",
-					_getGitHubBranchUsername("JENKINS_GITHUB_URL"));
+					"GITHUB_UPSTREAM_BRANCH_SHA",
+					_getDistPortalBundlesBuildSHA(upstreamBranchName));
 				invocationParameters.put(
-					"JENKINS_TOP_LEVEL_BUILD_URL", buildData.getBuildURL());
+					"JENKINS_JOB_VARIANT", _getCITestSuite(upstreamBranchName));
+				invocationParameters.put(
+					"PORTAL_BUNDLES_DIST_URL",
+					JenkinsResultsParserUtil.getDistPortalBundlesBuildURL(
+						upstreamBranchName));
+			}
 
-				for (Map.Entry<String, String> invocationParameter :
-						invocationParameters.entrySet()) {
+			for (Map.Entry<String, String> invocationParameter :
+					invocationParameters.entrySet()) {
 
-					String invocationParameterValue =
-						invocationParameter.getValue();
+				String invocationParameterValue =
+					invocationParameter.getValue();
 
-					if (JenkinsResultsParserUtil.isNullOrEmpty(
-							invocationParameterValue)) {
+				if (JenkinsResultsParserUtil.isNullOrEmpty(
+						invocationParameterValue)) {
 
-						continue;
-					}
-
-					sb.append("&");
-					sb.append(invocationParameter.getKey());
-					sb.append("=");
-					sb.append(invocationParameterValue);
+					continue;
 				}
-			}
-			catch (IOException ioException) {
-				throw new RuntimeException(ioException);
-			}
 
-			topLevelBuild.addDownstreamBuilds(sb.toString());
-		}
-	}
-
-	@Override
-	protected void prepareInvocationBuildDataList() {
-	}
-
-	protected void preparePoshiPortalPullRequests() {
-		Workspace workspace = getWorkspace();
-
-		WorkspaceGitRepository primaryWorkspaceGitRepository =
-			workspace.getPrimaryWorkspaceGitRepository();
-
-		File jarFile = new File(
-			primaryWorkspaceGitRepository.getDirectory(),
-			".m2-tmp/com/liferay/com.liferay.gradle.plugins.poshi.runner/" +
-				getGradlePluginsPoshiRunnerVersion() +
-					"/com.liferay.gradle.plugins.poshi.runner-" +
-						getGradlePluginsPoshiRunnerVersion() + ".jar");
-
-		if (!jarFile.exists()) {
-			throw new RuntimeException(
-				"Poshi Runner Gradle Plugin cached jar does not exist: " +
-					jarFile);
-		}
-
-		for (WorkspaceGitRepository workspaceGitRepository :
-				workspace.getWorkspaceGitRepositories()) {
-
-			if (workspaceGitRepository instanceof
-					PortalWorkspaceGitRepository) {
-
-				GitWorkingDirectory gitWorkingDirectory =
-					workspaceGitRepository.getGitWorkingDirectory();
-
-				_pullRequests.put(
-					gitWorkingDirectory.getUpstreamBranchName(),
-					createPortalPullRequest(gitWorkingDirectory));
+				sb.append("&");
+				sb.append(invocationParameter.getKey());
+				sb.append("=");
+				sb.append(invocationParameterValue);
 			}
 		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		return sb.toString();
 	}
 
-	@Override
-	protected void validateBuildParameters() {
-		_validateBuildParameterPortalGitHubURL();
+	private File _getBuildTestGradleFile(
+		GitWorkingDirectory gitWorkingDirectory) {
+
+		return new File(
+			gitWorkingDirectory.getWorkingDirectory(),
+			"portal-web/build-test.gradle");
 	}
 
 	private String _getCITestSuite(String upstreamBranchName) {
@@ -469,8 +404,174 @@ public class PoshiReleasePortalTopLevelBuildRunner
 		return matcher.group("username");
 	}
 
+	private String _getGradlePluginsPoshiRunnerVersion() {
+		if (_gradlePluginsPoshiRunnerVersion != null) {
+			return _gradlePluginsPoshiRunnerVersion;
+		}
+
+		Workspace workspace = getWorkspace();
+
+		WorkspaceGitRepository primaryWorkspaceGitRepository =
+			workspace.getPrimaryWorkspaceGitRepository();
+
+		File bndFile = new File(
+			primaryWorkspaceGitRepository.getDirectory(),
+			"modules/sdk/gradle-plugins-poshi-runner/bnd.bnd");
+
+		try {
+			String fileContent = JenkinsResultsParserUtil.read(bndFile);
+
+			Matcher matcher = _bundleVersionPattern.matcher(fileContent);
+
+			matcher.find();
+
+			_gradlePluginsPoshiRunnerVersion = matcher.group(1);
+
+			return _gradlePluginsPoshiRunnerVersion;
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
+	private List<String> _getJobNames(GitWorkingDirectory gitWorkingDirectory) {
+		if (gitWorkingDirectory instanceof QAWebsitesGitWorkingDirectory) {
+			return Collections.singletonList("test-qa-websites-source-format");
+		}
+
+		if (gitWorkingDirectory instanceof PortalGitWorkingDirectory) {
+			List<String> jobNames = new ArrayList<>();
+
+			String upstreamBranchName =
+				gitWorkingDirectory.getUpstreamBranchName();
+
+			jobNames.add(
+				"test-portal-acceptance-pullrequest(" + upstreamBranchName +
+					")");
+
+			if (upstreamBranchName.equals("master")) {
+				jobNames.add("test-portal-source-format");
+			}
+
+			return jobNames;
+		}
+
+		return Collections.emptyList();
+	}
+
 	private String _getPortalGitHubURL() {
 		return getBuildParameter(_NAME_BUILD_PARAMETER_PORTAL_GITHUB_URL);
+	}
+
+	private RemoteGitRepository _getPullRequestRemoteGitRepository(
+		GitWorkingDirectory gitWorkingDirectory) {
+
+		String portalGitHubURL = _getPortalGitHubURL();
+
+		Matcher matcher = GitRemote.getRemoteURLMatcher(portalGitHubURL);
+
+		if (matcher.find()) {
+			return GitRepositoryFactory.getRemoteGitRepository(
+				matcher.group("hostname"),
+				gitWorkingDirectory.getGitRepositoryName(),
+				matcher.group("username"));
+		}
+
+		throw new RuntimeException(
+			"Invalid portal GitHub URL: " + portalGitHubURL);
+	}
+
+	private void _preparePoshiPortalPullRequests() {
+		Workspace workspace = getWorkspace();
+
+		WorkspaceGitRepository primaryWorkspaceGitRepository =
+			workspace.getPrimaryWorkspaceGitRepository();
+
+		File jarFile = new File(
+			primaryWorkspaceGitRepository.getDirectory(),
+			".m2-tmp/com/liferay/com.liferay.gradle.plugins.poshi.runner/" +
+				_getGradlePluginsPoshiRunnerVersion() +
+					"/com.liferay.gradle.plugins.poshi.runner-" +
+						_getGradlePluginsPoshiRunnerVersion() + ".jar");
+
+		if (!jarFile.exists()) {
+			throw new RuntimeException(
+				"Poshi Runner Gradle Plugin cached jar does not exist: " +
+					jarFile);
+		}
+
+		for (WorkspaceGitRepository workspaceGitRepository :
+				workspace.getWorkspaceGitRepositories()) {
+
+			if (workspaceGitRepository instanceof
+					PortalWorkspaceGitRepository ||
+				workspaceGitRepository instanceof
+					QAWebsitesWorkspaceGitRepository) {
+
+				GitWorkingDirectory gitWorkingDirectory =
+					workspaceGitRepository.getGitWorkingDirectory();
+
+				_pullRequests.put(
+					gitWorkingDirectory,
+					_createPortalPullRequest(gitWorkingDirectory));
+			}
+		}
+	}
+
+	private void _updateGradlePluginsPoshiRunnerDependency(
+			GitWorkingDirectory gitWorkingDirectory)
+		throws IOException {
+
+		Workspace workspace = getWorkspace();
+
+		WorkspaceGitRepository workspaceGitRepository =
+			workspace.getPrimaryWorkspaceGitRepository();
+
+		File sourceCacheDir = new File(
+			workspaceGitRepository.getDirectory(),
+			".m2-tmp/com/liferay/com.liferay.gradle.plugins.poshi.runner");
+
+		File targetCacheDir = new File(
+			gitWorkingDirectory.getWorkingDirectory(),
+			".m2-tmp/com/liferay/com.liferay.gradle.plugins.poshi.runner");
+
+		FileUtils.copyDirectory(sourceCacheDir, targetCacheDir);
+
+		List<File> buildGradleFiles = _getBuildGradleFiles(gitWorkingDirectory);
+
+		_updateGradlePluginsPoshiRunnerDependency(buildGradleFiles);
+
+		if (gitWorkingDirectory instanceof QAWebsitesGitWorkingDirectory) {
+			for (File buildGradleFile : buildGradleFiles) {
+				String buildGradleFileContent = JenkinsResultsParserUtil.read(
+					buildGradleFile);
+
+				JenkinsResultsParserUtil.write(
+					buildGradleFile,
+					buildGradleFileContent.replaceAll(
+						"([\\s]*)(mavenLocal\\(\\))",
+						"$1$2\n$1maven {$1\turl file(\"" +
+							gitWorkingDirectory.getWorkingDirectory() +
+								"/.m2-tmp\")$1}"));
+			}
+		}
+	}
+
+	private void _updateGradlePluginsPoshiRunnerDependency(List<File> files)
+		throws IOException {
+
+		for (File file : files) {
+			String fileContent = JenkinsResultsParserUtil.read(file);
+
+			JenkinsResultsParserUtil.write(
+				file,
+				fileContent.replaceAll(
+					_BUILD_GRADLE_PLUGINS_REGEX,
+					"$1$2$1classpath group: \"com.liferay\", name: " +
+						"\"com.liferay.gradle.plugins.poshi.runner\", " +
+							"version: \"" +
+								_getGradlePluginsPoshiRunnerVersion() + "\""));
+		}
 	}
 
 	private void _validateBuildParameterPortalGitHubURL() {
@@ -499,6 +600,9 @@ public class PoshiReleasePortalTopLevelBuildRunner
 		}
 	}
 
+	private static final String _BUILD_GRADLE_PLUGINS_REGEX =
+		"([\\s]*)(.*\"com\\.liferay\\.gradle\\.plugins\\.defaults\".*)";
+
 	private static final String _DEFAULT_CI_TEST_SUITE = "poshi-release";
 
 	private static final String _NAME_BUILD_PARAMETER_PORTAL_GITHUB_URL =
@@ -515,7 +619,8 @@ public class PoshiReleasePortalTopLevelBuildRunner
 			"(commits|tree)/(?<branch>[^/]+)");
 
 	private String _gradlePluginsPoshiRunnerVersion;
-	private final Map<String, PullRequest> _pullRequests = new HashMap<>();
+	private final Map<GitWorkingDirectory, PullRequest> _pullRequests =
+		new HashMap<>();
 	private final Map<GitWorkingDirectory, RemoteGitBranch> _remoteGitBranches =
 		new HashMap<>();
 

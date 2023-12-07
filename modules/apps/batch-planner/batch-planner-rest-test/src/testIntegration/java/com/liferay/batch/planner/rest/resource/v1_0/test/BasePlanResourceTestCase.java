@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.planner.rest.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.batch.planner.rest.client.pagination.Page;
 import com.liferay.batch.planner.rest.client.pagination.Pagination;
 import com.liferay.batch.planner.rest.client.resource.v1_0.PlanResource;
 import com.liferay.batch.planner.rest.client.serdes.v1_0.PlanSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -57,6 +49,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -184,6 +175,7 @@ public abstract class BasePlanResourceTestCase {
 		plan.setExternalType(regex);
 		plan.setExternalURL(regex);
 		plan.setInternalClassName(regex);
+		plan.setInternalClassNameKey(regex);
 		plan.setName(regex);
 		plan.setTaskItemDelegateName(regex);
 
@@ -196,6 +188,7 @@ public abstract class BasePlanResourceTestCase {
 		Assert.assertEquals(regex, plan.getExternalType());
 		Assert.assertEquals(regex, plan.getExternalURL());
 		Assert.assertEquals(regex, plan.getInternalClassName());
+		Assert.assertEquals(regex, plan.getInternalClassNameKey());
 		Assert.assertEquals(regex, plan.getName());
 		Assert.assertEquals(regex, plan.getTaskItemDelegateName());
 	}
@@ -216,18 +209,27 @@ public abstract class BasePlanResourceTestCase {
 
 		assertContains(plan1, (List<Plan>)page.getItems());
 		assertContains(plan2, (List<Plan>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetPlansPage_getExpectedActions());
 
 		planResource.deletePlan(plan1.getId());
 
 		planResource.deletePlan(plan2.getId());
 	}
 
+	protected Map<String, Map<String, String>>
+			testGetPlansPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
 	@Test
 	public void testGetPlansPageWithPagination() throws Exception {
-		Page<Plan> totalPage = planResource.getPlansPage(null);
+		Page<Plan> planPage = planResource.getPlansPage(null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(planPage.getTotalCount());
 
 		Plan plan1 = testGetPlansPage_addPlan(randomPlan());
 
@@ -252,7 +254,7 @@ public abstract class BasePlanResourceTestCase {
 		Assert.assertEquals(plans2.toString(), 1, plans2.size());
 
 		Page<Plan> page3 = planResource.getPlansPage(
-			Pagination.of(1, totalCount + 3));
+			Pagination.of(1, (int)totalCount + 3));
 
 		assertContains(plan1, (List<Plan>)page3.getItems());
 		assertContains(plan2, (List<Plan>)page3.getItems());
@@ -458,6 +460,16 @@ public abstract class BasePlanResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"internalClassNameKey", additionalAssertFieldName)) {
+
+				if (plan.getInternalClassNameKey() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("mappings", additionalAssertFieldName)) {
 				if (plan.getMappings() == null) {
 					valid = false;
@@ -533,6 +545,12 @@ public abstract class BasePlanResourceTestCase {
 	}
 
 	protected void assertValid(Page<Plan> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Plan> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Plan> plans = page.getItems();
@@ -547,6 +565,25 @@ public abstract class BasePlanResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -671,6 +708,19 @@ public abstract class BasePlanResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"internalClassNameKey", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						plan1.getInternalClassNameKey(),
+						plan2.getInternalClassNameKey())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("mappings", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						plan1.getMappings(), plan2.getMappings())) {
@@ -783,14 +833,16 @@ public abstract class BasePlanResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -807,6 +859,10 @@ public abstract class BasePlanResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -816,18 +872,18 @@ public abstract class BasePlanResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -854,17 +910,93 @@ public abstract class BasePlanResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalType")) {
-			sb.append("'");
-			sb.append(String.valueOf(plan.getExternalType()));
-			sb.append("'");
+			Object object = plan.getExternalType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("externalURL")) {
-			sb.append("'");
-			sb.append(String.valueOf(plan.getExternalURL()));
-			sb.append("'");
+			Object object = plan.getExternalURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -875,9 +1007,93 @@ public abstract class BasePlanResourceTestCase {
 		}
 
 		if (entityFieldName.equals("internalClassName")) {
-			sb.append("'");
-			sb.append(String.valueOf(plan.getInternalClassName()));
-			sb.append("'");
+			Object object = plan.getInternalClassName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("internalClassNameKey")) {
+			Object object = plan.getInternalClassNameKey();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -888,9 +1104,47 @@ public abstract class BasePlanResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(plan.getName()));
-			sb.append("'");
+			Object object = plan.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -913,9 +1167,47 @@ public abstract class BasePlanResourceTestCase {
 		}
 
 		if (entityFieldName.equals("taskItemDelegateName")) {
-			sb.append("'");
-			sb.append(String.valueOf(plan.getTaskItemDelegateName()));
-			sb.append("'");
+			Object object = plan.getTaskItemDelegateName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -983,6 +1275,8 @@ public abstract class BasePlanResourceTestCase {
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				internalClassName = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				internalClassNameKey = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				size = RandomTestUtil.randomInt();

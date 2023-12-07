@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.depot.internal.instance.lifecycle;
 
-import com.liferay.depot.constants.DepotRolesConstants;
+import com.liferay.depot.internal.util.DepotRoleUtil;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -27,13 +18,6 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
-
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,9 +33,8 @@ public class DepotRolesPortalInstanceLifecycleListener
 	public void portalInstanceRegistered(Company company)
 		throws PortalException {
 
-		for (String name : _DEPOT_ROLE_NAMES) {
-			Role role = _getOrCreateRole(
-				company.getCompanyId(), name, _getDescriptionMap(name));
+		for (String name : DepotRoleUtil.DEPOT_ROLE_NAMES) {
+			Role role = _getOrCreateRole(company.getCompanyId(), name);
 
 			_resourceLocalService.addResources(
 				company.getCompanyId(), 0, 0, Role.class.getName(),
@@ -59,55 +42,7 @@ public class DepotRolesPortalInstanceLifecycleListener
 		}
 	}
 
-	private String _getDescription(Locale locale, String name) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			locale, getClass());
-
-		if (Objects.equals(
-				DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR, name)) {
-
-			return ResourceBundleUtil.getString(
-				resourceBundle,
-				"asset-library-administrators-are-super-users-of-their-asset-" +
-					"library-but-cannot-make-other-users-into-asset-library-" +
-						"administrators");
-		}
-		else if (Objects.equals(
-					DepotRolesConstants.ASSET_LIBRARY_MEMBER, name)) {
-
-			return ResourceBundleUtil.getString(
-				resourceBundle,
-				"all-users-who-belong-to-an-asset-library-have-this-role-" +
-					"within-that-asset-library");
-		}
-		else if (Objects.equals(
-					DepotRolesConstants.ASSET_LIBRARY_OWNER, name)) {
-
-			return ResourceBundleUtil.getString(
-				resourceBundle,
-				"asset-library-owners-are-super-users-of-their-asset-library-" +
-					"and-can-assign-asset-library-roles-to-users");
-		}
-
-		return null;
-	}
-
-	private Map<Locale, String> _getDescriptionMap(String name) {
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		for (Locale locale : _language.getAvailableLocales()) {
-			String description = _getDescription(locale, name);
-
-			if (description != null) {
-				descriptionMap.put(locale, description);
-			}
-		}
-
-		return descriptionMap;
-	}
-
-	private Role _getOrCreateRole(
-			long companyId, String name, Map<Locale, String> descriptionMap)
+	private Role _getOrCreateRole(long companyId, String name)
 		throws PortalException {
 
 		Role role = _roleLocalService.fetchRole(companyId, name);
@@ -118,10 +53,11 @@ public class DepotRolesPortalInstanceLifecycleListener
 			try {
 				PermissionThreadLocal.setAddResource(false);
 
-				User user = _userLocalService.getDefaultUser(companyId);
+				User user = _userLocalService.getGuestUser(companyId);
 
 				return _roleLocalService.addRole(
-					user.getUserId(), null, 0, name, null, descriptionMap,
+					user.getUserId(), null, 0, name, null,
+					DepotRoleUtil.getDescriptionMap(_language, name),
 					RoleConstants.TYPE_DEPOT, null, null);
 			}
 			finally {
@@ -129,22 +65,8 @@ public class DepotRolesPortalInstanceLifecycleListener
 			}
 		}
 
-		if (!Objects.equals(descriptionMap, role.getDescriptionMap())) {
-			role.setDescriptionMap(descriptionMap);
-
-			return _roleLocalService.updateRole(role);
-		}
-
 		return role;
 	}
-
-	private static final String[] _DEPOT_ROLE_NAMES = {
-		DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR,
-		DepotRolesConstants.ASSET_LIBRARY_CONNECTED_SITE_MEMBER,
-		DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER,
-		DepotRolesConstants.ASSET_LIBRARY_MEMBER,
-		DepotRolesConstants.ASSET_LIBRARY_OWNER
-	};
 
 	@Reference
 	private Language _language;

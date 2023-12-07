@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -238,6 +229,13 @@ response.setHeader("Ajax-ID", request.getHeader("Ajax-ID"));
 
 					<div class="sheet">
 						<div class="panel-group panel-group-flush">
+							<clay:alert
+								displayType="warning"
+								message="publish-small-incremental-changes-to-avoid-large-publishing-processes-that-can-take-a-long-time-to-execute"
+								symbol="page"
+								title="recommendation"
+							/>
+
 							<aui:fieldset>
 								<c:choose>
 									<c:when test="<%= exportImportConfiguration == null %>">
@@ -323,10 +321,32 @@ response.setHeader("Ajax-ID", request.getHeader("Ajax-ID"));
 			'<portlet:namespace />ExportImportComponent'
 		);
 
+		var deletePortletDataBeforeImportingCheckbox = document.getElementById(
+			'<portlet:namespace /><%= PortletDataHandlerKeys.DELETE_PORTLET_DATA %>'
+		);
+
 		var dateChecker = exportImport.getDateRangeChecker();
 
 		if (dateChecker.validRange) {
-			submitForm(document.<portlet:namespace />publishPagesFm);
+			var form = document.<portlet:namespace />publishPagesFm;
+
+			if (
+				deletePortletDataBeforeImportingCheckbox &&
+				deletePortletDataBeforeImportingCheckbox.checked
+			) {
+				Liferay.Util.openConfirmModal({
+					message:
+						'<%= UnicodeLanguageUtil.get(request, "delete-application-data-before-importing-confirmation") %>',
+					onConfirm: (isConfirmed) => {
+						if (isConfirmed) {
+							submitForm(form);
+						}
+					},
+				});
+			}
+			else {
+				submitForm(form);
+			}
 		}
 		else {
 			exportImport.showNotification(dateChecker);
@@ -353,23 +373,31 @@ response.setHeader("Ajax-ID", request.getHeader("Ajax-ID"));
 		['<portlet:namespace />selectSchedule', '<portlet:namespace />addButton'],
 		'<portlet:namespace />publishButton'
 	);
-	Liferay.Util.toggleRadio('<portlet:namespace />rangeAll', '', [
-		'<portlet:namespace />startEndDate',
-		'<portlet:namespace />rangeLastInputs',
-	]);
+	Liferay.Util.toggleRadio(
+		'<portlet:namespace />rangeAll',
+		'<portlet:namespace />warningSection',
+		[
+			'<portlet:namespace />startEndDate',
+			'<portlet:namespace />rangeLastInputs',
+		]
+	);
 	Liferay.Util.toggleRadio(
 		'<portlet:namespace />rangeDateRange',
 		'<portlet:namespace />startEndDate',
-		'<portlet:namespace />rangeLastInputs'
+		[
+			'<portlet:namespace />rangeLastInputs',
+			'<portlet:namespace />warningSection',
+		]
 	);
 	Liferay.Util.toggleRadio('<portlet:namespace />rangeLastPublish', '', [
 		'<portlet:namespace />startEndDate',
 		'<portlet:namespace />rangeLastInputs',
+		'<portlet:namespace />warningSection',
 	]);
 	Liferay.Util.toggleRadio(
 		'<portlet:namespace />rangeLast',
 		'<portlet:namespace />rangeLastInputs',
-		['<portlet:namespace />startEndDate']
+		['<portlet:namespace />startEndDate', '<portlet:namespace />warningSection']
 	);
 </aui:script>
 

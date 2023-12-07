@@ -1,34 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayDatePicker from '@clayui/date-picker';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import {
+	createAutoCorrectedDatePipe,
+	generateDate,
+	generateDateConfigurations,
+	generateInputMask,
+} from '@liferay/object-js-components-web';
 import moment from 'moment/min/moment-with-locales';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {createTextMaskInputElement} from 'text-mask-core';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
-import {createAutoCorrectedDatePipe} from './createAutoCorrectedDatePipe';
-
-const DIGIT_REGEX = /\d/;
-const PIPE_FORBIDDEN_ENDING_CHAR_REGEX = /[^\w]/i;
-const LETTER_REGEX = /[a-z]/i;
-const SERVER_DATE_FORMAT = 'YYYY-MM-DD';
-const SERVER_DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm';
-const NOT_LETTER_REGEX = /[^a-z]/gi;
-const WORD_CHARACTER_REGEX = /\w/g;
-const A_OR_P_CHARACTER_REGEX = /[AP]/i;
-const M_CHARACTER_REGEX = /M/i;
+import {getTooltipTitle} from '../util/tooltip';
 
 export default function DatePicker({
 	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
@@ -59,49 +47,11 @@ export default function DatePicker({
 		serverFormat,
 		use12Hours,
 	} = useMemo(() => {
-		let use12Hours = false;
-
-		const isDateTime = type === 'date_time';
-		const momentLocale = moment().locale(locale ?? defaultLanguageId);
-		const dateFormat = momentLocale.localeData().longDateFormat('L');
-		const firstDayOfWeek = momentLocale.localeData().firstDayOfWeek();
-		const time = momentLocale.localeData().longDateFormat('LT');
-
-		let momentFormat = dateFormat;
-
-		if (isDateTime) {
-			const [hourFormat] = time.split(NOT_LETTER_REGEX, 1);
-
-			const formattedTime =
-				hourFormat.length === 1
-					? hourFormat[0] === 'H'
-						? `H${time}`
-						: `h${time}`
-					: time;
-
-			momentFormat = `${dateFormat} ${formattedTime}`;
-			use12Hours = time.endsWith('A');
-		}
-
-		const clayFormat = dateFormat
-			.replace('YYYY', 'yyyy')
-			.replace('DD', 'dd');
-
-		const placeholder = momentFormat.replace(WORD_CHARACTER_REGEX, '_');
-
-		const serverFormat = isDateTime
-			? SERVER_DATE_TIME_FORMAT
-			: SERVER_DATE_FORMAT;
-
-		return {
-			clayFormat,
-			firstDayOfWeek,
-			isDateTime,
-			momentFormat,
-			placeholder,
-			serverFormat,
-			use12Hours,
-		};
+		return generateDateConfigurations({
+			defaultLanguageId,
+			locale,
+			type,
+		});
 	}, [defaultLanguageId, locale, type]);
 
 	const date = useMemo(() => {
@@ -151,8 +101,10 @@ export default function DatePicker({
 	 */
 	useEffect(
 		() =>
-			setDate(({formattedDate, name, predefinedValue}) =>
-				name === date.name && predefinedValue === date.predefinedValue
+			setDate(({formattedDate, name, predefinedValue, rawDate}) =>
+				name === date.name &&
+				predefinedValue === date.predefinedValue &&
+				rawDate === ''
 					? {...date, formattedDate}
 					: date
 			),
@@ -163,39 +115,7 @@ export default function DatePicker({
 	 * Creates the input mask and update it whenever the format changes
 	 */
 	useEffect(() => {
-		const mask = [];
-		[...momentFormat].forEach((char) => {
-			if (char === 'A' || char === 'a') {
-				mask.push(A_OR_P_CHARACTER_REGEX);
-				mask.push(M_CHARACTER_REGEX);
-
-				return;
-			}
-			mask.push(LETTER_REGEX.test(char) ? DIGIT_REGEX : char);
-		});
-
-		const pipeFormat = momentFormat
-			.split(PIPE_FORBIDDEN_ENDING_CHAR_REGEX)
-			.reduce((format, item) => {
-				switch (item) {
-					case 'YYYY':
-						return `${format} yyyy`;
-					case 'MM':
-						return `${format} mm`;
-					case 'DD':
-						return `${format} dd`;
-					case 'mm':
-						return `${format} MM`;
-					case 'A':
-					case 'a':
-						return format;
-					case '':
-						return `${format} `;
-					default:
-						return `${format} ${item}`;
-				}
-			}, '')
-			.trim();
+		const {mask, pipeFormat} = generateInputMask(momentFormat);
 
 		maskRef.current = createTextMaskInputElement({
 			guide: true,
@@ -208,25 +128,12 @@ export default function DatePicker({
 	}, [momentFormat]);
 
 	const handleValueChange = (value) => {
-		let formattedDate = value;
-		if (isDateTime) {
-			const firstSpace = value.indexOf(' ');
-			formattedDate = value.substring(0, firstSpace);
-			const formattedTime = value
-				.substring(firstSpace)
-				.replaceAll('-', '_');
-			formattedDate = `${formattedDate}${formattedTime}`;
-		}
-		const nextState = {
-			formattedDate,
-			rawDate: '',
-		};
-
-		const date = moment(formattedDate, momentFormat, true);
-		if (date.isValid()) {
-			nextState.rawDate = date.locale('en').format(serverFormat);
-			nextState.years = {end: date.year() + 5, start: date.year() - 5};
-		}
+		const nextState = generateDate({
+			isDateTime,
+			momentFormat,
+			serverFormat,
+			value,
+		});
 
 		setDate((previousState) => ({...previousState, ...nextState}));
 
@@ -263,31 +170,56 @@ export default function DatePicker({
 			localizedValue={localizedValue}
 			name={name}
 			readOnly={readOnly}
+			type="date"
 			{...otherProps}
 		>
-			<ClayDatePicker
-				dateFormat={clayFormat}
-				dir={dir}
-				disabled={readOnly}
-				expanded={expanded}
-				firstDayOfWeek={firstDayOfWeek}
-				months={months}
-				onBlur={onBlur}
-				onExpandedChange={handleExpandedChange}
-				onFocus={onFocus}
-				onInput={onInputMask}
-				onValueChange={handleValueChange}
-				placeholder={placeholder}
-				ref={inputRef}
-				time={isDateTime}
-				use12Hours={use12Hours}
-				value={formattedDate}
-				weekdaysShort={weekdaysShort}
-				years={years}
-				yearsCheck={false}
-			/>
+			<ClayTooltipProvider autoAlign>
+				<div
+					data-tooltip-align="top"
+					{...getTooltipTitle({placeholder, value: formattedDate})}
+				>
+					<ClayDatePicker
+						aria-required={otherProps.required}
+						ariaLabels={{
+							buttonChooseDate: `${Liferay.Language.get(
+								'select-date'
+							)}`,
+							buttonDot: `${Liferay.Language.get(
+								'select-current-date'
+							)}`,
+							buttonNextMonth: `${Liferay.Language.get(
+								'select-next-month'
+							)}`,
+							buttonPreviousMonth: `${Liferay.Language.get(
+								'select-previous-month'
+							)}`,
+							dialog: `${Liferay.Language.get('select-date')}`,
+						}}
+						dateFormat={clayFormat}
+						dir={dir}
+						disabled={readOnly}
+						expanded={expanded}
+						firstDayOfWeek={firstDayOfWeek}
+						id={name}
+						months={months}
+						onBlur={onBlur}
+						onChange={handleValueChange}
+						onExpandedChange={handleExpandedChange}
+						onFocus={onFocus}
+						onInput={onInputMask}
+						placeholder={placeholder}
+						ref={inputRef}
+						time={isDateTime}
+						use12Hours={use12Hours}
+						value={formattedDate}
+						weekdaysShort={weekdaysShort}
+						years={years}
+						yearsCheck={false}
+					/>
 
-			<input name={name} type="hidden" value={rawDate} />
+					<input name={name} type="hidden" value={rawDate} />
+				</div>
+			</ClayTooltipProvider>
 		</FieldBase>
 	);
 }

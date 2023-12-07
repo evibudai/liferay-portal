@@ -1,23 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ChangeEventHandler, FormEvent, FormEventHandler, useState} from 'react';
 
+export function invalidateLocalizableLabelRequired(
+	labels: LocalizedValue<string> | undefined
+) {
+	const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+
+	if (!labels) {
+		return true;
+	}
+
+	return !labels[defaultLanguageId];
+}
+
 export function invalidateRequired(text: string | void) {
 	return !text?.trim();
 }
-
 interface IProps<T, P = {}, K extends Partial<T> = Partial<T>> {
 	initialValues: K;
 	onSubmit: (values: T) => void;
@@ -28,10 +30,15 @@ interface IUseForm<T, P = {}, K extends Partial<T> = Partial<T>> {
 	errors: FormError<T & P>;
 	handleChange: ChangeEventHandler<HTMLInputElement>;
 	handleSubmit: FormEventHandler<HTMLFormElement>;
+	handleValidate: (editedValues?: K) => FormError<T & P>;
 	setValues: (values: Partial<T>) => void;
 	validateSubmit: () => void;
 	values: K;
 }
+
+export type FormError<T> = {
+	[key in keyof T]?: string;
+};
 
 export function useForm<T, P = {}, K extends Partial<T> = Partial<T>>({
 	initialValues,
@@ -64,17 +71,27 @@ export function useForm<T, P = {}, K extends Partial<T> = Partial<T>>({
 		target: {name, value},
 	}) => setValues((values) => ({...values, [name]: value}));
 
+	const handleValidate = (editedValues?: K) => {
+		const errors = validate(editedValues ?? values);
+
+		if (Object.keys(errors).length) {
+			setErrors(errors);
+		}
+		else {
+			setErrors({});
+		}
+
+		return errors;
+	};
+
 	return {
 		errors,
 		handleChange,
 		handleSubmit,
+		handleValidate,
 		setValues: (values: Partial<T>) =>
 			setValues((currentValues) => ({...currentValues, ...values})),
 		validateSubmit,
 		values,
 	};
 }
-
-export type FormError<T> = {
-	[key in keyof T]?: string;
-};

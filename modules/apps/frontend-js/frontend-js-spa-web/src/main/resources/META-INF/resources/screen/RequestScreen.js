@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {fetch} from 'frontend-js-web';
@@ -20,6 +11,7 @@ import Screen from './Screen';
 const INVALID_STATUS = 'Invalid status code';
 
 const FAILED_TO_FETCH_MSG = 'Failed to fetch';
+const LOAD_FAILED_MSG = 'Load failed';
 const NETWORK_ERROR_MSG = 'NetworkError when attempting to fetch resource.';
 const PREFLIGHT_ERROR_MSG = 'Preflight response is not successful';
 const REQUEST_ERROR_MSG = 'Request error';
@@ -292,6 +284,9 @@ class RequestScreen extends Screen {
 			}),
 		]).catch((reason) => {
 			switch (reason.message) {
+				case LOAD_FAILED_MSG:
+					window.location.href = url;
+					break;
 				case REQUEST_TIMEOUT_MSG:
 					reason.timeout = true;
 					break;

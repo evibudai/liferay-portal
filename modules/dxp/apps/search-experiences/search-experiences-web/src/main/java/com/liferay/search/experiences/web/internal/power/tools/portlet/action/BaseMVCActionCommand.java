@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.web.internal.power.tools.portlet.action;
 
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.petra.string.StringBundler;
@@ -23,6 +16,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -47,6 +41,11 @@ public abstract class BaseMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
+		DDMStructure ddmStructure = ddmStructureLocalService.getStructure(
+			portal.getSiteGroupId(themeDisplay.getScopeGroupId()),
+			portal.getClassNameId(JournalArticle.class.getName()),
+			"BASIC-WEB-CONTENT", true);
+
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			JournalArticle.class.getName(), actionRequest);
 
@@ -55,7 +54,7 @@ public abstract class BaseMVCActionCommand
 		serviceContext.setAssetTagNames(assetTagNames);
 
 		return journalArticleLocalService.addArticle(
-			themeDisplay.getUserId(), themeDisplay.getScopeGroupId(), 0,
+			null, themeDisplay.getUserId(), themeDisplay.getScopeGroupId(), 0,
 			HashMapBuilder.put(
 				themeDisplay.getLocale(), title
 			).build(),
@@ -63,15 +62,21 @@ public abstract class BaseMVCActionCommand
 				themeDisplay.getLocale(),
 				StringUtil.shorten(HtmlUtil.stripHtml(content), 500)
 			).build(),
-			_toXML(content, themeDisplay.getLanguageId()), "BASIC-WEB-CONTENT",
-			"BASIC-WEB-CONTENT", serviceContext);
+			_toXML(content, themeDisplay.getLanguageId()),
+			ddmStructure.getStructureId(), "BASIC-WEB-CONTENT", serviceContext);
 	}
+
+	@Reference
+	protected DDMStructureLocalService ddmStructureLocalService;
 
 	@Reference
 	protected JournalArticleLocalService journalArticleLocalService;
 
 	@Reference
 	protected JSONFactory jsonFactory;
+
+	@Reference
+	protected Portal portal;
 
 	private String _toXML(String content, String languageId) {
 		StringBundler sb = new StringBundler(18);

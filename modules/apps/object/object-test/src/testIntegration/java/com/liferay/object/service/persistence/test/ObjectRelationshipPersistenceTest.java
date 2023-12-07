@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.persistence.test;
@@ -129,6 +120,9 @@ public class ObjectRelationshipPersistenceTest {
 
 		newObjectRelationship.setUuid(RandomTestUtil.randomString());
 
+		newObjectRelationship.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newObjectRelationship.setCompanyId(RandomTestUtil.nextLong());
 
 		newObjectRelationship.setUserId(RandomTestUtil.nextLong());
@@ -152,11 +146,15 @@ public class ObjectRelationshipPersistenceTest {
 
 		newObjectRelationship.setDBTableName(RandomTestUtil.randomString());
 
+		newObjectRelationship.setEdge(RandomTestUtil.randomBoolean());
+
 		newObjectRelationship.setLabel(RandomTestUtil.randomString());
 
 		newObjectRelationship.setName(RandomTestUtil.randomString());
 
 		newObjectRelationship.setReverse(RandomTestUtil.randomBoolean());
+
+		newObjectRelationship.setSystem(RandomTestUtil.randomBoolean());
 
 		newObjectRelationship.setType(RandomTestUtil.randomString());
 
@@ -172,6 +170,9 @@ public class ObjectRelationshipPersistenceTest {
 		Assert.assertEquals(
 			existingObjectRelationship.getUuid(),
 			newObjectRelationship.getUuid());
+		Assert.assertEquals(
+			existingObjectRelationship.getExternalReferenceCode(),
+			newObjectRelationship.getExternalReferenceCode());
 		Assert.assertEquals(
 			existingObjectRelationship.getObjectRelationshipId(),
 			newObjectRelationship.getObjectRelationshipId());
@@ -210,6 +211,9 @@ public class ObjectRelationshipPersistenceTest {
 			existingObjectRelationship.getDBTableName(),
 			newObjectRelationship.getDBTableName());
 		Assert.assertEquals(
+			existingObjectRelationship.isEdge(),
+			newObjectRelationship.isEdge());
+		Assert.assertEquals(
 			existingObjectRelationship.getLabel(),
 			newObjectRelationship.getLabel());
 		Assert.assertEquals(
@@ -218,6 +222,9 @@ public class ObjectRelationshipPersistenceTest {
 		Assert.assertEquals(
 			existingObjectRelationship.isReverse(),
 			newObjectRelationship.isReverse());
+		Assert.assertEquals(
+			existingObjectRelationship.isSystem(),
+			newObjectRelationship.isSystem());
 		Assert.assertEquals(
 			existingObjectRelationship.getType(),
 			newObjectRelationship.getType());
@@ -263,6 +270,21 @@ public class ObjectRelationshipPersistenceTest {
 	}
 
 	@Test
+	public void testCountByParameterObjectFieldId() throws Exception {
+		_persistence.countByParameterObjectFieldId(RandomTestUtil.nextLong());
+
+		_persistence.countByParameterObjectFieldId(0L);
+	}
+
+	@Test
+	public void testCountByODI1_E() throws Exception {
+		_persistence.countByODI1_E(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByODI1_E(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByODI1_N() throws Exception {
 		_persistence.countByODI1_N(RandomTestUtil.nextLong(), "");
 
@@ -285,6 +307,25 @@ public class ObjectRelationshipPersistenceTest {
 			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
 
 		_persistence.countByODI2_R(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByDTN_R() throws Exception {
+		_persistence.countByDTN_R("", RandomTestUtil.randomBoolean());
+
+		_persistence.countByDTN_R("null", RandomTestUtil.randomBoolean());
+
+		_persistence.countByDTN_R((String)null, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByERC_C_ODI1() throws Exception {
+		_persistence.countByERC_C_ODI1(
+			"", RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByERC_C_ODI1("null", 0L, 0L);
+
+		_persistence.countByERC_C_ODI1((String)null, 0L, 0L);
 	}
 
 	@Test
@@ -383,12 +424,13 @@ public class ObjectRelationshipPersistenceTest {
 	protected OrderByComparator<ObjectRelationship> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
 			"ObjectRelationship", "mvccVersion", true, "uuid", true,
-			"objectRelationshipId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "modifiedDate", true,
-			"objectDefinitionId1", true, "objectDefinitionId2", true,
-			"objectFieldId2", true, "parameterObjectFieldId", true,
-			"deletionType", true, "dbTableName", true, "label", true, "name",
-			true, "reverse", true, "type", true);
+			"externalReferenceCode", true, "objectRelationshipId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "objectDefinitionId1", true,
+			"objectDefinitionId2", true, "objectFieldId2", true,
+			"parameterObjectFieldId", true, "deletionType", true, "dbTableName",
+			true, "edge", true, "label", true, "name", true, "reverse", true,
+			"system", true, "type", true);
 	}
 
 	@Test
@@ -674,6 +716,33 @@ public class ObjectRelationshipPersistenceTest {
 				new Class<?>[] {String.class}, "objectFieldId2"));
 
 		Assert.assertEquals(
+			objectRelationship.getDBTableName(),
+			ReflectionTestUtil.invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "dbTableName"));
+		Assert.assertEquals(
+			Boolean.valueOf(objectRelationship.getReverse()),
+			ReflectionTestUtil.<Boolean>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "reverse"));
+
+		Assert.assertEquals(
+			objectRelationship.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
+		Assert.assertEquals(
+			Long.valueOf(objectRelationship.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			Long.valueOf(objectRelationship.getObjectDefinitionId1()),
+			ReflectionTestUtil.<Long>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "objectDefinitionId1"));
+
+		Assert.assertEquals(
 			Long.valueOf(objectRelationship.getObjectDefinitionId1()),
 			ReflectionTestUtil.<Long>invoke(
 				objectRelationship, "getColumnOriginalValue",
@@ -709,6 +778,9 @@ public class ObjectRelationshipPersistenceTest {
 
 		objectRelationship.setUuid(RandomTestUtil.randomString());
 
+		objectRelationship.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		objectRelationship.setCompanyId(RandomTestUtil.nextLong());
 
 		objectRelationship.setUserId(RandomTestUtil.nextLong());
@@ -731,11 +803,15 @@ public class ObjectRelationshipPersistenceTest {
 
 		objectRelationship.setDBTableName(RandomTestUtil.randomString());
 
+		objectRelationship.setEdge(RandomTestUtil.randomBoolean());
+
 		objectRelationship.setLabel(RandomTestUtil.randomString());
 
 		objectRelationship.setName(RandomTestUtil.randomString());
 
 		objectRelationship.setReverse(RandomTestUtil.randomBoolean());
+
+		objectRelationship.setSystem(RandomTestUtil.randomBoolean());
 
 		objectRelationship.setType(RandomTestUtil.randomString());
 

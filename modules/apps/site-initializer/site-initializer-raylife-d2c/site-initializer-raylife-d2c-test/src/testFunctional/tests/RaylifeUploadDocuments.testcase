@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,15 +34,20 @@ definition {
 	}
 
 	@description = "LPS-144519 - Check if the Building Interior Photos field is required"
-	@priority = "4"
+	@priority = 4
 	test BuildingInteriorPhotosFieldIsRequired {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		Click(locator1 = "RaylifeUploadDocuments#BUTTON_CONFIRM_UPLOADS");
 
@@ -49,15 +57,20 @@ definition {
 	}
 
 	@description = "LPS-144525 - Check if I can cancel discard changes in the modal"
-	@priority = "4"
+	@priority = 4
 	test CanCancelChangesInModal {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -73,15 +86,20 @@ definition {
 	}
 
 	@description = "LPS-144345 - Verify if users can delete attached files"
-	@priority = "5"
+	@priority = 5
 	test CanUserDeleteAttachedFiles {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -97,15 +115,20 @@ definition {
 	}
 
 	@description = "LPS-144524 - heck that I can discard Files by clicking the Discard Changes button"
-	@priority = "4"
+	@priority = 4
 	test CanUserDiscardFiles {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -122,15 +145,20 @@ definition {
 
 	@description = "LPS-144526 - Check if I can modify the attached files"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanUserModifyAttachedFiles {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -167,15 +195,20 @@ definition {
 
 	@description = "LPS-144348 - Verify if users can delete attached photos"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanUsersDeleteAttachedPhotos {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.jpg",
@@ -192,15 +225,20 @@ definition {
 
 	@description = "LPS-144521 - Check that the Discard Changes button appears when adding attached files"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test DeleteChangesButtonAppearsWhenAddingFiles {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.jpg",
@@ -211,41 +249,56 @@ definition {
 
 	@description = "LPS-144346 - Verify if that when the upload limit is reached it displays the following notification: Upload limit of 4 files reached for Business License."
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test IsLimitOf4FilesReached {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 	}
 
 	@description = "LPS-144347 - Verify if that when the upload limit is reached it displays the following notification: 4 file upload limit reached for Building Interior Photos."
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test IsLimitOf4PhotosReached {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 	}
 
 	@description = "LPS-144349 - Verify if when all required fields are filled in the confirm uploads button is enabled"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test IsUploadButtonEnabled {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",
@@ -262,28 +315,38 @@ definition {
 
 	@description = "LPS-144344 - Verify if a maximum of 4 files can be uploaded to Business License"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test MaxIs4FilesToCommercialLicense {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 	}
 
 	@description = "LPS-144350 - Verify if when users complete the upload documents section, that completed section is indicated with a green checkmark"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test UploadSectionCompleted {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
 		Raylife.formsFlow();
 
-		RaylifeCreateAccount.createAccount();
+		RaylifeCreateAccount.createAccount(createAccount = "true");
 
 		RaylifeUploadDocuments.uploadDocuments(
 			dmDocumentFileList = "Document_1.pdf",

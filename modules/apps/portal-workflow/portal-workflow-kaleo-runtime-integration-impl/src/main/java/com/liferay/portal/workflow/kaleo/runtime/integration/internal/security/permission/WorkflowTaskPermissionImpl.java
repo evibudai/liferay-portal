@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.integration.internal.security.permission;
@@ -29,14 +20,14 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskAssignee;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portal.workflow.security.permission.WorkflowTaskPermission;
 
 import java.io.Serializable;
@@ -78,19 +69,22 @@ public class WorkflowTaskPermissionImpl implements WorkflowTaskPermission {
 			return true;
 		}
 
-		int userNotificationEventsCount =
-			_userNotificationEventLocalService.getUserNotificationEventsCount(
-				permissionChecker.getUserId(), PortletKeys.MY_WORKFLOW_TASK,
-				HashMapBuilder.put(
-					"workflowInstanceId",
-					String.valueOf(workflowTask.getWorkflowInstanceId())
-				).put(
-					"workflowTaskId",
-					String.valueOf(workflowTask.getWorkflowTaskId())
-				).build());
+		boolean assignableUser = false;
+
+		try {
+			List<User> assignableUsers =
+				_workflowTaskManager.getAssignableUsers(
+					workflowTask.getWorkflowTaskId());
+
+			assignableUser = assignableUsers.contains(
+				permissionChecker.getUser());
+		}
+		catch (WorkflowException workflowException) {
+			_log.error(workflowException);
+		}
 
 		if (hasAssetViewPermission(workflowTask, permissionChecker) &&
-			((userNotificationEventsCount > 0) ||
+			(assignableUser ||
 			 (workflowTask.isCompleted() &&
 			  (workflowTask.getAssigneeUserId() ==
 				  permissionChecker.getUserId())))) {
@@ -264,5 +258,8 @@ public class WorkflowTaskPermissionImpl implements WorkflowTaskPermission {
 	@Reference
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
+
+	@Reference
+	private WorkflowTaskManager _workflowTaskManager;
 
 }

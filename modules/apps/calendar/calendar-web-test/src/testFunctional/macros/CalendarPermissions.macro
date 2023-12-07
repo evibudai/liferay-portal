@@ -1,22 +1,20 @@
 definition {
 
-	macro changePaginationPermissions {
+	@summary = "Default summary"
+	macro changePaginationPermissions(itemsPerPage = null) {
 		Click(locator1 = "CalendarPermissions#PERMISSIONS_ITEMS_PER_PAGE_SELECT");
 
-		var key_itemsPerPage = "${itemsPerPage}";
+		var key_itemsPerPage = ${itemsPerPage};
 
-		MenuItem.click(menuItem = "${itemsPerPage}");
+		MenuItem.click(menuItem = ${itemsPerPage});
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Pagination#ITEMS_PER_PAGE_SELECT",
 			value1 = "${itemsPerPage} Entries");
 	}
 
-	macro cleanSearchResult {
-		Click(locator1 = "CalendarPermissions#PERMISSIONS_SEARCH_CLEAR");
-	}
-
-	macro gotoPermissions {
+	@summary = "Default summary"
+	macro gotoPermissions() {
 		Portlet.gotoPortletOptions(
 			portletName = "Calendar",
 			portletOption = "Permissions");
@@ -24,43 +22,37 @@ definition {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
-	macro resultBarIsnotDisplayed {
-		AssertElementNotPresent(locator1 = "CalendarPermissions#PERMISSIONS_RESULTS_BAR");
-	}
-
-	macro searchRoleName {
+	@summary = "Default summary"
+	macro searchRoleName(searchTerm = null) {
 		Click(locator1 = "CalendarPermissions#PERMISSIONS_FIELD_SEARCH");
 
 		Type(
 			locator1 = "CalendarPermissions#PERMISSIONS_FIELD_SEARCH",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
 
 		Click(locator1 = "CalendarPermissions#PERMISSIONS_SEARCH_ICON");
 	}
 
-	macro viewPermissionsRoleName {
+	@summary = "Default summary"
+	macro viewPermissionsRoleName(roleName = null, key_roleName = null) {
 		AssertTextEquals(
-			key_roleName = "${roleName}",
+			key_roleName = ${roleName},
 			locator1 = "CalendarPermissions#PERMISSIONS_ROLE_NAME",
-			value1 = "${key_roleName}");
+			value1 = ${key_roleName});
 	}
 
-	macro viewResultsEntries {
+	@summary = "Default summary"
+	macro viewResultsEntries(results = null) {
 		AssertTextEquals(
 			locator1 = "CalendarPermissions#RESULTS_ENTRIES",
-			value1 = "${results}");
+			value1 = ${results});
 	}
 
-	macro viewSearchResult {
+	@summary = "Default summary"
+	macro viewSearchResult(searchResults = null) {
 		AssertTextEquals(
 			locator1 = "CalendarPermissions#PERMISSIONS_RESULTS_BAR",
-			value1 = "${searchResults}");
-	}
-
-	macro viewTableDisplay {
-		AssertTextEquals(
-			locator1 = "CalendarPermissions#NO_ROLES_WERE_FOUND",
-			value1 = "${message}");
+			value1 = ${searchResults});
 	}
 
 }

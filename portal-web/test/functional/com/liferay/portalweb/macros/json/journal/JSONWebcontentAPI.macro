@@ -1,24 +1,24 @@
 definition {
 
-	@summary = "Helper function to add a WC Folder via JSON"
-	macro _addFolder {
+	@summary = "Default summary"
+	macro _addFolder(folderDescription = null, parentFolderId = null, groupId = null, folderName = null) {
 		Variables.assertDefined(parameterList = "${groupId},${parentFolderId},${folderName}");
 
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(folderDescription)) {
-			var description = "${folderDescription}";
+			var description = ${folderDescription};
 		}
 		else {
 			var description = "";
 		}
 
 		if (!(isSet(userEmailAddress))) {
-			var userEmailAddress = "test@liferay.com";
+			var userEmailAddress = JSONUtil2.getDefaultUserEmail();
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = JSONUtil2.getDefaultUserPassword();
 		}
 
 		var curl = '''
@@ -31,22 +31,31 @@ definition {
 				-d description=${description}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to add a WC Article via JSON"
-	macro _addWebContent {
+	@summary = "Default summary"
+	macro _addWebContent(groupId = null, descriptionMap = null, serviceContext = null, titleMap = null, folderId = null, contentXml = null) {
 		Variables.assertDefined(parameterList = "${groupId},${folderId},${titleMap},${descriptionMap},${contentXml},${serviceContext}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var classNameId = JSONClassname._getClassNameId(value = "com.liferay.journal.model.JournalArticle");
+		var globalGroupId = JSONGroupAPI._getGroupIdByName(
+			groupName = "Global",
+			site = "true");
 
 		if (!(isSet(userEmailAddress))) {
-			var userEmailAddress = "test@liferay.com";
+			var userEmailAddress = JSONUtil2.getDefaultUserEmail();
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = JSONUtil2.getDefaultUserPassword();
 		}
+
+		var basicWebContentStructureId = JSONDDMstructureAPI._getStructureId(
+			classNameId = ${classNameId},
+			groupId = ${globalGroupId},
+			structureName = "Basic Web Content");
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalarticle/add-article \
@@ -57,138 +66,147 @@ definition {
 				-d titleMap=${titleMap} \
 				-d descriptionMap=${descriptionMap} \
 				-d content=${contentXml} \
-				-d ddmStructureKey=BASIC-WEB-CONTENT \
+				-d ddmStructureId=${basicWebContentStructureId} \
 				-d ddmTemplateKey=BASIC-WEB-CONTENT \
 				-d serviceContext=${serviceContext}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to delete a WC Article via JSON"
-	macro _deleteWebContent {
+	@summary = "Default summary"
+	macro _deleteWebContent(groupId = null, articleId = null) {
 		Variables.assertDefined(parameterList = "${articleId},${groupId}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalarticle/delete-article \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d articleId=${articleId} \
 				-d articleURL='' \
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _getArticleIdByURLTitle {
+	@summary = "Default summary"
+	macro _getArticleIdByURLTitle(groupName = null, site = null, urlTitle = null) {
 		Variables.assertDefined(parameterList = "${groupName},${urlTitle}");
 
 		var groupId = JSONCategorySetter.setGroupId(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalarticle/get-article-by-url-title \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d "urlTitle=${urlTitle}"
 		''';
 
-		var articleId = JSONCurlUtil.post("${curl}", "$.[?(@['urlTitle'] == '${urlTitle}')]['articleId']");
+		var articleId = JSONCurlUtil.post(${curl}, "$.[?(@['urlTitle'] == '${urlTitle}')]['articleId']");
 
-		return "${articleId}";
+		return ${articleId};
 	}
 
-	@summary = "Helper function to get the 'folderId' for the folder '${folderName}'"
-	macro _getFolderIdByFolderName {
+	@summary = "Default summary"
+	macro _getFolderIdByFolderName(groupId = null, folderName = null) {
 		Variables.assertDefined(parameterList = "${groupId},${folderName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalfolder/get-folders \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId}
 		''';
 
-		var folderId = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${folderName}')]['folderId']");
+		var folderId = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${folderName}')]['folderId']");
 
-		if ("${folderId}" == "") {
+		if (${folderId} == "") {
 			fail("FAIL. Cannot find folder.");
 		}
 		else {
-			return "${folderId}";
+			return ${folderId};
 		}
 	}
 
-	@summary = "Helper function to get the 'uuid' for the folder '${folderName}'"
-	macro _getFolderUuidByFolderName {
+	@summary = "Default summary"
+	macro _getFolderUuidByFolderName(groupId = null, folderName = null) {
 		Variables.assertDefined(parameterList = "${groupId},${folderName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalfolder/get-folders \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId}
 		''';
 
-		var folderUuid = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${folderName}')]['uuid']");
+		var folderUuid = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${folderName}')]['uuid']");
 
-		if ("${folderUuid}" == "") {
+		if (${folderUuid} == "") {
 			fail("FAIL. Cannot find folder.");
 		}
 		else {
-			return "${folderUuid}";
+			return ${folderUuid};
 		}
 	}
 
-	macro _getResourcePrimKeyByURLTitle {
+	@summary = "Default summary"
+	macro _getResourcePrimKeyByURLTitle(groupName = null, urlTitle = null) {
 		Variables.assertDefined(parameterList = "${groupName},${urlTitle}");
 
-		var groupId = JSONCategorySetter.setGroupId(groupName = "${groupName}");
+		var groupId = JSONCategorySetter.setGroupId(groupName = ${groupName});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalarticle/get-display-article-by-url-title \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d urlTitle=${urlTitle}
 		''';
 
-		var resourcePrimKey = JSONCurlUtil.post("${curl}", "$.[?(@['urlTitle'] == '${urlTitle}')]['resourcePrimKey']");
+		var resourcePrimKey = JSONCurlUtil.post(${curl}, "$.[?(@['urlTitle'] == '${urlTitle}')]['resourcePrimKey']");
 
-		return "${resourcePrimKey}";
+		return ${resourcePrimKey};
 	}
 
-	@summary = "Helper function to move a WC Article to the trash via JSON"
-	macro _moveWebContentToTrash {
+	@summary = "Default summary"
+	macro _moveWebContentToTrash(groupId = null, articleId = null) {
 		Variables.assertDefined(parameterList = "${articleId},${groupId}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalarticle/move-article-to-trash \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d articleId=${articleId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to update status of WC Article via JSON"
-	macro _updateStatus {
+	@summary = "Default summary"
+	macro _updateStatus(groupId = null, articleId = null, version = null, status = null) {
 		Variables.assertDefined(parameterList = "${articleId},${groupId},${status},${version}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/journal.journalarticle/update-status \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d articleId=${articleId} \
 				-d version=${version} \
@@ -196,7 +214,7 @@ definition {
 				-d articleURL=
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

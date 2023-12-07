@@ -51,24 +51,28 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8531 | Test Summary: Site overview visitors by day and time card shows when individuals are viewing the site"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test ShowsWhenIndividualsViewingSite {
-		property test.name.skip.portal.instance = "SitesVisitorsDayAndTime#ShowsWhenIndividualsViewingSite";
+		property test.run.type = "single";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-13994
 
 		task ("Sign in as new user") {
 			User.logoutAndLoginPG(
@@ -91,7 +95,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to the Overview in Sites dashboard") {

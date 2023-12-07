@@ -1,117 +1,198 @@
 definition {
 
-	macro assertGenericJSONPathResponse {
-		var actual = JSONUtil.getWithJSONPath("${apiResponse}", "$..${apiPath}");
+	@summary = "Default summary"
+	macro assertApiResponse(apiDataResponse = null, expectedList = null) {
+		for (var expected : list ${expectedList}) {
+			if (contains(${apiDataResponse}, ${expected})) {
+				echo("${expected} - PASSED");
+			}
+			else {
+				echo("${expected} - Not found in response");
 
-		TestUtils.assertEquals(
-			actual = "${actual}",
-			expected = "${expected}");
+				fail(${apiDataResponse});
+			}
+		}
 	}
 
-	macro assertSearchKeywordNotPresent {
+	@summary = "Default summary"
+	macro assertApiResponseNotContain(apiDataResponse = null, expectedList = null) {
+		for (var expected : list ${expectedList}) {
+			if (!(contains(${apiDataResponse}, ${expected}))) {
+				echo("${expected} - Not found - PASSED");
+			}
+			else {
+				echo("${expected} - Found in response - FAILED");
+
+				fail(${apiDataResponse});
+			}
+		}
+	}
+
+	@summary = "Default summary"
+	macro assertGenericJSONPathResponse(apiResponse = null, apiPath = null, expected = null) {
+		var actual = JSONUtil.getWithJSONPath(${apiResponse}, "$..${apiPath}");
+
+		TestUtils.assertEquals(
+			actual = ${actual},
+			expected = ${expected});
+	}
+
+	@summary = "Default summary"
+	macro assertSearchKeywordNotPresent(apiResponse = null, expected = null) {
 		if (!(isSet(keywordPosition))) {
-			var keywordPosition = "0";
+			var keywordPosition = 0;
 		}
 
-		var actual = JSONUtil.getWithJSONPath("${apiResponse}", "$..search-keywords[${keywordPosition}].keywords");
+		var actual = JSONUtil.getWithJSONPath(${apiResponse}, "$..search-keywords[${keywordPosition}].keywords");
 
 		TestUtils.assertNotEquals(
-			actual = "${actual}",
-			expected = "${expected}");
+			actual = ${actual},
+			expected = ${expected});
 	}
 
-	macro assertSearchResponse {
+	@summary = "Default summary"
+	macro assertSearchResponse(apiResponse = null, expected = null) {
 		if (!(isSet(keywordPosition))) {
-			var keywordPosition = "0";
+			var keywordPosition = 0;
 		}
 
-		var actual = JSONUtil.getWithJSONPath("${apiResponse}", "$..search-keywords[${keywordPosition}].keywords");
+		var actual = JSONUtil.getWithJSONPath(${apiResponse}, "$..search-keywords[${keywordPosition}].keywords");
 
 		TestUtils.assertEquals(
-			actual = "${actual}",
-			expected = "${expected}");
+			actual = ${actual},
+			expected = ${expected});
 	}
 
-	macro createNewExportSchedule {
+	@summary = "Default summary"
+	macro configureExpirationDate(expirationDate = null) {
+		Select(
+			locator1 = "ACSettings#EXPIRATION_DATE",
+			value1 = ${expirationDate});
+	}
+
+	@summary = "Default summary"
+	macro createDataReport(filter = null, filterValue = null, type = null, token = null) {
+		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
+
+		if (isSet(type)) {
+			var curl = '''
+				${analyticsCloudURL}/api/reports/${type} -H "Authorization: Bearer ${token}"
+			''';
+
+			if (isSet(filter)) {
+				var curl = '''
+					${analyticsCloudURL}/api/reports/${type}\?${filter}=${filterValue} -H "Authorization: Bearer ${token}"
+				''';
+			}
+		}
+		else {
+			var curl = '''
+				${analyticsCloudURL}/api/reports -H "Authorization: Bearer ${token}"
+			''';
+		}
+
+		static var apiResponse = JSONCurlUtil.get(${curl});
+
+		return ${apiResponse};
+	}
+
+	@summary = "Default summary"
+	macro createIndividualOrAssetDataReport(id = null, type = null, token = null) {
+		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
+
+		if (isSet(type) && isSet(id)) {
+			var curl = '''
+				${analyticsCloudURL}/api/reports/${type}/${id} -H "Authorization: Bearer ${token}"
+			''';
+
+			static var apiIndividualOrAssetResponse = JSONCurlUtil.get(${curl});
+
+			return ${apiIndividualOrAssetResponse};
+		}
+		else {
+			fail("Enter both valids type and id");
+		}
+	}
+
+	@summary = "Default summary"
+	macro createNewExportSchedule(endDate = null, startTime = null, endTime = null, type = null, startDate = null, token = null) {
 		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
 
 		var curl = '''
 			${analyticsCloudURL}/api/reports/export/${type}\?fromDate=${startDate}T${startTime}Z\&toDate=${endDate}T${endTime}Z
-			-H "Authorization: Bearer ${token}"
-			''';
+				-H "Authorization: Bearer ${token}"
+		''';
 
-		static var apiResponse = JSONCurlUtil.get("${curl}", "$");
+		static var apiResponse = JSONCurlUtil.get(${curl}, "$");
 
-		return "${apiResponse}";
+		return ${apiResponse};
 	}
 
-	macro createQueryData {
-		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
-
-		var curl = '''
-			${analyticsCloudURL}/api/reports -H "Authorization: Bearer ${token}"
-			''';
-
-		static var apiResponse = JSONCurlUtil.get("${curl}", "$");
-
-		return "${apiResponse}";
-	}
-
-	macro getAnalyticsConfiguration {
+	@summary = "Default summary"
+	macro getAnalyticsConfiguration(scriptValue = null) {
 		ServerAdministration.openServerAdmin();
 
 		ACApi.getSearchHeaderValues(header = "liferayAnalyticsFaroBackendURL");
 
-		static var faroBackendURL = "${scriptValue}";
+		static var faroBackendURL = ${scriptValue};
 
 		ACApi.getSearchHeaderValues(header = "liferayAnalyticsFaroBackendSecuritySignature");
 
-		static var osbAsahFaroBackendSS = "${scriptValue}";
+		static var osbAsahFaroBackendSS = ${scriptValue};
 
 		ACApi.getSearchHeaderValues(header = "liferayAnalyticsProjectId");
 
-		static var osbAsahProjectId = "${scriptValue}";
+		static var osbAsahProjectId = ${scriptValue};
 	}
 
-	macro getSearchHeaderValues {
+	@summary = "Default summary"
+	macro getSearchHeaderValues(header = null) {
 		var script = '''
-			    out.println(com.liferay.portal.kernel.util.PrefsPropsUtil.getPreferences(com.liferay.portal.kernel.service.CompanyServiceUtil.getCompanies()[0].getCompanyId(), false).getMap().get("${header}")[0]);
+			    import com.liferay.analytics.settings.configuration.AnalyticsConfiguration; 
+				import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil; 
+				import com.liferay.portal.kernel.service.CompanyServiceUtil; 
+
+				AnalyticsConfiguration analyticsConfiguration = (AnalyticsConfiguration)ConfigurationProviderUtil.getCompanyConfiguration(AnalyticsConfiguration.class, CompanyServiceUtil.getCompanies()[0].getCompanyId());
+
+				out.println(analyticsConfiguration."${header}"());
 		    ''';
 
 		ServerAdministration.executeScript(
 			language = "Groovy",
-			script = "${script}");
+			script = ${script});
 
 		static var scriptValue = selenium.getText("ServerAdministrationScript#OUTPUT_FIELD");
 	}
 
-	macro getSearchKeywords {
+	@summary = "Default summary"
+	macro getSearchKeywords(faroBackendURL = null, osbAsahFaroBackendSS = null, parameters = null, osbAsahProjectId = null) {
 
 		// The pause is necessary because it takes some time for the keywords to appear during curl see LRAC-12141
 
-		Pause(locator1 = "10000");
+		Pause(value1 = 10000);
 
 		if (isSet(parameters)) {
 			var curl = '''
 				${faroBackendURL}/api/1.0/pages/search-keywords?${parameters} \
-				-H "OSB-Asah-Faro-Backend-Security-Signature: ${osbAsahFaroBackendSS}" \
-				-H "OSB-Asah-Project-ID: ${osbAsahProjectId}"
-				''';
+					-H "OSB-Asah-Faro-Backend-Security-Signature: ${osbAsahFaroBackendSS}" \
+					-H "OSB-Asah-Project-ID: ${osbAsahProjectId}"
+			''';
 		}
 		else {
 			var curl = '''
 				${faroBackendURL}/api/1.0/pages/search-keywords \
-				-H "OSB-Asah-Faro-Backend-Security-Signature: ${osbAsahFaroBackendSS}" \
-				-H "OSB-Asah-Project-ID: ${osbAsahProjectId}"
-				''';
+					-H "OSB-Asah-Faro-Backend-Security-Signature: ${osbAsahFaroBackendSS}" \
+					-H "OSB-Asah-Project-ID: ${osbAsahProjectId}"
+			''';
 		}
 
-		static var apiResponse = JSONCurlUtil.get("${curl}");
+		static var apiResponse = JSONCurlUtil.get(${curl});
 
-		return "${apiResponse}";
+		return ${apiResponse};
 	}
 
-	macro getTokenValue {
+	@summary = "Default summary"
+	macro getTokenValue() {
 		if (IsElementNotPresent(locator1 = "ACSettings#COPY_TOKEN_BUTTON")) {
 			ACUtils.clickAnyButton(button = "Generate Token");
 		}
@@ -122,28 +203,42 @@ definition {
 
 		var token = selenium.getAttribute("//button[@aria-label='Click to Copy']@data-clipboard-text");
 
-		return "${token}";
+		return ${token};
 	}
 
-	macro sendEmailReport {
+	@summary = "Default summary"
+	macro searchApiResponse(apiDataResponse = null, jsonQuery = null, resultPosition = null) {
+		if (!(isSet(resultPosition))) {
+			var searchedValue = JSONUtil.getWithJSONPath(${apiDataResponse}, "$..${jsonQuery}");
+		}
+		else {
+			var searchedValue = JSONUtil.getWithJSONPath(${apiDataResponse}, "$.results[${resultPosition}].${jsonQuery}");
+		}
+
+		return ${searchedValue};
+	}
+
+	@summary = "Default summary"
+	macro sendEmailReport(groupId = null, userID = null, channelId = null, frequency = null) {
 		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
 
 		var curl = '''
 			${analyticsCloudURL}/o/faro/main/${groupId}/preferences/send_email_report
-			-u 'test@liferay.com:test'
-			-F 'channelId="${channelId}"'
-			-F 'userId="${userID}"'
-			-F 'frequency="${frequency}"'
-			''';
+				-u 'test@liferay.com:test'
+				-F 'channelId="${channelId}"'
+				-F 'userId="${userID}"'
+				-F 'frequency="${frequency}"'
+		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 	}
 
-	macro viewApiResponseForError {
+	@summary = "Default summary"
+	macro viewApiResponseForError(apiResponse = null, message = null) {
 
 		// Checks if the API response message explains the reason for the error
 
-		if (contains("${apiResponse}", "${message}")) {
+		if (contains(${apiResponse}, ${message})) {
 			echo("Correct error message - PASSED");
 		}
 		else {
@@ -152,7 +247,7 @@ definition {
 
 		// Checks if the status value is ERROR
 
-		if (contains("${apiResponse}", "status=ERROR")) {
+		if (contains(${apiResponse}, "status=ERROR")) {
 			echo("Correct status - PASSED");
 		}
 		else {
@@ -160,11 +255,12 @@ definition {
 		}
 	}
 
-	macro viewApiResponseForExportProcess {
+	@summary = "Default summary"
+	macro viewApiResponseForExportProcess(endDate = null, apiResponse = null, upperCaseType = null, startTime = null, endTime = null, message = null, startDate = null, status = null) {
 
 		// Checks if the API response message is correct
 
-		if (contains("${apiResponse}", "${message}")) {
+		if (contains(${apiResponse}, ${message})) {
 			echo("Correct message - PASSED");
 		}
 		else {
@@ -173,7 +269,7 @@ definition {
 
 		// Checks if the fromDate value is the same as the one used to create the schedule
 
-		if (contains("${apiResponse}", "fromDate=${startDate}T${startTime}Z")) {
+		if (contains(${apiResponse}, "fromDate=${startDate}T${startTime}Z")) {
 			echo("Correct fromDate - PASSED");
 		}
 		else {
@@ -182,7 +278,7 @@ definition {
 
 		// Checks if the toDate value is the same as the one used to create the schedule
 
-		if (contains("${apiResponse}", "toDate=${endDate}T${endTime}Z")) {
+		if (contains(${apiResponse}, "toDate=${endDate}T${endTime}Z")) {
 			echo("Correct toDate - PASSED");
 		}
 		else {
@@ -191,7 +287,7 @@ definition {
 
 		// Checks if the type value is the same as the one used to create the schedule
 
-		if (contains("${apiResponse}", "type=${upperCaseType}")) {
+		if (contains(${apiResponse}, "type=${upperCaseType}")) {
 			echo("Correct type - PASSED");
 		}
 		else {
@@ -200,7 +296,7 @@ definition {
 
 		// Checks if the status value is the same as the one used to create the schedule
 
-		if (contains("${apiResponse}", "status=${status}")) {
+		if (contains(${apiResponse}, "status=${status}")) {
 			echo("Correct status - PASSED");
 		}
 		else {
@@ -208,13 +304,16 @@ definition {
 		}
 	}
 
-	macro viewApiResponseForQueryData {
-		for (var type : list "${typeList}") {
-			if (contains("${apiResponse}", "${type}={href=http://osbasahbackend:8080/api/reports/${type}")) {
+	@summary = "Default summary"
+	macro viewApiResponseForRootEndpoint(typeList = null, apiResponse = null) {
+		for (var type : list ${typeList}) {
+			if (contains(${apiResponse}, "http://osbasahbackend:8080/api/reports/${type}")) {
 				echo("${type} - PASSED");
 			}
 			else {
-				fail("${apiResponse}");
+				echo("${type} - Invalid type");
+
+				fail(${apiResponse});
 			}
 		}
 	}

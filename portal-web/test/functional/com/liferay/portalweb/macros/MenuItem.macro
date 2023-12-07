@@ -1,57 +1,86 @@
 definition {
 
-	macro click {
+	@summary = "Default summary"
+	macro click(menuItem = null) {
 		Click(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
-	macro clickNoError {
+	@summary = "Default summary"
+	macro clickNoError(menuItem = null) {
 		ClickNoError(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
-	macro viewDisabled {
+	@summary = "Default summary"
+	macro verifyNotPresent(menuItem = null) {
+		VerifyElementNotPresent(
+			key_menuItem = ${menuItem},
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	@summary = "Default summary"
+	macro verifyPresent(menuItem = null) {
+		VerifyElementPresent(
+			key_menuItem = ${menuItem},
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	@summary = "Default summary"
+	macro verifyVisible(menuItem = null) {
+		VerifyVisible(
+			key_menuItem = ${menuItem},
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	@summary = "Default summary"
+	macro viewDisabled(menuItem = null) {
 		AssertElementPresent(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#DISABLED_MENU_ITEM");
 	}
 
-	macro viewNotPresent {
+	@summary = "Default summary"
+	macro viewNotPresent(menuItem = null) {
 		AssertElementNotPresent(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
-	macro viewNotVisible {
+	@summary = "Default summary"
+	macro viewNotVisible(menuItem = null) {
 		AssertNotVisible(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
-	macro viewOrder {
-		var key_index = "1";
+	@summary = "Default summary"
+	macro viewOrder(menuItemList = null) {
+		var key_index = 1;
 
-		for (var menuItem : list "${menuItemList}") {
-			AssertTextEquals(
-				index = "${key_index}",
+		for (var menuItem : list ${menuItemList}) {
+			AssertTextEquals.assertPartialText(
+				index = ${key_index},
 				locator1 = "MenuItem#DROPDOWN_MENU_ITEM_SPECIFIC",
-				value1 = "${menuItem}");
+				value1 = ${menuItem});
 
 			var key_index = ${key_index} + 1;
 		}
 	}
 
-	macro viewPresent {
+	@summary = "Default summary"
+	macro viewPresent(menuItem = null) {
 		AssertElementPresent(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
-	macro viewVisible {
+	@summary = "Default summary"
+	macro viewVisible(menuItem = null) {
 		AssertVisible(
-			key_menuItem = "${menuItem}",
+			key_menuItem = ${menuItem},
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 

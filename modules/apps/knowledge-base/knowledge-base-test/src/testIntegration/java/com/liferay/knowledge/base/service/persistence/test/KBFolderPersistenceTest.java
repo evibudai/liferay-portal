@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service.persistence.test;
@@ -127,6 +118,8 @@ public class KBFolderPersistenceTest {
 
 		newKBFolder.setMvccVersion(RandomTestUtil.nextLong());
 
+		newKBFolder.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newKBFolder.setUuid(RandomTestUtil.randomString());
 
 		newKBFolder.setExternalReferenceCode(RandomTestUtil.randomString());
@@ -153,6 +146,14 @@ public class KBFolderPersistenceTest {
 
 		newKBFolder.setLastPublishDate(RandomTestUtil.nextDate());
 
+		newKBFolder.setStatus(RandomTestUtil.nextInt());
+
+		newKBFolder.setStatusByUserId(RandomTestUtil.nextLong());
+
+		newKBFolder.setStatusByUserName(RandomTestUtil.randomString());
+
+		newKBFolder.setStatusDate(RandomTestUtil.nextDate());
+
 		_kbFolders.add(_persistence.update(newKBFolder));
 
 		KBFolder existingKBFolder = _persistence.findByPrimaryKey(
@@ -160,6 +161,9 @@ public class KBFolderPersistenceTest {
 
 		Assert.assertEquals(
 			existingKBFolder.getMvccVersion(), newKBFolder.getMvccVersion());
+		Assert.assertEquals(
+			existingKBFolder.getCtCollectionId(),
+			newKBFolder.getCtCollectionId());
 		Assert.assertEquals(existingKBFolder.getUuid(), newKBFolder.getUuid());
 		Assert.assertEquals(
 			existingKBFolder.getExternalReferenceCode(),
@@ -191,6 +195,17 @@ public class KBFolderPersistenceTest {
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingKBFolder.getLastPublishDate()),
 			Time.getShortTimestamp(newKBFolder.getLastPublishDate()));
+		Assert.assertEquals(
+			existingKBFolder.getStatus(), newKBFolder.getStatus());
+		Assert.assertEquals(
+			existingKBFolder.getStatusByUserId(),
+			newKBFolder.getStatusByUserId());
+		Assert.assertEquals(
+			existingKBFolder.getStatusByUserName(),
+			newKBFolder.getStatusByUserName());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingKBFolder.getStatusDate()),
+			Time.getShortTimestamp(newKBFolder.getStatusDate()));
 	}
 
 	@Test(expected = DuplicateKBFolderExternalReferenceCodeException.class)
@@ -276,6 +291,15 @@ public class KBFolderPersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_P_S() throws Exception {
+		_persistence.countByG_P_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByG_P_S(0L, 0L, 0);
+	}
+
+	@Test
 	public void testCountByERC_G() throws Exception {
 		_persistence.countByERC_G("", RandomTestUtil.nextLong());
 
@@ -309,11 +333,13 @@ public class KBFolderPersistenceTest {
 
 	protected OrderByComparator<KBFolder> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"KBFolder", "mvccVersion", true, "uuid", true,
-			"externalReferenceCode", true, "kbFolderId", true, "groupId", true,
-			"companyId", true, "userId", true, "userName", true, "createDate",
-			true, "modifiedDate", true, "parentKBFolderId", true, "name", true,
-			"urlTitle", true, "description", true, "lastPublishDate", true);
+			"KBFolder", "mvccVersion", true, "ctCollectionId", true, "uuid",
+			true, "externalReferenceCode", true, "kbFolderId", true, "groupId",
+			true, "companyId", true, "userId", true, "userName", true,
+			"createDate", true, "modifiedDate", true, "parentKBFolderId", true,
+			"name", true, "urlTitle", true, "description", true,
+			"lastPublishDate", true, "status", true, "statusByUserId", true,
+			"statusByUserName", true, "statusDate", true);
 	}
 
 	@Test
@@ -635,6 +661,8 @@ public class KBFolderPersistenceTest {
 
 		kbFolder.setMvccVersion(RandomTestUtil.nextLong());
 
+		kbFolder.setCtCollectionId(RandomTestUtil.nextLong());
+
 		kbFolder.setUuid(RandomTestUtil.randomString());
 
 		kbFolder.setExternalReferenceCode(RandomTestUtil.randomString());
@@ -660,6 +688,14 @@ public class KBFolderPersistenceTest {
 		kbFolder.setDescription(RandomTestUtil.randomString());
 
 		kbFolder.setLastPublishDate(RandomTestUtil.nextDate());
+
+		kbFolder.setStatus(RandomTestUtil.nextInt());
+
+		kbFolder.setStatusByUserId(RandomTestUtil.nextLong());
+
+		kbFolder.setStatusByUserName(RandomTestUtil.randomString());
+
+		kbFolder.setStatusDate(RandomTestUtil.nextDate());
 
 		_kbFolders.add(_persistence.update(kbFolder));
 

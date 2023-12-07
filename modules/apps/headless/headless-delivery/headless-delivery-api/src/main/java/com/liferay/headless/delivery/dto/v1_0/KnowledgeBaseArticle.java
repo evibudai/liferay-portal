@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.dto.v1_0;
@@ -287,6 +278,34 @@ public class KnowledgeBaseArticle implements Serializable {
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
+
+	@Schema(description = "The article's scheduled publication date.")
+	public Date getDatePublished() {
+		return datePublished;
+	}
+
+	public void setDatePublished(Date datePublished) {
+		this.datePublished = datePublished;
+	}
+
+	@JsonIgnore
+	public void setDatePublished(
+		UnsafeSupplier<Date, Exception> datePublishedUnsafeSupplier) {
+
+		try {
+			datePublished = datePublishedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The article's scheduled publication date.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Date datePublished;
 
 	@Schema(description = "The article's description.")
 	public String getDescription() {
@@ -969,6 +988,20 @@ public class KnowledgeBaseArticle implements Serializable {
 			sb.append("\"");
 		}
 
+		if (datePublished != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"datePublished\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(datePublished));
+
+			sb.append("\"");
+		}
+
 		if (description != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1349,5 +1382,7 @@ public class KnowledgeBaseArticle implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

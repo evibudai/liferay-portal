@@ -1,9 +1,12 @@
 {
 	"dependencies": {
-		"@types/ckeditor4": "4.16.2",
+		"@liferay/cookies-banner-web": "*",
+		"ckeditor4": "4.22.1",
 		"ckeditor4-react": "1.4.2",
 		"frontend-js-web": "*",
-		"liferay-ckeditor": "4.18.0-liferay.4"
+		"liferay-ckeditor": "4.21.0-liferay.1",
+		"prop-types": "15.7.2",
+		"react": "16.12.0"
 	},
 	"main": "index.js",
 	"name": "frontend-editor-ckeditor-web",
@@ -12,5 +15,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "5.0.70"
+	"version": "5.0.89"
 }

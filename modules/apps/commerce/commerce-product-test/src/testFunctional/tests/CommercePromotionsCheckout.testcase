@@ -15,8 +15,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-10290. Checkout an order of a product with bulk pricing on the price list and tiered price on promotions"
-	@priority = "3"
+	@priority = 5
 	test CanCheckoutProductWithBulkPriceAndPromotionTierPrice {
+		property portal.acceptance = "true";
+
 		task ("Given a Commerce Account and Buyer User are created") {
 			CommerceEntry.addAccountEntryUser(
 				accountName = "Commerce Account",
@@ -35,6 +37,12 @@ definition {
 		task ("And the tier list are changed") {
 			CommercePriceLists.openPriceListsAdmin();
 
+			MouseOver(locator1 = "Icon#PLUS");
+
+			VerifyElementPresent(
+				key_text = "Create New Price List",
+				locator1 = "CP2ActivationKeys#TOOLTIPS_TEXT");
+
 			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
 			CommerceEntry.gotoMenuTab(menuTab = "Entries");
@@ -45,12 +53,18 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Bulk Pricing",
-				key_quantity = "1",
-				key_value = "40");
+				key_quantity = 1,
+				key_value = 40);
 		}
 
 		task ("And given a promotion price entry for U-Joint is set lower than price list") {
 			CommercePromotions.openPromotionsAdmin();
+
+			MouseOver(locator1 = "Icon#PLUS");
+
+			VerifyElementPresent(
+				key_text = "Create New Promotion",
+				locator1 = "CP2ActivationKeys#TOOLTIPS_TEXT");
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Base Promotion");
 
@@ -62,8 +76,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Bulk Pricing",
-				key_quantity = "4",
-				key_value = "10");
+				key_quantity = 4,
+				key_value = 10);
 		}
 
 		task ("And Buyer User logged in") {
@@ -85,7 +99,7 @@ definition {
 		task ("And buyer user add a product to the cart") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "4");
+				productQuantity = 4);
 		}
 
 		task ("Then by clicking Submit button from minicart, the checkout process is completed") {
@@ -98,8 +112,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "4",
-				productUnitPrice = "10",
+				productQuantity = 4,
+				productUnitPrice = 10,
 				shippingMethod = "Standard");
 
 			AssertTextEquals(
@@ -109,8 +123,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-10282. Can checkout an order of a product with bulk pricing only on the promotions"
-	@priority = "3"
+	@priority = 3
 	test CanCheckoutProductWithBulkPriceOnlyInPromotions {
+		property portal.acceptance = "false";
+
 		task ("Given a Commerce Account and Buyer User are created") {
 			CommerceEntry.addAccountEntryUser(
 				accountName = "Commerce Account",
@@ -139,8 +155,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Bulk Pricing",
-				key_quantity = "5",
-				key_value = "15");
+				key_quantity = 5,
+				key_value = 15);
 		}
 
 		task ("And Buyer User logged in") {
@@ -155,7 +171,7 @@ definition {
 		task ("And buyer user add a product to the cart") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "5");
+				productQuantity = 5);
 		}
 
 		task ("Then by clicking Submit button from minicart, the checkout process is completed") {
@@ -168,8 +184,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "5",
-				productUnitPrice = "15",
+				productQuantity = 5,
+				productUnitPrice = 15,
 				shippingMethod = "Standard");
 
 			AssertTextEquals(
@@ -179,8 +195,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-10307. Can checkout an order of a product with price list with bulk and promotion with bulk"
-	@priority = "3"
+	@priority = 5
 	test CanCheckoutProductWithBulkPriceOnPromotionAndPriceList {
+		property portal.acceptance = "true";
+
 		task ("Given a Commerce Account and Buyer User are created") {
 			CommerceEntry.addAccountEntryUser(
 				accountName = "Commerce Account",
@@ -209,8 +227,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Bulk Pricing",
-				key_quantity = "1",
-				key_value = "50");
+				key_quantity = 1,
+				key_value = 50);
 		}
 
 		task ("And given a promotion price entry for U-Joint is set lower than price list") {
@@ -226,8 +244,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Bulk Pricing",
-				key_quantity = "5",
-				key_value = "30");
+				key_quantity = 5,
+				key_value = 30);
 		}
 
 		task ("And Buyer User logged in") {
@@ -249,7 +267,7 @@ definition {
 		task ("And buyer user add a product to the cart") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "5");
+				productQuantity = 5);
 		}
 
 		task ("Then by clicking Submit button from minicart, the checkout process is completed") {
@@ -262,8 +280,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "5",
-				productUnitPrice = "30",
+				productQuantity = 5,
+				productUnitPrice = 30,
 				shippingMethod = "Standard");
 
 			AssertTextEquals(
@@ -273,8 +291,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-10306. Can checkout an order of a product with price list with tier and promotion with bulk"
-	@priority = "3"
+	@priority = 5
 	test CanCheckoutProductWithBulkPriceOnPromotionAndTierPriceOnPriceList {
+		property portal.acceptance = "true";
+
 		task ("Given a Commerce Account and Buyer User are created") {
 			CommerceEntry.addAccountEntryUser(
 				accountName = "Commerce Account",
@@ -303,8 +323,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Tiered Pricing",
-				key_quantity = "1",
-				key_value = "50");
+				key_quantity = 1,
+				key_value = 50);
 		}
 
 		task ("And given a promotion price entry for U-Joint is set lower than price list") {
@@ -320,8 +340,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Bulk Pricing",
-				key_quantity = "5",
-				key_value = "30");
+				key_quantity = 5,
+				key_value = 30);
 		}
 
 		task ("And Buyer User logged in") {
@@ -343,7 +363,7 @@ definition {
 		task ("And buyer user add a product to the cart") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "5");
+				productQuantity = 5);
 		}
 
 		task ("Then by clicking Submit button from minicart, the checkout process is completed") {
@@ -356,8 +376,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "5",
-				productUnitPrice = "30",
+				productQuantity = 5,
+				productUnitPrice = 30,
 				shippingMethod = "Standard");
 
 			AssertTextEquals(
@@ -367,8 +387,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-10289. Can checkout an order of a product with tier price list and promotion tier"
-	@priority = "3"
+	@priority = 5
 	test CanCheckoutProductWithTierPriceAndPromotionTierPrice {
+		property portal.acceptance = "true";
+
 		task ("Given a Commerce Account and Buyer User are created") {
 			CommerceEntry.addAccountEntryUser(
 				accountName = "Commerce Account",
@@ -397,8 +419,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Tiered Pricing",
-				key_quantity = "1",
-				key_value = "50");
+				key_quantity = 1,
+				key_value = 50);
 		}
 
 		task ("And given a promotion price entry for U-Joint is set lower than price list") {
@@ -414,8 +436,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Tiered Pricing",
-				key_quantity = "5",
-				key_value = "50");
+				key_quantity = 5,
+				key_value = 50);
 		}
 
 		task ("And Buyer User logged in") {
@@ -437,7 +459,7 @@ definition {
 		task ("And buyer user add a product to the cart") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "5");
+				productQuantity = 5);
 		}
 
 		task ("Then by clicking Submit button from minicart, the checkout process is completed") {
@@ -450,8 +472,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "5",
-				productUnitPrice = "10",
+				productQuantity = 5,
+				productUnitPrice = 10,
 				shippingMethod = "Standard");
 
 			AssertTextEquals(
@@ -461,8 +483,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-10281. Can checkout an order of a product with tier pricing only on the promotions"
-	@priority = "3"
+	@priority = 3
 	test CanCheckoutProductWithTierPriceOnlyInPromotion {
+		property portal.acceptance = "false";
+
 		task ("Given a Commerce Account and Buyer User are created") {
 			CommerceEntry.addAccountEntryUser(
 				accountName = "Commerce Account",
@@ -491,8 +515,8 @@ definition {
 
 			CommercePriceLists.createPriceListPriceTiers(
 				key_pricingType = "Tiered Pricing",
-				key_quantity = "5",
-				key_value = "10");
+				key_quantity = 5,
+				key_value = 10);
 		}
 
 		task ("And Buyer User logged in") {
@@ -507,7 +531,7 @@ definition {
 		task ("And buyer user add a product to the cart") {
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "5");
+				productQuantity = 5);
 		}
 
 		task ("Then by clicking Submit button from minicart, the checkout process is completed") {
@@ -520,8 +544,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "5",
-				productUnitPrice = "2",
+				productQuantity = 5,
+				productUnitPrice = 2,
 				shippingMethod = "Standard");
 
 			AssertTextEquals(

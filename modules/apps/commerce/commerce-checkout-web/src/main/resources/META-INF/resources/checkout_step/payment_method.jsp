@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -19,25 +10,23 @@
 <%
 PaymentMethodCheckoutStepDisplayContext paymentMethodCheckoutStepDisplayContext = (PaymentMethodCheckoutStepDisplayContext)request.getAttribute(CommerceCheckoutWebKeys.COMMERCE_CHECKOUT_STEP_DISPLAY_CONTEXT);
 
-List<CommercePaymentMethod> commercePaymentMethods = paymentMethodCheckoutStepDisplayContext.getCommercePaymentMethods();
+List<CommercePaymentMethodGroupRel> commercePaymentMethodGroupRels = paymentMethodCheckoutStepDisplayContext.getCommercePaymentMethodGroupRels();
 
-CommerceOrder commerceOrder = paymentMethodCheckoutStepDisplayContext.getCommerceOrder();
-
-String commercePaymentMethodKey = BeanParamUtil.getString(commerceOrder, request, "commercePaymentMethodKey");
+String commercePaymentMethodKey = BeanParamUtil.getString(paymentMethodCheckoutStepDisplayContext.getCommerceOrder(), request, "commercePaymentMethodKey");
 %>
 
 <div id="commercePaymentMethodsContainer">
 	<liferay-ui:error exception="<%= CommerceOrderPaymentMethodException.class %>" message="please-select-a-valid-payment-method" />
 
 	<c:choose>
-		<c:when test="<%= commercePaymentMethods.isEmpty() %>">
+		<c:when test="<%= commercePaymentMethodGroupRels.isEmpty() %>">
 			<clay:row>
 				<clay:col
 					size="12"
 				>
-					<aui:alert type="info">
-						<liferay-ui:message key="there-are-no-available-payment-methods" />
-					</aui:alert>
+					<clay:alert
+						message="there-are-no-available-payment-methods"
+					/>
 				</clay:col>
 			</clay:row>
 
@@ -53,21 +42,21 @@ String commercePaymentMethodKey = BeanParamUtil.getString(commerceOrder, request
 			<ul class="list-group">
 
 				<%
-				for (CommercePaymentMethod commercePaymentMethod : commercePaymentMethods) {
+				for (CommercePaymentMethodGroupRel commercePaymentMethodGroupRel : commercePaymentMethodGroupRels) {
 				%>
 
 					<li class="commerce-payment-types list-group-item list-group-item-flex">
 						<div class="autofit-col autofit-col-expand">
-							<aui:input checked="<%= commercePaymentMethodKey.equals(commercePaymentMethod.getKey()) %>" label="<%= commercePaymentMethod.getName(locale) %>" name="commercePaymentMethodKey" type="radio" value="<%= commercePaymentMethod.getKey() %>" />
+							<aui:input checked="<%= commercePaymentMethodKey.equals(commercePaymentMethodGroupRel.getPaymentIntegrationKey()) %>" label="<%= commercePaymentMethodGroupRel.getName(locale) %>" name="commercePaymentMethodKey" type="radio" value="<%= commercePaymentMethodGroupRel.getPaymentIntegrationKey() %>" />
 						</div>
 
 						<%
-						String thumbnailSrc = paymentMethodCheckoutStepDisplayContext.getImageURL(commerceOrder.getGroupId(), commercePaymentMethod.getKey(), themeDisplay);
+						String thumbnailSrc = commercePaymentMethodGroupRel.getImageURL(themeDisplay);
 						%>
 
 						<c:if test="<%= Validator.isNotNull(thumbnailSrc) %>">
 							<div class="autofit-col">
-								<img alt="<%= HtmlUtil.escapeAttribute(commercePaymentMethod.getName(locale)) %>" class="payment-icon" src="<%= HtmlUtil.escapeAttribute(thumbnailSrc) %>" style="height: 45px; width: auto;" />
+								<img alt="<%= HtmlUtil.escapeAttribute(commercePaymentMethodGroupRel.getName(locale)) %>" class="payment-icon" src="<%= HtmlUtil.escapeAttribute(thumbnailSrc) %>" style="height: 45px; width: auto;" />
 							</div>
 						</c:if>
 					</li>
@@ -81,7 +70,7 @@ String commercePaymentMethodKey = BeanParamUtil.getString(commerceOrder, request
 	</c:choose>
 </div>
 
-<c:if test="<%= commercePaymentMethods.isEmpty() %>">
+<c:if test="<%= commercePaymentMethodGroupRels.isEmpty() %>">
 	<aui:script use="aui-base">
 		var value = A.one('#<portlet:namespace />continue');
 

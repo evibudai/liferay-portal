@@ -25,22 +25,20 @@ definition {
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Comment");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Page Comments Page");
 
-		PagesAdmin.addPage(pageName = "Page Comments Page");
-
-		Navigator.gotoPage(pageName = "Page Comments Page");
-
-		Portlet.addPG(portletName = "Page Comments");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Page Comments Page",
+			widgetName = "Page Comments");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -54,7 +52,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ApprovePageCommentPG {
 		property portal.acceptance = "true";
 
@@ -108,8 +106,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-54707."
-	@priority = "4"
+	@priority = 4
 	test DeleteComment {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		Navigator.gotoPage(pageName = "Page Comments Page");
 
 		PageComment.addWithWorkflowPG(
@@ -143,7 +144,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-68780."
-	@priority = "5"
+	@priority = 5
 	test EditCommentAssignedToMe {
 		property portal.acceptance = "true";
 
@@ -181,8 +182,10 @@ definition {
 			workflowTask = "Review");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RejectPageCommentPG {
+		property test.liferay.virtual.instance = "true";
+
 		Navigator.gotoPage(pageName = "Page Comments Page");
 
 		PageComment.addWithWorkflowPG(

@@ -1,3 +1,5 @@
+const isRTL = document.documentElement.classList.contains('rtl');
+
 const buttonElement = fragmentElement.querySelector('.btn');
 const dropdownElement = fragmentElement.querySelector('.dropdown-menu');
 const optionListElement = fragmentElement.querySelector('.list-unstyled');
@@ -27,6 +29,11 @@ const valueInputElement = document.getElementById(
 	`${fragmentEntryLinkNamespace}-value-input`
 );
 
+if (layoutMode === 'edit') {
+	buttonElement.setAttribute('disabled', true);
+	uiInputElement.setAttribute('disabled', true);
+}
+
 buttonElement.addEventListener('click', toggleDropdown);
 buttonElement.addEventListener('blur', handleResultListBlur);
 uiInputElement.addEventListener('click', toggleDropdown);
@@ -42,10 +49,29 @@ window.addEventListener('scroll', handleWindowResizeOrScroll, {
 	passive: true,
 });
 
-const MAX_ITEMS = 10;
-
 let lastSearchAbortController = new AbortController();
 let lastSearchQuery = null;
+valueInputElement.value = '';
+
+if (input.value) {
+	const selectedOption = (input.attributes.options || []).find(
+		(option) => option.value === input.value
+	);
+
+	lastSearchQuery = selectedOption.label.toLowerCase();
+	valueInputElement.value = selectedOption.value;
+
+	const selectedOptionElement = optionListElement.querySelector(
+		'.active.dropdown-item'
+	);
+
+	if (selectedOptionElement) {
+		optionListElement.setAttribute(
+			'aria-activedescendant',
+			selectedOption.id
+		);
+	}
+}
 
 const KEYS = {
 	ArrowDown: 'ArrowDown',
@@ -72,7 +98,7 @@ function handleResultListClick(event) {
 	}
 
 	if (selectedOptionElement) {
-		setFocusedOption(selectedOptionElement);
+		setFocusedOption(selectedOptionElement, {scrollToElement: false});
 		setSelectedOption(selectedOptionElement);
 	}
 }
@@ -157,7 +183,10 @@ function handleInputChange() {
 			if (optionListElement.firstElementChild) {
 				chooseOptionElement.classList.remove('d-none');
 				noResultsElement.classList.add('d-none');
-				setFocusedOption(optionListElement.firstElementChild);
+
+				setFocusedOption(optionListElement.firstElementChild, {
+					scrollToElement: false,
+				});
 			}
 			else {
 				chooseOptionElement.classList.add('d-none');
@@ -231,11 +260,24 @@ function filterRemoteOptions(query, abortController) {
 	})
 		.then((response) => response.json())
 		.then((result) => {
-			return result.items.map((entry) => ({
-				textContent: entry[input.attributes.relationshipLabelFieldName],
-				textValue: entry[input.attributes.relationshipLabelFieldName],
-				value: `${entry[input.attributes.relationshipValueFieldName]}`,
-			}));
+			return result.items.map((entry) => {
+				let label = entry[input.attributes.relationshipLabelFieldName];
+
+				if (Array.isArray(label)) {
+					label = label.map((label) => label.name).join(', ');
+				}
+				else if (typeof label === 'object') {
+					label = label.name;
+				}
+
+				return {
+					textContent: label,
+					textValue: label,
+					value: `${
+						entry[input.attributes.relationshipValueFieldName]
+					}`,
+				};
+			});
 		});
 }
 
@@ -256,7 +298,10 @@ function handleWindowResizeOrScroll() {
 	}
 }
 
-function setFocusedOption(optionElement) {
+function setFocusedOption(
+	optionElement,
+	{scrollToElement = true} = {scrollToElement: true}
+) {
 	const currentFocusedOption = document.getElementById(
 		optionListElement.getAttribute('aria-activedescendant')
 	);
@@ -272,7 +317,10 @@ function setFocusedOption(optionElement) {
 		);
 
 		optionElement.setAttribute('aria-selected', 'true');
-		optionElement.scrollIntoView({block: 'center'});
+
+		if (scrollToElement) {
+			optionElement.scrollIntoView({block: 'nearest'});
+		}
 	}
 	else {
 		optionListElement.removeAttribute('aria-activedescendant');
@@ -295,7 +343,7 @@ function createOptionElement(option) {
 		optionElement.id
 	) {
 		optionElement.setAttribute('aria-selected', 'true');
-		optionElement.scrollIntoView({block: 'center'});
+		optionElement.scrollIntoView({block: 'nearest'});
 	}
 
 	if (valueInputElement.value === option.value) {
@@ -344,6 +392,12 @@ function openDropdown() {
 	uiInputElement.setAttribute('aria-expanded', 'true');
 	buttonElement.setAttribute('aria-expanded', 'true');
 
+	const wrapperWidth = `${fragmentElement.getBoundingClientRect().width}px`;
+
+	dropdownElement.style.maxWidth = wrapperWidth;
+	dropdownElement.style.minWidth = wrapperWidth;
+	dropdownElement.style.width = wrapperWidth;
+
 	requestAnimationFrame(() => {
 		handleInputChange();
 		repositionDropdownElement();
@@ -378,7 +432,10 @@ function repositionDropdownElement() {
 	}
 
 	dropdownElement.style.transform = `
-		translateX(${uiInputRect.left + window.scrollX}px)
+		translateX(${
+			(isRTL ? uiInputRect.right - window.innerWidth : uiInputRect.left) +
+			window.scrollX
+		}px)
 		translateY(${uiInputRect.bottom + window.scrollY}px)
 	`;
 }
@@ -386,11 +443,9 @@ function repositionDropdownElement() {
 function renderOptionList(options) {
 	optionListElement.innerHTML = '';
 
-	options
-		.slice(0, MAX_ITEMS)
-		.forEach((option) =>
-			optionListElement.appendChild(createOptionElement(option))
-		);
+	options.forEach((option) =>
+		optionListElement.appendChild(createOptionElement(option))
+	);
 }
 
 function debounce(fn, delay) {

@@ -10,15 +10,15 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,7 +27,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be created."
-	@priority = "5"
+	@priority = 5
 	test CanBeCreated {
 		property portal.acceptance = "true";
 
@@ -49,7 +49,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be deleted."
-	@priority = "5"
+	@priority = 5
 	test CanBeDeleted {
 		property portal.acceptance = "true";
 
@@ -93,7 +93,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be duplicated."
-	@priority = "5"
+	@priority = 5
 	test CanBeDuplicated {
 		property portal.acceptance = "true";
 
@@ -127,7 +127,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be edited."
-	@priority = "5"
+	@priority = 5
 	test CanBeEdited {
 		property portal.acceptance = "true";
 
@@ -157,7 +157,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be Required."
-	@priority = "5"
+	@priority = 5
 	test CanBeRequired {
 		NavItem.gotoStructures();
 
@@ -175,7 +175,9 @@ definition {
 			checkboxName = "Required Field",
 			locator1 = "Checkbox#ANY_CHECKBOX");
 
-		WaitForVisible(locator1 = "Icon#ASTERISK");
+		WaitForVisible(
+			key_fieldFieldLabel = "Boolean",
+			locator1 = "Icon#ASTERISK_DATE_FIELD");
 
 		WebContentStructures.saveCP();
 
@@ -203,7 +205,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field can be set to show as a switch."
-	@priority = "5"
+	@priority = 5
 	test CanBeSetToShowAsASwitch {
 		property portal.acceptance = "true";
 
@@ -243,7 +245,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with more than one boolean field can be save and if the entries are stored correctly."
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmittedAndCheckEntries {
 		property portal.acceptance = "true";
 
@@ -258,10 +260,6 @@ definition {
 		DEBuilder.addField(
 			fieldLabel = "Boolean 2",
 			fieldName = "Boolean");
-
-		FormFields.viewBooleanField(fieldValue = "Boolean 1");
-
-		FormFields.viewBooleanField(fieldValue = "Boolean 2");
 
 		Click(locator1 = "DataEngineBuilder#FIELD_BODY");
 
@@ -295,7 +293,7 @@ definition {
 	}
 
 	@description = "Verify that a structure with the boolean field having a help text can be added."
-	@priority = "5"
+	@priority = 5
 	test HelpTextCanBeAdded {
 		property portal.acceptance = "true";
 
@@ -333,7 +331,7 @@ definition {
 	}
 
 	@description = "Verify that the boolean field can have its label edited."
-	@priority = "5"
+	@priority = 5
 	test LabelCanBeEdited {
 		property portal.acceptance = "true";
 
@@ -365,7 +363,7 @@ definition {
 	}
 
 	@description = "Verify that the boolean field reference can be edited."
-	@priority = "5"
+	@priority = 5
 	test ReferenceCanBeEdited {
 		property portal.acceptance = "true";
 

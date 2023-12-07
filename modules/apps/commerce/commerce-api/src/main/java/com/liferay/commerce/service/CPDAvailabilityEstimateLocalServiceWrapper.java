@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link CPDAvailabilityEstimateLocalService}.
@@ -123,18 +115,6 @@ public class CPDAvailabilityEstimateLocalServiceWrapper
 
 		return _cpdAvailabilityEstimateLocalService.
 			deleteCPDAvailabilityEstimate(CPDAvailabilityEstimateId);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public void deleteCPDAvailabilityEstimateByCPDefinitionId(
-		long cpDefinitionId) {
-
-		_cpdAvailabilityEstimateLocalService.
-			deleteCPDAvailabilityEstimateByCPDefinitionId(cpDefinitionId);
 	}
 
 	@Override
@@ -273,18 +253,6 @@ public class CPDAvailabilityEstimateLocalServiceWrapper
 
 		return _cpdAvailabilityEstimateLocalService.
 			fetchCPDAvailabilityEstimate(CPDAvailabilityEstimateId);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.commerce.model.CPDAvailabilityEstimate
-		fetchCPDAvailabilityEstimateByCPDefinitionId(long cpDefinitionId) {
-
-		return _cpdAvailabilityEstimateLocalService.
-			fetchCPDAvailabilityEstimateByCPDefinitionId(cpDefinitionId);
 	}
 
 	@Override
@@ -442,36 +410,22 @@ public class CPDAvailabilityEstimateLocalServiceWrapper
 			updateCPDAvailabilityEstimate(cpdAvailabilityEstimate);
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
 	@Override
 	public com.liferay.commerce.model.CPDAvailabilityEstimate
-			updateCPDAvailabilityEstimate(
-				long cpdAvailabilityEstimateId, long cpDefinitionId,
-				long commerceAvailabilityEstimateId,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+			updateCPDAvailabilityEstimateByCProductId(
+				long userId, long cpdAvailabilityEstimateId, long cProductId,
+				long commerceAvailabilityEstimateId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpdAvailabilityEstimateLocalService.
-			updateCPDAvailabilityEstimate(
-				cpdAvailabilityEstimateId, cpDefinitionId,
-				commerceAvailabilityEstimateId, serviceContext);
+			updateCPDAvailabilityEstimateByCProductId(
+				userId, cpdAvailabilityEstimateId, cProductId,
+				commerceAvailabilityEstimateId);
 	}
 
 	@Override
-	public com.liferay.commerce.model.CPDAvailabilityEstimate
-			updateCPDAvailabilityEstimateByCProductId(
-				long cpdAvailabilityEstimateId, long cProductId,
-				long commerceAvailabilityEstimateId,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _cpdAvailabilityEstimateLocalService.
-			updateCPDAvailabilityEstimateByCProductId(
-				cpdAvailabilityEstimateId, cProductId,
-				commerceAvailabilityEstimateId, serviceContext);
+	public BasePersistence<?> getBasePersistence() {
+		return _cpdAvailabilityEstimateLocalService.getBasePersistence();
 	}
 
 	@Override

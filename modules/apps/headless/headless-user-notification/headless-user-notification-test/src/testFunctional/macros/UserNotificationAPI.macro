@@ -1,0 +1,152 @@
+definition {
+
+	@summary = "Default summary"
+	macro _curlNotificationTemplates(notificationTemplateId = null) {
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (isSet(notificationTemplateId)) {
+			var api = "notification-templates/${notificationTemplateId}";
+		}
+		else {
+			var api = "notification-templates";
+		}
+
+		var curl = '''
+			${portalURL}/o/notification/v1.0/${api} \
+				-u test@liferay.com:test \
+				-H accept: application/json \
+				-H 'Content-Type: application/json' \
+		''';
+
+		return ${curl};
+	}
+
+	@summary = "Default summary"
+	macro _curlUserNotifications(parameter = null, userAccountId = null, userNotificationId = null) {
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (isSet(userNotificationId)) {
+			var api = "user-notifications/${userNotificationId}";
+
+			if (isSet(parameter)) {
+				var api = "user-notifications/${userNotificationId}/${parameter}";
+			}
+		}
+		else if (isSet(userAccountId)) {
+			var api = "user-accounts/${userAccountId}/user-notifications";
+		}
+		else {
+			var api = "my-user-notifications";
+		}
+
+		var curl = '''
+			${portalURL}/o/headless-user-notification/v1.0/${api} \
+				-H accept: application/json \
+				-H 'Content-Type: application/json' \
+				-u test@liferay.com:test \
+		''';
+
+		return ${curl};
+	}
+
+	@summary = "Default summary"
+	macro deleteNotificationTemplate(staticNotificationTemplateId = null) {
+		var curl = UserNotificationAPI._curlNotificationTemplates(notificationTemplateId = ${staticNotificationTemplateId});
+
+		JSONCurlUtil.delete(${curl});
+	}
+
+	@summary = "Default summary"
+	macro getUserAccountUserNotifications(userAccountId = null) {
+		Variables.assertDefined(parameterList = ${userAccountId});
+
+		var curl = UserNotificationAPI._curlUserNotifications(userAccountId = ${userAccountId});
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
+	}
+
+	@summary = "Default summary"
+	macro getUserNotifications() {
+		var curl = UserNotificationAPI._curlUserNotifications();
+
+		var response = JSONCurlUtil.get(${curl});
+
+		return ${response};
+	}
+
+	@summary = "Default summary"
+	macro postNotificationTemplate(recipientType = null, en_US = null, userScreenName = null, name = null, term = null, type = null, externalReferenceCode = null) {
+		Variables.assertDefined(parameterList = "${name},${recipientType},${en_US},${type}");
+
+		if (${recipientType} == "term") {
+			var curl = UserNotificationAPI._curlNotificationTemplates();
+			var body = '''
+				-d {
+					"editorType": "richText",
+					"externalReferenceCode": "${externalReferenceCode}",
+					"name": "${name}",
+					"recipientType": "${recipientType}",
+					"recipients": [
+						{
+							"term": "${term}"
+						}
+					],
+					"subject": {
+						"en_US": "${en_US}"
+					},
+					"type": "${type}"
+				}
+			''';
+		}
+		else {
+			var curl = UserNotificationAPI._curlNotificationTemplates();
+			var body = '''
+				-d {
+					"editorType": "richText",
+					"externalReferenceCode": "${externalReferenceCode}",
+					"name": "${name}",
+					"recipientType": "${recipientType}",
+					"recipients": [
+						{
+							"userScreenName": "${userScreenName}"
+						}
+					],
+					"subject": {
+						"en_US": "${en_US}"
+					},
+					"type": "${type}"
+				}
+			''';
+		}
+
+		var curl = StringUtil.add(${curl}, ${body}, " ");
+
+		var curl = JSONCurlUtil.post(${curl});
+
+		var notificationTemplateId = JSONUtil.getWithJSONPath(${curl}, "$.id");
+
+		static var staticNotificationTemplateId = ${notificationTemplateId};
+
+		return ${staticNotificationTemplateId};
+	}
+
+	@summary = "Default summary"
+	macro putUserNotificationReadOrUnread(parameter = null) {
+		Variables.assertDefined(parameterList = ${parameter});
+
+		var response = UserNotificationAPI.getUserNotifications();
+
+		var userNotificationId = JSONUtil.getWithJSONPath(${response}, "$..items..id");
+
+		var curl = UserNotificationAPI._curlUserNotifications(
+			parameter = ${parameter},
+			userNotificationId = ${userNotificationId});
+
+		var response = JSONCurlUtil.put(${curl});
+
+		return ${response};
+	}
+
+}

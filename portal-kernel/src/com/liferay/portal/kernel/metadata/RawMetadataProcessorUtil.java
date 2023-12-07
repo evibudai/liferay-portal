@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.metadata;
 
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.io.InputStream;
 
@@ -28,24 +19,29 @@ import java.util.Set;
  */
 public class RawMetadataProcessorUtil {
 
-	public static Map<String, Set<String>> getFieldNames() {
-		return _rawMetadataProcessor.getFieldNames();
+	public static Set<String> getFieldNames() {
+		RawMetadataProcessor rawMetadataProcessor =
+			_rawMetadataProcessorSnapshot.get();
+
+		return rawMetadataProcessor.getFieldNames();
 	}
 
 	public static Map<String, DDMFormValues> getRawMetadataMap(
 			String mimeType, InputStream inputStream)
 		throws PortalException {
 
-		return _rawMetadataProcessor.getRawMetadataMap(mimeType, inputStream);
+		RawMetadataProcessor rawMetadataProcessor =
+			_rawMetadataProcessorSnapshot.get();
+
+		return rawMetadataProcessor.getRawMetadataMap(mimeType, inputStream);
 	}
 
 	public static RawMetadataProcessor getRawMetadataProcessor() {
-		return _rawMetadataProcessor;
+		return _rawMetadataProcessorSnapshot.get();
 	}
 
-	private static volatile RawMetadataProcessor _rawMetadataProcessor =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			RawMetadataProcessor.class, RawMetadataProcessorUtil.class,
-			"_rawMetadataProcessor", true);
+	private static final Snapshot<RawMetadataProcessor>
+		_rawMetadataProcessorSnapshot = new Snapshot<>(
+			RawMetadataProcessorUtil.class, RawMetadataProcessor.class);
 
 }

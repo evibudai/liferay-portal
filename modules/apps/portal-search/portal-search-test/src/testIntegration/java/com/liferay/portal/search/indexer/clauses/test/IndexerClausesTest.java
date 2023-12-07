@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.indexer.clauses.test;
@@ -19,6 +10,7 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.test.util.search.BlogsEntryBlueprint.BlogsEntryBlueprintBuilder;
 import com.liferay.blogs.test.util.search.BlogsEntrySearchFixture;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.search.JournalArticleBlueprintBuilder;
@@ -33,7 +25,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -43,6 +34,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -84,7 +76,8 @@ public class IndexerClausesTest {
 		GroupSearchFixture groupSearchFixture = new GroupSearchFixture();
 
 		JournalArticleSearchFixture journalArticleSearchFixture =
-			new JournalArticleSearchFixture(journalArticleLocalService);
+			new JournalArticleSearchFixture(
+				ddmStructureLocalService, journalArticleLocalService, portal);
 
 		_blogsEntries = blogsEntrySearchFixture.getBlogsEntries();
 		_blogsEntrySearchFixture = blogsEntrySearchFixture;
@@ -96,8 +89,10 @@ public class IndexerClausesTest {
 	}
 
 	@Test
-	public void testBaseIndexer() throws Exception {
-		Assert.assertTrue(journalArticleIndexer instanceof BaseIndexer);
+	public void testDefaultIndexer1() throws Exception {
+		Assert.assertEquals(
+			"class com.liferay.portal.search.internal.indexer.DefaultIndexer",
+			String.valueOf(journalArticleIndexer.getClass()));
 
 		addJournalArticle("Gamma Article");
 		addJournalArticle("Omega Article");
@@ -117,7 +112,7 @@ public class IndexerClausesTest {
 	}
 
 	@Test
-	public void testDefaultIndexer() throws Exception {
+	public void testDefaultIndexer2() throws Exception {
 		Assert.assertEquals(
 			"class com.liferay.portal.search.internal.indexer.DefaultIndexer",
 			String.valueOf(blogsEntryIndexer.getClass()));
@@ -228,8 +223,8 @@ public class IndexerClausesTest {
 			).build());
 
 		DocumentsAssert.assertValuesIgnoreRelevance(
-			searchResponse.getRequestString(),
-			searchResponse.getDocumentsStream(), _TITLE_EN_US, expected);
+			searchResponse.getRequestString(), searchResponse.getDocuments(),
+			_TITLE_EN_US, expected);
 	}
 
 	protected Consumer<SearchRequestBuilder> withoutIndexerClauses() {
@@ -238,13 +233,21 @@ public class IndexerClausesTest {
 				"search.full.query.suppress.indexer.provided.clauses", true));
 	}
 
+	@Inject
+	protected static DDMStructureLocalService ddmStructureLocalService;
+
+	@Inject
+	protected static Portal portal;
+
 	@Inject(filter = "indexer.class.name=com.liferay.blogs.model.BlogsEntry")
 	protected Indexer<BlogsEntry> blogsEntryIndexer;
 
 	@Inject
 	protected BlogsEntryLocalService blogsEntryLocalService;
 
-	@Inject(filter = "component.name=*.JournalArticleIndexer")
+	@Inject(
+		filter = "indexer.class.name=com.liferay.journal.model.JournalArticle"
+	)
 	protected Indexer<JournalArticle> journalArticleIndexer;
 
 	@Inject

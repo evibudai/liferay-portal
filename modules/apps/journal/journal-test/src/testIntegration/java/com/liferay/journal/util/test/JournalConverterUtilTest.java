@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.util.test;
@@ -149,12 +140,12 @@ public class JournalConverterUtilTest {
 
 	@Test
 	public void testGetContentFromNestedFields() throws Exception {
-		Fields fields = getNestedFields(_ddmStructure.getStructureId());
+		Fields expectedFields = getNestedFields(_ddmStructure.getStructureId());
 
 		String expectedContent = read("test-journal-content-nested-fields.xml");
 
 		String actualContent = _journalConverter.getContent(
-			_ddmStructure, fields, _ddmStructure.getGroupId());
+			_ddmStructure, expectedFields, _ddmStructure.getGroupId());
 
 		assertEquals(expectedContent, actualContent);
 	}
@@ -249,6 +240,8 @@ public class JournalConverterUtilTest {
 				StringBundler.concat(
 					"list_INSTANCE_pcm9WPVX,contactFieldSet_INSTANCE_",
 					_ddmStructure.getStructureId(), ",phoneFieldSet_INSTANCE_",
+					_ddmStructure.getStructureId(),
+					",phoneFieldSetFieldSet_INSTANCE_",
 					_ddmStructure.getStructureId())));
 
 		String content = read("test-journal-content-list-field.xml");
@@ -278,6 +271,8 @@ public class JournalConverterUtilTest {
 				StringBundler.concat(
 					"multi_list_INSTANCE_9X5wVsSv,contactFieldSet_INSTANCE_",
 					_ddmStructure.getStructureId(), ",phoneFieldSet_INSTANCE_",
+					_ddmStructure.getStructureId(),
+					",phoneFieldSetFieldSet_INSTANCE_",
 					_ddmStructure.getStructureId())));
 
 		String content = read("test-journal-content-multi-list-field.xml");
@@ -387,6 +382,8 @@ public class JournalConverterUtilTest {
 				StringBundler.concat(
 					"contactFieldSet_INSTANCE_", _ddmStructure.getStructureId(),
 					",phoneFieldSet_INSTANCE_", _ddmStructure.getStructureId(),
+					",phoneFieldSetFieldSet_INSTANCE_",
+					_ddmStructure.getStructureId(),
 					",text_INSTANCE_Okhyj7Ni")));
 
 		String content = read(
@@ -394,6 +391,25 @@ public class JournalConverterUtilTest {
 
 		Fields actualFields = _journalConverter.getDDMFields(
 			_ddmStructure, content);
+
+		Assert.assertEquals(expectedFields, actualFields);
+	}
+
+	@Test
+	public void testGetFieldsFromRemovedNestedField() throws Exception {
+		String structureDefinition = read(
+			"test-ddm-structure-removed-nested-field.json");
+
+		DDMStructure ddmStructure = _ddmStructureTestHelper.addStructure(
+			PortalUtil.getClassNameId(JournalArticle.class), null,
+			"Test Structure", jsonDeserialize(structureDefinition),
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+
+		Fields expectedFields = _getRemovedNestedFields(
+			ddmStructure.getStructureId());
+		Fields actualFields = _journalConverter.getDDMFields(
+			ddmStructure,
+			read("test-journal-content-removed-nested-field.xml"));
 
 		Assert.assertEquals(expectedFields, actualFields);
 	}
@@ -658,16 +674,18 @@ public class JournalConverterUtilTest {
 				"boolean_INSTANCE_YELSrniM,document_library_INSTANCE_HzKJrSts,",
 				"link_to_layout_INSTANCE_eHQALxHa,text_area_INSTANCE_ucizquBv,",
 				"multi_list_INSTANCE_oOUZHUcy,list_INSTANCE_RMYIbORN,",
-				"contactFieldSet_INSTANCE_RJSkjdfi,",
-				"contact_INSTANCE_RF3do1m5,phoneFieldSet_INSTANCE_zhglwgmk,",
-				"phone_INSTANCE_QK6B0wK9,ext_INSTANCE_L67MPqQf,",
-				"ext_INSTANCE_8uxzZl41,ext_INSTANCE_S58K861T,",
+				"contactFieldSet_INSTANCE_RJSkjdfi,contact_INSTANCE_RF3do1m5,",
+				"phoneFieldSet_INSTANCE_zhglwgmk,phone_INSTANCE_QK6B0wK9,",
+				"phoneFieldSetFieldSet_INSTANCE_42904,",
+				"ext_INSTANCE_L67MPqQf,ext_INSTANCE_8uxzZl41,",
+				"ext_INSTANCE_S58K861T,",
 				"contactFieldSet_INSTANCE_3hACzXcE,contact_INSTANCE_CUeFxcrA,",
 				"phoneFieldSet_INSTANCE_UgCyiQd3,phone_INSTANCE_lVTcTviF,",
+				"phoneFieldSetFieldSet_INSTANCE_42904,",
 				"ext_INSTANCE_cZalDSll,ext_INSTANCE_HDrK2Um5,",
-				"text_INSTANCE_zWlZDoLc,text_box_INSTANCE_fmyemVKH,",
-				"image_1_INSTANCE_xhdykzYh,image_2_INSTANCE_FViKyTea,",
-				"image_3_INSTANCE_JVBHdcGZ"));
+				"text_INSTANCE_zWlZDoLc,",
+				"text_box_INSTANCE_fmyemVKH,image_1_INSTANCE_xhdykzYh,",
+				"image_2_INSTANCE_FViKyTea,image_3_INSTANCE_JVBHdcGZ"));
 
 		fields.put(fieldsDisplayField);
 
@@ -764,6 +782,37 @@ public class JournalConverterUtilTest {
 		}
 
 		fields.put(field);
+	}
+
+	private Fields _getRemovedNestedFields(long ddmStructureId) {
+		Fields fields = new Fields();
+
+		_addField(
+			ddmStructureId, null, fields, "backgroundcolor",
+			HashMapBuilder.<Locale, List<Serializable>>put(
+				_enLocale, Collections.singletonList("#FFF")
+			).build());
+
+		_addField(
+			ddmStructureId, null, fields, "titulo",
+			HashMapBuilder.<Locale, List<Serializable>>put(
+				_enLocale, Collections.singletonList("Servicios")
+			).build());
+
+		_addField(
+			ddmStructureId, null, fields, "subtitulo",
+			HashMapBuilder.<Locale, List<Serializable>>put(
+				_enLocale, Collections.singletonList("")
+			).build());
+
+		Field fieldsDisplayField = new Field(
+			ddmStructureId, DDM.FIELDS_DISPLAY_NAME,
+			"backgroundcolor_INSTANCE_koamvduz,titulo_INSTANCE_ieaastyz," +
+				"subtitulo_INSTANCE_lsamnmcz");
+
+		fields.put(fieldsDisplayField);
+
+		return fields;
 	}
 
 	@Inject(filter = "ddm.form.deserializer.type=json")

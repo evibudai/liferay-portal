@@ -23,22 +23,21 @@ definition {
 
 		Workflow.configureWCWorkflowViaFolderInfo(workflowDefinition = "Single Approver");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Web Content Display Page");
 
-		PagesAdmin.addPage(pageName = "Web Content Display Page");
-
-		Navigator.gotoPage(pageName = "Web Content Display Page");
-
-		Portlet.addPG(portletName = "Web Content Display");
+		JSONLayout.addWidgetToPublicLayout(
+			column = 1,
+			groupName = "Guest",
+			layoutName = "Web Content Display Page",
+			widgetName = "Web Content Display");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -52,7 +51,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ApproveWebContentViaWebContentDisplayPG {
 		Navigator.gotoPage(pageName = "Web Content Display Page");
 
@@ -95,7 +94,7 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RejectWebContentViaWebContentDisplayPG {
 		Navigator.gotoPage(pageName = "Web Content Display Page");
 

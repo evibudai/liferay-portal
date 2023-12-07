@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.info.internal.item;
@@ -19,7 +10,6 @@ import com.liferay.friendly.url.info.item.updater.InfoItemFriendlyURLUpdater;
 import com.liferay.info.collection.provider.InfoCollectionProvider;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
 import com.liferay.info.exception.CapabilityVerificationException;
-import com.liferay.info.exception.InfoPermissionException;
 import com.liferay.info.filter.InfoFilterProvider;
 import com.liferay.info.filter.InfoRequestItemProvider;
 import com.liferay.info.formatter.InfoCollectionTextFormatter;
@@ -27,9 +17,12 @@ import com.liferay.info.formatter.InfoTextFormatter;
 import com.liferay.info.internal.util.ItemClassNameServiceReferenceMapper;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.info.item.action.executor.InfoItemActionExecutor;
 import com.liferay.info.item.capability.InfoItemCapability;
 import com.liferay.info.item.creator.InfoItemCreator;
+import com.liferay.info.item.provider.InfoItemActionDetailsProvider;
 import com.liferay.info.item.provider.InfoItemCapabilitiesProvider;
+import com.liferay.info.item.provider.InfoItemCategorizationProvider;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
@@ -37,7 +30,8 @@ import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.item.provider.InfoItemObjectVariationProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
-import com.liferay.info.item.provider.InfoItemWorkflowProvider;
+import com.liferay.info.item.provider.InfoItemScopeProvider;
+import com.liferay.info.item.provider.InfoItemStatusProvider;
 import com.liferay.info.item.provider.filter.InfoItemServiceFilter;
 import com.liferay.info.item.provider.filter.OptionalPropertyInfoItemServiceFilter;
 import com.liferay.info.item.renderer.InfoItemRenderer;
@@ -53,8 +47,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFa
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -70,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -180,15 +171,9 @@ public class InfoItemServiceRegistryImpl implements InfoItemServiceRegistry {
 	public <P> List<InfoItemClassDetails> getInfoItemClassDetails(
 		Class<P> serviceClass) {
 
-		List<String> infoItemClassNames = getInfoItemClassNames(serviceClass);
-
-		Stream<String> infoItemClassNamesStream = infoItemClassNames.stream();
-
-		return infoItemClassNamesStream.map(
-			itemClassName -> _getInfoItemClassDetails(itemClassName)
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(
+			getInfoItemClassNames(serviceClass),
+			this::_getInfoItemClassDetails);
 	}
 
 	@Override
@@ -240,23 +225,10 @@ public class InfoItemServiceRegistryImpl implements InfoItemServiceRegistry {
 					InfoPermissionProvider.class,
 					infoItemClassDetail.getClassName());
 
-			if (infoPermissionProvider == null) {
+			if ((infoPermissionProvider == null) ||
+				infoPermissionProvider.hasViewPermission(permissionChecker)) {
+
 				infoItemClassDetails.add(infoItemClassDetail);
-
-				continue;
-			}
-
-			try {
-				if (infoPermissionProvider.hasViewPermission(
-						permissionChecker)) {
-
-					infoItemClassDetails.add(infoItemClassDetail);
-				}
-			}
-			catch (InfoPermissionException infoPermissionException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(infoPermissionException);
-				}
 			}
 		}
 
@@ -422,23 +394,23 @@ public class InfoItemServiceRegistryImpl implements InfoItemServiceRegistry {
 				new PropertyServiceReferenceComparator<>("service.ranking")));
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		InfoItemServiceRegistryImpl.class);
-
 	private static final Set<Class<?>> _validInfoClasses = new HashSet<>(
 		Arrays.asList(
 			InfoCollectionProvider.class, InfoCollectionTextFormatter.class,
-			InfoFilterProvider.class, InfoItemCapabilitiesProvider.class,
-			InfoItemCreator.class, InfoItemDetailsProvider.class,
-			InfoItemFieldValuesProvider.class, InfoItemFieldValuesUpdater.class,
-			InfoItemFormProvider.class, InfoItemFormVariationsProvider.class,
+			InfoFilterProvider.class, InfoItemActionDetailsProvider.class,
+			InfoItemActionExecutor.class, InfoItemCapabilitiesProvider.class,
+			InfoItemCategorizationProvider.class, InfoItemCreator.class,
+			InfoItemDetailsProvider.class, InfoItemFieldValuesProvider.class,
+			InfoItemFieldValuesUpdater.class, InfoItemFormProvider.class,
+			InfoItemFormVariationsProvider.class,
 			InfoItemFriendlyURLProvider.class, InfoItemFriendlyURLUpdater.class,
 			InfoItemIdentifierTranslator.class, InfoItemLanguagesProvider.class,
 			InfoItemObjectProvider.class, InfoItemObjectVariationProvider.class,
 			InfoItemPermissionProvider.class, InfoItemRenderer.class,
-			InfoItemWorkflowProvider.class, InfoListRenderer.class,
-			InfoPermissionProvider.class, InfoRequestItemProvider.class,
-			InfoTextFormatter.class, RelatedInfoItemCollectionProvider.class));
+			InfoItemScopeProvider.class, InfoItemStatusProvider.class,
+			InfoListRenderer.class, InfoPermissionProvider.class,
+			InfoRequestItemProvider.class, InfoTextFormatter.class,
+			RelatedInfoItemCollectionProvider.class));
 
 	private BundleContext _bundleContext;
 	private ServiceTrackerMap<String, InfoItemCapability>

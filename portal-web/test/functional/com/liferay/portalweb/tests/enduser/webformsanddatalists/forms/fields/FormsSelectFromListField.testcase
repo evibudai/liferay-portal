@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,7 +33,7 @@ definition {
 	}
 
 	@description = "Verify if the user can add an empty option just with the field reference."
-	@priority = "4"
+	@priority = 4
 	test CanAddEmptyOptionSelectFromList {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -43,45 +43,52 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		FormFields.editOptionsRowValueOrFieldReference(
 			fieldReference = "Test",
 			optionValue = "",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.publishForm();
 
 		FormsAdminNavigator.gotoPublishedForm();
 
-		FormFields.viewSelectFromListOption(optionValue = "");
+		Click(
+			key_fieldName = "Select from List",
+			locator1 = "FormFields#SELECT_FIELD");
+
+		AssertElementPresent(
+			key_menuItem = "",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 	}
 
 	@description = "LPS-76079 - Verify that a Select From List Field can allow Multiple Selections"
-	@priority = "5"
+	@priority = 5
 	test CanAllowMultipleSelections {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsSelectFromListField#CanAllowMultipleSelections";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
 		Form.editName();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		var fieldSelectFromListField = FormFields.getFieldName();
@@ -92,7 +99,7 @@ definition {
 			FormFields.editOptionsRow(
 				optionName = "Select${number}",
 				optionValue = "Select ${number}",
-				rowNumber = "${number}");
+				rowNumber = ${number});
 		}
 
 		Form.gotoAdvancedTab();
@@ -108,28 +115,22 @@ definition {
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.selectSelectWithMultipleOptions(
-			fieldName = "${fieldSelectFromListField}",
+			fieldName = ${fieldSelectFromListField},
 			selectOptionsList = "Select 1,Select 2,Select 3");
 
-		FormFields.removeSelectOption(
-			fieldName = "${fieldSelectFromListField}",
-			selectOption = "Select 1");
-
-		FormFields.removeSelectOptionViaDropdown(
-			fieldName = "${fieldSelectFromListField}",
-			selectOption = "Select 2");
+		for (var i : list "Select 1,Select 2") {
+			FormFields.removeSelectOption(
+				fieldName = ${fieldSelectFromListField},
+				selectOption = ${i});
+		}
 
 		FormFields.selectSelectWithMultipleOptions(
-			fieldName = "${fieldSelectFromListField}",
+			fieldName = ${fieldSelectFromListField},
 			selectOptionsList = "Select 4");
-
-		FormFields.viewSelectMultipleOptions(
-			fieldName = "${fieldSelectFromListField}",
-			selectOptionsList = "Select 3,Select 4");
 
 		FormPortlet.submitSuccessfully();
 
-		FormsAdmin.openFormsAdmin(siteURLKey = "guest");
+		FormsAdminNavigator.openFormsAdmin(siteURLKey = "guest");
 
 		FormsAdminNavigator.gotoViewEntries();
 
@@ -139,7 +140,7 @@ definition {
 	}
 
 	@description = "Verify that a Select From List Field can be created"
-	@priority = "5"
+	@priority = 5
 	test CanBeCreated {
 		property portal.acceptance = "true";
 
@@ -148,13 +149,13 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.save();
 
@@ -166,28 +167,28 @@ definition {
 
 		FormFields.viewOptionsRowFieldValue(
 			fieldValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 	}
 
 	@description = "Verify that a Select From List Field can be deleted"
-	@priority = "5"
+	@priority = 5
 	test CanBeDeleted {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormViewBuilder.closeSidebar();
 
-		Form.addTextField(fieldPositionNumber = "1");
+		Form.addTextField(fieldPositionNumber = 1);
 
 		FormViewBuilder.closeSidebar();
 
@@ -205,14 +206,14 @@ definition {
 	}
 
 	@description = "Verify that a Select From List Field can be duplicated"
-	@priority = "5"
+	@priority = 5
 	test CanBeDuplicated {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
@@ -239,7 +240,7 @@ definition {
 	}
 
 	@description = "Verify that a Select From List Field can be edited"
-	@priority = "5"
+	@priority = 5
 	test CanBeEdited {
 		property portal.acceptance = "true";
 
@@ -248,13 +249,13 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.save();
 
@@ -267,7 +268,7 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 2",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.save();
 
@@ -275,17 +276,18 @@ definition {
 
 		FormsAdminNavigator.gotoPublishedForm();
 
-		FormViewBuilder.validatePredefinedSelectFromList(
-			fieldName = "Select from List",
-			fieldValue = "Choose an Option");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Select from List",
+			optionName = "Option 2");
 
-		FormFields.viewSelectFromListOption(optionValue = "Option 2");
-
-		FormFields.viewDeletedSelectFromListOption(optionValue = "Option 1");
+		AssertTextEquals(
+			key_labelName = "Select from List",
+			locator1 = "ObjectAdmin#CLAY_GENERIC_BUTTON",
+			value1 = "Option 2");
 	}
 
 	@description = "Verify that a Select From List Field can be required"
-	@priority = "5"
+	@priority = 5
 	test CanBeRequired {
 		property portal.acceptance = "true";
 
@@ -294,7 +296,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
@@ -325,7 +327,7 @@ definition {
 	}
 
 	@description = "Verify that a Select From List Field can be set to repeatable"
-	@priority = "5"
+	@priority = 5
 	test CanBeSetAsRepeatable {
 		property portal.acceptance = "true";
 
@@ -334,13 +336,13 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.gotoAdvancedTab();
 
@@ -356,40 +358,40 @@ definition {
 
 		FormFields.viewRepeatableSelectFromList(
 			fieldLabel = "Select from List",
-			index = "1");
+			index = 1);
 
 		FormFields.viewRepeatableSelectFromList(
 			fieldLabel = "Select from List",
-			index = "2");
+			index = 2);
 
 		FormFields.selectSelectOptionRepeatable(
 			fieldLabel = "Select from List",
-			index = "1",
+			index = 1,
 			selectOption = "Option 1");
 
 		FormFields.selectSelectOptionRepeatable(
 			fieldLabel = "Select from List",
-			index = "2",
+			index = 2,
 			selectOption = "Option 1");
 
 		FormPortlet.submitSuccessfully();
 	}
 
 	@description = "Verify that a Form can be submitted with the Select From List Field"
-	@priority = "5"
+	@priority = 5
 	test CanBeSubmitted {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.save();
 
@@ -419,7 +421,7 @@ definition {
 	}
 
 	@description = "Verify can that a Form create an empty option in the Select from List"
-	@priority = "3"
+	@priority = 3
 	test CanCreateEmptyOption {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -429,25 +431,25 @@ definition {
 		Form.editName(formName = "Form");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRowValueOrFieldReference(
 			fieldReference = "Option1234",
 			optionValue = "Option1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRowValueOrFieldReference(
 			fieldReference = "Option2345",
 			optionValue = "",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		AssertElementPresent(
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD");
 
 		AssertElementPresent(
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD_REFERENCE");
 
 		Form.save();
@@ -456,24 +458,25 @@ definition {
 
 		FormsAdminNavigator.gotoPublishedForm();
 
+		Click(
+			key_fieldName = "Select from List",
+			locator1 = "FormFields#SELECT_FIELD");
+
 		AssertElementPresent(
-			key_itemName = " ",
-			locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
+			key_menuItem = "",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 	}
 
 	@description = "Verify that a list can be created using Autofill"
-	@priority = "5"
+	@priority = 5
 	test CanCreateListUsingAutofill {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "FormsSelectFromListField#CanCreateListUsingAutofill";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		FormsAdminNavigator.enableLocalNetworkDataProvider();
+		FormsAdmin.enableLocalNetworkDataProvider();
 
-		FormsAdmin.openFormsAdmin(siteURLKey = "guest");
-
-		Navigator.gotoNavItem(navItem = "Data Providers");
-
-		FormsAdminNavigator.gotoAddDataProvider();
+		FormsAdminNavigator.gotoRESTDataProvider();
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -482,7 +485,7 @@ definition {
 			outputParameterLabel = "Country Names",
 			outputParameterPath = "$..nameCurrentValue",
 			outputParameterType = "List",
-			timeout = "1000",
+			timeout = 1000,
 			url = "${portalURL}/api/jsonws/country/get-countries");
 
 		FormsAdmin.saveDataProvider();
@@ -492,17 +495,17 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Single Selection");
 
 		FormFields.editOptionsRow(
 			optionValue = "United",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.closeSidebar();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "1",
+			fieldPositionNumber = 1,
 			fieldType = "Select from List");
 
 		FormFields.selectSelectOption(
@@ -516,13 +519,13 @@ definition {
 		FormRules.configureConditionOptions(
 			conditionField = "Single Selection",
 			conditionOperator = "Is Equal To",
-			conditionRowNumber = "1",
+			conditionRowNumber = 1,
 			conditionValueField = "United",
 			conditionValueType = "Value");
 
 		FormRules.configureActionOptions(
 			action = "Autofill",
-			actionRowNumber = "1",
+			actionRowNumber = 1,
 			actionTarget = "Countries of the World");
 
 		FormRules.selectAutofillFromDataProvider(
@@ -543,28 +546,33 @@ definition {
 			fieldName = "Single Selection",
 			radioOption = "United");
 
-		FormFields.selectSelectOption(
-			fieldName = "Select from List",
-			selectOption = "Antarctica");
+		Click.javaScriptClick(
+			key_fieldName = "Select from List",
+			locator1 = "FormFields#SELECT_FIELD");
+
+		WaitForElementPresent(
+			key_menuItem = "Antarctica",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+
+		Click.javaScriptClick(
+			key_menuItem = "Antarctica",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 
 		FormPortlet.submitSuccessfullyAndViewSuccessPage();
 	}
 
 	@description = "LPS-85025 - Verify that a list can be created using a DataProvider"
-	@priority = "5"
+	@priority = 5
 	test CanCreateListUsingDataProvider {
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsSelectFromListField#CanCreateListUsingDataProvider";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
-		FormsAdminNavigator.enableLocalNetworkDataProvider();
+		FormsAdmin.enableLocalNetworkDataProvider();
 
-		FormsAdmin.openFormsAdmin(siteURLKey = "guest");
-
-		Navigator.gotoNavItem(navItem = "Data Providers");
-
-		FormsAdminNavigator.gotoAddDataProvider();
+		FormsAdminNavigator.gotoRESTDataProvider();
 
 		FormsAdmin.editDataProvider(
 			name = "Liferay Countries",
@@ -585,7 +593,7 @@ definition {
 		Form.editDescription();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		var fieldNameDataProvider = FormFields.getFieldName();
@@ -606,10 +614,10 @@ definition {
 
 		FormFields.viewSelectLabel(
 			fieldLabel = "Data Provider Select Field",
-			fieldName = "${fieldNameDataProvider}");
+			fieldName = ${fieldNameDataProvider});
 
 		FormFields.selectSelectOption(
-			fieldName = "${fieldNameDataProvider}",
+			fieldName = ${fieldNameDataProvider},
 			selectOption = "United States");
 
 		FormPortlet.submitSuccessfully();
@@ -627,9 +635,150 @@ definition {
 			fieldValue = "United States");
 	}
 
+	@description = "Verify that the data in the fields where the rules are set will be saved if a data provider is assigned on a list box"
+	@priority = 4
+	test CanSaveFormFieldEntryWithRestDataProvider {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given that Access Local Network and Trust Self Signed Certificates is enabled") {
+			FormsAdmin.enableLocalNetworkDataProvider();
+
+			Click(
+				key_checkboxOption = "Trust Self Signed Certificates",
+				locator1 = "Checkbox#ENABLE_CHECKBOX_VIA_SPAN");
+
+			PortletEntry.update();
+		}
+
+		task ("and Given a REST data provider") {
+			FormsAdminNavigator.openFormsAdmin(siteURLKey = "guest");
+
+			Navigator.gotoNavItem(navItem = "Data Providers");
+
+			FormsAdminNavigator.gotoRESTDataProvider();
+
+			var portalURL = PropsUtil.get("portal.url");
+
+			FormsAdmin.editDataProviderLocalNetwork(
+				name = "Get Countries",
+				outputParameterLabel = "Country Names",
+				outputParameterPath = "$..nameCurrentValue",
+				outputParameterType = "List",
+				timeout = 1000,
+				url = "${portalURL}/api/jsonws/country/get-countries");
+
+			FormsAdmin.saveDataProvider();
+		}
+
+		task ("and Given a new form with a Data Provider Field and a Text Field") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Select country");
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			var fieldNameTextField = FormFields.getFieldName();
+
+			Form.editFieldLabelMetal(fieldValue = "Postal Code");
+
+			Form.closeSidebar();
+
+			Form.gotoAddField(
+				fieldPositionNumber = 0,
+				fieldType = "Select from List");
+
+			var fieldNameSelectFromList = FormFields.getFieldName();
+
+			FormFields.enableSwitch(fieldName = "Required Field");
+
+			Form.editFieldLabelMetal(fieldValue = "Country");
+
+			SetWindowSize.maximizeWindow();
+
+			Form.editFieldDataProvider(
+				dataProvider = "Get Countries",
+				dataProviderOutput = "Country Names");
+
+			Form.save();
+		}
+
+		task ("and Given that a rule is added") {
+			FormsAdminNavigator.gotoRules();
+
+			FormRules.addRule();
+
+			FormRules.configureConditionOptions(
+				conditionField = "Country",
+				conditionOperator = "Is Equal To",
+				conditionRowNumber = 1,
+				conditionValueField = "United States",
+				conditionValueType = "Value");
+
+			for (var actionTypeAndPosition : list "Show-1,Enable-2,Require-3") {
+				var actionType = StringUtil.extractFirst(${actionTypeAndPosition}, "-");
+				var position = StringUtil.extractLast(${actionTypeAndPosition}, "-");
+
+				FormRules.configureActionOptions(
+					action = ${actionType},
+					actionRowNumber = ${position},
+					actionTarget = "Postal Code");
+
+				FormRules.addAction();
+			}
+
+			FormRules.deleteActions(rowNumber = 4);
+
+			FormRules.save();
+
+			FormsAdminNavigator.gotoFormBuilder();
+
+			Form.publishForm();
+		}
+
+		task ("and Given that a form page is created and the form is selected") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			FormPortletConfiguration.selectFormOnAPage(
+				formName = "Select country",
+				pageName = "Form Page");
+		}
+
+		task ("When an entry is submitted immediately") {
+			FormFields.selectSelectOption(
+				fieldName = ${fieldNameSelectFromList},
+				selectOption = "United States");
+
+			FormFields.editText(
+				fieldName = ${fieldNameTextField},
+				fieldValue = 91765);
+
+			FormPortlet.submitSuccessfully();
+		}
+
+		task ("Then the entry is saved") {
+			FormsAdminNavigator.openFormsAdmin(siteURLKey = "guest");
+
+			FormsAdminNavigator.gotoEditFormByName(formName = "Select country");
+
+			FormsAdminNavigator.gotoEntries();
+
+			AssertElementPresent(
+				key_entryName = 91765,
+				locator1 = "FormViewBuilder#ENTRY_NAME");
+		}
+	}
+
 	@description = "Verify that changes to a Field can be canceled"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ChangesCanBeCanceled {
 		property portal.acceptance = "false";
 
@@ -637,8 +786,200 @@ definition {
 
 	}
 
+	@description = "Verify that the correct entries are shown when the page refreshes after autosave"
+	@priority = 4
+	test CorrectEntriesShownWhenPageRefreshedAfterAutoSaveForm {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given that Access Local Network and Trust Self Signed Certificates is enabled") {
+			FormsAdmin.enableLocalNetworkDataProvider();
+
+			Click(
+				key_checkboxOption = "Trust Self Signed Certificates",
+				locator1 = "Checkbox#ENABLE_CHECKBOX_VIA_SPAN");
+
+			PortletEntry.update();
+		}
+
+		task ("and Given a REST data provider") {
+			FormsAdminNavigator.gotoRESTDataProvider();
+
+			var portalURL = PropsUtil.get("portal.url");
+
+			FormsAdmin.editDataProviderLocalNetwork(
+				name = "Get Countries",
+				outputParameterLabel = "Country Names",
+				outputParameterPath = "$..nameCurrentValue",
+				outputParameterType = "List",
+				timeout = 1000,
+				url = "${portalURL}/api/jsonws/country/get-countries");
+
+			FormsAdmin.saveDataProvider();
+		}
+
+		task ("and Given a new form with a Data Provider Field and two Text Fields") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "Select country");
+
+			Form.addTextField(fieldPositionNumber = 0);
+
+			var fieldNameTextField = FormFields.getFieldName();
+
+			Form.editFieldLabelMetal(fieldValue = "US Postal Code");
+
+			Form.closeSidebar();
+
+			Form.addTextField(fieldPositionNumber = 1);
+
+			Form.editFieldLabelMetal(fieldValue = "Non-US Postal Code");
+
+			Form.closeSidebar();
+
+			Form.gotoAddField(
+				fieldPositionNumber = 0,
+				fieldType = "Select from List");
+
+			var fieldNameSelectFromList = FormFields.getFieldName();
+
+			FormFields.enableSwitch(fieldName = "Required Field");
+
+			Form.editFieldLabelMetal(fieldValue = "Country");
+
+			SetWindowSize.maximizeWindow();
+
+			Form.editFieldDataProvider(
+				dataProvider = "Get Countries",
+				dataProviderOutput = "Country Names");
+
+			Form.save();
+		}
+
+		task ("and Given that two rules are added") {
+			FormsAdminNavigator.gotoRules();
+
+			FormRules.addRule();
+
+			FormRules.configureConditionOptions(
+				conditionField = "Country",
+				conditionOperator = "Is Equal To",
+				conditionRowNumber = 1,
+				conditionValueField = "United States",
+				conditionValueType = "Value");
+
+			for (var actionTypeAndPosition : list "Show-1,Enable-2,Require-3") {
+				var actionType = StringUtil.extractFirst(${actionTypeAndPosition}, "-");
+				var position = StringUtil.extractLast(${actionTypeAndPosition}, "-");
+
+				FormRules.configureActionOptions(
+					action = ${actionType},
+					actionRowNumber = ${position},
+					actionTarget = "US Postal Code");
+
+				FormRules.addAction();
+			}
+
+			FormRules.deleteActions(rowNumber = 4);
+
+			FormRules.save();
+
+			FormRules.addRule();
+
+			FormRules.configureConditionOptions(
+				conditionField = "Country",
+				conditionOperator = "Is Not Equal To",
+				conditionRowNumber = 1,
+				conditionValueField = "United States",
+				conditionValueType = "Value");
+
+			for (var actionTypeAndPosition : list "Show-1,Enable-2,Require-3") {
+				var actionType = StringUtil.extractFirst(${actionTypeAndPosition}, "-");
+				var position = StringUtil.extractLast(${actionTypeAndPosition}, "-");
+
+				FormRules.configureActionOptions(
+					action = ${actionType},
+					actionRowNumber = ${position},
+					actionTarget = "Non-US Postal Code");
+
+				FormRules.addAction();
+			}
+
+			FormRules.deleteActions(rowNumber = 4);
+
+			FormRules.save();
+
+			FormsAdminNavigator.gotoFormBuilder();
+
+			Form.publishForm();
+		}
+
+		task ("and Given that a form page is created and the form is selected") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Form Page",
+				widgetName = "Form");
+
+			FormPortletConfiguration.selectFormOnAPage(
+				formName = "Select country",
+				pageName = "Form Page");
+		}
+
+		task ("When an entry is automatically saved and a new tab is opened") {
+			FormFields.selectSelectOption(
+				fieldName = ${fieldNameSelectFromList},
+				selectOption = "United States");
+
+			FormFields.editText(
+				fieldName = ${fieldNameTextField},
+				fieldValue = 10004);
+
+			// Pause for 60 seconds for the entry to be automatically saved. See LPS-185648
+
+			Pause(value1 = 60000);
+
+			Open.openInTheNewTab(value1 = "http://localhost:8080");
+
+			SelectWindow(value1 = "title=Home - Liferay DXP");
+
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Forms");
+
+			FormsAdminNavigator.gotoViewEntries();
+		}
+
+		task ("Then the entry is saved") {
+			FormsAdmin.viewFormTableEntry(
+				fieldLabel = "US Postal Code",
+				fieldValue = 10004);
+		}
+
+		task ("When the Form Page is refreshed") {
+			SelectWindow(value1 = "title=Form Page - Liferay DXP");
+
+			Refresh();
+		}
+
+		task ("Then United States is selected in Country field and US Postal Code is displayed with the value entered") {
+			AssertTextEquals(
+				key_fieldName = "Country",
+				locator1 = "FormFields#SELECT_FIELD",
+				value1 = "United States");
+
+			AssertValue(
+				key_labelName = "US Postal Code",
+				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				value1 = 10004);
+		}
+	}
+
 	@description = "Verify that the Field References for the options can be edited"
-	@priority = "5"
+	@priority = 5
 	test FieldReferenceOfOptionsCanBeEdited {
 		property portal.acceptance = "true";
 
@@ -647,13 +988,13 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRowValueOrFieldReference(
 			fieldReference = "Option1234",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.save();
 
@@ -666,23 +1007,23 @@ definition {
 		FormFields.viewOptionsRowFieldValueOrFieldReference(
 			fieldReference = "Option1234",
 			fieldValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 	}
 
 	@description = "Verify that a Help Text can be added"
-	@priority = "5"
+	@priority = 5
 	test HelpTextCanBeAdded {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 1",
-			optionValue = "1");
+			optionValue = 1);
 
 		FormViewBuilder.setFieldHelpText(fieldLabel = "Help Text Test");
 
@@ -696,14 +1037,14 @@ definition {
 	}
 
 	@description = "Verify that the Field Label can be edited"
-	@priority = "5"
+	@priority = 5
 	test LabelCanBeEdited {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
@@ -722,14 +1063,14 @@ definition {
 	}
 
 	@description = "Veriy that the Field Label can be hidden"
-	@priority = "5"
+	@priority = 5
 	test LabelCanBeHidden {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
@@ -752,7 +1093,7 @@ definition {
 	}
 
 	@description = "Verify that options can be added"
-	@priority = "5"
+	@priority = 5
 	test OptionsCanBeAdded {
 		property portal.acceptance = "true";
 
@@ -761,7 +1102,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
@@ -771,7 +1112,7 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.save();
 
@@ -793,18 +1134,19 @@ definition {
 	}
 
 	@description = "LPS-68362 - Verify that options can be removed"
-	@priority = "3"
+	@priority = 3
 	test OptionsCanBeDeleted {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property test.name.skip.portal.instance = "FormsSelectFromListField#OptionsCanBeDeleted";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		FormsAdmin.addForm();
 
 		Form.editName();
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		var fieldSelectFromListField = FormFields.getFieldName();
@@ -815,22 +1157,22 @@ definition {
 			FormFields.editOptionsRow(
 				optionName = "Select${number}",
 				optionValue = "Select ${number}",
-				rowNumber = "${number}");
+				rowNumber = ${number});
 		}
 
-		FormFields.deleteOptionsRow(rowNumber = "3");
+		FormFields.deleteOptionsRow(rowNumber = 3);
 
 		FormFields.viewSelectOptionsRowFieldValue(
 			fieldValue = "Select 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.viewSelectOptionsRowFieldValue(
 			fieldValue = "Select 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		FormFields.viewDeletedSelectOptionsRowFieldValue(
 			fieldValue = "Select 3",
-			rowNumber = "3");
+			rowNumber = 3);
 
 		Form.closeSidebar();
 
@@ -838,19 +1180,19 @@ definition {
 
 		FormFields.viewSelectOptionsRowFieldValue(
 			fieldValue = "Select 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.viewSelectOptionsRowFieldValue(
 			fieldValue = "Select 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		FormFields.viewDeletedSelectOptionsRowFieldValue(
 			fieldValue = "Select 3",
-			rowNumber = "3");
+			rowNumber = 3);
 	}
 
 	@description = "Verify that options can be rearranged"
-	@priority = "5"
+	@priority = 5
 	test OptionsCanBeRearranged {
 		property portal.acceptance = "true";
 
@@ -859,7 +1201,7 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
@@ -869,11 +1211,11 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		FormFields.moveOptionsRow(
-			rowNumberEnd = "1",
-			rowNumberStart = "2");
+			rowNumberEnd = 1,
+			rowNumberStart = 2);
 
 		Form.save();
 
@@ -881,40 +1223,42 @@ definition {
 
 		Navigator.selectSpecificWindow(windowTitle = "Form - Forms");
 
-		Form.viewSelectFromListOptionOnPreview(
-			optionValue = "Option 2",
-			rowPosition = "1");
+		Click(
+			key_fieldName = "Select from List",
+			locator1 = "FormFields#SELECT_FIELD");
 
-		Form.viewSelectFromListOptionOnPreview(
-			optionValue = "Option 1",
-			rowPosition = "2");
+		for (var options : list "Option 1,Option 2") {
+			AssertElementPresent(
+				key_menuItem = ${options},
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
 	}
 
 	@description = "Verify that options can be sorted alphabetically"
-	@priority = "5"
+	@priority = 5
 	test OptionsCanBeSortedAlphabetically {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option A",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option C",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		FormFields.editOptionsRow(
 			optionName = "Option3",
 			optionValue = "Option B",
-			rowNumber = "3");
+			rowNumber = 3);
 
 		Form.gotoAdvancedTab();
 
@@ -930,32 +1274,28 @@ definition {
 			key_fieldName = "Select from List",
 			locator1 = "FormFields#SELECT_FIELD");
 
-		var iterator = "1";
-
-		for (var option : list "A,B,C") {
-			Form.viewSelectFromListOptionOnPreview(
-				optionValue = "Option ${option}",
-				rowPosition = "${iterator}");
-
-			var iterator = ${iterator} + 1;
+		for (var options : list "A,B,C") {
+			AssertElementPresent(
+				key_menuItem = "Option ${options}",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 		}
 	}
 
 	@description = "Verify that an option can be selected as a Predefined Value"
-	@priority = "5"
+	@priority = 5
 	test PredefinedValueCanBeAdded {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.gotoAdvancedTab();
 
@@ -979,25 +1319,25 @@ definition {
 	}
 
 	@description = "Verify that after deleting an option that had been selected as the Predefined Value, the Predefined Value is reset to "Choose Options""
-	@priority = "5"
+	@priority = 5
 	test PredefinedValueIsResetWhenSelectedOptionIsDeleted {
 		FormsAdmin.addForm();
 
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List");
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
-			rowNumber = "2");
+			rowNumber = 2);
 
 		Form.gotoAdvancedTab();
 
@@ -1009,7 +1349,7 @@ definition {
 
 		Form.gotoBasicTab();
 
-		FormFields.deleteOptionsRow(rowNumber = "1");
+		FormFields.deleteOptionsRow(rowNumber = 1);
 
 		Form.save();
 
@@ -1025,7 +1365,7 @@ definition {
 	}
 
 	@description = "Verify that the Field Reference can be Edited"
-	@priority = "5"
+	@priority = 5
 	test ReferenceCanBeEdited {
 		property portal.acceptance = "true";
 
@@ -1034,14 +1374,14 @@ definition {
 		Form.editName(formName = "Form 1");
 
 		Form.gotoAddField(
-			fieldPositionNumber = "0",
+			fieldPositionNumber = 0,
 			fieldType = "Select from List",
-			formPageNumber = "0");
+			formPageNumber = 0);
 
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		Form.gotoAdvancedTab();
 
@@ -1060,7 +1400,7 @@ definition {
 
 	@description = "Verify that the Field Type can be changed"
 	@ignore = "Test Stub"
-	@priority = "5"
+	@priority = 5
 	test TypeCanBeChanged {
 		property portal.acceptance = "false";
 

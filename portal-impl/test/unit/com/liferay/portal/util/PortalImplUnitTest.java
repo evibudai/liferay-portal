@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.util;
@@ -61,7 +52,6 @@ import javax.portlet.WindowState;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpSession;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -140,37 +130,44 @@ public class PortalImplUnitTest {
 	}
 
 	@Test
-	public void testGetForwardedHostWithCustomXForwardedHostEnabled()
+	public void testGetForwardedHostWithCustomXForwardedHostEnabledAndNotValidHost()
 		throws Exception {
 
-		boolean webServerForwardedHostEnabled =
-			PropsValues.WEB_SERVER_FORWARDED_HOST_ENABLED;
-		String webServerForwardedHostHeader =
-			PropsValues.WEB_SERVER_FORWARDED_HOST_HEADER;
-
 		try {
-			setPropsValuesValue("WEB_SERVER_FORWARDED_HOST_ENABLED", true);
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_HOST_HEADER", "X-Forwarded-Custom-Host");
+			_storeAndResetPropsValuesValue("X-Forwarded-Custom-Host", null);
 
 			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
+				_createMockHttpServletRequestWithHeader(
+					"X-Forwarded-Custom-Host");
 
-			mockHttpServletRequest.addHeader(
+			_portalImpl.getForwardedHost(mockHttpServletRequest);
+		}
+		catch (Exception exception) {
+			Assert.assertTrue(exception instanceof NullPointerException);
+		}
+		finally {
+			_restorePropsValuesValue();
+		}
+	}
+
+	@Test
+	public void testGetForwardedHostWithCustomXForwardedHostEnabledAndValidHost()
+		throws Exception {
+
+		try {
+			_storeAndResetPropsValuesValue(
 				"X-Forwarded-Custom-Host", "forwardedServer");
-			mockHttpServletRequest.setServerName("serverName");
+
+			MockHttpServletRequest mockHttpServletRequest =
+				_createMockHttpServletRequestWithHeader(
+					"X-Forwarded-Custom-Host");
 
 			Assert.assertEquals(
 				"forwardedServer",
 				_portalImpl.getForwardedHost(mockHttpServletRequest));
 		}
 		finally {
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_HOST_ENABLED",
-				webServerForwardedHostEnabled);
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_HOST_HEADER",
-				webServerForwardedHostHeader);
+			_restorePropsValuesValue();
 		}
 	}
 
@@ -185,11 +182,7 @@ public class PortalImplUnitTest {
 			setPropsValuesValue("WEB_SERVER_FORWARDED_HOST_ENABLED", false);
 
 			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
-
-			mockHttpServletRequest.addHeader(
-				"X-Forwarded-Host", "forwardedServer");
-			mockHttpServletRequest.setServerName("serverName");
+				_createMockHttpServletRequestWithHeader("X-Forwarded-Host");
 
 			Assert.assertEquals(
 				"serverName",
@@ -203,30 +196,42 @@ public class PortalImplUnitTest {
 	}
 
 	@Test
-	public void testGetForwardedHostWithXForwardedHostEnabled()
+	public void testGetForwardedHostWithXForwardedHostEnabledAndNotValidHost()
 		throws Exception {
 
-		boolean webServerForwardedHostEnabled =
-			PropsValues.WEB_SERVER_FORWARDED_HOST_ENABLED;
-
 		try {
-			setPropsValuesValue("WEB_SERVER_FORWARDED_HOST_ENABLED", true);
+			_storeAndResetPropsValuesValue("X-Forwarded-Host", null);
 
 			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
+				_createMockHttpServletRequestWithHeader("X-Forwarded-Host");
 
-			mockHttpServletRequest.addHeader(
+			_portalImpl.getForwardedHost(mockHttpServletRequest);
+		}
+		catch (Exception exception) {
+			Assert.assertTrue(exception instanceof NullPointerException);
+		}
+		finally {
+			_restorePropsValuesValue();
+		}
+	}
+
+	@Test
+	public void testGetForwardedHostWithXForwardedHostEnabledAndValidHost()
+		throws Exception {
+
+		try {
+			_storeAndResetPropsValuesValue(
 				"X-Forwarded-Host", "forwardedServer");
-			mockHttpServletRequest.setServerName("serverName");
+
+			MockHttpServletRequest mockHttpServletRequest =
+				_createMockHttpServletRequestWithHeader("X-Forwarded-Host");
 
 			Assert.assertEquals(
 				"forwardedServer",
 				_portalImpl.getForwardedHost(mockHttpServletRequest));
 		}
 		finally {
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_HOST_ENABLED",
-				webServerForwardedHostEnabled);
+			_restorePropsValuesValue();
 		}
 	}
 
@@ -443,199 +448,6 @@ public class PortalImplUnitTest {
 		}
 		finally {
 			serviceRegistration.unregister();
-		}
-	}
-
-	@Test
-	public void testIsSecureWithHttpsInitialFalse() throws Exception {
-		boolean companySecurityAuthRequiresHttps =
-			PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS;
-		boolean sessionEnablePhishingProtection =
-			PropsValues.SESSION_ENABLE_PHISHING_PROTECTION;
-
-		try {
-			setPropsValuesValue("COMPANY_SECURITY_AUTH_REQUIRES_HTTPS", true);
-			setPropsValuesValue("SESSION_ENABLE_PHISHING_PROTECTION", false);
-
-			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
-
-			mockHttpServletRequest.setSecure(true);
-
-			HttpSession httpSession = mockHttpServletRequest.getSession();
-
-			httpSession.setAttribute(WebKeys.HTTPS_INITIAL, Boolean.FALSE);
-
-			Assert.assertFalse(_portalImpl.isSecure(mockHttpServletRequest));
-		}
-		finally {
-			setPropsValuesValue(
-				"COMPANY_SECURITY_AUTH_REQUIRES_HTTPS",
-				companySecurityAuthRequiresHttps);
-			setPropsValuesValue(
-				"SESSION_ENABLE_PHISHING_PROTECTION",
-				sessionEnablePhishingProtection);
-		}
-	}
-
-	@Test
-	public void testIsSecureWithHttpsInitialFalseXForwardedHttps()
-		throws Exception {
-
-		boolean companySecurityAuthRequiresHttps =
-			PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS;
-		boolean sessionEnablePhishingProtection =
-			PropsValues.SESSION_ENABLE_PHISHING_PROTECTION;
-		boolean webServerForwardedProtocolEnabled =
-			PropsValues.WEB_SERVER_FORWARDED_PROTOCOL_ENABLED;
-
-		try {
-			setPropsValuesValue("COMPANY_SECURITY_AUTH_REQUIRES_HTTPS", false);
-			setPropsValuesValue("SESSION_ENABLE_PHISHING_PROTECTION", true);
-			setPropsValuesValue("WEB_SERVER_FORWARDED_PROTOCOL_ENABLED", true);
-
-			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
-
-			mockHttpServletRequest.addHeader("X-Forwarded-Proto", "https");
-			mockHttpServletRequest.setSecure(false);
-
-			HttpSession httpSession = mockHttpServletRequest.getSession();
-
-			httpSession.setAttribute(WebKeys.HTTPS_INITIAL, Boolean.FALSE);
-
-			Assert.assertTrue(_portalImpl.isSecure(mockHttpServletRequest));
-		}
-		finally {
-			setPropsValuesValue(
-				"COMPANY_SECURITY_AUTH_REQUIRES_HTTPS",
-				companySecurityAuthRequiresHttps);
-			setPropsValuesValue(
-				"SESSION_ENABLE_PHISHING_PROTECTION",
-				sessionEnablePhishingProtection);
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_PROTOCOL_ENABLED",
-				webServerForwardedProtocolEnabled);
-		}
-	}
-
-	@Test
-	public void testIsSecureWithHttpsInitialTrue() throws Exception {
-		boolean companySecurityAuthRequiresHttps =
-			PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS;
-		boolean sessionEnablePhishingProtection =
-			PropsValues.SESSION_ENABLE_PHISHING_PROTECTION;
-
-		try {
-			setPropsValuesValue("COMPANY_SECURITY_AUTH_REQUIRES_HTTPS", true);
-			setPropsValuesValue("SESSION_ENABLE_PHISHING_PROTECTION", false);
-
-			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
-
-			mockHttpServletRequest.setSecure(true);
-
-			HttpSession httpSession = mockHttpServletRequest.getSession();
-
-			httpSession.setAttribute(WebKeys.HTTPS_INITIAL, Boolean.TRUE);
-
-			Assert.assertTrue(_portalImpl.isSecure(mockHttpServletRequest));
-		}
-		finally {
-			setPropsValuesValue(
-				"COMPANY_SECURITY_AUTH_REQUIRES_HTTPS",
-				companySecurityAuthRequiresHttps);
-			setPropsValuesValue(
-				"SESSION_ENABLE_PHISHING_PROTECTION",
-				sessionEnablePhishingProtection);
-		}
-	}
-
-	@Test
-	public void testIsSecureWithHttpsInitialTrueCustomXForwardedHttps()
-		throws Exception {
-
-		boolean companySecurityAuthRequiresHttps =
-			PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS;
-		boolean sessionEnablePhishingProtection =
-			PropsValues.SESSION_ENABLE_PHISHING_PROTECTION;
-		boolean webServerForwardedProtocolEnabled =
-			PropsValues.WEB_SERVER_FORWARDED_PROTOCOL_ENABLED;
-
-		String webServerForwardedProtocolEnabledHeader =
-			PropsValues.WEB_SERVER_FORWARDED_PROTOCOL_HEADER;
-
-		try {
-			setPropsValuesValue("COMPANY_SECURITY_AUTH_REQUIRES_HTTPS", true);
-			setPropsValuesValue("SESSION_ENABLE_PHISHING_PROTECTION", false);
-			setPropsValuesValue("WEB_SERVER_FORWARDED_PROTOCOL_ENABLED", true);
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_PROTOCOL_HEADER",
-				"X-Forwarded-Custom-Proto");
-
-			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
-
-			mockHttpServletRequest.addHeader(
-				"X-Forwarded-Custom-Proto", "https");
-			mockHttpServletRequest.setSecure(false);
-
-			Assert.assertTrue(_portalImpl.isSecure(mockHttpServletRequest));
-		}
-		finally {
-			setPropsValuesValue(
-				"COMPANY_SECURITY_AUTH_REQUIRES_HTTPS",
-				companySecurityAuthRequiresHttps);
-			setPropsValuesValue(
-				"SESSION_ENABLE_PHISHING_PROTECTION",
-				sessionEnablePhishingProtection);
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_PROTOCOL_ENABLED",
-				webServerForwardedProtocolEnabled);
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_PROTOCOL_HEADER",
-				webServerForwardedProtocolEnabledHeader);
-		}
-	}
-
-	@Test
-	public void testIsSecureWithHttpsInitialTrueXForwardedHttps()
-		throws Exception {
-
-		boolean companySecurityAuthRequiresHttps =
-			PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS;
-		boolean sessionEnablePhishingProtection =
-			PropsValues.SESSION_ENABLE_PHISHING_PROTECTION;
-		boolean webServerForwardedProtocolEnabled =
-			PropsValues.WEB_SERVER_FORWARDED_PROTOCOL_ENABLED;
-
-		try {
-			setPropsValuesValue("COMPANY_SECURITY_AUTH_REQUIRES_HTTPS", true);
-			setPropsValuesValue("SESSION_ENABLE_PHISHING_PROTECTION", false);
-			setPropsValuesValue("WEB_SERVER_FORWARDED_PROTOCOL_ENABLED", true);
-
-			MockHttpServletRequest mockHttpServletRequest =
-				new MockHttpServletRequest();
-
-			mockHttpServletRequest.addHeader("X-Forwarded-Proto", "https");
-			mockHttpServletRequest.setSecure(false);
-
-			HttpSession httpSession = mockHttpServletRequest.getSession();
-
-			httpSession.setAttribute(WebKeys.HTTPS_INITIAL, Boolean.TRUE);
-
-			Assert.assertTrue(_portalImpl.isSecure(mockHttpServletRequest));
-		}
-		finally {
-			setPropsValuesValue(
-				"COMPANY_SECURITY_AUTH_REQUIRES_HTTPS",
-				companySecurityAuthRequiresHttps);
-			setPropsValuesValue(
-				"SESSION_ENABLE_PHISHING_PROTECTION",
-				sessionEnablePhishingProtection);
-			setPropsValuesValue(
-				"WEB_SERVER_FORWARDED_PROTOCOL_ENABLED",
-				webServerForwardedProtocolEnabled);
 		}
 	}
 
@@ -872,7 +684,53 @@ public class PortalImplUnitTest {
 			new UserImpl(), new LayoutImpl());
 	}
 
+	private MockHttpServletRequest _createMockHttpServletRequestWithHeader(
+		String header) {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.addHeader(header, "forwardedServer");
+		mockHttpServletRequest.setServerName("serverName");
+
+		return mockHttpServletRequest;
+	}
+
+	private void _restorePropsValuesValue() {
+		setPropsValuesValue(
+			"VIRTUAL_HOSTS_VALID_HOSTS", _virtualHostsValidHosts);
+		setPropsValuesValue(
+			"WEB_SERVER_FORWARDED_HOST_ENABLED",
+			_webServerForwardedHostEnabled);
+		setPropsValuesValue(
+			"WEB_SERVER_FORWARDED_HOST_HEADER", _webServerForwardedHostHeader);
+	}
+
+	private void _storeAndResetPropsValuesValue(
+		String forwaredHostHeader, String forwaredServer) {
+
+		_webServerForwardedHostEnabled =
+			PropsValues.WEB_SERVER_FORWARDED_HOST_ENABLED;
+
+		_webServerForwardedHostHeader =
+			PropsValues.WEB_SERVER_FORWARDED_HOST_HEADER;
+
+		_virtualHostsValidHosts = PropsValues.VIRTUAL_HOSTS_VALID_HOSTS;
+
+		if (forwaredHostHeader != null) {
+			setPropsValuesValue(
+				"VIRTUAL_HOSTS_VALID_HOSTS", new String[] {forwaredServer});
+		}
+
+		setPropsValuesValue("WEB_SERVER_FORWARDED_HOST_ENABLED", true);
+		setPropsValuesValue(
+			"WEB_SERVER_FORWARDED_HOST_HEADER", forwaredHostHeader);
+	}
+
 	private final PortalImpl _portalImpl = new PortalImpl();
+	private String[] _virtualHostsValidHosts;
+	private boolean _webServerForwardedHostEnabled;
+	private String _webServerForwardedHostHeader;
 
 	private static class PersistentHttpServletRequestWrapper1
 		extends PersistentHttpServletRequestWrapper {

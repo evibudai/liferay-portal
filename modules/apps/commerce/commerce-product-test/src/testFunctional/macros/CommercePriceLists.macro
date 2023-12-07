@@ -1,6 +1,7 @@
 definition {
 
-	macro addNewPriceModifier {
+	@summary = "Default summary"
+	macro addNewPriceModifier(modifier = null, name = null, target = null) {
 		Click(locator1 = "Button#PLUS");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
@@ -8,24 +9,25 @@ definition {
 		Type(
 			key_fieldLabel = "Name",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${name}");
+			value1 = ${name});
 
 		Select(
 			key_fieldLabel = "Target",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${target}");
+			value1 = ${target});
 
 		Select(
 			key_fieldLabel = "Modifier",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
-			value1 = "${modifier}");
+			value1 = ${modifier});
 
 		Button.clickSubmitButton();
 	}
 
-	macro assertDeleteButtonNotPresent {
+	@summary = "Default summary"
+	macro assertDeleteButtonNotPresent(baseEntryName = null) {
 		Click(
-			key_value = "${baseEntryName}",
+			key_value = ${baseEntryName},
 			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
 
 		AssertElementNotPresent(
@@ -33,12 +35,13 @@ definition {
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
-	macro createPriceListPriceTiers {
+	@summary = "Default summary"
+	macro createPriceListPriceTiers(key_quantity = null, key_value = null, key_pricingType = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 		Click(
 			locator1 = "Radio#ANY",
-			radioLabel = "${key_pricingType}");
+			radioLabel = ${key_pricingType});
 
 		Click(locator1 = "Button#PLUS");
 
@@ -50,14 +53,62 @@ definition {
 			Type(
 				key_text = "Quantity",
 				locator1 = "TextInput#ANY",
-				value1 = "${key_quantity}");
+				value1 = ${key_quantity});
 		}
 
 		if (isSet(key_value)) {
 			Type(
 				key_text = "Tier Price",
 				locator1 = "TextInput#ANY",
-				value1 = "${key_value}");
+				value1 = ${key_value});
+		}
+
+		if (isSet(minutesToExpire)) {
+			var timeString = selenium.getElementValue("TextInput#DISPLAY_DATE_TIME");
+			var timeAMPM = selenium.getElementValue("TextInput#DISPLAY_DATE_MERIDIAN");
+			var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 1);
+			var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*)", 2);
+			var minutesToExpire = ${minutesToExpire};
+
+			var minutes = ${minutes} + ${minutesToExpire};
+
+			if (${timeAMPM} == 0) {
+				var ampm = "AM";
+			}
+			else {
+				var ampm = "PM";
+			}
+
+			var changeHour = MathUtil.isGreaterThan(${minutes}, 59);
+
+			if (${changeHour} == "true") {
+				var minutes = ${minutes} - 60;
+
+				if (${hours} == 11) {
+					if (${ampm} == "PM") {
+						var ampm = "AM";
+					}
+					else {
+						var ampm = "PM";
+					}
+				}
+
+				if (${hours} == 12) {
+					var hours = 01;
+				}
+				else {
+					var hours = ${hours} + 1;
+				}
+			}
+
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Never Expire",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			Type.sendKeys(
+				inputFieldId = "expirationDateTime",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = "${hours}${minutes}${ampm}");
 		}
 
 		Click(locator1 = "Button#SUBMIT");
@@ -71,21 +122,254 @@ definition {
 		SelectFrameTop();
 	}
 
-	macro editPriceListEntryPrice {
+	@summary = "Default summary"
+	macro createTierPriceEntryDirectlyInsideProductSKU(quantity = null, price = null, tierPriceSetting = null) {
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		if (isSet(tierPriceSetting)) {
+			Click(
+				key_radioOption = ${tierPriceSetting},
+				locator1 = "CommerceEntry#RADIO_BUTTON");
+
+			Button.clickSave();
+		}
+
+		Click(locator1 = "Button#PLUS");
+
+		SelectFrame.selectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		CommerceSKUs.addPriceToSKU(price = ${price});
+
+		Type(
+			key_fieldLabel = "Quantity",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${quantity});
+
+		Button.clickSubmitButton();
+	}
+
+	@summary = "Default summary"
+	macro deletePriceModifier(priceModifierName = null) {
+		Click(
+			key_value = ${priceModifierName},
+			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(key_menuItem = "Delete");
+
+		Alert.viewSuccessMessage();
+	}
+
+	@summary = "Default summary"
+	macro editPriceListDetails(parentPriceList = null, name = null, priceType = null, currency = null, priority = null) {
+		if (isSet(name)) {
+			Type(
+				key_text = "Name",
+				locator1 = "TextInput#ANY",
+				value1 = ${name});
+		}
+
+		if (isSet(currency)) {
+			Select(
+				key_fieldLabel = "Currency",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${currency});
+		}
+
+		if (isSet(priority)) {
+			Type(
+				key_text = "Priority",
+				locator1 = "TextInput#ANY",
+				value1 = ${priority});
+		}
+
+		if (isSet(parentPriceList)) {
+			Type(
+				key_label = "Parent Price List",
+				locator1 = "CommerceEntry#ANY_AUTOCOMPLETE_TEXT_FIELD",
+				value1 = ${parentPriceList});
+
+			Click(
+				key_fieldName = ${parentPriceList},
+				locator1 = "FormViewBuilder#OBJECT_FIELD_BUTTON_DROPDOWN");
+		}
+
+		if (isSet(priceType)) {
+			Select(
+				key_fieldLabel = "Price Type",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${priceType});
+		}
+
+		Button.clickPublish();
+	}
+
+	@summary = "Default summary"
+	macro editPriceListEntryPrice(priceListEntryPrice = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 		Type(
 			key_text = "Price List Price",
 			locator1 = "TextInput#ANY",
-			value1 = "${priceListEntryPrice}");
+			value1 = ${priceListEntryPrice});
 
 		Button.clickSave();
 	}
 
-	macro openPriceListsAdmin {
+	@summary = "Default summary"
+	macro editPriceModifier(amountValue = null, modifier = null, entryName = null, priceModifierName = null, modifierTarget = null, target = null, relation = null) {
+		if (!(isSet(active))) {
+			var active = "true";
+		}
+
+		Click(
+			key_value = ${priceModifierName},
+			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(key_menuItem = "Edit");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		if (isSet(modifier)) {
+			Select(
+				key_fieldLabel = "Modifier",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${modifier});
+		}
+
+		if (isSet(modifierTarget)) {
+			Select(
+				key_fieldLabel = "Target",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${modifierTarget});
+		}
+
+		if (isSet(amountValue)) {
+			Type(
+				key_fieldLabel = "Amount",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = ${amountValue});
+		}
+
+		if (${active} == "true") {
+			Check.checkToggleSwitch(locator1 = "ToggleSwitch#ACTIVE");
+		}
+
+		Button.clickSave();
+
+		CommerceEntry.gotoMenuTab(menuTab = ${target});
+
+		CommerceRelations.assignSingleRelationToProductsEntry(
+			entryName = ${entryName},
+			title = ${relation});
+
+		Click(locator1 = "Icon#CLOSE");
+
+		SelectFrameTop();
+	}
+
+	@summary = "Default summary"
+	macro editTierPriceEntryDirectlyInsideProductSKU(quantity = null, price = null, entryName = null) {
+		SelectFrame.selectFrame(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		CommerceEntry.clickEntryDropdownMenuItem(
+			entryName = ${entryName},
+			menuItem = "Edit");
+
+		SelectFrame.selectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		CommerceSKUs.addPriceToSKU(price = ${price});
+
+		Type(
+			key_fieldLabel = "Quantity",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = ${quantity});
+
+		Button.clickSubmitButton();
+	}
+
+	@summary = "Default summary"
+	macro openPriceListsAdmin(baseURL = null) {
 		Navigator.openWithAppendToBaseURL(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_pricing_web_internal_portlet_CommercePriceListPortlet");
+	}
+
+	@summary = "Default summary"
+	macro setOverrideDiscount(overrideDiscounts = null) {
+		Check.checkToggleSwitch(
+			key_toggleSwitchLabel = "Override Discount",
+			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+		for (var overrideDiscount : list ${overrideDiscounts}) {
+			var key_text = StringUtil.extractFirst(${overrideDiscount}, "-");
+			var currentValue = StringUtil.extractLast(${overrideDiscount}, "-");
+
+			Type(
+				locator1 = "TextInput#ANY",
+				value1 = ${currentValue});
+		}
+
+		Button.clickSave();
+	}
+
+	@summary = "Default summary"
+	macro viewPriceListEntry(priceListCatalog = null, priceListType = null, priceListCurrency = null, priceListPriority = null, priceListParent = null, priceListName = null) {
+		if (isSet(priceListName)) {
+			AssertTextEquals(
+				locator1 = "CommerceEntry#NAME_FIELD",
+				value1 = ${priceListName});
+
+			echo("Name is OK");
+		}
+
+		if (isSet(priceListCatalog)) {
+			AssertSelectedLabel(
+				key_fieldLabel = "Catalog",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${priceListCatalog});
+
+			echo("Catalog is OK");
+		}
+
+		if (isSet(priceListCurrency)) {
+			AssertSelectedLabel(
+				key_fieldLabel = "Currency",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = ${priceListCurrency});
+
+			echo("Currency is OK");
+		}
+
+		if (isSet(priceListPriority)) {
+			AssertTextEquals(
+				key_text = "Priority",
+				locator1 = "TextInput#ANY",
+				value1 = ${priceListPriority});
+
+			echo("Priority is OK");
+		}
+
+		if (isSet(priceListParent)) {
+			AssertTextEquals(
+				key_label = "Parent Price List",
+				locator1 = "CommerceEntry#ANY_AUTOCOMPLETE_TEXT_FIELD",
+				value1 = ${priceListParent});
+
+			echo("Parent Price List/Promotion is OK");
+		}
+
+		if (isSet(priceListType)) {
+			AssertElementPresent(
+				key_fieldLabel = "Price Type",
+				key_value = ${priceListType},
+				locator1 = "CommerceEntry#SELECT_ASSERT_SELECTED_VALUE");
+
+			echo("Price Type is OK");
+		}
 	}
 
 }

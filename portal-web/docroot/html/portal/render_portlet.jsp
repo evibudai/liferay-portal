@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -48,7 +39,7 @@ boolean customizable = layoutTypePortlet.isCustomizable();
 
 PortletPreferences portletPreferences = PortletPreferencesLocalServiceUtil.getStrictPreferences(PortletPreferencesFactoryUtil.getPortletPreferencesIds(request, portletId));
 
-PortletPreferences portletSetup = themeDisplay.getStrictLayoutPortletSetup(layout, portletId);
+PortletPreferences setupPortletPreferences = themeDisplay.getStrictLayoutPortletSetup(layout, portletId);
 
 Group group = null;
 boolean privateLayout = false;
@@ -243,7 +234,7 @@ if (portlet.hasPortletMode(responseContentType, PortletMode.HELP) && PortletPerm
 boolean supportsMimeType = portlet.hasPortletMode(responseContentType, portletMode);
 
 if (responseContentType.equals(ContentTypes.XHTML_MP) && portlet.hasMultipleMimeTypes()) {
-	supportsMimeType = GetterUtil.getBoolean(portletSetup.getValue("portletSetupSupportedClientsMobileDevices_" + portletMode, String.valueOf(supportsMimeType)));
+	supportsMimeType = GetterUtil.getBoolean(setupPortletPreferences.getValue("portletSetupSupportedClientsMobileDevices_" + portletMode, String.valueOf(supportsMimeType)));
 }
 
 // Only authenticated with the correct permissions can update a layout. If
@@ -371,12 +362,12 @@ portletDisplay.setStateMax(stateMax);
 portletDisplay.setStateMin(stateMin);
 portletDisplay.setStateNormal(windowState.equals(WindowState.NORMAL));
 portletDisplay.setStatePopUp(themeDisplay.isStatePopUp());
-portletDisplay.setPortletSetup(portletSetup);
+portletDisplay.setPortletPreferences(setupPortletPreferences);
 portletDisplay.setWebDAVEnabled(portlet.getWebDAVStorageInstance() != null);
 
 // Portlet custom CSS class name
 
-String customCSSClassName = PortletConfigurationUtil.getPortletCustomCSSClassName(portletSetup);
+String customCSSClassName = PortletConfigurationUtil.getPortletCustomCSSClassName(setupPortletPreferences);
 
 portletDisplay.setCustomCSSClassName(customCSSClassName);
 
@@ -884,7 +875,7 @@ Boolean renderPortletBoundary = GetterUtil.getBoolean(request.getAttribute(WebKe
 
 	// Portlet decorator
 
-	String portletDecoratorId = portletSetup.getValue("portletSetupPortletDecoratorId", StringPool.BLANK);
+	String portletDecoratorId = setupPortletPreferences.getValue("portletSetupPortletDecoratorId", StringPool.BLANK);
 
 	PortletDecorator portletDecorator = ThemeLocalServiceUtil.getPortletDecorator(company.getCompanyId(), theme.getThemeId(), portletDecoratorId);
 

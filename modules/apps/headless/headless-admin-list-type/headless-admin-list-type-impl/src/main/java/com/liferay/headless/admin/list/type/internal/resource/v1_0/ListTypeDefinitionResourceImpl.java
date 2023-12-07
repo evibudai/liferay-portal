@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.list.type.internal.resource.v1_0;
@@ -25,6 +16,7 @@ import com.liferay.list.type.service.ListTypeDefinitionService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -79,6 +71,17 @@ public class ListTypeDefinitionResourceImpl
 	}
 
 	@Override
+	public ListTypeDefinition getListTypeDefinitionByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		return _toListTypeDefinition(
+			_listTypeDefinitionService.
+				fetchListTypeDefinitionByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId()));
+	}
+
+	@Override
 	public Page<ListTypeDefinition> getListTypeDefinitionsPage(
 			String search, Aggregation aggregation, Filter filter,
 			Pagination pagination, Sort[] sorts)
@@ -90,6 +93,13 @@ public class ListTypeDefinitionResourceImpl
 				addAction(
 					ListTypeActionKeys.ADD_LIST_TYPE_DEFINITION,
 					"postListTypeDefinition", ListTypeConstants.RESOURCE_NAME,
+					contextCompany.getCompanyId())
+			).put(
+				"createBatch",
+				addAction(
+					ListTypeActionKeys.ADD_LIST_TYPE_DEFINITION,
+					"postListTypeDefinitionBatch",
+					ListTypeConstants.RESOURCE_NAME,
 					contextCompany.getCompanyId())
 			).put(
 				"get",
@@ -124,7 +134,12 @@ public class ListTypeDefinitionResourceImpl
 			_listTypeDefinitionService.addListTypeDefinition(
 				listTypeDefinition.getExternalReferenceCode(),
 				LocalizedMapUtil.getLocalizedMap(
-					listTypeDefinition.getName_i18n())));
+					listTypeDefinition.getName_i18n()),
+				GetterUtil.getBoolean(listTypeDefinition.getSystem()),
+				transformToList(
+					listTypeDefinition.getListTypeEntries(),
+					listTypeEntry -> ListTypeEntryUtil.toListTypeEntry(
+						listTypeEntry, _listTypeEntryLocalService))));
 	}
 
 	@Override
@@ -137,7 +152,33 @@ public class ListTypeDefinitionResourceImpl
 				listTypeDefinition.getExternalReferenceCode(),
 				listTypeDefinitionId,
 				LocalizedMapUtil.getLocalizedMap(
-					listTypeDefinition.getName_i18n())));
+					listTypeDefinition.getName_i18n()),
+				transformToList(
+					listTypeDefinition.getListTypeEntries(),
+					listTypeEntry -> ListTypeEntryUtil.toListTypeEntry(
+						listTypeEntry, _listTypeEntryLocalService))));
+	}
+
+	@Override
+	public ListTypeDefinition putListTypeDefinitionByExternalReferenceCode(
+			String externalReferenceCode, ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		listTypeDefinition.setExternalReferenceCode(externalReferenceCode);
+
+		com.liferay.list.type.model.ListTypeDefinition
+			serviceBuilderListTypeDefinition =
+				_listTypeDefinitionService.
+					fetchListTypeDefinitionByExternalReferenceCode(
+						externalReferenceCode, contextCompany.getCompanyId());
+
+		if (serviceBuilderListTypeDefinition != null) {
+			return putListTypeDefinition(
+				serviceBuilderListTypeDefinition.getListTypeDefinitionId(),
+				listTypeDefinition);
+		}
+
+		return postListTypeDefinition(listTypeDefinition);
 	}
 
 	private Locale _getLocale() {
@@ -152,6 +193,10 @@ public class ListTypeDefinitionResourceImpl
 		com.liferay.list.type.model.ListTypeDefinition
 			serviceBuilderListTypeDefinition) {
 
+		if (serviceBuilderListTypeDefinition == null) {
+			return null;
+		}
+
 		Locale locale = _getLocale();
 
 		return new ListTypeDefinition() {
@@ -165,7 +210,9 @@ public class ListTypeDefinitionResourceImpl
 									serviceBuilderListTypeDefinition.
 										getListTypeDefinitionId());
 
-						if (count > 0) {
+						if ((count > 0) ||
+							serviceBuilderListTypeDefinition.isSystem()) {
+
 							return null;
 						}
 
@@ -218,6 +265,7 @@ public class ListTypeDefinitionResourceImpl
 				name = serviceBuilderListTypeDefinition.getName(locale);
 				name_i18n = LocalizedMapUtil.getI18nMap(
 					serviceBuilderListTypeDefinition.getNameMap());
+				system = serviceBuilderListTypeDefinition.getSystem();
 			}
 		};
 	}

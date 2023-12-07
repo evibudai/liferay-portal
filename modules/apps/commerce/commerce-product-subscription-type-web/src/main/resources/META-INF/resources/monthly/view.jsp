@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,7 +15,7 @@ int selectedMonthlyMode = monthlyCPSubscriptionTypeDisplayContext.getSelectedMon
 
 <c:choose>
 	<c:when test="<%= monthlyCPSubscriptionTypeDisplayContext.isPayment() %>">
-		<aui:select label="mode" name="subscriptionTypeSettings--monthlyMode--" onChange="event.preventDefault(); changeMonthlyCPSubscriptionTypeSettingsMode();">
+		<aui:select label="mode" name="subscriptionTypeSettings--monthly--monthlyMode--" onChange="event.preventDefault(); changeMonthlyCPSubscriptionTypeSettingsMode();">
 
 			<%
 			for (int mode : CPSubscriptionTypeConstants.MONTHLY_MODES) {
@@ -38,8 +29,8 @@ int selectedMonthlyMode = monthlyCPSubscriptionTypeDisplayContext.getSelectedMon
 
 		</aui:select>
 
-		<div class="<%= (selectedMonthlyMode == CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />monthDayInputContainer">
-			<aui:input label="on" name="subscriptionTypeSettings--monthDay--" value="<%= monthlyCPSubscriptionTypeDisplayContext.getMonthDay() %>">
+		<div class="<%= (selectedMonthlyMode == CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />monthly--monthDayInputContainer">
+			<aui:input label="on" name="subscriptionTypeSettings--monthly--monthDay--" value="<%= monthlyCPSubscriptionTypeDisplayContext.getMonthDay() %>">
 				<aui:validator name="digits" />
 				<aui:validator name="max">31</aui:validator>
 				<aui:validator name="min">1</aui:validator>
@@ -48,32 +39,26 @@ int selectedMonthlyMode = monthlyCPSubscriptionTypeDisplayContext.getSelectedMon
 
 		<aui:script>
 			function changeMonthlyCPSubscriptionTypeSettingsMode() {
-				var A = AUI();
+				const monthDayInputContainer = document.getElementById(
+					'<portlet:namespace />monthly--monthDayInputContainer'
+				);
 
 				if (
-					A.one('#<portlet:namespace />monthlyMode').val() ==
+					document.getElementById('<portlet:namespace />monthly--monthlyMode')
+						.value ===
 					'<%= CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH %>'
 				) {
-					A.one('#<portlet:namespace />monthDayInputContainer').removeClass(
-						'hide'
-					);
+					monthDayInputContainer.classList.remove('hide');
 				}
 				else {
-					if (
-						!A.one('#<portlet:namespace />monthDayInputContainer').hasClass(
-							'hide'
-						)
-					) {
-						A.one('#<portlet:namespace />monthDayInputContainer').addClass(
-							'hide'
-						);
-					}
+					if (!monthDayInputContainer.classList.contains('hide'))
+						monthDayInputContainer.classList.add('hide');
 				}
 			}
 		</aui:script>
 	</c:when>
 	<c:otherwise>
-		<aui:select label="mode" name="deliverySubscriptionTypeSettings--deliveryMonthlyMode--" onChange="event.preventDefault(); changeMonthlyDeliveryCPSubscriptionTypeSettingsMode();">
+		<aui:select label="mode" name="deliverySubscriptionTypeSettings--monthly--deliveryMonthlyMode--" onChange="event.preventDefault(); changeMonthlyDeliveryCPSubscriptionTypeSettingsMode();">
 
 			<%
 			for (int mode : CPSubscriptionTypeConstants.MONTHLY_MODES) {
@@ -87,8 +72,8 @@ int selectedMonthlyMode = monthlyCPSubscriptionTypeDisplayContext.getSelectedMon
 
 		</aui:select>
 
-		<div class="<%= (selectedMonthlyMode == CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />deliveryMonthDayInputContainer">
-			<aui:input label="on" name="deliverySubscriptionTypeSettings--deliveryMonthDay--" value="<%= monthlyCPSubscriptionTypeDisplayContext.getMonthDay() %>">
+		<div class="<%= (selectedMonthlyMode == CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />monthly--deliveryMonthDayInputContainer">
+			<aui:input label="on" name="deliverySubscriptionTypeSettings--monthly--deliveryMonthDay--" value="<%= monthlyCPSubscriptionTypeDisplayContext.getMonthDay() %>">
 				<aui:validator name="digits" />
 				<aui:validator name="max">31</aui:validator>
 				<aui:validator name="min">1</aui:validator>
@@ -97,26 +82,20 @@ int selectedMonthlyMode = monthlyCPSubscriptionTypeDisplayContext.getSelectedMon
 
 		<aui:script>
 			function changeMonthlyDeliveryCPSubscriptionTypeSettingsMode() {
-				var A = AUI();
+				const deliveryMonthDayInputContainer = document.getElementById(
+					'<portlet:namespace />monthly--deliveryMonthDayInputContainer'
+				);
 
 				if (
-					A.one('#<portlet:namespace />deliveryMonthlyMode').val() ==
-					'<%= CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH %>'
+					document.getElementById(
+						'<portlet:namespace />monthly--deliveryMonthlyMode'
+					).value === '<%= CPSubscriptionTypeConstants.MODE_EXACT_DAY_OF_MONTH %>'
 				) {
-					A.one(
-						'#<portlet:namespace />deliveryMonthDayInputContainer'
-					).removeClass('hide');
+					deliveryMonthDayInputContainer.classList.remove('hide');
 				}
 				else {
-					if (
-						!A.one(
-							'#<portlet:namespace />deliveryMonthDayInputContainer'
-						).hasClass('hide')
-					) {
-						A.one(
-							'#<portlet:namespace />deliveryMonthDayInputContainer'
-						).addClass('hide');
-					}
+					if (!deliveryMonthDayInputContainer.classList.contains('hide'))
+						deliveryMonthDayInputContainer.classList.add('hide');
 				}
 			}
 		</aui:script>

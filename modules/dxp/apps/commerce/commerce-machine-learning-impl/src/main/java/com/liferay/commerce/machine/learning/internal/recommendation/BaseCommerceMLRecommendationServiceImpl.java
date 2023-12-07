@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.machine.learning.internal.recommendation;
 
 import com.liferay.commerce.machine.learning.internal.recommendation.constants.CommerceMLRecommendationField;
 import com.liferay.commerce.machine.learning.recommendation.CommerceMLRecommendation;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -45,8 +37,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -56,16 +46,13 @@ import org.osgi.service.component.annotations.Reference;
 public abstract class BaseCommerceMLRecommendationServiceImpl
 	<T extends CommerceMLRecommendation> {
 
-	protected T addCommerceMLRecommendation(
-			T model, String indexName, String documentType)
+	protected T addCommerceMLRecommendation(T model, String indexName)
 		throws PortalException {
 
 		Document document = toDocument(model);
 
 		IndexDocumentRequest indexDocumentRequest = new IndexDocumentRequest(
 			indexName, document);
-
-		indexDocumentRequest.setType(documentType);
 
 		IndexDocumentResponse indexDocumentResponse =
 			searchEngineAdapter.execute(indexDocumentRequest);
@@ -178,13 +165,7 @@ public abstract class BaseCommerceMLRecommendationServiceImpl
 	}
 
 	protected List<T> toList(List<Document> documents) {
-		Stream<Document> stream = documents.stream();
-
-		return stream.map(
-			this::toModel
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(documents, this::toModel);
 	}
 
 	protected abstract T toModel(Document document);

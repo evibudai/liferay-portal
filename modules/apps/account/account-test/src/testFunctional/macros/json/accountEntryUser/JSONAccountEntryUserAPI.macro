@@ -1,11 +1,12 @@
 definition {
 
-	macro _addAccountEntryUser {
-		Variables.assertDefined(parameterList = "${accountEntryName}");
+	@summary = "Default summary"
+	macro _addAccountEntryUser(creatorPassword = null, userLastName = null, userScreenName = null, userEmailAddress = null, userFirstName = null, accountEntryName = null, creatorEmailAddress = null, accountEntryId = null) {
+		Variables.assertDefined(parameterList = ${accountEntryName});
 
 		var companyId = JSONCompany.getCompanyId();
 		var portalURL = JSONCompany.getPortalURL();
-		var userId = JSONUserSetter.setUserId(userEmailAddress = "${creatorEmailAddress}");
+		var userId = JSONUserSetter.setUserId(userEmailAddress = ${creatorEmailAddress});
 
 		var curl = '''
 			${portalURL}/api/jsonws/account.accountentryuserrel/add-account-entry-user-rel \
@@ -23,10 +24,11 @@ definition {
 				-d jobTitle=
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _addExistUsertoAccount {
+	@summary = "Default summary"
+	macro _addExistUsertoAccount(accountEntryId = null, userId = null) {
 		Variables.assertDefined(parameterList = "${accountEntryId},${userId}");
 
 		if (!(isSet(creatorEmailAddress))) {
@@ -37,17 +39,17 @@ definition {
 			var creatorPassword = "test";
 		}
 
-		var companyId = JSONCompany.getCompanyId();
+		var companyId = JSONCompany.getCompanyIdNoSelenium();
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
 			${portalURL}/api/jsonws/account.accountentryuserrel/add-account-entry-user-rels \
 				-u ${creatorEmailAddress}:${creatorPassword} \
 				-d accountEntryId=${accountEntryId} \
-				-d accountUserIds=${userId} 
+				-d accountUserIds=${userId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

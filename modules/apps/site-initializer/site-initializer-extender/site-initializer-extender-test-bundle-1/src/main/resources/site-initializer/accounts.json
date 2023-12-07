@@ -1,0 +1,17 @@
+[
+	{
+		"externalReferenceCode": "TESTACCOUNT1",
+		"name": "Test Account 1",
+		"type": "business"
+	},
+	{
+		"externalReferenceCode": "TESTACCOUNT2",
+		"name": "Test Account 2",
+		"type": "guest"
+	},
+	{
+		"externalReferenceCode": "TESTACCOUNT3",
+		"name": "Test Account 3",
+		"type": "person"
+	}
+]

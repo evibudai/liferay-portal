@@ -19,23 +19,17 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
-		}
-		else {
-			MessageboardsThread.tearDownCP();
-
-			DMDocument.tearDownCP();
-
-			PagesAdmin.tearDownCP();
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AssertReplicationAfterReindex {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#AssertReplicationAfterReindex";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFile(
 			dmDocumentDescription = "DM Description",
@@ -46,9 +40,9 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Apple1",
 			searchAssetType = "Document");
 
@@ -61,16 +55,17 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewMultipleSearchResults(
-			resultsList = "Apple1/Document,Apple2/Document",
+		SearchResults.viewMultipleSearchResults(
+			resultsList = "Apple1,Apple2",
 			searchTerm = "Apple");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test AssertReplicationWithSynonyms {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#AssertReplicationWithSynonyms";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -78,7 +73,7 @@ definition {
 			JSONWebcontent.addWebContent(
 				content = "WC Content",
 				groupName = "Guest",
-				title = "${title}");
+				title = ${title});
 		}
 
 		SearchTuning.openSynonymsAdmin();
@@ -93,20 +88,21 @@ definition {
 
 		var ccrStatsCurrent = CrossClusterReplication.getNumberOfSuccessfulWriteRequests(indexName = "search-tuning-synonyms");
 
-		var ccrStatsIncrement = MathUtil.isGreaterThan("${ccrStatsCurrent}", "${ccrStatsInitial}");
+		var ccrStatsIncrement = MathUtil.isGreaterThan(${ccrStatsCurrent}, ${ccrStatsInitial});
 
-		if ("${ccrStatsIncrement}" == "false") {
+		if (${ccrStatsIncrement} == "false") {
 			fail("Synonyms index was not successfully replicated from write cluster to read cluster.");
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test BreakWorkflowSLA {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#BreakWorkflowSLA";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		WorkflowMetrics.setSLADefinitionsJobInterval(
-			definitionsJobInterval = "1",
-			slaJobInterval = "1");
+			definitionsJobInterval = 1,
+			slaJobInterval = 1);
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -129,7 +125,7 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
 			slaDefinitionHours = "00:02",
@@ -148,32 +144,60 @@ definition {
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "ONTIME");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "1",
-			key_overdue = "0",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 1,
+			key_overdue = 0,
+			key_pending = 1,
+			key_untracked = 0);
 
 		Refresh();
 
 		WorkflowMetrics.waitForSLA(
-			key_expectedValue = "0",
+			key_expectedValue = 0,
 			key_status = "OVERDUE");
 
 		WorkflowMetrics.checkPendingWorkflowValues(
-			key_ontime = "0",
-			key_overdue = "1",
-			key_pending = "1",
-			key_untracked = "0");
+			key_ontime = 0,
+			key_overdue = 1,
+			key_pending = 1,
+			key_untracked = 0);
+	}
+
+	@priority = 4
+	test CanReindexWithConcurrentExecutionMode {
+		property search.environment.suite.exclude = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		CrossClusterReplication.setupCrossClusterReplication();
+
+		JSONWebcontent.addWebContent(
+			content = "Web Content",
+			groupName = "Guest",
+			title = "WC Title");
+
+		SearchAdministration.executeReindex(reindexMode = "Concurrent");
+
+		task ("Assert that the web content shows up after the concurrent reindex completes") {
+			Navigator.openURL();
+
+			SearchPage.searchEmbedded(searchTerm = "WC Title");
+
+			SearchResults.viewSearchResults(
+				searchAssetTitle = "WC Title",
+				searchAssetType = "Web Content Article",
+				searchTerm = "WC Title");
+		}
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CleanAndReindexWorkflowMetricsInstances {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CleanAndReindexWorkflowMetricsInstances";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -185,7 +209,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetrics#DASHBOARD_TOTAL_PENDING_ITEMS_VALUE",
-			value1 = "0");
+			value1 = 0);
 
 		WorkflowMetrics.executeIndexActions(actionDescription = "Workflow Metrics Instances");
 
@@ -193,13 +217,14 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "WorkflowMetrics#DASHBOARD_TOTAL_PENDING_ITEMS_VALUE",
-			value1 = "1");
+			value1 = 1);
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CleanAndReindexWorkflowMetricsNodes {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CleanAndReindexWorkflowMetricsNodes";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -223,7 +248,7 @@ definition {
 		Click(locator1 = "WorkflowMetricsSLA#ADD_NEW_SLA_BUTTON");
 
 		WorkflowMetrics.fillSLAForm(
-			slaDefinitionDays = "0",
+			slaDefinitionDays = 0,
 			slaDefinitionDescription = "SLA Description",
 			slaDefinitionEnd = "Process Ends: Approved",
 			slaDefinitionHours = "00:02",
@@ -232,20 +257,18 @@ definition {
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CleanAndReindexWorkflowMetricsProcesses {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CleanAndReindexWorkflowMetricsProcesses";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
 		CrossClusterReplication.cleanWorkflowIndex(workflowIndexName = "workflow-metrics-processes");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Metrics");
+		Workflow.openWorkflowMetrics();
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "Once there are active processes, metrics will appear here.");
 
@@ -255,18 +278,16 @@ definition {
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CleanAndReindexWorkflowMetricsSLAInstanceResults {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CleanAndReindexWorkflowMetricsSLAInstanceResults";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
 		CrossClusterReplication.cleanWorkflowIndex(workflowIndexName = "workflow-metrics-sla-instance-results");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Metrics");
+		Workflow.openWorkflowMetrics();
 
 		AssertElementNotPresent(
 			key_workflowProcessName = "Single Approver",
@@ -278,9 +299,10 @@ definition {
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CleanAndReindexWorkflowMetricsSLATaskResults {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CleanAndReindexWorkflowMetricsSLATaskResults";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -290,7 +312,7 @@ definition {
 
 		AssertElementNotPresent(
 			key_rowName = "Update",
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 
 		WorkflowMetrics.executeIndexActions(actionDescription = "Workflow SLA Task Results");
@@ -299,14 +321,15 @@ definition {
 
 		AssertElementPresent(
 			key_rowName = "Update",
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "WorkflowMetrics#METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK");
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CleanAndReindexWorkflowMetricsTasks {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CleanAndReindexWorkflowMetricsTasks";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -343,13 +366,14 @@ definition {
 		WorkflowMetrics.viewPerformanceByAssignee(
 			assignee = "Test Test",
 			avgCompletionTime = "1min",
-			taskCount = "1");
+			taskCount = 1);
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CleanAndReindexWorkflowMetricsTransitions {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CleanAndReindexWorkflowMetricsTransitions";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -372,7 +396,7 @@ definition {
 
 		Click(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		AssertElementNotPresent(
 			key_menuItem = "Approve",
@@ -386,35 +410,34 @@ definition {
 
 		Click(
 			locator1 = "WorkflowAllItems#KEBAB_DROPDOWN",
-			task = "1");
+			task = 1);
 
 		AssertElementPresent(
 			key_menuItem = "Approve",
 			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test CreateBlogsEntryWithNewWorkflow {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#CreateBlogsEntryWithNewWorkflow";
+		property portal.upstream = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Workflow.openWorkflowListView();
 
-		Workflow.duplicateSingleApproverWorkflow(workflowName = "CCR Single Approver");
+		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
 
-		Navigator.openURL();
+		Workflow.openWorkflowListView();
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			portlet = "Workflow");
+		Navigator.gotoNavItem(navItem = "Configuration");
 
 		Workflow.configureWorkflow(
-			workflowDefinition = "CCR Single Approver",
+			workflowDefinition = "Copy of Single Approver",
 			workflowResourceValue = "Blogs Entry");
+
+		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -430,30 +453,38 @@ definition {
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
+		// Workaround for LPS-180801
+
+		var workflowTask = Workflow._matchTaskCase(
+			workflowAssetTitle = "Blogs Entry Title",
+			workflowDefinitionTask = "approve",
+			workflowTask = "review");
+
 		Workflow.assignToMeTaskByActions(
 			workflowAssetTitle = "Blogs Entry Title",
 			workflowAssetType = "Blogs Entry",
-			workflowTask = "review");
+			workflowTask = ${workflowTask});
 
 		Workflow.approveTaskByActions(
 			workflowAssetTitle = "Blogs Entry Title",
 			workflowAssetType = "Blogs Entry",
-			workflowDefinitionTask = "approve",
-			workflowTask = "review");
+			workflowDefinitionTask = ${workflowDefinitionTask},
+			workflowTask = ${workflowTask});
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "Blogs");
+		SearchPage.searchEmbedded(searchTerm = "Blogs");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Blogs");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test SearchWithResultRankings {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#SearchWithResultRankings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
@@ -484,28 +515,26 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "WC Title");
+		SearchPage.searchEmbedded(searchTerm = "WC Title");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "WC Title 3,WC Title 1");
+		SearchResults.viewSearchResultsSpecificOrder(resultsList = "WC Title 3,WC Title 1");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "WC Title 2",
 			searchAssetType = "Web Content Article");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test SearchWithVirtualInstance {
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#SearchWithVirtualInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFile(
 			dmDocumentDescription = "DM Description",
 			dmDocumentTitle = "Apple 1",
 			groupName = "Guest");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.addCP(
 			mailDomain = "www.able.com",
@@ -532,22 +561,23 @@ definition {
 
 		Navigator.openSpecificURL(url = "http://www.able.com:8080");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+		SearchPage.searchEmbedded(searchTerm = "Apple");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "Apple 2",
 			searchAssetType = "Document");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
+		SearchResults.viewSearchResultNotPresent(
 			searchAssetTitle = "Apple 1",
 			searchAssetType = "Document");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test Smoke {
 		property osgi.module.configuration.file.names = "com.liferay.portal.bundle.blacklist.internal.configuration.BundleBlacklistConfiguration.config";
 		property osgi.module.configurations = "blacklistBundleSymbolicNames=\"com.liferay.portal.search.tuning.rankings.web\"";
-		property test.name.skip.portal.instance = "CrossClusterReplicationES7#Smoke";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDocument.addFile(
 			dmDocumentDescription = "DM Description",
@@ -574,15 +604,13 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM");
+		SearchPage.searchEmbedded(searchTerm = "DM");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Title 1",
 			searchAssetType = "Document");
 
-		AntCommand(
-			locator1 = "build-test-elasticsearch7.xml",
-			value1 = "stop-elasticsearch -Delasticsearch.bundle.number=1");
+		AntCommands.runCommand("build-test-elasticsearch7.xml", "stop-elasticsearch -Delasticsearch.bundle.number=1");
 
 		SearchAdministration.openSearchAdmin();
 
@@ -605,19 +633,15 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM");
+		SearchPage.searchEmbedded(searchTerm = "DM");
 
-		SearchResultPortlet.viewSearchResults(
+		SearchResults.viewSearchResults(
 			searchAssetTitle = "DM Title 1",
 			searchAssetType = "Document");
 
-		AntCommand(
-			locator1 = "build-test-elasticsearch7.xml",
-			value1 = "start-elasticsearch-node -Delasticsearch.bundle.number=1");
+		AntCommands.runCommand("build-test-elasticsearch7.xml", "start-elasticsearch-node -Delasticsearch.bundle.number=1");
 
-		AntCommand(
-			locator1 = "build-test-elasticsearch7.xml",
-			value1 = "stop-elasticsearch -Delasticsearch.bundle.number=2");
+		AntCommands.runCommand("build-test-elasticsearch7.xml", "stop-elasticsearch -Delasticsearch.bundle.number=2");
 
 		SearchAdministration.openSearchAdmin();
 
@@ -640,9 +664,9 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "DM");
+		SearchPage.searchEmbedded(searchTerm = "DM");
 
-		SearchResultPortlet.viewSearchResultNotPresent(searchTerm = "DM");
+		SearchResults.viewSearchResultNotPresent(searchTerm = "DM");
 	}
 
 }

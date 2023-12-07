@@ -1,6 +1,40 @@
 definition {
 
-	macro acceptConditions {
+	// Some attributes are hard coded like client secret, implement additional changes for other url's or realms
+
+	@summary = "Default summary"
+	macro _getKeycloakUserAccessToken(userEmail = null) {
+		var curl = '''
+			http://localhost:18080/auth/realms/master/protocol/openid-connect/token \
+				-H 'Content-Type: application/x-www-form-urlencoded'
+				--data-urlencode 'client_id=liferay'
+				--data-urlencode 'grant_type=password'
+				--data-urlencode 'client_secret=9d26a159-86fd-481b-889c-f9c7fd482761'
+				--data-urlencode 'username=${userEmail}'
+				--data-urlencode 'password=test'
+		''';
+
+		var accessToken = JSONCurlUtil.post(${curl}, "$['access_token']");
+
+		return ${accessToken};
+	}
+
+	@summary = "Default summary"
+	macro _getKeycloakUserInformations(accessToken = null) {
+		var curl = '''
+			http://localhost:18080/auth/realms/master/protocol/openid-connect/userinfo \
+				-H 'Authorization: Bearer ${accessToken}'
+		''';
+
+		var userInformation = JSONCurlUtil.post(${curl});
+
+		echo("userInfo: ${userInformation}");
+
+		return ${userInformation};
+	}
+
+	@summary = "Default summary"
+	macro acceptConditions() {
 		if (IsElementPresent.pauseIsElementPresent(locator1 = "GoogleLogin#ALLOW")) {
 			Click(locator1 = "GoogleLogin#ALLOW");
 		}
@@ -20,12 +54,13 @@ definition {
 		}
 	}
 
-	macro accountSignIn {
+	@summary = "Default summary"
+	macro accountSignIn(userPassword = null, specificURL = null, userEmailAddress = null) {
 		if (!(isSet(specificURL))) {
 			Navigator.openURL();
 		}
 		else {
-			Navigator.openSpecificURL(url = "${specificURL}");
+			Navigator.openSpecificURL(url = ${specificURL});
 		}
 
 		AssertClick(
@@ -38,7 +73,7 @@ definition {
 
 		Type(
 			locator1 = "OpenIDConnect#LOGIN_USERNAME_FIELD",
-			value1 = "${userEmailAddress}");
+			value1 = ${userEmailAddress});
 
 		if (IsElementPresent(locator1 = "MicrosoftLogin#LOGIN_NEXT_BUTTON")) {
 			Click(locator1 = "MicrosoftLogin#LOGIN_NEXT_BUTTON");
@@ -50,7 +85,7 @@ definition {
 
 		Type(
 			locator1 = "OpenIDConnect#LOGIN_PASSWORD_FIELD",
-			value1 = "${userPassword}");
+			value1 = ${userPassword});
 
 		if (IsElementPresent(locator1 = "OpenIDConnect#LOGIN_SIGN_IN_BUTTON")) {
 			Click(locator1 = "OpenIDConnect#LOGIN_SIGN_IN_BUTTON");
@@ -64,25 +99,26 @@ definition {
 		}
 	}
 
-	macro addProvider {
+	@summary = "Default summary"
+	macro addProvider(openIdConnectClientSecret = null, openIdConnectClientId = null, customTokenRequestParameters = null, customAuthorizationRequestParameters = null, discoveryEndpoint = null, providerName = null) {
 		Button.clickAdd();
 
 		FormFields.editTextMultiline(
 			fieldName = "providerName",
-			fieldValue = "${providerName}");
+			fieldValue = ${providerName});
 
 		FormFields.editTextMultiline(
 			fieldName = "openIdConnectClientId",
-			fieldValue = "${openIdConnectClientId}");
+			fieldValue = ${openIdConnectClientId});
 
 		FormFields.editTextMultiline(
 			fieldName = "openIdConnectClientSecret",
-			fieldValue = "${openIdConnectClientSecret}");
+			fieldValue = ${openIdConnectClientSecret});
 
 		if (isSet(discoveryEndpoint)) {
 			FormFields.editTextMultiline(
 				fieldName = "discoveryEndPoint",
-				fieldValue = "${discoveryEndpoint}");
+				fieldValue = ${discoveryEndpoint});
 		}
 		else {
 			FormFields.editTextMultiline(
@@ -93,13 +129,13 @@ definition {
 		if (isSet(customAuthorizationRequestParameters)) {
 			FormFields.editTextMultiline(
 				fieldName = "customAuthorizationRequestParameters",
-				fieldValue = "${customAuthorizationRequestParameters}");
+				fieldValue = ${customAuthorizationRequestParameters});
 		}
 
 		if (isSet(customTokenRequestParameters)) {
 			FormFields.editTextMultiline(
 				fieldName = "customTokenRequestParameters",
-				fieldValue = "${customTokenRequestParameters}");
+				fieldValue = ${customTokenRequestParameters});
 		}
 
 		FormFields.editTextMultiline(
@@ -109,7 +145,8 @@ definition {
 		PortletEntry.save();
 	}
 
-	macro enableOpenIdConnect {
+	@summary = "Default summary"
+	macro enableOpenIdConnect() {
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -129,7 +166,8 @@ definition {
 		WaitForElementPresent(locator1 = "Button#UPDATE");
 	}
 
-	macro enableOpenIDConnectCustomParametersDebugLogs {
+	@summary = "Default summary"
+	macro enableOpenIDConnectCustomParametersDebugLogs() {
 		ServerAdministration.addCategoryLogLevels(
 			categoryLevel = "DEBUG",
 			categoryName = "com.liferay.portal.security.sso.openid.connect.internal.OpenIdConnectAuthenticationHandlerImpl");
@@ -139,7 +177,8 @@ definition {
 			categoryName = "com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectTokenRequestUtil");
 	}
 
-	macro enableOpenIDConnectDebugLogs {
+	@summary = "Default summary"
+	macro enableOpenIDConnectDebugLogs() {
 		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.addCategoryLogLevels(
@@ -147,16 +186,17 @@ definition {
 			categoryName = "com.liferay.login.authentication.openid.connect.web");
 	}
 
-	macro setTokenRefreshOffset {
+	@summary = "Default summary"
+	macro setTokenRefreshOffset(expirationTime = null,expectedTime = null) {
 		AssertElementPresent(locator1 = "OpenIDConnect#TOKEN_REFRESH_OFFSET");
 
 		AssertTextEquals(
 			locator1 = "OpenIDConnect#TOKEN_REFRESH_OFFSET",
-			value1 = "30");
+			value1 = 30);
 
 		Type(
 			locator1 = "OpenIDConnect#TOKEN_REFRESH_OFFSET",
-			value1 = "${expirationTime}");
+			value1 = ${expirationTime});
 
 		AssertClick(
 			locator1 = "Button#SUBMIT",
@@ -164,10 +204,11 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "OpenIDConnect#TOKEN_REFRESH_OFFSET",
-			value1 = "${expirationTime}");
+			value1 = ${expectedTime});
 	}
 
-	macro viewNoProvider {
+	@summary = "Default summary"
+	macro viewNoProvider() {
 		AssertClick(
 			locator1 = "UserBar#USER_SIGN_IN",
 			value1 = "Sign In");
@@ -175,7 +216,8 @@ definition {
 		AssertElementNotPresent(locator1 = "Icon#OPENID_CONNECT");
 	}
 
-	macro viewProvider {
+	@summary = "Default summary"
+	macro viewProvider() {
 		AssertClick(
 			locator1 = "UserBar#USER_SIGN_IN",
 			value1 = "Sign In");

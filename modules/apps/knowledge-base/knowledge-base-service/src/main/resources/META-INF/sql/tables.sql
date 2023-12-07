@@ -1,7 +1,8 @@
 create table KBArticle (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	kbArticleId LONG not null primary key,
+	kbArticleId LONG not null,
 	resourcePrimKey LONG,
 	groupId LONG,
 	companyId LONG,
@@ -24,19 +25,22 @@ create table KBArticle (
 	latest BOOLEAN,
 	main BOOLEAN,
 	sourceURL STRING null,
+	displayDate DATE null,
 	expirationDate DATE null,
 	reviewDate DATE null,
 	lastPublishDate DATE null,
 	status INTEGER,
 	statusByUserId LONG,
 	statusByUserName VARCHAR(75) null,
-	statusDate DATE null
+	statusDate DATE null,
+	primary key (kbArticleId, ctCollectionId)
 );
 
 create table KBComment (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	kbCommentId LONG not null primary key,
+	kbCommentId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -48,14 +52,16 @@ create table KBComment (
 	content STRING null,
 	userRating INTEGER,
 	lastPublishDate DATE null,
-	status INTEGER
+	status INTEGER,
+	primary key (kbCommentId, ctCollectionId)
 );
 
 create table KBFolder (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
-	kbFolderId LONG not null primary key,
+	kbFolderId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -66,13 +72,19 @@ create table KBFolder (
 	name VARCHAR(75) null,
 	urlTitle VARCHAR(75) null,
 	description STRING null,
-	lastPublishDate DATE null
+	lastPublishDate DATE null,
+	status INTEGER,
+	statusByUserId LONG,
+	statusByUserName VARCHAR(75) null,
+	statusDate DATE null,
+	primary key (kbFolderId, ctCollectionId)
 );
 
 create table KBTemplate (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	kbTemplateId LONG not null primary key,
+	kbTemplateId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -81,5 +93,6 @@ create table KBTemplate (
 	modifiedDate DATE null,
 	title STRING null,
 	content TEXT null,
-	lastPublishDate DATE null
+	lastPublishDate DATE null,
+	primary key (kbTemplateId, ctCollectionId)
 );

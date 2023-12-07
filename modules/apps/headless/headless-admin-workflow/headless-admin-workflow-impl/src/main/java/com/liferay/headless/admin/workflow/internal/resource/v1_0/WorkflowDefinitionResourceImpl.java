@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.workflow.internal.resource.v1_0;
@@ -36,20 +27,18 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
-import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
+import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
+import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
 import java.io.Serializable;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -66,7 +55,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 )
 @CTAware
 public class WorkflowDefinitionResourceImpl
-	extends BaseWorkflowDefinitionResourceImpl implements EntityModelResource {
+	extends BaseWorkflowDefinitionResourceImpl {
 
 	@Override
 	public void create(
@@ -133,16 +122,18 @@ public class WorkflowDefinitionResourceImpl
 		throws Exception {
 
 		return _toWorkflowDefinition(
+			null,
 			() -> _workflowDefinitionManager.getWorkflowDefinition(
 				workflowDefinitionId));
 	}
 
 	@Override
 	public WorkflowDefinition getWorkflowDefinitionByName(
-			String name, Integer version)
+			String name, String contentFormat, Integer version)
 		throws Exception {
 
 		return _toWorkflowDefinition(
+			contentFormat,
 			() -> {
 				if (version == null) {
 					return _workflowDefinitionManager.
@@ -292,13 +283,14 @@ public class WorkflowDefinitionResourceImpl
 	}
 
 	private WorkflowDefinition _toWorkflowDefinition(
+			String contentFormat,
 			UnsafeSupplier
 				<com.liferay.portal.kernel.workflow.WorkflowDefinition,
 				 Exception> unsafeSupplier)
 		throws Exception {
 
 		try {
-			return _toWorkflowDefinition(unsafeSupplier.get());
+			return _toWorkflowDefinition(contentFormat, unsafeSupplier.get());
 		}
 		catch (Exception exception) {
 			Throwable throwable = exception.getCause();
@@ -312,13 +304,13 @@ public class WorkflowDefinitionResourceImpl
 	}
 
 	private WorkflowDefinition _toWorkflowDefinition(
+		String contentFormat,
 		com.liferay.portal.kernel.workflow.WorkflowDefinition
 			workflowDefinition) {
 
 		return new WorkflowDefinition() {
 			{
 				active = workflowDefinition.isActive();
-				content = workflowDefinition.getContent();
 				dateCreated = workflowDefinition.getCreateDate();
 				dateModified = workflowDefinition.getModifiedDate();
 				description = workflowDefinition.getDescription();
@@ -333,18 +325,6 @@ public class WorkflowDefinitionResourceImpl
 				title = workflowDefinition.getTitle(
 					_language.getLanguageId(
 						contextAcceptLanguage.getPreferredLocale()));
-				title_i18n = Stream.of(
-					_localization.getLocalizationMap(
-						workflowDefinition.getTitle())
-				).map(
-					Map::entrySet
-				).flatMap(
-					Set::stream
-				).collect(
-					Collectors.toMap(
-						entry -> _language.getLanguageId(entry.getKey()),
-						Map.Entry::getValue)
-				);
 				transitions = transformToArray(
 					workflowDefinition.getWorkflowTransitions(),
 					workflowTransition -> TransitionUtil.toTransition(
@@ -369,8 +349,39 @@ public class WorkflowDefinitionResourceImpl
 							"putWorkflowDefinition",
 							_workflowDefinitionModelResourcePermission)
 					).build());
+				setContent(
+					() -> {
+						if (StringUtil.equalsIgnoreCase(contentFormat, "xml")) {
+							return workflowDefinition.getContentAsXML();
+						}
+
+						return workflowDefinition.getContent();
+					});
+				setTitle_i18n(
+					() -> {
+						Map<String, String> title_i18n = new HashMap<>();
+
+						Map<Locale, String> map =
+							_localization.getLocalizationMap(
+								workflowDefinition.getTitle());
+
+						for (Map.Entry<Locale, String> entry : map.entrySet()) {
+							title_i18n.put(
+								_language.getLanguageId(entry.getKey()),
+								entry.getValue());
+						}
+
+						return title_i18n;
+					});
 			}
 		};
+	}
+
+	private WorkflowDefinition _toWorkflowDefinition(
+		com.liferay.portal.kernel.workflow.WorkflowDefinition
+			workflowDefinition) {
+
+		return _toWorkflowDefinition(null, workflowDefinition);
 	}
 
 	private static final EntityModel _entityModel =
@@ -389,7 +400,7 @@ public class WorkflowDefinitionResourceImpl
 	private WorkflowDefinitionManager _workflowDefinitionManager;
 
 	@Reference(
-		target = "(model.class.name=com.liferay.portal.kernel.workflow.WorkflowDefinition)"
+		target = "(model.class.name=com.liferay.portal.workflow.kaleo.model.KaleoDefinition)"
 	)
 	private ModelResourcePermission<?>
 		_workflowDefinitionModelResourcePermission;

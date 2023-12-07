@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -34,39 +25,56 @@ else if (selLayout == null) {
 PluginPackage selPluginPackage = selTheme.getPluginPackage();
 %>
 
-<p class="h4 mb-3 mt-3"><liferay-ui:message key="current-theme" /></p>
+<p class="c-mb-3 c-mt-4 h4"><liferay-ui:message key="current-theme" /></p>
 
 <clay:row>
 	<clay:col
 		size="6"
-		sm="4"
+		sm="5"
 	>
-		<div class="card card-type-asset image-card">
-			<div class="aspect-ratio card-item-first card-item-last">
-				<img alt="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" class="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selTheme.getImagesPath()) %>/thumbnail.png" />
-			</div>
-		</div>
+		<clay:image-card
+			cssClass="c-mb-0"
+			imageAlt=""
+			imageSrc='<%= themeDisplay.getCDNBaseURL() + HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) + HtmlUtil.escapeAttribute(selTheme.getImagesPath()) + "/thumbnail.png" %>'
+			subtitle='<%= ((selPluginPackage != null) && Validator.isNotNull(selPluginPackage.getAuthor())) ? HtmlUtil.escape(selPluginPackage.getAuthor()) : "" %>'
+			title='<%= Validator.isNotNull(selTheme.getName()) ? HtmlUtil.escapeAttribute(selTheme.getName()) : "" %>'
+		/>
 	</clay:col>
 
 	<clay:col
+		cssClass="c-pl-4 c-pt-3"
 		size="6"
-		sm="8"
+		sm="7"
 	>
-		<c:if test="<%= Validator.isNotNull(selTheme.getName()) %>">
-			<h2 class="h4"><liferay-ui:message key="name" /></h2>
 
-			<p class="text-default">
-				<%= HtmlUtil.escape(selTheme.getName()) %>
-			</p>
+		<%
+		Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSettings();
+		%>
+
+		<c:if test="<%= !configurableSettings.isEmpty() %>">
+
+			<%
+			LayoutSet selLayoutSet = layoutsAdminDisplayContext.getSelLayoutSet();
+
+			for (String name : configurableSettings.keySet()) {
+				String value = selLayoutSet.getThemeSetting(name, "regular");
+			%>
+
+				<div class="c-mb-3">
+					<aui:input checked='<%= value.equals("true") %>' disabled="<%= true %>" label="<%= LanguageUtil.get(request, HtmlUtil.escape(name)) %>" labelCssClass="font-weight-normal" name="<%= LanguageUtil.get(request, HtmlUtil.escape(name)) %>" type="checkbox" wrapperCssClass="c-mb-3" />
+				</div>
+
+			<%
+			}
+			%>
+
 		</c:if>
 
-		<c:if test="<%= (selPluginPackage != null) && Validator.isNotNull(selPluginPackage.getAuthor()) %>">
-			<h2 class="h4"><liferay-ui:message key="author" /></h2>
-
-			<p class="text-default">
-				<aui:a href="<%= HtmlUtil.escapeHREF(selPluginPackage.getPageURL()) %>" target="_blank"><%= HtmlUtil.escape(selPluginPackage.getAuthor()) %></aui:a>
-			</p>
-		</c:if>
+		<clay:button
+			disabled="true"
+			displayType="secondary"
+			label="change-current-theme"
+		/>
 	</clay:col>
 </clay:row>
 
@@ -95,10 +103,10 @@ List<ColorScheme> colorSchemes = selTheme.getColorSchemes();
 		>
 			<div class="card image-card img-thumbnail">
 				<div class="aspect-ratio aspect-ratio-16-to-9">
-					<img alt="" class="aspect-ratio-item-flush aspect-ratio-item-top-center img-thumbnail theme-screenshot" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selColorScheme.getColorSchemeThumbnailPath()) %>/thumbnail.png" title="<%= HtmlUtil.escapeAttribute(selColorScheme.getName()) %>" />
+					<img alt="" class="aspect-ratio-item-flush theme-screenshot" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selColorScheme.getColorSchemeThumbnailPath()) %>/thumbnail.png" title="<%= HtmlUtil.escapeAttribute(selColorScheme.getName()) %>" />
 				</div>
 
-				<div class="card-body p-2">
+				<div class="c-p-2 card-body">
 					<div class="card-row">
 						<div class="card-title text-truncate">
 							<%= HtmlUtil.escapeAttribute(selColorScheme.getName()) %>
@@ -108,26 +116,4 @@ List<ColorScheme> colorSchemes = selTheme.getColorSchemes();
 			</div>
 		</clay:col>
 	</clay:row>
-</c:if>
-
-<%
-Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSettings();
-%>
-
-<c:if test="<%= !configurableSettings.isEmpty() %>">
-	<h2 class="h4"><liferay-ui:message key="settings" /></h2>
-
-	<%
-	LayoutSet selLayoutSet = layoutsAdminDisplayContext.getSelLayoutSet();
-
-	for (String name : configurableSettings.keySet()) {
-		String value = selLayoutSet.getThemeSetting(name, "regular");
-	%>
-
-		<p class="text-default"><liferay-ui:message key="<%= HtmlUtil.escape(name) %>" />: <%= HtmlUtil.escape(LanguageUtil.get(request, value)) %></p>
-
-	<%
-	}
-	%>
-
 </c:if>

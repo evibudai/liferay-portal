@@ -1,0 +1,55 @@
+definition {
+
+	@summary = "Default summary"
+	macro closeToastAlert(key_type = null) {
+		Click(
+			key_type = ${key_type},
+			locator1 = "ClayAlertToast#ALERT_TOAST_CLOSE_BUTTON");
+	}
+
+	@summary = "Default summary"
+	macro getElementRectanglePositionX(code = null, index = null) {
+		WaitForSPARefresh();
+
+		var javascript = '''
+		let elem = document.querySelectorAll('${code}')[${index}];
+
+		let elementCoordinates = elem.getBoundingClientRect();
+
+		let positionX = Math.round(elementCoordinates.x).toString();
+
+		return positionX;
+		''';
+
+		var position_x = selenium.getEval(${javascript});
+
+		return ${position_x};
+	}
+
+	@summary = "Default summary"
+	macro getElementRectanglePositionY(code = null, index = null) {
+		WaitForSPARefresh();
+
+		var javascript = '''
+		let elem = document.querySelectorAll('${code}')[${index}];
+
+		let elementCoordinates = elem.getBoundingClientRect();
+
+		let positionY = Math.round(elementCoordinates.y).toString();
+
+		return positionY;
+		''';
+
+		var position_y = selenium.getEval(${javascript});
+
+		return ${position_y};
+	}
+
+	@summary = "Default summary"
+	macro openToastAlert(key_text = null) {
+		Click(
+			key_text = ${key_text},
+			locator1 = "Button#ANY");
+	}
+
+}

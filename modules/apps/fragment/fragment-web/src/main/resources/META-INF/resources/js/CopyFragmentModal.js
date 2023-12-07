@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -75,6 +66,13 @@ export default function CopyFragmentModal({
 				if (response.redirected) {
 					navigate(response.url);
 				}
+
+				openToast({
+					message: Liferay.Language.get(
+						'the-fragment-was-copied-successfully'
+					),
+					type: 'success',
+				});
 			})
 			.catch(() => {
 				openToast({
@@ -321,17 +319,17 @@ function FragmentSetForm({
 }
 
 function getDefaultFragmentSetName(fragmentCollections) {
-	const untitledSets = fragmentCollections.filter((fragmentCollection) =>
-		fragmentCollection.name?.startsWith(
-			Liferay.Language.get('untitled-set')
-		)
-	);
+	const nameIsUsed = (collections, name) =>
+		collections.some((collection) => collection.name === name);
 
-	if (untitledSets.length) {
-		return `${Liferay.Language.get('untitled-set')} ${
-			untitledSets.length + 1
-		}`;
+	let name = Liferay.Language.get('untitled-set');
+	let suffix = 0;
+
+	while (nameIsUsed(fragmentCollections, name)) {
+		suffix++;
+
+		name = `${Liferay.Language.get('untitled-set')} ${suffix}`;
 	}
 
-	return Liferay.Language.get('untitled-set');
+	return name;
 }

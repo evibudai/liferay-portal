@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a company Object with a Text field") {
@@ -24,17 +25,16 @@ definition {
 		}
 
 		task ("Activate local live staging") {
-			JSONStaging.enableLocalStaging(
-				branchingPrivate = "false",
-				branchingPublic = "false",
-				groupName = "Test Site Name");
+			Staging.openStagingAdmin(siteURLKey = "test-site-name");
+
+			Staging.activateStagingCP(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -45,7 +45,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-157740. The page creator can only drop Form fragments inside a mapped Form Container on content page in staging site."
-	@priority = "4"
+	@priority = 4
 	test CannotAddFragmentToOutsideFormContainerOnContentPageInStagingSite {
 		task ("Given a page creator has a content page in staging site") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -87,7 +87,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-155529. The page designer can submit a Form Container on staging site."
-	@priority = "4"
+	@priority = 4
 	test SubmitFormContainerOnContentPageInStagingSite {
 		task ("Given a page designer has a Form Container on content page in staging site") {
 			ObjectAdmin.addObjectFieldViaAPI(
@@ -121,7 +121,7 @@ definition {
 				panel = "General");
 
 			for (var fragmentName : list "Text Input,Submit Button") {
-				PageEditor.removeFragment(fragmentName = "${fragmentName}");
+				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 		}
 
@@ -129,31 +129,28 @@ definition {
 			PageEditor.gotoConfiguration(fragmentName = "Form Container");
 
 			AssertSelectedLabel(
-				key_fieldLabel = "Success Message",
+				key_fieldLabel = "Success Interaction",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "Embedded");
+				value1 = "Show Embedded Message");
 
 			AssertTextEquals(
-				key_text = "Success Text",
+				key_text = "Embedded Message",
 				locator1 = "TextInput#ANY",
 				value1 = "Thank you. Your information was successfully received.");
 
 			AssertNotChecked.assertNotCheckedNotVisible(
-				key_toggleSwitchLabel = "Preview Success State",
+				key_toggleSwitchLabel = "Preview Embedded Message",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
 			AssertVisible(
 				key_fragmentName = "Form Container",
 				key_messageInfo = "Place fragments here.",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#NO_FRAGMENTS_MESSAGE");
 		}
 
 		task ("When the page designer checks preview success state toggle") {
-			PageEditor.editFormContainer(
-				panel = "General",
-				previewSuccessState = "true",
-				successMessage = "Embedded");
+			PageEditor.previewEmbeddedMessage();
 		}
 
 		task ("Then the page designer can see sucess text under Form Container") {

@@ -1,4 +1,4 @@
-@component-name = "portal-user-management-and-portal-configuration"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,10 +29,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-164469. It ensures that the Not Found message is shown when a guest user access the manage URL."
-	@priority = "3"
+	@priority = 4
 	test CanViewNotFoundWhenGuestAccessManageURL {
 		property custom.properties = "virtual.hosts.default.site.name=Guest";
-		property test.name.skip.portal.instance = "Personalmenu#CanViewNotFoundWhenGuestAccessManageURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -44,19 +45,21 @@ definition {
 			Navigator.openSpecificURL(url = "${portalURL}/manage");
 		}
 
-		task ("Then: Assert the Not Found message displays") {
-			AssertTextEquals.assertPartialText(
-				locator1 = "Home#ERROR_MESSAGE_RESOURCE_NOT_FOUND",
-				value1 = "The requested resource could not be found.");
+		task ("Then: Assert the 404 Utility Page with Page Not Found message displays") {
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = 404);
 
-			AssertTextEquals(
-				locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
-				value1 = "Not Found");
+			ContentPages.viewFragmentText(
+				fragmentName = "paragraph",
+				id = "element-text",
+				text = "Page Not Found");
 		}
 	}
 
 	@description = "This test asserts that the user display name of My Profile can wrap when over-bounded in the special simulation."
-	@priority = "3"
+	@priority = 4
 	test CheckUserDisplayNameOfMyProfileInSpecialSimulation {
 		task ("Given the last name of admin user is changed to a long text") {
 			JSONUser.updateUser(
@@ -94,7 +97,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ConfigureLookAndFeelCurrentSiteAndMyDashboard {
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Users",
@@ -119,7 +122,7 @@ definition {
 		AssertTextPresent(value1 = "My Dashboard");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ConfigureShowInControlMenu {
 		AssertElementNotPresent.assertElementNotPresent(locator1 = "UserBar#USER_AVATAR_IN_CONTROL_MENU");
 
@@ -139,22 +142,23 @@ definition {
 		AssertElementPresent.assertElementPresent(locator1 = "UserBar#USER_AVATAR_IN_NAVIGATION_USER_PERSONAL_BAR_PORTLET");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test EnableStaging {
-		property test.name.skip.portal.instance = "Personalmenu#EnableStaging";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
 			portlet = "Staging");
 
-		Staging.activateStagingCP(siteName = "${siteName}");
+		Staging.activateStagingCP(siteName = ${siteName});
 
 		Navigator.gotoStagedSitePage(
 			defaultSite = "true",
 			pageName = "Home",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		ProductMenuHelper.closeProductMenu();
 
@@ -162,10 +166,7 @@ definition {
 
 		Portlet.viewTitle(portletName = "My Workflow Tasks");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Organizations");
 
@@ -176,16 +177,22 @@ definition {
 		AssertElementPresent.assertElementPresent(locator1 = "UsersAndOrganizations#MY_ORGANIZATION_PORTLET");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test NavigateToMySites {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Sites");
 
-		Site.viewSelectSiteViaPersonalMenuMySites(siteName = "${siteName}");
+		AssertTextEquals(
+			locator1 = "Modal#HEADER",
+			value1 = "Select Site");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		LexiconCard.viewCardPresent(card = ${siteName});
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RenderAppsWithCurrentTheme {
 		Navigator.openURL();
 
@@ -205,10 +212,7 @@ definition {
 
 		Portlet.viewPG(portletName = "Notifications");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UserBar.gotoDropdownItem(dropdownItem = "Notifications");
 
@@ -250,7 +254,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-106534."
-	@priority = "4"
+	@priority = 4
 	test UpdateAddressFromUserProfile {
 		UserBar.viewUserDefaultIcon();
 
@@ -261,7 +265,7 @@ definition {
 		User.addAddressViaMyAccount(
 			userAddressCity = "Diamond Bar",
 			userAddressCountry = "United States",
-			userAddressPostalCode = "91765",
+			userAddressPostalCode = 91765,
 			userAddressRegion = "California",
 			userAddressStreet1 = "1400 Montefino Ave");
 
@@ -273,8 +277,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-120825."
-	@priority = "4"
+	@priority = 4
 	test UpdateUserInformation {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		UserBar.viewUserDefaultIcon();
 
 		Navigator.gotoAccountSettings();
@@ -300,7 +307,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-105387."
-	@priority = "5"
+	@priority = 4
 	test UpdateUserPortrait {
 		UserBar.viewUserDefaultIcon();
 
@@ -313,12 +320,35 @@ definition {
 		UserBar.viewUserPortraitMatchConfiguration();
 	}
 
-	@priority = "4"
+	@description = "LPS-182444 TC-1-8. Verify back Navigation icon present and can return to the previous page from the personal menu page."
+	@priority = 4
+	test VerifyBackNavigationLinkOfPersonalMenuPages {
+		property portal.release = "false";
+
+		for (var menuItem : list "Shared Content,My Submissions,My Workflow Tasks,Account Settings,My Connected Applications,My Organizations") {
+			Navigator.openURL();
+
+			UserBar.gotoDropdownItem(dropdownItem = ${menuItem});
+
+			Click(locator1 = "Icon#BACK");
+
+			if (${menuItem} == "Account Settings") {
+				AssertTextEquals(
+					locator1 = "CommerceEntry#COMMERCE_OBJECT_NAME_ON_HEADER",
+					value1 = "Users and Organizations");
+			}
+			else {
+				ContentPages.viewFragmentText(
+					fragmentName = "paragraph",
+					id = "element-text",
+					text = "Welcome to Liferay");
+			}
+		}
+	}
+
+	@priority = 4
 	test ViewMyAccountUser {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.addCP(
 			userEmailAddress = "userea@liferay.com",
@@ -326,10 +356,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
@@ -351,8 +378,12 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-76106."
-	@priority = "5"
+	@priority = 4
 	test ViewMyAccountUserViaURL {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property test.liferay.virtual.instance = "false";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		JSONUser.addUser(
@@ -361,10 +392,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
@@ -385,7 +413,7 @@ definition {
 			userLoginFullName = "Test Test");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewMyAccountViaSignInPortlet {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
@@ -406,7 +434,7 @@ definition {
 		MyAccount.view();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewMyOrganizations {
 		JSONUser.addUser(
 			userEmailAddress = "user1@liferay.com",
@@ -414,10 +442,7 @@ definition {
 			userLastName = "user1",
 			userScreenName = "user1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editPasswordCP(
 			userEmailAddress = "user1@liferay.com",
@@ -448,11 +473,11 @@ definition {
 		LexiconEntry.viewNoEntry(rowEntry = "Organization2 Name");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewNoMyDashboardMyProfileLink {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}layout.user.private.layouts.power.user.required=true${line.separator}layout.user.public.layouts.power.user.required=true";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONUser.addUser(
 			userEmailAddress = "user1@liferay.com",
@@ -488,7 +513,7 @@ definition {
 	}
 
 	@ignore = "true"
-	@priority = "3"
+	@priority = 4
 	test ViewUserIconIsAccessibleViaKeyboard {
 		AssertAccessible();
 

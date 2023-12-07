@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Web Content Administration";
@@ -14,14 +15,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,7 +31,7 @@ definition {
 	}
 
 	@description = "The user can add an embedded portlet in a freemarker template."
-	@priority = "3"
+	@priority = 3
 	test AddEmbeddedPortletFreemarkerTemplate {
 		task ("Add a Web Content Display widget to page") {
 			JSONLayout.addPublicLayout(
@@ -66,7 +67,7 @@ definition {
 				structureName = "WC Structure Name",
 				templateDescription = "WC Template Description",
 				templateName = "WC Template Name",
-				templateScript = "${templateScript}");
+				templateScript = ${templateScript});
 
 			PortletEntry.save();
 		}
@@ -90,7 +91,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-102795. Can add translations to removable fields sets contents to null."
-	@priority = "4"
+	@priority = 4
 	test AddTranslationsToRemovableFields {
 		task ("Add a Web Content Display widget to page") {
 			JSONLayout.addPublicLayout(
@@ -135,7 +136,7 @@ definition {
 
 			WebContentTemplates.addCP(
 				templateName = "WC Template Name",
-				templateScript = "${templateScript}");
+				templateScript = ${templateScript});
 		}
 
 		task ("Add a web content based on new structure") {
@@ -209,9 +210,10 @@ definition {
 	}
 
 	@description = "A child site can use structures and templates inherited from its parent."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentBasedOnStructureAndTemplateFromParentSite {
-		property test.name.skip.portal.instance = "WebContentWithCustomStructures#AddWebContentBasedOnStructureAndTemplateFromParentSite";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Enable ancestor scopes by default in System Settings") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -227,9 +229,9 @@ definition {
 		}
 
 		task ("Add a child site") {
-			JSONGroup.addChildGroup(
-				groupName = "Child Site Name",
-				parentGroupName = "Test Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Test Site Name",
+				siteName = "Child Site Name");
 		}
 
 		task ("Add a web content structure with rich text field") {
@@ -294,9 +296,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-150307. The user can create a web content based on structure with ampersand in its structure key."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentBasedOnStructureKeyWithAmpersand {
-		property test.name.skip.portal.instance = "WebContentWithCustomStructures#AddWebContentBasedOnStructureKeyWithAmpersand";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a web content creator has a structure with ampersand in its structure key") {
 			task ("Disable Autogenerate Structure Key in System Settings") {
@@ -362,7 +365,7 @@ definition {
 	}
 
 	@description = "The user can add a web content via Web Content Display widget based on global structure and local template."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentViaWCDWithGlobalStructureAndLocalTemplate {
 		task ("Add a web content global structure with a text field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "global");
@@ -420,7 +423,7 @@ definition {
 	}
 
 	@description = "The user can add a web content with color field."
-	@priority = "3"
+	@priority = 3
 	test AddWebContentWithColorField {
 		task ("Add a web content structure with a Color field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -484,7 +487,7 @@ definition {
 	}
 
 	@description = "The user can add a web content with image field."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithImageField {
 		task ("Add a web content with an Image field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -556,7 +559,7 @@ definition {
 	}
 
 	@description = "Add a web content with custom structure that has nested fields."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithNestedFields {
 		task ("Add a web content strcuture with custom fields") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -594,7 +597,7 @@ definition {
 			WebContent.addWithStructureCP(
 				structureName = "WC Structure Name",
 				templateName = "WC Template Name",
-				webContentNumeric = "123",
+				webContentNumeric = 123,
 				webContentText = "Text",
 				webContentTitle = "Web Content Title");
 
@@ -611,7 +614,7 @@ definition {
 			DataEngine.viewNestedField(
 				fieldName = "Text",
 				nestedField = "Numeric",
-				nestedFieldData = "123");
+				nestedFieldData = 123);
 		}
 
 		task ("View custom fields are shown in web content structure") {
@@ -627,14 +630,14 @@ definition {
 
 			for (var structureFieldName : list "Text,Numeric") {
 				DataEngine.viewField(
-					fieldFieldLabel = "${structureFieldName}",
-					fieldName = "${structureFieldName}");
+					fieldFieldLabel = ${structureFieldName},
+					fieldName = ${structureFieldName});
 			}
 		}
 	}
 
 	@description = "This is a test for LPS-86223. A user can create web content without having a template, and web content without templates will display using an automatically defined template."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithoutTemplate {
 		task ("Add a structure with a text field without adding a template") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -691,7 +694,7 @@ definition {
 			IFrame.closeFrame();
 
 			AssertTextEquals(
-				index = "1",
+				index = 1,
 				locator1 = "WCD#WEB_CONTENT_TITLE",
 				value1 = "Web Content Title");
 
@@ -708,10 +711,10 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-61632. Add web content with repeatable HTML field."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithRepeatableRichTextField {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		task ("Add a web content structure with a repeatable Rich Text field") {
@@ -752,7 +755,7 @@ definition {
 
 		task ("Type content to the second Rich Text field") {
 			SelectFrame.selectFrameNoLoading(
-				index = "2",
+				index = 2,
 				key_fieldLabel = "Rich Text",
 				locator1 = "CKEditor#ANY_BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
 
@@ -798,7 +801,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-61632. Add web content with required HTML field."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithRequiredRichTextField {
 		task ("Add a web content structure with a required Rich Text field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -871,7 +874,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-52248. View no error is thrown when add a web content with separator field in custom structure."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithSeparatorField {
 		task ("Add a web content structure with a separator field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -919,7 +922,7 @@ definition {
 	}
 
 	@description = "Add a web content based on new structure with a text field."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithTextField {
 		task ("Add a web content structure with a text field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -965,7 +968,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-69560. Can add a web content with custom structure that has a geolocation field."
-	@priority = "5"
+	@priority = 5
 	test AddWebContentWithWebContentAndGeolocationFields {
 		property portal.acceptance = "true";
 
@@ -989,7 +992,7 @@ definition {
 
 			DataEngine.addField(
 				fieldFieldLabel = "Geolocation",
-				fieldLocation = "2",
+				fieldLocation = 2,
 				fieldName = "Geolocation");
 
 			WebContentStructures.saveCP(structureName = "WC Structure Name");
@@ -1027,9 +1030,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147960. Display Page panel of structure default values should not be available to non global scope."
-	@priority = "4"
+	@priority = 4
 	test CannotAssociateDisplayPageToGlobalStructureInNormalSite {
-		property test.name.skip.portal.instance = "WebContentWithCustomStructures#CannotAssociateDisplayPageToGlobalStructureInNormalSite";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a web content creator enables ancestor scopes by default in System Settings") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -1058,7 +1062,7 @@ definition {
 	}
 
 	@description = "The user cannot delete a web content structure and template that have a referenced web content."
-	@priority = "4"
+	@priority = 4
 	test CannotDeleteTemplateAndStructureWithReferencedWebContent {
 		task ("Add a web content structure with a text field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -1116,7 +1120,7 @@ definition {
 	}
 
 	@description = "Can edit a global web content template via Web Content Display widget then view edited template is shown in web content admin"
-	@priority = "4"
+	@priority = 4
 	test EditGlobalWebContentTemplate {
 		task ("Add a global web content structure with a text field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "global");
@@ -1195,7 +1199,7 @@ definition {
 	}
 
 	@description = "Can edit a web content from global structure in web content display widget."
-	@priority = "4"
+	@priority = 4
 	test EditWebContentBasedOnGlobalStructure {
 		task ("Add a web content structure with a Text field in global site") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "global");
@@ -1266,7 +1270,7 @@ definition {
 	}
 
 	@description = "Can edit a local web content template then view edited template is shown in web content admin"
-	@priority = "4"
+	@priority = 4
 	test EditWebContentTemplate {
 		task ("Add a global web content structure with a text field") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -1334,31 +1338,19 @@ definition {
 	}
 
 	@description = "The user can edit a web content title even though the fields are empty."
-	@priority = "5"
+	@priority = 5
 	test EditWebContentTitleWithEmptyFields {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training,Web Content Administration";
 
 		task ("Add a web content structure with custom fields") {
-			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
-			WebContentStructures.addCP(
-				structureDescription = "WC Structure Description",
-				structureName = "WC Structure Name");
+			NavItem.gotoStructures();
 
-			DataEngine.addFields(fieldNameList = "Date,Numeric,Upload,Image,Link to Page,Numeric,Single Selection,Multiple Selection,Grid,Select from List,Text,Rich Text");
-
-			WebContentStructures.saveCP();
-		}
-
-		task ("Add a web content template associated with new structure") {
-			WebContentNavigator.openWebContentTemplatesAdmin(siteURLKey = "test-site-name");
-
-			WebContentTemplates.addCP(
+			WebContentStructures.importStructure(
 				structureName = "WC Structure Name",
-				templateDescription = "WC Template Description",
-				templateFieldNames = "Date,Numeric,Upload,Image,Link to Page,Numeric,Single Selection,Multiple Selection,Grid,Select from List,Text,Rich Text",
-				templateName = "WC Template Name");
+				uploadFileName = "Structure_All_Fields.json");
 		}
 
 		task ("Add a web content based on new structure") {
@@ -1366,12 +1358,9 @@ definition {
 
 			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
-			WebContent.addWithStructureCP(
-				structureName = "WC Structure Name",
-				templateName = "WC Template Name",
-				webContentTitle = "Web Content Title");
+			WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
 
-			PortletEntry.publishAndWait();
+			PortletEntry.publish();
 		}
 
 		task ("View web content is shown") {
@@ -1388,7 +1377,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-96545. Cancel reset and reset the default values when edit default values in imported web content structure."
-	@priority = "4"
+	@priority = 4
 	test ResetStructureDefaultValues {
 		task ("Add a widget page") {
 			JSONLayout.addPublicLayout(
@@ -1415,38 +1404,26 @@ definition {
 
 			NavItem.gotoStructures();
 
-			WebContentStructures.addCP(structureName = "WC Structure Name");
-
-			DataEngine.addFields(fieldNameList = "Text,Select from List,Single Selection,Multiple Selection,Grid,Date,Numeric,Image,Rich Text,Upload,Color,Web Content,Link to Page");
-
-			WebContentStructures.saveCP();
-		}
-
-		task ("Add a template for new structure") {
-			WebContentNavigator.gotoManageTemplatesViaStructures(structureName = "WC Structure Name");
-
-			WebContentTemplates.addCP(
-				templateFieldNames = "Text,Select from List,Single Selection,Multiple Selection,Grid,Date,Numeric,Image,Rich Text,Upload,Color,Web Content,Link to Page",
-				templateName = "WC Template Name");
+			WebContentStructures.importStructure(
+				structureName = "WC Structure Name",
+				uploadFileName = "Structure_All_Fields.json");
 		}
 
 		task ("Edit the default values of new structure") {
-			NavItem.gotoStructures();
-
 			WebContentStructures.editStructureDefaultValuesCP(structureName = "WC Structure Name");
 
 			WebContent.addWithStructureCP(
-				column = "1",
+				column = 1,
 				dmNavTab = "User Personal Folder",
 				navTab = "Web Content Images",
-				row = "1",
+				row = 1,
 				webContentColor = "FF0D0D",
 				webContentDate = "10/10/2020",
 				webContentGrid = "true",
 				webContentImage = "Document_3.png",
 				webContentLinkToPage = "Test Page Name",
 				webContentMultipleSelection = "Option 1",
-				webContentNumeric = "9",
+				webContentNumeric = 9,
 				webContentRichText = "This is a Rich Text field",
 				webContentSelectFromList = "Option 2",
 				webContentSingleSelection = "Option 3",
@@ -1468,20 +1445,19 @@ definition {
 		task ("Cancel reset the default values") {
 			WebContentStructures.resetStructureDefaultValuesCP(
 				assetTitle = "Blogs Entry Title",
-				cancel = "true",
-				templateName = "WC Template Name");
+				cancel = "true");
 
 			WebContent.viewWithStructureCP(
-				column = "1",
+				column = 1,
 				predefinedValue = "true",
-				row = "1",
+				row = 1,
 				webContentColor = "FF0D0D",
 				webContentDate = "10/10/2020",
 				webContentGrid = "true",
 				webContentImage = "Document_3.png",
 				webContentLinkToPage = "Test Page Name",
 				webContentMultipleSelection = "Option 1",
-				webContentNumeric = "9",
+				webContentNumeric = 9,
 				webContentRichText = "This is a Rich Text field",
 				webContentSelectFromList = "Option 2",
 				webContentSingleSelection = "Option 3",
@@ -1491,15 +1467,13 @@ definition {
 		}
 
 		task ("Reset the default values") {
-			WebContentStructures.resetStructureDefaultValuesCP(
-				assetTitle = "Blogs Entry Title",
-				templateName = "WC Template Name");
+			WebContentStructures.resetStructureDefaultValuesCP(assetTitle = "Blogs Entry Title");
 
 			WebContent.viewWithStructureCP(
-				column = "1",
+				column = 1,
 				predefinedValue = "true",
-				row = "1",
-				webContentColor = "000000",
+				row = 1,
+				webContentColor = 000000,
 				webContentDate = "__/__/____",
 				webContentGrid = "false",
 				webContentLinkToPage = "",
@@ -1528,9 +1502,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-130506. Aseert Web Content Structure defaults not showing in Search Results."
-	@priority = "3"
+	@priority = 3
 	test SearchStructureWithDefaultValue {
-		property test.name.skip.portal.instance = "WebContentWithCustomStructures#SearchStructureWithDefaultValue";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a web content structure with text field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
@@ -1559,9 +1534,9 @@ definition {
 		task ("Go to Home page and assert no web content displayed after searching") {
 			Navigator.openURL();
 
-			SearchPortlets.searchEmbedded(searchTerm = "WC WebContent Title");
+			SearchPage.searchEmbedded(searchTerm = "WC WebContent Title");
 
-			SearchResultPortlet.viewNoSearchResults(searchTerm = "WC WebContent Title");
+			SearchResults.viewNoSearchResults(searchTerm = "WC WebContent Title");
 		}
 
 		task ("Reindex and search it again") {
@@ -1569,14 +1544,62 @@ definition {
 
 			Navigator.openURL();
 
-			SearchPortlets.searchEmbedded(searchTerm = "WC WebContent Title");
+			SearchPage.searchEmbedded(searchTerm = "WC WebContent Title");
 
-			SearchResultPortlet.viewNoSearchResults(searchTerm = "WC WebContent Title");
+			SearchResults.viewNoSearchResults(searchTerm = "WC WebContent Title");
+		}
+	}
+
+	@description = "This is a test for LPS-162313. The user is able to select Hidden Pages for Web Content structure."
+	@priority = 4
+	test SelectHiddenPageInLinkToPageField {
+		task ("Given a user has a widget page hidden from Menu Display") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "Test Site Name");
+
+			PagesAdmin.addPage(
+				pageName = "Test Widget Page",
+				sitePageType = "Widget Page");
+
+			PagesAdmin.toggleHiddenFromNavigationMenuWidget(toggleValue = "enable");
+
+			PortletEntry.save();
+		}
+
+		task ("When the user creates a web content based on structure with Link a Page field") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Link to Page",
+				fieldName = "Link to Page");
+
+			WebContentStructures.saveCP();
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			WebContent.addWithStructureCP(webContentTitle = "WC WebContent Title");
+		}
+
+		task ("Then the user could select the hidden page in Link a Page field") {
+			DERenderer.inputDataInLinkToPageField(
+				linkToPageContent = "Test Widget Page",
+				linkToPageFieldLabel = "Link to Page");
+
+			DERenderer.assertContentInLinktoPageField(
+				linkToPageContent = "Pages > Test Widget Page",
+				linkToPageFieldLabel = "Link to Page");
+
+			PortletEntry.publish();
 		}
 	}
 
 	@description = "This is a test for LPS-125933. Create, read, update and delete a Web Content from a Structure with all possible fields and using a Template with all posible fields."
-	@priority = "5"
+	@priority = 5
 	test ViewAndEditAsWellAsDeleteContentWithTitleAndAllFields {
 		property portal.acceptance = "true";
 
@@ -1602,23 +1625,9 @@ definition {
 
 			NavItem.gotoStructures();
 
-			WebContentStructures.addCP(
-				structureDescription = "WC Structure Description",
-				structureName = "WC Structure Name");
-
-			DataEngine.addFields(fieldNameList = "Text,Select from List,Single Selection,Multiple Selection,Grid,Date,Numeric,Image,Rich Text,Upload,Color,Web Content,Geolocation,Link to Page,Separator");
-
-			WebContentStructures.saveCP(structureName = "WC Structure Name");
-		}
-
-		task ("Add a web content template with all fields") {
-			WebContentNavigator.gotoManageTemplatesViaStructures(structureName = "WC Structure Name");
-
-			WebContentTemplates.addCP(
+			WebContentStructures.importStructure(
 				structureName = "WC Structure Name",
-				templateDescription = "WC Template Description",
-				templateFieldNames = "Text,Select from List,Single Selection,Multiple Selection,Grid,Date,Numeric,Image,Rich Text,Upload,Color,Web Content,Geolocation,Link to Page",
-				templateName = "WC Template Name");
+				uploadFileName = "Structure_All_Fields.json");
 		}
 
 		task ("Add a web content based on new structure and template") {
@@ -1627,19 +1636,17 @@ definition {
 			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
 			WebContent.addWithStructureCP(
-				column = "1",
+				column = 1,
 				dmNavTab = "User Personal Folder",
 				navTab = "Web Content Images",
-				row = "1",
-				structureName = "WC Structure Name",
-				templateName = "WC Template Name",
+				row = 1,
 				webContentColor = "FF0D0D",
 				webContentDate = "10/10/2020",
 				webContentGrid = "true",
 				webContentImage = "Document_3.png",
 				webContentLinkToPage = "Test Page Name 1",
 				webContentMultipleSelection = "Option 1",
-				webContentNumeric = "9",
+				webContentNumeric = 9,
 				webContentRichText = "This is a Rich Text field",
 				webContentSelectFromList = "Option 2",
 				webContentSingleSelection = "Option 3",
@@ -1653,8 +1660,8 @@ definition {
 
 		task ("View web content") {
 			WebContent.viewWithStructureCP(
-				column = "1",
-				row = "1",
+				column = 1,
+				row = 1,
 				webContentColor = "FF0D0D",
 				webContentDate = "10/10/2020",
 				webContentGeolocation = "true",
@@ -1662,7 +1669,7 @@ definition {
 				webContentImage = "Document_3.png",
 				webContentLinkToPage = "Test Page Name 1",
 				webContentMultipleSelection = "Option 1",
-				webContentNumeric = "9",
+				webContentNumeric = 9,
 				webContentRichText = "This is a Rich Text field",
 				webContentSelectFromList = "Option 2",
 				webContentSeparator = "true",
@@ -1677,16 +1684,16 @@ definition {
 
 		task ("Edit web content") {
 			WebContent.editWithStructureCP(
-				column = "2",
+				column = 2,
 				dmNavTab = "User Personal Folder",
 				navTab = "Web Content Images",
-				row = "2",
+				row = 2,
 				webContentColor = "5F5F5F",
 				webContentDate = "11/11/2019",
-				webContentGrid = "true			WebContentNavigator.openWebContentAdmin(siteURLKey = \"test-site-name\");",
+				webContentGrid = "true",
 				webContentLinkToPage = "Test Page Name 2",
 				webContentMultipleSelection = "Option 2",
-				webContentNumeric = "8",
+				webContentNumeric = 8,
 				webContentRichText = "This is a Edited Rich Text field",
 				webContentSelectFromList = "Option 1",
 				webContentSingleSelection = "Option 4",
@@ -1699,14 +1706,14 @@ definition {
 
 		task ("Assert web content has been edited") {
 			WebContent.viewWithStructureCP(
-				column = "2",
-				row = "2",
+				column = 2,
+				row = 2,
 				webContentColor = "5F5F5F",
 				webContentDate = "11/11/2019",
 				webContentGrid = "true",
 				webContentLinkToPage = "Test Page Name 2",
 				webContentMultipleSelection = "Option 2",
-				webContentNumeric = "8",
+				webContentNumeric = 8,
 				webContentRichText = "This is a Edited Rich Text field",
 				webContentSelectFromList = "Option 1",
 				webContentSingleSelection = "Option 4",
@@ -1728,7 +1735,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-61632. View structure field with predefined value."
-	@priority = "4"
+	@priority = 4
 	test ViewFieldWithPredefinedValue {
 		task ("Add a web content article based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
@@ -1742,66 +1749,9 @@ definition {
 
 			NavItem.gotoStructures();
 
-			WebContentStructures.addCP(structureName = "WC Structure Name");
-		}
-
-		task ("Add the following fields") {
-			DataEngine.addFields(fieldNameList = "Multiple Selection,Color,Date,Upload,Numeric,Rich Text,Single Selection,Select from List,Text,Web Content");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Text Box",
-				fieldLocation = "11",
-				fieldName = "Text",
-				fieldType = "Multiple Lines");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Decimal",
-				fieldLocation = "12",
-				fieldName = "Numeric",
-				numericType = "Decimal");
-
-			var index = "1";
-
-			for (var optionValue : list "Option 1,Option 2,Option 3") {
-				DataEngine.addFieldOption(
-					fieldFieldLabel = "Select from List",
-					index = "${index}",
-					optionValue = "${optionValue}");
-
-				DataEngine.editFieldReferenceOfFieldOption(
-					fieldFieldLabel = "Select from List",
-					fieldReferenceOfFieldOption = "Value${index}",
-					index = "${index}");
-
-				var index = ${index} + 1;
-			}
-
-			var index = "1";
-
-			for (var optionValue : list "Option 1,Option 2,Option 3") {
-				DataEngine.addFieldOption(
-					fieldFieldLabel = "Single Selection",
-					index = "${index}",
-					optionFieldLabel = "Options",
-					optionValue = "${optionValue}");
-
-				DataEngine.editFieldReferenceOfFieldOption(
-					fieldFieldLabel = "Single Selection",
-					fieldReferenceOfFieldOption = "Value${index}",
-					index = "${index}");
-
-				var index = ${index} + 1;
-			}
-
-			DataEngine.addFieldOption(
-				fieldFieldLabel = "Multiple Selection",
-				index = "1",
-				optionFieldLabel = "Options",
-				optionValue = "Boolean");
-		}
-
-		task ("Save the new structure") {
-			WebContentStructures.saveCP(structureName = "WC Structure Name");
+			WebContentStructures.importStructure(
+				structureName = "WC Structure Name",
+				uploadFileName = "Structure_All_Fields.json");
 		}
 
 		task ("Edit Structure Default Values") {
@@ -1811,11 +1761,11 @@ definition {
 				dmNavTab = "User Personal Folder",
 				webContentColor = "FF0D0D",
 				webContentDate = "10/10/2020",
-				webContentMultipleSelection = "Boolean",
-				webContentNumeric = "9",
+				webContentMultipleSelection = "Option 1",
+				webContentNumeric = 9,
 				webContentRichText = "This is a Rich Text field",
 				webContentSelectFromList = "Option 2",
-				webContentSingleSelection = "Option 1",
+				webContentSingleSelection = "Option 3",
 				webContentText = "This is a Text field",
 				webContentUpload = "Document_1.jpg",
 				webContentWebContent = "Web Content Title");
@@ -1846,11 +1796,11 @@ definition {
 				predefinedValue = "true",
 				webContentColor = "FF0D0D",
 				webContentDate = "10/10/2020",
-				webContentMultipleSelection = "Boolean",
-				webContentNumeric = "9",
+				webContentMultipleSelection = "Option 1",
+				webContentNumeric = 9,
 				webContentRichText = "This is a Rich Text field",
 				webContentSelectFromList = "Option 2",
-				webContentSingleSelection = "Option 1",
+				webContentSingleSelection = "Option 3",
 				webContentText = "This is a Text field",
 				webContentUpload = "Document_1.jpg",
 				webContentWebContent = "Web Content Title");
@@ -1869,7 +1819,7 @@ definition {
 	}
 
 	@description = "The user can view a global web content structure via add menu icon."
-	@priority = "3"
+	@priority = 3
 	test ViewGlobalStructureAvailableToNormalSite {
 		task ("Add a global web content structure with text field") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "global");
@@ -1895,7 +1845,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-102867. View Select From List cannot lose the selection after add repeatable fields."
-	@priority = "4"
+	@priority = 4
 	test ViewSelectedOptionsInRepeatableFields {
 		task ("Add a web content structure with custom fields") {
 			WebContentNavigator.openWebContentStructuresAdmin(siteURLKey = "test-site-name");
@@ -1905,17 +1855,15 @@ definition {
 				structureName = "WC Structure Name");
 
 			for (var fieldName : list "Select from List,Color,Geolocation") {
-				DataEngine.addField(
-					fieldFieldLabel = "${fieldName}",
-					fieldName = "${fieldName}");
+				DataEngine.addField(fieldName = ${fieldName});
 
-				DataEngine.toggleFieldRepeatable(fieldFieldLabel = "${fieldName}");
+				DataEngine.toggleFieldRepeatable(fieldFieldLabel = ${fieldName});
 			}
 
 			for (var i : list "1,2,3") {
 				DataEngine.addFieldOption(
 					fieldFieldLabel = "Select from List",
-					index = "${i}",
+					index = ${i},
 					optionValue = "option ${i}");
 			}
 
@@ -1940,14 +1888,14 @@ definition {
 
 			for (var selectFromListOption : list "option 1,option 2,option 3") {
 				AssertElementPresent(
-					key_menuItem = "${selectFromListOption}",
+					key_menuItem = ${selectFromListOption},
 					locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 			}
 		}
 
 		task ("Add a repeatable field in each Field") {
 			for (var fieldLabel : list "Color,Geolocation,Select from List") {
-				DataEngine.addRepeatableField(fieldLabel = "${fieldLabel}");
+				DataEngine.addRepeatableField(fieldLabel = ${fieldLabel});
 			}
 		}
 
@@ -1957,30 +1905,27 @@ definition {
 					key_fieldFieldLabel = "Select from List",
 					locator1 = "WCEditWebContent#SELECT_FIELD_TRIGGER_2");
 
-				DropdownMenuItem.click(menuItem = "${selectFromListOption}");
+				DropdownMenuItem.click(menuItem = ${selectFromListOption});
 			}
 		}
 	}
 
-	@description = "This is a test for LPS-71204. Web content structure with localization cannot save garbage data in place of images."
-	@priority = "4"
+	@description = "This is a test for LPS-71204 and LPS-189318. Web content structure with localization cannot save garbage data in place of images."
+	@priority = 4
 	test ViewSourceContainsNoGarbageData {
+		property timeout.explicit.wait = "20";
+
 		task ("Add a web content structure with custom fields") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 			NavItem.gotoStructures();
 
-			WebContentStructures.addCP(
-				structureDescription = "WC Structure Description",
-				structureName = "WC Structure Name");
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(fieldName = "Text");
 
 			DataEngine.addField(
-				fieldFieldLabel = "Text",
-				fieldName = "Text");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Image",
-				fieldLocation = "2",
+				fieldLocation = 2,
 				fieldName = "Image");
 
 			WebContentStructures.saveCP();
@@ -1991,7 +1936,6 @@ definition {
 
 			WebContentTemplates.addCP(
 				structureName = "WC Structure Name",
-				templateDescription = "WC Template Description",
 				templateFieldNames = "Text,Image",
 				templateName = "WC Template Name");
 		}
@@ -2002,8 +1946,6 @@ definition {
 			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
 			WebContent.addWithStructureCP(
-				structureName = "WC Structure Name",
-				templateName = "WC Template Name",
 				webContentText = "Web Content Text",
 				webContentTitle = "Web Content Title");
 
@@ -2070,10 +2012,18 @@ definition {
 
 			AssertElementNotPresent(locator1 = "WC#SOURCE_GARBAGE_DATA");
 		}
+
+		task ("View the web content editor is rendered well after close the modal") {
+			IFrame.closeFrame();
+
+			WebContent.viewWithStructureCP(
+				predefinedValue = "true",
+				webContentText = "Web Content Text");
+		}
 	}
 
 	@description = "The user cannot add a web content, structure and template without a title."
-	@priority = "4"
+	@priority = 4
 	test WebContentAdministrationDataValidation {
 		task ("View cannot add web content without title") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");

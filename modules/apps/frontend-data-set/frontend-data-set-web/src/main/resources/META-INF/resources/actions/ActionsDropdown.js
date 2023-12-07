@@ -1,23 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import ClayLink from '@clayui/link';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {LinkOrButton} from '@clayui/shared';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
+import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useContext} from 'react';
 
@@ -25,15 +17,7 @@ import FrontendDataSetContext from '../FrontendDataSetContext';
 import {formatActionURL} from '../utils/index';
 import {actionsBasePropTypes, isLink} from './Actions';
 
-function DropdownItem({
-	action,
-	closeMenu,
-	itemData,
-	itemId,
-	onClick,
-	size,
-	url,
-}) {
+function DropdownItem({action, closeMenu, onClick, url}) {
 	const {icon, label, target} = action;
 
 	return (
@@ -44,9 +28,6 @@ function DropdownItem({
 					action,
 					closeMenu,
 					event,
-					itemData,
-					itemId,
-					size,
 				})
 			}
 		>
@@ -63,7 +44,6 @@ function DropdownItem({
 
 function ActionsDropdown({
 	actions,
-	handleAction,
 	itemData,
 	itemId,
 	loading,
@@ -72,19 +52,27 @@ function ActionsDropdown({
 	onMenuActiveChange,
 	setLoading,
 }) {
-	const context = useContext(FrontendDataSetContext);
+	const {
+		applyItemInlineUpdates,
+		inlineEditingSettings,
+		itemsChanges,
+		toggleItemInlineEdit,
+		uniformActionsDisplay,
+	} = useContext(FrontendDataSetContext);
 
 	const inlineEditingAvailable =
-		context.inlineEditingSettings && itemData.actions?.update;
+		inlineEditingSettings && itemData.actions?.update;
+
 	const inlineEditingAlwaysOn =
-		inlineEditingAvailable && context.inlineEditingSettings.alwaysOn;
+		inlineEditingAvailable && inlineEditingSettings.alwaysOn;
 
 	const isMounted = useIsMounted();
 
-	const editModeActive = !!context.itemsChanges[itemId];
+	const editModeActive = !!itemsChanges[itemId];
+
 	const itemChanges =
-		editModeActive && Object.keys(context.itemsChanges[itemId]).length
-			? context.itemsChanges[itemId]
+		editModeActive && Object.keys(itemsChanges[itemId]).length
+			? itemsChanges[itemId]
 			: null;
 
 	const inlineEditingActions = (
@@ -93,7 +81,7 @@ function ActionsDropdown({
 				className="mr-1"
 				disabled={inlineEditingAlwaysOn && !itemChanges}
 				displayType="secondary"
-				onClick={() => context.toggleItemInlineEdit(itemId)}
+				onClick={() => toggleItemInlineEdit(itemId)}
 				small
 				symbol="times-small"
 			/>
@@ -106,7 +94,8 @@ function ActionsDropdown({
 					monospaced
 					onClick={() => {
 						setLoading(true);
-						context.applyItemInlineUpdates(itemId).finally(() => {
+
+						applyItemInlineUpdates(itemId).finally(() => {
 							if (isMounted()) {
 								setLoading(false);
 							}
@@ -127,8 +116,13 @@ function ActionsDropdown({
 		return null;
 	}
 
-	if (!inlineEditingAlwaysOn && actions.length === 1) {
+	if (
+		!inlineEditingAlwaysOn &&
+		!uniformActionsDisplay &&
+		actions.length === 1
+	) {
 		const [action] = actions;
+
 		const {data: actionData} = action;
 
 		if (actionData?.id && !action?.href) {
@@ -139,74 +133,26 @@ function ActionsDropdown({
 			return <ClayLoadingIndicator className="mb-2 mt-2" />;
 		}
 
-		const content = action.icon ? (
-			<ClayIcon symbol={action.icon} />
-		) : (
-			action.label
-		);
-
-		const onActionDropdownItemClick = context.onActionDropdownItemClick;
-
-		const url = formatActionURL(action.href, itemData);
-
-		const elementWithIconSpecialProps = action.icon
-			? {
-					ariaLabel: action.label,
-					title: action.label,
-			  }
-			: {};
-
-		return isLink(action.target, action.onClick) ? (
-			<ClayLink
-				{...elementWithIconSpecialProps}
+		return (
+			<LinkOrButton
+				aria-label={action.label}
 				className="btn btn-secondary btn-sm"
-				href={url}
+				href={
+					isLink(action.target, action.onClick)
+						? formatActionURL(action.href, itemData)
+						: null
+				}
 				monospaced={Boolean(action.icon)}
 				onClick={(event) => {
-					if (onActionDropdownItemClick) {
-						onActionDropdownItemClick({
-							action,
-							event,
-							itemData,
-						});
-					}
+					onClick({
+						action,
+						event,
+					});
 				}}
+				title={action.label}
 			>
-				{content}
-			</ClayLink>
-		) : (
-			<ClayLink
-				{...elementWithIconSpecialProps}
-				className="btn btn-secondary btn-sm"
-				data-senna-off
-				href="#"
-				monospaced={Boolean(action.icon)}
-				onClick={(event) => {
-					if (onActionDropdownItemClick) {
-						onActionDropdownItemClick({
-							action,
-							event,
-							itemData,
-						});
-					}
-
-					handleAction(
-						{
-							errorMessage: actionData?.errorMessage,
-							event,
-							itemId,
-							method: action.method ?? actionData?.method,
-							setLoading,
-							successMessage: actionData?.successMessage,
-							url,
-							...action,
-						},
-						context
-					);
-				}}
-			>
-				{content}
-			</ClayLink>
+				{action.icon ? <ClayIcon symbol={action.icon} /> : action.label}
+			</LinkOrButton>
 		);
 	}
 
@@ -218,7 +164,7 @@ function ActionsDropdown({
 		items.map(({items: nestedItems = [], separator, type, ...item}, i) => {
 			if (type === 'group') {
 				return (
-					<ClayDropDown.Group {...item}>
+					<ClayDropDown.Group {...item} key={i}>
 						{separator && <ClayDropDown.Divider />}
 
 						{renderItems(nestedItems)}
@@ -230,9 +176,6 @@ function ActionsDropdown({
 				<DropdownItem
 					action={item}
 					closeMenu={() => onMenuActiveChange(false)}
-					handleAction={handleAction}
-					itemData={itemData}
-					itemId={itemId}
 					key={i}
 					onClick={onClick}
 					setLoading={setLoading}
@@ -242,7 +185,11 @@ function ActionsDropdown({
 		});
 
 	return (
-		<div className="d-flex justify-content-end">
+		<div
+			className={classnames('d-flex', {
+				'justify-content-end': !Liferay.FeatureFlags['LPS-193005'],
+			})}
+		>
 			{inlineEditingAlwaysOn && inlineEditingActions}
 
 			<ClayDropDown
@@ -250,7 +197,12 @@ function ActionsDropdown({
 				onActiveChange={onMenuActiveChange}
 				trigger={
 					<ClayButton
-						className="component-action dropdown-toggle ml-1"
+						className={classnames(
+							'component-action dropdown-toggle',
+							{
+								'ml-1': !Liferay.FeatureFlags['LPS-193005'],
+							}
+						)}
 						disabled={loading}
 						displayType="unstyled"
 					>
@@ -272,7 +224,6 @@ function ActionsDropdown({
 
 ActionsDropdown.propTypes = {
 	...actionsBasePropTypes,
-	handleAction: PropTypes.func.isRequired,
 	loading: PropTypes.bool.isRequired,
 	onClick: PropTypes.func.isRequired,
 	setLoading: PropTypes.func.isRequired,

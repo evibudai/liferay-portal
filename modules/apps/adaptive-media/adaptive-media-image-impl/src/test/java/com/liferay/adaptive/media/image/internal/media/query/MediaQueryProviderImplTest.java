@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.internal.media.query;
@@ -27,8 +18,8 @@ import com.liferay.adaptive.media.image.internal.processor.AMImage;
 import com.liferay.adaptive.media.image.media.query.Condition;
 import com.liferay.adaptive.media.image.media.query.MediaQuery;
 import com.liferay.adaptive.media.image.processor.AMImageAttribute;
-import com.liferay.adaptive.media.image.processor.AMImageProcessor;
 import com.liferay.adaptive.media.image.url.AMImageURLFactory;
+import com.liferay.adaptive.media.processor.AMProcessor;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -40,12 +31,11 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import java.net.URI;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,9 +58,9 @@ public class MediaQueryProviderImplTest {
 	@Before
 	public void setUp() throws PortalException {
 		Mockito.when(
-			_amImageFinder.getAdaptiveMediaStream(Mockito.any(Function.class))
+			_amImageFinder.getAdaptiveMedias(Mockito.any(Function.class))
 		).thenAnswer(
-			invocation -> Stream.empty()
+			invocation -> Collections.emptyList()
 		);
 
 		Mockito.when(
@@ -642,11 +632,11 @@ public class MediaQueryProviderImplTest {
 
 	private void _addAdaptiveMedias(
 			FileEntry fileEntry,
-			AdaptiveMedia<AMImageProcessor>... adaptiveMedias)
+			AdaptiveMedia<AMProcessor<FileVersion>>... adaptiveMedias)
 		throws Exception {
 
 		Mockito.when(
-			_amImageFinder.getAdaptiveMediaStream(Mockito.any(Function.class))
+			_amImageFinder.getAdaptiveMedias(Mockito.any(Function.class))
 		).thenAnswer(
 			invocation -> {
 				Function<AMImageQueryBuilder, AMQuery<?, ?>>
@@ -660,16 +650,14 @@ public class MediaQueryProviderImplTest {
 					amImageQueryBuilderImpl);
 
 				if (!AMImageQueryBuilderImpl.AM_QUERY.equals(amQuery)) {
-					return Stream.empty();
+					return Collections.emptyList();
 				}
 
-				for (AdaptiveMedia<AMImageProcessor> adaptiveMedia :
+				for (AdaptiveMedia<AMProcessor<FileVersion>> adaptiveMedia :
 						adaptiveMedias) {
 
-					Optional<String> optional = adaptiveMedia.getValueOptional(
+					String configurationUuid = adaptiveMedia.getValue(
 						AMAttribute.getConfigurationUuidAMAttribute());
-
-					String configurationUuid = optional.get();
 
 					if (Objects.equals(
 							fileEntry.getFileVersion(),
@@ -677,11 +665,11 @@ public class MediaQueryProviderImplTest {
 						configurationUuid.equals(
 							amImageQueryBuilderImpl.getConfigurationUuid())) {
 
-						return Stream.of(adaptiveMedia);
+						return Collections.singletonList(adaptiveMedia);
 					}
 				}
 
-				return Stream.empty();
+				return Collections.emptyList();
 			}
 		);
 	}
@@ -730,7 +718,7 @@ public class MediaQueryProviderImplTest {
 		_assertCondition(conditions.get(1), "min-width", minWidth + "px");
 	}
 
-	private AdaptiveMedia<AMImageProcessor> _createAdaptiveMedia(
+	private AdaptiveMedia<AMProcessor<FileVersion>> _createAdaptiveMedia(
 			String amImageConfigurationEntryUuid, int height, int width,
 			String url)
 		throws Exception {

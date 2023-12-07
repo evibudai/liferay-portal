@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,14 +14,14 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,11 +30,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-120190 and LPS-125164. Can add fragments into drop zone of Dropdown fragment."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test AddFragmentIntoDropdownPanel {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "Dropdown#AddFragmentIntoDropdownPanel";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add a custom master page") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
@@ -82,9 +84,9 @@ definition {
 
 		task ("Assert the dropdown panel is collapsed") {
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "false");
+				value1 = "aria-expanded",
+				value2 = "false");
 
 			AssertNotVisible(
 				key_element = "//div[contains(@class,'alert-info')][normalize-space(text())='There are no menu items to display.']",
@@ -107,9 +109,9 @@ definition {
 				siteName = "Test Site Name");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "false");
+				value1 = "aria-expanded",
+				value2 = "false");
 
 			AssertNotVisible(
 				key_element = "//li[contains(@class,'nav-item')]//a[normalize-space()='Test Content Page']",
@@ -126,7 +128,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-120190. Can define the displayed behavior of dropdown panel in Dropdown fragment."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test DefineDisplayedBehaviorOfDropdownPanel {
 		property portal.acceptance = "true";
@@ -155,27 +157,27 @@ definition {
 			Click.javaScriptClick(locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "true");
+				value1 = "aria-expanded",
+				value2 = "true");
 
 			AssertVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 
 			Click.javaScriptClick(locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "false");
+				value1 = "aria-expanded",
+				value2 = "false");
 
 			AssertNotVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 
 			MastersPageTemplates.publishMaster();
@@ -193,9 +195,9 @@ definition {
 			Click(locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "false");
+				value1 = "aria-expanded",
+				value2 = "false");
 		}
 
 		task ("Define the Display on Hover as displayed behavior") {
@@ -214,14 +216,14 @@ definition {
 			MouseOver(locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "true");
+				value1 = "aria-expanded",
+				value2 = "true");
 
 			AssertVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 
 			MouseOver(
@@ -229,14 +231,14 @@ definition {
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "false");
+				value1 = "aria-expanded",
+				value2 = "false");
 
 			AssertNotVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 		}
 
@@ -260,14 +262,14 @@ definition {
 
 		task ("Assert the drop zone is always shown in dropdown panel") {
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "true");
+				value1 = "aria-expanded",
+				value2 = "true");
 
 			AssertVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 
 			PageEditor.clickManagementBar();
@@ -275,14 +277,14 @@ definition {
 			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Dropdown");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "true");
+				value1 = "aria-expanded",
+				value2 = "true");
 
 			AssertVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 		}
 
@@ -294,14 +296,14 @@ definition {
 
 		task ("Assert the drop zone is always shown in dropdown panel") {
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "true");
+				value1 = "aria-expanded",
+				value2 = "true");
 
 			AssertVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 
 			PageEditor.clickManagementBar();
@@ -309,20 +311,20 @@ definition {
 			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Dropdown");
 
 			AssertAttributeValue(
-				attribute1 = "aria-expanded",
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE",
-				value1 = "true");
+				value1 = "aria-expanded",
+				value2 = "true");
 
 			AssertVisible(
 				key_content = "Place fragments or widgets here.",
 				key_fragmentClass = "menu",
-				key_position = "1",
+				key_position = 1,
 				locator1 = "Fragment#DROP_ZONE_NO_FRAGMENTS_MESSAGE");
 		}
 	}
 
 	@description = "This is a test for LPS-120190. Can define the panel type of Dropdown fragment."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test DefinePanelType {
 		property portal.acceptance = "true";
@@ -348,7 +350,7 @@ definition {
 		task ("Add a Dropdown fragment to the second module") {
 			PageEditor.addElementToColumn(
 				collectionName = "Basic Components",
-				columnNumber = "2",
+				columnNumber = 2,
 				fragmentName = "Dropdown",
 				navTab = "Fragments");
 		}
@@ -382,7 +384,7 @@ definition {
 			var moduleContainerWidth = selenium.getAttribute("//div[contains(@class,'col-4')][2]//div[contains(@class,'col__border')]@width");
 
 			AssertVisible(
-				key_panelWidth = "${moduleContainerWidth}",
+				key_panelWidth = ${moduleContainerWidth},
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_MENU_WIDTH");
 		}
 
@@ -398,13 +400,13 @@ definition {
 			var pageEditorWidth = selenium.getAttribute("//div[contains(@class,'layout-viewport')]/div[contains(@id,'page-editor')]@width");
 
 			AssertVisible(
-				key_panelWidth = "${pageEditorWidth}",
+				key_panelWidth = ${pageEditorWidth},
 				locator1 = "Fragment#DROPDOWN_FRAGMENT_MENU_WIDTH");
 		}
 	}
 
 	@description = "This is a test for LPS-120190. Can edit the text of dropdown button in Dropdown fragment."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test EditInlineContent {
 		property portal.acceptance = "true";

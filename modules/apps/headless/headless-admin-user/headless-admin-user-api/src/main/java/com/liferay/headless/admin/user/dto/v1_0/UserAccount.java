@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.dto.v1_0;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -551,7 +544,7 @@ public class UserAccount implements Serializable {
 	}
 
 	@GraphQLField(description = "The user's ID.")
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
 	@Schema(description = "A relative URL to the user's profile image.")
@@ -581,6 +574,34 @@ public class UserAccount implements Serializable {
 	@GraphQLField(description = "A relative URL to the user's profile image.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String image;
+
+	@Schema(description = "The user's profile image id.")
+	public Long getImageId() {
+		return imageId;
+	}
+
+	public void setImageId(Long imageId) {
+		this.imageId = imageId;
+	}
+
+	@JsonIgnore
+	public void setImageId(
+		UnsafeSupplier<Long, Exception> imageIdUnsafeSupplier) {
+
+		try {
+			imageId = imageIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The user's profile image id.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long imageId;
 
 	@Schema(description = "The user's job title.")
 	public String getJobTitle() {
@@ -637,6 +658,62 @@ public class UserAccount implements Serializable {
 	@GraphQLField(description = "A list of keywords describing the user.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String[] keywords;
+
+	@Schema(description = "The user's preferred language.")
+	public String getLanguageDisplayName() {
+		return languageDisplayName;
+	}
+
+	public void setLanguageDisplayName(String languageDisplayName) {
+		this.languageDisplayName = languageDisplayName;
+	}
+
+	@JsonIgnore
+	public void setLanguageDisplayName(
+		UnsafeSupplier<String, Exception> languageDisplayNameUnsafeSupplier) {
+
+		try {
+			languageDisplayName = languageDisplayNameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The user's preferred language.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String languageDisplayName;
+
+	@Schema(description = "The user's preferred language id.")
+	public String getLanguageId() {
+		return languageId;
+	}
+
+	public void setLanguageId(String languageId) {
+		this.languageId = languageId;
+	}
+
+	@JsonIgnore
+	public void setLanguageId(
+		UnsafeSupplier<String, Exception> languageIdUnsafeSupplier) {
+
+		try {
+			languageId = languageIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The user's preferred language id.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String languageId;
 
 	@Schema(description = "The last time the user logged in.")
 	public Date getLastLoginDate() {
@@ -835,6 +912,44 @@ public class UserAccount implements Serializable {
 	@GraphQLField(description = "A list of the user's sites.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected SiteBrief[] siteBriefs;
+
+	@Schema(description = "The user's status.")
+	@Valid
+	public Status getStatus() {
+		return status;
+	}
+
+	@JsonIgnore
+	public String getStatusAsString() {
+		if (status == null) {
+			return null;
+		}
+
+		return status.toString();
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
+	@JsonIgnore
+	public void setStatus(
+		UnsafeSupplier<Status, Exception> statusUnsafeSupplier) {
+
+		try {
+			status = statusUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The user's status.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Status status;
 
 	@Schema(description = "The user's contact information.")
 	@Valid
@@ -1185,6 +1300,16 @@ public class UserAccount implements Serializable {
 			sb.append("\"");
 		}
 
+		if (imageId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"imageId\": ");
+
+			sb.append(imageId);
+		}
+
 		if (jobTitle != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1221,6 +1346,34 @@ public class UserAccount implements Serializable {
 			}
 
 			sb.append("]");
+		}
+
+		if (languageDisplayName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"languageDisplayName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(languageDisplayName));
+
+			sb.append("\"");
+		}
+
+		if (languageId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"languageId\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(languageId));
+
+			sb.append("\"");
 		}
 
 		if (lastLoginDate != null) {
@@ -1339,6 +1492,20 @@ public class UserAccount implements Serializable {
 			sb.append("]");
 		}
 
+		if (status != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append("\"");
+
+			sb.append(status);
+
+			sb.append("\"");
+		}
+
 		if (userAccountContactInformation != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1380,6 +1547,44 @@ public class UserAccount implements Serializable {
 		name = "x-class-name"
 	)
 	public String xClassName;
+
+	@GraphQLName("Status")
+	public static enum Status {
+
+		ACTIVE("Active"), INACTIVE("Inactive");
+
+		@JsonCreator
+		public static Status create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
+			for (Status status : values()) {
+				if (Objects.equals(status.getValue(), value)) {
+					return status;
+				}
+			}
+
+			throw new IllegalArgumentException("Invalid enum value: " + value);
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private Status(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
 
 	private static String _escape(Object object) {
 		return StringUtil.replace(
@@ -1463,5 +1668,7 @@ public class UserAccount implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

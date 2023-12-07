@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.persistence.model.impl;
@@ -215,62 +206,82 @@ public class SamlSpMessageModelImpl
 	public Map<String, Function<SamlSpMessage, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<SamlSpMessage, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<SamlSpMessage, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<SamlSpMessage, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<SamlSpMessage, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<SamlSpMessage, Object>>();
-		Map<String, BiConsumer<SamlSpMessage, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<SamlSpMessage, ?>>();
+		private static final Map<String, Function<SamlSpMessage, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"samlSpMessageId", SamlSpMessage::getSamlSpMessageId);
-		attributeSetterBiConsumers.put(
-			"samlSpMessageId",
-			(BiConsumer<SamlSpMessage, Long>)SamlSpMessage::setSamlSpMessageId);
-		attributeGetterFunctions.put("companyId", SamlSpMessage::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<SamlSpMessage, Long>)SamlSpMessage::setCompanyId);
-		attributeGetterFunctions.put(
-			"createDate", SamlSpMessage::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<SamlSpMessage, Date>)SamlSpMessage::setCreateDate);
-		attributeGetterFunctions.put(
-			"samlIdpEntityId", SamlSpMessage::getSamlIdpEntityId);
-		attributeSetterBiConsumers.put(
-			"samlIdpEntityId",
-			(BiConsumer<SamlSpMessage, String>)
-				SamlSpMessage::setSamlIdpEntityId);
-		attributeGetterFunctions.put(
-			"samlIdpResponseKey", SamlSpMessage::getSamlIdpResponseKey);
-		attributeSetterBiConsumers.put(
-			"samlIdpResponseKey",
-			(BiConsumer<SamlSpMessage, String>)
-				SamlSpMessage::setSamlIdpResponseKey);
-		attributeGetterFunctions.put(
-			"expirationDate", SamlSpMessage::getExpirationDate);
-		attributeSetterBiConsumers.put(
-			"expirationDate",
-			(BiConsumer<SamlSpMessage, Date>)SamlSpMessage::setExpirationDate);
+		static {
+			Map<String, Function<SamlSpMessage, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<SamlSpMessage, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"samlSpMessageId", SamlSpMessage::getSamlSpMessageId);
+			attributeGetterFunctions.put(
+				"companyId", SamlSpMessage::getCompanyId);
+			attributeGetterFunctions.put(
+				"createDate", SamlSpMessage::getCreateDate);
+			attributeGetterFunctions.put(
+				"samlIdpEntityId", SamlSpMessage::getSamlIdpEntityId);
+			attributeGetterFunctions.put(
+				"samlIdpResponseKey", SamlSpMessage::getSamlIdpResponseKey);
+			attributeGetterFunctions.put(
+				"expirationDate", SamlSpMessage::getExpirationDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<SamlSpMessage, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<SamlSpMessage, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<SamlSpMessage, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"samlSpMessageId",
+				(BiConsumer<SamlSpMessage, Long>)
+					SamlSpMessage::setSamlSpMessageId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<SamlSpMessage, Long>)SamlSpMessage::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<SamlSpMessage, Date>)SamlSpMessage::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"samlIdpEntityId",
+				(BiConsumer<SamlSpMessage, String>)
+					SamlSpMessage::setSamlIdpEntityId);
+			attributeSetterBiConsumers.put(
+				"samlIdpResponseKey",
+				(BiConsumer<SamlSpMessage, String>)
+					SamlSpMessage::setSamlIdpResponseKey);
+			attributeSetterBiConsumers.put(
+				"expirationDate",
+				(BiConsumer<SamlSpMessage, Date>)
+					SamlSpMessage::setExpirationDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -664,7 +675,8 @@ public class SamlSpMessageModelImpl
 
 	public <T> T getColumnValue(String columnName) {
 		Function<SamlSpMessage, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

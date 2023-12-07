@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.synonyms.web.internal;
@@ -31,6 +22,8 @@ import com.liferay.portal.search.engine.adapter.document.DocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.DocumentResponse;
 import com.liferay.portal.search.engine.adapter.index.IndexRequest;
 import com.liferay.portal.search.engine.adapter.index.IndexResponse;
+import com.liferay.portal.search.engine.adapter.index.IndicesExistsIndexRequest;
+import com.liferay.portal.search.engine.adapter.index.IndicesExistsIndexResponse;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
@@ -45,7 +38,6 @@ import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIn
 import com.liferay.portal.search.tuning.synonyms.web.internal.storage.SynonymSetStorageAdapter;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 import javax.portlet.ActionURL;
 import javax.portlet.MimeResponse;
@@ -248,6 +240,23 @@ public abstract class BaseSynonymsWebTestCase {
 		).execute(
 			(DocumentRequest)Mockito.any()
 		);
+
+		IndicesExistsIndexResponse indicesExistsIndexResponse = Mockito.mock(
+			IndicesExistsIndexResponse.class);
+
+		Mockito.doReturn(
+			true
+		).when(
+			indicesExistsIndexResponse
+		).isExists();
+
+		Mockito.doReturn(
+			indicesExistsIndexResponse
+		).when(
+			searchEngineAdapter
+		).execute(
+			(IndicesExistsIndexRequest)Mockito.any()
+		);
 	}
 
 	protected SearchHits setUpSearchEngineAdapter(SearchHits searchHits) {
@@ -348,15 +357,14 @@ public abstract class BaseSynonymsWebTestCase {
 			new SynonymSet.SynonymSetBuilder();
 
 		Mockito.doReturn(
-			Optional.of(
-				synonymSetBuilder.synonyms(
-					synonyms
-				).synonymSetDocumentId(
-					id
-				).build())
+			synonymSetBuilder.synonyms(
+				synonyms
+			).synonymSetDocumentId(
+				id
+			).build()
 		).when(
 			synonymSetIndexReader
-		).fetchOptional(
+		).fetch(
 			Mockito.any(), Mockito.anyString()
 		);
 

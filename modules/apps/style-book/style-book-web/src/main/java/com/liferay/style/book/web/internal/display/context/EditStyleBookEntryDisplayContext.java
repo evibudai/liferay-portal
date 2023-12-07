@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.style.book.web.internal.display.context;
@@ -25,7 +16,6 @@ import com.liferay.fragment.util.comparator.FragmentCollectionCreateDateComparat
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.item.selector.ItemSelector;
-import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.item.selector.LayoutItemSelectorReturnType;
 import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -35,6 +25,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryModifiedDateComparator;
 import com.liferay.layout.util.comparator.LayoutModifiedDateComparator;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -46,7 +37,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Theme;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
@@ -74,13 +64,10 @@ import com.liferay.style.book.web.internal.constants.StyleBookWebKeys;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
-import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -101,11 +88,11 @@ public class EditStyleBookEntryDisplayContext {
 			(FragmentCollectionContributorRegistry)renderRequest.getAttribute(
 				StyleBookWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER);
 		_frontendTokenDefinitionRegistry =
-			(FrontendTokenDefinitionRegistry)_renderRequest.getAttribute(
+			(FrontendTokenDefinitionRegistry)renderRequest.getAttribute(
 				FrontendTokenDefinitionRegistry.class.getName());
-		_itemSelector = (ItemSelector)_renderRequest.getAttribute(
+		_itemSelector = (ItemSelector)renderRequest.getAttribute(
 			ItemSelector.class.getName());
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_setViewAttributes();
@@ -144,7 +131,7 @@ public class EditStyleBookEntryDisplayContext {
 				JSONUtil.put(
 					"data",
 					_getOptionJSONObject(
-						LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE)
+						LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)
 				).put(
 					"type", "displayPageTemplate"
 				),
@@ -156,7 +143,7 @@ public class EditStyleBookEntryDisplayContext {
 				JSONUtil.put(
 					"data",
 					_getOptionJSONObject(
-						LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT)
+						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)
 				).put(
 					"type", "master"
 				),
@@ -168,8 +155,8 @@ public class EditStyleBookEntryDisplayContext {
 				JSONUtil.put(
 					"data",
 					_getOptionJSONObject(
-						LayoutPageTemplateEntryTypeConstants.TYPE_BASIC,
-						LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE)
+						LayoutPageTemplateEntryTypeConstants.BASIC,
+						LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE)
 				).put(
 					"type", "pageTemplate"
 				))
@@ -247,12 +234,9 @@ public class EditStyleBookEntryDisplayContext {
 								fragmentCollectionContributors, 0,
 								4 - fragmentCollections.size());
 
-					Stream<FragmentCollectionContributor>
-						fragmentCollectionContributorsStream =
-							filteredFragmentCollectionContributors.stream();
-
 					fragmentCollectionContributorJSONObjects =
-						fragmentCollectionContributorsStream.map(
+						TransformUtil.transformToArray(
+							filteredFragmentCollectionContributors,
 							fragmentCollectionContributor -> JSONUtil.put(
 								"name", fragmentCollectionContributor.getName()
 							).put(
@@ -261,18 +245,14 @@ public class EditStyleBookEntryDisplayContext {
 									fragmentCollectionContributor.
 										getFragmentCollectionKey(),
 									CompanyConstants.SYSTEM)
-							)
-						).toArray(
-							JSONObject[]::new
-						);
+							),
+							JSONObject.class);
 				}
-
-				Stream<FragmentCollection> fragmentCollectionsStream =
-					fragmentCollections.stream();
 
 				return JSONUtil.putAll(
 					ArrayUtil.append(
-						fragmentCollectionsStream.map(
+						(JSONObject[])TransformUtil.transformToArray(
+							fragmentCollections,
 							fragmentCollection -> JSONUtil.put(
 								"name", fragmentCollection.getName()
 							).put(
@@ -281,10 +261,8 @@ public class EditStyleBookEntryDisplayContext {
 									fragmentCollection.
 										getFragmentCollectionKey(),
 									fragmentCollection.getGroupId())
-							)
-						).toArray(
-							JSONObject[]::new
-						),
+							),
+							JSONObject.class),
 						fragmentCollectionContributorJSONObjects));
 			}
 		).put(
@@ -345,14 +323,13 @@ public class EditStyleBookEntryDisplayContext {
 					layoutPageTemplateEntryItemSelectorCriterion =
 						new LayoutPageTemplateEntryItemSelectorCriterion();
 
+				layoutPageTemplateEntryItemSelectorCriterion.
+					setDesiredItemSelectorReturnTypes(
+						new LayoutPageTemplateEntryItemSelectorReturnType());
 				layoutPageTemplateEntryItemSelectorCriterion.setGroupId(
 					_getPreviewItemsGroupId());
 				layoutPageTemplateEntryItemSelectorCriterion.setLayoutTypes(
 					layoutTypes);
-
-				layoutPageTemplateEntryItemSelectorCriterion.
-					setDesiredItemSelectorReturnTypes(
-						new LayoutPageTemplateEntryItemSelectorReturnType());
 
 				PortletURL entryItemSelectorURL =
 					_itemSelector.getItemSelectorURL(
@@ -365,33 +342,23 @@ public class EditStyleBookEntryDisplayContext {
 			}
 		).put(
 			"recentLayouts",
-			() -> {
-				List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
+			() -> JSONUtil.putAll(
+				(JSONObject[])TransformUtil.transformToArray(
 					LayoutPageTemplateEntryServiceUtil.
 						getLayoutPageTemplateEntries(
 							_getPreviewItemsGroupId(), layoutTypes,
 							WorkflowConstants.STATUS_APPROVED, 0,
 							Math.min(total, 4),
 							new LayoutPageTemplateEntryModifiedDateComparator(
-								false));
-
-				Stream<LayoutPageTemplateEntry>
-					layoutPageTemplateEntriesStream =
-						layoutPageTemplateEntries.stream();
-
-				return JSONUtil.putAll(
-					layoutPageTemplateEntriesStream.map(
-						layoutPageTemplateEntry -> JSONUtil.put(
-							"name", layoutPageTemplateEntry.getName()
-						).put(
-							"private", false
-						).put(
-							"url", _getPreviewURL(layoutPageTemplateEntry)
-						)
-					).toArray(
-						JSONObject[]::new
-					));
-			}
+								false)),
+					layoutPageTemplateEntry -> JSONUtil.put(
+						"name", layoutPageTemplateEntry.getName()
+					).put(
+						"private", false
+					).put(
+						"url", _getPreviewURL(layoutPageTemplateEntry)
+					),
+					JSONObject.class))
 		).put(
 			"totalLayouts", total
 		);
@@ -409,7 +376,6 @@ public class EditStyleBookEntryDisplayContext {
 
 				layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 					new LayoutItemSelectorReturnType());
-				layoutItemSelectorCriterion.setShowHiddenPages(true);
 
 				Group group = _themeDisplay.getScopeGroup();
 
@@ -431,20 +397,17 @@ public class EditStyleBookEntryDisplayContext {
 						_getPreviewItemsGroupId(), 0, Math.min(total, 4),
 						new LayoutModifiedDateComparator(false));
 
-				Stream<Layout> layoutsStream = layouts.stream();
-
 				return JSONUtil.putAll(
-					layoutsStream.map(
+					(JSONObject[])TransformUtil.transformToArray(
+						layouts,
 						layout -> JSONUtil.put(
 							"name", layout.getName(_themeDisplay.getLocale())
 						).put(
 							"private", layout.isPrivateLayout()
 						).put(
 							"url", _getPreviewURL(layout)
-						)
-					).toArray(
-						JSONObject[]::new
-					));
+						),
+						JSONObject.class));
 			}
 		).put(
 			"totalLayouts", total
@@ -485,16 +448,18 @@ public class EditStyleBookEntryDisplayContext {
 
 	private String _getPreviewURL(Layout layout) {
 		try {
-			String layoutURL = HttpComponentsUtil.addParameter(
+			String layoutURL = HttpComponentsUtil.addParameters(
 				PortalUtil.getLayoutFullURL(layout, _themeDisplay), "p_l_mode",
-				Constants.PREVIEW);
+				Constants.PREVIEW, "p_p_auth",
+				AuthTokenUtil.getToken(_httpServletRequest),
+				"styleBookEntryPreview", true);
 
-			layoutURL = HttpComponentsUtil.addParameter(
-				layoutURL, "p_p_auth",
-				AuthTokenUtil.getToken(_httpServletRequest));
+			if (Validator.isNotNull(_themeDisplay.getDoAsUserId())) {
+				layoutURL = PortalUtil.addPreservedParameters(
+					_themeDisplay, layoutURL, false, true);
+			}
 
-			return HttpComponentsUtil.addParameter(
-				layoutURL, "styleBookEntryPreview", true);
+			return layoutURL;
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
@@ -507,35 +472,30 @@ public class EditStyleBookEntryDisplayContext {
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
 
 		try {
-			Layout layout = LayoutLocalServiceUtil.getLayout(
-				layoutPageTemplateEntry.getPlid());
-
 			if (layoutPageTemplateEntry.getType() ==
-					LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE) {
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE) {
 
-				ResourceURL getPagePreviewURL = PortletURLFactoryUtil.create(
-					_httpServletRequest,
-					ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-					layout, PortletRequest.RESOURCE_PHASE);
+				String previewURL = HttpComponentsUtil.addParameters(
+					_themeDisplay.getPortalURL() + _themeDisplay.getPathMain() +
+						"/portal/get_page_preview",
+					"p_l_mode", Constants.PREVIEW, "segmentsExperienceId",
+					SegmentsExperienceLocalServiceUtil.
+						fetchDefaultSegmentsExperienceId(
+							layoutPageTemplateEntry.getPlid()),
+					"selPlid", layoutPageTemplateEntry.getPlid(),
+					"styleBookEntryPreview", true);
 
-				getPagePreviewURL.setParameter(
-					"segmentsExperienceId",
-					String.valueOf(
-						SegmentsExperienceLocalServiceUtil.
-							fetchDefaultSegmentsExperienceId(
-								layoutPageTemplateEntry.getPlid())));
-				getPagePreviewURL.setResourceID(
-					"/layout_content_page_editor/get_page_preview");
+				if (Validator.isNotNull(_themeDisplay.getDoAsUserId())) {
+					previewURL = PortalUtil.addPreservedParameters(
+						_themeDisplay, previewURL, false, true);
+				}
 
-				String url = HttpComponentsUtil.addParameter(
-					getPagePreviewURL.toString(), "p_l_mode",
-					Constants.PREVIEW);
-
-				return HttpComponentsUtil.addParameter(
-					url, "styleBookEntryPreview", true);
+				return previewURL;
 			}
 
-			return _getPreviewURL(layout);
+			return _getPreviewURL(
+				LayoutLocalServiceUtil.getLayout(
+					layoutPageTemplateEntry.getPlid()));
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
@@ -594,8 +554,10 @@ public class EditStyleBookEntryDisplayContext {
 	}
 
 	private String _getThemeName() {
+		Group group = _themeDisplay.getScopeGroup();
+
 		LayoutSet layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(
-			_themeDisplay.getSiteGroupId(), false);
+			_themeDisplay.getSiteGroupId(), group.isLayoutSetPrototype());
 
 		Theme theme = layoutSet.getTheme();
 
@@ -607,6 +569,7 @@ public class EditStyleBookEntryDisplayContext {
 
 		portletDisplay.setShowBackIcon(true);
 		portletDisplay.setURLBack(_getRedirect());
+		portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 		_renderResponse.setTitle(_getStyleBookEntryTitle());
 	}

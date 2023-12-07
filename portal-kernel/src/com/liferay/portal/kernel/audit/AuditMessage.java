@@ -1,27 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.audit;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PortalRunMode;
+import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
@@ -54,6 +49,7 @@ public class AuditMessage implements Serializable {
 
 		_companyId = jsonObject.getLong(_COMPANY_ID);
 		_eventType = jsonObject.getString(_EVENT_TYPE);
+		_groupId = jsonObject.getLong(_GROUP_ID);
 		_message = jsonObject.getString(_MESSAGE);
 
 		if (jsonObject.has(_SERVER_NAME)) {
@@ -77,38 +73,13 @@ public class AuditMessage implements Serializable {
 	}
 
 	public AuditMessage(
-		String eventType, long companyId, long userId, String userName) {
-
-		this(
-			eventType, companyId, userId, userName, null, null, null, null,
-			null);
-	}
-
-	public AuditMessage(
-		String eventType, long companyId, long userId, String userName,
-		String className, String classPK) {
-
-		this(
-			eventType, companyId, userId, userName, className, classPK, null,
-			null, null);
-	}
-
-	public AuditMessage(
-		String eventType, long companyId, long userId, String userName,
-		String className, String classPK, String message) {
-
-		this(
-			eventType, companyId, userId, userName, className, classPK, message,
-			null, null);
-	}
-
-	public AuditMessage(
-		String eventType, long companyId, long userId, String userName,
-		String className, String classPK, String message, Date timestamp,
-		JSONObject additionalInfoJSONObject) {
+		String eventType, long companyId, long groupId, long userId,
+		String userName, String className, String classPK, String message,
+		Date timestamp, JSONObject additionalInfoJSONObject) {
 
 		_eventType = eventType;
 		_companyId = companyId;
+		_groupId = groupId;
 		_userId = userId;
 		_userName = userName;
 		_className = className;
@@ -132,13 +103,72 @@ public class AuditMessage implements Serializable {
 
 		long realUserId = auditRequestThreadLocal.getRealUserId();
 
+		long doAsUserId = 0;
+
+		if (PrincipalThreadLocal.getName() != null) {
+			doAsUserId = GetterUtil.getLong(PrincipalThreadLocal.getName());
+		}
+
+		if ((realUserId > 0) && (doAsUserId != realUserId) &&
+			!_additionalInfoJSONObject.has("doAsUserId")) {
+
+			_additionalInfoJSONObject.put(
+				"doAsUserEmailAddress",
+				PortalUtil.getUserEmailAddress(doAsUserId)
+			).put(
+				"doAsUserId", String.valueOf(doAsUserId)
+			).put(
+				"doAsUserName",
+				PortalUtil.getUserName(doAsUserId, StringPool.BLANK)
+			);
+		}
+
 		if (userId == realUserId) {
 			_userLogin = auditRequestThreadLocal.getRealUserLogin();
 		}
-		else if (realUserId > 0) {
+
+		// LPS-172507
+
+		else if ((realUserId > 0) && !PortalRunMode.isTestMode()) {
 			_log.error(
 				"Impersonated actions must be audited on the real user's ID");
 		}
+	}
+
+	public AuditMessage(
+		String eventType, long companyId, long userId, String userName) {
+
+		this(
+			eventType, companyId, 0, userId, userName, null, null, null, null,
+			null);
+	}
+
+	public AuditMessage(
+		String eventType, long companyId, long userId, String userName,
+		String className, String classPK) {
+
+		this(
+			eventType, companyId, 0, userId, userName, className, classPK, null,
+			null, null);
+	}
+
+	public AuditMessage(
+		String eventType, long companyId, long userId, String userName,
+		String className, String classPK, String message) {
+
+		this(
+			eventType, companyId, 0, userId, userName, className, classPK,
+			message, null, null);
+	}
+
+	public AuditMessage(
+		String eventType, long companyId, long userId, String userName,
+		String className, String classPK, String message, Date timestamp,
+		JSONObject additionalInfoJSONObject) {
+
+		this(
+			eventType, companyId, 0, userId, userName, className, classPK,
+			message, timestamp, additionalInfoJSONObject);
 	}
 
 	public AuditMessage(
@@ -147,8 +177,8 @@ public class AuditMessage implements Serializable {
 		JSONObject additionalInfoJSONObject) {
 
 		this(
-			eventType, companyId, userId, userName, className, classPK, message,
-			null, additionalInfoJSONObject);
+			eventType, companyId, 0, userId, userName, className, classPK,
+			message, null, additionalInfoJSONObject);
 	}
 
 	public JSONObject getAdditionalInfo() {
@@ -177,6 +207,10 @@ public class AuditMessage implements Serializable {
 
 	public String getEventType() {
 		return _eventType;
+	}
+
+	public long getGroupId() {
+		return _groupId;
 	}
 
 	public String getMessage() {
@@ -245,6 +279,10 @@ public class AuditMessage implements Serializable {
 
 	public void setEventType(String eventType) {
 		_eventType = eventType;
+	}
+
+	public void setGroupId(long groupId) {
+		_groupId = groupId;
 	}
 
 	public void setMessage(String message) {
@@ -339,6 +377,8 @@ public class AuditMessage implements Serializable {
 
 	private static final String _EVENT_TYPE = "eventType";
 
+	private static final String _GROUP_ID = "groupId";
+
 	private static final String _MESSAGE = "message";
 
 	private static final String _SERVER_NAME = "serverName";
@@ -366,6 +406,7 @@ public class AuditMessage implements Serializable {
 	private String _clientIP;
 	private long _companyId = -1;
 	private String _eventType;
+	private long _groupId = -1;
 	private String _message;
 	private String _serverName;
 	private int _serverPort;

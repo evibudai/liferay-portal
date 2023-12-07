@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.internal.service;
@@ -17,6 +8,7 @@ package com.liferay.layout.page.template.internal.service;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceWrapper;
+import com.liferay.layout.util.UpdateLayoutStatusThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -42,10 +34,12 @@ public class LayoutPageTemplateStructureRelFragmentEntryLinkLocalServiceWrapper
 		FragmentEntryLink fragmentEntryLink = super.updateFragmentEntryLink(
 			fragmentEntryLinkId, editableValues);
 
-		_layoutLocalService.updateStatus(
-			PrincipalThreadLocal.getUserId(), fragmentEntryLink.getPlid(),
-			WorkflowConstants.STATUS_DRAFT,
-			ServiceContextThreadLocal.getServiceContext());
+		if (UpdateLayoutStatusThreadLocal.isUpdateLayoutStatus()) {
+			_layoutLocalService.updateStatus(
+				PrincipalThreadLocal.getUserId(), fragmentEntryLink.getPlid(),
+				WorkflowConstants.STATUS_DRAFT,
+				ServiceContextThreadLocal.getServiceContext());
+		}
 
 		return fragmentEntryLink;
 	}

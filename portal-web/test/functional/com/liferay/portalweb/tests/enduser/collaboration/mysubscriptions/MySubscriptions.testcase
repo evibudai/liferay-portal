@@ -24,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -34,6 +34,7 @@ definition {
 		}
 	}
 
+	@priority = 3
 	test SubscribeAndUnsubscribetoDMFolder {
 		property custom.properties = "dl.actions.visible=true";
 
@@ -42,7 +43,7 @@ definition {
 			layoutName = "Test Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Test Page",
 			widgetName = "Documents and Media");
@@ -62,7 +63,7 @@ definition {
 			assetTitle = "Home",
 			assetType = "Documents Folder");
 
-		Subscriptions.unsubscribeViaMySubscriptions(rowNumber = "1");
+		Subscriptions.unsubscribeViaMySubscriptions(rowNumber = 1);
 
 		Navigator.gotoPage(pageName = "My Subscriptions Page");
 

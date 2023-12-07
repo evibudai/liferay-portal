@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -25,6 +16,10 @@ String countryTwoLettersISOCode = BeanParamUtil.getString(commerceInventoryWareh
 
 String commerceRegionCode = BeanParamUtil.getString(commerceInventoryWarehouse, request, "commerceRegionCode");
 %>
+
+<liferay-ui:error exception="<%= CommerceGeocoderException.class %>">
+	<liferay-ui:message arguments="<%= HtmlUtil.escape(errorException.toString()) %>" key="an-unexpected-error-occurred-while-invoking-the-geolocation-service-x" translateArguments="<%= false %>" />
+</liferay-ui:error>
 
 <liferay-ui:error exception="<%= CommerceInventoryWarehouseActiveException.class %>" message="please-add-geolocation-information-to-the-warehouse-to-activate" />
 <liferay-ui:error exception="<%= CommerceInventoryWarehouseNameException.class %>" message="please-enter-a-valid-name" />
@@ -50,23 +45,40 @@ String commerceRegionCode = BeanParamUtil.getString(commerceInventoryWarehouse, 
 			<commerce-ui:panel
 				title='<%= LanguageUtil.get(request, "details") %>'
 			>
-				<aui:input localized="<%= true %>" name="name" required="<%= true %>" value="<%= commerceInventoryWarehouse.getName(locale) %>" />
+				<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" localized="<%= true %>" name="name" required="<%= true %>" value="<%= commerceInventoryWarehouse.getName(locale) %>" />
 
-				<aui:input localized="<%= true %>" name="description" type="textarea" value="<%= commerceInventoryWarehouse.getDescription(locale) %>" />
+				<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" localized="<%= true %>" name="description" type="textarea" value="<%= commerceInventoryWarehouse.getDescription(locale) %>" />
 
-				<aui:input label='<%= HtmlUtil.escape("active") %>' name="active" type="toggle-switch" value="<%= commerceInventoryWarehouse.isActive() %>" />
+				<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" label='<%= HtmlUtil.escape("active") %>' name="active" type="toggle-switch" value="<%= commerceInventoryWarehouse.isActive() %>" />
 			</commerce-ui:panel>
 		</div>
 
-		<div class="col-lg-6">
+		<div class="col-lg-6 d-flex">
+			<portlet:actionURL name="/commerce_inventory_warehouse/edit_commerce_inventory_warehouse" var="geolocateURL">
+				<portlet:param name="<%= Constants.CMD %>" value="geolocate" />
+				<portlet:param name="redirect" value="<%= currentURL %>" />
+				<portlet:param name="commerceInventoryWarehouseId" value="<%= String.valueOf(commerceInventoryWarehouse.getCommerceInventoryWarehouseId()) %>" />
+			</portlet:actionURL>
+
 			<commerce-ui:panel
 				bodyClasses="flex-fill"
-				elementClasses="card-full-height h-100"
+				elementClasses="card-full-height w-100"
 				title='<%= LanguageUtil.get(request, "geolocation") %>'
 			>
-				<aui:input name="latitude" />
+				<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" name="latitude" />
 
-				<aui:input name="longitude" />
+				<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" name="longitude" />
+
+				<div>
+					<c:if test="<%= cIWarehousesDisplayContext.hasPermission() %>">
+						<clay:link
+							displayType="secondary"
+							href="<%= geolocateURL.toString() %>"
+							label="geolocate"
+							type="button"
+						/>
+					</c:if>
+				</div>
 			</commerce-ui:panel>
 		</div>
 
@@ -76,21 +88,21 @@ String commerceRegionCode = BeanParamUtil.getString(commerceInventoryWarehouse, 
 			>
 				<div class="row">
 					<div class="col-lg-6">
-						<aui:input name="street1" />
+						<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" name="street1" />
 
-						<aui:input name="street3" />
+						<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" name="street3" />
 
-						<aui:select label="region" name="commerceRegionCode" />
+						<aui:select disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" label="region" name="commerceRegionCode" />
 
-						<aui:input name="city" />
+						<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" name="city" />
 					</div>
 
 					<div class="col-lg-6">
-						<aui:input name="street2" />
+						<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" name="street2" />
 
-						<aui:select label="country" name="countryTwoLettersISOCode" />
+						<aui:select disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" label="country" name="countryTwoLettersISOCode" />
 
-						<aui:input label="postal-code" name="zip" />
+						<aui:input disabled="<%= !cIWarehousesDisplayContext.hasPermission() %>" label="postal-code" name="zip" />
 					</div>
 				</div>
 			</commerce-ui:panel>

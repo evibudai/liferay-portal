@@ -11,7 +11,7 @@ definition {
 	setUp {
 		TestCase.setUpPortalInstance();
 
-		User.firstLoginUI();
+		User.firstLoginPG();
 
 		HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
 			domain = "www.able.com",
@@ -21,23 +21,21 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-142122: Clicking on Masterclass logo opens a page with an error"
-	@priority = "3"
+	@priority = 3
 	test ClickMasterclassLogoGoesHomePage {
-		property test.name.skip.portal.instance = "LiferayOnlineCoverBugs#ClickMasterclassLogoGoesHomePage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Assert the Virtual Instance created by Json is present") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.viewCP(virtualHost = "www.able.com");
 
@@ -69,9 +67,10 @@ definition {
 	}
 
 	@description = "Verify if a virtual instance is created using the initializer, showing a different site comparing with the default Liferay bundle"
-	@priority = "4"
+	@priority = 4
 	test CreateVirtualInstanceUsingInitializerWithSuccess {
-		property test.name.skip.portal.instance = "LiferayOnlineCoverBugs#CreateVirtualInstanceUsingInitializerWithSuccess";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to the Virtual Instance created") {
 			Navigator.openSpecificURL(url = "http://www.able.com:8080");
@@ -91,15 +90,13 @@ definition {
 	}
 
 	@description = "Delete Virtual Instance in Liferay Online"
-	@priority = "4"
+	@priority = 4
 	test DeleteVirtualInstance {
-		property test.name.skip.portal.instance = "LiferayOnlineCoverBugs#DeleteVirtualInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Virtual Instances") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 		}
 
 		task ("Delete the Virtual Instance created") {
@@ -116,15 +113,13 @@ definition {
 	}
 
 	@description = "Verify if a friendly error appears when the user is not able to create the virtual host"
-	@priority = "3"
+	@priority = 3
 	test FriendlyErrorAppearsWhenTheUserCantCreateVirtualHost {
-		property test.name.skip.portal.instance = "LiferayOnlineCoverBugs#FriendlyErrorAppearsWhenTheUserCantCreateVirtualHost";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Virtual Instances") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 		}
 
 		task ("Create a new Virtual instance using localhost") {
@@ -144,24 +139,26 @@ definition {
 				locator1 = "TextInput#MAIL_DOMAIN",
 				value1 = "www.baker.com");
 
+			SelectFrameTop();
+
 			Button.clickAdd();
 		}
 
 		task ("Assert the error message") {
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
 			Alert.viewErrorMessage(errorMessage = "Please enter a valid virtual host.");
 		}
 	}
 
 	@description = "Create Virtual instance using the Virtual Instance Initializer not works with the curl command."
-	@priority = "4"
+	@priority = 4
 	test UserCanCreateVirtualInstance {
-		property test.name.skip.portal.instance = "LiferayOnlineCoverBugs#UserCanCreateVirtualInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Assert the Virtual Instance created by Json is present") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.viewCP(virtualHost = "www.able.com");
 

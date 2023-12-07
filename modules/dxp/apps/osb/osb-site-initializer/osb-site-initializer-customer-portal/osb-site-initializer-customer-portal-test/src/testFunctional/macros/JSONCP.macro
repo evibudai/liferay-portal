@@ -1,0 +1,12 @@
+definition {
+
+	@summary = "Default summary"
+	macro activeAllowSelfProvisioning(koroneiki = null) {
+		var accountid = JSONCPAPI.getIdKoreneikiAccount(koroneikiERC = ${koroneiki});
+
+		echo(${accountid});
+
+		JSONCPAPI.updateSelfProvisioning(koroneikiAccountId = ${accountid});
+	}
+
+}

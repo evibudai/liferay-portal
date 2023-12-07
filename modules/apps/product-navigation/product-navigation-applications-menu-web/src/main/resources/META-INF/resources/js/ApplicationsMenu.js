@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -21,6 +12,7 @@ import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
 import {ReactDOMServer, useEventListener} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
+import {useId} from 'frontend-js-components-web';
 import {fetch, navigate, openSelectionModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
@@ -30,16 +22,16 @@ import '../css/ApplicationsMenu.scss';
 const getOpenMenuTooltip = (keyLabel) => (
 	<>
 		<div>{Liferay.Language.get('open-applications-menu')}</div>
-		<kbd className="c-kbd c-kbd-dark">
+		<kbd className="c-kbd c-kbd-dark mt-1">
+			<kbd className="c-kbd">Ctrl</kbd>
+
+			<span className="c-kbd-separator">+</span>
+
 			<kbd className="c-kbd">{keyLabel}</kbd>
 
 			<span className="c-kbd-separator">+</span>
 
-			<kbd className="c-kbd">⇧</kbd>
-
-			<span className="c-kbd-separator">+</span>
-
-			<kbd className="c-kbd">M</kbd>
+			<kbd className="c-kbd">A</kbd>
 		</kbd>
 	</>
 );
@@ -47,7 +39,7 @@ const getOpenMenuTooltip = (keyLabel) => (
 const SitesPanel = ({portletNamespace, sites, virtualInstance}) => {
 	return (
 		<div className="applications-menu-sites c-p-3 c-px-md-4">
-			<h2 className="applications-menu-sites-label c-mt-2 c-mt-md-0 text-uppercase">
+			<h2 className="applications-menu-sites-label c-mt-2 c-mt-md-0 mb-0 text-uppercase">
 				{Liferay.Language.get('sites')}
 			</h2>
 
@@ -214,8 +206,10 @@ const AppsPanel = ({
 
 	return (
 		<div className="applications-menu-wrapper">
-			<div className="applications-menu-header flex-shrink-0">
-				<ClayLayout.ContainerFluid>
+			<div className="applications-menu-header">
+				<ClayLayout.ContainerFluid
+					size={Liferay?.FeatureFlags?.['LPS-184404'] ? false : 'xl'}
+				>
 					<ClayLayout.Row>
 						<ClayLayout.Col>
 							<ClayLayout.ContentRow verticalAlign="center">
@@ -245,6 +239,9 @@ const AppsPanel = ({
 
 								<ClayLayout.ContentCol>
 									<ClayButtonWithIcon
+										aria-label={Liferay.Language.get(
+											'close'
+										)}
 										displayType="unstyled"
 										onClick={handleCloseButtonClick}
 										size="sm"
@@ -259,68 +256,29 @@ const AppsPanel = ({
 			</div>
 
 			<div className="applications-menu-bg applications-menu-border-top applications-menu-content">
-				<ClayLayout.ContainerFluid>
-					<ClayLayout.Row className="flex-md-nowrap">
-						<ClayLayout.Col lg="9" md="8">
+				<ClayLayout.ContainerFluid
+					size={Liferay?.FeatureFlags?.['LPS-184404'] ? false : 'xl'}
+				>
+					<ClayLayout.Row>
+						<ClayLayout.Col className="pr-0" md="9" xl="8">
 							<ClayTabs.Content activeIndex={activeTab}>
 								{categories.map(({childCategories}, index) => (
 									<ClayTabs.TabPane
 										aria-labelledby={`${portletNamespace}tab_${index}`}
 										key={`tabPane-${index}`}
 									>
-										<div className="applications-menu-nav-columns c-mt-md-3 c-my-2">
+										<div className="applications-menu-nav-columns c-pt-md-3 c-py-2">
 											{childCategories.map(
 												({key, label, panelApps}) => (
-													<ClayLayout.Col
+													<NavigationSection
+														id={`nav_${key}`}
 														key={key}
-														md
-													>
-														<ul className="list-unstyled">
-															<li className="c-my-3">
-																<h2 className="applications-menu-nav-header">
-																	{label}
-																</h2>
-															</li>
-
-															{panelApps.map(
-																({
-																	label,
-																	portletId,
-																	url,
-																}) => (
-																	<li
-																		className="c-mt-2"
-																		key={
-																			portletId
-																		}
-																	>
-																		<a
-																			className={classNames(
-																				'component-link applications-menu-nav-link',
-																				{
-																					active:
-																						portletId ===
-																						selectedPortletId,
-																				}
-																			)}
-																			href={
-																				url
-																			}
-																		>
-																			<span
-																				className="c-inner"
-																				tabIndex="-1"
-																			>
-																				{
-																					label
-																				}
-																			</span>
-																		</a>
-																	</li>
-																)
-															)}
-														</ul>
-													</ClayLayout.Col>
+														label={label}
+														panelApps={panelApps}
+														selectedPortletId={
+															selectedPortletId
+														}
+													/>
 												)
 											)}
 										</div>
@@ -329,11 +287,7 @@ const AppsPanel = ({
 							</ClayTabs.Content>
 						</ClayLayout.Col>
 
-						<ClayLayout.Col
-							className="c-pl-md-2 c-px-0"
-							lg="3"
-							md="4"
-						>
+						<ClayLayout.Col className="px-0" md="3" xl="4">
 							<SitesPanel
 								portletNamespace={portletNamespace}
 								sites={sites}
@@ -344,10 +298,12 @@ const AppsPanel = ({
 				</ClayLayout.ContainerFluid>
 			</div>
 
-			<div className="applications-menu-bg applications-menu-footer flex-shrink-0">
-				<ClayLayout.ContainerFluid>
+			<div className="applications-menu-bg applications-menu-footer">
+				<ClayLayout.ContainerFluid
+					size={Liferay?.FeatureFlags?.['LPS-184404'] ? false : 'xl'}
+				>
 					<ClayLayout.Row>
-						<ClayLayout.Col lg="9" md="8">
+						<ClayLayout.Col className="pr-3" md="9" xl="8">
 							<ClayLayout.ContentRow
 								className="applications-menu-border-top bg-white c-py-3"
 								verticalAlign="center"
@@ -375,9 +331,9 @@ const AppsPanel = ({
 						</ClayLayout.Col>
 
 						<ClayLayout.Col
-							className="c-pl-md-2 c-px-0 d-md-block d-none"
-							lg="3"
-							md="4"
+							className="d-md-block d-none px-0"
+							md="3"
+							xl="4"
 						>
 							<div className="applications-menu-sites"></div>
 						</ClayLayout.Col>
@@ -385,6 +341,38 @@ const AppsPanel = ({
 				</ClayLayout.ContainerFluid>
 			</div>
 		</div>
+	);
+};
+
+const NavigationSection = ({id, label, panelApps, selectedPortletId}) => {
+	return (
+		<ClayLayout.Col md>
+			<nav aria-labelledby={id}>
+				<h2 className="applications-menu-nav-header c-my-3" id={id}>
+					{label}
+				</h2>
+
+				<ul className="list-unstyled">
+					{panelApps.map(({label, portletId, url}) => (
+						<li className="c-mt-2" key={portletId}>
+							<a
+								className={classNames(
+									'component-link applications-menu-nav-link',
+									{
+										active: portletId === selectedPortletId,
+									}
+								)}
+								href={url}
+							>
+								<span className="c-inner" tabIndex="-1">
+									{label}
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		</ClayLayout.Col>
 	);
 };
 
@@ -397,6 +385,7 @@ const ApplicationsMenu = ({
 }) => {
 	const [appsPanelData, setAppsPanelData] = useState({});
 	const buttonRef = useRef();
+	const buttonTitleId = useId();
 	const [visible, setVisible] = useState(false);
 
 	const {observer, onClose} = useModal({
@@ -407,7 +396,7 @@ const ApplicationsMenu = ({
 	});
 
 	const buttonTitle = useMemo(() => {
-		const keyLabel = Liferay.Browser.isMac() ? '⌘' : 'Ctrl';
+		const keyLabel = Liferay.Browser.isMac() ? '⌥' : 'Alt';
 
 		return getOpenMenuTooltip(keyLabel);
 	}, []);
@@ -440,14 +429,12 @@ const ApplicationsMenu = ({
 	useEventListener(
 		'keydown',
 		(event) => {
-			const isCMDPressed = Liferay.Browser.isMac()
-				? event.metaKey
-				: event.ctrlKey;
+			const AKey = Liferay.Browser.isMac() ? 'å' : 'a';
 
 			if (
-				isCMDPressed &&
-				event.shiftKey &&
-				event.key.toLowerCase() === 'm'
+				event.ctrlKey &&
+				event.altKey &&
+				event.key.toLowerCase() === AKey
 			) {
 				event.preventDefault();
 
@@ -483,11 +470,13 @@ const ApplicationsMenu = ({
 					observer={observer}
 					status="info"
 				>
-					<ClayModal.Header className="sr-only">
-						{Liferay.Language.get('applications-menu')}
+					<ClayModal.Header className="sr-only" withTitle={false}>
+						<ClayModal.Title>
+							{Liferay.Language.get('applications-menu')}
+						</ClayModal.Title>
 					</ClayModal.Header>
 
-					<ClayModal.Body>
+					<ClayModal.Body className="p-0">
 						<AppsPanel
 							handleCloseButtonClick={onClose}
 							liferayLogoURL={liferayLogoURL}
@@ -500,17 +489,11 @@ const ApplicationsMenu = ({
 			)}
 
 			<ClayButtonWithIcon
-				aria-label={
-					Liferay.Browser.isMac()
-						? Liferay.Language.get(
-								'open-applications-menu-or-use-cmd-shift-m'
-						  )
-						: Liferay.Language.get(
-								'open-applications-menu-or-use-ctrl-shift-m'
-						  )
-				}
+				aria-haspopup="dialog"
+				aria-labelledby={buttonTitleId}
 				className="dropdown-toggle lfr-portal-tooltip"
 				data-qa-id="applicationsMenu"
+				data-title={ReactDOMServer.renderToString(buttonTitle)}
 				data-title-set-as-html
 				data-tooltip-align="bottom-left"
 				displayType="unstyled"
@@ -520,8 +503,11 @@ const ApplicationsMenu = ({
 				ref={buttonRef}
 				size="sm"
 				symbol="grid"
-				title={ReactDOMServer.renderToString(buttonTitle)}
 			/>
+
+			<div className="sr-only" id={buttonTitleId}>
+				{buttonTitle}
+			</div>
 		</>
 	);
 };

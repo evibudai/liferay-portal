@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.internal.exportimport.data.handler;
@@ -44,7 +35,7 @@ import com.liferay.portal.kernel.service.WebsiteLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.xml.Element;
-import com.liferay.users.admin.kernel.util.UsersAdmin;
+import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -181,13 +172,14 @@ public class OrganizationStagedModelDataHandler
 			serviceContext.setUuid(organization.getUuid());
 
 			importedOrganization = _organizationLocalService.addOrganization(
-				userId, parentOrganizationId, organization.getName(),
+				null, userId, parentOrganizationId, organization.getName(),
 				organization.getType(), organization.getRegionId(),
 				organization.getCountryId(), organization.getStatusListTypeId(),
 				organization.getComments(), false, serviceContext);
 		}
 		else {
 			importedOrganization = _organizationLocalService.updateOrganization(
+				existingOrganization.getExternalReferenceCode(),
 				portletDataContext.getCompanyId(),
 				existingOrganization.getOrganizationId(), parentOrganizationId,
 				organization.getName(), organization.getType(),
@@ -348,7 +340,7 @@ public class OrganizationStagedModelDataHandler
 			addresses.add(address);
 		}
 
-		_usersAdmin.updateAddresses(
+		UsersAdminUtil.updateAddresses(
 			Organization.class.getName(),
 			importedOrganization.getOrganizationId(), addresses);
 	}
@@ -390,7 +382,7 @@ public class OrganizationStagedModelDataHandler
 			emailAddresses.add(emailAddress);
 		}
 
-		_usersAdmin.updateEmailAddresses(
+		UsersAdminUtil.updateEmailAddresses(
 			Organization.class.getName(),
 			importedOrganization.getOrganizationId(), emailAddresses);
 	}
@@ -410,7 +402,7 @@ public class OrganizationStagedModelDataHandler
 			orgLabor.setOrgLaborId(0);
 		}
 
-		_usersAdmin.updateOrgLabors(
+		UsersAdminUtil.updateOrgLabors(
 			importedOrganization.getOrganizationId(), orgLabors);
 	}
 
@@ -482,7 +474,7 @@ public class OrganizationStagedModelDataHandler
 			phones.add(phone);
 		}
 
-		_usersAdmin.updatePhones(
+		UsersAdminUtil.updatePhones(
 			Organization.class.getName(),
 			importedOrganization.getOrganizationId(), phones);
 	}
@@ -518,7 +510,7 @@ public class OrganizationStagedModelDataHandler
 			websites.add(website);
 		}
 
-		_usersAdmin.updateWebsites(
+		UsersAdminUtil.updateWebsites(
 			Organization.class.getName(),
 			importedOrganization.getOrganizationId(), websites);
 	}
@@ -546,9 +538,6 @@ public class OrganizationStagedModelDataHandler
 
 	@Reference
 	private PhoneLocalService _phoneLocalService;
-
-	@Reference
-	private UsersAdmin _usersAdmin;
 
 	@Reference
 	private WebsiteLocalService _websiteLocalService;

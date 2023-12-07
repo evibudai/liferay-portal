@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.resource.v2_0.test;
@@ -29,6 +20,7 @@ import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataListViewResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataListViewSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -43,6 +35,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -65,8 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -204,7 +195,15 @@ public abstract class BaseDataListViewResourceTestCase {
 		assertHttpResponseStatusCode(
 			204,
 			dataListViewResource.deleteDataDefinitionDataListViewHttpResponse(
-				dataListView.getDataDefinitionId()));
+				testDeleteDataDefinitionDataListView_getDataDefinitionId(
+					dataListView)));
+	}
+
+	protected Long testDeleteDataDefinitionDataListView_getDataDefinitionId(
+			DataListView dataListView)
+		throws Exception {
+
+		return dataListView.getDataDefinitionId();
 	}
 
 	protected DataListView
@@ -227,7 +226,7 @@ public abstract class BaseDataListViewResourceTestCase {
 				dataDefinitionId, RandomTestUtil.randomString(),
 				Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantDataDefinitionId != null) {
 			DataListView irrelevantDataListView =
@@ -235,14 +234,17 @@ public abstract class BaseDataListViewResourceTestCase {
 					irrelevantDataDefinitionId, randomIrrelevantDataListView());
 
 			page = dataListViewResource.getDataDefinitionDataListViewsPage(
-				irrelevantDataDefinitionId, null, Pagination.of(1, 2), null);
+				irrelevantDataDefinitionId, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDataListView),
-				(List<DataListView>)page.getItems());
-			assertValid(page);
+			assertContains(
+				irrelevantDataListView, (List<DataListView>)page.getItems());
+			assertValid(
+				page,
+				testGetDataDefinitionDataListViewsPage_getExpectedActions(
+					irrelevantDataDefinitionId));
 		}
 
 		DataListView dataListView1 =
@@ -256,16 +258,38 @@ public abstract class BaseDataListViewResourceTestCase {
 		page = dataListViewResource.getDataDefinitionDataListViewsPage(
 			dataDefinitionId, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dataListView1, dataListView2),
-			(List<DataListView>)page.getItems());
-		assertValid(page);
+		assertContains(dataListView1, (List<DataListView>)page.getItems());
+		assertContains(dataListView2, (List<DataListView>)page.getItems());
+		assertValid(
+			page,
+			testGetDataDefinitionDataListViewsPage_getExpectedActions(
+				dataDefinitionId));
 
 		dataListViewResource.deleteDataListView(dataListView1.getId());
 
 		dataListViewResource.deleteDataListView(dataListView2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDataDefinitionDataListViewsPage_getExpectedActions(
+				Long dataDefinitionId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-list-views/batch".
+				replace(
+					"{dataDefinitionId}", String.valueOf(dataDefinitionId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -274,6 +298,13 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		Long dataDefinitionId =
 			testGetDataDefinitionDataListViewsPage_getDataDefinitionId();
+
+		Page<DataListView> dataListViewPage =
+			dataListViewResource.getDataDefinitionDataListViewsPage(
+				dataDefinitionId, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			dataListViewPage.getTotalCount());
 
 		DataListView dataListView1 =
 			testGetDataDefinitionDataListViewsPage_addDataListView(
@@ -289,19 +320,19 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		Page<DataListView> page1 =
 			dataListViewResource.getDataDefinitionDataListViewsPage(
-				dataDefinitionId, null, Pagination.of(1, 2), null);
+				dataDefinitionId, null, Pagination.of(1, totalCount + 2), null);
 
 		List<DataListView> dataListViews1 =
 			(List<DataListView>)page1.getItems();
 
 		Assert.assertEquals(
-			dataListViews1.toString(), 2, dataListViews1.size());
+			dataListViews1.toString(), totalCount + 2, dataListViews1.size());
 
 		Page<DataListView> page2 =
 			dataListViewResource.getDataDefinitionDataListViewsPage(
-				dataDefinitionId, null, Pagination.of(2, 2), null);
+				dataDefinitionId, null, Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DataListView> dataListViews2 =
 			(List<DataListView>)page2.getItems();
@@ -311,11 +342,12 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		Page<DataListView> page3 =
 			dataListViewResource.getDataDefinitionDataListViewsPage(
-				dataDefinitionId, null, Pagination.of(1, 3), null);
+				dataDefinitionId, null, Pagination.of(1, (int)totalCount + 3),
+				null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(dataListView1, dataListView2, dataListView3),
-			(List<DataListView>)page3.getItems());
+		assertContains(dataListView1, (List<DataListView>)page3.getItems());
+		assertContains(dataListView2, (List<DataListView>)page3.getItems());
+		assertContains(dataListView3, (List<DataListView>)page3.getItems());
 	}
 
 	@Test
@@ -441,24 +473,32 @@ public abstract class BaseDataListViewResourceTestCase {
 		dataListView2 = testGetDataDefinitionDataListViewsPage_addDataListView(
 			dataDefinitionId, dataListView2);
 
+		Page<DataListView> page =
+			dataListViewResource.getDataDefinitionDataListViewsPage(
+				dataDefinitionId, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<DataListView> ascPage =
 				dataListViewResource.getDataDefinitionDataListViewsPage(
-					dataDefinitionId, null, Pagination.of(1, 2),
+					dataDefinitionId, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(dataListView1, dataListView2),
-				(List<DataListView>)ascPage.getItems());
+			assertContains(
+				dataListView1, (List<DataListView>)ascPage.getItems());
+			assertContains(
+				dataListView2, (List<DataListView>)ascPage.getItems());
 
 			Page<DataListView> descPage =
 				dataListViewResource.getDataDefinitionDataListViewsPage(
-					dataDefinitionId, null, Pagination.of(1, 2),
+					dataDefinitionId, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(dataListView2, dataListView1),
-				(List<DataListView>)descPage.getItems());
+			assertContains(
+				dataListView2, (List<DataListView>)descPage.getItems());
+			assertContains(
+				dataListView1, (List<DataListView>)descPage.getItems());
 		}
 	}
 
@@ -817,6 +857,13 @@ public abstract class BaseDataListViewResourceTestCase {
 	}
 
 	protected void assertValid(Page<DataListView> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<DataListView> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<DataListView> dataListViews = page.getItems();
@@ -831,6 +878,25 @@ public abstract class BaseDataListViewResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1042,14 +1108,16 @@ public abstract class BaseDataListViewResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1066,6 +1134,10 @@ public abstract class BaseDataListViewResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1075,18 +1147,18 @@ public abstract class BaseDataListViewResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1199,9 +1271,47 @@ public abstract class BaseDataListViewResourceTestCase {
 		}
 
 		if (entityFieldName.equals("sortField")) {
-			sb.append("'");
-			sb.append(String.valueOf(dataListView.getSortField()));
-			sb.append("'");
+			Object object = dataListView.getSortField();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

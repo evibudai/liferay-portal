@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 AUI.add(
@@ -116,6 +107,10 @@ AUI.add(
 
 				itemsError: {
 					validator: Array.isArray,
+				},
+
+				languagesTranslationsAriaLabels: {
+					validator: Lang.isObject,
 				},
 
 				name: {
@@ -397,7 +392,7 @@ AUI.add(
 					const locales = instance.get('items').map((languageId) => {
 						const displayName = availableLocales[languageId];
 
-						const label = languageId.replace(/_/, '-');
+						const label = languageId.replaceAll(/_/g, '-');
 
 						return {
 							displayName,
@@ -411,7 +406,7 @@ AUI.add(
 						.get('translatedLanguages')
 						.values()
 						.reduce((accumulator, item) => {
-							const language = item.replace(/_/, '-');
+							const language = item.replaceAll(/_/g, '-');
 
 							if (!accumulator[language]) {
 								accumulator[language] = language;
@@ -621,21 +616,37 @@ AUI.add(
 				_updateTranslationStatus(languageId) {
 					const instance = this;
 
+					const languagesTranslationsAriaLabels = instance.get(
+						'languagesTranslationsAriaLabels'
+					);
+
 					const translatedLanguages = instance.get(
 						'translatedLanguages'
 					);
 
+					let translationAriaLabel =
+						languagesTranslationsAriaLabels[languageId][
+							'notTranslatedStatus'
+						];
 					let translationStatus = Liferay.Language.get(
 						'not-translated'
 					);
 					let translationStatusCssClass = 'warning';
 
 					if (translatedLanguages.has(languageId)) {
+						translationAriaLabel =
+							languagesTranslationsAriaLabels[languageId][
+								'translatedStatus'
+							];
 						translationStatus = Liferay.Language.get('translated');
 						translationStatusCssClass = 'success';
 					}
 
 					if (languageId === instance.get('defaultLanguageId')) {
+						translationAriaLabel =
+							languagesTranslationsAriaLabels[languageId][
+								'defaultStatus'
+							];
 						translationStatus = Liferay.Language.get('default');
 						translationStatusCssClass = 'info';
 					}
@@ -649,7 +660,8 @@ AUI.add(
 					if (languageStatusNode) {
 						languageStatusNode.setHTML(
 							A.Lang.sub(instance.TRANSLATION_STATUS_TEMPLATE, {
-								languageId: languageId.replace(/_/, '-'),
+								languageId: languageId.replaceAll(/_/g, '-'),
+								translationAriaLabel,
 								translationStatus,
 								translationStatusCssClass,
 							})
@@ -660,7 +672,16 @@ AUI.add(
 				_updateTrigger(languageId) {
 					const instance = this;
 
-					languageId = languageId.replace('_', '-');
+					const languagesTranslationsAriaLabels = instance.get(
+						'languagesTranslationsAriaLabels'
+					);
+
+					const updatedTriggerAriaLabel =
+						languagesTranslationsAriaLabels[languageId][
+							'currentlySelected'
+						];
+
+					languageId = languageId.replaceAll('_', '-');
 
 					const triggerContent = A.Lang.sub(
 						instance.TRIGGER_TEMPLATE,
@@ -669,6 +690,7 @@ AUI.add(
 								languageId.toLowerCase()
 							),
 							languageId,
+							updatedTriggerAriaLabel,
 						}
 					);
 
@@ -682,10 +704,10 @@ AUI.add(
 					'<input id="{namespace}{id}_{value}" name="{namespace}{fieldNamePrefix}{name}_{value}{fieldNameSuffix}" type="hidden" value="" />',
 
 				TRANSLATION_STATUS_TEMPLATE:
-					'{languageId} <span class="dropdown-item-indicator-end w-auto"><span class="label label-{translationStatusCssClass}">{translationStatus}</span></span>',
+					'<span aria-label="{translationAriaLabel}" role="button" tabindex="0"> {languageId} <span class="dropdown-item-indicator-end w-auto"><span class="label label-{translationStatusCssClass}">{translationStatus}</span></span></span>',
 
 				TRIGGER_TEMPLATE:
-					'<span class="inline-item">{flag}</span><span class="btn-section">{languageId}</span>',
+					'<span class="inline-item">{flag}</span><span aria-label="{updatedTriggerAriaLabel}" class="btn-section">{languageId}</span>',
 
 				destructor() {
 					const instance = this;

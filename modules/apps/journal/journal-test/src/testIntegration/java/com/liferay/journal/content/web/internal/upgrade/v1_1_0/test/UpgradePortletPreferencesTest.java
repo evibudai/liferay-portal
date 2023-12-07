@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.content.web.internal.upgrade.v1_1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.constants.JournalFolderConstants;
@@ -28,6 +21,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTemplate;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
+import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -53,7 +47,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.portlet.PortletPreferences;
 
@@ -65,7 +58,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -153,6 +145,11 @@ public class UpgradePortletPreferencesTest {
 			"scopeType", "layout"
 		).build();
 
+		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
+			_portal.getSiteGroupId(_group.getGroupId()),
+			_portal.getClassNameId(JournalArticle.class.getName()),
+			"BASIC-WEB-CONTENT", true);
+
 		JournalArticle journalArticle = _journalArticleLocalService.addArticle(
 			null, TestPropsValues.getUserId(), layoutGroup.getGroupId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
@@ -165,7 +162,7 @@ public class UpgradePortletPreferencesTest {
 			DDMStructureTestUtil.getSampleStructuredContent(
 				"content", Collections.emptyList(),
 				LocaleUtil.toLanguageId(locale)),
-			"BASIC-WEB-CONTENT", "BASIC-WEB-CONTENT",
+			ddmStructure.getStructureId(), "BASIC-WEB-CONTENT",
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_assertUpgradePortletPreferences(
@@ -374,20 +371,8 @@ public class UpgradePortletPreferencesTest {
 		Bundle bundle = FrameworkUtil.getBundle(
 			UpgradePortletPreferencesTest.class);
 
-		BundleContext bundleContext = bundle.getBundleContext();
-
-		Bundle journalContentWebBundle = null;
-
-		for (Bundle curBundle : bundleContext.getBundles()) {
-			if (Objects.equals(
-					curBundle.getSymbolicName(),
-					"com.liferay.journal.content.web")) {
-
-				journalContentWebBundle = curBundle;
-
-				break;
-			}
-		}
+		Bundle journalContentWebBundle = BundleUtil.getBundle(
+			bundle.getBundleContext(), "com.liferay.journal.content.web");
 
 		Assert.assertNotNull(
 			"Unable to find journal-content-web bundle",
@@ -405,6 +390,9 @@ public class UpgradePortletPreferencesTest {
 			_groupLocalService, _journalArticleLocalService, _language,
 			_layoutLocalService, _portal);
 	}
+
+	@Inject
+	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;

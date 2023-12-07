@@ -1,32 +1,34 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.internal.graphql.mutation.v1_0;
 
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.DDMOption;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOptionValue;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Sku;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.WishList;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.WishListItem;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ChannelResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductOptionValueResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.SkuResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.WishListItemResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.WishListResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.function.BiFunction;
 
@@ -47,6 +49,30 @@ import org.osgi.service.component.ComponentServiceObjects;
 @Generated("")
 public class Mutation {
 
+	public static void setChannelResourceComponentServiceObjects(
+		ComponentServiceObjects<ChannelResource>
+			channelResourceComponentServiceObjects) {
+
+		_channelResourceComponentServiceObjects =
+			channelResourceComponentServiceObjects;
+	}
+
+	public static void setProductOptionValueResourceComponentServiceObjects(
+		ComponentServiceObjects<ProductOptionValueResource>
+			productOptionValueResourceComponentServiceObjects) {
+
+		_productOptionValueResourceComponentServiceObjects =
+			productOptionValueResourceComponentServiceObjects;
+	}
+
+	public static void setSkuResourceComponentServiceObjects(
+		ComponentServiceObjects<SkuResource>
+			skuResourceComponentServiceObjects) {
+
+		_skuResourceComponentServiceObjects =
+			skuResourceComponentServiceObjects;
+	}
+
 	public static void setWishListResourceComponentServiceObjects(
 		ComponentServiceObjects<WishListResource>
 			wishListResourceComponentServiceObjects) {
@@ -61,6 +87,92 @@ public class Mutation {
 
 		_wishListItemResourceComponentServiceObjects =
 			wishListItemResourceComponentServiceObjects;
+	}
+
+	@GraphQLField
+	public Response createChannelsPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource -> channelResource.postChannelsPageExportBatch(
+				search, _filterBiFunction.apply(channelResource, filterString),
+				_sortsBiFunction.apply(channelResource, sortsString),
+				callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField(
+		description = "Retrieves a list of ProductOptionValue from selected channel, product ID and product option ID."
+	)
+	public java.util.Collection<ProductOptionValue>
+			createChannelProductProductOptionProductOptionValuesPage(
+				@GraphQLName("channelId") Long channelId,
+				@GraphQLName("productId") Long productId,
+				@GraphQLName("productOptionId") Long productOptionId,
+				@GraphQLName("accountId") Long accountId,
+				@GraphQLName("productOptionValueId") Long productOptionValueId,
+				@GraphQLName("skuId") Long skuId,
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page,
+				@GraphQLName("skuOptions") SkuOption[] skuOptions)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productOptionValueResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productOptionValueResource -> {
+				Page paginationPage =
+					productOptionValueResource.
+						postChannelProductProductOptionProductOptionValuesPage(
+							channelId, productId, productOptionId, accountId,
+							productOptionValueId, skuId,
+							Pagination.of(page, pageSize), skuOptions);
+
+				return paginationPage.getItems();
+			});
+	}
+
+	@GraphQLField(
+		description = "Retrieves a SKU from selected channel and product ID."
+	)
+	public Sku createChannelProductSku(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("productId") Long productId,
+			@GraphQLName("accountId") Long accountId,
+			@GraphQLName("quantity") java.math.BigDecimal quantity,
+			@GraphQLName("ddmOptions") DDMOption[] ddmOptions)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_skuResourceComponentServiceObjects, this::_populateResourceContext,
+			skuResource -> skuResource.postChannelProductSku(
+				channelId, productId, accountId, quantity, ddmOptions));
+	}
+
+	@GraphQLField(
+		description = "Retrieves a SKU from selected channel and product ID."
+	)
+	public Sku createChannelProductSkuBySkuOption(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("productId") Long productId,
+			@GraphQLName("accountId") Long accountId,
+			@GraphQLName("quantity") java.math.BigDecimal quantity,
+			@GraphQLName("skuUnitOfMeasureKey") String skuUnitOfMeasureKey,
+			@GraphQLName("skuOptions") SkuOption[] skuOptions)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_skuResourceComponentServiceObjects, this::_populateResourceContext,
+			skuResource -> skuResource.postChannelProductSkuBySkuOption(
+				channelId, productId, accountId, quantity, skuUnitOfMeasureKey,
+				skuOptions));
 	}
 
 	@GraphQLField
@@ -103,7 +215,7 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public WishList patchChannelWishList(
+	public WishList patchWishList(
 			@GraphQLName("wishListId") Long wishListId,
 			@GraphQLName("wishList") WishList wishList)
 		throws Exception {
@@ -111,7 +223,7 @@ public class Mutation {
 		return _applyComponentServiceObjects(
 			_wishListResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			wishListResource -> wishListResource.patchChannelWishList(
+			wishListResource -> wishListResource.patchWishList(
 				wishListId, wishList));
 	}
 
@@ -144,7 +256,7 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public WishListItem createChannelWishListItem(
+	public WishListItem createWishlistWishListWishListItem(
 			@GraphQLName("wishListId") Long wishListId,
 			@GraphQLName("accountId") Long accountId,
 			@GraphQLName("wishListItem") WishListItem wishListItem)
@@ -154,7 +266,7 @@ public class Mutation {
 			_wishListItemResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			wishListItemResource ->
-				wishListItemResource.postChannelWishListItem(
+				wishListItemResource.postWishlistWishListWishListItem(
 					wishListId, accountId, wishListItem));
 	}
 
@@ -196,6 +308,66 @@ public class Mutation {
 		}
 	}
 
+	private void _populateResourceContext(ChannelResource channelResource)
+		throws Exception {
+
+		channelResource.setContextAcceptLanguage(_acceptLanguage);
+		channelResource.setContextCompany(_company);
+		channelResource.setContextHttpServletRequest(_httpServletRequest);
+		channelResource.setContextHttpServletResponse(_httpServletResponse);
+		channelResource.setContextUriInfo(_uriInfo);
+		channelResource.setContextUser(_user);
+		channelResource.setGroupLocalService(_groupLocalService);
+		channelResource.setRoleLocalService(_roleLocalService);
+
+		channelResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		channelResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			ProductOptionValueResource productOptionValueResource)
+		throws Exception {
+
+		productOptionValueResource.setContextAcceptLanguage(_acceptLanguage);
+		productOptionValueResource.setContextCompany(_company);
+		productOptionValueResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		productOptionValueResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		productOptionValueResource.setContextUriInfo(_uriInfo);
+		productOptionValueResource.setContextUser(_user);
+		productOptionValueResource.setGroupLocalService(_groupLocalService);
+		productOptionValueResource.setRoleLocalService(_roleLocalService);
+
+		productOptionValueResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		productOptionValueResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(SkuResource skuResource)
+		throws Exception {
+
+		skuResource.setContextAcceptLanguage(_acceptLanguage);
+		skuResource.setContextCompany(_company);
+		skuResource.setContextHttpServletRequest(_httpServletRequest);
+		skuResource.setContextHttpServletResponse(_httpServletResponse);
+		skuResource.setContextUriInfo(_uriInfo);
+		skuResource.setContextUser(_user);
+		skuResource.setGroupLocalService(_groupLocalService);
+		skuResource.setRoleLocalService(_roleLocalService);
+
+		skuResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		skuResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
 	private void _populateResourceContext(WishListResource wishListResource)
 		throws Exception {
 
@@ -207,6 +379,9 @@ public class Mutation {
 		wishListResource.setContextUser(_user);
 		wishListResource.setGroupLocalService(_groupLocalService);
 		wishListResource.setRoleLocalService(_roleLocalService);
+
+		wishListResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
 
 		wishListResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
@@ -226,10 +401,19 @@ public class Mutation {
 		wishListItemResource.setGroupLocalService(_groupLocalService);
 		wishListItemResource.setRoleLocalService(_roleLocalService);
 
+		wishListItemResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		wishListItemResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
 
+	private static ComponentServiceObjects<ChannelResource>
+		_channelResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ProductOptionValueResource>
+		_productOptionValueResourceComponentServiceObjects;
+	private static ComponentServiceObjects<SkuResource>
+		_skuResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WishListResource>
 		_wishListResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WishListItemResource>
@@ -237,6 +421,7 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
+	private BiFunction<Object, String, Filter> _filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
@@ -244,6 +429,8 @@ public class Mutation {
 	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
+	private VulcanBatchEngineExportTaskResource
+		_vulcanBatchEngineExportTaskResource;
 	private VulcanBatchEngineImportTaskResource
 		_vulcanBatchEngineImportTaskResource;
 

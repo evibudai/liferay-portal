@@ -1,21 +1,23 @@
 definition {
 
-	macro assertOSGiConfigDoesNotExist {
+	@summary = "Assert no ${osgiConfigFileName} exist"
+	macro assertOSGiConfigDoesNotExist(osgiConfigFileName = null) {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
 		var osgiConfigExists = FileUtil.exists("${liferayHome}/osgi/configs/${osgiConfigFileName}");
 
-		if ("${osgiConfigExists}" == "true") {
+		if (${osgiConfigExists} == "true") {
 			fail("File ${osgiConfigFileName} exists");
 		}
 	}
 
-	macro assertTextInOSGiConfig {
+	@summary = "Assert ${text} on ${osgiConfigFileName}"
+	macro assertTextInOSGiConfig(osgiConfigFileName = null, text = null) {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
 		var fileContent = FileUtil.read("${liferayHome}/osgi/configs/${osgiConfigFileName}");
 
-		if (contains("${fileContent}", "${text}")) {
+		if (contains(${fileContent}, ${text})) {
 			echo("File ${osgiConfigFileName} contains text ${text}");
 		}
 		else {
@@ -23,12 +25,13 @@ definition {
 		}
 	}
 
-	macro assertTextNotInOSGiConfig {
+	@summary = "Assert no ${text} on ${osgiConfigFileName}"
+	macro assertTextNotInOSGiConfig(osgiConfigFileName = null, text = null) {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
 		var fileContent = FileUtil.read("${liferayHome}/osgi/configs/${osgiConfigFileName}");
 
-		if (contains("${fileContent}", "${text}")) {
+		if (contains(${fileContent}, ${text})) {
 			fail("File ${osgiConfigFileName} contains text ${text}");
 		}
 		else {
@@ -36,39 +39,43 @@ definition {
 		}
 	}
 
-	macro copyOSGiConfigFile {
+	@summary = "Copy an OSGI config file"
+	macro copyOSGiConfigFile(osgiConfigFileBaseDir = null, osgiConfigFileName = null) {
 		Variables.assertDefined(parameterList = "${osgiConfigFileBaseDir},${osgiConfigFileName}");
 
 		var configs = FileUtil.read("${osgiConfigFileBaseDir}/${osgiConfigFileName}");
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		FileUtil.write("${liferayHome}/osgi/configs/${osgiConfigFileName}", "${configs}");
+		FileUtil.write("${liferayHome}/osgi/configs/${osgiConfigFileName}", ${configs});
 	}
 
-	macro deleteOSGiConfigFile {
-		Variables.assertDefined(parameterList = "${osgiConfigFileName}");
+	@summary = "Delete an OSGI config file"
+	macro deleteOSGiConfigFile(osgiConfigFileName = null) {
+		Variables.assertDefined(parameterList = ${osgiConfigFileName});
 
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
 		FileUtil.delete("${liferayHome}/osgi/configs/${osgiConfigFileName}");
 	}
 
-	macro deployOSGiConfigFile {
+	@summary = "Deploy an OSGI config file"
+	macro deployOSGiConfigFile(osgiConfigFileName = null, osgiConfigs = null) {
 		Variables.assertDefined(parameterList = "${osgiConfigs},${osgiConfigFileName}");
 
 		var configList = "";
 
-		for (var osgiConfig : list "${osgiConfigs}") {
+		for (var osgiConfig : list ${osgiConfigs}) {
 			var configList = '''${osgiConfig}
 ${configList}''';
 		}
 
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
 
-		FileUtil.write("${liferayHome}/osgi/configs/${osgiConfigFileName}", "${configList}");
+		FileUtil.write("${liferayHome}/osgi/configs/${osgiConfigFileName}", ${configList});
 	}
 
-	macro editOSGiConfigFileFromTempFolder {
+	@summary = "Edit an OSGI config file located on Temp dir"
+	macro editOSGiConfigFileFromTempFolder(newValue = null, osgiConfigFileName = null, oldValue = null) {
 		var tempDir = PropsUtil.get("output.dir.name");
 
 		Variables.assertDefined(parameterList = "${tempDir},${osgiConfigFileName}");
@@ -77,15 +84,15 @@ ${configList}''';
 
 		var filePath = "${filePath}/${osgiConfigFileName}";
 
-		FileUtil.replaceStringInFile("${filePath}", "${oldValue}", "${newValue}");
+		FileUtil.replaceStringInFile(${filePath}, ${oldValue}, ${newValue});
 	}
 
-	@description = "Wait for OSGi Configuration to update in the Database"
-	macro waitForOSGiConfig {
+	@summary = "Wait for OSGi Configuration to update in the Database"
+	macro waitForOSGiConfig() {
 
 		// LRQA-78134 Current workaround to wait for OSGi configurations until we get a reliable way of waiting for them to update in the database
 
-		Pause(locator1 = "8000");
+		Pause(value1 = 8000);
 	}
 
 }

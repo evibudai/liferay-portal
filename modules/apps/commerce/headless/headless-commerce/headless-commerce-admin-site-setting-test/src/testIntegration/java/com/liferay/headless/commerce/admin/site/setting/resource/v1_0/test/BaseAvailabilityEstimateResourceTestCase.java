@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.site.setting.resource.v1_0.test;
@@ -28,6 +19,7 @@ import com.liferay.headless.commerce.admin.site.setting.client.pagination.Page;
 import com.liferay.headless.commerce.admin.site.setting.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.site.setting.client.resource.v1_0.AvailabilityEstimateResource;
 import com.liferay.headless.commerce.admin.site.setting.client.serdes.v1_0.AvailabilityEstimateSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -42,6 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -56,6 +49,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -349,7 +341,7 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 				getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
 					groupId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantGroupId != null) {
 			AvailabilityEstimate irrelevantAvailabilityEstimate =
@@ -359,14 +351,18 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 			page =
 				availabilityEstimateResource.
 					getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
-						irrelevantGroupId, Pagination.of(1, 2));
+						irrelevantGroupId,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAvailabilityEstimate),
+			assertContains(
+				irrelevantAvailabilityEstimate,
 				(List<AvailabilityEstimate>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage_getExpectedActions(
+					irrelevantGroupId));
 		}
 
 		AvailabilityEstimate availabilityEstimate1 =
@@ -382,12 +378,16 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 				getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
 					groupId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(availabilityEstimate1, availabilityEstimate2),
-			(List<AvailabilityEstimate>)page.getItems());
-		assertValid(page);
+		assertContains(
+			availabilityEstimate1, (List<AvailabilityEstimate>)page.getItems());
+		assertContains(
+			availabilityEstimate2, (List<AvailabilityEstimate>)page.getItems());
+		assertValid(
+			page,
+			testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage_getExpectedActions(
+				groupId));
 
 		availabilityEstimateResource.deleteAvailabilityEstimate(
 			availabilityEstimate1.getId());
@@ -396,12 +396,30 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 			availabilityEstimate2.getId());
 	}
 
+	protected Map<String, Map<String, String>>
+			testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage_getExpectedActions(
+				Long groupId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
 	@Test
 	public void testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePageWithPagination()
 		throws Exception {
 
 		Long groupId =
 			testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage_getGroupId();
+
+		Page<AvailabilityEstimate> availabilityEstimatePage =
+			availabilityEstimateResource.
+				getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
+					groupId, null);
+
+		int totalCount = GetterUtil.getInteger(
+			availabilityEstimatePage.getTotalCount());
 
 		AvailabilityEstimate availabilityEstimate1 =
 			testGetCommerceAdminSiteSettingGroupAvailabilityEstimatePage_addAvailabilityEstimate(
@@ -418,21 +436,21 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 		Page<AvailabilityEstimate> page1 =
 			availabilityEstimateResource.
 				getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
-					groupId, Pagination.of(1, 2));
+					groupId, Pagination.of(1, totalCount + 2));
 
 		List<AvailabilityEstimate> availabilityEstimates1 =
 			(List<AvailabilityEstimate>)page1.getItems();
 
 		Assert.assertEquals(
-			availabilityEstimates1.toString(), 2,
+			availabilityEstimates1.toString(), totalCount + 2,
 			availabilityEstimates1.size());
 
 		Page<AvailabilityEstimate> page2 =
 			availabilityEstimateResource.
 				getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
-					groupId, Pagination.of(2, 2));
+					groupId, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<AvailabilityEstimate> availabilityEstimates2 =
 			(List<AvailabilityEstimate>)page2.getItems();
@@ -444,12 +462,16 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 		Page<AvailabilityEstimate> page3 =
 			availabilityEstimateResource.
 				getCommerceAdminSiteSettingGroupAvailabilityEstimatePage(
-					groupId, Pagination.of(1, 3));
+					groupId, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				availabilityEstimate1, availabilityEstimate2,
-				availabilityEstimate3),
+		assertContains(
+			availabilityEstimate1,
+			(List<AvailabilityEstimate>)page3.getItems());
+		assertContains(
+			availabilityEstimate2,
+			(List<AvailabilityEstimate>)page3.getItems());
+		assertContains(
+			availabilityEstimate3,
 			(List<AvailabilityEstimate>)page3.getItems());
 	}
 
@@ -636,6 +658,13 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 	}
 
 	protected void assertValid(Page<AvailabilityEstimate> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<AvailabilityEstimate> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<AvailabilityEstimate> availabilityEstimates =
@@ -651,6 +680,25 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -803,14 +851,16 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -827,6 +877,10 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -836,18 +890,18 @@ public abstract class BaseAvailabilityEstimateResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

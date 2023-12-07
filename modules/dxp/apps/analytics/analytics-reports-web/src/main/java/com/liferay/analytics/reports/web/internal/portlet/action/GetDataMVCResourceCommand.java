@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.portlet.action;
@@ -20,12 +11,15 @@ import com.liferay.analytics.reports.info.item.ClassNameClassPKInfoItemIdentifie
 import com.liferay.analytics.reports.info.item.provider.AnalyticsReportsInfoItemObjectProvider;
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
 import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReportsDataProvider;
-import com.liferay.analytics.reports.web.internal.info.item.provider.AnalyticsReportsInfoItemObjectProviderRegistry;
+import com.liferay.analytics.reports.web.internal.info.item.provider.util.AnalyticsReportsInfoItemObjectProviderRegistryUtil;
 import com.liferay.analytics.reports.web.internal.model.TimeRange;
 import com.liferay.analytics.reports.web.internal.model.TimeSpan;
 import com.liferay.analytics.reports.web.internal.util.AnalyticsReportsUtil;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.info.type.WebImage;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
@@ -48,6 +42,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -64,16 +59,13 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
 import javax.portlet.MimeResponse;
 import javax.portlet.PortletRequest;
@@ -110,19 +102,27 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 			InfoItemReference infoItemReference = _getInfoItemReference(
 				httpServletRequest);
 
-			Object analyticsReportsInfoItemObject = Optional.ofNullable(
-				_analyticsReportsInfoItemObjectProviderRegistry.
-					getAnalyticsReportsInfoItemObjectProvider(
-						infoItemReference.getClassName())
-			).map(
-				analyticsReportsInfoItemObjectProvider ->
-					analyticsReportsInfoItemObjectProvider.
-						getAnalyticsReportsInfoItemObject(infoItemReference)
-			).orElseThrow(
-				() -> new NoSuchModelException(
+			AnalyticsReportsInfoItemObjectProvider<?>
+				analyticsReportsInfoItemObjectProvider =
+					AnalyticsReportsInfoItemObjectProviderRegistryUtil.
+						getAnalyticsReportsInfoItemObjectProvider(
+							infoItemReference.getClassName());
+
+			if (analyticsReportsInfoItemObjectProvider == null) {
+				throw new NoSuchModelException(
 					"No analytics reports info item object provider found " +
-						"for " + infoItemReference)
-			);
+						"for " + infoItemReference);
+			}
+
+			Object analyticsReportsInfoItemObject =
+				analyticsReportsInfoItemObjectProvider.
+					getAnalyticsReportsInfoItemObject(infoItemReference);
+
+			if (analyticsReportsInfoItemObject == null) {
+				throw new NoSuchModelException(
+					"No analytics reports info item object provider found " +
+						"for " + infoItemReference);
+			}
 
 			AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem =
 				(AnalyticsReportsInfoItem<Object>)
@@ -168,14 +168,15 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 			"hasValidConnection",
 			() -> {
 				AnalyticsReportsDataProvider analyticsReportsDataProvider =
-					new AnalyticsReportsDataProvider(_http);
+					new AnalyticsReportsDataProvider(
+						_analyticsSettingsManager, _http);
 
 				return analyticsReportsDataProvider.isValidAnalyticsConnection(
 					layout.getCompanyId());
 			}
 		).put(
 			"isSynced",
-			() -> AnalyticsReportsUtil.isAnalyticsSynced(
+			() -> _analyticsSettingsManager.isSiteIdSynced(
 				layout.getCompanyId(), layout.getGroupId())
 		).put(
 			"url",
@@ -188,35 +189,31 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem,
 		Locale locale, Object object) {
 
-		return Optional.ofNullable(
-			analyticsReportsInfoItem.getAuthorWebImage(object, locale)
-		).filter(
-			webImage -> Validator.isNotNull(webImage.getUrl())
-		).map(
-			webImage -> {
-				long portraitId = GetterUtil.getLong(
-					HttpComponentsUtil.getParameter(
-						HtmlUtil.escape(webImage.getUrl()), "img_id"));
+		WebImage webImage = analyticsReportsInfoItem.getAuthorWebImage(
+			object, locale);
 
-				if (portraitId > 0) {
-					return JSONUtil.put(
-						"authorId",
-						analyticsReportsInfoItem.getAuthorUserId(object)
-					).put(
-						"name", analyticsReportsInfoItem.getAuthorName(object)
-					).put(
-						"url", webImage.getUrl()
-					);
-				}
+		if ((webImage == null) || Validator.isNull(webImage.getURL())) {
+			return null;
+		}
 
-				return JSONUtil.put(
-					"authorId", analyticsReportsInfoItem.getAuthorUserId(object)
-				).put(
-					"name", analyticsReportsInfoItem.getAuthorName(object)
-				);
-			}
-		).orElse(
-			null
+		long portraitId = GetterUtil.getLong(
+			HttpComponentsUtil.getParameter(
+				HtmlUtil.escape(webImage.getURL()), "img_id"));
+
+		if (portraitId > 0) {
+			return JSONUtil.put(
+				"authorId", analyticsReportsInfoItem.getAuthorUserId(object)
+			).put(
+				"name", analyticsReportsInfoItem.getAuthorName(object)
+			).put(
+				"url", webImage.getURL()
+			);
+		}
+
+		return JSONUtil.put(
+			"authorId", analyticsReportsInfoItem.getAuthorUserId(object)
+		).put(
+			"name", analyticsReportsInfoItem.getAuthorName(object)
 		);
 	}
 
@@ -255,20 +252,22 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
-		Optional.ofNullable(
-			analyticsReportsInfoItem.getActions()
-		).orElseGet(
-			Collections::emptyList
-		).stream(
-		).map(
-			_objectValuePairs::get
-		).forEach(
-			objectValuePair -> jsonObject.put(
+		for (AnalyticsReportsInfoItem.Action action :
+				analyticsReportsInfoItem.getActions()) {
+
+			ObjectValuePair<String, String> objectValuePair =
+				_objectValuePairs.get(action);
+
+			if (objectValuePair == null) {
+				continue;
+			}
+
+			jsonObject.put(
 				objectValuePair.getKey(),
 				_getResourceURL(
 					canonicalURL, locale, resourceRequest, resourceResponse,
-					objectValuePair.getValue()))
-		);
+					objectValuePair.getValue()));
+		}
 
 		return jsonObject;
 	}
@@ -276,20 +275,18 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 	private InfoItemReference _getInfoItemReference(
 		HttpServletRequest httpServletRequest) {
 
-		return Optional.ofNullable(
-			_getClassTypeName(httpServletRequest)
-		).filter(
-			Validator::isNotNull
-		).map(
-			classTypeName -> new InfoItemReference(
+		String classTypeName = _getClassTypeName(httpServletRequest);
+
+		if (Validator.isNull(classTypeName)) {
+			return new InfoItemReference(
 				_getClassName(httpServletRequest),
-				new ClassNameClassPKInfoItemIdentifier(
-					classTypeName, _getClassPK(httpServletRequest)))
-		).orElseGet(
-			() -> new InfoItemReference(
-				_getClassName(httpServletRequest),
-				_getClassPK(httpServletRequest))
-		);
+				_getClassPK(httpServletRequest));
+		}
+
+		return new InfoItemReference(
+			_getClassName(httpServletRequest),
+			new ClassNameClassPKInfoItemIdentifier(
+				classTypeName, _getClassPK(httpServletRequest)));
 	}
 
 	private JSONObject _getJSONObject(
@@ -479,22 +476,22 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 	}
 
 	private JSONArray _getTimeSpansJSONArray(ResourceBundle resourceBundle) {
-		Stream<TimeSpan> stream = Arrays.stream(TimeSpan.values());
+		List<TimeSpan> timeSpans = Arrays.asList(TimeSpan.values());
 
-		return JSONUtil.putAll(
-			stream.filter(
-				timeSpan -> timeSpan != TimeSpan.TODAY
-			).sorted(
-				Comparator.comparingInt(TimeSpan::getDays)
-			).map(
-				timeSpan -> JSONUtil.put(
-					"key", timeSpan.getKey()
-				).put(
-					"label",
-					ResourceBundleUtil.getString(
-						resourceBundle, timeSpan.getKey())
-				)
-			).toArray());
+		timeSpans = ListUtil.filter(
+			timeSpans, timeSpan -> timeSpan != TimeSpan.TODAY);
+
+		timeSpans.sort(Comparator.comparingInt(TimeSpan::getDays));
+
+		return JSONUtil.toJSONArray(
+			timeSpans,
+			timeSpan -> JSONUtil.put(
+				"key", timeSpan.getKey()
+			).put(
+				"label",
+				ResourceBundleUtil.getString(resourceBundle, timeSpan.getKey())
+			),
+			_log);
 	}
 
 	private JSONArray _getViewURLsJSONArray(
@@ -503,39 +500,34 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		ResourceRequest resourceRequest, ResourceResponse resourceResponse,
 		Locale urlLocale) {
 
-		List<Locale> locales = analyticsReportsInfoItem.getAvailableLocales(
-			object);
+		List<Locale> locales = ListUtil.copy(
+			analyticsReportsInfoItem.getAvailableLocales(object));
 
-		Stream<Locale> stream = locales.stream();
+		locales.sort(
+			(locale1, locale2) -> {
+				if (Objects.equals(
+						locale1,
+						analyticsReportsInfoItem.getDefaultLocale(object))) {
+
+					return -1;
+				}
+
+				if (Objects.equals(
+						locale2,
+						analyticsReportsInfoItem.getDefaultLocale(object))) {
+
+					return 1;
+				}
+
+				String displayLanguage1 = locale1.getDisplayLanguage(locale);
+				String displayLanguage2 = locale2.getDisplayLanguage(locale);
+
+				return displayLanguage1.compareToIgnoreCase(displayLanguage2);
+			});
 
 		return JSONUtil.putAll(
-			stream.sorted(
-				(locale1, locale2) -> {
-					if (Objects.equals(
-							locale1,
-							analyticsReportsInfoItem.getDefaultLocale(
-								object))) {
-
-						return -1;
-					}
-
-					if (Objects.equals(
-							locale2,
-							analyticsReportsInfoItem.getDefaultLocale(
-								object))) {
-
-						return 1;
-					}
-
-					String displayLanguage1 = locale1.getDisplayLanguage(
-						locale);
-					String displayLanguage2 = locale2.getDisplayLanguage(
-						locale);
-
-					return displayLanguage1.compareToIgnoreCase(
-						displayLanguage2);
-				}
-			).map(
+			TransformUtil.transformToArray(
+				locales,
 				currentLocale -> JSONUtil.put(
 					"default",
 					Objects.equals(
@@ -557,8 +549,8 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 					_getResourceURL(
 						infoItemReference, currentLocale, resourceRequest,
 						resourceResponse, "/analytics_reports/get_data")
-				)
-			).toArray());
+				),
+				JSONObject.class));
 	}
 
 	private String _toISODateFormat(LocalDate localDate) {
@@ -621,11 +613,10 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		_analyticsReportsInfoItemObjectProvider;
 
 	@Reference
-	private AnalyticsReportsInfoItemObjectProviderRegistry
-		_analyticsReportsInfoItemObjectProviderRegistry;
+	private AnalyticsReportsInfoItemRegistry _analyticsReportsInfoItemRegistry;
 
 	@Reference
-	private AnalyticsReportsInfoItemRegistry _analyticsReportsInfoItemRegistry;
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference
 	private Http _http;

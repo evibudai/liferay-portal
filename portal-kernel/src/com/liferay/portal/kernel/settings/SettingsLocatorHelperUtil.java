@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.settings;
 
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 /**
  * @author Iván Zaera
@@ -24,69 +15,102 @@ public class SettingsLocatorHelperUtil {
 	public static Settings getCompanyConfigurationBeanSettings(
 		long companyId, String configurationPid, Settings parentSettings) {
 
-		return _settingsLocatorHelper.getCompanyConfigurationBeanSettings(
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getCompanyConfigurationBeanSettings(
 			companyId, configurationPid, parentSettings);
 	}
 
 	public static Settings getCompanyPortletPreferencesSettings(
 		long companyId, String settingsId, Settings parentSettings) {
 
-		return _settingsLocatorHelper.getCompanyPortletPreferencesSettings(
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getCompanyPortletPreferencesSettings(
 			companyId, settingsId, parentSettings);
 	}
 
 	public static Settings getGroupConfigurationBeanSettings(
 		long groupId, String configurationPid, Settings parentSettings) {
 
-		return _settingsLocatorHelper.getGroupConfigurationBeanSettings(
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getGroupConfigurationBeanSettings(
 			groupId, configurationPid, parentSettings);
 	}
 
 	public static Settings getPortletInstanceConfigurationBeanSettings(
 		String portletId, String configurationPid, Settings parentSettings) {
 
-		return _settingsLocatorHelper.
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.
 			getPortletInstanceConfigurationBeanSettings(
 				portletId, configurationPid, parentSettings);
 	}
 
+	public static SettingsDescriptor getSettingsDescriptor(String settingsId) {
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getSettingsDescriptor(settingsId);
+	}
+
 	public static SettingsLocatorHelper getSettingsLocatorHelper() {
-		return _settingsLocatorHelper;
+		return _settingsLocatorHelperSnapshot.get();
 	}
 
 	public Settings getConfigurationBeanSettings(String settingsId) {
-		return _settingsLocatorHelper.getConfigurationBeanSettings(settingsId);
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getConfigurationBeanSettings(settingsId);
 	}
 
 	public Settings getGroupPortletPreferencesSettings(
 		long groupId, String settingsId, Settings parentSettings) {
 
-		return _settingsLocatorHelper.getGroupPortletPreferencesSettings(
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getGroupPortletPreferencesSettings(
 			groupId, settingsId, parentSettings);
 	}
 
 	public Settings getPortalPreferencesSettings(
 		long companyId, Settings parentSettings) {
 
-		return _settingsLocatorHelper.getPortalPreferencesSettings(
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getPortalPreferencesSettings(
 			companyId, parentSettings);
 	}
 
 	public Settings getPortletInstancePortletPreferencesSettings(
 		long companyId, long plid, String portletId, Settings parentSettings) {
 
-		return _settingsLocatorHelper.
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.
 			getPortletInstancePortletPreferencesSettings(
 				companyId, plid, portletId, parentSettings);
 	}
 
 	public Settings getServerSettings(String settingsId) {
-		return _settingsLocatorHelper.getServerSettings(settingsId);
+		SettingsLocatorHelper settingsLocatorHelper =
+			_settingsLocatorHelperSnapshot.get();
+
+		return settingsLocatorHelper.getServerSettings(settingsId);
 	}
 
-	private static volatile SettingsLocatorHelper _settingsLocatorHelper =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			SettingsLocatorHelper.class, SettingsLocatorHelperUtil.class,
-			"_settingsLocatorHelper", true);
+	private static final Snapshot<SettingsLocatorHelper>
+		_settingsLocatorHelperSnapshot = new Snapshot<>(
+			SettingsLocatorHelperUtil.class, SettingsLocatorHelper.class);
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.item.selector.internal;
@@ -21,16 +12,13 @@ import com.liferay.adaptive.media.image.media.query.MediaQueryProvider;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-
-import java.util.List;
-import java.util.stream.Stream;
+import com.liferay.portal.util.RepositoryUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -64,7 +52,11 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 
 		String previewURL = null;
 
-		if (fileEntry.getGroupId() == fileEntry.getRepositoryId()) {
+		long repositoryId = fileEntry.getRepositoryId();
+
+		if (RepositoryUtil.isExternalRepository(repositoryId) ||
+			(fileEntry.getGroupId() == repositoryId)) {
+
 			previewURL = _dlURLHelper.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), themeDisplay,
 				StringPool.BLANK, false, false);
@@ -74,25 +66,15 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 				themeDisplay, fileEntry, "&imagePreview=1", false);
 		}
 
-		JSONArray sourcesJSONArray = _jsonFactory.createJSONArray();
-
-		List<MediaQuery> mediaQueries = _mediaQueryProvider.getMediaQueries(
-			fileEntry);
-
-		Stream<MediaQuery> mediaQueryStream = mediaQueries.stream();
-
-		mediaQueryStream.map(
-			this::_getSourceJSONObject
-		).forEach(
-			sourcesJSONArray::put
-		);
-
 		return JSONUtil.put(
 			"defaultSource", previewURL
 		).put(
 			"fileEntryId", String.valueOf(fileEntry.getFileEntryId())
 		).put(
-			"sources", sourcesJSONArray
+			"sources",
+			JSONUtil.toJSONArray(
+				_mediaQueryProvider.getMediaQueries(fileEntry),
+				this::_getSourceJSONObject)
 		).toString();
 	}
 

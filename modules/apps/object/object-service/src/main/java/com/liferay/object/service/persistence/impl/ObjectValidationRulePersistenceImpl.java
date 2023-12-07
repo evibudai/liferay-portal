@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.persistence.impl;
@@ -45,11 +36,10 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -2288,11 +2278,1482 @@ public class ObjectValidationRulePersistenceImpl
 	private static final String _FINDER_COLUMN_ODI_A_ACTIVE_2 =
 		"objectValidationRule.active = ?";
 
+	private FinderPath _finderPathWithPaginationFindByODI_E;
+	private FinderPath _finderPathWithoutPaginationFindByODI_E;
+	private FinderPath _finderPathCountByODI_E;
+
+	/**
+	 * Returns all the object validation rules where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @return the matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_E(
+		long objectDefinitionId, String engine) {
+
+		return findByODI_E(
+			objectDefinitionId, engine, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null);
+	}
+
+	/**
+	 * Returns a range of all the object validation rules where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectValidationRuleModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param start the lower bound of the range of object validation rules
+	 * @param end the upper bound of the range of object validation rules (not inclusive)
+	 * @return the range of matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_E(
+		long objectDefinitionId, String engine, int start, int end) {
+
+		return findByODI_E(objectDefinitionId, engine, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the object validation rules where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectValidationRuleModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param start the lower bound of the range of object validation rules
+	 * @param end the upper bound of the range of object validation rules (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_E(
+		long objectDefinitionId, String engine, int start, int end,
+		OrderByComparator<ObjectValidationRule> orderByComparator) {
+
+		return findByODI_E(
+			objectDefinitionId, engine, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the object validation rules where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectValidationRuleModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param start the lower bound of the range of object validation rules
+	 * @param end the upper bound of the range of object validation rules (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_E(
+		long objectDefinitionId, String engine, int start, int end,
+		OrderByComparator<ObjectValidationRule> orderByComparator,
+		boolean useFinderCache) {
+
+		engine = Objects.toString(engine, "");
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByODI_E;
+				finderArgs = new Object[] {objectDefinitionId, engine};
+			}
+		}
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByODI_E;
+			finderArgs = new Object[] {
+				objectDefinitionId, engine, start, end, orderByComparator
+			};
+		}
+
+		List<ObjectValidationRule> list = null;
+
+		if (useFinderCache) {
+			list = (List<ObjectValidationRule>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (ObjectValidationRule objectValidationRule : list) {
+					if ((objectDefinitionId !=
+							objectValidationRule.getObjectDefinitionId()) ||
+						!engine.equals(objectValidationRule.getEngine())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(4);
+			}
+
+			sb.append(_SQL_SELECT_OBJECTVALIDATIONRULE_WHERE);
+
+			sb.append(_FINDER_COLUMN_ODI_E_OBJECTDEFINITIONID_2);
+
+			boolean bindEngine = false;
+
+			if (engine.isEmpty()) {
+				sb.append(_FINDER_COLUMN_ODI_E_ENGINE_3);
+			}
+			else {
+				bindEngine = true;
+
+				sb.append(_FINDER_COLUMN_ODI_E_ENGINE_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(ObjectValidationRuleModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(objectDefinitionId);
+
+				if (bindEngine) {
+					queryPos.add(engine);
+				}
+
+				list = (List<ObjectValidationRule>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first object validation rule in the ordered set where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object validation rule
+	 * @throws NoSuchObjectValidationRuleException if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule findByODI_E_First(
+			long objectDefinitionId, String engine,
+			OrderByComparator<ObjectValidationRule> orderByComparator)
+		throws NoSuchObjectValidationRuleException {
+
+		ObjectValidationRule objectValidationRule = fetchByODI_E_First(
+			objectDefinitionId, engine, orderByComparator);
+
+		if (objectValidationRule != null) {
+			return objectValidationRule;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("objectDefinitionId=");
+		sb.append(objectDefinitionId);
+
+		sb.append(", engine=");
+		sb.append(engine);
+
+		sb.append("}");
+
+		throw new NoSuchObjectValidationRuleException(sb.toString());
+	}
+
+	/**
+	 * Returns the first object validation rule in the ordered set where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object validation rule, or <code>null</code> if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule fetchByODI_E_First(
+		long objectDefinitionId, String engine,
+		OrderByComparator<ObjectValidationRule> orderByComparator) {
+
+		List<ObjectValidationRule> list = findByODI_E(
+			objectDefinitionId, engine, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last object validation rule in the ordered set where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object validation rule
+	 * @throws NoSuchObjectValidationRuleException if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule findByODI_E_Last(
+			long objectDefinitionId, String engine,
+			OrderByComparator<ObjectValidationRule> orderByComparator)
+		throws NoSuchObjectValidationRuleException {
+
+		ObjectValidationRule objectValidationRule = fetchByODI_E_Last(
+			objectDefinitionId, engine, orderByComparator);
+
+		if (objectValidationRule != null) {
+			return objectValidationRule;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("objectDefinitionId=");
+		sb.append(objectDefinitionId);
+
+		sb.append(", engine=");
+		sb.append(engine);
+
+		sb.append("}");
+
+		throw new NoSuchObjectValidationRuleException(sb.toString());
+	}
+
+	/**
+	 * Returns the last object validation rule in the ordered set where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object validation rule, or <code>null</code> if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule fetchByODI_E_Last(
+		long objectDefinitionId, String engine,
+		OrderByComparator<ObjectValidationRule> orderByComparator) {
+
+		int count = countByODI_E(objectDefinitionId, engine);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<ObjectValidationRule> list = findByODI_E(
+			objectDefinitionId, engine, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the object validation rules before and after the current object validation rule in the ordered set where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * @param objectValidationRuleId the primary key of the current object validation rule
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object validation rule
+	 * @throws NoSuchObjectValidationRuleException if a object validation rule with the primary key could not be found
+	 */
+	@Override
+	public ObjectValidationRule[] findByODI_E_PrevAndNext(
+			long objectValidationRuleId, long objectDefinitionId, String engine,
+			OrderByComparator<ObjectValidationRule> orderByComparator)
+		throws NoSuchObjectValidationRuleException {
+
+		engine = Objects.toString(engine, "");
+
+		ObjectValidationRule objectValidationRule = findByPrimaryKey(
+			objectValidationRuleId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			ObjectValidationRule[] array = new ObjectValidationRuleImpl[3];
+
+			array[0] = getByODI_E_PrevAndNext(
+				session, objectValidationRule, objectDefinitionId, engine,
+				orderByComparator, true);
+
+			array[1] = objectValidationRule;
+
+			array[2] = getByODI_E_PrevAndNext(
+				session, objectValidationRule, objectDefinitionId, engine,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected ObjectValidationRule getByODI_E_PrevAndNext(
+		Session session, ObjectValidationRule objectValidationRule,
+		long objectDefinitionId, String engine,
+		OrderByComparator<ObjectValidationRule> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		sb.append(_SQL_SELECT_OBJECTVALIDATIONRULE_WHERE);
+
+		sb.append(_FINDER_COLUMN_ODI_E_OBJECTDEFINITIONID_2);
+
+		boolean bindEngine = false;
+
+		if (engine.isEmpty()) {
+			sb.append(_FINDER_COLUMN_ODI_E_ENGINE_3);
+		}
+		else {
+			bindEngine = true;
+
+			sb.append(_FINDER_COLUMN_ODI_E_ENGINE_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(ObjectValidationRuleModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(objectDefinitionId);
+
+		if (bindEngine) {
+			queryPos.add(engine);
+		}
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						objectValidationRule)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<ObjectValidationRule> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the object validation rules where objectDefinitionId = &#63; and engine = &#63; from the database.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 */
+	@Override
+	public void removeByODI_E(long objectDefinitionId, String engine) {
+		for (ObjectValidationRule objectValidationRule :
+				findByODI_E(
+					objectDefinitionId, engine, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			remove(objectValidationRule);
+		}
+	}
+
+	/**
+	 * Returns the number of object validation rules where objectDefinitionId = &#63; and engine = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param engine the engine
+	 * @return the number of matching object validation rules
+	 */
+	@Override
+	public int countByODI_E(long objectDefinitionId, String engine) {
+		engine = Objects.toString(engine, "");
+
+		FinderPath finderPath = _finderPathCountByODI_E;
+
+		Object[] finderArgs = new Object[] {objectDefinitionId, engine};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_OBJECTVALIDATIONRULE_WHERE);
+
+			sb.append(_FINDER_COLUMN_ODI_E_OBJECTDEFINITIONID_2);
+
+			boolean bindEngine = false;
+
+			if (engine.isEmpty()) {
+				sb.append(_FINDER_COLUMN_ODI_E_ENGINE_3);
+			}
+			else {
+				bindEngine = true;
+
+				sb.append(_FINDER_COLUMN_ODI_E_ENGINE_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(objectDefinitionId);
+
+				if (bindEngine) {
+					queryPos.add(engine);
+				}
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_ODI_E_OBJECTDEFINITIONID_2 =
+		"objectValidationRule.objectDefinitionId = ? AND ";
+
+	private static final String _FINDER_COLUMN_ODI_E_ENGINE_2 =
+		"objectValidationRule.engine = ?";
+
+	private static final String _FINDER_COLUMN_ODI_E_ENGINE_3 =
+		"(objectValidationRule.engine IS NULL OR objectValidationRule.engine = '')";
+
+	private FinderPath _finderPathWithPaginationFindByODI_O;
+	private FinderPath _finderPathWithoutPaginationFindByODI_O;
+	private FinderPath _finderPathCountByODI_O;
+
+	/**
+	 * Returns all the object validation rules where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @return the matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_O(
+		long objectDefinitionId, String outputType) {
+
+		return findByODI_O(
+			objectDefinitionId, outputType, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the object validation rules where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectValidationRuleModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param start the lower bound of the range of object validation rules
+	 * @param end the upper bound of the range of object validation rules (not inclusive)
+	 * @return the range of matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_O(
+		long objectDefinitionId, String outputType, int start, int end) {
+
+		return findByODI_O(objectDefinitionId, outputType, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the object validation rules where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectValidationRuleModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param start the lower bound of the range of object validation rules
+	 * @param end the upper bound of the range of object validation rules (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_O(
+		long objectDefinitionId, String outputType, int start, int end,
+		OrderByComparator<ObjectValidationRule> orderByComparator) {
+
+		return findByODI_O(
+			objectDefinitionId, outputType, start, end, orderByComparator,
+			true);
+	}
+
+	/**
+	 * Returns an ordered range of all the object validation rules where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectValidationRuleModelImpl</code>.
+	 * </p>
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param start the lower bound of the range of object validation rules
+	 * @param end the upper bound of the range of object validation rules (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching object validation rules
+	 */
+	@Override
+	public List<ObjectValidationRule> findByODI_O(
+		long objectDefinitionId, String outputType, int start, int end,
+		OrderByComparator<ObjectValidationRule> orderByComparator,
+		boolean useFinderCache) {
+
+		outputType = Objects.toString(outputType, "");
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByODI_O;
+				finderArgs = new Object[] {objectDefinitionId, outputType};
+			}
+		}
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByODI_O;
+			finderArgs = new Object[] {
+				objectDefinitionId, outputType, start, end, orderByComparator
+			};
+		}
+
+		List<ObjectValidationRule> list = null;
+
+		if (useFinderCache) {
+			list = (List<ObjectValidationRule>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (ObjectValidationRule objectValidationRule : list) {
+					if ((objectDefinitionId !=
+							objectValidationRule.getObjectDefinitionId()) ||
+						!outputType.equals(
+							objectValidationRule.getOutputType())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(4);
+			}
+
+			sb.append(_SQL_SELECT_OBJECTVALIDATIONRULE_WHERE);
+
+			sb.append(_FINDER_COLUMN_ODI_O_OBJECTDEFINITIONID_2);
+
+			boolean bindOutputType = false;
+
+			if (outputType.isEmpty()) {
+				sb.append(_FINDER_COLUMN_ODI_O_OUTPUTTYPE_3);
+			}
+			else {
+				bindOutputType = true;
+
+				sb.append(_FINDER_COLUMN_ODI_O_OUTPUTTYPE_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(ObjectValidationRuleModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(objectDefinitionId);
+
+				if (bindOutputType) {
+					queryPos.add(outputType);
+				}
+
+				list = (List<ObjectValidationRule>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first object validation rule in the ordered set where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object validation rule
+	 * @throws NoSuchObjectValidationRuleException if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule findByODI_O_First(
+			long objectDefinitionId, String outputType,
+			OrderByComparator<ObjectValidationRule> orderByComparator)
+		throws NoSuchObjectValidationRuleException {
+
+		ObjectValidationRule objectValidationRule = fetchByODI_O_First(
+			objectDefinitionId, outputType, orderByComparator);
+
+		if (objectValidationRule != null) {
+			return objectValidationRule;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("objectDefinitionId=");
+		sb.append(objectDefinitionId);
+
+		sb.append(", outputType=");
+		sb.append(outputType);
+
+		sb.append("}");
+
+		throw new NoSuchObjectValidationRuleException(sb.toString());
+	}
+
+	/**
+	 * Returns the first object validation rule in the ordered set where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object validation rule, or <code>null</code> if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule fetchByODI_O_First(
+		long objectDefinitionId, String outputType,
+		OrderByComparator<ObjectValidationRule> orderByComparator) {
+
+		List<ObjectValidationRule> list = findByODI_O(
+			objectDefinitionId, outputType, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last object validation rule in the ordered set where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object validation rule
+	 * @throws NoSuchObjectValidationRuleException if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule findByODI_O_Last(
+			long objectDefinitionId, String outputType,
+			OrderByComparator<ObjectValidationRule> orderByComparator)
+		throws NoSuchObjectValidationRuleException {
+
+		ObjectValidationRule objectValidationRule = fetchByODI_O_Last(
+			objectDefinitionId, outputType, orderByComparator);
+
+		if (objectValidationRule != null) {
+			return objectValidationRule;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("objectDefinitionId=");
+		sb.append(objectDefinitionId);
+
+		sb.append(", outputType=");
+		sb.append(outputType);
+
+		sb.append("}");
+
+		throw new NoSuchObjectValidationRuleException(sb.toString());
+	}
+
+	/**
+	 * Returns the last object validation rule in the ordered set where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object validation rule, or <code>null</code> if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule fetchByODI_O_Last(
+		long objectDefinitionId, String outputType,
+		OrderByComparator<ObjectValidationRule> orderByComparator) {
+
+		int count = countByODI_O(objectDefinitionId, outputType);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<ObjectValidationRule> list = findByODI_O(
+			objectDefinitionId, outputType, count - 1, count,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the object validation rules before and after the current object validation rule in the ordered set where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * @param objectValidationRuleId the primary key of the current object validation rule
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object validation rule
+	 * @throws NoSuchObjectValidationRuleException if a object validation rule with the primary key could not be found
+	 */
+	@Override
+	public ObjectValidationRule[] findByODI_O_PrevAndNext(
+			long objectValidationRuleId, long objectDefinitionId,
+			String outputType,
+			OrderByComparator<ObjectValidationRule> orderByComparator)
+		throws NoSuchObjectValidationRuleException {
+
+		outputType = Objects.toString(outputType, "");
+
+		ObjectValidationRule objectValidationRule = findByPrimaryKey(
+			objectValidationRuleId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			ObjectValidationRule[] array = new ObjectValidationRuleImpl[3];
+
+			array[0] = getByODI_O_PrevAndNext(
+				session, objectValidationRule, objectDefinitionId, outputType,
+				orderByComparator, true);
+
+			array[1] = objectValidationRule;
+
+			array[2] = getByODI_O_PrevAndNext(
+				session, objectValidationRule, objectDefinitionId, outputType,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected ObjectValidationRule getByODI_O_PrevAndNext(
+		Session session, ObjectValidationRule objectValidationRule,
+		long objectDefinitionId, String outputType,
+		OrderByComparator<ObjectValidationRule> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		sb.append(_SQL_SELECT_OBJECTVALIDATIONRULE_WHERE);
+
+		sb.append(_FINDER_COLUMN_ODI_O_OBJECTDEFINITIONID_2);
+
+		boolean bindOutputType = false;
+
+		if (outputType.isEmpty()) {
+			sb.append(_FINDER_COLUMN_ODI_O_OUTPUTTYPE_3);
+		}
+		else {
+			bindOutputType = true;
+
+			sb.append(_FINDER_COLUMN_ODI_O_OUTPUTTYPE_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(ObjectValidationRuleModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(objectDefinitionId);
+
+		if (bindOutputType) {
+			queryPos.add(outputType);
+		}
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						objectValidationRule)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<ObjectValidationRule> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the object validation rules where objectDefinitionId = &#63; and outputType = &#63; from the database.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 */
+	@Override
+	public void removeByODI_O(long objectDefinitionId, String outputType) {
+		for (ObjectValidationRule objectValidationRule :
+				findByODI_O(
+					objectDefinitionId, outputType, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			remove(objectValidationRule);
+		}
+	}
+
+	/**
+	 * Returns the number of object validation rules where objectDefinitionId = &#63; and outputType = &#63;.
+	 *
+	 * @param objectDefinitionId the object definition ID
+	 * @param outputType the output type
+	 * @return the number of matching object validation rules
+	 */
+	@Override
+	public int countByODI_O(long objectDefinitionId, String outputType) {
+		outputType = Objects.toString(outputType, "");
+
+		FinderPath finderPath = _finderPathCountByODI_O;
+
+		Object[] finderArgs = new Object[] {objectDefinitionId, outputType};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_OBJECTVALIDATIONRULE_WHERE);
+
+			sb.append(_FINDER_COLUMN_ODI_O_OBJECTDEFINITIONID_2);
+
+			boolean bindOutputType = false;
+
+			if (outputType.isEmpty()) {
+				sb.append(_FINDER_COLUMN_ODI_O_OUTPUTTYPE_3);
+			}
+			else {
+				bindOutputType = true;
+
+				sb.append(_FINDER_COLUMN_ODI_O_OUTPUTTYPE_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(objectDefinitionId);
+
+				if (bindOutputType) {
+					queryPos.add(outputType);
+				}
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_ODI_O_OBJECTDEFINITIONID_2 =
+		"objectValidationRule.objectDefinitionId = ? AND ";
+
+	private static final String _FINDER_COLUMN_ODI_O_OUTPUTTYPE_2 =
+		"objectValidationRule.outputType = ?";
+
+	private static final String _FINDER_COLUMN_ODI_O_OUTPUTTYPE_3 =
+		"(objectValidationRule.outputType IS NULL OR objectValidationRule.outputType = '')";
+
+	private FinderPath _finderPathFetchByERC_C_ODI;
+	private FinderPath _finderPathCountByERC_C_ODI;
+
+	/**
+	 * Returns the object validation rule where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId = &#63; or throws a <code>NoSuchObjectValidationRuleException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId the object definition ID
+	 * @return the matching object validation rule
+	 * @throws NoSuchObjectValidationRuleException if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule findByERC_C_ODI(
+			String externalReferenceCode, long companyId,
+			long objectDefinitionId)
+		throws NoSuchObjectValidationRuleException {
+
+		ObjectValidationRule objectValidationRule = fetchByERC_C_ODI(
+			externalReferenceCode, companyId, objectDefinitionId);
+
+		if (objectValidationRule == null) {
+			StringBundler sb = new StringBundler(8);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("externalReferenceCode=");
+			sb.append(externalReferenceCode);
+
+			sb.append(", companyId=");
+			sb.append(companyId);
+
+			sb.append(", objectDefinitionId=");
+			sb.append(objectDefinitionId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchObjectValidationRuleException(sb.toString());
+		}
+
+		return objectValidationRule;
+	}
+
+	/**
+	 * Returns the object validation rule where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId the object definition ID
+	 * @return the matching object validation rule, or <code>null</code> if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule fetchByERC_C_ODI(
+		String externalReferenceCode, long companyId, long objectDefinitionId) {
+
+		return fetchByERC_C_ODI(
+			externalReferenceCode, companyId, objectDefinitionId, true);
+	}
+
+	/**
+	 * Returns the object validation rule where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId the object definition ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching object validation rule, or <code>null</code> if a matching object validation rule could not be found
+	 */
+	@Override
+	public ObjectValidationRule fetchByERC_C_ODI(
+		String externalReferenceCode, long companyId, long objectDefinitionId,
+		boolean useFinderCache) {
+
+		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {
+				externalReferenceCode, companyId, objectDefinitionId
+			};
+		}
+
+		Object result = null;
+
+		if (useFinderCache) {
+			result = finderCache.getResult(
+				_finderPathFetchByERC_C_ODI, finderArgs, this);
+		}
+
+		if (result instanceof ObjectValidationRule) {
+			ObjectValidationRule objectValidationRule =
+				(ObjectValidationRule)result;
+
+			if (!Objects.equals(
+					externalReferenceCode,
+					objectValidationRule.getExternalReferenceCode()) ||
+				(companyId != objectValidationRule.getCompanyId()) ||
+				(objectDefinitionId !=
+					objectValidationRule.getObjectDefinitionId())) {
+
+				result = null;
+			}
+		}
+
+		if (result == null) {
+			StringBundler sb = new StringBundler(5);
+
+			sb.append(_SQL_SELECT_OBJECTVALIDATIONRULE_WHERE);
+
+			boolean bindExternalReferenceCode = false;
+
+			if (externalReferenceCode.isEmpty()) {
+				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_3);
+			}
+			else {
+				bindExternalReferenceCode = true;
+
+				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_2);
+			}
+
+			sb.append(_FINDER_COLUMN_ERC_C_ODI_COMPANYID_2);
+
+			sb.append(_FINDER_COLUMN_ERC_C_ODI_OBJECTDEFINITIONID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				if (bindExternalReferenceCode) {
+					queryPos.add(externalReferenceCode);
+				}
+
+				queryPos.add(companyId);
+
+				queryPos.add(objectDefinitionId);
+
+				List<ObjectValidationRule> list = query.list();
+
+				if (list.isEmpty()) {
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByERC_C_ODI, finderArgs, list);
+					}
+				}
+				else {
+					ObjectValidationRule objectValidationRule = list.get(0);
+
+					result = objectValidationRule;
+
+					cacheResult(objectValidationRule);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		if (result instanceof List<?>) {
+			return null;
+		}
+		else {
+			return (ObjectValidationRule)result;
+		}
+	}
+
+	/**
+	 * Removes the object validation rule where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId the object definition ID
+	 * @return the object validation rule that was removed
+	 */
+	@Override
+	public ObjectValidationRule removeByERC_C_ODI(
+			String externalReferenceCode, long companyId,
+			long objectDefinitionId)
+		throws NoSuchObjectValidationRuleException {
+
+		ObjectValidationRule objectValidationRule = findByERC_C_ODI(
+			externalReferenceCode, companyId, objectDefinitionId);
+
+		return remove(objectValidationRule);
+	}
+
+	/**
+	 * Returns the number of object validation rules where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId the object definition ID
+	 * @return the number of matching object validation rules
+	 */
+	@Override
+	public int countByERC_C_ODI(
+		String externalReferenceCode, long companyId, long objectDefinitionId) {
+
+		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+		FinderPath finderPath = _finderPathCountByERC_C_ODI;
+
+		Object[] finderArgs = new Object[] {
+			externalReferenceCode, companyId, objectDefinitionId
+		};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_COUNT_OBJECTVALIDATIONRULE_WHERE);
+
+			boolean bindExternalReferenceCode = false;
+
+			if (externalReferenceCode.isEmpty()) {
+				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_3);
+			}
+			else {
+				bindExternalReferenceCode = true;
+
+				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_2);
+			}
+
+			sb.append(_FINDER_COLUMN_ERC_C_ODI_COMPANYID_2);
+
+			sb.append(_FINDER_COLUMN_ERC_C_ODI_OBJECTDEFINITIONID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				if (bindExternalReferenceCode) {
+					queryPos.add(externalReferenceCode);
+				}
+
+				queryPos.add(companyId);
+
+				queryPos.add(objectDefinitionId);
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String
+		_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_2 =
+			"objectValidationRule.externalReferenceCode = ? AND ";
+
+	private static final String
+		_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_3 =
+			"(objectValidationRule.externalReferenceCode IS NULL OR objectValidationRule.externalReferenceCode = '') AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_ODI_COMPANYID_2 =
+		"objectValidationRule.companyId = ? AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_ODI_OBJECTDEFINITIONID_2 =
+		"objectValidationRule.objectDefinitionId = ?";
+
 	public ObjectValidationRulePersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("uuid", "uuid_");
 		dbColumnNames.put("active", "active_");
+		dbColumnNames.put("system", "system_");
 
 		setDBColumnNames(dbColumnNames);
 
@@ -2314,6 +3775,15 @@ public class ObjectValidationRulePersistenceImpl
 		entityCache.putResult(
 			ObjectValidationRuleImpl.class,
 			objectValidationRule.getPrimaryKey(), objectValidationRule);
+
+		finderCache.putResult(
+			_finderPathFetchByERC_C_ODI,
+			new Object[] {
+				objectValidationRule.getExternalReferenceCode(),
+				objectValidationRule.getCompanyId(),
+				objectValidationRule.getObjectDefinitionId()
+			},
+			objectValidationRule);
 	}
 
 	private int _valueObjectFinderCacheListThreshold;
@@ -2392,6 +3862,21 @@ public class ObjectValidationRulePersistenceImpl
 		}
 	}
 
+	protected void cacheUniqueFindersCache(
+		ObjectValidationRuleModelImpl objectValidationRuleModelImpl) {
+
+		Object[] args = new Object[] {
+			objectValidationRuleModelImpl.getExternalReferenceCode(),
+			objectValidationRuleModelImpl.getCompanyId(),
+			objectValidationRuleModelImpl.getObjectDefinitionId()
+		};
+
+		finderCache.putResult(
+			_finderPathCountByERC_C_ODI, args, Long.valueOf(1));
+		finderCache.putResult(
+			_finderPathFetchByERC_C_ODI, args, objectValidationRuleModelImpl);
+	}
+
 	/**
 	 * Creates a new object validation rule with the primary key. Does not add the object validation rule to the database.
 	 *
@@ -2406,7 +3891,7 @@ public class ObjectValidationRulePersistenceImpl
 		objectValidationRule.setNew(true);
 		objectValidationRule.setPrimaryKey(objectValidationRuleId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		objectValidationRule.setUuid(uuid);
 
@@ -2531,9 +4016,14 @@ public class ObjectValidationRulePersistenceImpl
 			(ObjectValidationRuleModelImpl)objectValidationRule;
 
 		if (Validator.isNull(objectValidationRule.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			objectValidationRule.setUuid(uuid);
+		}
+
+		if (Validator.isNull(objectValidationRule.getExternalReferenceCode())) {
+			objectValidationRule.setExternalReferenceCode(
+				objectValidationRule.getUuid());
 		}
 
 		ServiceContext serviceContext =
@@ -2584,6 +4074,8 @@ public class ObjectValidationRulePersistenceImpl
 		entityCache.putResult(
 			ObjectValidationRuleImpl.class, objectValidationRuleModelImpl,
 			false, true);
+
+		cacheUniqueFindersCache(objectValidationRuleModelImpl);
 
 		if (isNew) {
 			objectValidationRule.setNew(false);
@@ -2946,30 +4438,74 @@ public class ObjectValidationRulePersistenceImpl
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"objectDefinitionId", "active_"}, false);
 
-		_setObjectValidationRuleUtilPersistence(this);
+		_finderPathWithPaginationFindByODI_E = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByODI_E",
+			new String[] {
+				Long.class.getName(), String.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"objectDefinitionId", "engine"}, true);
+
+		_finderPathWithoutPaginationFindByODI_E = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByODI_E",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"objectDefinitionId", "engine"}, true);
+
+		_finderPathCountByODI_E = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByODI_E",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"objectDefinitionId", "engine"}, false);
+
+		_finderPathWithPaginationFindByODI_O = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByODI_O",
+			new String[] {
+				Long.class.getName(), String.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"objectDefinitionId", "outputType"}, true);
+
+		_finderPathWithoutPaginationFindByODI_O = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByODI_O",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"objectDefinitionId", "outputType"}, true);
+
+		_finderPathCountByODI_O = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByODI_O",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"objectDefinitionId", "outputType"}, false);
+
+		_finderPathFetchByERC_C_ODI = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C_ODI",
+			new String[] {
+				String.class.getName(), Long.class.getName(),
+				Long.class.getName()
+			},
+			new String[] {
+				"externalReferenceCode", "companyId", "objectDefinitionId"
+			},
+			true);
+
+		_finderPathCountByERC_C_ODI = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C_ODI",
+			new String[] {
+				String.class.getName(), Long.class.getName(),
+				Long.class.getName()
+			},
+			new String[] {
+				"externalReferenceCode", "companyId", "objectDefinitionId"
+			},
+			false);
+
+		ObjectValidationRuleUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setObjectValidationRuleUtilPersistence(null);
+		ObjectValidationRuleUtil.setPersistence(null);
 
 		entityCache.removeCache(ObjectValidationRuleImpl.class.getName());
-	}
-
-	private void _setObjectValidationRuleUtilPersistence(
-		ObjectValidationRulePersistence objectValidationRulePersistence) {
-
-		try {
-			Field field = ObjectValidationRuleUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, objectValidationRulePersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -3029,14 +4565,11 @@ public class ObjectValidationRulePersistenceImpl
 		ObjectValidationRulePersistenceImpl.class);
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
-		new String[] {"uuid", "active"});
+		new String[] {"uuid", "active", "system"});
 
 	@Override
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

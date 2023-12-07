@@ -1,24 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayModal from '@clayui/modal';
 import {Observer} from '@clayui/modal/lib/types';
-import {FormError, Input, useForm} from '@liferay/object-js-components-web';
+import {
+	FormError,
+	Input,
+	REQUIRED_MSG,
+	useForm,
+} from '@liferay/object-js-components-web';
 import React from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
 
 type TInitialValues = {
@@ -46,7 +43,7 @@ export function ModalAddObjectLayoutBox({
 		dispatch({
 			payload: {
 				name: {
-					[Liferay.ThemeDisplay.getDefaultLanguageId()]: values.name,
+					[defaultLanguageId]: values.name,
 				},
 				tabIndex,
 				type: 'regular',
@@ -61,7 +58,7 @@ export function ModalAddObjectLayoutBox({
 		const errors: FormError<TInitialValues> = {};
 
 		if (!values.name) {
-			errors.name = Liferay.Language.get('required');
+			errors.name = REQUIRED_MSG;
 		}
 
 		return errors;

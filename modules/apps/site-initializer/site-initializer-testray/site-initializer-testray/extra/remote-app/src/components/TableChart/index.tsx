@@ -1,41 +1,86 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import classNames from 'classnames';
-
-type DataProps = {
-	redirectTo?: string;
-	value?: number;
-};
+import {memo} from 'react';
+import {Link, useParams} from 'react-router-dom';
+import i18n from '~/i18n';
+import {CaseResultStatuses} from '~/util/statuses';
 
 type TableChartProps = {
-	colors: string[][];
-	columns: string[][];
-	data: DataProps[][];
+	matrixData: number[][];
 	title: string;
 };
 
-const TableChart: React.FC<TableChartProps> = ({
-	colors,
-	columns,
-	data,
-	title,
-}) => {
-	const [horizontalColumns, verticalColumns] = columns;
+const columns = [
+	i18n.translate('passed'),
+	i18n.translate('failed'),
+	i18n.translate('blocked'),
+	i18n.translate('test-fix'),
+	i18n.translate('dnr'),
+];
+
+const columnsDueStatus = [
+	CaseResultStatuses.PASSED,
+	CaseResultStatuses.FAILED,
+	CaseResultStatuses.BLOCKED,
+	CaseResultStatuses.TEST_FIX,
+	CaseResultStatuses.DID_NOT_RUN,
+];
+
+const STATUS_COLOR = {
+	BLOCKED: 'blocked',
+	DNR: 'dnr',
+	FAILED: 'failed',
+	PASSED: 'passed',
+	TEST_FIX: 'test-fix',
+};
+
+const colors = [
+	[
+		STATUS_COLOR.PASSED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.PASSED,
+	],
+	[
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+	],
+	[
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.BLOCKED,
+	],
+	[
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.TEST_FIX,
+	],
+	[
+		STATUS_COLOR.PASSED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.DNR,
+	],
+];
+
+const TableChart: React.FC<TableChartProps> = ({matrixData, title}) => {
+	const {runA, runB} = useParams();
 
 	return (
-		<table className="table table-borderless table-chart table-sm">
+		<table className="table table-borderless table-sm tr-table-chart">
 			<thead>
 				<tr>
 					<td className="border-0 pb-2" colSpan={6}>
@@ -48,45 +93,45 @@ const TableChart: React.FC<TableChartProps> = ({
 				<tr>
 					<th></th>
 
-					{horizontalColumns.map((horizontalColumn) => (
+					{columns.map((horizontalColumn, index) => (
 						<td
-							className="text-neutral-7 text-paragraph-xs"
-							key={horizontalColumn}
+							className="text-paragraph-xs tr-table-chart__column-title"
+							key={index}
 						>
-							{horizontalColumn}
+							B {horizontalColumn}
 						</td>
 					))}
 				</tr>
 
-				{verticalColumns.map((verticalColumn, verticalColumnIndex) => (
-					<tr key={verticalColumn}>
-						<td className="text-neutral-7 text-paragraph-xs">
-							{verticalColumn}
+				{columns.map((verticalColumn, verticalColumnIndex) => (
+					<tr key={verticalColumnIndex}>
+						<td className="text-paragraph-xs tr-table-chart__column-title">
+							A {verticalColumn}
 						</td>
 
-						{horizontalColumns.map((_, horizontalColumnIndex) => {
-							const dataType =
-								data[verticalColumnIndex][
+						{columns.map((_, horizontalColumnIndex) => {
+							const value =
+								matrixData[verticalColumnIndex][
 									horizontalColumnIndex
 								];
 
 							return (
 								<td
 									className={classNames(
-										'border py-2 table-chart-data-area text-right',
+										'border py-2 tr-table-chart__data-area text-center',
 										colors[verticalColumnIndex][
 											horizontalColumnIndex
 										]
 									)}
 									key={`${verticalColumnIndex}-${horizontalColumnIndex}`}
 								>
-									{dataType?.value && (
-										<a
-											className="text-neutral-10"
-											href={dataType?.redirectTo}
+									{value > 0 && (
+										<Link
+											className="font-weight-bold"
+											to={`/compare-runs/${runA}/${runB}/cases?dueStatusA=${columnsDueStatus[verticalColumnIndex]}&dueStatusB=${columnsDueStatus[horizontalColumnIndex]}`}
 										>
-											{dataType.value}
-										</a>
+											{value}
+										</Link>
 									)}
 								</td>
 							);
@@ -98,4 +143,4 @@ const TableChart: React.FC<TableChartProps> = ({
 	);
 };
 
-export default TableChart;
+export default memo(TableChart);

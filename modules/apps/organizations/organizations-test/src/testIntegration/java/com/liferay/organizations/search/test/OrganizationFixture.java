@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.organizations.search.test;
@@ -24,6 +15,7 @@ import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.ListTypeService;
 import com.liferay.portal.kernel.service.OrganizationService;
 import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -33,17 +25,15 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.search.test.util.SearchStreamUtil;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 /**
  * @author Igor Fabiano Nazar
@@ -52,13 +42,15 @@ import java.util.stream.Stream;
 public class OrganizationFixture {
 
 	public OrganizationFixture(
-		OrganizationService organizationService, CountryService countryService,
-		RegionService regionService, Language language) {
+		CountryService countryService, Language language,
+		ListTypeService listTypeService,
+		OrganizationService organizationService, RegionService regionService) {
 
-		_organizationService = organizationService;
 		_countryService = countryService;
-		_regionService = regionService;
 		_language = language;
+		_listTypeService = listTypeService;
+		_organizationService = organizationService;
+		_regionService = regionService;
 	}
 
 	public Organization createOrganization(String organizationName)
@@ -102,10 +94,13 @@ public class OrganizationFixture {
 		}
 
 		Organization organization = _organizationService.addOrganization(
-			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
+			null, OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			organizationName, OrganizationConstants.TYPE_ORGANIZATION,
 			region.getRegionId(), country.getCountryId(),
-			ListTypeConstants.ORGANIZATION_STATUS_DEFAULT,
+			_listTypeService.getListTypeId(
+				country.getCompanyId(),
+				ListTypeConstants.ORGANIZATION_STATUS_DEFAULT,
+				ListTypeConstants.ORGANIZATION_STATUS),
 			RandomTestUtil.randomString(), RandomTestUtil.randomBoolean(),
 			serviceContext);
 
@@ -115,18 +110,16 @@ public class OrganizationFixture {
 	}
 
 	public List<String> getCountryNames(Organization organization) {
+		Set<String> countryNames = new HashSet<>();
+
 		Country country = _countryService.fetchCountry(
 			organization.getCountryId());
 
-		Stream<Locale> stream = SearchStreamUtil.stream(
-			_language.getAvailableLocales());
+		for (Locale locale : _language.getAvailableLocales()) {
+			countryNames.add(StringUtil.toLowerCase(country.getName(locale)));
+		}
 
-		return stream.map(
-			locale -> StringUtil.toLowerCase(country.getName(locale))
-		).distinct(
-		).collect(
-			Collectors.toList()
-		);
+		return new ArrayList<>(countryNames);
 	}
 
 	public List<Organization> getOrganizations() {
@@ -155,21 +148,21 @@ public class OrganizationFixture {
 	}
 
 	private Region _getRegion(String regionName, Country country) {
-		List<Region> regions = _regionService.getRegions(
-			country.getCountryId());
+		for (Region region :
+				_regionService.getRegions(country.getCountryId())) {
 
-		Stream<Region> stream = regions.stream();
+			if (StringUtil.equalsIgnoreCase(regionName, region.getName())) {
+				return region;
+			}
+		}
 
-		Optional<Region> regionOptional = stream.filter(
-			line -> StringUtil.equalsIgnoreCase(regionName, line.getName())
-		).findFirst();
-
-		return regionOptional.get();
+		return null;
 	}
 
 	private final CountryService _countryService;
 	private Group _group;
 	private final Language _language;
+	private final ListTypeService _listTypeService;
 	private final OrganizationService _organizationService;
 	private final List<Organization> _organizatons = new ArrayList<>();
 	private final RegionService _regionService;

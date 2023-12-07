@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.test;
@@ -71,20 +62,22 @@ public class SearchEngineHelperImplTest {
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		ComponentConfigurationDTO componentConfigurationDTO =
-			_getElasticsearchSearchEngineComponentConfigurationDTO(
-				bundleContext);
+		SearchEngine searchEngine = _searchEngineHelper.getSearchEngine();
 
-		// Assert ElasticsearchSearchEngine is on duty
+		String vendor = searchEngine.getVendor();
+
+		ComponentConfigurationDTO componentConfigurationDTO =
+			_getRealSearchEngineComponentConfigurationDTO(
+				bundleContext, vendor);
+
+		// Assert real search engine is on duty
 
 		Assert.assertEquals(
 			ComponentConfigurationDTO.ACTIVE, componentConfigurationDTO.state);
 
-		SearchEngine searchEngine = _searchEngineHelper.getSearchEngine();
+		Assert.assertNotEquals("MockSearchEngine", vendor);
 
-		Assert.assertEquals("Elasticsearch", searchEngine.getVendor());
-
-		// Register mock SeachEngine to swap out ElasticsearchSearchEngine
+		// Register mock SeachEngine to swap out real search engine
 
 		MockIndexSearcher mockIndexSearcher = new MockIndexSearcher();
 
@@ -104,8 +97,8 @@ public class SearchEngineHelperImplTest {
 			Assert.assertEquals("MockSearchEngine", searchEngine.getVendor());
 
 			componentConfigurationDTO =
-				_getElasticsearchSearchEngineComponentConfigurationDTO(
-					bundleContext);
+				_getRealSearchEngineComponentConfigurationDTO(
+					bundleContext, vendor);
 
 			// Assert search request went to MockIndexSearcher
 
@@ -122,7 +115,7 @@ public class SearchEngineHelperImplTest {
 
 			Assert.assertSame(document, mockIndexWriter._document);
 
-			// Assert ElasticsearchSearchEngine is off duty
+			// Assert real search engine is off duty
 
 			Assert.assertEquals(
 				ComponentConfigurationDTO.SATISFIED,
@@ -133,27 +126,27 @@ public class SearchEngineHelperImplTest {
 		}
 
 		componentConfigurationDTO =
-			_getElasticsearchSearchEngineComponentConfigurationDTO(
-				bundleContext);
+			_getRealSearchEngineComponentConfigurationDTO(
+				bundleContext, vendor);
 
-		// Assert ElasticsearchSearchEngine is back on duty
+		// Assert real search engine is back on duty
 
 		Assert.assertEquals(
 			ComponentConfigurationDTO.ACTIVE, componentConfigurationDTO.state);
 
 		searchEngine = _searchEngineHelper.getSearchEngine();
 
-		Assert.assertEquals("Elasticsearch", searchEngine.getVendor());
+		Assert.assertEquals(vendor, searchEngine.getVendor());
 	}
 
 	private ComponentConfigurationDTO
-			_getElasticsearchSearchEngineComponentConfigurationDTO(
-				BundleContext bundleContext)
+			_getRealSearchEngineComponentConfigurationDTO(
+				BundleContext bundleContext, String vendor)
 		throws Exception {
 
 		Collection<ServiceReference<SearchEngine>> serviceReferences =
 			bundleContext.getServiceReferences(
-				SearchEngine.class, "(search.engine.impl=Elasticsearch)");
+				SearchEngine.class, "(search.engine.impl=" + vendor + ")");
 
 		Assert.assertEquals(
 			serviceReferences.toString(), 1, serviceReferences.size());

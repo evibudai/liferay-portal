@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Categories";
@@ -13,14 +14,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,18 +30,15 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121449. No alert shown when add a vocabulary in site with XSS name."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test AddVocabularyInSiteWithXSSName {
 		var siteName = '''<script>alert(123)</script>''';
 
 		task ("Add a site with XSS name") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Sites",
-				panel = "Control Panel",
-				portlet = "Sites");
+			Site.openSitesAdmin();
 
-			Site.addBlankCP(siteName = "${siteName}");
+			Site.addBlankCP(siteName = ${siteName});
 		}
 
 		task ("Add a vocabulary") {
@@ -57,7 +55,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121450. No alert shown when add a vocabulary in site where existing structure and document type have XSS name."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test AddVocabularyWhenExistingStructureAndDocumentTypeWithXSSName {
 		var documentName = '''<script>alert(123)</script>''';
@@ -68,11 +66,11 @@ definition {
 
 			DMDocumentType.add(
 				dmDocumentTypeFieldNames = "Text",
-				dmDocumentTypeName = "${documentName}");
+				dmDocumentTypeName = ${documentName});
 		}
 
 		task ("View the XSS is not escaped") {
-			LexiconEntry.viewEntryName(rowEntry = "${documentName}");
+			LexiconEntry.viewEntryName(rowEntry = ${documentName});
 		}
 
 		task ("Add a web content structure with XSS name") {
@@ -80,7 +78,7 @@ definition {
 
 			NavItem.gotoStructures();
 
-			WebContentStructures.addCP(structureName = "${structureName}");
+			WebContentStructures.addCP(structureName = ${structureName});
 
 			DataEngine.addField(
 				fieldFieldLabel = "Text",
@@ -90,7 +88,7 @@ definition {
 		}
 
 		task ("View the XSS is not escaped") {
-			WebContentStructures.viewCP(structureName = "${structureName}");
+			WebContentStructures.viewCP(structureName = ${structureName});
 		}
 
 		task ("View no alert shown when create a vocabulary") {
@@ -103,7 +101,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-132705. The user could select a category with XSS name in Account Settings."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test SelectCategoryWithXSSNameInAccountSettings {
 		task ("Add a global category with XSS name in Topic") {
@@ -144,7 +142,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-123823. The user can select a category with XSS name on the page settings."
-	@priority = "4"
+	@priority = 4
 	@uitest
 	test SelectCategoryWithXSSNameInPageConfiguration {
 		var categoryName = '''><img src=xss onerror=alert(1)>''';
@@ -153,7 +151,7 @@ definition {
 			Category.openCategoriesAdmin(siteURLKey = "global");
 
 			Category.addCP(
-				categoryName = "${categoryName}",
+				categoryName = ${categoryName},
 				vocabularyName = "Topic");
 		}
 
@@ -174,7 +172,7 @@ definition {
 				key_vocabularyName = "Topic",
 				locator1 = "AssetCategorization#CATEGORY_SELECT");
 
-			AssetCategorization.selectCategories(categoryNameList = "${categoryName}");
+			AssetCategorization.selectCategories(categoryNameList = ${categoryName});
 		}
 
 		task ("View the alert not shown") {

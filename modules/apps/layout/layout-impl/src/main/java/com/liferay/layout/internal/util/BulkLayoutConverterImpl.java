@@ -1,24 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.util;
 
+import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.exception.LayoutConvertException;
+import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.BulkLayoutConverter;
-import com.liferay.layout.util.LayoutCopyHelper;
 import com.liferay.layout.util.template.LayoutConversionResult;
 import com.liferay.layout.util.template.LayoutConverter;
 import com.liferay.layout.util.template.LayoutConverterRegistry;
@@ -64,10 +56,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ReadOnlyException;
 
@@ -135,11 +124,12 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 				"Layout with PLID " + layout.getPlid() + " is not convertible");
 		}
 
-		ServiceContext serviceContext = Optional.ofNullable(
-			ServiceContextThreadLocal.getServiceContext()
-		).orElse(
-			new ServiceContext()
-		);
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			serviceContext = new ServiceContext();
+		}
 
 		serviceContext.setScopeGroupId(layout.getGroupId());
 
@@ -198,7 +188,6 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 
 					dynamicQuery.add(property.eq(false));
 				});
-
 			actionableDynamicQuery.setPerformActionMethod(
 				(Layout layout) -> {
 					UnicodeProperties typeSettingsUnicodeProperties =
@@ -266,7 +255,7 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 			Layout layout = _layoutLocalService.getLayout(
 				draftLayout.getClassPK());
 
-			_layoutCopyHelper.copyLayout(draftLayout, layout);
+			_layoutCopyHelper.copyLayoutContent(draftLayout, layout);
 
 			draftLayout = _layoutLocalService.getLayout(draftLayout.getPlid());
 
@@ -276,11 +265,12 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 				draftLayout.getTypeSettingsProperties();
 
 			typeSettingsUnicodeProperties.put(
-				"published", Boolean.TRUE.toString());
+				LayoutTypeSettingsConstants.KEY_PUBLISHED,
+				Boolean.TRUE.toString());
 
 			draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
 
-			_layoutLocalService.updateLayout(draftLayout);
+			draftLayout = _layoutLocalService.updateLayout(draftLayout);
 
 			layout = _layoutLocalService.getLayout(layout.getPlid());
 
@@ -301,17 +291,9 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 
 		Theme theme = layout.getTheme();
 
-		List<PortletDecorator> portletDecorators = theme.getPortletDecorators();
-
-		Stream<PortletDecorator> portletDecoratorsStream =
-			portletDecorators.stream();
-
-		List<PortletDecorator> filteredPortletDecorators =
-			portletDecoratorsStream.filter(
-				PortletDecorator::isDefaultPortletDecorator
-			).collect(
-				Collectors.toList()
-			);
+		List<PortletDecorator> filteredPortletDecorators = ListUtil.filter(
+			theme.getPortletDecorators(),
+			portletDecorator -> portletDecorator.isDefaultPortletDecorator());
 
 		if (ListUtil.isEmpty(filteredPortletDecorators)) {
 			return StringPool.BLANK;
@@ -374,7 +356,7 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 		}
 
 		try {
-			return _layoutCopyHelper.copyLayout(layout, draftLayout);
+			return _layoutCopyHelper.copyLayoutContent(layout, draftLayout);
 		}
 		catch (Exception exception) {
 			throw new PortalException(exception);

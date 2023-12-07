@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.internal.service.taglib.test;
@@ -90,7 +81,8 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 			_portal.getClassNameId(LayoutSet.class),
 			publicLayoutSet.getLayoutSetId(),
 			layoutSetGlobalCSSClientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		String masterLayoutGlobalCSSURL = _getRandomURL();
 
@@ -101,7 +93,7 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
@@ -111,7 +103,8 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 			masterLayoutPageTemplateEntry.getPlid(),
 			masterLayoutGlobalCSSClientExtensionEntry.
 				getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		String layoutGlobalCSSURL = _getRandomURL();
 
@@ -122,13 +115,14 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 
 		layout.setMasterLayoutPlid(masterLayoutPageTemplateEntry.getPlid());
 
-		_layoutLocalService.updateLayout(layout);
+		layout = _layoutLocalService.updateLayout(layout);
 
 		_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
 			layoutGlobalCSSClientExtensionEntry.getExternalReferenceCode(),
-			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, StringPool.BLANK);
+			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();

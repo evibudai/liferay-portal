@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayForm, {ClayInput} from '@clayui/form';
 import classNames from 'classnames';
+import {useId} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback} from 'react';
@@ -23,10 +15,11 @@ import React, {useCallback} from 'react';
 import {config} from '../../app/config/index';
 import {useSelectorCallback} from '../../app/contexts/StoreContext';
 import {selectPageContentDropdownItems} from '../../app/selectors/selectPageContentDropdownItems';
-import {useId} from '../../core/hooks/useId';
-import {openItemSelector} from '../../core/openItemSelector';
+import findPageContent from '../../app/utils/findPageContent';
+import getEditableId from '../../app/utils/getEditableId';
+import {openItemSelector} from '../openItemSelector';
 
-const DEFAULT_PREVENT_ITEM_SELECT = (callback) => callback(false);
+const DEFAULT_BEFORE_ITEM_SELECT = () => {};
 
 const DEFAULT_OPTIONS_MENU_ITEMS = [];
 
@@ -39,8 +32,8 @@ export default function ItemSelector({
 	itemSelectorURL,
 	label,
 	modalProps,
+	onBeforeItemSelect = DEFAULT_BEFORE_ITEM_SELECT,
 	onItemSelect,
-	onPreventCollectionSelect = DEFAULT_PREVENT_ITEM_SELECT,
 	optionsMenuItems = DEFAULT_OPTIONS_MENU_ITEMS,
 	quickMappedInfoItems = DEFAULT_QUICK_MAPPED_INFO_ITEMS,
 	selectedItem,
@@ -52,25 +45,31 @@ export default function ItemSelector({
 	const itemSelectorInputId = useId();
 
 	const openModal = useCallback(() => {
-		onPreventCollectionSelect((result) => {
-			if (!result) {
-				openItemSelector({
-					callback: onItemSelect,
-					eventName:
-						eventName || `${config.portletNamespace}selectInfoItem`,
-					itemSelectorURL:
-						itemSelectorURL || config.infoItemSelectorURL,
-					modalProps,
-					transformValueCallback,
-				});
-			}
+		let defaultPrevented = false;
+
+		onBeforeItemSelect({
+			preventDefault: () => {
+				defaultPrevented = true;
+			},
+		});
+
+		if (defaultPrevented) {
+			return;
+		}
+
+		openItemSelector({
+			callback: onItemSelect,
+			eventName: eventName || `${config.portletNamespace}selectInfoItem`,
+			itemSelectorURL: itemSelectorURL || config.infoItemSelectorURL,
+			modalProps,
+			transformValueCallback,
 		});
 	}, [
 		eventName,
 		itemSelectorURL,
 		modalProps,
 		onItemSelect,
-		onPreventCollectionSelect,
+		onBeforeItemSelect,
 		transformValueCallback,
 	]);
 
@@ -83,7 +82,7 @@ export default function ItemSelector({
 			}
 
 			const transformMappedItem = (item) => ({
-				'data-item-id': `${item.classNameId}-${item.classPK}`,
+				'data-item-id': getEditableId(item),
 				'label': item.title,
 				'onClick': () => onItemSelect(item),
 			});
@@ -100,6 +99,14 @@ export default function ItemSelector({
 			}
 
 			if (transformedMappedItems.length) {
+				transformedMappedItems = [
+					{
+						items: transformedMappedItems,
+						label: Liferay.Language.get('recent'),
+						type: 'group',
+					},
+				];
+
 				transformedMappedItems.push(
 					{
 						type: 'divider',
@@ -129,9 +136,9 @@ export default function ItemSelector({
 		(state) => {
 			const menuItems = [];
 
-			if (selectedItem?.classPK) {
+			if (selectedItem?.classPK || selectedItem?.externalReferenceCode) {
 				const contentMenuItems = selectPageContentDropdownItems(
-					selectedItem.classPK,
+					selectedItem,
 					label
 				)(state)?.filter(
 					(item) => item.label !== Liferay.Language.get('edit-image')
@@ -166,18 +173,15 @@ export default function ItemSelector({
 				return '';
 			}
 
-			return (
+			const content = findPageContent(
 				[
 					...(quickMappedInfoItems || []),
 					...(state.pageContents || []),
-				].find(
-					(item) =>
-						item.classNameId === selectedItem.classNameId &&
-						item.classPK === selectedItem.classPK
-				)?.title ||
-				selectedItem.title ||
-				''
+				],
+				selectedItem
 			);
+
+			return content?.title || selectedItem.title || '';
 		},
 		[quickMappedInfoItems, selectedItem]
 	);
@@ -203,18 +207,12 @@ export default function ItemSelector({
 							'page-editor__item-selector__content-input': showEditControls,
 						})}
 						id={itemSelectorInputId}
-						onClick={() => {
-							if (showEditControls) {
-								openModal();
-							}
-						}}
 						placeholder={sub(
-							Liferay.Language.get('select-x'),
+							Liferay.Language.get('no-x-selected'),
 							label
 						)}
 						readOnly
 						sizing="sm"
-						title={selectedItemTitle}
 						type="text"
 						value={selectedItemTitle}
 					/>
@@ -299,22 +297,24 @@ ItemSelector.propTypes = {
 	itemSelectorURL: PropTypes.string,
 	label: PropTypes.string.isRequired,
 	modalProps: PropTypes.object,
+	onBeforeItemSelect: PropTypes.func,
 	onItemSelect: PropTypes.func.isRequired,
 	optionsMenuItems: PropTypes.arrayOf(
 		PropTypes.shape({
+			href: PropTypes.string,
 			label: PropTypes.string.isRequired,
-			onClick: PropTypes.func.isRequired,
+			onClick: PropTypes.func,
 		})
 	),
 	quickMappedInfoItems: PropTypes.arrayOf(
 		PropTypes.shape({
 			classNameId: PropTypes.string,
 			classPK: PropTypes.string,
+			externalReferenceCode: PropTypes.string,
 			title: PropTypes.string,
 		})
 	),
 	selectedItem: PropTypes.shape({title: PropTypes.string}),
-	shouldPreventItemSelect: PropTypes.func,
 	showEditControls: PropTypes.bool,
 	showMappedItems: PropTypes.bool,
 	transformValueCallback: PropTypes.func.isRequired,

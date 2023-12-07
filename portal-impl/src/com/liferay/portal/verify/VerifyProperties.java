@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.verify;
@@ -1479,6 +1470,17 @@ public class VerifyProperties {
 			"com.liferay.search.web"
 		},
 
+		// Session
+
+		{
+			"session.timeout.auto.extend", "auto-extend",
+			"com.liferay.frontend.js.web"
+		},
+		{
+			"session.timeout.auto.extend.offset", "auto-extend-offset",
+			"com.liferay.frontend.js.web"
+		},
+
 		// Site Map
 
 		{
@@ -1523,6 +1525,19 @@ public class VerifyProperties {
 		{
 			"tags.compiler.enabled", "enabled",
 			"com.liferay.asset.tags.compiler.web"
+		},
+
+		// Text Extraction
+
+		{
+			"text.extraction.fork.process.enabled",
+			"text-extraction-fork-process-enabled",
+			"com.liferay.portal.tika"
+		},
+		{
+			"text.extraction.fork.process.mime.types",
+			"text-extraction-fork-process-mime-types",
+			"com.liferay.portal.tika"
 		},
 
 		// Translator
@@ -1625,14 +1640,20 @@ public class VerifyProperties {
 		{
 			"ical4j.validation.relaxed", "ical4j.validation.relaxed",
 			"com.liferay.calendar.service"
+		},
+
+		// Tika
+
+		{
+			"tika.config", "tika-config-xml", "com.liferay.portal.tika"
 		}
+
 	};
 
 	private static final String[] _OBSOLETE_PORTAL_KEYS = {
 		"aim.login", "aim.login", "amazon.access.key.id",
 		"amazon.associate.tag", "amazon.secret.access.key",
-		"asset.categories.properties.default",
-		"asset.entry.increment.view.counter.enabled", "asset.entry.validator",
+		"asset.categories.properties.default", "asset.entry.validator",
 		"asset.publisher.asset.entry.query.processors",
 		"asset.publisher.filter.unlistable.entries",
 		"asset.publisher.query.form.configuration",
@@ -1677,6 +1698,7 @@ public class VerifyProperties {
 		"captcha.engine.simplecaptcha.noise.producers",
 		"captcha.engine.simplecaptcha.text.producers",
 		"captcha.engine.simplecaptcha.word.renderers", "cas.validate.url",
+		"change.tracking.sql.transformer.cache.size",
 		"cluster.executor.heartbeat.interval",
 		"cluster.link.node.bootup.response.timeout",
 		"com.liferay.filters.doubleclick.DoubleClickFilter",
@@ -1684,6 +1706,7 @@ public class VerifyProperties {
 		"com.liferay.portal.servlet.filters.doubleclick.DoubleClickFilter",
 		"com.liferay.portal.servlet.filters.charbufferpool." +
 			"CharBufferPoolFilter",
+		"com.liferay.portal.servlet.filters.i18n.I18nFilter",
 		"com.liferay.portal.servlet.filters.jsoncontenttype." +
 			"JSONContentTypeFilter",
 		"com.liferay.portal.servlet.filters.monitoring.MonitoringFilter",
@@ -1692,14 +1715,14 @@ public class VerifyProperties {
 		"com.liferay.portal.servlet.filters.validhtml.ValidHtmlFilter",
 		"com.liferay.portal.upload.UploadServletRequestImpl.max.size",
 		"com.liferay.portal.upload.UploadServletRequestImpl.temp.dir",
-		"commons.pool.enabled", "company.security.send.password",
-		"company.settings.form.configuration",
+		"commons.pool.enabled", "company.security.auth.requires.https",
+		"company.security.send.password", "company.settings.form.configuration",
 		"company.settings.form.identification",
 		"company.settings.form.miscellaneous", "company.settings.form.social",
 		"control.panel.home.portlet.id",
 		"control.panel.navigation.max.organizations",
 		"control.panel.navigation.max.sites", "convert.processes",
-		"data.limit.max.dl.storage.size",
+		"counter.jdbc.prefix", "data.limit.max.dl.storage.size",
 		"data.limit.max.journal.article.count",
 		"data.limit.max.journal.folder.count",
 		"data.limit.max.mail.message.count",
@@ -1723,7 +1746,7 @@ public class VerifyProperties {
 		"dl.file.entry.preview.auto.create.on.upgrade",
 		"dl.file.entry.preview.document.depth",
 		"dl.file.entry.previewable.processor.max.size",
-		"dl.file.entry.read.count.enabled",
+		"dl.file.entry.processors", "dl.file.entry.read.count.enabled",
 		"dl.file.entry.thumbnail.video.frame.percentage",
 		"dl.file.entry.type.ig.image.auto.create.on.upgrade",
 		"dl.file.entry.version.policy", "dl.file.extensions",
@@ -1837,8 +1860,7 @@ public class VerifyProperties {
 		"jdbc.default.minIdle", "jdbc.default.minPoolSize",
 		"jdbc.default.numHelperThreads", "jdbc.default.removeAbandonedTimeout",
 		"jdbc.default.testWhileIdle",
-		"jdbc.default.timeBetweenEvictionRunsMillis",
-		"jdbc.default.transactionIsolation", "jdbc.default.useEquals",
+		"jdbc.default.timeBetweenEvictionRunsMillis", "jdbc.default.useEquals",
 		"jdbc.default.validationQuery", "json.deserializer.strict.mode",
 		"journal.article.form.add", "journal.article.form.default.values",
 		"journal.article.form.update", "journal.article.form.translate",
@@ -1889,9 +1911,11 @@ public class VerifyProperties {
 		"layout.url.friendliable[panel]", "layout.url.friendliable[url]",
 		"layout.view.page[control_panel]", "layout.view.page[embedded]",
 		"layout.view.page[link_to_layout]", "layout.view.page[panel]",
-		"layout.view.page[url]", "library.download.url.resin.jar",
-		"library.download.url.script-10.jar", "liferay.lib.global.shared.dir",
-		"liferay.web.portal.dir", "look.and.feel.modifiable", "lucene.analyzer",
+		"layout.view.page[url]", "ldap.clock.skew",
+		"ldap.ignore.user.search.filter.for.auth=true",
+		"library.download.url.resin.jar", "library.download.url.script-10.jar",
+		"liferay.lib.global.shared.dir", "liferay.web.portal.dir",
+		"look.and.feel.modifiable", "lucene.analyzer",
 		"lucene.cluster.index.loading.sync.timeout", "lucene.file.extractor",
 		"lucene.file.extractor.regexp.strip", "lucene.replicate.write",
 		"lucene.store.jdbc.auto.clean.up",
@@ -1996,6 +2020,17 @@ public class VerifyProperties {
 		"sites.form.add.miscellaneous", "sites.form.add.seo",
 		"sites.form.update.advanced", "sites.form.update.main",
 		"sites.form.update.miscellaneous", "sites.form.update.seo",
+		"sql.data.com.liferay.portal.kernel.model.Country.country.id",
+		"sql.data.com.liferay.portal.kernel.model.ListType.account.address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.account.email." +
+			"address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.company.address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.company.email." +
+			"address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.contact.email." +
+			"address",
+		"sql.data.com.liferay.portal.kernel.model.ListType.organization.status",
+		"sql.data.com.liferay.portal.kernel.model.Region.region.id",
 		"staging.lock.enabled", "social.activity.sets.bundling.enabled",
 		"social.activity.sets.enabled", "social.bookmark.display.styles",
 		"social.bookmark.types", "spring.hibernate.data.source",
@@ -2223,7 +2258,8 @@ public class VerifyProperties {
 		{
 			"tags.asset.increment.view.counter.enabled",
 			"asset.entry.increment.view.counter.enabled"
-		}
+		},
+		{"sql.data.max.parameters", "database.max.parameters"}
 	};
 
 	private static final String[][] _RENAMED_SYSTEM_KEYS = {

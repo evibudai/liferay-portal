@@ -1,77 +1,54 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.internal.provider;
 
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
+
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.redirect.constants.RedirectConstants;
 import com.liferay.redirect.internal.configuration.RedirectPatternConfiguration;
 import com.liferay.redirect.internal.util.PatternUtil;
+import com.liferay.redirect.matcher.UserAgentMatcher;
 import com.liferay.redirect.model.RedirectEntry;
+import com.liferay.redirect.model.RedirectPatternEntry;
 import com.liferay.redirect.provider.RedirectProvider;
 import com.liferay.redirect.service.RedirectEntryLocalService;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
  */
-@Component(
-	property = Constants.SERVICE_PID + "=com.liferay.redirect.internal.configuration.RedirectPatternConfiguration.scoped",
-	service = {ManagedServiceFactory.class, RedirectProvider.class}
-)
-public class RedirectProviderImpl
-	implements ManagedServiceFactory, RedirectProvider {
-
-	@Override
-	public void deleted(String pid) {
-		_unmapPid(pid);
-	}
-
-	@Override
-	public String getName() {
-		return "com.liferay.redirect.internal.configuration." +
-			"RedirectPatternConfiguration.scoped";
-	}
-
-	@Override
-	public Map<Pattern, String> getPatternStrings(long groupId) {
-		Map<Pattern, String> patternStrings = _patternStrings.get(groupId);
-
-		if (patternStrings != null) {
-			return patternStrings;
-		}
-
-		return new LinkedHashMap<>();
-	}
+@Component(service = RedirectProvider.class)
+public class RedirectProviderImpl implements RedirectProvider {
 
 	@Override
 	public Redirect getRedirect(
-		long groupId, String friendlyURL, String fullURL) {
+		long groupId, String friendlyURL, String fullURL, String userAgent) {
 
 		if (friendlyURL.contains("/control_panel/manage")) {
 			return null;
@@ -91,17 +68,24 @@ public class RedirectProviderImpl
 				redirectEntry.getDestinationURL(), redirectEntry.isPermanent());
 		}
 
-		Map<Pattern, String> patternStrings = _patternStrings.getOrDefault(
-			groupId, Collections.emptyMap());
+		List<RedirectPatternEntry> redirectPatternEntries =
+			_redirectPatternEntries.getOrDefault(
+				groupId, Collections.emptyList());
 
-		for (Map.Entry<Pattern, String> entry : patternStrings.entrySet()) {
-			Pattern pattern = entry.getKey();
+		for (RedirectPatternEntry redirectPatternEntry :
+				redirectPatternEntries) {
 
-			Matcher matcher = pattern.matcher(friendlyURL);
+			if (_isUserAgentMatch(redirectPatternEntry, userAgent)) {
+				Pattern pattern = redirectPatternEntry.getPattern();
 
-			if (matcher.matches()) {
-				return new RedirectImpl(
-					matcher.replaceFirst(entry.getValue()), false);
+				Matcher matcher = pattern.matcher(friendlyURL);
+
+				if (matcher.matches()) {
+					return new RedirectImpl(
+						matcher.replaceFirst(
+							redirectPatternEntry.getDestinationURL()),
+						false);
+				}
 			}
 		}
 
@@ -109,33 +93,38 @@ public class RedirectProviderImpl
 	}
 
 	@Override
-	public void updated(String pid, Dictionary<String, ?> dictionary)
-		throws ConfigurationException {
+	public List<RedirectPatternEntry> getRedirectPatternEntries(long groupId) {
+		List<RedirectPatternEntry> redirectPatternEntries =
+			_redirectPatternEntries.get(groupId);
 
-		_unmapPid(pid);
-
-		long groupId = GetterUtil.getLong(
-			dictionary.get("groupId"), GroupConstants.DEFAULT_PARENT_GROUP_ID);
-
-		if (groupId == GroupConstants.DEFAULT_PARENT_GROUP_ID) {
-			return;
+		if (redirectPatternEntries != null) {
+			return redirectPatternEntries;
 		}
 
-		_groupIds.put(pid, groupId);
-
-		RedirectPatternConfiguration redirectPatternConfiguration =
-			ConfigurableUtil.createConfigurable(
-				RedirectPatternConfiguration.class, dictionary);
-
-		_patternStrings.put(
-			groupId,
-			PatternUtil.parse(redirectPatternConfiguration.patternStrings()));
+		return new ArrayList<>();
 	}
 
-	protected void setPatternStrings(
-		Map<Long, Map<Pattern, String>> patternStrings) {
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceRegistration = bundleContext.registerService(
+			ManagedServiceFactory.class,
+			new RedirectProviderManagedServiceFactory(),
+			HashMapDictionaryBuilder.put(
+				Constants.SERVICE_PID,
+				"com.liferay.redirect.internal.configuration." +
+					"RedirectPatternConfiguration.scoped"
+			).build());
+	}
 
-		_patternStrings = patternStrings;
+	@Deactivate
+	protected void deactivate() {
+		_serviceRegistration.unregister();
+	}
+
+	protected void setCrawlerUserAgentsMatcher(
+		UserAgentMatcher userAgentMatcher) {
+
+		_userAgentMatcher = userAgentMatcher;
 	}
 
 	protected void setRedirectEntryLocalService(
@@ -144,20 +133,65 @@ public class RedirectProviderImpl
 		_redirectEntryLocalService = redirectEntryLocalService;
 	}
 
+	protected void setRedirectPatternEntries(
+		Map<Long, List<RedirectPatternEntry>> redirectPatternEntries) {
+
+		_redirectPatternEntries = redirectPatternEntries;
+	}
+
+	private boolean _isUserAgentMatch(
+		RedirectPatternEntry redirectPatternEntry, String userAgent) {
+
+		if (Validator.isNull(redirectPatternEntry.getUserAgent()) ||
+			Validator.isNull(userAgent) ||
+			Objects.equals(
+				RedirectConstants.USER_AGENT_ALL,
+				redirectPatternEntry.getUserAgent())) {
+
+			return true;
+		}
+
+		boolean crawlerUserAgent = _userAgentMatcher.isCrawlerUserAgent(
+			userAgent);
+
+		if (crawlerUserAgent &&
+			Objects.equals(
+				RedirectConstants.USER_AGENT_BOT,
+				redirectPatternEntry.getUserAgent())) {
+
+			return true;
+		}
+
+		if (!crawlerUserAgent &&
+			Objects.equals(
+				RedirectConstants.USER_AGENT_HUMAN,
+				redirectPatternEntry.getUserAgent())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private void _unmapPid(String pid) {
 		if (_groupIds.containsKey(pid)) {
 			Long groupId = _groupIds.remove(pid);
 
-			_patternStrings.remove(groupId);
+			_redirectPatternEntries.remove(groupId);
 		}
 	}
 
 	private final Map<String, Long> _groupIds = new ConcurrentHashMap<>();
-	private Map<Long, Map<Pattern, String>> _patternStrings =
-		new ConcurrentHashMap<>();
 
 	@Reference
 	private RedirectEntryLocalService _redirectEntryLocalService;
+
+	private Map<Long, List<RedirectPatternEntry>> _redirectPatternEntries =
+		new ConcurrentHashMap<>();
+	private ServiceRegistration<ManagedServiceFactory> _serviceRegistration;
+
+	@Reference
+	private UserAgentMatcher _userAgentMatcher;
 
 	private static class RedirectImpl implements Redirect {
 
@@ -178,6 +212,48 @@ public class RedirectProviderImpl
 
 		private final String _destinationURL;
 		private final boolean _permanent;
+
+	}
+
+	private class RedirectProviderManagedServiceFactory
+		implements ManagedServiceFactory {
+
+		@Override
+		public void deleted(String pid) {
+			_unmapPid(pid);
+		}
+
+		@Override
+		public String getName() {
+			return "com.liferay.redirect.internal.configuration." +
+				"RedirectPatternConfiguration.scoped";
+		}
+
+		@Override
+		public void updated(String pid, Dictionary<String, ?> dictionary)
+			throws ConfigurationException {
+
+			_unmapPid(pid);
+
+			long groupId = GetterUtil.getLong(
+				dictionary.get("groupId"),
+				GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
+			if (groupId == GroupConstants.DEFAULT_PARENT_GROUP_ID) {
+				return;
+			}
+
+			_groupIds.put(pid, groupId);
+
+			RedirectPatternConfiguration redirectPatternConfiguration =
+				ConfigurableUtil.createConfigurable(
+					RedirectPatternConfiguration.class, dictionary);
+
+			_redirectPatternEntries.put(
+				groupId,
+				PatternUtil.parse(
+					redirectPatternConfiguration.patternStrings()));
+		}
 
 	}
 

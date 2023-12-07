@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.portlet.action;
 
+import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
@@ -30,7 +22,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -96,14 +88,15 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 		User user = themeDisplay.getUser();
 
 		long[] groupIds = user.getGroupIds();
+		long[] userGroupIds = user.getUserGroupIds();
 
-		if (ArrayUtil.isEmpty(groupIds)) {
+		if (ArrayUtil.isEmpty(groupIds) && ArrayUtil.isEmpty(userGroupIds)) {
 			return Collections.emptyList();
 		}
 
 		return _userLocalService.searchBySocial(
-			themeDisplay.getCompanyId(), groupIds, keywords, 0, 20,
-			new UserScreenNameComparator(true));
+			themeDisplay.getCompanyId(), groupIds, userGroupIds, keywords, 0,
+			20, new UserScreenNameComparator(true));
 	}
 
 	private JSONArray _getUsersJSONArray(ResourceRequest resourceRequest)
@@ -111,15 +104,19 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
+		long ctCollectionId = ParamUtil.getLong(
+			resourceRequest, "ctCollectionId");
+
 		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
-			ParamUtil.getLong(resourceRequest, "ctCollectionId"));
+			ctCollectionId);
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		for (User user : _getUsers(resourceRequest, themeDisplay)) {
-			if (user.isDefaultUser() ||
-				(themeDisplay.getUserId() == user.getUserId())) {
+			if ((user.isGuestUser() ||
+				 (themeDisplay.getUserId() == user.getUserId())) &&
+				(ctCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
 
 				continue;
 			}
@@ -140,13 +137,13 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 					"fullName", user.getFullName()
 				).put(
 					"hasPublicationsAccess",
-					_portletPermission.contains(
+					PortletPermissionUtil.contains(
 						permissionChecker, PortletKeys.PORTAL,
 						ActionKeys.VIEW_CONTROL_PANEL) &&
-					_portletPermission.contains(
+					PortletPermissionUtil.contains(
 						permissionChecker, CTPortletKeys.PUBLICATIONS,
 						ActionKeys.ACCESS_IN_CONTROL_PANEL) &&
-					_portletPermission.contains(
+					PortletPermissionUtil.contains(
 						permissionChecker, CTPortletKeys.PUBLICATIONS,
 						ActionKeys.VIEW)
 				).put(
@@ -168,9 +165,6 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private PortletPermission _portletPermission;
 
 	@Reference
 	private UserLocalService _userLocalService;

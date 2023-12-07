@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
 
@@ -23,9 +23,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,8 +36,8 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@ignore = "true"
-	@priority = "5"
+	@ignore = "Test Stub"
+	@priority = 5
 	test AddSeparatorOnFormByDragAndDrop {
 		property portal.acceptance = "false";
 
@@ -46,8 +46,8 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@ignore = "true"
-	@priority = "5"
+	@ignore = "Test Stub"
+	@priority = 5
 	test DeleteSeparatorOnBuilder {
 		property portal.acceptance = "false";
 
@@ -56,8 +56,8 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@ignore = "true"
-	@priority = "4"
+	@ignore = "Test Stub"
+	@priority = 4
 	test DuplicateSeparatorOnBuilder {
 		property portal.acceptance = "false";
 
@@ -66,8 +66,8 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@ignore = "true"
-	@priority = "5"
+	@ignore = "Test Stub"
+	@priority = 5
 	test EditHelpTextOfSeparator {
 		property portal.acceptance = "false";
 
@@ -76,8 +76,8 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@ignore = "true"
-	@priority = "5"
+	@ignore = "Test Stub"
+	@priority = 5
 	test EditLabelOfSeparator {
 		property portal.acceptance = "false";
 
@@ -86,7 +86,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@priority = "5"
+	@priority = 5
 	test EditReferenceOfSeparator {
 		property portal.acceptance = "false";
 
@@ -100,10 +100,10 @@ definition {
 		var assertFieldReference = "Myreference123";
 
 		DataEngine.editFieldReference(
-			assertFieldReference = "${assertFieldReference}",
+			assertFieldReference = ${assertFieldReference},
 			fieldFieldLabel = "Separator",
 			fieldName = "Separator",
-			fieldReference = "${assertFieldReference}");
+			fieldReference = ${assertFieldReference});
 
 		Button.clickSave();
 
@@ -111,13 +111,13 @@ definition {
 
 		DEBuilder.assertFieldReference(
 			fieldLabel = "Separator",
-			fieldReference = "${assertFieldReference}");
+			fieldReference = ${assertFieldReference});
 
 		Button.clickSave();
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@priority = "4"
+	@priority = 4
 	test EditReferenceOfSeparatorWithInvalidCharacters {
 		property portal.acceptance = "false";
 
@@ -134,10 +134,10 @@ definition {
 		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "Document Type Name");
 
 		DataEngine.editFieldReference(
-			assertFieldReference = "${assertFieldReference}",
+			assertFieldReference = ${assertFieldReference},
 			fieldFieldLabel = "Separator",
 			fieldName = "Separator",
-			fieldReference = "${fieldReferenceWithInvalidChars}");
+			fieldReference = ${fieldReferenceWithInvalidChars});
 
 		Button.clickSave();
 
@@ -145,14 +145,14 @@ definition {
 
 		DEBuilder.assertFieldReference(
 			fieldLabel = "Separator",
-			fieldReference = "${assertFieldReference}");
+			fieldReference = ${assertFieldReference});
 
 		Button.clickSave();
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@ignore = "true"
-	@priority = "5"
+	@ignore = "Test Stub"
+	@priority = 5
 	test RepeatSeparatorOnUpload {
 		property portal.acceptance = "false";
 
@@ -161,7 +161,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@priority = "4"
+	@priority = 4
 	test SetSeparatorRepeatable {
 		property portal.acceptance = "false";
 
@@ -177,7 +177,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
-	@priority = "3"
+	@priority = 3
 	test ShowAndHideSeparatorLabel {
 		property portal.acceptance = "false";
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.message.boards.service.http;
@@ -1043,6 +1034,134 @@ public class MBMessageServiceHttp {
 		}
 	}
 
+	public static java.util.List<com.liferay.message.boards.model.MBMessage>
+			getGroupUserMessageBoardMessagesActivity(
+				HttpPrincipal httpPrincipal, long groupId, long userId,
+				int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBMessageServiceUtil.class,
+				"getGroupUserMessageBoardMessagesActivity",
+				_getGroupUserMessageBoardMessagesActivityParameterTypes24);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List<com.liferay.message.boards.model.MBMessage>)
+				returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static int getGroupUserMessageBoardMessagesActivityCount(
+			HttpPrincipal httpPrincipal, long groupId, long userId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBMessageServiceUtil.class,
+				"getGroupUserMessageBoardMessagesActivityCount",
+				_getGroupUserMessageBoardMessagesActivityCountParameterTypes25);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.message.boards.model.MBMessage
+			getMBMessageByExternalReferenceCode(
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBMessageServiceUtil.class,
+				"getMBMessageByExternalReferenceCode",
+				_getMBMessageByExternalReferenceCodeParameterTypes26);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, externalReferenceCode, groupId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.message.boards.model.MBMessage)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	public static com.liferay.message.boards.model.MBMessage getMessage(
 			HttpPrincipal httpPrincipal, long messageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -1050,7 +1169,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "getMessage",
-				_getMessageParameterTypes24);
+				_getMessageParameterTypes27);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId);
@@ -1091,7 +1210,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "getMessageDisplay",
-				_getMessageDisplayParameterTypes25);
+				_getMessageDisplayParameterTypes28);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId, status);
@@ -1131,7 +1250,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "getTempAttachmentNames",
-				_getTempAttachmentNamesParameterTypes26);
+				_getTempAttachmentNamesParameterTypes29);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, folderName);
@@ -1171,7 +1290,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "getThreadAnswersCount",
-				_getThreadAnswersCountParameterTypes27);
+				_getThreadAnswersCountParameterTypes30);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, categoryId, threadId);
@@ -1205,7 +1324,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "getThreadMessages",
-				_getThreadMessagesParameterTypes28);
+				_getThreadMessagesParameterTypes31);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, categoryId, threadId, status, start, end);
@@ -1239,7 +1358,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "getThreadMessagesCount",
-				_getThreadMessagesCountParameterTypes29);
+				_getThreadMessagesCountParameterTypes32);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, categoryId, threadId, status);
@@ -1275,7 +1394,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "getThreadMessagesRSS",
-				_getThreadMessagesRSSParameterTypes30);
+				_getThreadMessagesRSSParameterTypes33);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, threadId, status, max, type, version, displayStyle,
@@ -1316,7 +1435,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "moveMessageAttachmentToTrash",
-				_moveMessageAttachmentToTrashParameterTypes31);
+				_moveMessageAttachmentToTrashParameterTypes34);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId, fileName);
@@ -1352,7 +1471,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "restoreMessageAttachmentFromTrash",
-				_restoreMessageAttachmentFromTrashParameterTypes32);
+				_restoreMessageAttachmentFromTrashParameterTypes35);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId, fileName);
@@ -1388,7 +1507,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "subscribeMessage",
-				_subscribeMessageParameterTypes33);
+				_subscribeMessageParameterTypes36);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId);
@@ -1424,7 +1543,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "unsubscribeMessage",
-				_unsubscribeMessageParameterTypes34);
+				_unsubscribeMessageParameterTypes37);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId);
@@ -1461,7 +1580,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "updateAnswer",
-				_updateAnswerParameterTypes35);
+				_updateAnswerParameterTypes38);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId, answer, cascade);
@@ -1504,7 +1623,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "updateDiscussionMessage",
-				_updateDiscussionMessageParameterTypes36);
+				_updateDiscussionMessageParameterTypes39);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, className, classPK, messageId, subject, body,
@@ -1551,7 +1670,7 @@ public class MBMessageServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				MBMessageServiceUtil.class, "updateMessage",
-				_updateMessageParameterTypes37);
+				_updateMessageParameterTypes40);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, messageId, subject, body, inputStreamOVPs, priority,
@@ -1682,47 +1801,57 @@ public class MBMessageServiceHttp {
 			double.class, String.class, String.class, String.class,
 			com.liferay.portal.kernel.theme.ThemeDisplay.class
 		};
-	private static final Class<?>[] _getMessageParameterTypes24 = new Class[] {
+	private static final Class<?>[]
+		_getGroupUserMessageBoardMessagesActivityParameterTypes24 =
+			new Class[] {long.class, long.class, int.class, int.class};
+	private static final Class<?>[]
+		_getGroupUserMessageBoardMessagesActivityCountParameterTypes25 =
+			new Class[] {long.class, long.class};
+	private static final Class<?>[]
+		_getMBMessageByExternalReferenceCodeParameterTypes26 = new Class[] {
+			String.class, long.class
+		};
+	private static final Class<?>[] _getMessageParameterTypes27 = new Class[] {
 		long.class
 	};
-	private static final Class<?>[] _getMessageDisplayParameterTypes25 =
+	private static final Class<?>[] _getMessageDisplayParameterTypes28 =
 		new Class[] {long.class, int.class};
-	private static final Class<?>[] _getTempAttachmentNamesParameterTypes26 =
+	private static final Class<?>[] _getTempAttachmentNamesParameterTypes29 =
 		new Class[] {long.class, String.class};
-	private static final Class<?>[] _getThreadAnswersCountParameterTypes27 =
+	private static final Class<?>[] _getThreadAnswersCountParameterTypes30 =
 		new Class[] {long.class, long.class, long.class};
-	private static final Class<?>[] _getThreadMessagesParameterTypes28 =
+	private static final Class<?>[] _getThreadMessagesParameterTypes31 =
 		new Class[] {
 			long.class, long.class, long.class, int.class, int.class, int.class
 		};
-	private static final Class<?>[] _getThreadMessagesCountParameterTypes29 =
+	private static final Class<?>[] _getThreadMessagesCountParameterTypes32 =
 		new Class[] {long.class, long.class, long.class, int.class};
-	private static final Class<?>[] _getThreadMessagesRSSParameterTypes30 =
+	private static final Class<?>[] _getThreadMessagesRSSParameterTypes33 =
 		new Class[] {
 			long.class, int.class, int.class, String.class, double.class,
 			String.class, String.class, String.class,
 			com.liferay.portal.kernel.theme.ThemeDisplay.class
 		};
 	private static final Class<?>[]
-		_moveMessageAttachmentToTrashParameterTypes31 = new Class[] {
+		_moveMessageAttachmentToTrashParameterTypes34 = new Class[] {
 			long.class, String.class
 		};
 	private static final Class<?>[]
-		_restoreMessageAttachmentFromTrashParameterTypes32 = new Class[] {
+		_restoreMessageAttachmentFromTrashParameterTypes35 = new Class[] {
 			long.class, String.class
 		};
-	private static final Class<?>[] _subscribeMessageParameterTypes33 =
+	private static final Class<?>[] _subscribeMessageParameterTypes36 =
 		new Class[] {long.class};
-	private static final Class<?>[] _unsubscribeMessageParameterTypes34 =
+	private static final Class<?>[] _unsubscribeMessageParameterTypes37 =
 		new Class[] {long.class};
-	private static final Class<?>[] _updateAnswerParameterTypes35 =
+	private static final Class<?>[] _updateAnswerParameterTypes38 =
 		new Class[] {long.class, boolean.class, boolean.class};
-	private static final Class<?>[] _updateDiscussionMessageParameterTypes36 =
+	private static final Class<?>[] _updateDiscussionMessageParameterTypes39 =
 		new Class[] {
 			String.class, long.class, long.class, String.class, String.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updateMessageParameterTypes37 =
+	private static final Class<?>[] _updateMessageParameterTypes40 =
 		new Class[] {
 			long.class, String.class, String.class, java.util.List.class,
 			double.class, boolean.class,

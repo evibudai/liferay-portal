@@ -72,6 +72,21 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DETAILS_SCREEN_NAME_FIELD_DISABLED</td>
+	<td>//input[contains(@id,'screenName') and @disabled='disabled']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DETAILS_PREFIX_SELECT</td>
+	<td>//div[contains(.,'Prefix')]/select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DETAILS_LANGUAGE_SELECT</td>
+	<td>//div[contains(.,'Language')]/select</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DETAILS_SUFFIX_SELECT</td>
 	<td>//div[contains(.,'Suffix')]/select</td>
 	<td></td>
@@ -103,12 +118,12 @@
 </tr>
 <tr>
 	<td>DETAILS_PORTRAIT</td>
-	<td>//a//img[contains(@src,'user_portrait')]</td>
+	<td>//div//img[contains(@src,'user_portrait')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DETAILS_PROFILE_IMAGE</td>
-	<td>//img[contains(@id,'avatar') and contains(@src,'${key_imageName}')]</td>
+	<td>//img[contains(@class,'logo-selector') and contains(@src,'${key_imageName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -131,7 +146,7 @@
 
 <tr>
 	<td>MEMBERSHIPS_SELECT_ASSET_BUTTON</td>
-	<td>//a[contains(@id,'${key_selectId}')]/span</td>
+	<td>//*[contains(@id,'${key_selectId}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -183,11 +198,6 @@
 <tr>
 	<td>DEPOT_ROLES_SELECT_BUTTON</td>
 	<td>//button[contains(@data-rolename,'${roleTitle}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DEPOT_ROLES_SELECT_LINK</td>
-	<td>//a[contains(@id,'selectDepotRoleLink')]/span</td>
 	<td></td>
 </tr>
 <tr>
@@ -263,18 +273,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ROLES_REGULAR_ROLES_REMOVE_ROLE</td>
-	<td>//tr[contains(.,'${key_regularRoleName}')]//span[contains(@class,' lfr-portal-tooltip')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ROLES_REGULAR_ROLES_TABLE_TITLE</td>
 	<td>//tr[contains(.,'${key_regularRoleName}')]/td[1]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ROLES_SELECT_LINK</td>
-	<td>//a[contains(@id,'select${key_roleType}Link')]/span</td>
+	<td>//button[contains(@id,'select${key_roleType}Link')]</td>
 	<td></td>
 </tr>
 <tr>

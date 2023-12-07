@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.info.collection.provider;
@@ -20,7 +11,6 @@ import com.liferay.info.sort.Sort;
 import com.liferay.portal.kernel.util.MapUtil;
 
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Jorge Ferrer
@@ -28,25 +18,23 @@ import java.util.Optional;
  */
 public class CollectionQuery {
 
-	public Optional<Map<String, String[]>> getConfigurationOptional() {
-		return Optional.ofNullable(_configuration);
+	public Map<String, String[]> getConfiguration() {
+		return _configuration;
 	}
 
-	public <T> Optional<T> getInfoFilterOptional(
-		Class<? extends InfoFilter> clazz) {
-
+	public <T> T getInfoFilter(Class<? extends InfoFilter> clazz) {
 		if (MapUtil.isEmpty(_infoFilters)) {
-			return Optional.empty();
+			return null;
 		}
 
 		InfoFilter infoFilter = _infoFilters.getOrDefault(
 			clazz.getName(), null);
 
 		if (infoFilter != null) {
-			return Optional.of((T)infoFilter);
+			return (T)infoFilter;
 		}
 
-		return Optional.empty();
+		return null;
 	}
 
 	public Pagination getPagination() {
@@ -57,12 +45,12 @@ public class CollectionQuery {
 		return _pagination;
 	}
 
-	public Optional<Object> getRelatedItemObjectOptional() {
-		return Optional.ofNullable(_relatedItemObject);
+	public Object getRelatedItem() {
+		return _relatedItemObject;
 	}
 
-	public Optional<Sort> getSortOptional() {
-		return Optional.ofNullable(_sort);
+	public Sort getSort() {
+		return _sort;
 	}
 
 	public void setConfiguration(Map<String, String[]> configuration) {

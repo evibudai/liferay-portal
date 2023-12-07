@@ -1,101 +1,177 @@
 definition {
 
-	@summary = "Add a segment with a user or session specific criteria"
-	macro addSegment {
+	@summary = "Default summary"
+	macro addSegment(date = null, fieldName = null, description = null, workflowAction = null, selectedOption = null, segmentName = null, operator = null, groupName = null, site = null, assetCategoryIds = null, firstSegmentId = null, assetTagNames = null, conditionType = null, value = null, key = null, secondSegmentId = null) {
 		Variables.assertDefined(parameterList = "${groupName},${segmentName},${fieldName},${operator}");
 
-		var descriptionMap = JSONSegmentsentrySetter.setDescriptionMap(description = "${description}");
-		var field = JSONSegmentsentrySetter.setField(fieldName = "${fieldName}");
+		var descriptionMap = JSONSegmentsentrySetter.setDescriptionMap(description = ${description});
+		var field = JSONSegmentsentrySetter.setField(fieldName = ${fieldName});
 
 		if (isSet(selectedOption)) {
 			var text = JSONSegmentsentrySetter.setSelectedOptionId(
-				fieldName = "${field}",
-				groupName = "${groupName}",
-				selectedOption = "${selectedOption}");
+				fieldName = ${field},
+				groupName = ${groupName},
+				selectedOption = ${selectedOption});
 		}
 
-		if ("${conditionType}" == "Session") {
+		if (${conditionType} == "Session") {
 			var criteria = JSONSegmentsentrySetter.setSessionCriteria(
-				date = "${date}",
-				field = "${field}",
-				key = "${key}",
-				operator = "${operator}",
-				text = "${text}",
-				value = "${value}");
+				date = ${date},
+				field = ${field},
+				key = ${key},
+				operator = ${operator},
+				text = ${text},
+				value = ${value});
 		}
-		else if ("${conditionType}" == "Segments") {
+		else if (${conditionType} == "Segments") {
 			var criteria = JSONSegmentsentrySetter.setSegmentCriteria(
-				conjunctionOperator = "${operator}",
-				firstSegmentId = "${firstSegmentId}",
-				secondSegmentId = "${secondSegmentId}");
+				conjunctionOperator = ${operator},
+				firstSegmentId = ${firstSegmentId},
+				secondSegmentId = ${secondSegmentId});
 		}
-		else if ("${conditionType}" == "Organization") {
+		else if (${conditionType} == "Organization") {
 			var criteria = JSONSegmentsentrySetter.setOrganizationCriteria(
-				date = "${date}",
-				field = "${field}",
-				operator = "${operator}",
-				text = "${text}");
+				date = ${date},
+				field = ${field},
+				operator = ${operator},
+				text = ${text});
 		}
-		else if (!(isSet(conditionType)) || ("${conditionType}" == "User")) {
+		else if (!(isSet(conditionType)) || (${conditionType} == "User")) {
 			var criteria = JSONSegmentsentrySetter.setCriteria(
-				date = "${date}",
-				field = "${field}",
-				operator = "${operator}",
-				text = "${text}");
+				date = ${date},
+				field = ${field},
+				operator = ${operator},
+				text = ${text});
 		}
 
-		var nameMap = JSONSegmentsentrySetter.setNameMap(name = "${segmentName}");
+		var nameMap = JSONSegmentsentrySetter.setNameMap(name = ${segmentName});
 		var serviceContext = JSONSegmentsentrySetter.setServiceContext(
-			assetCategoryIds = "${assetCategoryIds}",
-			assetTagNames = "${assetTagNames}",
-			groupName = "${groupName}",
-			site = "${site}",
-			workflowAction = "${workflowAction}");
+			assetCategoryIds = ${assetCategoryIds},
+			assetTagNames = ${assetTagNames},
+			groupName = ${groupName},
+			site = ${site},
+			workflowAction = ${workflowAction});
 
 		var segmentId = JSONSegmentsentryAPI._addSegment(
-			criteria = "${criteria}",
-			descriptionMap = "${descriptionMap}",
-			nameMap = "${nameMap}",
-			serviceContext = "${serviceContext}");
+			criteria = ${criteria},
+			descriptionMap = ${descriptionMap},
+			nameMap = ${nameMap},
+			serviceContext = ${serviceContext});
 
-		return "${segmentId}";
+		return ${segmentId};
 	}
 
-	@summary = "Delete a segment based on its name and group"
-	macro deleteSegment {
+	@summary = "Add a segment entry with properties"
+	macro addSegmentWithProperties(filterStringList = null, description = null, workflowAction = null, segmentName = null, groupName = null, site = null, contentTypeList = null, assetCategoryIds = null, assetTagNames = null) {
+		Variables.assertDefined(parameterList = "${contentTypeList},${filterStringList},${groupName},${segmentName}");
+
+		var descriptionMap = JSONSegmentsentrySetter.setDescriptionMap(description = ${description});
+		var list1 = ListUtil.newListFromString(${contentTypeList});
+		var list2 = ListUtil.newListFromString(${filterStringList}, ":");
+		var size = ListUtil.size(${list1});
+		var criteria = "";
+		var i = 0;
+
+		while (${i} != ${size}) {
+			var contentType = ListUtil.get(${list1}, ${i});
+
+			var type = JSONSegmentsentrySetter.setPropertyType(contentType = ${contentType});
+			var typeValue = JSONSegmentsentrySetter.setPropertyTypeValue(contentType = ${contentType});
+			var filterString = ListUtil.get(${list2}, ${i});
+
+			var filterString = StringUtil.replace(${filterString}, "'", "%27");
+
+			if (${i} != 0) {
+				var criteria = StringUtil.add(${criteria}, ",\"${type}\":{\"conjunction\":\"and\",", "");
+			}
+			else {
+				var criteria = StringUtil.add(${criteria}, "\"${type}\":{\"conjunction\":\"and\",", "");
+			}
+
+			var criteria = StringUtil.add(${criteria}, "\"filterString\":\"${filterString}\",", "");
+
+			var criteria = StringUtil.add(${criteria}, "\"typeValue\":\"${typeValue}\"}", "");
+			var i = ${i} + 1;
+		}
+
+		var filterStrings = "";
+		var i = 0;
+
+		while (${i} != ${size}) {
+			var contentType = ListUtil.get(${list1}, ${i});
+
+			var typeValue = JSONSegmentsentrySetter.setPropertyTypeValue(contentType = ${contentType});
+			var filterString = ListUtil.get(${list2}, ${i});
+
+			var filterString = StringUtil.replace(${filterString}, "'", "%27");
+
+			if (${i} != 0) {
+				var filterStrings = StringUtil.add(${filterStrings}, ",\"${typeValue}\":\"${filterString}\"", "");
+			}
+			else {
+				var filterStrings = StringUtil.add(${filterStrings}, "\"${typeValue}\":\"${filterString}\"", "");
+			}
+
+			var i = ${i} + 1;
+		}
+
+		var criteria = StringUtil.add("{\"criteria\":", "{${criteria}},", "");
+
+		var criteria = StringUtil.add(${criteria}, "\"filterStrings\":{${filterStrings}}}", "");
+		var nameMap = JSONSegmentsentrySetter.setNameMap(name = ${segmentName});
+		var serviceContext = JSONSegmentsentrySetter.setServiceContext(
+			assetCategoryIds = ${assetCategoryIds},
+			assetTagNames = ${assetTagNames},
+			groupName = ${groupName},
+			site = ${site},
+			workflowAction = ${workflowAction});
+
+		var segmentId = JSONSegmentsentryAPI._addSegment(
+			criteria = ${criteria},
+			descriptionMap = ${descriptionMap},
+			nameMap = ${nameMap},
+			serviceContext = ${serviceContext});
+
+		return ${segmentId};
+	}
+
+	@summary = "Default summary"
+	macro deleteSegment(groupName = null, segmentName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${segmentName}");
 
 		var segmentId = JSONSegmentsentry.getSegmentId(
-			groupName = "${groupName}",
-			segmentName = "${segmentName}");
+			groupName = ${groupName},
+			segmentName = ${segmentName});
 
-		JSONSegmentsentryAPI._deleteSegment(segmentsId = "${segmentId}");
+		JSONSegmentsentryAPI._deleteSegment(segmentsId = ${segmentId});
 	}
 
-	macro getSegmentId {
-		Variables.assertDefined(parameterList = "${segmentName}");
+	@summary = "Default summary"
+	macro getSegmentId(segmentName = null) {
+		Variables.assertDefined(parameterList = ${segmentName});
 
 		if (!(isSet(groupName))) {
 			var groupName = "Guest";
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
+			groupName = ${groupName},
 			site = "true");
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/segments.segmentsentry/get-segments-entries \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d includeAncestorSegmentsEntries=true
 		''';
 
-		var segmentId = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${segmentName}')]['segmentsEntryId']");
+		var segmentId = JSONCurlUtil.post(${curl}, "$.[?(@['nameCurrentValue'] == '${segmentName}')]['segmentsEntryId']");
 
 		echo("## ID for Segment ${segmentName}: ${segmentId}");
 
-		return "${segmentId}";
+		return ${segmentId};
 	}
 
 }

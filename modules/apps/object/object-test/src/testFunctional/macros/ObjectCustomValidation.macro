@@ -1,85 +1,80 @@
 definition {
 
-	macro activeValidation {
+	@summary = "Default summary"
+	macro activeValidation() {
 		Check.checkToggleSwitch(locator1 = "ObjectCustomValidation#ACTIVE_VALIDATION_TOGGLE");
 	}
 
-	macro addErrorMessage {
+	@summary = "Default summary"
+	macro addErrorMessage(errorMessage = null) {
 		Type.type(
 			locator1 = "ObjectCustomValidation#ADD_ERROR_MESSAGE_VALIDATION",
-			value1 = "${errorMessage}");
+			value1 = ${errorMessage});
 	}
 
-	macro addObjectValidation {
+	@summary = "Default summary"
+	macro addObjectValidation(validationName = null, validationType = null) {
 		LexiconEntry.gotoAdd();
 
 		Type(
 			locator1 = "ObjectCustomValidation#LABEL_ON_ADD_VALIDATION",
-			value1 = "${validationName}");
+			value1 = ${validationName});
 
-		Click(locator1 = "ObjectCustomValidation#SELECT_TYPE_VALIDATION");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Type",
+			optionName = ${validationType});
 
-		Click(
-			key_validationType = "${validationType}",
-			locator1 = "ObjectCustomValidation#CHOOSE_OPTION_TYPE_VALIDATION");
-
-		PortletEntry.save();
+		Button.clickSave();
 	}
 
-	macro assertValidationPresent {
+	@summary = "Default summary"
+	macro assertValidationPresent(validationName = null, validationType = null, validationActive = null) {
 		AssertElementPresent(
-			key_validationName = "${validationName}",
+			key_validationName = ${validationName},
 			locator1 = "ObjectCustomValidation#VIEW_LABEL_VALIDATION");
 
 		AssertElementPresent(
-			key_validationInfo = "${validationType}",
+			key_validationInfo = ${validationType},
 			locator1 = "ObjectCustomValidation#VIEW_INFO_VALIDATION");
 
 		AssertElementPresent(
-			key_validationInfo = "${validationActive}",
+			key_validationInfo = ${validationActive},
 			locator1 = "ObjectCustomValidation#VIEW_INFO_VALIDATION");
 	}
 
-	macro desactiveValidation {
+	@summary = "Default summary"
+	macro desactiveValidation() {
 		Uncheck.uncheckToggleSwitch(locator1 = "ObjectCustomValidation#ACTIVE_VALIDATION_TOGGLE");
 	}
 
-	macro editLabelOnCustomValidation {
+	@summary = "Default summary"
+	macro editLabelOnCustomValidation(editValidationName = null) {
 		Type(
 			locator1 = "ObjectCustomValidation#LABEL_EDIT_VALIDATION",
-			value1 = "${editValidationName}");
+			value1 = ${editValidationName});
 	}
 
-	macro gotoCustomValidation {
+	@summary = "Default summary"
+	macro gotoCustomValidation(validationName = null) {
 		Click(
-			key_validationName = "${validationName}",
+			key_validationName = ${validationName},
 			locator1 = "ObjectCustomValidation#VIEW_LABEL_VALIDATION");
 
 		SelectFrame(locator1 = "IFrame#IFRAME");
 	}
 
-	macro gotoTab {
+	@summary = "Default summary"
+	macro gotoTab(tabName = null) {
 		Click(
-			key_tab = "${tabName}",
+			key_tab = ${tabName},
 			locator1 = "NavTab#TAB_LINK");
 	}
 
-	macro insertScriptOnValidation {
+	@summary = "Default summary"
+	macro insertScriptOnValidation(scriptValidation = null) {
 		Type.typeCodeMirrorEditorNoError(
 			locator1 = "ObjectCustomValidation#INSERT_SCRIPT_ON_VALIDATION",
-			value1 = "${scriptValidation}");
-	}
-
-	macro viewActiveTabOnCustomValidation {
-		AssertElementPresent(
-			key_activeTab = "${activeTab}",
-			locator1 = "ObjectCustomValidation#VIEW_ACTIVE_TAB_ON_CUSTOM_VALIDATION");
-	}
-
-	macro viewCardsOnCustomValidation {
-		AssertElementPresent.assertVisible(
-			key_title = "${cardName}",
-			locator1 = "Header#H3_TITLE");
+			value1 = ${scriptValidation});
 	}
 
 }

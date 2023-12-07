@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.upgrade;
@@ -19,7 +10,6 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.BaseDBProcess;
 import com.liferay.portal.kernel.dao.db.DBInspector;
-import com.liferay.portal.kernel.dao.db.DBProcessContext;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.db.IndexMetadataFactoryUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
@@ -55,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Brian Wing Shun Chan
@@ -89,6 +80,7 @@ public abstract class UpgradeProcess
 			getPostUpgradeSteps());
 	}
 
+	@Override
 	public void upgrade() throws UpgradeException {
 		if (this instanceof DummyUpgradeProcess) {
 			return;
@@ -150,13 +142,6 @@ public abstract class UpgradeProcess
 		}
 	}
 
-	@Override
-	public void upgrade(DBProcessContext dbProcessContext)
-		throws UpgradeException {
-
-		upgrade();
-	}
-
 	public void upgrade(UpgradeProcess upgradeProcess) throws UpgradeException {
 		upgradeProcess.upgrade();
 	}
@@ -191,8 +176,10 @@ public abstract class UpgradeProcess
 			String tableName, boolean unique, String... columnNames)
 		throws Exception {
 
+		String indexName = "IX_TEMP_" + _tempIndexCounter.incrementAndGet();
+
 		IndexMetadata indexMetadata = new IndexMetadata(
-			"IX_TEMP", tableName, unique, columnNames);
+			indexName, tableName, unique, columnNames);
 
 		try (LoggingTimer loggingTimer = new LoggingTimer(tableName)) {
 			addIndexes(
@@ -201,13 +188,16 @@ public abstract class UpgradeProcess
 
 		return () -> {
 			try {
-				runSQL("drop index IX_TEMP on " + tableName);
+				runSQL(
+					StringBundler.concat(
+						"drop index ", indexName, " on ", tableName));
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Unable to drop temporary index IX_TEMP on " +
-							tableName);
+						StringBundler.concat(
+							"Unable to drop temporary index ", indexName,
+							" on ", tableName));
 				}
 			}
 		};
@@ -422,6 +412,7 @@ public abstract class UpgradeProcess
 	private static final Map
 		<String, List<ObjectValuePair<String, IndexMetadata>>>
 			_portalIndexesSQL = new HashMap<>();
+	private static final AtomicLong _tempIndexCounter = new AtomicLong(0);
 
 	private String _upgradeInfo;
 

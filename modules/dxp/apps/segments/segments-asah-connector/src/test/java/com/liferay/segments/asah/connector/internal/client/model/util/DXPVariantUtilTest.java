@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.asah.connector.internal.client.model.util;
@@ -17,9 +8,12 @@ package com.liferay.segments.asah.connector.internal.client.model.util;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.segments.asah.connector.internal.client.model.DXPVariant;
+import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.model.SegmentsExperimentRel;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.Locale;
 
@@ -44,17 +38,28 @@ public class DXPVariantUtilTest {
 	public void testToDXPVariant() throws PortalException {
 		Boolean control = RandomTestUtil.randomBoolean();
 		Locale locale = LocaleUtil.ENGLISH;
+		long segmentsExperienceId = RandomTestUtil.randomLong();
 		String segmentsExperienceKey = RandomTestUtil.randomString();
 		String segmentsExperienceName = RandomTestUtil.randomString();
 		double split = RandomTestUtil.randomDouble();
 
 		SegmentsExperimentRel segmentsExperimentRel =
 			_createSegmentsExperimentRel(
-				control, locale, segmentsExperienceKey, segmentsExperienceName,
-				split);
+				control, locale, segmentsExperienceId, segmentsExperienceKey,
+				segmentsExperienceName, split);
+
+		SegmentsExperience segmentsExperience = _createSegmentsExperience(
+			segmentsExperienceKey);
+
+		Mockito.when(
+			_segmentsExperienceLocalService.getSegmentsExperience(
+				segmentsExperienceId)
+		).thenReturn(
+			segmentsExperience
+		);
 
 		DXPVariant dxpVariant = DXPVariantUtil.toDXPVariant(
-			locale, segmentsExperimentRel);
+			locale, _segmentsExperienceLocalService, segmentsExperimentRel);
 
 		Assert.assertEquals(Integer.valueOf(0), dxpVariant.getChanges());
 		Assert.assertEquals(
@@ -70,9 +75,31 @@ public class DXPVariantUtilTest {
 			dxpVariant.getTrafficSplit() / 100, 0.001);
 	}
 
+	private SegmentsExperience _createSegmentsExperience(
+		String segmentsExperienceKey) {
+
+		SegmentsExperience segmentsExperience = Mockito.mock(
+			SegmentsExperience.class);
+
+		Mockito.doReturn(
+			segmentsExperienceKey
+		).when(
+			segmentsExperience
+		).getSegmentsExperienceKey();
+
+		Mockito.doReturn(
+			new UnicodeProperties()
+		).when(
+			segmentsExperience
+		).getTypeSettingsUnicodeProperties();
+
+		return segmentsExperience;
+	}
+
 	private SegmentsExperimentRel _createSegmentsExperimentRel(
-			boolean control, Locale locale, String segmentsExperienceKey,
-			String segmentsExperienceName, double split)
+			boolean control, Locale locale, long segmentsExperienceId,
+			String segmentsExperienceKey, String segmentsExperienceName,
+			double split)
 		throws PortalException {
 
 		SegmentsExperimentRel segmentsExperimentRel = Mockito.mock(
@@ -83,6 +110,12 @@ public class DXPVariantUtilTest {
 		).when(
 			segmentsExperimentRel
 		).isControl();
+
+		Mockito.doReturn(
+			segmentsExperienceId
+		).when(
+			segmentsExperimentRel
+		).getSegmentsExperienceId();
 
 		Mockito.doReturn(
 			segmentsExperienceKey
@@ -106,5 +139,9 @@ public class DXPVariantUtilTest {
 
 		return segmentsExperimentRel;
 	}
+
+	private final SegmentsExperienceLocalService
+		_segmentsExperienceLocalService = Mockito.mock(
+			SegmentsExperienceLocalService.class);
 
 }

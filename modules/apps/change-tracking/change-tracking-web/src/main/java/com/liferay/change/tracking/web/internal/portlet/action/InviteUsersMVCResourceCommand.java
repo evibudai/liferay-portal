@@ -1,32 +1,24 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.web.internal.portlet.action;
 
 import com.liferay.change.tracking.constants.CTActionKeys;
+import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.web.internal.constants.PublicationRoleConstants;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
-import com.liferay.portal.aop.AopService;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
-import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -37,11 +29,9 @@ import com.liferay.portal.kernel.notifications.NotificationEvent;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
+import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.ResourceActions;
-import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -49,8 +39,6 @@ import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.transaction.Propagation;
-import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -59,7 +47,10 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.portlet.PortletException;
 import javax.portlet.ResourceRequest;
@@ -67,7 +58,6 @@ import javax.portlet.ResourceResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -79,59 +69,40 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/invite_users"
 	},
-	service = AopService.class
+	service = MVCResourceCommand.class
 )
 public class InviteUsersMVCResourceCommand
-	extends BaseMVCResourceCommand implements AopService, MVCResourceCommand {
+	extends BaseTransactionalMVCResourceCommand {
 
 	@Override
-	@Transactional(
-		propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class
-	)
 	public boolean serveResource(
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws PortletException {
 
-		return super.serveResource(resourceRequest, resourceResponse);
-	}
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
 
-	@Activate
-	protected void activate() throws PortalException {
-		_companyLocalService.forEachCompanyId(
-			companyId -> {
-				Role role = _roleLocalService.getRole(
-					companyId, RoleConstants.PUBLICATIONS_USER);
-
-				_resourcePermissionLocalService.addResourcePermission(
-					role.getCompanyId(),
-					_resourceActions.getPortletRootModelResource(
-						CTPortletKeys.PUBLICATIONS),
-					ResourceConstants.SCOPE_COMPANY,
-					String.valueOf(role.getCompanyId()), role.getRoleId(),
-					CTActionKeys.ADD_PUBLICATION);
-				_resourcePermissionLocalService.addResourcePermission(
-					companyId, CTPortletKeys.PUBLICATIONS,
-					ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
-					role.getRoleId(), ActionKeys.ACCESS_IN_CONTROL_PANEL);
-				_resourcePermissionLocalService.addResourcePermission(
-					companyId, CTPortletKeys.PUBLICATIONS,
-					ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
-					role.getRoleId(), ActionKeys.VIEW);
-			});
+			return super.serveResource(resourceRequest, resourceResponse);
+		}
 	}
 
 	@Override
-	protected void doServeResource(
+	protected void doTransactionalCommand(
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws IOException, PortalException {
 
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
 
-		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
-			ParamUtil.getLong(resourceRequest, "ctCollectionId"));
+		long ctCollectionId = ParamUtil.getLong(
+			resourceRequest, "ctCollectionId");
 
-		if (ctCollection == null) {
+		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
+			ctCollectionId);
+
+		if ((ctCollection == null) &&
+			(ctCollectionId != CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
 				JSONUtil.put(
@@ -146,7 +117,8 @@ public class InviteUsersMVCResourceCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		if (!CTCollectionPermission.contains(
+		if ((ctCollection != null) &&
+			!CTCollectionPermission.contains(
 				themeDisplay.getPermissionChecker(), ctCollection,
 				ActionKeys.PERMISSIONS)) {
 
@@ -162,21 +134,44 @@ public class InviteUsersMVCResourceCommand
 			return;
 		}
 
-		Group group = _groupLocalService.fetchGroup(
-			ctCollection.getCompanyId(),
-			_portal.getClassNameId(CTCollection.class),
-			ctCollection.getCtCollectionId());
+		Group group = null;
+
+		if (ctCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			group = _groupLocalService.fetchUserGroup(
+				themeDisplay.getCompanyId(), themeDisplay.getUserId());
+		}
+		else {
+			group = _groupLocalService.fetchGroup(
+				ctCollection.getCompanyId(),
+				_portal.getClassNameId(CTCollection.class),
+				ctCollection.getCtCollectionId());
+		}
 
 		if (group == null) {
-			group = _groupLocalService.addGroup(
-				ctCollection.getUserId(),
-				GroupConstants.DEFAULT_PARENT_GROUP_ID,
-				CTCollection.class.getName(), ctCollection.getCtCollectionId(),
-				GroupConstants.DEFAULT_LIVE_GROUP_ID,
-				HashMapBuilder.put(
+			long userId = 0;
+			String className = null;
+			long classPK = 0;
+			Map<Locale, String> nameMap = null;
+
+			if (ctCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+				userId = themeDisplay.getGuestUserId();
+				className = null;
+				classPK = 0;
+				nameMap = new HashMap<>();
+			}
+			else {
+				userId = ctCollection.getUserId();
+				className = CTCollection.class.getName();
+				classPK = ctCollection.getCtCollectionId();
+				nameMap = HashMapBuilder.put(
 					LocaleUtil.getDefault(), ctCollection.getName()
-				).build(),
-				null, GroupConstants.TYPE_SITE_PRIVATE, false,
+				).build();
+			}
+
+			group = _groupLocalService.addGroup(
+				userId, GroupConstants.DEFAULT_PARENT_GROUP_ID, className,
+				classPK, GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap, null,
+				GroupConstants.TYPE_SITE_PRIVATE, false,
 				GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false,
 				true, null);
 		}
@@ -232,8 +227,7 @@ public class InviteUsersMVCResourceCommand
 
 			if (userGroupRoles.isEmpty()) {
 				_sendNotificationEvent(
-					ctCollection.getCtCollectionId(), userIds[i], roleValues[i],
-					themeDisplay);
+					ctCollectionId, userIds[i], roleValues[i], themeDisplay);
 			}
 		}
 
@@ -274,7 +268,7 @@ public class InviteUsersMVCResourceCommand
 
 		if (role == null) {
 			role = _roleLocalService.addRole(
-				themeDisplay.getDefaultUserId(), null, 0, name, null, null,
+				themeDisplay.getGuestUserId(), null, 0, name, null, null,
 				RoleConstants.TYPE_PUBLICATIONS, null, null);
 
 			for (String actionId : _getModelResourceActions(roleValue)) {
@@ -322,9 +316,6 @@ public class InviteUsersMVCResourceCommand
 	}
 
 	@Reference
-	private CompanyLocalService _companyLocalService;
-
-	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Reference
@@ -335,14 +326,6 @@ public class InviteUsersMVCResourceCommand
 
 	@Reference
 	private Portal _portal;
-
-	@Reference(
-		target = "(javax.portlet.name=" + CTPortletKeys.PUBLICATIONS + ")"
-	)
-	private Portlet _portlet;
-
-	@Reference
-	private ResourceActions _resourceActions;
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

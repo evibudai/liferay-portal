@@ -20,7 +20,6 @@ Export-Package:\
 	!aQute.lib.filter,\
 	\
 	!com.liferay.portal.cache.thread.local,\
-	!com.liferay.portal.dao.jdbc.aop,\
 	!com.liferay.portal.freemarker,\
 	!com.liferay.portal.increment,\
 	!com.liferay.portal.javadoc,\
@@ -37,7 +36,6 @@ Export-Package:\
 	!com.liferay.portal.scripting.ruby,\
 	!com.liferay.portal.search,\
 	!com.liferay.portal.security.jaas.ext.*,\
-	!com.liferay.portal.service,\
 	!com.liferay.portal.sharepoint.*,\
 	!com.liferay.portal.spring.bean,\
 	!com.liferay.portal.spring.context,\
@@ -201,7 +199,7 @@ Export-Package:\
 	\
 	org.jaxen.*;version='1.1.6',\
 	\
-	org.json.*;version='20220320',\
+	org.json.*;version='20231013',\
 	\
 	org.slf4j;version='1.7.2',\
 	org.slf4j.helpers;version='1.7.2',\
@@ -294,6 +292,5 @@ Provide-Capability:\
 	@lib/com.liferay.petra.sql.dsl.spi.jar,\
 	@lib/com.liferay.petra.string.jar,\
 	@lib/com.liferay.petra.url.pattern.mapper.jar,\
-	@lib/com.liferay.petra.xml.jar,\
 	@lib/com.liferay.portal.log4j.jar
 -removeheaders: Private-Package

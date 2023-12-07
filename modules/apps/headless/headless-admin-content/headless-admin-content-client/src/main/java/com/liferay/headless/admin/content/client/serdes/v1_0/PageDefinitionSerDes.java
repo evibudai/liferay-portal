@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.content.client.serdes.v1_0;
 
 import com.liferay.headless.admin.content.client.dto.v1_0.PageDefinition;
+import com.liferay.headless.admin.content.client.dto.v1_0.PageRule;
 import com.liferay.headless.admin.content.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -65,6 +57,26 @@ public class PageDefinitionSerDes {
 			sb.append(pageDefinition.getPageElement());
 		}
 
+		if (pageDefinition.getPageRules() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pageRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < pageDefinition.getPageRules().length; i++) {
+				sb.append(pageDefinition.getPageRules()[i]);
+
+				if ((i + 1) < pageDefinition.getPageRules().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (pageDefinition.getSettings() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -112,6 +124,13 @@ public class PageDefinitionSerDes {
 				"pageElement", String.valueOf(pageDefinition.getPageElement()));
 		}
 
+		if (pageDefinition.getPageRules() == null) {
+			map.put("pageRules", null);
+		}
+		else {
+			map.put("pageRules", String.valueOf(pageDefinition.getPageRules()));
+		}
+
 		if (pageDefinition.getSettings() == null) {
 			map.put("settings", null);
 		}
@@ -151,6 +170,22 @@ public class PageDefinitionSerDes {
 				if (jsonParserFieldValue != null) {
 					pageDefinition.setPageElement(
 						PageElementSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "pageRules")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					PageRule[] pageRulesArray =
+						new PageRule[jsonParserFieldValues.length];
+
+					for (int i = 0; i < pageRulesArray.length; i++) {
+						pageRulesArray[i] = PageRuleSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					pageDefinition.setPageRules(pageRulesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {

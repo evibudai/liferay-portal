@@ -1,26 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.opener.constants;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 
-import java.util.AbstractMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Provides a set of constants and methods for working with the MIME types
@@ -108,25 +97,37 @@ public class DLOpenerMimeTypes {
 	public static final String TEXT_TAB_SEPARATED_VALUES =
 		"text/tab-separated-values";
 
-	public static final Map<String, String> extensions = Stream.of(
-		new AbstractMap.SimpleEntry<>(ContentTypes.APPLICATION_PDF, ".pdf"),
-		new AbstractMap.SimpleEntry<>(APPLICATION_RTF, ".rtf"),
-		new AbstractMap.SimpleEntry<>(ContentTypes.APPLICATION_TEXT, ".txt"),
-		new AbstractMap.SimpleEntry<>(APPLICATION_VND_DOCX, ".docx"),
-		new AbstractMap.SimpleEntry<>(APPLICATION_VND_ODP, ".odp"),
-		new AbstractMap.SimpleEntry<>(APPLICATION_VND_ODS, ".ods"),
-		new AbstractMap.SimpleEntry<>(APPLICATION_VND_ODT, ".odt"),
-		new AbstractMap.SimpleEntry<>(APPLICATION_VND_PPTX, ".pptx"),
-		new AbstractMap.SimpleEntry<>(APPLICATION_VND_XLSX, ".xlsx"),
-		new AbstractMap.SimpleEntry<>(ContentTypes.IMAGE_PNG, ".png"),
-		new AbstractMap.SimpleEntry<>(ContentTypes.TEXT, ".txt"),
-		new AbstractMap.SimpleEntry<>(ContentTypes.TEXT_CSV, ".csv"),
-		new AbstractMap.SimpleEntry<>(ContentTypes.TEXT_PLAIN, ".txt"),
-		new AbstractMap.SimpleEntry<>(ContentTypes.TEXT_HTML, ".html"),
-		new AbstractMap.SimpleEntry<>(TEXT_TAB_SEPARATED_VALUES, ".tsv")
-	).collect(
-		Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-	);
+	public static final Map<String, String> extensions = HashMapBuilder.put(
+		APPLICATION_RTF, ".rtf"
+	).put(
+		APPLICATION_VND_DOCX, ".docx"
+	).put(
+		APPLICATION_VND_ODP, ".odp"
+	).put(
+		APPLICATION_VND_ODS, ".ods"
+	).put(
+		APPLICATION_VND_ODT, ".odt"
+	).put(
+		APPLICATION_VND_PPTX, ".pptx"
+	).put(
+		APPLICATION_VND_XLSX, ".xlsx"
+	).put(
+		ContentTypes.APPLICATION_PDF, ".pdf"
+	).put(
+		ContentTypes.APPLICATION_TEXT, ".txt"
+	).put(
+		ContentTypes.IMAGE_PNG, ".png"
+	).put(
+		ContentTypes.TEXT, ".txt"
+	).put(
+		ContentTypes.TEXT_CSV, ".csv"
+	).put(
+		ContentTypes.TEXT_HTML, ".html"
+	).put(
+		ContentTypes.TEXT_PLAIN, ".txt"
+	).put(
+		TEXT_TAB_SEPARATED_VALUES, ".tsv"
+	).build();
 
 	/**
 	 * Returns the canonical file extension associated with the MIME type. The

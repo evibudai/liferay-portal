@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.designer.web.internal.portlet.display.context;
@@ -57,7 +48,6 @@ import com.liferay.portal.workflow.constants.WorkflowDefinitionConstants;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
 import com.liferay.portal.workflow.exception.IncompleteWorkflowInstancesException;
 import com.liferay.portal.workflow.kaleo.designer.web.constants.KaleoDesignerPortletKeys;
-import com.liferay.portal.workflow.kaleo.designer.web.internal.action.executor.FunctionActionExecutorServiceWrapperTracker;
 import com.liferay.portal.workflow.kaleo.designer.web.internal.constants.KaleoDesignerActionKeys;
 import com.liferay.portal.workflow.kaleo.designer.web.internal.permission.KaleoDefinitionVersionPermission;
 import com.liferay.portal.workflow.kaleo.designer.web.internal.permission.KaleoDesignerPermission;
@@ -68,6 +58,7 @@ import com.liferay.portal.workflow.kaleo.designer.web.internal.util.filter.Kaleo
 import com.liferay.portal.workflow.kaleo.designer.web.internal.util.filter.KaleoDefinitionVersionViewPermissionPredicate;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
+import com.liferay.portal.workflow.kaleo.runtime.action.ActionExecutorManager;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService;
 import com.liferay.portal.workflow.kaleo.util.comparator.KaleoDefinitionVersionActiveComparator;
 import com.liferay.portal.workflow.kaleo.util.comparator.KaleoDefinitionVersionModifiedDateComparator;
@@ -78,7 +69,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.Set;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
@@ -94,16 +84,14 @@ import javax.servlet.jsp.PageContext;
 public class KaleoDesignerDisplayContext {
 
 	public KaleoDesignerDisplayContext(
-		FunctionActionExecutorServiceWrapperTracker
-			functionActionExecutorServiceWrapperTracker,
+		ActionExecutorManager actionExecutorManager,
 		RenderRequest renderRequest,
 		KaleoDefinitionVersionLocalService kaleoDefinitionVersionLocalService,
 		PortletResourcePermission portletResourcePermission,
 		ResourceBundleLoader resourceBundleLoader,
 		UserLocalService userLocalService) {
 
-		_functionActionExecutorServiceWrapperTracker =
-			functionActionExecutorServiceWrapperTracker;
+		_actionExecutorManager = actionExecutorManager;
 		_kaleoDefinitionVersionLocalService =
 			kaleoDefinitionVersionLocalService;
 		_portletResourcePermission = portletResourcePermission;
@@ -223,12 +211,8 @@ public class KaleoDesignerDisplayContext {
 	}
 
 	public JSONArray getFunctionActionExecutorsJSONArray() throws Exception {
-		Set<String> functionActionExecutorKeys =
-			_functionActionExecutorServiceWrapperTracker.
-				getFunctionActionExecutorKeys();
-
 		return JSONUtil.putAll(
-			functionActionExecutorKeys.toArray(new String[0]));
+			_actionExecutorManager.getFunctionActionExecutorKeys());
 	}
 
 	public KaleoDefinition getKaleoDefinition(
@@ -360,19 +344,17 @@ public class KaleoDesignerDisplayContext {
 				_getConfigureAssignementLink()
 			};
 		}
-		else {
-			WorkflowDefinitionLink workflowDefinitionLink1 =
-				workflowDefinitionLinks.get(0);
-			WorkflowDefinitionLink workflowDefinitionLink2 =
-				workflowDefinitionLinks.get(1);
 
-			return new Object[] {
-				_getLocalizedAssetName(workflowDefinitionLink1.getClassName()),
-				_getLocalizedAssetName(workflowDefinitionLink2.getClassName()),
-				workflowDefinitionLinks.size() - 2,
-				_getConfigureAssignementLink()
-			};
-		}
+		WorkflowDefinitionLink workflowDefinitionLink1 =
+			workflowDefinitionLinks.get(0);
+		WorkflowDefinitionLink workflowDefinitionLink2 =
+			workflowDefinitionLinks.get(1);
+
+		return new Object[] {
+			_getLocalizedAssetName(workflowDefinitionLink1.getClassName()),
+			_getLocalizedAssetName(workflowDefinitionLink2.getClassName()),
+			workflowDefinitionLinks.size() - 2, _getConfigureAssignementLink()
+		};
 	}
 
 	public String getMessageKey(
@@ -510,6 +492,82 @@ public class KaleoDesignerDisplayContext {
 		return sortingURL.toString();
 	}
 
+	public JSONArray getStatusesJSONArray() {
+		return JSONUtil.putAll(
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_APPROVED)
+			).put(
+				"value", WorkflowConstants.STATUS_APPROVED
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_DENIED)
+			).put(
+				"value", WorkflowConstants.STATUS_DENIED
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_DRAFT)
+			).put(
+				"value", WorkflowConstants.STATUS_DRAFT
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_EXPIRED)
+			).put(
+				"value", WorkflowConstants.STATUS_EXPIRED
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_IN_TRASH)
+			).put(
+				"value", WorkflowConstants.STATUS_IN_TRASH
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_INACTIVE)
+			).put(
+				"value", WorkflowConstants.STATUS_INACTIVE
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_INCOMPLETE)
+			).put(
+				"value", WorkflowConstants.STATUS_INCOMPLETE
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_PENDING)
+			).put(
+				"value", WorkflowConstants.STATUS_PENDING
+			),
+			JSONUtil.put(
+				"label",
+				LanguageUtil.get(
+					_kaleoDesignerRequestHelper.getRequest(),
+					WorkflowConstants.LABEL_SCHEDULED)
+			).put(
+				"value", WorkflowConstants.STATUS_SCHEDULED
+			));
+	}
+
 	public String getTitle(KaleoDefinitionVersion kaleoDefinitionVersion) {
 		if (kaleoDefinitionVersion == null) {
 			return _getLanguage("new-workflow");
@@ -537,7 +595,7 @@ public class KaleoDesignerDisplayContext {
 		User user = _userLocalService.fetchUser(
 			kaleoDefinitionVersion.getUserId());
 
-		if ((user == null) || user.isDefaultUser() ||
+		if ((user == null) || user.isGuestUser() ||
 			Validator.isNull(user.getFullName())) {
 
 			return null;
@@ -841,8 +899,7 @@ public class KaleoDesignerDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		KaleoDesignerDisplayContext.class);
 
-	private final FunctionActionExecutorServiceWrapperTracker
-		_functionActionExecutorServiceWrapperTracker;
+	private final ActionExecutorManager _actionExecutorManager;
 	private final KaleoDefinitionVersionLocalService
 		_kaleoDefinitionVersionLocalService;
 	private KaleoDesignerRequestHelper _kaleoDesignerRequestHelper;

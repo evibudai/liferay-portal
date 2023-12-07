@@ -29,35 +29,33 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8336 | Test Summary: Search for a Page in Pages list"
-	@priority = "5"
+	@priority = 5
 	test CanSearchPageInPagesList {
-		property analytics.cloud.upstream = "false";
-
 		task ("Add pages") {
 			for (var layoutName : list "AC Page 2,AC Page 3") {
-				ACUtils.addPage(layoutName = "${layoutName}");
+				ACUtils.addPage(layoutName = ${layoutName});
 
 				Navigator.gotoSitePage(
-					pageName = "${layoutName}",
+					pageName = ${layoutName},
 					siteName = "Site Name");
 
 				ACUtils.addWidgetToPage(
-					layoutName = "${layoutName}",
+					layoutName = ${layoutName},
 					widgetName = "Blogs");
 			}
 		}
@@ -92,7 +90,7 @@ definition {
 				ACUtils.navigateToSitePage(
 					actionType = "View Blog",
 					documentTitleList = "Blogs AC Title",
-					pageName = "${pageName}",
+					pageName = ${pageName},
 					siteName = "Site Name");
 			}
 		}
@@ -102,7 +100,7 @@ definition {
 
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Go to sites pages tab") {
@@ -118,27 +116,94 @@ definition {
 		}
 
 		task ("Search the Pages") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", " ");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			var pageNameList = "AC Page - Site Name - ${dataSourceName},AC Page 2 - Site Name - ${dataSourceName},AC Page 3 - Site Name - ${dataSourceName}";
 
 			ACUtils.searchBar(searchItem = "AC Page");
 
-			ACUtils.viewNameList(nameList = "${pageNameList}");
+			ACUtils.viewNameList(nameList = ${pageNameList});
 
-			ACUtils.searchBar(searchItem = "2");
+			ACUtils.searchBar(searchItem = 2);
 
 			ACUtils.viewNameList(nameList = "AC Page 2 - Site Name - ${dataSourceName}");
 
-			ACUtils.searchBar(searchItem = "3");
+			ACUtils.searchBar(searchItem = 3);
 
 			ACUtils.viewNameList(nameList = "AC Page 3 - Site Name - ${dataSourceName}");
 		}
 	}
 
+	@description = "Feature ID: LRAC-14794 | Automation ID: LRAC-14794 | Test Summary: Search for a Page in Pages list by its canonical URL"
+	@priority = 5
+	test CanSearchPageInPagesListByCanonicalURL {
+		task ("Connect DXP to AC") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		}
+
+		task ("Add a new user in DXP") {
+			JSONUser.addUser(
+				userEmailAddress = "ac@liferay.com",
+				userFirstName = "ac",
+				userLastName = "ac",
+				userScreenName = "ac");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "ac@liferay.com");
+		}
+
+		task ("Sync the Contact Data") {
+			ACDXPSettings.syncNewContactData();
+		}
+
+		task ("Sign in with the new user to visit the site pages") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "ac@liferay.com",
+				userLoginFullName = "ac ac");
+
+			ACUtils.navigateToSitePage(
+				actionType = "View Blog",
+				documentTitleList = "Blogs AC Title",
+				pageName = "AC Page",
+				siteName = "Site Name");
+
+			var canonicalURL = Navigator.getCurrentURL();
+		}
+
+		task ("Switch to new property in AC") {
+			ACUtils.closeAllSessionsAndWait();
+
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+		}
+
+		task ("Go to sites pages tab") {
+			ACNavigation.goToSites();
+
+			ACNavigation.switchTab(tabName = "Pages");
+		}
+
+		task ("Choose Last 24 Hours") {
+			ACTimeFilter.clickTimeFilterButton();
+
+			ACTimeFilter.setLast24Hours();
+		}
+
+		task ("Search the Pages") {
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
+
+			ACUtils.searchBar(searchItem = ${canonicalURL});
+
+			ACUtils.viewNameList(nameList = "AC Page - Site Name - ${dataSourceName}");
+		}
+	}
+
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8342 | Test Summary: Custom Range time period filter in Page table"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanTimeFilterUseCustomRangeInPageTable {
 
 		// AC Refactor: Test needs data from past dates to assert
@@ -157,7 +222,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${propertyName}");
+			ACProperties.switchProperty(propertyName = ${propertyName});
 		}
 
 		task ("Select Pages tab and set a 24h time filter") {
@@ -180,12 +245,12 @@ definition {
 			ACTimeFilter.clickTimeFilterButton();
 
 			ACTimeFilter.setCustomRange(
-				endDay = "30",
+				endDay = 30,
 				endMonth = "August",
-				endYear = "2021",
-				startDay = "1",
+				endYear = 2021,
+				startDay = 1,
 				startMonth = "July",
-				startYear = "2021");
+				startYear = 2021);
 		}
 
 		task ("Assert that the 24h filter page is not present on Custom Range filter") {
@@ -201,7 +266,7 @@ definition {
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8340 | Test Summary: Filter Page Table by last 180 days"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test PeriodFilter180DaysPageTable {
 
 		// AC Refactor: Test needs data from past dates to assert
@@ -220,7 +285,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${propertyName}");
+			ACProperties.switchProperty(propertyName = ${propertyName});
 		}
 
 		task ("Select Pages tab and set a 24h time filter") {
@@ -256,7 +321,7 @@ definition {
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8341 | Test Summary: Filter Page Table by Last Year"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test PeriodFilterLastYearPageTable {
 
 		// AC Refactor: Test needs data from past dates to assert
@@ -275,7 +340,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${propertyName}");
+			ACProperties.switchProperty(propertyName = ${propertyName});
 		}
 
 		task ("Select Pages tab and set a 24h time filter") {
@@ -310,20 +375,18 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8111 | Test Summary: Assert the pages list shows a list of pages"
-	@priority = "5"
+	@priority = 5
 	test ShowsListOfPages {
-		property analytics.cloud.upstream = "false";
-
 		task ("Add pages") {
 			for (var layoutName : list "AC Page 2,AC Page 3") {
-				ACUtils.addPage(layoutName = "${layoutName}");
+				ACUtils.addPage(layoutName = ${layoutName});
 
 				Navigator.gotoSitePage(
-					pageName = "${layoutName}",
+					pageName = ${layoutName},
 					siteName = "Site Name");
 
 				ACUtils.addWidgetToPage(
-					layoutName = "${layoutName}",
+					layoutName = ${layoutName},
 					widgetName = "Blogs");
 			}
 		}
@@ -354,7 +417,7 @@ definition {
 				ACUtils.navigateToSitePage(
 					actionType = "View Blog",
 					documentTitleList = "Blogs AC Title",
-					pageName = "${pageName}",
+					pageName = ${pageName},
 					siteName = "Site Name");
 			}
 		}
@@ -364,7 +427,7 @@ definition {
 
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Go to sites pages tab") {
@@ -380,11 +443,11 @@ definition {
 		}
 
 		task ("Assert that the page list is beeing showed") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", " ");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			var pageNameList = "AC Page - Site Name - ${dataSourceName},AC Page 2 - Site Name - ${dataSourceName},AC Page 3 - Site Name - ${dataSourceName}";
 
-			ACUtils.viewNameList(nameList = "${pageNameList}");
+			ACUtils.viewNameList(nameList = ${pageNameList});
 		}
 	}
 

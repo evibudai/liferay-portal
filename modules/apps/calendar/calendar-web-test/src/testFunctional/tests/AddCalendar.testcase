@@ -1,7 +1,7 @@
 @component-name = "portal-calendar"
 definition {
 
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Calendar";
@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -55,24 +50,24 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddCalendarToCurrentSiteCalendars {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		Calendar.add(
 			calendarName = "Site Calendar Name",
 			calendarType = "Current Site Calendars",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
 		Calendar.view(
 			calendarName = "Site Calendar Name",
 			calendarType = "Current Site Calendars",
-			site = "${siteName}");
+			site = ${siteName});
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddCalendarToMyCalendars {
 		Calendar.add(
 			calendarName = "My Calendar Name",
@@ -87,12 +82,9 @@ definition {
 			user = "Test Test");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddUserCalendarToOtherCalendars {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.addCP(
 			userEmailAddress = "userea@liferay.com",
@@ -119,14 +111,14 @@ definition {
 	}
 
 	@description = "LRQA-71605 - Verify that the user can add multiple calendars with the same name"
-	@priority = "4"
+	@priority = 4
 	test CanAddCalendarsWithSameName {
 		for (var calendarsName : list "Same Name Calendar,Same Name Calendar") {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
 			CalendarNavigator.gotoMyCalendarsManage();
 
-			CalendarMyCalendars.addMyCalendarByManageCalendars(calendarName = "${calendarsName}");
+			CalendarMyCalendars.addMyCalendarByManageCalendars(calendarName = ${calendarsName});
 
 			PortletEntry.save();
 		}
@@ -135,15 +127,15 @@ definition {
 
 		CalendarMyCalendars.viewManageCalendarsByPosition(
 			calendarName = "Same Name Calendar",
-			rowNumber = "1");
+			rowNumber = 1);
 
 		CalendarMyCalendars.viewManageCalendarsByPosition(
 			calendarName = "Same Name Calendar",
-			rowNumber = "2");
+			rowNumber = 2);
 	}
 
 	@description = "LRQA-71606 - Verify that the user can add calendars with Non-Ascii characters on the name field"
-	@priority = "4"
+	@priority = 4
 	test CanAddCalendarWithNoAsciiCharactersOnNameField {
 		Calendar.add(
 			calendarName = "旧历",
@@ -159,7 +151,7 @@ definition {
 	}
 
 	@description = "LRQA-71604 - Verify that the user can cancel Adding a new calendar"
-	@priority = "5"
+	@priority = 5
 	test CanCancelAddingCalendar {
 		CalendarNavigator.gotoAddMyCalendars();
 
@@ -171,25 +163,25 @@ definition {
 	}
 
 	@description = "LRQA-71596 - Verify that user can choose the color of calendar in the -Add Calendar- Page"
-	@priority = "4"
+	@priority = 4
 	test CanChooseAColor {
-		property portal.upstream = "quarantine";
-
 		CalendarNavigator.gotoAddMyCalendars();
 
 		Calendar._editName(calendarName = "Calendar Name");
 
-		Calendar.chooseCalendarColor(myCalendarColor = "8C66D9");
+		Calendar.chooseCalendarColor(myCalendarColor = "#E0C240");
 
 		Button.clickSave();
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
-		CalendarMyCalendars.viewColorMyCalendars(myCalendarColor = "8C66D9");
+		AssertElementPresent(
+			key_myCalendarColor = "#E6804D",
+			locator1 = "CalendarEditCalendar#CHOOSE_MY_CALENDAR_COLOR");
 	}
 
 	@description = "LRQA-71797 - Verify that the user can Enable Comments on Calendar"
-	@priority = "3"
+	@priority = 3
 	test CanEnableComments {
 		CalendarNavigator.gotoMyCalendarsManage();
 
@@ -231,7 +223,7 @@ definition {
 	}
 
 	@description = "Verify that the user can Enable Ratings on Calendar"
-	@priority = "3"
+	@priority = 3
 	test CanEnableRatings {
 		CalendarNavigator.gotoMyCalendarsManage();
 
@@ -273,7 +265,7 @@ definition {
 	}
 
 	@description = "LRQA-71595 - Verify that the user can make the new Calendar as the Default Calendar"
-	@priority = "3"
+	@priority = 3
 	test CanMakeNewCalendarAsDefault {
 		CalendarNavigator.gotoMyCalendarsManage();
 
@@ -300,7 +292,7 @@ definition {
 
 	@description = "LRQA-71360 - Verify that the user can save a new calendar with permission viewable by Anyone"
 	@ignore = "Test Stub"
-	@priority = "5"
+	@priority = 5
 	test CanSaveCalendarViewableByAnyone {
 
 		// TODO LRQA-71602 CanSaveCalendarViewableByAnyone pending implementation
@@ -309,7 +301,7 @@ definition {
 
 	@description = "LRQA-71360 - Verify that the user can save a new calendar with permission viewable by Owner"
 	@ignore = "Test Stub"
-	@priority = "3"
+	@priority = 3
 	test CanSaveCalendarViewableByOwner {
 
 		// TODO LRQA-71599 CanSaveCalendarViewableByOwner pending implementation
@@ -318,7 +310,7 @@ definition {
 
 	@description = "LRQA-71360 - Verify that the user can save a new calendar with permission viewable by Site Members"
 	@ignore = "Test Stub"
-	@priority = "5"
+	@priority = 5
 	test CanSaveCalendarViewableBySiteMembers {
 
 		// TODO LRQA-71600 CanSaveCalendarViewableBySiteMembers pending implementation
@@ -326,7 +318,7 @@ definition {
 	}
 
 	@description = "LRQA-71598 - Verify that the Time Zone selected by default follows the User's preferences."
-	@priority = "3"
+	@priority = 3
 	test DefaultTimeZoneFollowsUserPreferences {
 		Navigator.gotoAccountSettings();
 
@@ -345,7 +337,7 @@ definition {
 
 	@description = "LRQA-71360 - Verify that the name field is required"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test DescriptionTranslationIconHasEnglishByDefault {
 
 		// TODO LRQA-71603 DescriptionTranslationIconHasEnglishByDefault pending implementation
@@ -353,7 +345,7 @@ definition {
 	}
 
 	@description = "LRQA-71597 - Verify that the name is a required field"
-	@priority = "5"
+	@priority = 5
 	test NameFieldIsRequired {
 		CalendarNavigator.gotoMyCalendarsManage();
 
@@ -372,7 +364,7 @@ definition {
 
 	@description = "This is a use case for LPS-45062."
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test ResizeAddedEventsViaEventBlock {
 		property portal.acceptance = "true";
 
@@ -418,12 +410,9 @@ definition {
 	}
 
 	@description = "LRQA-71601 - Verify that the translation icon has the Instance Language by default"
-	@priority = "4"
+	@priority = 4
 	test TranslationIconHasInstanceLanguageByDefault {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
+		PortalSettings.openInstanceSettingsAdmin();
 
 		SystemSettings.gotoConfiguration(
 			configurationCategory = "Localization",
@@ -445,10 +434,8 @@ definition {
 	}
 
 	@description = "LPS-60800, Verify that can save individual calendar permissions."
-	@priority = "3"
+	@priority = 3
 	test ViewEntryPermissionsNotDefinedByRolePermissions {
-		property portal.upstream = "quarantine";
-
 		CalendarNavigator.gotoAddEvent();
 
 		CalendarEvent.editTitle(eventTitle = "Calendar Event Title");
@@ -461,26 +448,27 @@ definition {
 
 		Click(locator1 = "Button#PERMISSIONS");
 
+		SetWindowSize.maximizeWindow();
+
 		SelectFrameTop();
 
 		IFrame.selectModalFrame();
 
-		Check(
-			key_roleTitle = "Site Member",
-			locator1 = "Permissions#CONTENT_PERMISSIONS_DELETE_CHECKBOX");
+		Check.checkNotVisible(
+			key_roleTitle = "site-member",
+			locator1 = "Permissions#CONTENT_PERMISSIONS_DELETE_DISCUSSION_CHECKBOX");
 
-		Check(
-			key_roleTitle = "Site Member",
-			locator1 = "Permissions#CONTENT_PERMISSIONS_UPDATE_CHECKBOX");
+		Check.checkNotVisible(
+			key_roleTitle = "site-member",
+			locator1 = "Permissions#CONTENT_PERMISSIONS_UPDATE_DISCUSSION_CHECKBOX");
 
-		Button.clickSave();
+		Click.clickNoMouseOverNoWaitForVisible(
+			key_text = "Save",
+			locator1 = "Button#ANY");
 
 		Navigator.openURL();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		RoleNavigator.gotoViewNotHaveRolePermissions(
 			roleTitle = "Site Member",
@@ -496,26 +484,23 @@ definition {
 
 		IFrame.selectModalFrame();
 
-		AssertChecked(
-			key_roleTitle = "Site Member",
-			locator1 = "Permissions#CONTENT_PERMISSIONS_DELETE_CHECKBOX");
+		AssertChecked.assertCheckedNotVisible(
+			key_roleTitle = "site-member",
+			locator1 = "Permissions#CONTENT_PERMISSIONS_DELETE_DISCUSSION_CHECKBOX");
 
-		AssertChecked(
-			key_roleTitle = "Site Member",
-			locator1 = "Permissions#CONTENT_PERMISSIONS_UPDATE_CHECKBOX");
+		AssertChecked.assertCheckedNotVisible(
+			key_roleTitle = "site-member",
+			locator1 = "Permissions#CONTENT_PERMISSIONS_UPDATE_DISCUSSION_CHECKBOX");
 	}
 
 	@description = "This is a use case for LPS-56229."
-	@priority = "3"
+	@priority = 3
 	test ViewUserCanAddSiteCalendarsWithCalendarPermissions {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		RoleNavigator.gotoRoleType(roleType = "Site");
-
-		Role.add(roleTitle = "Calendar Site Role Name");
+		JSONRole.addSiteRole(
+			roleKey = "Calendar Site Role Name",
+			roleTitle = "Calendar Site Role Name");
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "MANAGE_BOOKINGS",
@@ -525,72 +510,39 @@ definition {
 
 		for (var resourceActionIndex : list "UPDATE,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
+				resourceAction = ${resourceActionIndex},
 				resourceName = "com.liferay.portal.kernel.model.Layout",
 				roleTitle = "User");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "usersn@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.editPasswordCP(
-			userEmailAddress = "usersn@liferay.com",
-			userScreenName = "usersn");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "usersn@liferay.com");
 
 		for (var siteName : list "Site A,Site B,Site C") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Sites",
-				panel = "Control Panel",
-				portlet = "Sites");
+			HeadlessSite.addSite(siteName = ${siteName});
 
-			Site.addBlankCP(siteName = "${siteName}");
-
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
-
-			User.editUserSiteCP(
-				siteName = "${siteName}",
-				userScreenName = "usersn");
+			JSONUser.addUserToSite(
+				groupName = ${siteName},
+				userEmailAddress = "usersn@liferay.com");
 		}
 
-		PagesAdmin.openPagesAdmin(siteURLKey = "Site A");
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Site A",
+			roleTitle = "Calendar Site Role Name",
+			userEmailAddress = "usersn@liferay.com");
 
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Memberships");
-
-		Site.assignSiteRoleCP(
-			resourceName = "userfn userln",
-			roleTitle = "Calendar Site Role Name");
-
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		PagesAdmin.openPagesAdmin(siteURLKey = "Site C");
-
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Memberships");
-
-		Site.assignSiteRoleCP(
-			resourceName = "userfn userln",
-			roleTitle = "Calendar Site Role Name");
-
-		Navigator.gotoPage(pageName = "Calendar Page");
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Site C",
+			roleTitle = "Calendar Site Role Name",
+			userEmailAddress = "usersn@liferay.com");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "usersn@liferay.com",
@@ -600,16 +552,12 @@ definition {
 
 		Portlet.addPG(portletName = "Calendar");
 
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "usersn@liferay.com",
-			userScreenName = "usersn");
-
 		UserBar.gotoDropdownItem(dropdownItem = "My Dashboard");
 
 		Calendar.searchOtherCalendars(searchValue = "site");
 
 		for (var calendarName : list "Site A,Site B,Site C") {
-			Calendar.viewOtherCalendarsSearchResult(calendarName = "${calendarName}");
+			Calendar.viewOtherCalendarsSearchResult(calendarName = ${calendarName});
 		}
 
 		CalendarNavigator.gotoAddEvent();

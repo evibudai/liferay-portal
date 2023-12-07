@@ -86,6 +86,17 @@ components:
             properties:
                 advancedConfiguration:
                     properties:
+                        collapse:
+                            properties:
+                                field:
+                                    type: string
+                                innerHits:
+                                    items:
+                                        $ref: "#/components/schemas/InnerHit"
+                                    type: array
+                                maxConcurrentGroupRequests:
+                                    type: integer
+                            type: object
                         source:
                             properties:
                                 excludes:
@@ -99,6 +110,10 @@ components:
                                         type: string
                                     type: array
                             type: object
+                        stored_fields:
+                            items:
+                                type: string
+                            type: array
                     type: object
                 aggregationConfiguration:
                     properties:
@@ -254,7 +269,11 @@ components:
                                                     type: array
                                                 helpText:
                                                     type: string
+                                                helpTextLocalized:
+                                                    type: string
                                                 label:
+                                                    type: string
+                                                labelLocalized:
                                                     type: string
                                                 name:
                                                     type: string
@@ -312,6 +331,29 @@ components:
                         type: object
                     type: object
             type: object
+        EmbeddingProviderConfiguration:
+            properties:
+                attributes:
+                    type: object
+                embeddingVectorDimensions:
+                    type: integer
+                languageIds:
+                    items:
+                        type: string
+                    type: array
+                modelClassNames:
+                    items:
+                        type: string
+                    type: array
+                providerName:
+                    type: string
+            type: object
+        EmbeddingProviderValidationResult:
+            properties:
+                errorMessage:
+                    type: string
+                expectedDimensions:
+                    type: integer
         FieldMappingInfo:
             properties:
                 languageIdPosition:
@@ -328,6 +370,21 @@ components:
                     type: integer
                 number_of_fragments:
                     type: integer
+        InnerHit:
+            properties:
+                innerCollapse:
+                    properties:
+                        field:
+                            type: string
+                    type: object
+                name:
+                    type: string
+                size:
+                    type: integer
+                sorts:
+                    items:
+                        type: object
+                    type: array
         KeywordQueryContributor:
             properties:
                 className:
@@ -426,6 +483,10 @@ components:
                     $ref: "#/components/schemas/ElementDefinition"
                 externalReferenceCode:
                     example: AB-34098-789-N
+                    type: string
+                fallbackDescription:
+                    type: string
+                fallbackTitle:
                     type: string
                 hidden:
                     type: boolean
@@ -535,16 +596,10 @@ components:
                 displayName:
                     type: string
             type: object
-        TextEmbeddingProviderValidationResult:
-            properties:
-                errorMessage:
-                    type: string
-                expectedDimensions:
-                    type: integer
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.search.experiences.rest.client', and version '3.0.10'."
+        'com.liferay.search.experiences.rest.client', and version '3.0.23'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -816,6 +871,51 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/SXPBlueprint"
             tags: ["SXPBlueprint"]
+    /sxp-blueprints/by-external-reference-code/{externalReferenceCode}:
+        get:
+            operationId: getSXPBlueprintByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SXPBlueprint"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SXPBlueprint"
+            tags: ["SXPBlueprint"]
+        put:
+            operationId: putSXPBlueprintByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SXPBlueprint"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/SXPBlueprint"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SXPBlueprint"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SXPBlueprint"
+            tags: ["SXPBlueprint"]
     /sxp-blueprints/validate:
         post:
             operationId: postSXPBlueprintValidate
@@ -874,6 +974,33 @@ paths:
             tags: ["SXPBlueprint"]
         patch:
             operationId: patchSXPBlueprint
+            parameters:
+                - in: path
+                  name: sxpBlueprintId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SXPBlueprint"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/SXPBlueprint"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SXPBlueprint"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SXPBlueprint"
+            tags: ["SXPBlueprint"]
+        put:
+            operationId: putSXPBlueprint
             parameters:
                 - in: path
                   name: sxpBlueprintId
@@ -1003,6 +1130,72 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/SXPElement"
             tags: ["SXPElement"]
+    /sxp-elements/by-external-reference-code/{externalReferenceCode}:
+        get:
+            operationId: getSXPElementByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+            tags: ["SXPElement"]
+        put:
+            operationId: putSXPElementByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SXPElement"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/SXPElement"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+            tags: ["SXPElement"]
+    /sxp-elements/preview:
+        post:
+            operationId: postSXPElementPreview
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SXPElement"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/SXPElement"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+            tags: ["SXPElement"]
     /sxp-elements/validate:
         post:
             operationId: postSXPElementValidate
@@ -1061,6 +1254,33 @@ paths:
             tags: ["SXPElement"]
         patch:
             operationId: patchSXPElement
+            parameters:
+                - in: path
+                  name: sxpElementId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SXPElement"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/SXPElement"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SXPElement"
+            tags: ["SXPElement"]
+        put:
+            operationId: putSXPElement
             parameters:
                 - in: path
                   name: sxpElementId
@@ -1149,24 +1369,24 @@ paths:
                                     $ref: "#/components/schemas/SXPParameterContributorDefinition"
                                 type: array
             tags: ["SXPParameterContributorDefinition"]
-    /text-embedding/validate-configuration:
+    /text-embeddings/validate-provider-configuration:
         post:
-            operationId: postTextEmbeddingValidateConfiguration
+            operationId: postTextEmbeddingValidateProviderConfiguration
             requestBody:
                 content:
                     application/json:
                         schema:
-                            type: string
+                            $ref: "#/components/schemas/EmbeddingProviderConfiguration"
                     application/xml:
                         schema:
-                            type: string
+                            $ref: "#/components/schemas/EmbeddingProviderConfiguration"
             responses:
                 200:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/TextEmbeddingProviderValidationResult"
+                                $ref: "#/components/schemas/EmbeddingProviderValidationResult"
                         application/xml:
                             schema:
-                                $ref: "#/components/schemas/TextEmbeddingProviderValidationResult"
-            tags: ["TextEmbeddingProviderValidationResult"]
+                                $ref: "#/components/schemas/EmbeddingProviderValidationResult"
+            tags: ["EmbeddingProviderValidationResult"]

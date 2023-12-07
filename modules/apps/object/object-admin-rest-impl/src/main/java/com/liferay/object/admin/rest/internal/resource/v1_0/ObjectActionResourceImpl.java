@@ -1,39 +1,31 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
 
+import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectAction;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectActionUtil;
+import com.liferay.object.admin.rest.internal.odata.entity.v1_0.ObjectActionEntityModel;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectActionResource;
-import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.service.ObjectActionService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Objects;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,15 +36,19 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/object-action.properties",
-	scope = ServiceScope.PROTOTYPE,
-	service = {NestedFieldSupport.class, ObjectActionResource.class}
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = ObjectActionResource.class
 )
-public class ObjectActionResourceImpl
-	extends BaseObjectActionResourceImpl implements NestedFieldSupport {
+public class ObjectActionResourceImpl extends BaseObjectActionResourceImpl {
 
 	@Override
 	public void deleteObjectAction(Long objectActionId) throws Exception {
 		_objectActionService.deleteObjectAction(objectActionId);
+	}
+
+	@Override
+	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
+		return _entityModel;
 	}
 
 	@Override
@@ -65,7 +61,7 @@ public class ObjectActionResourceImpl
 	public Page<ObjectAction>
 			getObjectDefinitionByExternalReferenceCodeObjectActionsPage(
 				String externalReferenceCode, String search,
-				Pagination pagination)
+				Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		com.liferay.object.model.ObjectDefinition objectDefinition =
@@ -74,13 +70,15 @@ public class ObjectActionResourceImpl
 					externalReferenceCode, contextCompany.getCompanyId());
 
 		return getObjectDefinitionObjectActionsPage(
-			objectDefinition.getObjectDefinitionId(), search, pagination);
+			objectDefinition.getObjectDefinitionId(), search, pagination,
+			sorts);
 	}
 
 	@NestedField(parentClass = ObjectDefinition.class, value = "objectActions")
 	@Override
 	public Page<ObjectAction> getObjectDefinitionObjectActionsPage(
-			Long objectDefinitionId, String search, Pagination pagination)
+			Long objectDefinitionId, String search, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
@@ -123,11 +121,12 @@ public class ObjectActionResourceImpl
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
 				searchContext.setAttribute(Field.NAME, search);
+				searchContext.setAttribute("label", search);
 				searchContext.setAttribute(
 					"objectDefinitionId", objectDefinitionId);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
 			},
-			null,
+			sorts,
 			document -> _toObjectAction(
 				_objectActionService.getObjectAction(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
@@ -152,18 +151,10 @@ public class ObjectActionResourceImpl
 			Long objectDefinitionId, ObjectAction objectAction)
 		throws Exception {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166918")) &&
-			Objects.equals(
-				objectAction.getObjectActionTriggerKey(),
-				ObjectActionTriggerConstants.KEY_STANDALONE)) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		return _toObjectAction(
 			_objectActionService.addObjectAction(
-				objectDefinitionId, objectAction.getActive(),
-				objectAction.getConditionExpression(),
+				objectAction.getExternalReferenceCode(), objectDefinitionId,
+				objectAction.getActive(), objectAction.getConditionExpression(),
 				objectAction.getDescription(),
 				LocalizedMapUtil.getLocalizedMap(
 					objectAction.getErrorMessage()),
@@ -172,7 +163,8 @@ public class ObjectActionResourceImpl
 				objectAction.getObjectActionExecutorKey(),
 				objectAction.getObjectActionTriggerKey(),
 				ObjectActionUtil.toParametersUnicodeProperties(
-					objectAction.getParameters())));
+					objectAction.getParameters()),
+				GetterUtil.getBoolean(objectAction.getSystem())));
 	}
 
 	@Override
@@ -180,18 +172,10 @@ public class ObjectActionResourceImpl
 			Long objectActionId, ObjectAction objectAction)
 		throws Exception {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-166918")) &&
-			Objects.equals(
-				objectAction.getObjectActionTriggerKey(),
-				ObjectActionTriggerConstants.KEY_STANDALONE)) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		return _toObjectAction(
 			_objectActionService.updateObjectAction(
-				objectActionId, objectAction.getActive(),
-				objectAction.getConditionExpression(),
+				objectAction.getExternalReferenceCode(), objectActionId,
+				objectAction.getActive(), objectAction.getConditionExpression(),
 				objectAction.getDescription(),
 				LocalizedMapUtil.getLocalizedMap(
 					objectAction.getErrorMessage()),
@@ -206,15 +190,25 @@ public class ObjectActionResourceImpl
 	private ObjectAction _toObjectAction(
 		com.liferay.object.model.ObjectAction objectAction) {
 
+		if (objectAction == null) {
+			return null;
+		}
+
 		String permissionName =
 			com.liferay.object.model.ObjectDefinition.class.getName();
 
 		return ObjectActionUtil.toObjectAction(
 			HashMapBuilder.put(
 				"delete",
-				addAction(
-					ActionKeys.DELETE, "deleteObjectAction", permissionName,
-					objectAction.getObjectDefinitionId())
+				() -> {
+					if (objectAction.isSystem()) {
+						return null;
+					}
+
+					return addAction(
+						ActionKeys.DELETE, "deleteObjectAction", permissionName,
+						objectAction.getObjectDefinitionId());
+				}
 			).put(
 				"get",
 				addAction(
@@ -227,8 +221,15 @@ public class ObjectActionResourceImpl
 					objectAction.getObjectDefinitionId())
 			).build(),
 			contextAcceptLanguage.getPreferredLocale(),
-			_objectDefinitionLocalService, objectAction);
+			_notificationTemplateLocalService, _objectDefinitionLocalService,
+			objectAction);
 	}
+
+	private static final EntityModel _entityModel =
+		new ObjectActionEntityModel();
+
+	@Reference
+	private NotificationTemplateLocalService _notificationTemplateLocalService;
 
 	@Reference
 	private ObjectActionService _objectActionService;

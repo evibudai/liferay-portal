@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0;
@@ -25,6 +16,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -56,6 +48,18 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ProductOptionValueResource {
 
+	public void deleteProductOptionValue(Long id) throws Exception;
+
+	public Response deleteProductOptionValueBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public ProductOptionValue getProductOptionValue(Long id) throws Exception;
+
+	public ProductOptionValue patchProductOptionValue(
+			Long id, ProductOptionValue productOptionValue)
+		throws Exception;
+
 	public Page<ProductOptionValue> getProductOptionIdProductOptionValuesPage(
 			Long id, String search, Pagination pagination, Sort[] sorts)
 		throws Exception;
@@ -65,7 +69,7 @@ public interface ProductOptionValueResource {
 		throws Exception;
 
 	public Response postProductOptionIdProductOptionValueBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -107,6 +111,10 @@ public interface ProductOptionValueResource {
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
 
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
+
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
@@ -140,6 +148,8 @@ public interface ProductOptionValueResource {
 			HttpServletResponse httpServletResponse);
 
 		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder uriInfo(UriInfo uriInfo);
 
 		public Builder user(com.liferay.portal.kernel.model.User user);
 

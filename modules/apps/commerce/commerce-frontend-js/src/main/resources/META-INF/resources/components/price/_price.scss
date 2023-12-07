@@ -1,3 +1,18 @@
+.commerce-checkout-summary-body {
+	.lfr-price-column {
+		.price {
+			align-items: center;
+			display: grid;
+			grid-template-areas: 'label value';
+
+			.price-value {
+				font-size: inherit !important;
+				text-align: left;
+			}
+		}
+	}
+}
+
 .price {
 	&-label,
 	&-value {
@@ -33,6 +48,10 @@
 			&:last-child::after {
 				content: '';
 			}
+		}
+
+		&.price-on-application {
+			color: $info-primary;
 		}
 
 		&-promo {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.item.selector.web.internal.util;
@@ -23,6 +14,7 @@ import com.liferay.item.selector.ItemSelectorViewReturnTypeProviderHandler;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.osgi.util.ServiceTrackerFactory;
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONContext;
@@ -68,8 +60,15 @@ public class ItemSelectorCriterionSerializerImpl
 		JSONDeserializer<T> jsonDeserializer =
 			_jsonFactory.createJSONDeserializer();
 
+		DesiredItemSelectorReturnTypesJSONDeserializerTransformer
+			desiredItemSelectorReturnTypesJSONDeserializerTransformer =
+				_desiredItemSelectorReturnTypesJSONDeserializerTransformerDCLSingleton.
+					getSingleton(
+						this::
+							_createDesiredItemSelectorReturnTypesJSONDeserializerTransformer);
+
 		jsonDeserializer.transform(
-			_desiredItemSelectorReturnTypesJSONDeserializerTransformer,
+			desiredItemSelectorReturnTypesJSONDeserializerTransformer,
 			"desiredItemSelectorReturnTypes");
 
 		return jsonDeserializer.deserialize(json, itemSelectorCriterionClass);
@@ -97,11 +96,11 @@ public class ItemSelectorCriterionSerializerImpl
 			(Class<ItemSelectorView<?>>)(Class<?>)ItemSelectorView.class,
 			"item.selector.view.key");
 
-		_serviceTracker = ServiceTrackerFactory.open(
+		_serviceTracker = ServiceTrackerFactory.create(
 			bundleContext, ItemSelectorViewReturnTypeProvider.class,
 			new ItemSelectorViewReturnTypeProviderServiceTrackerCustomizer());
 
-		_serviceTrackerItemSelectorView = ServiceTrackerFactory.open(
+		_serviceTrackerItemSelectorView = ServiceTrackerFactory.create(
 			bundleContext,
 			(Class<ItemSelectorView<?>>)(Class<?>)ItemSelectorView.class,
 			new ItemSelectorReturnTypeServiceTrackerCustomizer());
@@ -149,6 +148,15 @@ public class ItemSelectorCriterionSerializerImpl
 		_serviceTrackerMap.close();
 	}
 
+	private DesiredItemSelectorReturnTypesJSONDeserializerTransformer
+		_createDesiredItemSelectorReturnTypesJSONDeserializerTransformer() {
+
+		_serviceTracker.open();
+		_serviceTrackerItemSelectorView.open();
+
+		return new DesiredItemSelectorReturnTypesJSONDeserializerTransformer();
+	}
+
 	private static final String[] _EXCLUDED_FIELD_NAMES = {
 		"availableItemSelectorReturnTypes", "class"
 	};
@@ -157,9 +165,10 @@ public class ItemSelectorCriterionSerializerImpl
 		ItemSelectorCriterionSerializerImpl.class);
 
 	private BundleContext _bundleContext;
-	private final DesiredItemSelectorReturnTypesJSONDeserializerTransformer
-		_desiredItemSelectorReturnTypesJSONDeserializerTransformer =
-			new DesiredItemSelectorReturnTypesJSONDeserializerTransformer();
+	private final DCLSingleton
+		<DesiredItemSelectorReturnTypesJSONDeserializerTransformer>
+			_desiredItemSelectorReturnTypesJSONDeserializerTransformerDCLSingleton =
+				new DCLSingleton<>();
 	private final DesiredItemSelectorReturnTypesJSONTransformer
 		_desiredItemSelectorReturnTypesJSONTransformer =
 			new DesiredItemSelectorReturnTypesJSONTransformer();

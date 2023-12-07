@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.modified.facet.portlet;
@@ -18,7 +9,6 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.DateFormatFactory;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.facet.modified.ModifiedFacetFactory;
@@ -29,7 +19,6 @@ import com.liferay.portal.search.web.internal.display.context.ThemeDisplaySuppli
 import com.liferay.portal.search.web.internal.modified.facet.constants.ModifiedFacetPortletKeys;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.ModifiedFacetDisplayContext;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.builder.ModifiedFacetDisplayContextBuilder;
-import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
@@ -102,8 +91,7 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 		RenderRequest renderRequest) {
 
 		ModifiedFacetDisplayContextBuilder modifiedFacetDisplayContextBuilder =
-			_createModifiedFacetDisplayContextBuilder(
-				_dateFormatFactory, renderRequest);
+			_createModifiedFacetDisplayContextBuilder(renderRequest);
 
 		modifiedFacetDisplayContextBuilder.setCurrentURL(
 			_portal.getCurrentURL(renderRequest));
@@ -115,35 +103,35 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 				portletSharedSearchResponse.getPortletPreferences(
 					renderRequest));
 
+		modifiedFacetDisplayContextBuilder.setFrequenciesVisible(
+			modifiedFacetPortletPreferences.isFrequenciesVisible());
+		modifiedFacetDisplayContextBuilder.setFrequencyThreshold(
+			modifiedFacetPortletPreferences.getFrequencyThreshold());
+
 		String parameterName =
 			modifiedFacetPortletPreferences.getParameterName();
 
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchResponse.getParameter(
-				parameterName + "From", renderRequest),
-			modifiedFacetDisplayContextBuilder::setFromParameterValue);
+		modifiedFacetDisplayContextBuilder.setFromParameterValue(
+			portletSharedSearchResponse.getParameter(
+				parameterName + "From", renderRequest));
 
 		ThemeDisplay themeDisplay = _getThemeDisplay(renderRequest);
 
 		modifiedFacetDisplayContextBuilder.setLocale(themeDisplay.getLocale());
 
+		modifiedFacetDisplayContextBuilder.setOrder(
+			modifiedFacetPortletPreferences.getOrder());
 		modifiedFacetDisplayContextBuilder.setPaginationStartParameterName(
 			_getPaginationStartParameterName(portletSharedSearchResponse));
-
 		modifiedFacetDisplayContextBuilder.setParameterName(parameterName);
-
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchResponse.getParameterValues(
-				parameterName, renderRequest),
-			modifiedFacetDisplayContextBuilder::setParameterValues);
-
+		modifiedFacetDisplayContextBuilder.setParameterValues(
+			portletSharedSearchResponse.getParameterValues(
+				parameterName, renderRequest));
 		modifiedFacetDisplayContextBuilder.setTimeZone(
 			themeDisplay.getTimeZone());
-
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchResponse.getParameter(
-				parameterName + "To", renderRequest),
-			modifiedFacetDisplayContextBuilder::setToParameterValue);
+		modifiedFacetDisplayContextBuilder.setToParameterValue(
+			portletSharedSearchResponse.getParameter(
+				parameterName + "To", renderRequest));
 
 		SearchResponse searchResponse =
 			portletSharedSearchResponse.getSearchResponse();
@@ -155,12 +143,10 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 	}
 
 	private ModifiedFacetDisplayContextBuilder
-		_createModifiedFacetDisplayContextBuilder(
-			DateFormatFactory dateFormatFactory, RenderRequest renderRequest) {
+		_createModifiedFacetDisplayContextBuilder(RenderRequest renderRequest) {
 
 		try {
-			return new ModifiedFacetDisplayContextBuilder(
-				dateFormatFactory, renderRequest);
+			return new ModifiedFacetDisplayContextBuilder(renderRequest);
 		}
 		catch (ConfigurationException configurationException) {
 			throw new RuntimeException(configurationException);
@@ -190,9 +176,6 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 
 		return themeDisplaySupplier.getThemeDisplay();
 	}
-
-	@Reference
-	private DateFormatFactory _dateFormatFactory;
 
 	@Reference
 	private ModifiedFacetFactory _modifiedFacetFactory;

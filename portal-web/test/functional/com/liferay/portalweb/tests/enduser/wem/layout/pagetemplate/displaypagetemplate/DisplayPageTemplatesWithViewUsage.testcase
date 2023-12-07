@@ -1,22 +1,23 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Display Pages";
+	property testray.main.component.name = "Display Page Templates";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,7 +26,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121199. The user could assign multiple usages to default."
-	@priority = "4"
+	@priority = 4
 	test AssignMultipleUsagesToDefault {
 		task ("Add a display page template for Document and Basic Document") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
@@ -99,7 +100,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121199. The user could assign usage to the default when the default display page template exists."
-	@priority = "4"
+	@priority = 4
 	test AssignUsageToDefaultWhenDefaultPageTemplateExist {
 		task ("Add the first display page template for Web Content Article and Basic Web Content") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
@@ -188,7 +189,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121199. The user could assign usage to the default even if the default display page template doesn't exist."
-	@priority = "3"
+	@priority = 3
 	test AssignUsageToDefaultWhenDefaultPageTemplateNotExist {
 		task ("Add a display page template for Blogs Entry") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
@@ -260,7 +261,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121199. The user could delete display page template after assign the usages to default."
-	@priority = "5"
+	@priority = 5
 	test DeleteDisplayPageTemplateAfterAssignToDefault {
 		property portal.acceptance = "true";
 
@@ -333,7 +334,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121199. The user could delete display page template after unassign the usages."
-	@priority = "5"
+	@priority = 5
 	test DeleteDisplayPageTemplateAfterUnassign {
 		property portal.acceptance = "true";
 
@@ -406,7 +407,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121199. The user could unassign the usages of display page template."
-	@priority = "5"
+	@priority = 5
 	test UnassignUsages {
 		property portal.acceptance = "true";
 
@@ -466,15 +467,15 @@ definition {
 		}
 
 		task ("View the empty info") {
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "There are no display page template usages.");
 		}
 
-		task ("View the View Usages action is not shown") {
+		task ("View the View Usages action is disabled") {
 			Click(locator1 = "Icon#ANGLE_LEFT_BACK");
 
-			LexiconCard.viewMenuItemNotPresent(
+			LexiconCard.viewMenuItemDisabled(
 				card = "Display Page Name",
 				item = "View Usages");
 		}
@@ -491,7 +492,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-123480. The assets are ordered by modified date in view usages of display page template."
-	@priority = "5"
+	@priority = 5
 	test ViewAssetsOrderInViewUsagesOfDisplayPageTemplate {
 		property portal.acceptance = "true";
 
@@ -518,11 +519,11 @@ definition {
 				JSONWebcontent.addWebContent(
 					content = "Web Content Content",
 					groupName = "Test Site Name",
-					title = "${webContentTitle}");
+					title = ${webContentTitle});
 
 				WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
-				WebContentNavigator.gotoEditCP(webContentTitle = "${webContentTitle}");
+				WebContentNavigator.gotoEditCP(webContentTitle = ${webContentTitle});
 
 				WebContent.editDisplayPage(
 					pageName = "Web Content Display Page",
@@ -545,26 +546,26 @@ definition {
 
 			ManagementBar.viewFilterAndOrder(menuItem = "Modified Date");
 
-			var index = "1";
+			var index = 1;
 
 			for (var webContentTitle : list "The First Web Content,The Second Web Content,The Third Web Content") {
 				AssertTextEquals.assertPartialText(
-					index = "${index}",
+					index = ${index},
 					locator1 = "LexiconTable#TABLE_ROW",
-					value1 = "${webContentTitle}");
+					value1 = ${webContentTitle});
 
 				var index = ${index} + 1;
 			}
 
 			Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
 
-			var index = "1";
+			var index = 1;
 
 			for (var webContentTitle : list "The Third Web Content,The Second Web Content,The First Web Content") {
 				AssertTextEquals.assertPartialText(
-					index = "${index}",
+					index = ${index},
 					locator1 = "LexiconTable#TABLE_ROW",
-					value1 = "${webContentTitle}");
+					value1 = ${webContentTitle});
 
 				var index = ${index} + 1;
 			}
@@ -572,7 +573,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-123480. The user can view the usage of display page template."
-	@priority = "5"
+	@priority = 5
 	test ViewUsageOfDisplayPageTemplate {
 		property portal.acceptance = "true";
 

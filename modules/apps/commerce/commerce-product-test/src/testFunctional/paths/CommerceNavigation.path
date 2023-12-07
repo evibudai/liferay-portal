@@ -12,7 +12,7 @@
 <tbody>
 <tr>
 	<td>BACK</td>
-	<td>//li[contains(@class,'control-menu-nav-item')]//a[span//*[name()='svg'][contains(@class,'icon-angle-left')]]</td>
+	<td>//a[span//*[name()='svg'][contains(@class,'icon-angle-left')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -46,6 +46,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ENTRY_NAME_WITH_UOM</td>
+	<td>//div[@class='data-set-wrapper' or @class='searchcontainer-content']//div[contains(@class,'dnd-td') and contains(text(),'${key_uom}')]//..//a[text()='${key_entryName}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>OPTIONS_ENTRY_NAME</td>
 	<td>//div[@class='form-container']//td[contains(.,'${key_optionEntryName}')]</td>
 	<td></td>
@@ -53,6 +58,11 @@
 <tr>
 	<td>SEARCH_FIELD</td>
 	<td>//input[contains(@aria-label,'Search')] | //input[contains(@name,'Keywords') or contains(@name,'keywords')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DATASET_SEARCH_FIELD_BY_LABEL</td>
+	<td>//h4[normalize-space(text())='${key_label}']//following::input[@aria-label='Search']</td>
 	<td></td>
 </tr>
 <tr>

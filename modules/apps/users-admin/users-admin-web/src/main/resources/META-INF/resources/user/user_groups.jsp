@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -28,10 +19,10 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 	value="user-groups"
 />
 
-<liferay-ui:membership-policy-error />
+<liferay-site:membership-policy-error />
 
 <clay:content-row
-	containerElement="h3"
+	containerElement="div"
 	cssClass="sheet-subtitle"
 >
 	<clay:content-col
@@ -42,27 +33,29 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 	<c:if test="<%= !portletName.equals(myAccountPortletId) %>">
 		<clay:content-col>
-			<span class="heading-end">
-				<liferay-ui:icon
-					cssClass="modify-link"
-					id="openUserGroupsLink"
-					label="<%= true %>"
-					linkCssClass="btn btn-secondary btn-sm"
-					message="select"
-					url="javascript:void(0);"
-				/>
-			</span>
+			<clay:button
+				aria-label='<%= LanguageUtil.format(request, "select-x", "user-groups") %>'
+				cssClass="heading-end modify-link"
+				displayType="secondary"
+				id='<%= liferayPortletResponse.getNamespace() + "openUserGroupsLink" %>'
+				label='<%= LanguageUtil.get(request, "select") %>'
+				small="<%= true %>"
+			/>
 		</clay:content-col>
 	</c:if>
 </clay:content-row>
 
 <liferay-util:buffer
-	var="removeUserGroupIcon"
+	var="removeButtonUserGroups"
 >
-	<liferay-ui:icon
+	<clay:button
+		aria-label="TOKEN_ARIA_LABEL"
+		cssClass="lfr-portal-tooltip modify-link"
+		data-rowId="TOKEN_DATA_ROW_ID"
+		displayType="unstyled"
 		icon="times-circle"
-		markupView="lexicon"
-		message="remove"
+		small="<%= true %>"
+		title="TOKEN_TITLE"
 	/>
 </liferay-util:buffer>
 
@@ -97,7 +90,15 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		<c:if test="<%= !portletName.equals(myAccountPortletId) && !UserGroupMembershipPolicyUtil.isMembershipRequired((selUser != null) ? selUser.getUserId() : 0, userGroup.getUserGroupId()) %>">
 			<liferay-ui:search-container-column-text>
-				<a class="modify-link" data-rowId="<%= userGroup.getUserGroupId() %>" href="javascript:void(0);"><%= removeUserGroupIcon %></a>
+				<clay:button
+					aria-label='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escape(userGroup.getName())) %>'
+					cssClass="lfr-portal-tooltip modify-link"
+					data-rowId="<%= userGroup.getUserGroupId() %>"
+					displayType="unstyled"
+					icon="times-circle"
+					small="<%= true %>"
+					title='<%= LanguageUtil.format(request, "remove-x", HtmlUtil.escape(userGroup.getName())) %>'
+				/>
 			</liferay-ui:search-container-column-text>
 		</c:if>
 	</liferay-ui:search-container-row>
@@ -143,7 +144,9 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 				searchContainer.deleteRow(tr, rowId);
 
-				A.Array.removeItem(addUserGroupIds, rowId);
+				addUserGroupIds = addUserGroupIds.filter((userGroupId) => {
+					return userGroupId !== rowId;
+				});
 
 				deleteUserGroupIds.push(rowId);
 
@@ -157,29 +160,41 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			'.modify-link'
 		);
 
-		A.one('#<portlet:namespace />openUserGroupsLink').on('click', (event) => {
+		const selectUserGroupButton = document.getElementById(
+			'<portlet:namespace />openUserGroupsLink'
+		);
+
+		selectUserGroupButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (selectedItem) {
-					var A = AUI();
+					const itemValue = JSON.parse(selectedItem.value);
 
-					var entityId = selectedItem.entityid;
-
-					var rowColumns = [];
-
-					rowColumns.push(A.Escape.html(selectedItem.entityname));
-					rowColumns.push(
-						'<a class="modify-link" data-rowId="' +
-							entityId +
-							'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeUserGroupIcon) %></a>'
+					const label = Liferay.Util.sub(
+						'<liferay-ui:message key="remove-x" />',
+						itemValue.name
 					);
+					const rowColumns = [];
 
-					searchContainer.addRow(rowColumns, entityId);
+					let removeButton =
+						'<%= UnicodeFormatter.toString(removeButtonUserGroups) %>';
+
+					removeButton = removeButton
+						.replace('TOKEN_ARIA_LABEL', label)
+						.replace('TOKEN_DATA_ROW_ID', itemValue.userGroupId)
+						.replace('TOKEN_TITLE', label);
+
+					rowColumns.push(itemValue.name);
+					rowColumns.push(removeButton);
+
+					searchContainer.addRow(rowColumns, itemValue.userGroupId);
 
 					searchContainer.updateDataStore();
 
-					A.Array.removeItem(deleteUserGroupIds, entityId);
+					deleteUserGroupIds = deleteUserGroupIds.filter((userGroupId) => {
+						return userGroupId !== itemValue.userGroupId;
+					});
 
-					addUserGroupIds.push(entityId);
+					addUserGroupIds.push(itemValue.userGroupId);
 
 					document.<portlet:namespace />fm.<portlet:namespace />addUserGroupIds.value = addUserGroupIds.join(
 						','
@@ -191,18 +206,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				selectedData: searchContainer.getData(true),
 				selectEventName: '<portlet:namespace />selectUserGroup',
 				title: '<liferay-ui:message arguments="user-group" key="select-x" />',
-
-				<%
-				PortletURL selectUserGroupURL = PortletURLBuilder.create(
-					PortletProviderUtil.getPortletURL(request, UserGroup.class.getName(), PortletProvider.Action.BROWSE)
-				).setParameter(
-					"p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId())
-				).setWindowState(
-					LiferayWindowState.POP_UP
-				).buildPortletURL();
-				%>
-
-				url: '<%= selectUserGroupURL.toString() %>',
+				url: '<%= userDisplayContext.getUserGroupItemSelectorURL() %>',
 			});
 		});
 	</aui:script>

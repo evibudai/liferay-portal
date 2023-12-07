@@ -5,7 +5,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Clay";
-	property testray.main.component.name = "User Interface";
+	property testray.main.component.name = "Clay";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -30,9 +30,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -42,8 +42,8 @@ definition {
 		}
 	}
 
-	@description = "Verify clay checkbox API options can be configured"
-	@priority = "5"
+	@description = "LPS-121932. Verify clay checkbox API options can be configured"
+	@priority = 5
 	@refactordone
 	test CanBeConfigured {
 		Navigator.gotoNavTab(navTab = "Form Elements");
@@ -83,19 +83,19 @@ definition {
 			locator1 = "ClaySamplePortlet#CHECKBOX");
 	}
 
-	@description = "LRQA-65496: Validate that a parent checkbox is a checked state when all nested checkboxes are checked."
-	@priority = "3"
+	@description = "LRQA-55800. Validate that a parent checkbox is a checked state when all nested checkboxes are checked."
+	@priority = 3
 	test ParentMustBeCheckedIfAllChildrenAreChecked {
 		task ("Given treeview with indeterminate state checkboxes") {
 			Navigator.gotoNavTab(navTab = "Form Elements");
 		}
 
-		task ("And Given top most treeview checkbox state is indeterminate") {
+		task ("And top most treeview checkbox state is indeterminate") {
 			AssertAttributeValue(
-				attribute1 = "indeterminate",
 				key_label = "Liferay DXP",
 				locator1 = "ClaySamplePortlet#CHECKBOX_NESTED",
-				value1 = "true");
+				value1 = "indeterminate",
+				value2 = "true");
 		}
 
 		task ("When all children checkboxes states are checked") {
@@ -115,8 +115,8 @@ definition {
 		}
 	}
 
-	@description = "LRQA-65496: Validate that a parent checkbox is an indeterminate state when some nested checkboxes are checked."
-	@priority = "3"
+	@description = "LRQA-55800. Validate that a parent checkbox is an indeterminate state when some nested checkboxes are checked."
+	@priority = 3
 	test ParentMustBeIndeterminateIfSomeChildrenChecked {
 		task ("Given treeview with indeterminate state checkboxes") {
 			Navigator.gotoNavTab(navTab = "Form Elements");
@@ -130,7 +130,7 @@ definition {
 			}
 		}
 
-		task ("And when treeview has atleast 1 child checkbox state is unchecked") {
+		task ("And treeview has atleast 1 child checkbox state is unchecked") {
 			if (IsChecked(key_label = "Categorization", locator1 = "ClaySamplePortlet#CHECKBOX_NESTED")) {
 				Click(
 					key_label = "Categorization",
@@ -140,15 +140,15 @@ definition {
 
 		task ("Then parent checkbox is indeterminate state") {
 			AssertAttributeValue(
-				attribute1 = "indeterminate",
 				key_label = "Liferay DXP",
 				locator1 = "ClaySamplePortlet#CHECKBOX_NESTED",
-				value1 = "true");
+				value1 = "indeterminate",
+				value2 = "true");
 		}
 	}
 
-	@description = "LRQA-65496: Validate that a parent checkbox is an unchecked state when all nested checkboxes are unchecked."
-	@priority = "3"
+	@description = "LRQA-55800: Validate that a parent checkbox is an unchecked state when all nested checkboxes are unchecked."
+	@priority = 3
 	test ParentMustBeUncheckedIfNoChildrenChecked {
 		task ("Given treeview with indeterminate state checkboxes") {
 			Navigator.gotoNavTab(navTab = "Form Elements");
@@ -171,8 +171,8 @@ definition {
 		}
 	}
 
-	@description = "Verify clay checkbox UI looks ok"
-	@priority = "5"
+	@description = "LPS-121932. Verify clay checkbox UI looks ok"
+	@priority = 5
 	@refactordone
 	test VerifyDefaultUI {
 		Navigator.gotoNavTab(navTab = "Form Elements");
@@ -196,8 +196,7 @@ definition {
 		// Temporarily remove sikuli assertion until fix in LRQA-65984
 
 		//SikuliAssertElementPresent(locator1 = "ClaySamplePortlet#CHECKBOX_UNCHECKED");
-
-		SikuliAssertElementPresent(locator1 = "ClaySamplePortlet#CHECKBOX_INDETERMINATE_PNG");
+		//SikuliAssertElementPresent(locator1 = "ClaySamplePortlet#CHECKBOX_INDETERMINATE_PNG");
 
 		takeScreenshot();
 	}

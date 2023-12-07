@@ -1,6 +1,7 @@
 definition {
 
-	macro assertElementFocused {
+	@summary = "Default summary"
+	macro assertElementNotFocused(element = null) {
 		var javascript = '''
 var e = document.evaluate("${element}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
@@ -9,35 +10,20 @@ var aE = document.activeElement;
 return	aE.isEqualNode(e).toString();
 		''';
 
-		var focused = selenium.getEval("${javascript}");
+		var focused = selenium.getEval(${javascript});
 
-		if ("${focused}" != "true") {
-			TestUtils.fail(message = "FAILED: Element is not focused");
-		}
-	}
-
-	macro assertElementNotFocused {
-		var javascript = '''
-var e = document.evaluate("${element}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-
-var aE = document.activeElement;
-
-return	aE.isEqualNode(e).toString();
-		''';
-
-		var focused = selenium.getEval("${javascript}");
-
-		if ("${focused}" != "false") {
+		if (${focused} != "false") {
 			TestUtils.fail(message = "FAILED: Element is focused");
 		}
 	}
 
-	macro assertEquals {
-		echo("${expected}");
+	@summary = "Default summary"
+	macro assertEquals(actual = null, expected = null) {
+		echo(${expected});
 
-		echo("${actual}");
+		echo(${actual});
 
-		if ("${expected}" == "${actual}") {
+		if (${expected} == ${actual}) {
 			echo("PASSED");
 		}
 		else {
@@ -45,12 +31,27 @@ return	aE.isEqualNode(e).toString();
 		}
 	}
 
-	macro assertNotEquals {
-		echo("${expected}");
+	@summary = "Default summary"
+	macro assertNotContain(actual = null, expected = null) {
+		echo(${expected});
 
-		echo("${actual}");
+		echo(${actual});
 
-		if ("${expected}" != "${actual}") {
+		if (!(contains(${actual}, ${expected}))) {
+			echo("PASSED");
+		}
+		else {
+			TestUtils.fail(message = "FAILED: '${actual}' contain expected text '${expected}'");
+		}
+	}
+
+	@summary = "Default summary"
+	macro assertNotEquals(actual = null, expected = null) {
+		echo(${expected});
+
+		echo(${actual});
+
+		if (${expected} != ${actual}) {
 			echo("PASSED");
 		}
 		else {
@@ -58,10 +59,11 @@ return	aE.isEqualNode(e).toString();
 		}
 	}
 
-	macro assertPartialAttributeValue {
+	@summary = "Default summary"
+	macro assertPartialAttributeValue(attribute = null, value = null, element = null) {
 		var attributeValue = selenium.getAttribute("${element}@${attribute}");
 
-		if (contains("${attributeValue}", "${value}")) {
+		if (contains(${attributeValue}, ${value})) {
 			echo("PASSED");
 		}
 		else {
@@ -69,12 +71,13 @@ return	aE.isEqualNode(e).toString();
 		}
 	}
 
-	macro assertPartialEquals {
-		echo("${expected}");
+	@summary = "Default summary"
+	macro assertPartialEquals(actual = null, expected = null) {
+		echo(${expected});
 
-		echo("${actual}");
+		echo(${actual});
 
-		if (contains("${actual}", "${expected}")) {
+		if (contains(${actual}, ${expected})) {
 			echo("PASSED");
 		}
 		else {
@@ -82,7 +85,8 @@ return	aE.isEqualNode(e).toString();
 		}
 	}
 
-	macro assertTruncatedText {
+	@summary = "Default summary"
+	macro assertTruncatedText() {
 		WaitForSPARefresh();
 
 		var javascript = '''
@@ -92,26 +96,39 @@ return (element.offsetWidth < element.scrollWidth).toString();
 
 		''';
 
-		var isTruncated = selenium.getEval("${javascript}");
+		var isTruncated = selenium.getEval(${javascript});
 
-		if ("${isTruncated}" != "true") {
+		if (${isTruncated} != "true") {
 			TestUtils.fail(message = "FAILED: The text is not truncated");
 		}
 	}
 
-	macro fail {
+	@summary = "Default summary"
+	macro changeElementValueById(elementId = null, newValue = null) {
+		WaitForSPARefresh();
+
+		var javascript = '''
+document.getElementById('${elementId}').value = '${newValue}';
+		''';
+
+		var response = selenium.getEval(${javascript});
+	}
+
+	@summary = "Default summary"
+	macro fail() {
 		if (!(isSet(message))) {
 			var message = "FAIL";
 		}
 
-		echo("${message}");
+		echo(${message});
 
 		takeScreenshot();
 
-		fail("${message}");
+		fail(${message});
 	}
 
-	macro getElementTextContent {
+	@summary = "Default summary"
+	macro getElementTextContent() {
 		WaitForSPARefresh();
 
 		var javascript = '''
@@ -120,48 +137,73 @@ var element = document.evaluate("${element}", document, null, XPathResult.FIRST_
 return element.textContent;
 		''';
 
-		var textContent = selenium.getEval("${javascript}");
+		var textContent = selenium.getEval(${javascript});
 
-		return "${textContent}";
+		return ${textContent};
 	}
 
-	macro getScreenHeight {
+	@summary = "Default summary"
+	macro getElementWidth() {
+		var javascript = '''
+		let element = document.querySelector('.content-renderer-actionLink');
+
+		let width = element.offsetWidth;
+
+		let element_width = Math.round(width).toString();
+
+		return element_width;
+		''';
+
+		var element_width = selenium.getEval(${javascript});
+
+		return ${element_width};
+	}
+
+	@summary = "Default summary"
+	macro getScreenHeight() {
 		WaitForSPARefresh();
 
 		var screenHeight = selenium.getEval("return	screen.height.toString();");
 
-		return "${screenHeight}";
+		return ${screenHeight};
 	}
 
-	macro getScreenWidth {
+	@summary = "Default summary"
+	macro getScreenWidth() {
 		WaitForSPARefresh();
 
 		var screenWidth = selenium.getEval("return screen.width.toString();");
 
-		return "${screenWidth}";
+		return ${screenWidth};
 	}
 
-	macro hardRefresh {
+	@summary = "Default summary"
+	macro hardRefresh() {
 		var mac = OSDetector.isApple();
 
-		if ("${mac}" == "true") {
-			RobotType.robotTypeShortcut(locator1 = "Shift + Command + r");
+		if (${mac} == "true") {
+			Type.sendKeys(
+				locator1 = "//body",
+				value1 = "Shift + Command + r");
 		}
 		else {
-			RobotType.robotTypeShortcut(locator1 = "Ctrl + Shift + r");
+			Type.sendKeys(
+				locator1 = "//body",
+				value1 = "Ctrl + Shift + r");
 		}
 
 		WaitForPageLoad();
 	}
 
-	macro isGreaterThan {
-		echo("${expected}");
+	@summary = "Default summary"
+	macro isGreaterThan(actual = null, expected = null) {
+		echo(${expected});
 
-		echo("${actual}");
+		echo(${actual});
 
-		var result = MathUtil.isGreaterThan("${actual}", "${expected}");
+		var result = MathUtil.isGreaterThan(${actual}, ${expected});
 
-		if ("${result}" == "true") {
+		if (${result} == "true") {
 			echo("PASSED");
 		}
 		else {
@@ -169,14 +211,15 @@ return element.textContent;
 		}
 	}
 
-	macro isLessThan {
-		echo("${expected}");
+	@summary = "Default summary"
+	macro isLessThan(actual = null, expected = null) {
+		echo(${expected});
 
-		echo("${actual}");
+		echo(${actual});
 
-		var result = MathUtil.isLessThan("${actual}", "${expected}");
+		var result = MathUtil.isLessThan(${actual}, ${expected});
 
-		if ("${result}" == "true") {
+		if (${result} == "true") {
 			echo("PASSED");
 		}
 		else {
@@ -184,22 +227,17 @@ return element.textContent;
 		}
 	}
 
-	macro maximizeWindow {
-		var screenWidth = TestUtils.getScreenWidth();
-		var screenHeight = TestUtils.getScreenHeight();
-
-		SetWindowSize(value1 = "${screenWidth},${screenHeight}");
-	}
-
-	macro pass {
+	@summary = "Default summary"
+	macro pass() {
 		if (!(isSet(message))) {
 			var message = "PASS";
 		}
 
-		echo("${message}");
+		echo(${message});
 	}
 
-	macro typeIntoField {
+	@summary = "Default summary"
+	macro typeIntoField() {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(

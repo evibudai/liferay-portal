@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.opensaml.integration.internal.servlet.profile;
@@ -26,15 +17,15 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.constants.SamlWebKeys;
 import com.liferay.saml.opensaml.integration.internal.binding.SamlBinding;
+import com.liferay.saml.opensaml.integration.internal.binding.SamlBindingProvider;
 import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManager;
+import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
 import com.liferay.saml.persistence.model.SamlSpSession;
 import com.liferay.saml.persistence.service.SamlSpSessionLocalService;
 import com.liferay.saml.runtime.SamlException;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 import javax.servlet.http.Cookie;
@@ -45,7 +36,6 @@ import javax.servlet.http.HttpSession;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.security.IdentifierGenerationStrategy;
 
-import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.io.MarshallingException;
@@ -191,7 +181,7 @@ public abstract class BaseProfile {
 			basicSignatureValidationParametersResolver.resolveSingle(
 				new CriteriaSet(
 					new SignatureValidationConfigurationCriterion(
-						ConfigurationService.get(
+						ConfigurationServiceBootstrapUtil.get(
 							SignatureValidationConfiguration.class))));
 
 		signatureValidationParameters.setSignatureTrustEngine(
@@ -329,21 +319,6 @@ public abstract class BaseProfile {
 		return messageContext;
 	}
 
-	public SamlBinding getSamlBinding(String communicationProfileId)
-		throws PortalException {
-
-		for (SamlBinding samlBinding : _samlBindings) {
-			if (communicationProfileId.equals(
-					samlBinding.getCommunicationProfileId())) {
-
-				return samlBinding;
-			}
-		}
-
-		throw new SamlException(
-			"Unsupported binding " + communicationProfileId);
-	}
-
 	public SamlSpSession getSamlSpSession(
 		HttpServletRequest httpServletRequest) {
 
@@ -447,7 +422,8 @@ public abstract class BaseProfile {
 
 		Endpoint endpoint = samlPeerEndpointContext.getEndpoint();
 
-		SamlBinding samlBinding = getSamlBinding(endpoint.getBinding());
+		SamlBinding samlBinding = samlBindingProvider.getSamlBinding(
+			endpoint.getBinding());
 
 		if (_log.isDebugEnabled()) {
 			try {
@@ -523,22 +499,6 @@ public abstract class BaseProfile {
 			httpServletRequest.isSecure());
 	}
 
-	protected void addSamlBinding(SamlBinding samlBinding) {
-		_samlBindings.add(samlBinding);
-	}
-
-	protected void removeSamlBinding(SamlBinding samlBinding) {
-		_samlBindings.remove(samlBinding);
-	}
-
-	protected void setSamlBindings(List<SamlBinding> samlBindings) {
-		_samlBindings = samlBindings;
-	}
-
-	protected void unsetSamlBinding(SamlBinding samlBinding) {
-		removeSamlBinding(samlBinding);
-	}
-
 	@Reference
 	protected IdentifierGenerationStrategyFactory
 		identifierGenerationStrategyFactory;
@@ -550,13 +510,14 @@ public abstract class BaseProfile {
 	protected Portal portal;
 
 	@Reference
+	protected SamlBindingProvider samlBindingProvider;
+
+	@Reference
 	protected SamlProviderConfigurationHelper samlProviderConfigurationHelper;
 
 	@Reference
 	protected SamlSpSessionLocalService samlSpSessionLocalService;
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseProfile.class);
-
-	private List<SamlBinding> _samlBindings = new ArrayList<>();
 
 }

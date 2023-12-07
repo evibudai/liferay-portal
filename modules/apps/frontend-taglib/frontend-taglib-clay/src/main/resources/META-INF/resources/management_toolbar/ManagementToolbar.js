@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -17,8 +8,9 @@ import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {LinkOrButton} from '@clayui/shared';
 import {ManagementToolbar as FrontendManagementToolbar} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 
 import normalizeDropdownItems from '../normalize_dropdown_items';
 import ActionControls from './ActionControls';
@@ -42,6 +34,7 @@ function ManagementToolbar({
 	filterDropdownItems,
 	filterLabelItems,
 	itemsTotal,
+	itemsType,
 	infoPanelId,
 	initialActionDropdownItems,
 	initialCheckboxStatus,
@@ -65,6 +58,7 @@ function ManagementToolbar({
 	searchFormName,
 	searchInputAutoFocus,
 	searchInputName,
+	searchResultsTitle,
 	searchValue,
 	selectAllURL,
 	selectable,
@@ -87,10 +81,24 @@ function ManagementToolbar({
 		() => normalizeDropdownItems(viewTypeItems),
 		[viewTypeItems]
 	);
-	const viewTypeIcon = useMemo(
-		() => viewTypeItems?.find((item) => item.active)?.icon,
+	const activeViewType = useMemo(
+		() => viewTypeItems?.find((item) => item.active),
 		[viewTypeItems]
 	);
+	const viewTypeTitle = sub(
+		Liferay.Language.get('select-view-currently-selected-x'),
+		activeViewType?.label
+	);
+
+	const searchButtonRef = useRef();
+
+	useEffect(() => {
+		if (searchMobile) {
+			const searchButton = searchButtonRef.current;
+
+			return () => searchButton?.focus();
+		}
+	}, [searchMobile]);
 
 	return (
 		<FeatureFlagContext.Provider
@@ -103,13 +111,14 @@ function ManagementToolbar({
 							actionDropdownItems={actionDropdownItems}
 							active={active}
 							clearSelectionURL={clearSelectionURL}
-							disabled={disabled}
+							disabled={disabled || itemsTotal === 0}
 							initialCheckboxStatus={initialCheckboxStatus}
 							initialSelectAllButtonVisible={
 								initialSelectAllButtonVisible
 							}
 							initialSelectedItems={initialSelectedItems}
 							itemsTotal={itemsTotal}
+							itemsType={itemsType}
 							onCheckboxChange={onCheckboxChange}
 							onClearButtonClick={onClearSelectionButtonClick}
 							onSelectAllButtonClick={onSelectAllButtonClick}
@@ -145,6 +154,7 @@ function ManagementToolbar({
 				{!active && showSearch && (
 					<SearchControls
 						disabled={disabled}
+						onCloseSearchMobile={() => setSearchMobile(false)}
 						searchActionURL={searchActionURL}
 						searchData={searchData}
 						searchFormMethod={searchFormMethod}
@@ -153,14 +163,14 @@ function ManagementToolbar({
 						searchInputName={searchInputName}
 						searchMobile={searchMobile}
 						searchValue={searchValue}
-						setSearchMobile={setSearchMobile}
 					/>
 				)}
 
-				<FrontendManagementToolbar.ItemList>
+				<FrontendManagementToolbar.ItemList role="none">
 					{!active && showSearch && (
 						<SearchControls.ShowMobileButton
 							disabled={disabled}
+							ref={searchButtonRef}
 							setSearchMobile={setSearchMobile}
 						/>
 					)}
@@ -189,19 +199,15 @@ function ManagementToolbar({
 										trigger={
 											showDesignImprovementsFF ? (
 												<ClayButton
-													aria-label={Liferay.Language.get(
-														'show-view-options'
-													)}
+													aria-label={viewTypeTitle}
 													className="nav-link"
 													displayType="unstyled"
-													title={Liferay.Language.get(
-														'show-view-options'
-													)}
+													title={viewTypeTitle}
 												>
-													{viewTypeIcon && (
+													{activeViewType?.icon && (
 														<ClayIcon
 															symbol={
-																viewTypeIcon
+																activeViewType?.icon
 															}
 														/>
 													)}
@@ -213,15 +219,13 @@ function ManagementToolbar({
 												</ClayButton>
 											) : (
 												<ClayButtonWithIcon
-													aria-label={Liferay.Language.get(
-														'show-view-options'
-													)}
+													aria-label={viewTypeTitle}
 													className="nav-link nav-link-monospaced"
 													displayType="unstyled"
-													symbol={viewTypeIcon}
-													title={Liferay.Language.get(
-														'show-view-options'
-													)}
+													symbol={
+														activeViewType?.icon
+													}
+													title={viewTypeTitle}
 												/>
 											)
 										}
@@ -282,7 +286,9 @@ function ManagementToolbar({
 					clearResultsURL={clearResultsURL}
 					filterLabelItems={filterLabelItems}
 					itemsTotal={itemsTotal}
+					searchContainerId={searchContainerId}
 					searchValue={searchValue}
+					title={searchResultsTitle}
 				/>
 			)}
 		</FeatureFlagContext.Provider>
@@ -309,6 +315,7 @@ ManagementToolbar.propTypes = {
 		'unchecked',
 	]),
 	itemsTotal: PropTypes.number,
+	itemsType: PropTypes.string,
 	onCheckboxChange: PropTypes.func,
 	onCreateButtonClick: PropTypes.func,
 	onInfoButtonClick: PropTypes.func,
@@ -320,6 +327,7 @@ ManagementToolbar.propTypes = {
 	searchFormMethod: PropTypes.string,
 	searchFormName: PropTypes.string,
 	searchInputName: PropTypes.string,
+	searchResultsTitle: PropTypes.string,
 	searchValue: PropTypes.string,
 	selectAllURL: PropTypes.string,
 	selectable: PropTypes.bool,

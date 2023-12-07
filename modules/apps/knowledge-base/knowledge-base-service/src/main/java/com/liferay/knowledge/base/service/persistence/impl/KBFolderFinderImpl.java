@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service.persistence.impl;
@@ -33,6 +24,7 @@ import com.liferay.portal.kernel.security.permission.InlineSQLHelper;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -124,7 +116,11 @@ public class KBFolderFinderImpl
 			sb.append(sql);
 			sb.append(") UNION ALL (");
 
-			sql = _customSQL.get(getClass(), COUNT_F_BY_G_P, queryDefinition);
+			QueryDefinition<?> kbFolderQueryDefinition =
+				_getKBFolderQueryDefinition(queryDefinition);
+
+			sql = _customSQL.get(
+				getClass(), COUNT_F_BY_G_P, kbFolderQueryDefinition);
 
 			if (inlineSQLHelper) {
 				sql = _inlineSQLHelper.replacePermissionCheck(
@@ -148,6 +144,7 @@ public class KBFolderFinderImpl
 			queryPos.add(queryDefinition.getStatus());
 			queryPos.add(groupId);
 			queryPos.add(parentResourcePrimKey);
+			queryPos.add(kbFolderQueryDefinition.getStatus());
 
 			int count = 0;
 
@@ -216,7 +213,11 @@ public class KBFolderFinderImpl
 			sb.append(sql);
 			sb.append(" UNION ALL ");
 
-			sql = _customSQL.get(getClass(), FIND_F_BY_G_P, queryDefinition);
+			QueryDefinition<?> kbFolderQueryDefinition =
+				_getKBFolderQueryDefinition(queryDefinition);
+
+			sql = _customSQL.get(
+				getClass(), FIND_F_BY_G_P, kbFolderQueryDefinition);
 
 			if (inlineSQLHelper) {
 				sql = _inlineSQLHelper.replacePermissionCheck(
@@ -261,6 +262,7 @@ public class KBFolderFinderImpl
 			queryPos.add(queryDefinition.getStatus());
 			queryPos.add(groupId);
 			queryPos.add(parentResourcePrimKey);
+			queryPos.add(kbFolderQueryDefinition.getStatus());
 
 			List<Object> models = new ArrayList<>();
 
@@ -294,6 +296,27 @@ public class KBFolderFinderImpl
 		finally {
 			closeSession(session);
 		}
+	}
+
+	private QueryDefinition<?> _getKBFolderQueryDefinition(
+		QueryDefinition<?> queryDefinition) {
+
+		QueryDefinition<?> kbFolderQueryDefinition = new QueryDefinition<>();
+
+		kbFolderQueryDefinition.setStatus(
+			queryDefinition.getStatus(), queryDefinition.isExcludeStatus());
+
+		if (!queryDefinition.isExcludeStatus() &&
+			(queryDefinition.getStatus() !=
+				WorkflowConstants.STATUS_APPROVED) &&
+			(queryDefinition.getStatus() !=
+				WorkflowConstants.STATUS_IN_TRASH)) {
+
+			kbFolderQueryDefinition.setStatus(
+				WorkflowConstants.STATUS_APPROVED);
+		}
+
+		return kbFolderQueryDefinition;
 	}
 
 	@Reference

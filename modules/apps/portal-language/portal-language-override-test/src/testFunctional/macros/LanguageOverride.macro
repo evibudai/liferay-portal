@@ -1,22 +1,23 @@
 definition {
 
-	macro addLanguageKey {
+	@summary = "Default summary"
+	macro addLanguageKey(translationOverrideValueList = null, translationOverrideList = null, languageKey = null) {
 		LexiconEntry.gotoAdd();
 
 		PortletEntry.inputText(
 			fieldLabel = "Key",
-			text = "${languageKey}");
+			text = ${languageKey});
 
-		var j = "0";
+		var j = 0;
 
-		for (var translationOverride : list "${translationOverrideList}") {
-			var k = "0";
+		for (var translationOverride : list ${translationOverrideList}) {
+			var k = 0;
 
-			for (var translationOverrideValue : list "${translationOverrideValueList}") {
-				if ("${j}" == "${k}") {
+			for (var translationOverrideValue : list ${translationOverrideValueList}) {
+				if (${j} == ${k}) {
 					PortletEntry.inputText(
-						fieldLabel = "${translationOverride}",
-						text = "${translationOverrideValue}");
+						fieldLabel = ${translationOverride},
+						text = ${translationOverrideValue});
 				}
 
 				var k = ${k} + 1;
@@ -31,51 +32,56 @@ definition {
 	}
 
 	@description = "Assert the filter scope label in management toolbar"
-	macro assertFilterScope {
+	@summary = "Default summary"
+	macro assertFilterScope(filterScope = null) {
 		AssertElementPresent(
-			key_filterScope = "${filterScope}",
+			key_filterScope = ${filterScope},
 			locator1 = "ManagementBar#FILTER_RESULTS_SCOPE");
 	}
 
 	@description = "Assert values for existing language keys"
-	macro assertLanguageKeyWithoutOverride {
-		LexiconList.viewListEntryPresent(listEntry = "${languageKey}");
+	@summary = "Default summary"
+	macro assertLanguageKeyWithoutOverride(translation = null, languageKey = null) {
+		LexiconList.viewListEntryPresent(listEntry = ${languageKey});
 
 		LexiconList.viewListEntrySubtitle(
-			listEntry = "${languageKey}",
-			listEntrySubtitle = "${translation}");
+			listEntry = ${languageKey},
+			listEntrySubtitle = ${translation});
 	}
 
 	@description = "Assert the following values for language key with override when a language is NOT selected: language key, languages with override but not highlighted"
-	macro assertLanguageKeyWithOverrideInListView {
-		LexiconList.viewListEntryPresent(listEntry = "${languageKey}");
+	@summary = "Default summary"
+	macro assertLanguageKeyWithOverrideInListView(languagesWithOverride = null, languageKey = null) {
+		LexiconList.viewListEntryPresent(listEntry = ${languageKey});
 
 		LexiconList.viewListEntrySubtitle(
-			listEntry = "${languageKey}",
+			listEntry = ${languageKey},
 			listEntrySubtitle = "Languages With Override: ${languagesWithOverride}");
 	}
 
 	@description = "Assert the following values for language key with override when a language is selected: language key, current translation, and the highlighted language with override"
-	macro assertSelectedLanguageInListView {
-		LexiconList.viewListEntryPresent(listEntry = "${languageKey}");
+	@summary = "Default summary"
+	macro assertSelectedLanguageInListView(currentTranslationOverride = null, languagesWithOverride = null, selectedLanguage = null, languageKey = null) {
+		LexiconList.viewListEntryPresent(listEntry = ${languageKey});
 
 		LexiconList.viewListEntrySubtitle(
-			listEntry = "${languageKey}",
-			listEntrySubtitle = "${currentTranslationOverride}");
+			listEntry = ${languageKey},
+			listEntrySubtitle = ${currentTranslationOverride});
 
 		if (isSet(languagesWithOverride)) {
 			LexiconList.viewListEntrySubtitle(
-				listEntry = "${languageKey}",
+				listEntry = ${languageKey},
 				listEntrySubtitle = "Languages With Override: ${languagesWithOverride}");
 		}
 
 		AssertElementPresent(
-			key_language = "${selectedLanguage}",
-			key_languageKey = "${languageKey}",
+			key_language = ${selectedLanguage},
+			key_languageKey = ${languageKey},
 			locator1 = "LanguageOverride#FILTER_BY_OVERRIDE_BOLD_LANGUAGE_WITH_OVERRIDE");
 	}
 
-	macro clearAllOverridesViaEditPage {
+	@summary = "Default summary"
+	macro clearAllOverridesViaEditPage() {
 		ClickNoError(
 			key_text = "Clear All Overrides",
 			locator1 = "Link#ANY");
@@ -85,7 +91,8 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro exportOverriddenTranslations {
+	@summary = "Default summary"
+	macro exportOverriddenTranslations() {
 		Portlet.gotoPortletOptions(portletOption = "Export Overridden Translations");
 
 		var tempFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "*.zip");
@@ -93,7 +100,7 @@ definition {
 
 		var exportedZipFile = FileUtil.exists("${tempFileDirectory}/${tempFileName}");
 
-		if ("${exportedZipFile}" == "true") {
+		if (${exportedZipFile} == "true") {
 			echo("Overridden translations are exported");
 		}
 		else {
@@ -101,55 +108,62 @@ definition {
 		}
 	}
 
-	macro goToLanguageKey {
-		LexiconList.clickListEntryTitle(listEntry = "${languageKey}");
+	@summary = "Default summary"
+	macro goToLanguageKey(languageKey = null) {
+		LexiconList.clickListEntryTitle(listEntry = ${languageKey});
 	}
 
-	macro openLanguageOverridePortlet {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_portal_language_override_web_internal_portlet_PLOPortlet");
+	@summary = "Default summary"
+	macro openLanguageOverridePortlet(baseURL = null) {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = ${baseURL},
+			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_portal_language_override_web_internal_portlet_PLOPortlet");
 	}
 
-	macro removeAllTranslationOverrides {
+	@summary = "Default summary"
+	macro removeAllTranslationOverrides(languageKey = null) {
 		LexiconEntry.gotoEntryMenuItemNoError(
 			menuItem = "Remove all translation overrides",
-			rowEntry = "${languageKey}");
+			rowEntry = ${languageKey});
 
 		AssertConfirm(value1 = "Do you want to reset all translation overrides?");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro removeTranslationOverrideForSelectedLanguage {
+	@summary = "Default summary"
+	macro removeTranslationOverrideForSelectedLanguage(currentLanguage = null, languageKey = null) {
 		PageEditor.changeLocale(
-			currentLocale = "${currentLanguage}",
-			locale = "${newLanguage}");
+			currentLocale = ${currentLanguage},
+			locale = ${newLanguage});
 
-		var newLanguage = StringUtil.replace("${newLanguage}", "-", "_");
+		var newLanguage = StringUtil.replace(${newLanguage}, "-", "_");
 
 		LexiconEntry.gotoEntryMenuItemNoError(
 			menuItem = "Remove translation override for ${newLanguage}",
-			rowEntry = "${languageKey}");
+			rowEntry = ${languageKey});
 
 		AssertConfirm(value1 = "Do you want to reset the translation override for ${newLanguage}?");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro updateTranslationOverrideValues {
+	@summary = "Default summary"
+	macro updateTranslationOverrideValues(translationOverrideValueList = null, translationOverrideList = null, languageKey = null) {
 		LexiconEntry.gotoEntryMenuItemNoError(
 			menuItem = "Edit",
-			rowEntry = "${languageKey}");
+			rowEntry = ${languageKey});
 
-		var j = "0";
+		var j = 0;
 
-		for (var translationOverride : list "${translationOverrideList}") {
-			var k = "0";
+		for (var translationOverride : list ${translationOverrideList}) {
+			var k = 0;
 
-			for (var translationOverrideValue : list "${translationOverrideValueList}") {
-				if ("${j}" == "${k}") {
+			for (var translationOverrideValue : list ${translationOverrideValueList}) {
+				if (${j} == ${k}) {
 					PortletEntry.inputText(
-						fieldLabel = "${translationOverride}",
-						text = "${translationOverrideValue}");
+						fieldLabel = ${translationOverride},
+						text = ${translationOverrideValue});
 				}
 
 				var k = ${k} + 1;

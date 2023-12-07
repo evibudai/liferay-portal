@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 
 /**
  * Provides a wrapper for {@link ObjectRelationshipLocalService}.
@@ -37,19 +29,6 @@ public class ObjectRelationshipLocalServiceWrapper
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 	}
 
-	@Override
-	public com.liferay.object.model.ObjectRelationship addObjectRelationship(
-			long userId, long objectDefinitionId1, long objectDefinitionId2,
-			long parameterObjectFieldId, String deletionType,
-			java.util.Map<java.util.Locale, String> labelMap, String name,
-			String type)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _objectRelationshipLocalService.addObjectRelationship(
-			userId, objectDefinitionId1, objectDefinitionId2,
-			parameterObjectFieldId, deletionType, labelMap, name, type);
-	}
-
 	/**
 	 * Adds the object relationship to the database. Also notifies the appropriate model listeners.
 	 *
@@ -66,6 +45,22 @@ public class ObjectRelationshipLocalServiceWrapper
 
 		return _objectRelationshipLocalService.addObjectRelationship(
 			objectRelationship);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship addObjectRelationship(
+			String externalReferenceCode, long userId, long objectDefinitionId1,
+			long objectDefinitionId2, long parameterObjectFieldId,
+			String deletionType,
+			java.util.Map<java.util.Locale, String> labelMap, String name,
+			boolean system, String type,
+			com.liferay.object.model.ObjectField objectField)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectRelationshipLocalService.addObjectRelationship(
+			externalReferenceCode, userId, objectDefinitionId1,
+			objectDefinitionId2, parameterObjectFieldId, deletionType, labelMap,
+			name, system, type, objectField);
 	}
 
 	@Override
@@ -183,6 +178,15 @@ public class ObjectRelationshipLocalServiceWrapper
 
 		_objectRelationshipLocalService.deleteObjectRelationships(
 			objectDefinitionId1);
+	}
+
+	@Override
+	public void deleteObjectRelationships(
+			long objectDefinitionId1, boolean reverse)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectRelationshipLocalService.deleteObjectRelationships(
+			objectDefinitionId1, reverse);
 	}
 
 	/**
@@ -310,13 +314,43 @@ public class ObjectRelationshipLocalServiceWrapper
 
 	@Override
 	public com.liferay.object.model.ObjectRelationship
-			fetchObjectRelationshipByObjectDefinitionId(
-				long objectDefinitionId, String name)
-		throws Exception {
+		fetchObjectRelationshipByExternalReferenceCode(
+			String externalReferenceCode, long objectDefinitionId1) {
+
+		return _objectRelationshipLocalService.
+			fetchObjectRelationshipByExternalReferenceCode(
+				externalReferenceCode, objectDefinitionId1);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship
+		fetchObjectRelationshipByExternalReferenceCode(
+			String externalReferenceCode, long companyId,
+			long objectDefinitionId1) {
+
+		return _objectRelationshipLocalService.
+			fetchObjectRelationshipByExternalReferenceCode(
+				externalReferenceCode, companyId, objectDefinitionId1);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship
+		fetchObjectRelationshipByObjectDefinitionId(
+			long objectDefinitionId, String name) {
 
 		return _objectRelationshipLocalService.
 			fetchObjectRelationshipByObjectDefinitionId(
 				objectDefinitionId, name);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship
+		fetchObjectRelationshipByObjectDefinitionId1(
+			long objectDefinitionId1, String name) {
+
+		return _objectRelationshipLocalService.
+			fetchObjectRelationshipByObjectDefinitionId1(
+				objectDefinitionId1, name);
 	}
 
 	@Override
@@ -412,13 +446,24 @@ public class ObjectRelationshipLocalServiceWrapper
 
 	@Override
 	public com.liferay.object.model.ObjectRelationship
+			getObjectRelationshipByExternalReferenceCode(
+				String externalReferenceCode, long companyId,
+				long objectDefinitionId1)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectRelationshipLocalService.
+			getObjectRelationshipByExternalReferenceCode(
+				externalReferenceCode, companyId, objectDefinitionId1);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship
 			getObjectRelationshipByObjectDefinitionId(
-				long objectDefinitionId, String objectRelationshipName)
+				long objectDefinitionId, String name)
 		throws Exception {
 
 		return _objectRelationshipLocalService.
-			getObjectRelationshipByObjectDefinitionId(
-				objectDefinitionId, objectRelationshipName);
+			getObjectRelationshipByObjectDefinitionId(objectDefinitionId, name);
 	}
 
 	/**
@@ -467,6 +512,14 @@ public class ObjectRelationshipLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.object.model.ObjectRelationship>
+		getObjectRelationships(long objectDefinitionId1, boolean edge) {
+
+		return _objectRelationshipLocalService.getObjectRelationships(
+			objectDefinitionId1, edge);
+	}
+
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectRelationship>
 		getObjectRelationships(long objectDefinitionId1, int start, int end) {
 
 		return _objectRelationshipLocalService.getObjectRelationships(
@@ -497,6 +550,14 @@ public class ObjectRelationshipLocalServiceWrapper
 
 		return _objectRelationshipLocalService.getObjectRelationships(
 			objectDefinitionId1, deletionType, reverse);
+	}
+
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectRelationship>
+		getObjectRelationshipsByObjectDefinitionId2(long objectDefinitionId2) {
+
+		return _objectRelationshipLocalService.
+			getObjectRelationshipsByObjectDefinitionId2(objectDefinitionId2);
 	}
 
 	/**
@@ -531,15 +592,13 @@ public class ObjectRelationshipLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.object.model.ObjectRelationship updateObjectRelationship(
-			long objectRelationshipId, long parameterObjectFieldId,
-			String deletionType,
-			java.util.Map<java.util.Locale, String> labelMap)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public void registerObjectRelationshipsRelatedInfoCollectionProviders(
+		com.liferay.object.model.ObjectDefinition objectDefinition1,
+		ObjectDefinitionLocalService objectDefinitionLocalService) {
 
-		return _objectRelationshipLocalService.updateObjectRelationship(
-			objectRelationshipId, parameterObjectFieldId, deletionType,
-			labelMap);
+		_objectRelationshipLocalService.
+			registerObjectRelationshipsRelatedInfoCollectionProviders(
+				objectDefinition1, objectDefinitionLocalService);
 	}
 
 	/**
@@ -558,6 +617,24 @@ public class ObjectRelationshipLocalServiceWrapper
 
 		return _objectRelationshipLocalService.updateObjectRelationship(
 			objectRelationship);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship updateObjectRelationship(
+			String externalReferenceCode, long objectRelationshipId,
+			long parameterObjectFieldId, String deletionType, boolean edge,
+			java.util.Map<java.util.Locale, String> labelMap,
+			com.liferay.object.model.ObjectField objectField)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectRelationshipLocalService.updateObjectRelationship(
+			externalReferenceCode, objectRelationshipId, parameterObjectFieldId,
+			deletionType, edge, labelMap, objectField);
+	}
+
+	@Override
+	public BasePersistence<?> getBasePersistence() {
+		return _objectRelationshipLocalService.getBasePersistence();
 	}
 
 	@Override

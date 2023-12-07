@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.client.serdes.v1_0;
@@ -95,6 +86,21 @@ public class KnowledgeBaseAttachmentSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(knowledgeBaseAttachment.getEncodingFormat()));
+
+			sb.append("\"");
+		}
+
+		if (knowledgeBaseAttachment.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(knowledgeBaseAttachment.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -195,6 +201,16 @@ public class KnowledgeBaseAttachmentSerDes {
 				String.valueOf(knowledgeBaseAttachment.getEncodingFormat()));
 		}
 
+		if (knowledgeBaseAttachment.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(
+					knowledgeBaseAttachment.getExternalReferenceCode()));
+		}
+
 		if (knowledgeBaseAttachment.getFileExtension() == null) {
 			map.put("fileExtension", null);
 		}
@@ -264,6 +280,14 @@ public class KnowledgeBaseAttachmentSerDes {
 			else if (Objects.equals(jsonParserFieldName, "encodingFormat")) {
 				if (jsonParserFieldValue != null) {
 					knowledgeBaseAttachment.setEncodingFormat(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					knowledgeBaseAttachment.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}

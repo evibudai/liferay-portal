@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,9 +34,12 @@ definition {
 	}
 
 	@description = "LPS-142195 - Verify if Continue Button only will be enabled when all required fields have been filled in."
-	@priority = "4"
+	@priority = 4
 	test CanClickInContinueButton {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -51,9 +57,12 @@ definition {
 	}
 
 	@description = "LPS-142198 - Verify search field supports non-ascii chars."
-	@priority = "3"
+	@priority = 3
 	test CanPutNonAsciiInIndustrySearch {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -76,9 +85,12 @@ definition {
 	}
 
 	@description = "LPS-142192 - Verify if when no search results are found, a message will appear in place of the search results."
-	@priority = "4"
+	@priority = 4
 	test CanViewNoResultsMessage {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -101,9 +113,12 @@ definition {
 	}
 
 	@description = "LPS-142202 - Verify if when the user does not find your business, a button will be displayed with tips."
-	@priority = "4"
+	@priority = 4
 	test CanViewTipButtonInBusinessPage {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -126,9 +141,12 @@ definition {
 	}
 
 	@description = "LPS-142204 - Verify if the button 'I am unable to find my industry' opens an information panel when clicking on it."
-	@priority = "4"
+	@priority = 4
 	test CanViewTipInfoPanelInBusinessPage {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -153,9 +171,12 @@ definition {
 	}
 
 	@description = "LPS-142197 - Verify Max number of characters in the search field (max chars 256)."
-	@priority = "3"
+	@priority = 3
 	test IndustrySearchMaxNumber {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -171,9 +192,12 @@ definition {
 	}
 
 	@description = "LPS-142205 - Verify if information panel is closed when clicking on dismiss (information panel from button 'I am unable to find my industry')."
-	@priority = "4"
+	@priority = 4
 	test InfoPanelIsDismissedInBusinessPage {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -204,9 +228,12 @@ definition {
 	}
 
 	@description = "LPS-142203 - Verify if the button 'I am unable to find my industry' becomes highlighted when clicking on it."
-	@priority = "4"
+	@priority = 4
 	test IsTipButtonHighlighted {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -235,9 +262,12 @@ definition {
 	}
 
 	@description = "LPS-142201 - Verify if by selecting Previous users will be navigated to the previous screen and changes will be discarded."
-	@priority = "4"
+	@priority = 4
 	test NavigateToPreviousScreenDiscardChanges {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -280,9 +310,12 @@ definition {
 	}
 
 	@description = "LPS-142200 - Verify if in the first page of Basics section, the field Search is required."
-	@priority = "5"
+	@priority = 5
 	test SearchFieldIsRequiredInBusinessPage {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 

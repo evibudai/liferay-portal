@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.content.web.internal;
@@ -20,7 +11,6 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
-import com.liferay.journal.service.JournalContentSearchLocalService;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.petra.string.StringBundler;
@@ -60,7 +50,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Raymond Augé
  */
 @Component(
-	immediate = true,
 	property = "javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
 	service = PortletLayoutListener.class
 )
@@ -86,10 +75,6 @@ public class JournalContentPortletLayoutListener
 			}
 
 			_addLayoutClassedModelUsage(layout, portletId, article);
-
-			_journalContentSearchLocalService.updateContentSearch(
-				layout.getGroupId(), layout.isPrivateLayout(),
-				layout.getLayoutId(), portletId, article.getArticleId(), true);
 		}
 		catch (Exception exception) {
 			throw new PortletLayoutListenerException(exception);
@@ -128,10 +113,6 @@ public class JournalContentPortletLayoutListener
 			_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
 				portletId, _portal.getClassNameId(Portlet.class), plid);
 
-			_journalContentSearchLocalService.deleteArticleContentSearch(
-				layout.getGroupId(), layout.isPrivateLayout(),
-				layout.getLayoutId(), portletId, article.getArticleId());
-
 			String[] runtimePortletIds = _getRuntimePortletIds(
 				layout.getCompanyId(), layout.getGroupId(),
 				article.getArticleId());
@@ -162,19 +143,10 @@ public class JournalContentPortletLayoutListener
 			_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
 				portletId, _portal.getClassNameId(Portlet.class), plid);
 
-			_journalContentSearchLocalService.deleteArticleContentSearch(
-				layout.getGroupId(), layout.isPrivateLayout(),
-				layout.getLayoutId(), portletId);
-
 			JournalArticle article = _getArticle(layout, portletId);
 
 			if (article != null) {
 				_addLayoutClassedModelUsage(layout, portletId, article);
-
-				_journalContentSearchLocalService.updateContentSearch(
-					layout.getGroupId(), layout.isPrivateLayout(),
-					layout.getLayoutId(), portletId, article.getArticleId(),
-					true);
 			}
 		}
 		catch (Exception exception) {
@@ -194,7 +166,7 @@ public class JournalContentPortletLayoutListener
 		LayoutClassedModelUsage layoutClassedModelUsage =
 			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
 				_portal.getClassNameId(JournalArticle.class),
-				article.getResourcePrimKey(), portletId,
+				article.getResourcePrimKey(), StringPool.BLANK, portletId,
 				_portal.getClassNameId(Portlet.class), layout.getPlid());
 
 		if (layoutClassedModelUsage != null) {
@@ -203,7 +175,7 @@ public class JournalContentPortletLayoutListener
 
 		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
 			layout.getGroupId(), _portal.getClassNameId(JournalArticle.class),
-			article.getResourcePrimKey(), portletId,
+			article.getResourcePrimKey(), StringPool.BLANK, portletId,
 			_portal.getClassNameId(Portlet.class), layout.getPlid(),
 			ServiceContextThreadLocal.getServiceContext());
 	}
@@ -336,9 +308,6 @@ public class JournalContentPortletLayoutListener
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
-
-	@Reference
-	private JournalContentSearchLocalService _journalContentSearchLocalService;
 
 	@Reference
 	private LayoutClassedModelUsageLocalService

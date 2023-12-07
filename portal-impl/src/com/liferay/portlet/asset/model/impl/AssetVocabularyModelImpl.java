@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.asset.model.impl;
@@ -265,117 +256,142 @@ public class AssetVocabularyModelImpl
 	public Map<String, Function<AssetVocabulary, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<AssetVocabulary, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<AssetVocabulary, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<AssetVocabulary, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<AssetVocabulary, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<AssetVocabulary, Object>>();
-		Map<String, BiConsumer<AssetVocabulary, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<AssetVocabulary, ?>>();
+		private static final Map<String, Function<AssetVocabulary, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", AssetVocabulary::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<AssetVocabulary, Long>)AssetVocabulary::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", AssetVocabulary::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<AssetVocabulary, Long>)
-				AssetVocabulary::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", AssetVocabulary::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode", AssetVocabulary::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<AssetVocabulary, String>)
-				AssetVocabulary::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"vocabularyId", AssetVocabulary::getVocabularyId);
-		attributeSetterBiConsumers.put(
-			"vocabularyId",
-			(BiConsumer<AssetVocabulary, Long>)
-				AssetVocabulary::setVocabularyId);
-		attributeGetterFunctions.put("groupId", AssetVocabulary::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<AssetVocabulary, Long>)AssetVocabulary::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", AssetVocabulary::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<AssetVocabulary, Long>)AssetVocabulary::setCompanyId);
-		attributeGetterFunctions.put("userId", AssetVocabulary::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<AssetVocabulary, Long>)AssetVocabulary::setUserId);
-		attributeGetterFunctions.put("userName", AssetVocabulary::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", AssetVocabulary::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<AssetVocabulary, Date>)AssetVocabulary::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", AssetVocabulary::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<AssetVocabulary, Date>)
-				AssetVocabulary::setModifiedDate);
-		attributeGetterFunctions.put("name", AssetVocabulary::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setName);
-		attributeGetterFunctions.put("title", AssetVocabulary::getTitle);
-		attributeSetterBiConsumers.put(
-			"title",
-			(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setTitle);
-		attributeGetterFunctions.put(
-			"description", AssetVocabulary::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<AssetVocabulary, String>)
-				AssetVocabulary::setDescription);
-		attributeGetterFunctions.put("settings", AssetVocabulary::getSettings);
-		attributeSetterBiConsumers.put(
-			"settings",
-			(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setSettings);
-		attributeGetterFunctions.put(
-			"visibilityType", AssetVocabulary::getVisibilityType);
-		attributeSetterBiConsumers.put(
-			"visibilityType",
-			(BiConsumer<AssetVocabulary, Integer>)
-				AssetVocabulary::setVisibilityType);
-		attributeGetterFunctions.put(
-			"lastPublishDate", AssetVocabulary::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<AssetVocabulary, Date>)
-				AssetVocabulary::setLastPublishDate);
+		static {
+			Map<String, Function<AssetVocabulary, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<AssetVocabulary, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", AssetVocabulary::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", AssetVocabulary::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", AssetVocabulary::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				AssetVocabulary::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"vocabularyId", AssetVocabulary::getVocabularyId);
+			attributeGetterFunctions.put(
+				"groupId", AssetVocabulary::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", AssetVocabulary::getCompanyId);
+			attributeGetterFunctions.put("userId", AssetVocabulary::getUserId);
+			attributeGetterFunctions.put(
+				"userName", AssetVocabulary::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", AssetVocabulary::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", AssetVocabulary::getModifiedDate);
+			attributeGetterFunctions.put("name", AssetVocabulary::getName);
+			attributeGetterFunctions.put("title", AssetVocabulary::getTitle);
+			attributeGetterFunctions.put(
+				"description", AssetVocabulary::getDescription);
+			attributeGetterFunctions.put(
+				"settings", AssetVocabulary::getSettings);
+			attributeGetterFunctions.put(
+				"visibilityType", AssetVocabulary::getVisibilityType);
+			attributeGetterFunctions.put(
+				"lastPublishDate", AssetVocabulary::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<AssetVocabulary, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<AssetVocabulary, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<AssetVocabulary, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<AssetVocabulary, Long>)
+					AssetVocabulary::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<AssetVocabulary, Long>)
+					AssetVocabulary::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<AssetVocabulary, String>)
+					AssetVocabulary::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"vocabularyId",
+				(BiConsumer<AssetVocabulary, Long>)
+					AssetVocabulary::setVocabularyId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<AssetVocabulary, Long>)AssetVocabulary::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<AssetVocabulary, Long>)
+					AssetVocabulary::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<AssetVocabulary, Long>)AssetVocabulary::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<AssetVocabulary, String>)
+					AssetVocabulary::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<AssetVocabulary, Date>)
+					AssetVocabulary::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<AssetVocabulary, Date>)
+					AssetVocabulary::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setName);
+			attributeSetterBiConsumers.put(
+				"title",
+				(BiConsumer<AssetVocabulary, String>)AssetVocabulary::setTitle);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<AssetVocabulary, String>)
+					AssetVocabulary::setDescription);
+			attributeSetterBiConsumers.put(
+				"settings",
+				(BiConsumer<AssetVocabulary, String>)
+					AssetVocabulary::setSettings);
+			attributeSetterBiConsumers.put(
+				"visibilityType",
+				(BiConsumer<AssetVocabulary, Integer>)
+					AssetVocabulary::setVisibilityType);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<AssetVocabulary, Date>)
+					AssetVocabulary::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1403,7 +1419,8 @@ public class AssetVocabularyModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<AssetVocabulary, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

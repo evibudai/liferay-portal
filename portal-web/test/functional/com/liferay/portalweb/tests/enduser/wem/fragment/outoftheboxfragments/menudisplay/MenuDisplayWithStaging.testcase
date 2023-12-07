@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,14 +14,14 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +30,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-120091. Can navigate via Menu Display in Staging and Live site."
-	@priority = "4"
+	@priority = 4
 	test NavigateViaMenuDisplayInStagingAndLiveSite {
 		task ("Add a navigation menu") {
 			JSONSitenavigation.addSiteNavigationMenu(
@@ -72,18 +73,17 @@ definition {
 		}
 
 		task ("Change Master to custom master page") {
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			AssertClick(
-				key_text = "Change Master",
-				locator1 = "Button#ANY",
-				value1 = "Change Master");
+			Click(
+				ariaLabel = "Change Master",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			MastersPageTemplates.selectMaster(masterLayoutName = "Custom Masters Page Template");
 
-			AssertElementPresent(
-				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
+				value1 = "Custom Masters Page Template");
 
 			PortletEntry.save();
 		}
@@ -100,14 +100,13 @@ definition {
 		}
 
 		task ("Add an URL type item to navigation menu") {
-			NavigationMenusAdmin.openNavigationMenusAdmin(siteURLKey = "test-site-name");
-
-			LexiconEntry.gotoEntry(rowEntry = "Navigation Menu Name");
-
-			NavigationMenusAdmin.addItem(
-				item = "URL",
+			JSONSitenavigation.addSiteNavigationMenuItem(
+				groupName = "Test Site Name",
+				siteNavigationMenuItemName = "Liferay",
+				siteNavigationMenuName = "Navigation Menu Name",
+				type = "url",
 				url = "https://www.liferay.com",
-				urlName = "Liferay");
+				useNewTab = "false");
 		}
 
 		task ("Enable Local Live") {

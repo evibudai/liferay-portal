@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.remote.jaxrs.whiteboard.client.test;
@@ -17,7 +8,7 @@ package com.liferay.portal.remote.jaxrs.whiteboard.client.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.net.URL;
@@ -114,26 +105,26 @@ public class JaxRsComponentRegistrationTest {
 		URL url = new URL(
 			"http://localhost:8080/o/rest-test/greeter1/sayHello");
 
-		Assert.assertEquals("Hello.", StringUtil.read(url.openStream()));
+		Assert.assertEquals("Hello.", URLUtil.toString(url));
 
 		url = new URL("http://localhost:8080/o/rest-test/greeter2/sayHello");
 
-		Assert.assertEquals("Hello.", StringUtil.read(url.openStream()));
+		Assert.assertEquals("Hello.", URLUtil.toString(url));
 
 		url = new URL("http://localhost:8080/o/rest-test/greeter3/sayHello");
 
-		Assert.assertEquals("Hello.", StringUtil.read(url.openStream()));
+		Assert.assertEquals("Hello.", URLUtil.toString(url));
 
 		url = new URL("http://localhost:8080/o/rest-test/greeter3/addon");
 
-		Assert.assertEquals("addon", StringUtil.read(url.openStream()));
+		Assert.assertEquals("addon", URLUtil.toString(url));
 	}
 
 	@Test(expected = Exception.class)
 	public void testServiceListIsUnavailable() throws Exception {
 		URL url = new URL("http://localhost:8080/o/soap-test/services");
 
-		StringUtil.read(url.openStream());
+		URLUtil.toString(url);
 	}
 
 	public static class Addon {

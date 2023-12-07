@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.web.internal.model;
@@ -26,11 +17,7 @@ import com.liferay.portal.kernel.util.Tuple;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceURL;
 
@@ -135,46 +122,30 @@ public class TrafficChannel {
 
 		return JSONUtil.put(
 			"endpointURL",
-			Optional.ofNullable(
-				_tuples.get(_type)
-			).map(
-				tuple -> {
-					ResourceURL resourceURL =
-						(ResourceURL)liferayPortletResponse.createResourceURL();
+			() -> {
+				Tuple tuple = _tuples.get(_type);
 
-					resourceURL.setResourceID(
-						String.valueOf(tuple.getObject(0)));
-
-					HttpServletRequest httpServletRequest =
-						liferayPortletRequest.getHttpServletRequest();
-
-					Map<String, String[]> httpServletRequestParameterMap =
-						httpServletRequest.getParameterMap();
-
-					Set<Map.Entry<String, String[]>>
-						httpServletRequestParameterEntries =
-							httpServletRequestParameterMap.entrySet();
-
-					Map<String, String[]> parameterMap =
-						(Map<String, String[]>)tuple.getObject(1);
-
-					Set<Map.Entry<String, String[]>> parameterEntries =
-						parameterMap.entrySet();
-
-					resourceURL.setParameters(
-						Stream.concat(
-							httpServletRequestParameterEntries.stream(),
-							parameterEntries.stream()
-						).collect(
-							Collectors.toMap(
-								Map.Entry::getKey, Map.Entry::getValue)
-						));
-
-					return String.valueOf(resourceURL);
+				if (tuple == null) {
+					return null;
 				}
-			).orElse(
-				null
-			)
+
+				ResourceURL resourceURL =
+					liferayPortletResponse.createResourceURL();
+
+				resourceURL.setResourceID(String.valueOf(tuple.getObject(0)));
+
+				HttpServletRequest httpServletRequest =
+					liferayPortletRequest.getHttpServletRequest();
+
+				resourceURL.setParameters(
+					HashMapBuilder.putAll(
+						httpServletRequest.getParameterMap()
+					).putAll(
+						(Map<String, String[]>)tuple.getObject(1)
+					).build());
+
+				return String.valueOf(resourceURL);
+			}
 		).put(
 			"helpMessage",
 			ResourceBundleUtil.getString(resourceBundle, getHelpMessageKey())

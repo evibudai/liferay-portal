@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.task.web.internal.portlet;
 
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -29,13 +19,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
+import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
+import com.liferay.portal.workflow.manager.WorkflowLogManager;
 import com.liferay.portal.workflow.security.permission.WorkflowTaskPermission;
-import com.liferay.portal.workflow.task.web.internal.configuration.WorkflowTaskWebConfiguration;
 import com.liferay.portal.workflow.task.web.internal.display.context.WorkflowTaskDisplayContext;
 
 import java.io.IOException;
-
-import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -44,16 +33,13 @@ import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Leonardo Barros
  */
 @Component(
-	configurationPid = "com.liferay.portal.workflow.task.web.internal.configuration.WorkflowTaskWebConfiguration",
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-workflow-tasks",
 		"com.liferay.portlet.display-category=category.hidden",
@@ -117,13 +103,6 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_workflowTaskWebConfiguration = ConfigurableUtil.createConfigurable(
-			WorkflowTaskWebConfiguration.class, properties);
-	}
-
 	@Override
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
@@ -174,7 +153,8 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
 			new WorkflowTaskDisplayContext(
 				_portal.getLiferayPortletRequest(renderRequest),
-				_portal.getLiferayPortletResponse(renderResponse)));
+				_portal.getLiferayPortletResponse(renderResponse),
+				_workflowComparatorFactory, _workflowLogManager));
 	}
 
 	private void _setWorkflowTaskRenderRequestAttribute(
@@ -195,18 +175,18 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 
 			renderRequest.setAttribute(WebKeys.WORKFLOW_TASK, workflowTask);
 		}
-
-		renderRequest.setAttribute(
-			WorkflowTaskWebConfiguration.class.getName(),
-			_workflowTaskWebConfiguration);
 	}
 
 	@Reference
 	private Portal _portal;
 
 	@Reference
-	private WorkflowTaskPermission _workflowTaskPermission;
+	private WorkflowComparatorFactory _workflowComparatorFactory;
 
-	private volatile WorkflowTaskWebConfiguration _workflowTaskWebConfiguration;
+	@Reference
+	private WorkflowLogManager _workflowLogManager;
+
+	@Reference
+	private WorkflowTaskPermission _workflowTaskPermission;
 
 }

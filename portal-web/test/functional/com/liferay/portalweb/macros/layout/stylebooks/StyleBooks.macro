@@ -1,10 +1,12 @@
 definition {
 
-	macro clickManagementBar {
+	@summary = "Default summary"
+	macro clickManagementBar() {
 		Click(locator1 = "StyleBookEditor#MANAGEMENT_BAR");
 	}
 
-	macro clickPublish {
+	@summary = "Default summary"
+	macro clickPublish(publishing = null) {
 		Button.click(button = "Publish");
 
 		if (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Style Errors Detected")) {
@@ -12,7 +14,7 @@ definition {
 				locator1 = "Modal#BODY",
 				value1 = "Some of the fields have invalid values. If you continue publishing, the latest valid values will display.");
 
-			if ("${publishing}" == "Cancel") {
+			if (${publishing} == "Cancel") {
 				Click(
 					key_text = "Cancel",
 					locator1 = "Modal#MODAL_FOOTER_BUTTON");
@@ -44,64 +46,69 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro configureUnit {
+	@summary = "Default summary"
+	macro configureUnit(unit = null, fieldLabel = null) {
 		Click(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			locator1 = "Dropdown#DROPDOWN_TOGGLE_BUTTON_WITH_LABEL");
 
-		MenuItem.click(menuItem = "${unit}");
+		MenuItem.click(menuItem = ${unit});
 	}
 
-	macro expandSection {
+	@summary = "Default summary"
+	macro expandSection(sectionName = null) {
 		WaitForVisible(
-			key_panel = "${sectionName}",
+			key_panel = ${sectionName},
 			locator1 = "Panel#PANEL");
 
-		if (IsElementPresent(key_sectionName = "${sectionName}", locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_COLLAPSED")) {
+		if (IsElementPresent(key_sectionName = ${sectionName}, locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_COLLAPSED")) {
 			AssertClick(
-				key_sectionName = "${sectionName}",
+				key_sectionName = ${sectionName},
 				locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_COLLAPSED",
-				value1 = "${sectionName}");
+				value1 = ${sectionName});
 		}
 
 		AssertElementPresent(
-			key_sectionName = "${sectionName}",
+			key_sectionName = ${sectionName},
 			locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_EXPANDED");
 	}
 
-	macro linkValueFromStyleBook {
+	@summary = "Default summary"
+	macro linkValueFromStyleBook(fieldLabel = null, colorSwatchItem = null) {
 		Click.clickNoWaitForVisible(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			key_text = "theme",
 			locator1 = "Icon#ANY_ITEM_SELECTOR");
 
 		Click(
-			key_colorSwatchItem = "${colorSwatchItem}",
+			key_colorSwatchItem = ${colorSwatchItem},
 			locator1 = "Button#COLOR_SWATCH_ITEM");
 
 		StyleBooks.waitForAutoSave();
 
 		AssertElementPresent(
-			key_fieldLabel = "${fieldLabel}",
+			key_fieldLabel = ${fieldLabel},
 			key_text = "chain-broken",
 			locator1 = "Icon#ANY_ITEM_SELECTOR");
 	}
 
-	macro selectForm {
-		Click(locator1 = "StyleBookEditor#FORM_CONTROL_SELECT_BUTTON");
+	@summary = "Default summary"
+	macro selectForm(formName = null) {
+		Click.waitForMenuToggleJSClick(locator1 = "StyleBookEditor#FORM_CONTROL_SELECT_BUTTON");
 
-		MenuItem.click(menuItem = "${formName}");
+		MenuItem.click(menuItem = ${formName});
 	}
 
-	macro selectPreviewItem {
+	@summary = "Default summary"
+	macro selectPreviewItem(scope = null, caption = null, previewType = null, previewItem = null) {
 		Click(
-			index = "2",
+			index = 2,
 			locator1 = "StyleBookEditor#PREVIEW_SELECTOR");
 
-		if ((IsElementNotPresent(key_menuItem = "${previewItem}", locator1 = "MenuItem#ANY_MENU_ITEM")) && (IsElementPresent(key_text = "More", locator1 = "Button#ANY"))) {
+		if ((IsElementNotPresent(key_menuItem = ${previewItem}, locator1 = "MenuItem#ANY_MENU_ITEM")) && (IsElementPresent(key_text = "More", locator1 = "Button#ANY"))) {
 			if (isSet(caption)) {
 				AssertElementPresent(
-					key_caption = "${caption}",
+					key_caption = ${caption},
 					locator1 = "Dropdown#CAPTION");
 			}
 
@@ -112,76 +119,76 @@ definition {
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			if (isSet(scope)) {
-				NavItem.click(navItem = "${scope}");
+				NavItem.click(navItem = ${scope});
 			}
 
-			if ("${previewType}" == "Pages") {
+			if (${previewType} == "Pages") {
 				Portlet.expandTree();
 
 				Click(
-					key_nodeName = "${previewItem}",
+					key_nodeName = ${previewItem},
 					locator1 = "Treeview#NODE_UNSELECTED");
 			}
 			else {
-				LexiconCard.clickCard(card = "${previewItem}");
+				LexiconCard.clickCard(card = ${previewItem});
 			}
 
 			SelectFrameTop();
 		}
 		else {
-			MenuItem.click(menuItem = "${previewItem}");
+			MenuItem.click(menuItem = ${previewItem});
 		}
 	}
 
-	macro selectPreviewType {
+	@summary = "Default summary"
+	macro selectPreviewType(previewType = null) {
 		Click(
-			index = "1",
+			index = 1,
 			locator1 = "StyleBookEditor#PREVIEW_SELECTOR");
 
-		MenuItem.click(menuItem = "${previewType}");
+		MenuItem.click(menuItem = ${previewType});
 	}
 
-	macro selectStyleBook {
+	@summary = "Default summary"
+	macro selectStyleBook(styleBookName = null) {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		LexiconCard.clickCardTitle(card = "${styleBookName}");
-
-		AssertElementPresent(
-			key_card = "${styleBookName}",
-			locator1 = "Card#CARD_SELECTED");
+		LexiconCard.clickCardTitle(card = ${styleBookName});
 
 		SelectFrameTop();
-
-		Button.clickDone();
 	}
 
-	macro selectStyleBookViaPageDesignOptions {
+	@summary = "Default summary"
+	macro selectStyleBookViaPageDesignOptions(styleBookName = null) {
 		Navigator.gotoNavTab(navTab = "Style Book");
 
 		Click.waitForMenuToggleJSClick(
-			key_card = "${styleBookName}",
+			key_card = ${styleBookName},
 			locator1 = "Card#CARD_TYPE_ASSET");
 
 		AssertElementPresent(
-			key_card = "${styleBookName}",
+			key_card = ${styleBookName},
 			locator1 = "Card#CARD_SELECTED");
 	}
 
-	macro viewCurrentPreviewItem {
+	@summary = "Default summary"
+	macro viewCurrentPreviewItem(previewItem = null) {
 		AssertTextEquals(
-			index = "2",
+			index = 2,
 			locator1 = "StyleBookEditor#PREVIEW_SELECTOR",
-			value1 = "${previewItem}");
+			value1 = ${previewItem});
 	}
 
-	macro viewCurrentPreviewType {
+	@summary = "Default summary"
+	macro viewCurrentPreviewType(previewType = null) {
 		AssertTextEquals(
-			index = "1",
+			index = 1,
 			locator1 = "StyleBookEditor#PREVIEW_SELECTOR",
-			value1 = "${previewType}");
+			value1 = ${previewType});
 	}
 
-	macro waitForAutoSave {
+	@summary = "Default summary"
+	macro waitForAutoSave() {
 		WaitForElementNotPresent(locator1 = "StyleBookEditor#DRAFT_SAVING_MESSAGE");
 
 		AssertVisible(locator1 = "StyleBookEditor#DRAFT_SAVED_MESSAGE");

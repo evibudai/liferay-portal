@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.documentlibrary.service.persistence.test;
@@ -171,6 +162,8 @@ public class DLFileVersionPersistenceTest {
 
 		newDLFileVersion.setChecksum(RandomTestUtil.randomString());
 
+		newDLFileVersion.setStoreUUID(RandomTestUtil.randomString());
+
 		newDLFileVersion.setExpirationDate(RandomTestUtil.nextDate());
 
 		newDLFileVersion.setReviewDate(RandomTestUtil.nextDate());
@@ -260,6 +253,9 @@ public class DLFileVersionPersistenceTest {
 			existingDLFileVersion.getChecksum(),
 			newDLFileVersion.getChecksum());
 		Assert.assertEquals(
+			existingDLFileVersion.getStoreUUID(),
+			newDLFileVersion.getStoreUUID());
+		Assert.assertEquals(
 			Time.getShortTimestamp(existingDLFileVersion.getExpirationDate()),
 			Time.getShortTimestamp(newDLFileVersion.getExpirationDate()));
 		Assert.assertEquals(
@@ -329,6 +325,15 @@ public class DLFileVersionPersistenceTest {
 		_persistence.countByMimeType("null");
 
 		_persistence.countByMimeType((String)null);
+	}
+
+	@Test
+	public void testCountByC_SU() throws Exception {
+		_persistence.countByC_SU(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_SU(0L, "null");
+
+		_persistence.countByC_SU(0L, (String)null);
 	}
 
 	@Test
@@ -407,8 +412,8 @@ public class DLFileVersionPersistenceTest {
 			"fileEntryId", true, "treePath", true, "fileName", true,
 			"extension", true, "mimeType", true, "title", true, "description",
 			true, "changeLog", true, "fileEntryTypeId", true, "version", true,
-			"size", true, "checksum", true, "expirationDate", true,
-			"reviewDate", true, "lastPublishDate", true, "status", true,
+			"size", true, "checksum", true, "storeUUID", true, "expirationDate",
+			true, "reviewDate", true, "lastPublishDate", true, "status", true,
 			"statusByUserId", true, "statusByUserName", true, "statusDate",
 			true);
 	}
@@ -752,6 +757,8 @@ public class DLFileVersionPersistenceTest {
 		dlFileVersion.setSize(RandomTestUtil.nextLong());
 
 		dlFileVersion.setChecksum(RandomTestUtil.randomString());
+
+		dlFileVersion.setStoreUUID(RandomTestUtil.randomString());
 
 		dlFileVersion.setExpirationDate(RandomTestUtil.nextDate());
 

@@ -45,24 +45,24 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8514 | Test Summary: Page Profile Visitor behavior card shows the number of unique visitors and views"
-	@priority = "5"
-	test ShowNumberOfUniqueVisitorsAndViews {
-		property analytics.cloud.upstream = "false";
+	@description = "Feature ID: LRAC-14813 | Automation ID: LRAC-14813 | Test Summary: Assert page view accuracy between cards Visitor Behavior, Audience, and Page List number"
+	@priority = 4
+	test AssertPageViewAccuracyBetweenCards {
+		var metricNum = 1;
 
 		task ("Create Blog to Add to Page") {
 			ACUtils.createBlogsAndAddToPage();
@@ -89,7 +89,81 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+		}
+
+		task ("Navigate to Pages tab in Sites dashboard") {
+			ACNavigation.goToSites();
+
+			ACNavigation.switchTab(tabName = "Pages");
+		}
+
+		task ("Select the Last 24 hours in time period") {
+			ACTimeFilter.clickTimeFilterButton();
+
+			ACTimeFilter.setLast24Hours();
+		}
+
+		task ("Search the Pages") {
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
+
+			ACUtils.searchBar(searchItem = "AC Page - Site Name - ${dataSourceName}");
+		}
+
+		task ("View Page Metric of Unique Visitors in Page List") {
+			ACSites.viewPageMetricFromPagesList(
+				metricName = "Unique Visitors",
+				metricValue = ${metricNum},
+				pageName = "AC Page - Site Name - ${dataSourceName}");
+		}
+
+		task ("Navigate to page") {
+			ACNavigation.openItem(itemName = "AC Page - Site Name - ${dataSourceName}");
+		}
+
+		task ("View Unique Visitors metric value in Visitors Behavior card") {
+			ACCards.viewMetricValue(
+				cardTitle = "Visitors Behavior",
+				metricName = "Unique Visitors",
+				metricValue = ${metricNum});
+		}
+
+		task ("View Visitors metric value in Audience card") {
+			ACUtils.assertAudienceCardTotalNumber(
+				index = 1,
+				metricValue = ${metricNum});
+		}
+	}
+
+	@description = "Feature ID: Legacy | Automation ID: LRAC-8514 | Test Summary: Page Profile Visitor behavior card shows the number of unique visitors and views"
+	@priority = 5
+	test ShowNumberOfUniqueVisitorsAndViews {
+		task ("Create Blog to Add to Page") {
+			ACUtils.createBlogsAndAddToPage();
+		}
+
+		task ("Sign in as new user") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "userea@liferay.com",
+				userLoginFullName = "userfn userln");
+		}
+
+		task ("View the blog page") {
+			ACUtils.navigateToSitePage(
+				actionType = "View Blog",
+				documentTitleList = "Blogs AC Title",
+				pageName = "AC Page",
+				siteName = "Site Name");
+		}
+
+		task ("Close sessions") {
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Switch to new property in AC") {
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to Pages tab in Sites dashboard") {
@@ -105,7 +179,7 @@ definition {
 		}
 
 		task ("Navigate to page report entry") {
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", " ");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACNavigation.openItem(itemName = "Blogs AC Title - Site Name - ${dataSourceName}");
 		}
@@ -124,20 +198,20 @@ definition {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Unique Visitors",
-				metricValue = "1");
+				metricValue = 1);
 		}
 
 		task ("View the number of Views in Visitors Behavior chart is 1") {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Views",
-				metricValue = "1");
+				metricValue = 1);
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8516 | Test Summary: Assert Sites Page Overview time filter to Custom Filter"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test TimeFilterByCustomRangeInPagesOverview {
 
 		// AC Refactor: data doesn't appear on time and the test needs data from a past date
@@ -162,7 +236,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to Pages tab in Sites dashboard") {
@@ -185,32 +259,32 @@ definition {
 			ACTimeFilter.clickTimeFilterButton(cardName = "Visitors Behavior");
 
 			ACTimeFilter.setCustomRange(
-				endDay = "10",
+				endDay = 10,
 				endMonth = "July",
-				endYear = "2021",
-				startDay = "10",
+				endYear = 2021,
+				startDay = 10,
 				startMonth = "October",
-				startYear = "2020");
+				startYear = 2020);
 		}
 
 		task ("View the number of Unique Visitors in Visitors Behavior chart is 0") {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Unique Visitors",
-				metricValue = "0");
+				metricValue = 0);
 		}
 
 		task ("View the number of Views in Visitors Behavior chart is 0") {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Views",
-				metricValue = "0");
+				metricValue = 0);
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8517 | Test Summary: Assert Sites Page Overview time filter changes to 180 days"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test TimeFilterByLast180DaysInPagesOverview {
 
 		// AC Refactor: data doesn't appear on time and the test needs data from a past date
@@ -235,7 +309,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to Pages tab in Sites dashboard") {
@@ -264,20 +338,20 @@ definition {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Unique Visitors",
-				metricValue = "0");
+				metricValue = 0);
 		}
 
 		task ("View the number of Views in Visitors Behavior chart is 0") {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Views",
-				metricValue = "0");
+				metricValue = 0);
 		}
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8515 | Test Summary: Last Year time period filter in Page Overview"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test TimeFilterByLastYearInPagesOverview {
 
 		// AC Refactor: data doesn't appear on time and the test needs data from a past date
@@ -302,7 +376,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to Pages tab in Sites dashboard") {
@@ -331,14 +405,14 @@ definition {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Unique Visitors",
-				metricValue = "0");
+				metricValue = 0);
 		}
 
 		task ("View the number of Views in Visitors Behavior chart is 0") {
 			ACCards.viewMetricValue(
 				cardTitle = "Visitors Behavior",
 				metricName = "Views",
-				metricValue = "0");
+				metricValue = 0);
 		}
 	}
 

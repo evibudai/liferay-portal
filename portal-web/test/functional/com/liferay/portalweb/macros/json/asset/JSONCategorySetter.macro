@@ -1,19 +1,21 @@
 definition {
 
-	macro setCategoryId {
+	@summary = "Default summary"
+	macro setCategoryId(vocabularyId = null, groupId = null, categoryName = null) {
 		Variables.assertDefined(parameterList = "${categoryName},${groupId},${vocabularyId}");
 
 		var categoryId = JSONCategoryAPI._getCategoryIdByName(
-			categoryName = "${categoryName}",
-			groupId = "${groupId}",
-			vocabularyId = "${vocabularyId}");
+			categoryName = ${categoryName},
+			groupId = ${groupId},
+			vocabularyId = ${vocabularyId});
 
-		return "${categoryId}";
+		return ${categoryId};
 	}
 
-	macro setDescriptionMap {
+	@summary = "Default summary"
+	macro setDescriptionMap(description = null) {
 		if (isSet(descriptionMap)) {
-			var descriptionMap = JSONUtil2._convertLocalizedListToMap(listMap = "${descriptionMap}");
+			var descriptionMap = JSONUtil2._convertLocalizedListToMap(listMap = ${descriptionMap});
 		}
 		else if (isSet(description)) {
 			var descriptionMap = '''{"en_US":"${description}"}''';
@@ -22,86 +24,92 @@ definition {
 			var descriptionMap = "{}";
 		}
 
-		return "${descriptionMap}";
+		return ${descriptionMap};
 	}
 
-	macro setGroupId {
-		Variables.assertDefined(parameterList = "${groupName}");
+	@summary = "Default summary"
+	macro setGroupId(groupName = null) {
+		Variables.assertDefined(parameterList = ${groupName});
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 
-		return "${groupId}";
+		return ${groupId};
 	}
 
-	macro setParentCategoryId {
+	@summary = "Default summary"
+	macro setParentCategoryId(parentCategoryName = null, vocabularyId = null, groupId = null) {
 		if (!(isSet(parentCategoryName))) {
-			var parentCategoryId = "0";
+			var parentCategoryId = 0;
 		}
 		else {
 			Variables.assertDefined(parameterList = "${groupId},${vocabularyId}");
 
 			var parentCategoryId = JSONCategoryAPI._getCategoryIdByName(
-				categoryName = "${parentCategoryName}",
-				groupId = "${groupId}",
-				vocabularyId = "${vocabularyId}");
+				categoryName = ${parentCategoryName},
+				groupId = ${groupId},
+				vocabularyId = ${vocabularyId});
 		}
 
-		return "${parentCategoryId}";
+		return ${parentCategoryId};
 	}
 
-	macro setServiceContext {
+	@summary = "Default summary"
+	macro setServiceContext() {
 		if (!(isSet(serviceContext))) {
 			var serviceContext = JSONServiceContextUtil.setServiceContext(
 				addGroupPermissions = "true",
 				addGuestPermissions = "true");
 		}
 
-		return "${serviceContext}";
+		return ${serviceContext};
 	}
 
-	macro setTitleMap {
+	@summary = "Default summary"
+	macro setTitleMap(title = null) {
 		JSONUtil2._exclusiveOrCheck(
-			a = "${title}",
-			b = "${titleMap}",
+			a = ${title},
+			b = ${titleMap},
 			failMessage = "Please only set 'title' or only 'titleMap' but not both or none.");
 
 		if (isSet(titleMap)) {
-			var titleMap = JSONUtil2._convertLocalizedListToMap(listMap = "${titleMap}");
+			var titleMap = JSONUtil2._convertLocalizedListToMap(listMap = ${titleMap});
 		}
 		else if (isSet(title)) {
 			var titleMap = '''{"en_US":"${title}"}''';
 		}
 
-		return "${titleMap}";
+		return ${titleMap};
 	}
 
-	macro setVisibilityType {
-		Variables.assertDefined(parameterList = "${visibility}");
+	@summary = "Default summary"
+	macro setVisibilityType(visibility = null) {
+		Variables.assertDefined(parameterList = ${visibility});
 
-		if ("${visibility}" == "internal") {
-			var visibilityType = "1";
+		if (${visibility} == "internal") {
+			var visibilityType = 1;
 		}
 		else {
-			var visibilityType = "0";
+			var visibilityType = 0;
 		}
 
-		return "${visibilityType}";
+		return ${visibilityType};
 	}
 
-	macro setVocabularyId {
+	@summary = "Default summary"
+	macro setVocabularyId(groupId = null, vocabularyName = null) {
 		Variables.assertDefined(parameterList = "${groupId},${vocabularyName}");
 
 		var vocabularyId = JSONCategoryAPI._getVocabularyIdByName(
-			groupId = "${groupId}",
-			vocabularyName = "${vocabularyName}");
+			groupId = ${groupId},
+			vocabularyName = ${vocabularyName});
 
-		return "${vocabularyId}";
+		return ${vocabularyId};
 	}
 
 }

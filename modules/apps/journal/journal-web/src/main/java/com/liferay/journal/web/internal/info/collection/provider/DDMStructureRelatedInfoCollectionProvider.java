@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.web.internal.info.collection.provider;
@@ -39,14 +30,13 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.searcher.SearchResponse;
 
 import java.io.Serializable;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Jürgen Kappler
@@ -67,24 +57,23 @@ public class DDMStructureRelatedInfoCollectionProvider
 	public InfoPage<JournalArticle> getCollectionInfoPage(
 		CollectionQuery collectionQuery) {
 
-		Optional<Object> relatedItemOptional =
-			collectionQuery.getRelatedItemObjectOptional();
-
-		Object relatedItem = relatedItemOptional.orElse(null);
+		Object relatedItem = collectionQuery.getRelatedItem();
 
 		if (!(relatedItem instanceof AssetCategory)) {
 			return InfoPage.of(
 				Collections.emptyList(), collectionQuery.getPagination(), 0);
 		}
 
-		List<JournalArticle> articles =
+		SearchResponse searchResponse =
 			JournalSearcherUtil.searchJournalArticles(
 				searchContext -> _populateSearchContext(
 					(AssetCategory)relatedItem, collectionQuery,
 					searchContext));
 
 		return InfoPage.of(
-			articles, collectionQuery.getPagination(), articles.size());
+			JournalSearcherUtil.transformJournalArticles(
+				searchResponse.getDocuments71()),
+			collectionQuery.getPagination(), searchResponse.getTotalHits());
 	}
 
 	@Override
@@ -155,9 +144,7 @@ public class DDMStructureRelatedInfoCollectionProvider
 		Map<String, Serializable> attributes = searchContext.getAttributes();
 
 		attributes.put(Field.STATUS, WorkflowConstants.STATUS_APPROVED);
-		attributes.put("ddmStructureKey", _ddmStructure.getStructureKey());
 		attributes.put("head", true);
-		attributes.put("latest", true);
 
 		searchContext.setAttributes(attributes);
 
@@ -178,11 +165,9 @@ public class DDMStructureRelatedInfoCollectionProvider
 		searchContext.setGroupIds(
 			new long[] {serviceContext.getScopeGroupId()});
 
-		Optional<Sort> sortOptional = collectionQuery.getSortOptional();
+		Sort sort = collectionQuery.getSort();
 
-		if (sortOptional.isPresent()) {
-			Sort sort = sortOptional.get();
-
+		if (sort != null) {
 			searchContext.setSorts(
 				new com.liferay.portal.kernel.search.Sort(
 					sort.getFieldName(),

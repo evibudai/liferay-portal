@@ -1,13 +1,14 @@
 definition {
 
-	macro gotoContactInfoByEmployees {
+	@summary = "Default summary"
+	macro gotoContactInfoByEmployees() {
 		Click(
 			field = "Does your business have a Federal Employer Identification Number (FEIN)?",
 			locator1 = "Raylife#BUTTON_NO_OPTION");
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(
 			field = "Does your business operate year round?",
@@ -15,7 +16,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.partTimeEmployees",
-			value = "200");
+			value = 200);
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.estimatedAnnualGrossRevenue",
@@ -30,7 +31,8 @@ definition {
 			value = "$111.00");
 	}
 
-	macro typeAllEmployeesInfoFields {
+	@summary = "Default summary"
+	macro typeAllEmployeesInfoFields() {
 		Click(
 			field = "Does your business have a Federal Employer Identification Number (FEIN)?",
 			locator1 = "Raylife#BUTTON_YES_OPTION");
@@ -41,7 +43,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(
 			field = "Does your business operate year round?",
@@ -49,7 +51,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.partTimeEmployees",
-			value = "200");
+			value = 200);
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.estimatedAnnualGrossRevenue",
@@ -64,13 +66,15 @@ definition {
 			value = "$111.00");
 	}
 
-	macro typeEmployeesInfoFields {
+	@summary = "Default summary"
+	macro typeEmployeesInfoFields(value = null) {
 		Type(
 			locator1 = "Raylife#FORMS_FIELDS",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro viewEmployeesInfo {
+	@summary = "Default summary"
+	macro viewEmployeesInfo() {
 		AssertElementPresent(
 			field = "Does your business have a Federal Employer Identification Number (FEIN)?",
 			locator1 = "Raylife#BUTTON_YES_OPTION");
@@ -83,7 +87,7 @@ definition {
 		AssertElementPresent(
 			label = "employees.startBusinessAtYear",
 			locator1 = "Raylife#FORMS_FIELDS",
-			value1 = "2000");
+			value1 = 2000);
 
 		AssertElementPresent(
 			field = "Does your business operate year round?",
@@ -92,7 +96,7 @@ definition {
 		AssertElementPresent(
 			label = "employees.partTimeEmployees",
 			locator1 = "Raylife#FORMS_VALUE",
-			value = "200");
+			value = 200);
 
 		AssertElementPresent(
 			label = "employees.estimatedAnnualGrossRevenue",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.user.associated.data.test.util;
@@ -17,13 +8,14 @@ package com.liferay.user.associated.data.test.util;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Node;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.zip.ZipReader;
-import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
+import com.liferay.portal.kernel.zip.ZipReaderFactory;
+import com.liferay.portal.kernel.zip.ZipWriterFactory;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.user.associated.data.exporter.UADExporter;
 
 import java.io.ByteArrayInputStream;
@@ -32,7 +24,6 @@ import java.io.File;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,42 +44,21 @@ public abstract class BaseUADExporterTestCase<T extends BaseModel> {
 
 		Document document = getExportDocument(baseModel);
 
-		assertColumnValue(document, "userId", String.valueOf(user.getUserId()));
 		assertColumnValue(
-			document, getPrimaryKeyName(),
-			String.valueOf(baseModel.getPrimaryKeyObj()));
+			document, "userName", String.valueOf(user.getFullName()));
 	}
 
 	@Test
 	public void testExportAll() throws Exception {
 		addBaseModel(user.getUserId());
 
-		File file = uadExporter.exportAll(user.getUserId());
+		File file = uadExporter.exportAll(user.getUserId(), _zipWriterFactory);
 
-		ZipReader zipReader = ZipReaderFactoryUtil.getZipReader(file);
+		ZipReader zipReader = _zipReaderFactory.getZipReader(file);
 
 		List<String> entries = zipReader.getEntries();
 
 		Assert.assertEquals(entries.toString(), 1, entries.size());
-	}
-
-	@Test
-	public void testExportByStatusByUserId() throws Exception {
-		Assume.assumeTrue(this instanceof WhenHasStatusByUserIdField);
-
-		WhenHasStatusByUserIdField<T> whenHasStatusByUserIdField =
-			(WhenHasStatusByUserIdField)this;
-
-		T baseModel = whenHasStatusByUserIdField.addBaseModelWithStatusByUserId(
-			TestPropsValues.getUserId(), user.getUserId());
-
-		Document document = getExportDocument(baseModel);
-
-		assertColumnValue(
-			document, "statusByUserId", String.valueOf(user.getUserId()));
-		assertColumnValue(
-			document, getPrimaryKeyName(),
-			String.valueOf(baseModel.getPrimaryKeyObj()));
 	}
 
 	protected abstract T addBaseModel(long userId) throws Exception;
@@ -113,13 +83,17 @@ public abstract class BaseUADExporterTestCase<T extends BaseModel> {
 		return SAXReaderUtil.read(byteArrayInputStream);
 	}
 
-	protected abstract String getPrimaryKeyName();
-
 	protected abstract UADExporter<T> getUADExporter();
 
 	protected UADExporter<T> uadExporter;
 
 	@DeleteAfterTestRun
 	protected User user;
+
+	@Inject
+	private ZipReaderFactory _zipReaderFactory;
+
+	@Inject
+	private ZipWriterFactory _zipWriterFactory;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.resource.v1_0.test;
@@ -28,6 +19,7 @@ import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.pricing.client.resource.v1_0.DiscountRuleResource;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v1_0.DiscountRuleSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -42,6 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -56,6 +49,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -207,7 +199,7 @@ public abstract class BaseDiscountRuleResourceTestCase {
 				getDiscountByExternalReferenceCodeDiscountRulesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			DiscountRule irrelevantDiscountRule =
@@ -218,14 +210,17 @@ public abstract class BaseDiscountRuleResourceTestCase {
 			page =
 				discountRuleResource.
 					getDiscountByExternalReferenceCodeDiscountRulesPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDiscountRule),
-				(List<DiscountRule>)page.getItems());
-			assertValid(page);
+			assertContains(
+				irrelevantDiscountRule, (List<DiscountRule>)page.getItems());
+			assertValid(
+				page,
+				testGetDiscountByExternalReferenceCodeDiscountRulesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		DiscountRule discountRule1 =
@@ -241,16 +236,28 @@ public abstract class BaseDiscountRuleResourceTestCase {
 				getDiscountByExternalReferenceCodeDiscountRulesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(discountRule1, discountRule2),
-			(List<DiscountRule>)page.getItems());
-		assertValid(page);
+		assertContains(discountRule1, (List<DiscountRule>)page.getItems());
+		assertContains(discountRule2, (List<DiscountRule>)page.getItems());
+		assertValid(
+			page,
+			testGetDiscountByExternalReferenceCodeDiscountRulesPage_getExpectedActions(
+				externalReferenceCode));
 
 		discountRuleResource.deleteDiscountRule(discountRule1.getId());
 
 		discountRuleResource.deleteDiscountRule(discountRule2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDiscountByExternalReferenceCodeDiscountRulesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -259,6 +266,14 @@ public abstract class BaseDiscountRuleResourceTestCase {
 
 		String externalReferenceCode =
 			testGetDiscountByExternalReferenceCodeDiscountRulesPage_getExternalReferenceCode();
+
+		Page<DiscountRule> discountRulePage =
+			discountRuleResource.
+				getDiscountByExternalReferenceCodeDiscountRulesPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			discountRulePage.getTotalCount());
 
 		DiscountRule discountRule1 =
 			testGetDiscountByExternalReferenceCodeDiscountRulesPage_addDiscountRule(
@@ -275,20 +290,20 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		Page<DiscountRule> page1 =
 			discountRuleResource.
 				getDiscountByExternalReferenceCodeDiscountRulesPage(
-					externalReferenceCode, Pagination.of(1, 2));
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
 
 		List<DiscountRule> discountRules1 =
 			(List<DiscountRule>)page1.getItems();
 
 		Assert.assertEquals(
-			discountRules1.toString(), 2, discountRules1.size());
+			discountRules1.toString(), totalCount + 2, discountRules1.size());
 
 		Page<DiscountRule> page2 =
 			discountRuleResource.
 				getDiscountByExternalReferenceCodeDiscountRulesPage(
-					externalReferenceCode, Pagination.of(2, 2));
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DiscountRule> discountRules2 =
 			(List<DiscountRule>)page2.getItems();
@@ -299,11 +314,12 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		Page<DiscountRule> page3 =
 			discountRuleResource.
 				getDiscountByExternalReferenceCodeDiscountRulesPage(
-					externalReferenceCode, Pagination.of(1, 3));
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(discountRule1, discountRule2, discountRule3),
-			(List<DiscountRule>)page3.getItems());
+		assertContains(discountRule1, (List<DiscountRule>)page3.getItems());
+		assertContains(discountRule2, (List<DiscountRule>)page3.getItems());
+		assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
 	}
 
 	protected DiscountRule
@@ -499,7 +515,7 @@ public abstract class BaseDiscountRuleResourceTestCase {
 			discountRuleResource.getDiscountIdDiscountRulesPage(
 				id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			DiscountRule irrelevantDiscountRule =
@@ -507,14 +523,16 @@ public abstract class BaseDiscountRuleResourceTestCase {
 					irrelevantId, randomIrrelevantDiscountRule());
 
 			page = discountRuleResource.getDiscountIdDiscountRulesPage(
-				irrelevantId, Pagination.of(1, 2));
+				irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantDiscountRule),
-				(List<DiscountRule>)page.getItems());
-			assertValid(page);
+			assertContains(
+				irrelevantDiscountRule, (List<DiscountRule>)page.getItems());
+			assertValid(
+				page,
+				testGetDiscountIdDiscountRulesPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		DiscountRule discountRule1 =
@@ -528,16 +546,25 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		page = discountRuleResource.getDiscountIdDiscountRulesPage(
 			id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(discountRule1, discountRule2),
-			(List<DiscountRule>)page.getItems());
-		assertValid(page);
+		assertContains(discountRule1, (List<DiscountRule>)page.getItems());
+		assertContains(discountRule2, (List<DiscountRule>)page.getItems());
+		assertValid(
+			page, testGetDiscountIdDiscountRulesPage_getExpectedActions(id));
 
 		discountRuleResource.deleteDiscountRule(discountRule1.getId());
 
 		discountRuleResource.deleteDiscountRule(discountRule2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDiscountIdDiscountRulesPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -545,6 +572,12 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		throws Exception {
 
 		Long id = testGetDiscountIdDiscountRulesPage_getId();
+
+		Page<DiscountRule> discountRulePage =
+			discountRuleResource.getDiscountIdDiscountRulesPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			discountRulePage.getTotalCount());
 
 		DiscountRule discountRule1 =
 			testGetDiscountIdDiscountRulesPage_addDiscountRule(
@@ -560,19 +593,19 @@ public abstract class BaseDiscountRuleResourceTestCase {
 
 		Page<DiscountRule> page1 =
 			discountRuleResource.getDiscountIdDiscountRulesPage(
-				id, Pagination.of(1, 2));
+				id, Pagination.of(1, totalCount + 2));
 
 		List<DiscountRule> discountRules1 =
 			(List<DiscountRule>)page1.getItems();
 
 		Assert.assertEquals(
-			discountRules1.toString(), 2, discountRules1.size());
+			discountRules1.toString(), totalCount + 2, discountRules1.size());
 
 		Page<DiscountRule> page2 =
 			discountRuleResource.getDiscountIdDiscountRulesPage(
-				id, Pagination.of(2, 2));
+				id, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<DiscountRule> discountRules2 =
 			(List<DiscountRule>)page2.getItems();
@@ -582,11 +615,11 @@ public abstract class BaseDiscountRuleResourceTestCase {
 
 		Page<DiscountRule> page3 =
 			discountRuleResource.getDiscountIdDiscountRulesPage(
-				id, Pagination.of(1, 3));
+				id, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(discountRule1, discountRule2, discountRule3),
-			(List<DiscountRule>)page3.getItems());
+		assertContains(discountRule1, (List<DiscountRule>)page3.getItems());
+		assertContains(discountRule2, (List<DiscountRule>)page3.getItems());
+		assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
 	}
 
 	protected DiscountRule testGetDiscountIdDiscountRulesPage_addDiscountRule(
@@ -745,6 +778,13 @@ public abstract class BaseDiscountRuleResourceTestCase {
 	}
 
 	protected void assertValid(Page<DiscountRule> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<DiscountRule> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<DiscountRule> discountRules = page.getItems();
@@ -759,6 +799,25 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -908,14 +967,16 @@ public abstract class BaseDiscountRuleResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -932,6 +993,10 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -941,18 +1006,18 @@ public abstract class BaseDiscountRuleResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -979,17 +1044,93 @@ public abstract class BaseDiscountRuleResourceTestCase {
 		}
 
 		if (entityFieldName.equals("type")) {
-			sb.append("'");
-			sb.append(String.valueOf(discountRule.getType()));
-			sb.append("'");
+			Object object = discountRule.getType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("typeSettings")) {
-			sb.append("'");
-			sb.append(String.valueOf(discountRule.getTypeSettings()));
-			sb.append("'");
+			Object object = discountRule.getTypeSettings();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

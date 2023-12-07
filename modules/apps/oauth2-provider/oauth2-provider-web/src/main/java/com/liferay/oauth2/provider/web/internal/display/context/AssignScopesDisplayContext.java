@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.web.internal.display.context;
@@ -27,13 +18,13 @@ import com.liferay.oauth2.provider.service.OAuth2ApplicationScopeAliasesLocalSer
 import com.liferay.oauth2.provider.service.OAuth2ApplicationService;
 import com.liferay.oauth2.provider.service.OAuth2ScopeGrantLocalService;
 import com.liferay.oauth2.provider.web.internal.AssignableScopes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -50,9 +41,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.TreeSet;
 
 import javax.portlet.PortletRequest;
 
@@ -205,24 +194,13 @@ public class AssignScopesDisplayContext
 		String applicationName, AssignableScopes assignableScopes,
 		String delimiter) {
 
-		Set<String> applicationScopeDescription =
-			assignableScopes.getApplicationScopeDescription(
-				_companyId, applicationName);
-
-		Stream<String> stream = applicationScopeDescription.stream();
-
-		List<String> scopesList = stream.sorted(
-		).map(
-			HtmlUtil::escape
-		).collect(
-			Collectors.toList()
-		);
-
-		if (ListUtil.isEmpty(scopesList)) {
-			return StringPool.BLANK;
-		}
-
-		return StringUtil.merge(scopesList, delimiter);
+		return StringUtil.merge(
+			TransformUtil.transform(
+				new TreeSet<>(
+					assignableScopes.getApplicationScopeDescription(
+						_companyId, applicationName)),
+				HtmlUtil::escape),
+			delimiter);
 	}
 
 	public Map<AssignableScopes, Relations> getAssignableScopesRelations(
@@ -294,23 +272,19 @@ public class AssignScopesDisplayContext
 	public Map<AssignableScopes, Relations>
 		getGlobalAssignableScopesRelations() {
 
-		Collection<Set<AssignableScopes>> assignableScopesCollection =
-			_globalAssignableScopesByApplicationName.values();
+		Map<AssignableScopes, Relations> assignableScopesRelations =
+			new HashMap<>();
 
-		Stream<Set<AssignableScopes>> stream =
-			assignableScopesCollection.stream();
+		for (Set<AssignableScopes> assignableScopess :
+				_globalAssignableScopesByApplicationName.values()) {
 
-		return stream.flatMap(
-			Set::stream
-		).collect(
-			Collectors.toSet()
-		).stream(
-		).filter(
-			_assignableScopesRelations::containsKey
-		).collect(
-			Collectors.toMap(
-				Function.identity(), _assignableScopesRelations::get)
-		);
+			assignableScopesRelations.putAll(
+				HashMapBuilder.put(
+					assignableScopess, _assignableScopesRelations::get
+				).build());
+		}
+
+		return assignableScopesRelations;
 	}
 
 	public List<Map.Entry<String, String>>
@@ -374,19 +348,16 @@ public class AssignScopesDisplayContext
 		}
 
 		public Set<String> getGlobalScopeAliases() {
-			Stream<AssignableScopes> stream = _globalAssignableScopes.stream();
+			Set<String> scopeAliases = new HashSet<>();
 
-			return stream.map(
-				_assignableScopesRelations::get
-			).flatMap(
-				relations -> {
-					Set<String> scopeAliases = relations.getScopeAliases();
+			for (AssignableScopes assignableScopes : _globalAssignableScopes) {
+				Relations relations = _assignableScopesRelations.get(
+					assignableScopes);
 
-					return scopeAliases.stream();
-				}
-			).collect(
-				Collectors.toSet()
-			);
+				scopeAliases.addAll(relations.getScopeAliases());
+			}
+
+			return scopeAliases;
 		}
 
 		public Set<String> getScopeAliases() {
@@ -407,7 +378,8 @@ public class AssignScopesDisplayContext
 
 		private AssignableScopes _assignedAssignableScopes;
 		private Set<String> _assignedScopeAliases;
-		private Set<AssignableScopes> _globalAssignableScopes = new HashSet<>();
+		private final Set<AssignableScopes> _globalAssignableScopes =
+			new HashSet<>();
 		private final Set<String> _scopeAliases;
 
 	}
@@ -415,15 +387,9 @@ public class AssignScopesDisplayContext
 	protected Map<AssignableScopes, Relations> getAssignableScopesRelations(
 		Set<AssignableScopes> assignableScopes) {
 
-		Stream<AssignableScopes> assignableScopesStream =
-			assignableScopes.stream();
-
-		return assignableScopesStream.filter(
-			_assignableScopesRelations::containsKey
-		).collect(
-			Collectors.toMap(
-				Function.identity(), _assignableScopesRelations::get)
-		);
+		return HashMapBuilder.put(
+			assignableScopes, _assignableScopesRelations::get
+		).build();
 	}
 
 	private Map<String, AssignableScopes> _getAssignableScopesByScopeAlias(

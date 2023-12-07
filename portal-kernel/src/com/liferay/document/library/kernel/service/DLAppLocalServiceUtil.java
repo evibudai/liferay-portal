@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.service;
@@ -296,14 +287,14 @@ public class DLAppLocalServiceUtil {
 	 * @throws PortalException if a portal exception occurred
 	 */
 	public static com.liferay.portal.kernel.repository.model.Folder addFolder(
-			long userId, long repositoryId, long parentFolderId, String name,
-			String description,
+			String externalReferenceCode, long userId, long repositoryId,
+			long parentFolderId, String name, String description,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFolder(
-			userId, repositoryId, parentFolderId, name, description,
-			serviceContext);
+			externalReferenceCode, userId, repositoryId, parentFolderId, name,
+			description, serviceContext);
 	}
 
 	/**
@@ -415,6 +406,15 @@ public class DLAppLocalServiceUtil {
 
 		return getService().fetchFileEntryByExternalReferenceCode(
 			groupId, externalReferenceCode);
+	}
+
+	public static com.liferay.portal.kernel.repository.model.Folder
+			fetchFolderByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchFolderByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -552,6 +552,15 @@ public class DLAppLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getFolder(repositoryId, parentFolderId, name);
+	}
+
+	public static com.liferay.portal.kernel.repository.model.Folder
+			getFolderByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getFolderByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -943,6 +952,10 @@ public class DLAppLocalServiceUtil {
 
 	public static DLAppLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(DLAppLocalService service) {
+		_service = service;
 	}
 
 	private static volatile DLAppLocalService _service;

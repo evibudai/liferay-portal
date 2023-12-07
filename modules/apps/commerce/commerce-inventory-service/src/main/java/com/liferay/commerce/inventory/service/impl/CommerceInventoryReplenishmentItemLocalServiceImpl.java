@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.inventory.service.impl;
@@ -19,7 +10,13 @@ import com.liferay.commerce.inventory.exception.CommerceInventoryReplenishmentSk
 import com.liferay.commerce.inventory.exception.DuplicateCommerceInventoryReplenishmentItemException;
 import com.liferay.commerce.inventory.exception.MVCCException;
 import com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem;
+import com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItemTable;
+import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
+import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseTable;
 import com.liferay.commerce.inventory.service.base.CommerceInventoryReplenishmentItemLocalServiceBaseImpl;
+import com.liferay.petra.sql.dsl.Column;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
@@ -27,9 +24,12 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.util.Date;
 import java.util.List;
@@ -52,8 +52,8 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 	public CommerceInventoryReplenishmentItem
 			addCommerceInventoryReplenishmentItem(
 				String externalReferenceCode, long userId,
-				long commerceInventoryWarehouseId, String sku,
-				Date availabilityDate, int quantity)
+				long commerceInventoryWarehouseId, Date availabilityDate,
+				BigDecimal quantity, String sku, String unitOfMeasureKey)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -78,10 +78,12 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 		commerceInventoryReplenishmentItem.setUserName(user.getFullName());
 		commerceInventoryReplenishmentItem.setCommerceInventoryWarehouseId(
 			commerceInventoryWarehouseId);
-		commerceInventoryReplenishmentItem.setSku(sku);
 		commerceInventoryReplenishmentItem.setAvailabilityDate(
 			availabilityDate);
 		commerceInventoryReplenishmentItem.setQuantity(quantity);
+		commerceInventoryReplenishmentItem.setSku(sku);
+		commerceInventoryReplenishmentItem.setUnitOfMeasureKey(
+			unitOfMeasureKey);
 
 		return commerceInventoryReplenishmentItemPersistence.update(
 			commerceInventoryReplenishmentItem);
@@ -97,20 +99,20 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 
 	@Override
 	public void deleteCommerceInventoryReplenishmentItems(
-		long companyId, String sku) {
+		long companyId, String sku, String unitOfMeasureKey) {
 
-		commerceInventoryReplenishmentItemPersistence.removeByC_S(
-			companyId, sku);
+		commerceInventoryReplenishmentItemPersistence.removeByC_S_U(
+			companyId, sku, unitOfMeasureKey);
 	}
 
 	public CommerceInventoryReplenishmentItem
 		fetchCommerceInventoryReplenishmentItem(
-			long companyId, String sku,
+			long companyId, String sku, String unitOfMeasureKey,
 			OrderByComparator<CommerceInventoryReplenishmentItem>
 				orderByComparator) {
 
-		return commerceInventoryReplenishmentItemPersistence.fetchByC_S_First(
-			companyId, sku, orderByComparator);
+		return commerceInventoryReplenishmentItemPersistence.fetchByC_S_U_First(
+			companyId, sku, unitOfMeasureKey, orderByComparator);
 	}
 
 	@Override
@@ -123,18 +125,57 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 				commerceInventoryWarehouseId, start, end);
 	}
 
-	@Override
 	public List<CommerceInventoryReplenishmentItem>
-		getCommerceInventoryReplenishmentItemsByCompanyIdAndSku(
-			long companyId, String sku, int start, int end) {
+		getCommerceInventoryReplenishmentItemsByCompanyIdSkuAndUnitOfMeasureKey(
+			long companyId, String sku, String unitOfMeasureKey, int start,
+			int end, boolean replacePermissionCheck) {
 
-		return commerceInventoryReplenishmentItemPersistence.findByC_S(
-			companyId, sku, start, end);
+		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+			CommerceInventoryReplenishmentItemTable.INSTANCE
+		).from(
+			CommerceInventoryReplenishmentItemTable.INSTANCE
+		).leftJoinOn(
+			CommerceInventoryWarehouseTable.INSTANCE,
+			CommerceInventoryReplenishmentItemTable.INSTANCE.
+				commerceInventoryWarehouseId.eq(
+					CommerceInventoryWarehouseTable.INSTANCE.
+						commerceInventoryWarehouseId)
+		).where(
+			CommerceInventoryReplenishmentItemTable.INSTANCE.companyId.eq(
+				companyId
+			).and(
+				CommerceInventoryReplenishmentItemTable.INSTANCE.sku.eq(sku)
+			).and(
+				() -> {
+					if (Validator.isNull(unitOfMeasureKey)) {
+						return null;
+					}
+
+					return CommerceInventoryReplenishmentItemTable.INSTANCE.
+						unitOfMeasureKey.eq(unitOfMeasureKey);
+				}
+			)
+		).limit(
+			start, end
+		);
+
+		if (replacePermissionCheck) {
+			Column<?, Long> commerceInventoryWarehouseIdColumn =
+				CommerceInventoryReplenishmentItemTable.INSTANCE.
+					commerceInventoryWarehouseId;
+
+			dslQuery = InlineSQLHelperUtil.replacePermissionCheck(
+				dslQuery, CommerceInventoryWarehouse.class,
+				commerceInventoryWarehouseIdColumn, 0);
+		}
+
+		return dslQuery(dslQuery);
 	}
 
 	@Override
-	public long getCommerceInventoryReplenishmentItemsCount(
-		long commerceInventoryWarehouseId, String sku) {
+	public BigDecimal getCommerceInventoryReplenishmentItemsCount(
+		long commerceInventoryWarehouseId, String sku,
+		String unitOfMeasureKey) {
 
 		DynamicQuery dynamicQuery =
 			commerceInventoryReplenishmentItemLocalService.dynamicQuery();
@@ -152,12 +193,19 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 
 		dynamicQuery.add(skuProperty.eq(sku));
 
-		List<Long> results =
+		if (Validator.isNotNull(unitOfMeasureKey)) {
+			Property unitOfMeasureKeyProperty = PropertyFactoryUtil.forName(
+				"unitOfMeasureKey");
+
+			dynamicQuery.add(unitOfMeasureKeyProperty.eq(unitOfMeasureKey));
+		}
+
+		List<BigDecimal> results =
 			commerceInventoryReplenishmentItemLocalService.dynamicQuery(
 				dynamicQuery);
 
 		if (results.get(0) == null) {
-			return 0;
+			return BigDecimal.ZERO;
 		}
 
 		return results.get(0);
@@ -173,11 +221,12 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 	}
 
 	@Override
-	public int getCommerceInventoryReplenishmentItemsCountByCompanyIdAndSku(
-		long companyId, String sku) {
+	public int
+		getCommerceInventoryReplenishmentItemsCountByCompanyIdSkuAndUnitOfMeasureKey(
+			long companyId, String sku, String unitOfMeasureKey) {
 
-		return commerceInventoryReplenishmentItemPersistence.countByC_S(
-			companyId, sku);
+		return commerceInventoryReplenishmentItemPersistence.countByC_S_U(
+			companyId, sku, unitOfMeasureKey);
 	}
 
 	@Override
@@ -185,7 +234,7 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 			updateCommerceInventoryReplenishmentItem(
 				String externalReferenceCode,
 				long commerceInventoryReplenishmentItemId,
-				Date availabilityDate, int quantity, long mvccVersion)
+				Date availabilityDate, BigDecimal quantity, long mvccVersion)
 		throws PortalException {
 
 		CommerceInventoryReplenishmentItem commerceInventoryReplenishmentItem =
@@ -245,8 +294,8 @@ public class CommerceInventoryReplenishmentItemLocalServiceImpl
 		}
 	}
 
-	private void _validateQuantity(int quantity) throws PortalException {
-		if (quantity <= 0) {
+	private void _validateQuantity(BigDecimal quantity) throws PortalException {
+		if ((quantity == null) || (quantity.compareTo(BigDecimal.ZERO) <= 0)) {
 			throw new CommerceInventoryReplenishmentQuantityException(
 				"Enter a quantity greater than or equal to 1");
 		}

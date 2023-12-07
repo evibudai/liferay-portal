@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.sample.sql.builder;
@@ -180,6 +171,10 @@ public class SampleSQLBuilder {
 			(BenchmarksPropsValues.DB_TYPE == DBType.MYSQL)) {
 
 			db = new SampleMySQLDB(db.getMajorVersion(), db.getMinorVersion());
+		}
+		else if (BenchmarksPropsValues.DB_TYPE == DBType.POSTGRESQL) {
+			db = new SamplePostgreSQLDB(
+				db.getMajorVersion(), db.getMinorVersion());
 		}
 
 		Map<String, Writer> sqlWriters = new HashMap<>();
@@ -369,15 +364,14 @@ public class SampleSQLBuilder {
 		writer.write(sql);
 	}
 
-	private void _loadCreateSQL(InputStream inputStream, Writer writer)
-		throws IOException {
-
-		try (BufferedReader reader = new BufferedReader(
-				new InputStreamReader(inputStream))) {
+	private void _loadCreateSQL(URL url, Writer writer) throws IOException {
+		try (InputStream inputStream = url.openStream();
+			Reader reader = new InputStreamReader(inputStream);
+			BufferedReader bufferedReader = new BufferedReader(reader)) {
 
 			String line;
 
-			while ((line = reader.readLine()) != null) {
+			while ((line = bufferedReader.readLine()) != null) {
 				writer.append(line);
 				writer.append(System.lineSeparator());
 			}
@@ -395,14 +389,11 @@ public class SampleSQLBuilder {
 					sqlFileName);
 
 				while (enumeration.hasMoreElements()) {
-					URL url = enumeration.nextElement();
-
-					_loadCreateSQL(url.openStream(), writer);
+					_loadCreateSQL(enumeration.nextElement(), writer);
 				}
 			}
 			else {
-				_loadCreateSQL(
-					classLoader.getResourceAsStream(sqlFileName), writer);
+				_loadCreateSQL(classLoader.getResource(sqlFileName), writer);
 			}
 		}
 
@@ -418,7 +409,6 @@ public class SampleSQLBuilder {
 	private static final List<String> _createSQLTemplateFileNames =
 		Arrays.asList(
 			"com/liferay/portal/tools/sql/dependencies/portal-tables.sql",
-			"com/liferay/portal/tools/sql/dependencies/portal-data-common.sql",
 			"com/liferay/portal/tools/sql/dependencies/portal-data-counter.sql",
 			"com/liferay/portal/tools/sql/dependencies/indexes.sql",
 			"META-INF/sql/tables.sql", "META-INF/sql/indexes.sql");

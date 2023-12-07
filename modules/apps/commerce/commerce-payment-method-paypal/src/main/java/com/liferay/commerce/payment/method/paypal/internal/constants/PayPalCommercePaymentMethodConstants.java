@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.method.paypal.internal.constants;
@@ -35,6 +26,12 @@ public class PayPalCommercePaymentMethodConstants {
 
 	public static final String CANCELLED = "Cancelled";
 
+	public static final String COMMERCE_PAYMENT_ENGINE_SERVICE_NAME =
+		"com.liferay.commerce.payment.engine.method.paypal";
+
+	public static final String COMMERCE_PAYMENT_INTEGRATION_SERVICE_NAME =
+		"com.liferay.commerce.payment.integration.paypal";
+
 	public static final String DAY = "day";
 
 	public static final String INITIAL_FAIL_AMOUNT_ACTION = "CONTINUE";
@@ -57,7 +54,16 @@ public class PayPalCommercePaymentMethodConstants {
 
 	public static final String PAYMENT_DEFINITION_REGULAR = "REGULAR";
 
+	public static final String PAYMENT_INTEGRATION_SERVLET_PATH =
+		"commerce-paypal-payment-integration";
+
+	public static final String PAYMENT_METHOD_SERVLET_PATH =
+		"commerce-paypal-payment-method";
+
 	public static final String PAYMENT_STATE_FAILED = "failed";
+
+	public static final String PAYPAL_PARTNER_ATTRIBUTION_ID =
+		"PayPal-Partner-Attribution-Id";
 
 	public static final String PLAN_FIXED = "FIXED";
 
@@ -72,10 +78,8 @@ public class PayPalCommercePaymentMethodConstants {
 		REQUEST_DETAILS_FULL, REQUEST_DETAILS_MINIMAL
 	};
 
-	public static final String SERVICE_NAME =
-		"com.liferay.commerce.payment.engine.method.paypal";
-
-	public static final String SERVLET_PATH = "commerce-paypal-payment";
+	public static final String SHIPPING_PREFERENCE_PROVIDED =
+		"SET_PROVIDED_ADDRESS";
 
 	public static final String STATE = "state";
 
@@ -84,6 +88,8 @@ public class PayPalCommercePaymentMethodConstants {
 	public static final String USER_ACTION = "useraction";
 
 	public static final String USER_ACTION_COMMIT = "commit";
+
+	public static final String USER_ACTION_PAY_NOW = "PAY_NOW";
 
 	public static final String WEEK = "week";
 

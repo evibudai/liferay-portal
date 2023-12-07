@@ -1,24 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.documentlibrary.service.impl;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.Repository;
-import com.liferay.portal.kernel.repository.RepositoryProvider;
+import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
@@ -47,7 +37,7 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 			long fileEntryId, long newFolderId, ServiceContext serviceContext)
 		throws PortalException {
 
-		Repository repository = repositoryProvider.getFileEntryRepository(
+		Repository repository = RepositoryProviderUtil.getFileEntryRepository(
 			fileEntryId);
 
 		FileEntry fileEntry = repository.getFileEntry(fileEntryId);
@@ -78,7 +68,7 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 	public FileEntry moveFileEntryToTrash(long fileEntryId)
 		throws PortalException {
 
-		Repository repository = repositoryProvider.getFileEntryRepository(
+		Repository repository = RepositoryProviderUtil.getFileEntryRepository(
 			fileEntryId);
 
 		FileEntry fileEntry = repository.getFileEntry(fileEntryId);
@@ -106,8 +96,8 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		Repository repository = repositoryProvider.getFileShortcutRepository(
-			fileShortcutId);
+		Repository repository =
+			RepositoryProviderUtil.getFileShortcutRepository(fileShortcutId);
 
 		FileShortcut fileShortcut = repository.getFileShortcut(fileShortcutId);
 
@@ -137,8 +127,8 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 	public FileShortcut moveFileShortcutToTrash(long fileShortcutId)
 		throws PortalException {
 
-		Repository repository = repositoryProvider.getFileShortcutRepository(
-			fileShortcutId);
+		Repository repository =
+			RepositoryProviderUtil.getFileShortcutRepository(fileShortcutId);
 
 		FileShortcut fileShortcut = repository.getFileShortcut(fileShortcutId);
 
@@ -166,7 +156,7 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 			long folderId, long parentFolderId, ServiceContext serviceContext)
 		throws PortalException {
 
-		Repository repository = repositoryProvider.getFolderRepository(
+		Repository repository = RepositoryProviderUtil.getFolderRepository(
 			folderId);
 
 		Folder folder = repository.getFolder(folderId);
@@ -195,7 +185,7 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 	 */
 	@Override
 	public Folder moveFolderToTrash(long folderId) throws PortalException {
-		Repository repository = repositoryProvider.getFolderRepository(
+		Repository repository = RepositoryProviderUtil.getFolderRepository(
 			folderId);
 
 		Folder folder = repository.getFolder(folderId);
@@ -218,7 +208,7 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 	public void restoreFileEntryFromTrash(long fileEntryId)
 		throws PortalException {
 
-		Repository repository = repositoryProvider.getFileEntryRepository(
+		Repository repository = RepositoryProviderUtil.getFileEntryRepository(
 			fileEntryId);
 
 		FileEntry fileEntry = repository.getFileEntry(fileEntryId);
@@ -241,8 +231,8 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 	public void restoreFileShortcutFromTrash(long fileShortcutId)
 		throws PortalException {
 
-		Repository repository = repositoryProvider.getFileShortcutRepository(
-			fileShortcutId);
+		Repository repository =
+			RepositoryProviderUtil.getFileShortcutRepository(fileShortcutId);
 
 		FileShortcut fileShortcut = repository.getFileShortcut(fileShortcutId);
 
@@ -262,7 +252,7 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 	 */
 	@Override
 	public void restoreFolderFromTrash(long folderId) throws PortalException {
-		Repository repository = repositoryProvider.getFolderRepository(
+		Repository repository = RepositoryProviderUtil.getFolderRepository(
 			folderId);
 
 		Folder folder = repository.getFolder(folderId);
@@ -275,9 +265,6 @@ public class DLTrashServiceImpl extends DLTrashServiceBaseImpl {
 
 		trashCapability.restoreFolderFromTrash(getUserId(), folder);
 	}
-
-	@BeanReference(type = RepositoryProvider.class)
-	protected RepositoryProvider repositoryProvider;
 
 	private static volatile ModelResourcePermission<FileEntry>
 		_fileEntryModelResourcePermission =

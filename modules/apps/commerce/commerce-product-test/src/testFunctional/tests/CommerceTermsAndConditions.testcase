@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -25,8 +25,8 @@ definition {
 
 		for (var termsType : list "Delivery,Payment") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "2",
-				termsType = "${termsType}");
+				termsCount = 2,
+				termsType = ${termsType});
 		}
 	}
 
@@ -35,16 +35,14 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 5
 	test AssertCheckoutStepsNotShownWithoutPermissions {
 		property portal.acceptance = "true";
 
 		var deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2";
 		var paymentTermsEligibility = "Payment Term 1,Payment Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -66,7 +64,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = "${deliveryTermsEligibility}");
+		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = ${deliveryTermsEligibility});
 
 		Refresh();
 
@@ -82,14 +80,11 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(paymentTermsEligibility = "${paymentTermsEligibility}");
+		CommerceEntry.setEntryEligibility(paymentTermsEligibility = ${paymentTermsEligibility});
 
 		Refresh();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		for (var termType : list "Delivery,Payment") {
 			CommercePermissions.removeAccountRolePermission(
@@ -108,7 +103,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -129,22 +124,20 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentTerm = "Payment Term 2",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 5
 	test AssertDeliveryTermsNotEditableWithoutPermissions {
 		property portal.acceptance = "true";
 
 		var deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2";
 		var paymentTermsEligibility = "Payment Term 1,Payment Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -166,7 +159,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = "${deliveryTermsEligibility}");
+		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = ${deliveryTermsEligibility});
 
 		Refresh();
 
@@ -182,7 +175,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(paymentTermsEligibility = "${paymentTermsEligibility}");
+		CommerceEntry.setEntryEligibility(paymentTermsEligibility = ${paymentTermsEligibility});
 
 		Refresh();
 
@@ -197,7 +190,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -217,8 +210,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentTerm = "Payment Term 1",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -228,19 +221,13 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.assignRegularRoleCP(
 			roleTitle = "Operations Manager",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		CommercePermissions.removeRegularRolePermission(
 			permission = "Manage Order Delivery Terms",
@@ -253,9 +240,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -271,16 +256,14 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 5
 	test AssertPaymentTermsNotEditableWithoutPermissions {
 		property portal.acceptance = "true";
 
 		var deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2";
 		var paymentTermsEligibility = "Payment Term 1,Payment Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -302,7 +285,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = "${deliveryTermsEligibility}");
+		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = ${deliveryTermsEligibility});
 
 		Refresh();
 
@@ -318,7 +301,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(paymentTermsEligibility = "${paymentTermsEligibility}");
+		CommerceEntry.setEntryEligibility(paymentTermsEligibility = ${paymentTermsEligibility});
 
 		Refresh();
 
@@ -333,7 +316,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -353,8 +336,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentTerm = "Payment Term 1",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -364,19 +347,13 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.assignRegularRoleCP(
 			roleTitle = "Operations Manager",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		CommercePermissions.removeRegularRolePermission(
 			permission = "Manage Order Payment Terms",
@@ -389,9 +366,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -407,16 +382,14 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 4
 	test AssertTermsNotEditableAfterOrderIsPlaced {
 		property portal.acceptance = "false";
 
 		var deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2";
 		var paymentTermsEligibility = "Payment Term 1,Payment Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -438,7 +411,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = "${deliveryTermsEligibility}");
+		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = ${deliveryTermsEligibility});
 
 		Refresh();
 
@@ -454,7 +427,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(paymentTermsEligibility = "${paymentTermsEligibility}");
+		CommerceEntry.setEntryEligibility(paymentTermsEligibility = ${paymentTermsEligibility});
 
 		Refresh();
 
@@ -469,7 +442,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -488,8 +461,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentTerm = "Payment Term 1",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
@@ -500,7 +473,7 @@ definition {
 			paymentTerm = "Payment Term 1",
 			productName = "ABS Sensor",
 			productPrice = "100.00",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productUnitPrice = "50.00");
 
@@ -510,15 +483,13 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 4
 	test ChangeDeliveryTermBeforeCompletingCheckout {
 		property portal.acceptance = "false";
 
 		var deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -540,7 +511,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = "${deliveryTermsEligibility}");
+		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = ${deliveryTermsEligibility});
 
 		Refresh();
 
@@ -555,7 +526,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -598,9 +569,9 @@ definition {
 
 		Click(locator1 = "Button#CONTINUE");
 
-		for (var deliveryTerms : list "${deliveryTermsEligibility}") {
+		for (var deliveryTerms : list ${deliveryTermsEligibility}) {
 			AssertElementPresent(
-				key_radioOption = "${deliveryTerms}",
+				key_radioOption = ${deliveryTerms},
 				locator1 = "CommerceEntry#RADIO_BUTTON");
 
 			echo("${deliveryTerms} is available");
@@ -632,15 +603,13 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 4
 	test ChangePaymentTermBeforeCompletingCheckout {
 		property portal.acceptance = "false";
 
 		var paymentTermsEligibility = "Payment Term 1,Payment Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -656,7 +625,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(paymentTermsEligibility = "${paymentTermsEligibility}");
+		CommerceEntry.setEntryEligibility(paymentTermsEligibility = ${paymentTermsEligibility});
 
 		Refresh();
 
@@ -671,7 +640,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -714,9 +683,9 @@ definition {
 
 		Click(locator1 = "Button#CONTINUE");
 
-		for (var paymentTerms : list "${paymentTermsEligibility}") {
+		for (var paymentTerms : list ${paymentTermsEligibility}) {
 			AssertElementPresent(
-				key_radioOption = "${paymentTerms}",
+				key_radioOption = ${paymentTerms},
 				locator1 = "CommerceEntry#RADIO_BUTTON");
 
 			echo("${paymentTerms} is available");
@@ -748,16 +717,14 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 4
 	test EditTermsFromOrderAdmin {
 		property portal.acceptance = "false";
 
 		var deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2";
 		var paymentTermsEligibility = "Payment Term 1,Payment Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -779,7 +746,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = "${deliveryTermsEligibility}");
+		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = ${deliveryTermsEligibility});
 
 		Refresh();
 
@@ -795,7 +762,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(paymentTermsEligibility = "${paymentTermsEligibility}");
+		CommerceEntry.setEntryEligibility(paymentTermsEligibility = ${paymentTermsEligibility});
 
 		Refresh();
 
@@ -810,7 +777,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -829,8 +796,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentTerm = "Payment Term 1",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -840,9 +807,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -854,14 +819,14 @@ definition {
 			paymentTerm = "Payment Term 1",
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 
 		for (var termType : list "Payment,Delivery") {
 			CommerceOrders.editOrdersEntryTerms(
 				newTerm = "${termType} Term 2",
-				type = "${termType}");
+				type = ${termType});
 		}
 
 		CommerceOrders.viewOrdersEntry(
@@ -872,21 +837,19 @@ definition {
 			paymentTerm = "Payment Term 2",
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 4
 	test ViewAvailableDeliveryTerms {
 		property portal.acceptance = "false";
 
 		var deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -908,7 +871,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = "${deliveryTermsEligibility}");
+		CommerceEntry.setEntryEligibility(deliveryTermsEligibility = ${deliveryTermsEligibility});
 
 		Refresh();
 
@@ -923,7 +886,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -966,9 +929,9 @@ definition {
 
 		Click(locator1 = "Button#CONTINUE");
 
-		for (var deliveryTerms : list "${deliveryTermsEligibility}") {
+		for (var deliveryTerms : list ${deliveryTermsEligibility}) {
 			AssertElementPresent(
-				key_radioOption = "${deliveryTerms}",
+				key_radioOption = ${deliveryTerms},
 				locator1 = "CommerceEntry#RADIO_BUTTON");
 
 			echo("${deliveryTerms} is available");
@@ -987,15 +950,13 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 5
 	test ViewAvailablePaymentTerms {
 		property portal.acceptance = "true";
 
 		var paymentTermsEligibility = "Payment Term 1,Payment Term 2";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -1011,7 +972,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Eligibility");
 
-		CommerceEntry.setEntryEligibility(paymentTermsEligibility = "${paymentTermsEligibility}");
+		CommerceEntry.setEntryEligibility(paymentTermsEligibility = ${paymentTermsEligibility});
 
 		Refresh();
 
@@ -1026,7 +987,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -1069,9 +1030,9 @@ definition {
 
 		Click(locator1 = "Button#CONTINUE");
 
-		for (var paymentTerms : list "${paymentTermsEligibility}") {
+		for (var paymentTerms : list ${paymentTermsEligibility}) {
 			AssertElementPresent(
-				key_radioOption = "${paymentTerms}",
+				key_radioOption = ${paymentTerms},
 				locator1 = "CommerceEntry#RADIO_BUTTON");
 
 			echo("${paymentTerms} is available");
@@ -1090,13 +1051,11 @@ definition {
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 4
 	test ViewDeliveryTermAttachedToOrder {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -1133,7 +1092,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -1151,8 +1110,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -1162,9 +1121,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1175,19 +1132,17 @@ definition {
 			deliveryTerm = "Delivery Term 1",
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 	}
 
 	@description = "[Please Update]"
-	@priority = "4"
+	@priority = 4
 	test ViewPaymentTermAttachedToOrder {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -1218,7 +1173,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -1237,8 +1192,8 @@ definition {
 			paymentMethod = "Money Order",
 			paymentTerm = "Payment Term 1",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -1248,9 +1203,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1262,7 +1215,7 @@ definition {
 			paymentTerm = "Payment Term 1",
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 	}

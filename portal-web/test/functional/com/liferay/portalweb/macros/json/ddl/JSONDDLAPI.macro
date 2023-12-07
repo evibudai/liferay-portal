@@ -1,42 +1,46 @@
 definition {
 
-	macro _getRecordId {
+	@summary = "Default summary"
+	macro _getRecordId(recordSetId = null) {
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/ddl.ddlrecord/get-records \
-			-u test@liferay.com:test \
-			-d recordSetId=${recordSetId}
+				-u ${userLoginInfo} \
+				-d recordSetId=${recordSetId}
 		''';
 
-		var recordId = JSONCurlUtil.post("${curl}", "$.[?(@['recordSetId'] == '${recordSetId}')]['recordId']");
+		var recordId = JSONCurlUtil.post(${curl}, "$.[?(@['recordSetId'] == '${recordSetId}')]['recordId']");
 
-		if ("${recordId}" == "") {
+		if (${recordId} == "") {
 			fail("FAIL. Cannot find recordId.");
 		}
 
-		return "${recordId}";
+		return ${recordId};
 	}
 
-	macro _getRecordSetId {
+	@summary = "Default summary"
+	macro _getRecordSetId(groupName = null, ddlListName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${ddlListName}");
 
 		var portalURL = JSONCompany.getPortalURL();
-		var groupId = JSONDDLSetter.setGroupId(groupName = "${groupName}");
+		var groupId = JSONDDLSetter.setGroupId(groupName = ${groupName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/ddl.ddlrecordset/get-record-sets \
-			-u test@liferay.com:test \
-			-d groupIds=${groupId}
+				-u ${userLoginInfo} \
+				-d groupIds=${groupId}
 		''';
 
-		var recordSetId = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${ddlListName}')]['recordSetId']");
+		var recordSetId = JSONCurlUtil.post(${curl}, "$.[?(@['nameCurrentValue'] == '${ddlListName}')]['recordSetId']");
 
-		if ("${recordSetId}" == "") {
+		if (${recordSetId} == "") {
 			fail("FAIL. Cannot find recordSetId.");
 		}
 
-		return "${recordSetId}";
+		return ${recordSetId};
 	}
 
 }

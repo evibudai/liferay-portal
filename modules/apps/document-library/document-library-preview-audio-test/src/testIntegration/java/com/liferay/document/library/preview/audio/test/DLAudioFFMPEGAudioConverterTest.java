@@ -1,23 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.preview.audio.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.processor.AudioProcessorUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
-import com.liferay.document.library.kernel.util.AudioProcessorUtil;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.model.Group;
@@ -33,11 +24,10 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.rule.ExpectedLog;
-import com.liferay.portal.test.rule.ExpectedLogs;
-import com.liferay.portal.test.rule.ExpectedType;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portlet.documentlibrary.util.AudioProcessorImpl;
 
 import java.util.Dictionary;
 
@@ -81,35 +71,42 @@ public class DLAudioFFMPEGAudioConverterTest {
 			});
 	}
 
-	@ExpectedLogs(
-		expectedLogs = {
-			@ExpectedLog(
-				expectedLog = "ffmpeg", expectedType = ExpectedType.CONTAINS
-			),
-			@ExpectedLog(
-				expectedLog = "java.io.FileNotFoundException",
-				expectedType = ExpectedType.CONTAINS
-			),
-			@ExpectedLog(
-				expectedLog = "Unable to process",
-				expectedType = ExpectedType.CONTAINS
-			)
-		},
-		level = "ERROR", loggerClass = AudioProcessorImpl.class
-	)
 	@Test
 	public void testDoesNotGenerateAudioPreviewIfTheAudioIsCorrupt()
 		throws Exception {
 
-		_withDLAudioFFMPEGAudioConverterConfiguration(
-			true,
-			() -> {
-				FileEntry fileEntry = _createAudioFileEntry(
-					"audio_corrupt.wav");
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.document.library.preview.audio.internal." +
+					"processor.AudioDLProcessorImpl",
+				LoggerTestUtil.ERROR)) {
 
-				Assert.assertFalse(
-					AudioProcessorUtil.hasAudio(fileEntry.getFileVersion()));
-			});
+			_withDLAudioFFMPEGAudioConverterConfiguration(
+				true,
+				() -> {
+					FileEntry fileEntry = _createAudioFileEntry(
+						"audio_corrupt.wav");
+
+					Assert.assertFalse(
+						AudioProcessorUtil.hasAudio(
+							fileEntry.getFileVersion()));
+				});
+
+			for (LogEntry logEntry : logCapture.getLogEntries()) {
+				String logEntryMessage = logEntry.getMessage();
+
+				Assert.assertTrue(
+					logEntryMessage.contains("Unable to process"));
+
+				Throwable throwable = logEntry.getThrowable();
+
+				String throwableMessage = throwable.getMessage();
+
+				Assert.assertTrue(
+					throwableMessage.contains(
+						"java.io.FileNotFoundException") ||
+					throwableMessage.contains("ffmpeg"));
+			}
+		}
 	}
 
 	@Test

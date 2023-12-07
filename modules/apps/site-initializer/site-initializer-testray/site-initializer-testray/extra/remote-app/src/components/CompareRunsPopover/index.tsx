@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useObjectPermission} from '~/hooks/data/useObjectPermission';
 
 import useRuns from '../../hooks/useRuns';
 import i18n from '../../i18n';
@@ -27,24 +20,28 @@ import Form from '../Form';
 type CompareRunsPopoverProps = {
 	expanded?: boolean;
 	setVisible: (state: boolean) => void;
+	triggedRef: React.RefObject<HTMLDivElement>;
 	visible: boolean;
 };
 
 const CompareRunsPopover: React.FC<CompareRunsPopoverProps> = ({
 	expanded = false,
 	setVisible,
+	triggedRef,
 	visible,
 }) => {
+	const ref = useRef<HTMLDivElement>(null);
+
 	const {compareRuns, setRunA, setRunB} = useRuns();
 	const disableButtonA = !(compareRuns?.runId || compareRuns?.runA);
 	const disableButtonB = !(compareRuns?.runId || compareRuns?.runB);
-	const validateCompareButtons = !(compareRuns?.runA && compareRuns?.runB);
+	const caseResultPermission = useObjectPermission('/caseresults');
+	const disbleButtonAutofillRuns = caseResultPermission.canCreate;
+	const buildsPermission = useObjectPermission('/builds');
+	const disbleButtonAutofillBuilds = buildsPermission.canCreate;
 
-	useEffect(() => {
-		if (compareRuns?.runA || compareRuns?.runB) {
-			setVisible(true);
-		}
-	}, [compareRuns, setVisible]);
+	const validateCompareButtons = !(compareRuns?.runA && compareRuns?.runB);
+	const navigate = useNavigate();
 
 	const onAutoFill = (type: 'Build' | 'Run') => {
 		if (!compareRuns.runA || !compareRuns.runB) {
@@ -70,19 +67,38 @@ const CompareRunsPopover: React.FC<CompareRunsPopoverProps> = ({
 			);
 	};
 
+	useEffect(() => {
+		const handleClickOutside = (event: any) => {
+			if (
+				ref.current &&
+				!ref.current.contains(event.target) &&
+				!triggedRef.current?.contains(event.target)
+			) {
+				setVisible(false);
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+
+		return () =>
+			document.removeEventListener('mousedown', handleClickOutside);
+	}, [setVisible, triggedRef]);
+
 	return (
 		<div
-			className={classNames('compare-runs-popover', {
-				'box-hidden': !visible && !expanded,
-				'box-hidden-expanded': !visible && expanded,
-				'box-visible': visible && !expanded,
-				'box-visible-expanded': visible && expanded,
+			className={classNames('tr-compare-runs-popover', {
+				'hidden': !visible && !expanded,
+				'hidden--expanded': !visible && expanded,
+				'visible': visible && !expanded,
+				'visible--expanded': visible && expanded,
 			})}
+			onBlur={() => setVisible(false)}
+			ref={ref}
 		>
 			<div className="align-items d-flex flex-column justify-content-between m-3">
 				<div className="align-items-center d-flex justify-content-between">
 					<label className="mb-0">
-						{i18n.translate('compare-runs')}
+						{i18n.sub('compare-x', 'runs')}
 					</label>
 
 					<span
@@ -143,12 +159,22 @@ const CompareRunsPopover: React.FC<CompareRunsPopoverProps> = ({
 							<ClayButton
 								disabled={validateCompareButtons}
 								displayType="primary"
+								onClick={() => {
+									navigate(
+										`/compare-runs/${compareRuns.runA}/${compareRuns.runB}/teams`
+									);
+
+									setVisible(false);
+								}}
 							>
-								{i18n.translate('compare-runs')}
+								{i18n.sub('compare-x', 'runs')}
 							</ClayButton>
 
 							<ClayButton
-								disabled={validateCompareButtons}
+								disabled={
+									validateCompareButtons ||
+									!disbleButtonAutofillRuns
+								}
 								displayType="primary"
 								onClick={() => onAutoFill('Run')}
 							>
@@ -156,7 +182,10 @@ const CompareRunsPopover: React.FC<CompareRunsPopoverProps> = ({
 							</ClayButton>
 
 							<ClayButton
-								disabled={validateCompareButtons}
+								disabled={
+									validateCompareButtons ||
+									!disbleButtonAutofillBuilds
+								}
 								displayType="primary"
 								onClick={() => onAutoFill('Build')}
 							>

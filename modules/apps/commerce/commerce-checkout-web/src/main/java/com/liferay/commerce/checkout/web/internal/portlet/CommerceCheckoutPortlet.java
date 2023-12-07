@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.checkout.web.internal.portlet;
 
-import com.liferay.commerce.account.constants.CommerceAccountConstants;
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.commerce.checkout.web.internal.display.context.CheckoutDisplayContext;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.model.CommerceOrderItemModel;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.CommerceOrderValidatorRegistry;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
@@ -35,6 +27,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -82,7 +75,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.security-role-ref=power-user,user",
 		"javax.portlet.version=3.0"
 	},
-	service = {CommerceCheckoutPortlet.class, Portlet.class}
+	service = Portlet.class
 )
 public class CommerceCheckoutPortlet extends MVCPortlet {
 
@@ -120,11 +113,19 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 				boolean continueAsGuest = GetterUtil.getBoolean(
 					CookiesManagerUtil.getCookieValue(
 						CookiesConstants.NAME_COMMERCE_CONTINUE_AS_GUEST,
-						_portal.getHttpServletRequest(renderRequest)));
+						httpServletRequest));
 
-				if ((commerceOrder.getCommerceAccountId() ==
-						CommerceAccountConstants.ACCOUNT_ID_GUEST) &&
-					!continueAsGuest) {
+				if (commerceOrder.isQuote() ||
+					ListUtil.exists(
+						commerceOrder.getCommerceOrderItems(),
+						CommerceOrderItemModel::isPriceOnApplication)) {
+
+					httpServletResponse.sendRedirect(
+						_getOrderDetailsURL(renderRequest, commerceOrder));
+				}
+				else if ((commerceOrder.getCommerceAccountId() ==
+							AccountConstants.ACCOUNT_ENTRY_ID_GUEST) &&
+						 !continueAsGuest) {
 
 					httpServletResponse.sendRedirect(
 						_getCheckoutURL(renderRequest));
@@ -135,7 +136,7 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 							 LocaleUtil.getSiteDefault(), commerceOrder)) {
 
 					httpServletResponse.sendRedirect(
-						_getOrderDetailsURL(renderRequest));
+						_getOrderDetailsURL(renderRequest, commerceOrder));
 				}
 				else if (!commerceOrder.isOpen() &&
 						 (continueAsGuest || commerceOrder.isGuestOrder())) {
@@ -151,9 +152,6 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 						httpServletRequest, httpServletResponse,
 						CookiesConstants.NAME_COMMERCE_CONTINUE_AS_GUEST);
 				}
-
-				renderRequest.setAttribute(
-					CommerceCheckoutWebKeys.COMMERCE_ORDER, commerceOrder);
 			}
 
 			CheckoutDisplayContext checkoutDisplayContext =
@@ -189,6 +187,14 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest)
 		throws PortalException {
 
+		CommerceOrder commerceOrder =
+			(CommerceOrder)portletRequest.getAttribute(
+				CommerceCheckoutWebKeys.COMMERCE_ORDER);
+
+		if (commerceOrder != null) {
+			return commerceOrder;
+		}
+
 		String commerceOrderUuid = ParamUtil.getString(
 			portletRequest, "commerceOrderUuid");
 
@@ -198,21 +204,28 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 					getCommerceChannelGroupIdBySiteGroupId(
 						_portal.getScopeGroupId(portletRequest));
 
-			return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
-				commerceOrderUuid, groupId);
+			commerceOrder =
+				_commerceOrderService.getCommerceOrderByUuidAndGroupId(
+					commerceOrderUuid, groupId);
+		}
+		else {
+			commerceOrder = _commerceOrderHttpHelper.getCurrentCommerceOrder(
+				_portal.getHttpServletRequest(portletRequest));
 		}
 
-		return _commerceOrderHttpHelper.getCurrentCommerceOrder(
-			_portal.getHttpServletRequest(portletRequest));
+		portletRequest.setAttribute(
+			CommerceCheckoutWebKeys.COMMERCE_ORDER, commerceOrder);
+
+		return commerceOrder;
 	}
 
-	private String _getOrderDetailsURL(PortletRequest portletRequest)
+	private String _getOrderDetailsURL(
+			PortletRequest portletRequest, CommerceOrder commerceOrder)
 		throws PortalException {
 
 		PortletURL portletURL =
 			_commerceOrderHttpHelper.getCommerceCartPortletURL(
-				_portal.getHttpServletRequest(portletRequest),
-				_getCommerceOrder(portletRequest));
+				_portal.getHttpServletRequest(portletRequest), commerceOrder);
 
 		if (portletURL == null) {
 			return StringPool.BLANK;

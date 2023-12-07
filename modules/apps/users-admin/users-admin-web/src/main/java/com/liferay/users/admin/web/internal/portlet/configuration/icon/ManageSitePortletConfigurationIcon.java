@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.web.internal.portlet.configuration.icon;
@@ -27,8 +18,8 @@ import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfiguration
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.permission.GroupPermission;
-import com.liferay.portal.kernel.service.permission.OrganizationPermission;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -107,10 +98,10 @@ public class ManageSitePortletConfigurationIcon
 			Group organizationGroup = organization.getGroup();
 
 			if (organizationGroup.isSite() &&
-				(_groupPermission.contains(
+				(GroupPermissionUtil.contains(
 					permissionChecker, organizationGroup,
 					ActionKeys.MANAGE_STAGING) ||
-				 _organizationPermission.contains(
+				 OrganizationPermissionUtil.contains(
 					 permissionChecker, organization, ActionKeys.UPDATE))) {
 
 				return true;
@@ -129,13 +120,7 @@ public class ManageSitePortletConfigurationIcon
 		ManageSitePortletConfigurationIcon.class);
 
 	@Reference
-	private GroupPermission _groupPermission;
-
-	@Reference
 	private Language _language;
-
-	@Reference
-	private OrganizationPermission _organizationPermission;
 
 	@Reference
 	private Portal _portal;

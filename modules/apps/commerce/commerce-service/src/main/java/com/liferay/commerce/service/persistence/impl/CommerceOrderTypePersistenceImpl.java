@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service.persistence.impl;
@@ -48,11 +39,10 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Timestamp;
@@ -6339,7 +6329,7 @@ public class CommerceOrderTypePersistenceImpl
 		commerceOrderType.setNew(true);
 		commerceOrderType.setPrimaryKey(commerceOrderTypeId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		commerceOrderType.setUuid(uuid);
 
@@ -6462,7 +6452,7 @@ public class CommerceOrderTypePersistenceImpl
 			(CommerceOrderTypeModelImpl)commerceOrderType;
 
 		if (Validator.isNull(commerceOrderType.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			commerceOrderType.setUuid(uuid);
 		}
@@ -6480,7 +6470,9 @@ public class CommerceOrderTypePersistenceImpl
 				if (ercCommerceOrderType != null) {
 					throw new DuplicateCommerceOrderTypeExternalReferenceCodeException(
 						"Duplicate commerce order type with external reference code " +
-							commerceOrderType.getExternalReferenceCode());
+							commerceOrderType.getExternalReferenceCode() +
+								" and company " +
+									commerceOrderType.getCompanyId());
 				}
 			}
 			else {
@@ -6490,7 +6482,9 @@ public class CommerceOrderTypePersistenceImpl
 
 					throw new DuplicateCommerceOrderTypeExternalReferenceCodeException(
 						"Duplicate commerce order type with external reference code " +
-							commerceOrderType.getExternalReferenceCode());
+							commerceOrderType.getExternalReferenceCode() +
+								" and company " +
+									commerceOrderType.getCompanyId());
 				}
 			}
 		}
@@ -6943,30 +6937,14 @@ public class CommerceOrderTypePersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, false);
 
-		_setCommerceOrderTypeUtilPersistence(this);
+		CommerceOrderTypeUtil.setPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		_setCommerceOrderTypeUtilPersistence(null);
+		CommerceOrderTypeUtil.setPersistence(null);
 
 		entityCache.removeCache(CommerceOrderTypeImpl.class.getName());
-	}
-
-	private void _setCommerceOrderTypeUtilPersistence(
-		CommerceOrderTypePersistence commerceOrderTypePersistence) {
-
-		try {
-			Field field = CommerceOrderTypeUtil.class.getDeclaredField(
-				"_persistence");
-
-			field.setAccessible(true);
-
-			field.set(null, commerceOrderTypePersistence);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	@Override
@@ -7062,8 +7040,5 @@ public class CommerceOrderTypePersistenceImpl
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

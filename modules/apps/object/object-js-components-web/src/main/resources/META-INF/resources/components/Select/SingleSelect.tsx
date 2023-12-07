@@ -1,100 +1,85 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayDropDown from '@clayui/drop-down';
-import ClayPopover from '@clayui/popover';
-import React, {Children, Fragment, ReactNode, useEffect, useState} from 'react';
+import {Option, Picker} from '@clayui/core';
+import {FieldBase} from 'frontend-js-components-web';
+import React, {Key, ReactElement} from 'react';
 
-import {BaseSelect, CustomItem, SelectProps} from './BaseSelect';
+type SingleSelectOption = {
+	label?: string;
+	value?: string | number;
+};
 
-import './index.scss';
-
-interface IProps<T extends CustomItem<number | string> = CustomItem>
-	extends SelectProps {
-	children?: ReactNode;
-	onChange?: (selected: T) => void;
-	options: T[];
+interface SingleSelectProps<T extends SingleSelectOption> {
+	as?:
+		| 'button'
+		| React.ForwardRefExoticComponent<any>
+		| ((props: React.HTMLAttributes<HTMLElement>) => JSX.Element);
+	children?: (item: T) => ReactElement;
+	className?: string;
+	defaultSelectedKey?: Key;
+	disabled?: boolean;
+	error?: string;
+	feedbackMessage?: string;
+	id?: string;
+	items: T[];
+	label?: string;
+	onSelectionChange?: (itemValue: React.Key) => void;
+	placeholder?: string;
+	required?: boolean;
+	selectedKey?: string | number;
+	tooltip?: string;
 }
 
-export function SingleSelect<
-	T extends CustomItem<number | string> = CustomItem
->({onChange = () => {}, options, children, ...otherProps}: IProps<T>) {
-	const [dropdownActive, setDropdownActive] = useState<boolean>(false);
-	const arrayChildren = Children.toArray(children);
-	const [showPopover, setShowPopover] = useState(false);
-
-	useEffect(() => {
-		if (!dropdownActive) {
-			setShowPopover(false);
-		}
-	}, [dropdownActive]);
-
+export function SingleSelect<T extends SingleSelectOption>({
+	as,
+	children,
+	className,
+	defaultSelectedKey,
+	disabled,
+	error,
+	feedbackMessage,
+	id,
+	items,
+	label,
+	onSelectionChange,
+	placeholder,
+	required,
+	selectedKey,
+	tooltip,
+}: SingleSelectProps<T>) {
 	return (
-		<BaseSelect
-			dropdownActive={dropdownActive}
-			setDropdownActive={setDropdownActive}
-			{...otherProps}
+		<FieldBase
+			className={className}
+			disabled={disabled}
+			errorMessage={error}
+			helpMessage={feedbackMessage}
+			id={id}
+			label={label}
+			required={required}
+			tooltip={tooltip}
 		>
-			{options.map((option, index) => {
-				let events = {};
-				if (option.popover) {
-					events = {
-						onMouseOut: () => setShowPopover(false),
-						onMouseOver: () => setShowPopover(true),
-					};
+			<Picker<T>
+				UNSAFE_menuClassName={className}
+				as={as}
+				className={className}
+				defaultSelectedKey={defaultSelectedKey}
+				disabled={disabled}
+				items={items}
+				onSelectionChange={onSelectionChange}
+				placeholder={placeholder}
+				selectedKey={selectedKey}
+			>
+				{(item) =>
+					children ? (
+						children(item)
+					) : (
+						<Option key={item.value}>{item.label}</Option>
+					)
 				}
-
-				return (
-					<Fragment key={option.value}>
-						<ClayPopover
-							alignPosition="right"
-							disableScroll={false}
-							header={option.popover?.header}
-							onShowChange={setShowPopover}
-							show={showPopover && !!Object.keys(events).length}
-							trigger={
-								<ClayDropDown.Item
-									{...events}
-									className={
-										option.type
-											? 'lfr-object__single-select--with-label'
-											: ''
-									}
-									disabled={option.disabled}
-									key={index}
-									onClick={() => {
-										setDropdownActive(false);
-										onChange(option);
-									}}
-								>
-									<div>{option.label}</div>
-
-									{option.description && (
-										<span className="text-small">
-											{option.description}
-										</span>
-									)}
-
-									{arrayChildren?.[index]}
-								</ClayDropDown.Item>
-							}
-						>
-							{option.popover?.body}
-						</ClayPopover>
-					</Fragment>
-				);
-			})}
-		</BaseSelect>
+			</Picker>
+		</FieldBase>
 	);
 }

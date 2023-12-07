@@ -1,41 +1,39 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.simulation.web.internal.display.context;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsEntry;
+import com.liferay.segments.model.SegmentsExperience;
+import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryServiceUtil;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.util.List;
+import java.util.Map;
 
-import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,11 +44,16 @@ import javax.servlet.http.HttpServletRequest;
 public class SegmentsSimulationDisplayContext {
 
 	public SegmentsSimulationDisplayContext(
-		HttpServletRequest httpServletRequest,
-		SegmentsConfigurationProvider segmentsConfigurationProvider) {
+		HttpServletRequest httpServletRequest, Language language,
+		SegmentsConfigurationProvider segmentsConfigurationProvider,
+		SegmentsEntryLocalService segmentsEntryLocalService,
+		SegmentsExperienceLocalService segmentsExperienceLocalService) {
 
 		_httpServletRequest = httpServletRequest;
+		_language = language;
 		_segmentsConfigurationProvider = segmentsConfigurationProvider;
+		_segmentsEntryLocalService = segmentsEntryLocalService;
+		_segmentsExperienceLocalService = segmentsExperienceLocalService;
 
 		RenderResponse renderResponse =
 			(RenderResponse)httpServletRequest.getAttribute(
@@ -63,20 +66,39 @@ public class SegmentsSimulationDisplayContext {
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public PortletURL getDeactivateSimulationURL() {
+	public Map<String, Object> getData() throws Exception {
+		return HashMapBuilder.<String, Object>put(
+			"deactivateSimulationURL", _getDeactivateSimulationURL()
+		).put(
+			"namespace", _getPortletNamespace()
+		).put(
+			"segmentationEnabled", _isSegmentationEnabled()
+		).put(
+			"segmentsCompanyConfigurationURL",
+			_getSegmentsCompanyConfigurationURL()
+		).put(
+			"segmentsEntries", _getSegmentsEntriesJSONArray()
+		).put(
+			"segmentsExperiences", _getSegmentsExperiencesJSONArray()
+		).put(
+			"simulateSegmentsEntriesURL", _getSimulateSegmentsEntriesURL()
+		).build();
+	}
+
+	private String _getDeactivateSimulationURL() {
 		return PortletURLBuilder.createActionURL(
 			_liferayPortletResponse, SegmentsPortletKeys.SEGMENTS_SIMULATION
 		).setActionName(
 			"/segments_simulation/deactivate_simulation"
-		).buildPortletURL();
+		).buildString();
 	}
 
-	public String getPortletNamespace() {
+	private String _getPortletNamespace() {
 		return PortalUtil.getPortletNamespace(
 			SegmentsPortletKeys.SEGMENTS_SIMULATION);
 	}
 
-	public String getSegmentsCompanyConfigurationURL() {
+	private String _getSegmentsCompanyConfigurationURL() {
 		try {
 			return _segmentsConfigurationProvider.getCompanyConfigurationURL(
 				_httpServletRequest);
@@ -88,7 +110,7 @@ public class SegmentsSimulationDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public List<SegmentsEntry> getSegmentsEntries() {
+	private List<SegmentsEntry> _getSegmentsEntries() {
 		if (_segmentsEntries != null) {
 			return _segmentsEntries;
 		}
@@ -99,15 +121,127 @@ public class SegmentsSimulationDisplayContext {
 		return _segmentsEntries;
 	}
 
-	public PortletURL getSimulateSegmentsEntriesURL() {
+	private JSONArray _getSegmentsEntriesJSONArray() {
+		if (_segmentsEntriesJSONArray != null) {
+			return _segmentsEntriesJSONArray;
+		}
+
+		_segmentsEntriesJSONArray = JSONUtil.put(
+			JSONUtil.put(
+				"id", SegmentsEntryConstants.ID_DEFAULT
+			).put(
+				"name",
+				SegmentsEntryConstants.getDefaultSegmentsEntryName(
+					_themeDisplay.getLocale())
+			));
+
+		for (SegmentsEntry segmentsEntry : _getSegmentsEntries()) {
+			_segmentsEntriesJSONArray.put(
+				JSONUtil.put(
+					"id", segmentsEntry.getSegmentsEntryId()
+				).put(
+					"name", segmentsEntry.getName(_themeDisplay.getLocale())
+				));
+		}
+
+		return _segmentsEntriesJSONArray;
+	}
+
+	private JSONArray _getSegmentsExperiencesJSONArray() throws Exception {
+		if (_segmentsExperiencesJSONArray != null) {
+			return _segmentsExperiencesJSONArray;
+		}
+
+		List<SegmentsExperience> segmentsExperiences =
+			_segmentsExperienceLocalService.getSegmentsExperiences(
+				_themeDisplay.getScopeGroupId(), _themeDisplay.getPlid(), true);
+
+		_segmentsExperiencesJSONArray = JSONUtil.toJSONArray(
+			segmentsExperiences,
+			segmentsExperience -> JSONUtil.put(
+				"active", _isActive(segmentsExperience, segmentsExperiences)
+			).put(
+				"segmentsEntryName",
+				() -> {
+					SegmentsEntry segmentsEntry =
+						_segmentsEntryLocalService.fetchSegmentsEntry(
+							segmentsExperience.getSegmentsEntryId());
+
+					if (segmentsEntry != null) {
+						return segmentsEntry.getName(_themeDisplay.getLocale());
+					}
+
+					return SegmentsEntryConstants.getDefaultSegmentsEntryName(
+						_themeDisplay.getLocale());
+				}
+			).put(
+				"segmentsExperienceId",
+				segmentsExperience.getSegmentsExperienceId()
+			).put(
+				"segmentsExperienceName",
+				segmentsExperience.getName(_themeDisplay.getLocale())
+			).put(
+				"statusLabel",
+				() -> {
+					String statusLabelKey = "inactive";
+
+					if (_isActive(segmentsExperience, segmentsExperiences)) {
+						statusLabelKey = "active";
+					}
+
+					return _language.get(_httpServletRequest, statusLabelKey);
+				}
+			));
+
+		return _segmentsExperiencesJSONArray;
+	}
+
+	private String _getSimulateSegmentsEntriesURL() {
 		return PortletURLBuilder.createActionURL(
 			_liferayPortletResponse, SegmentsPortletKeys.SEGMENTS_SIMULATION
 		).setActionName(
 			"/segments_simulation/simulate_segments_entries"
-		).buildPortletURL();
+		).buildString();
 	}
 
-	public boolean isSegmentationEnabled() {
+	private long _getStagingAwareGroupId() {
+		if (_groupId != null) {
+			return _groupId;
+		}
+
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
+
+		_groupId = stagingGroupHelper.getStagedPortletGroupId(
+			_themeDisplay.getScopeGroupId(), SegmentsPortletKeys.SEGMENTS);
+
+		return _groupId;
+	}
+
+	private boolean _isActive(
+		SegmentsExperience segmentsExperience,
+		List<SegmentsExperience> segmentsExperiences) {
+
+		for (SegmentsExperience curSegmentsExperience : segmentsExperiences) {
+			if ((curSegmentsExperience.getSegmentsEntryId() ==
+					segmentsExperience.getSegmentsEntryId()) ||
+				(curSegmentsExperience.getSegmentsEntryId() ==
+					SegmentsEntryConstants.ID_DEFAULT)) {
+
+				if (curSegmentsExperience.getSegmentsExperienceId() ==
+						segmentsExperience.getSegmentsExperienceId()) {
+
+					return true;
+				}
+
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean _isSegmentationEnabled() {
 		try {
 			return _segmentsConfigurationProvider.isSegmentationEnabled(
 				_themeDisplay.getCompanyId());
@@ -119,53 +253,20 @@ public class SegmentsSimulationDisplayContext {
 		return false;
 	}
 
-	public boolean isShowEmptyMessage() {
-		if (_showEmptyMessage != null) {
-			return _showEmptyMessage;
-		}
-
-		List<SegmentsEntry> segmentsEntries = getSegmentsEntries();
-
-		_showEmptyMessage = segmentsEntries.isEmpty();
-
-		return _showEmptyMessage;
-	}
-
-	private long _getStagingAwareGroupId() {
-		if (_groupId != null) {
-			return _groupId;
-		}
-
-		long groupId = _themeDisplay.getScopeGroupId();
-
-		StagingGroupHelper stagingGroupHelper =
-			StagingGroupHelperUtil.getStagingGroupHelper();
-
-		if (stagingGroupHelper.isStagingGroup(groupId) &&
-			!stagingGroupHelper.isStagedPortlet(
-				groupId, SegmentsPortletKeys.SEGMENTS)) {
-
-			Group group = stagingGroupHelper.fetchLiveGroup(groupId);
-
-			if (group != null) {
-				groupId = group.getGroupId();
-			}
-		}
-
-		_groupId = groupId;
-
-		return groupId;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		SegmentsSimulationDisplayContext.class);
 
 	private Long _groupId;
 	private final HttpServletRequest _httpServletRequest;
+	private final Language _language;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final SegmentsConfigurationProvider _segmentsConfigurationProvider;
 	private List<SegmentsEntry> _segmentsEntries;
-	private Boolean _showEmptyMessage;
+	private JSONArray _segmentsEntriesJSONArray;
+	private final SegmentsEntryLocalService _segmentsEntryLocalService;
+	private final SegmentsExperienceLocalService
+		_segmentsExperienceLocalService;
+	private JSONArray _segmentsExperiencesJSONArray;
 	private final ThemeDisplay _themeDisplay;
 
 }

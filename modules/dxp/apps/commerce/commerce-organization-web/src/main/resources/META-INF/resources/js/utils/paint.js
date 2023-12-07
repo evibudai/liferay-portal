@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {event as d3event, linkHorizontal, select as d3select} from 'd3';
@@ -14,6 +8,7 @@ import {event as d3event, linkHorizontal, select as d3select} from 'd3';
 import {
 	ACTION_KEYS,
 	COUNTER_KEYS_MAP,
+	MODEL_TYPE_MAP,
 	NODE_BUTTON_WIDTH,
 	NODE_PADDING,
 	RECT_SIZES,
@@ -94,8 +89,8 @@ export function fillAddButtons(nodeEnter, spritemap, openModal) {
 		.append('g')
 		.attr('class', 'open-actions-wrapper')
 		.on('mousedown', (node) => {
-			if (node.parent.data.type === 'account') {
-				openModal(node.parent.data, 'user');
+			if (node.parent.data.type === MODEL_TYPE_MAP.account) {
+				openModal(node.parent.data, MODEL_TYPE_MAP.user);
 			}
 			else {
 				actionsWrapper.node().classList.toggle('menu-open');
@@ -105,9 +100,24 @@ export function fillAddButtons(nodeEnter, spritemap, openModal) {
 	appendCircle(openActionsWrapper, 36, 'action-circle');
 	appendIcon(openActionsWrapper, `${spritemap}#plus`, 18, 'action-icon');
 
-	createAddActionButton(actionsWrapper, 'account', openModal, spritemap);
-	createAddActionButton(actionsWrapper, 'organization', openModal, spritemap);
-	createAddActionButton(actionsWrapper, 'user', openModal, spritemap);
+	createAddActionButton(
+		actionsWrapper,
+		MODEL_TYPE_MAP.account,
+		openModal,
+		spritemap
+	);
+	createAddActionButton(
+		actionsWrapper,
+		MODEL_TYPE_MAP.organization,
+		openModal,
+		spritemap
+	);
+	createAddActionButton(
+		actionsWrapper,
+		MODEL_TYPE_MAP.user,
+		openModal,
+		spritemap
+	);
 }
 
 export function printDescription(d, element, spritemap) {
@@ -115,7 +125,7 @@ export function printDescription(d, element, spritemap) {
 		.append('g')
 		.attr('class', 'node-description');
 
-	if (d.data.type === 'user') {
+	if (d.data.type === MODEL_TYPE_MAP.user) {
 		descritionWrapper
 			.append('text')
 			.attr('class', 'node-description-content')
@@ -125,9 +135,13 @@ export function printDescription(d, element, spritemap) {
 	}
 
 	const entities =
-		d.data.type === 'organization'
-			? ['organization', 'account', 'user']
-			: ['user'];
+		d.data.type === MODEL_TYPE_MAP.organization
+			? [
+					MODEL_TYPE_MAP.organization,
+					MODEL_TYPE_MAP.account,
+					MODEL_TYPE_MAP.user,
+			  ]
+			: [MODEL_TYPE_MAP.user];
 
 	entities.reduce((x, nodeType) => {
 		const entityWrapper = descritionWrapper
@@ -149,7 +163,10 @@ export function printDescription(d, element, spritemap) {
 			.attr('y', 10)
 			.text(d.data[COUNTER_KEYS_MAP[nodeType]]);
 
-		if (nodeType !== 'organization' && d.data.type !== 'account') {
+		if (
+			nodeType !== MODEL_TYPE_MAP.organization &&
+			d.data.type !== MODEL_TYPE_MAP.account
+		) {
 			entityWrapper
 				.append('line')
 				.attr('class', 'entity-divider')
@@ -184,7 +201,7 @@ export function fillEntityNode(nodeEnter, spritemap, openMenu) {
 			'transform',
 			(d) => `translate(0, ${RECT_SIZES[d.data.type].height * -0.5})`
 		)
-		.attr('rx', (d) => RECT_SIZES[d.data.type].height / 2)
+		.attr('rx', (d) => RECT_SIZES[d.data.type].height / 2 - 16)
 		.attr('class', 'chart-rect');
 
 	const iconWrapper = nodeEnter.append('g').attr('class', 'icon-wrapper');
@@ -212,8 +229,10 @@ export function fillEntityNode(nodeEnter, spritemap, openMenu) {
 		}
 
 		return hasPermissions(chartItem.data, [
-			ACTION_KEYS[chartItem.data.type].REMOVE,
 			ACTION_KEYS[chartItem.data.type].DELETE,
+			ACTION_KEYS[chartItem.data.type].REMOVE,
+			ACTION_KEYS[chartItem.data.type].UPDATE,
+			ACTION_KEYS[chartItem.data.type].VIEW,
 		]);
 	});
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.web.internal.display.context;
@@ -55,6 +46,7 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
@@ -104,7 +96,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletSession;
 import javax.portlet.RenderRequest;
@@ -195,17 +186,16 @@ public class DDMFormDisplayContext {
 
 		DDMForm ddmForm = getDDMForm();
 
-		Set<Locale> availableLocales = ddmForm.getAvailableLocales();
+		return TransformUtil.transformToArray(
+			ddmForm.getAvailableLocales(),
+			locale -> {
+				if (!siteAvailableLocales.contains(locale)) {
+					return null;
+				}
 
-		Stream<Locale> availableLocalesStream = availableLocales.stream();
-
-		return availableLocalesStream.filter(
-			locale -> siteAvailableLocales.contains(locale)
-		).map(
-			locale -> LanguageUtil.getLanguageId(locale)
-		).toArray(
-			String[]::new
-		);
+				return LanguageUtil.getLanguageId(locale);
+			},
+			String.class);
 	}
 
 	public String getContainerId() {
@@ -292,11 +282,11 @@ public class DDMFormDisplayContext {
 
 		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion = null;
 
-		DDMFormInstanceRecord formInstanceRecord = getFormInstanceRecord();
+		DDMFormInstanceRecord ddmFormInstanceRecord = getFormInstanceRecord();
 
-		if (formInstanceRecord != null) {
+		if (ddmFormInstanceRecord != null) {
 			ddmFormInstanceRecordVersion =
-				formInstanceRecord.getLatestFormInstanceRecordVersion();
+				ddmFormInstanceRecord.getLatestFormInstanceRecordVersion();
 		}
 		else {
 			ddmFormInstanceRecordVersion =
@@ -308,6 +298,13 @@ public class DDMFormDisplayContext {
 		}
 
 		if (ddmFormInstanceRecordVersion != null) {
+			ddmFormInstanceRecord =
+				ddmFormInstanceRecordVersion.getFormInstanceRecord();
+
+			ddmFormRenderingContext.addProperty(
+				"ddmFormInstanceRecordId",
+				ddmFormInstanceRecord.getFormInstanceRecordId());
+
 			DDMFormValues mergedDDMFormValues = _ddmFormValuesMerger.merge(
 				ddmForm, ddmFormInstanceRecordVersion.getDDMFormValues(),
 				ddmFormRenderingContext.getDDMFormValues());
@@ -546,7 +543,7 @@ public class DDMFormDisplayContext {
 				}
 			}
 
-			return LanguageUtil.get(resourceBundle, "submit-for-publication");
+			return LanguageUtil.get(resourceBundle, "submit-for-workflow");
 		}
 
 		return LanguageUtil.get(resourceBundle, "submit-form");
@@ -644,7 +641,7 @@ public class DDMFormDisplayContext {
 			return _autosaveEnabled;
 		}
 
-		if (isDefaultUser()) {
+		if (isGuestUser()) {
 			_autosaveEnabled = Boolean.FALSE;
 		}
 		else {
@@ -1044,12 +1041,6 @@ public class DDMFormDisplayContext {
 		return themeDisplay.getUser();
 	}
 
-	protected boolean isDefaultUser() {
-		User user = getUser();
-
-		return user.isDefaultUser();
-	}
-
 	protected boolean isFormPublished() throws PortalException {
 		DDMFormInstance ddmFormInstance = getFormInstance();
 
@@ -1061,6 +1052,12 @@ public class DDMFormDisplayContext {
 			ddmFormInstance.getSettingsModel();
 
 		return ddmFormInstanceSettings.published();
+	}
+
+	protected boolean isGuestUser() {
+		User user = getUser();
+
+		return user.isGuestUser();
 	}
 
 	private String _createCaptchaResourceURL() {

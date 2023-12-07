@@ -1,21 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useResource} from '@clayui/data-provider';
 import ClayForm, {ClayInput} from '@clayui/form';
-import ClayMultiSelect, {itemLabelFilter} from '@clayui/multi-select';
-import React, {useState} from 'react';
+import ClayMultiSelect from '@clayui/multi-select';
+import React, {useEffect, useRef, useState} from 'react';
+
+function usePrevious(value) {
+	const ref = useRef();
+
+	useEffect(() => {
+		ref.current = value;
+	}, [value]);
+
+	return ref.current;
+}
 
 function formatAutocompleteValue(data) {
 	return `${data.fullName} (${data.emailAddress})`;
@@ -27,22 +28,6 @@ function isEmailAddressValid(email) {
 	return emailRegex.test(email.label);
 }
 
-function formatAutocompleteUsersFromRequest(resource, inputValue) {
-	if (resource.length) {
-		return itemLabelFilter(
-			resource.map((data) => {
-				return {
-					label: data.emailAddress,
-					value: formatAutocompleteValue(data),
-				};
-			}),
-			inputValue
-		);
-	}
-
-	return resource;
-}
-
 const Email = ({
 	addresses,
 	autocompleteUserURL,
@@ -51,19 +36,33 @@ const Email = ({
 	onMessageChanged,
 	onMultiSelectItemsChanged,
 	onSubjectChanged,
+	portletNamespace,
 	subject,
 }) => {
 	const [multiSelectValue, setMultiSelectValue] = useState('');
 
+	const previousMultiSelectValue = usePrevious(multiSelectValue);
+
 	const [networkStatus, setNetworkStatus] = useState(4);
 
-	const {resource} = useResource({
+	const {refetch, resource} = useResource({
 		fetchPolicy: 'cache-first',
-		link: autocompleteUserURL,
+		link:
+			autocompleteUserURL +
+			'&' +
+			portletNamespace +
+			'query=' +
+			multiSelectValue,
 		onNetworkStatusChange: setNetworkStatus,
 	});
 
 	const error = networkStatus === 5;
+
+	useEffect(() => {
+		if (multiSelectValue && multiSelectValue !== previousMultiSelectValue) {
+			refetch();
+		}
+	}, [multiSelectValue, previousMultiSelectValue, refetch]);
 
 	return (
 		<div className="share-form-modal-item-email">
@@ -75,10 +74,14 @@ const Email = ({
 						{!error && (
 							<>
 								<ClayMultiSelect
+									clearAllTitle={Liferay.Language.get(
+										'clear-all'
+									)}
 									closeButtonAriaLabel={Liferay.Language.get(
 										'remove'
 									)}
 									items={addresses}
+									loadingState={networkStatus}
 									onChange={setMultiSelectValue}
 									onClearAllButtonClick={() => {
 										emailContent.current.addresses = [];
@@ -111,10 +114,15 @@ const Email = ({
 									)}
 									sourceItems={
 										resource
-											? formatAutocompleteUsersFromRequest(
-													resource,
-													multiSelectValue
-											  )
+											? resource.map((data) => {
+													return {
+														label:
+															data.emailAddress,
+														value: formatAutocompleteValue(
+															data
+														),
+													};
+											  })
 											: []
 									}
 									value={multiSelectValue}

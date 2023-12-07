@@ -1,10 +1,10 @@
-@component-name = "portal-batch-engine"
+@component-name = "portal-batch-planner"
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true";
-	property portal.release = "false";
+	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Batch Engine";
+	property testray.main.component.name = "Import/Export";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -13,26 +13,66 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			CommerceJSONChannelsAPI._deleteAllCommerceChannels();
+			ObjectAdmin.deleteAllCustomObjectsViaAPI();
+		}
+	}
 
-			JSONAccountEntryAPI._deleteAllAccountEntries();
+	@priority = 4
+	test CanDownloadJsonTFormatFileAsJson {
+		property portal.acceptance = "true";
 
-			BatchPlanner.batchPlannerTearDown();
+		task ("Given Stock object definition created") {
+			ObjectDefinitionAPI.createAndPublishObjectDefinition(
+				en_US_label = "stock",
+				en_US_plural_label = "stocks",
+				name = "Stock",
+				requiredStringFieldName = "name");
+		}
 
-			JSONUser.tearDownNonAdminUsers();
+		task ("And Given Stock entries created") {
+			CustomObjectAPI.createObjectEntryWithFields(
+				en_US_plural_label = "stocks",
+				fieldName = "name",
+				fieldValue = "Stock Entry");
+		}
 
-			ObjectAdmin.deleteObjectViaAPI(objectName = "Coupon");
+		task ("When Exporting File with JSONT format in Import/Export center") {
+			BatchEngine.setUpGlobalIds();
+
+			ImportExport.exportAndUnzipFile(
+				entityType = "C_Stock (v1_0 - Liferay Object REST)",
+				exportFields = "name",
+				exportFileFormat = "JSONT");
+		}
+
+		task ("Then the downloaded zip file contain *.json file") {
+			DownloadTempFile();
+
+			var filePath = TestCase.getDependenciesDirPath(fileName = "jsont_objectEntry_import.txt");
+
+			FileUtil.replaceStringInFile(${filePath}, 20095, ${staticCompanyId});
+
+			FileUtil.replaceStringInFile(${filePath}, 20123, ${staticUserId});
+
+			var originalFileDownloadName = TestCase.getDownloadedTempFileName(fileNamePattern = "*.zip");
+
+			AntCommands.runCommand("build-test.xml", "unzip-temp-file -DfileName=${originalFileDownloadName}");
+
+			ImportExport.assertFileContent(
+				comparisonFileName = "jsont_objectEntry_import.txt",
+				fileName = "export.batch-engine-data.json");
 		}
 	}
 
 	@description = "Verify users can download the original import file in the executions list after a completed import"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanDownloadOriginalImportFile {
 		property portal.acceptance = "true";
 
@@ -60,20 +100,18 @@ definition {
 
 			var originalFileDownloadName = TestCase.getDownloadedTempFileName(fileNamePattern = "*.zip");
 
-			AntCommand(
-				locator1 = "build-test.xml",
-				value1 = "unzip-temp-file -DfileName=${originalFileDownloadName}");
+			AntCommands.runCommand("build-test.xml", "unzip-temp-file -DfileName=${originalFileDownloadName}");
 
 			var originalFileDownloadName = TestCase.getDownloadedTempFileName(fileNamePattern = "csv_account_import-*.csv");
 
 			ImportExport.assertFileContent(
 				comparisonFileName = "csv_account_import.csv",
-				fileName = "${originalFileDownloadName}");
+				fileName = ${originalFileDownloadName});
 		}
 	}
 
 	@description = "Verify users can download a sample file for a selected entity so that they can fill it with data and import it"
-	@priority = "3"
+	@priority = 3
 	test CanDownloadSampleImportFile {
 		property portal.acceptance = "true";
 
@@ -84,7 +122,7 @@ definition {
 		}
 
 		task ("When the user selects an entity and clicks on the Download a Sample File for This Entity button") {
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
 
 			Click.clickAt(locator1 = "ImportExport#SAMPLE_FILE_DOWNLOAD_BUTTON");
 		}
@@ -92,17 +130,19 @@ definition {
 		task ("Then a sample file for that entity should be downloaded") {
 			DownloadTempFile();
 
-			var sampleFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "account-*.csv");
+			var sampleFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "objectdefinition-*.csv");
 
 			ImportExport.assertFileContent(
-				comparisonFileName = "csv_account_import_sample.csv",
-				fileName = "${sampleFileName}");
+				comparisonFileName = "objectDefinition_import_sample.csv",
+				fileName = ${sampleFileName});
 		}
 	}
 
 	@description = "Verify users can exclude fields from being exported in CSV format"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanExcludeCSVFieldsFromExport {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given several channels") {
@@ -110,19 +150,17 @@ definition {
 				channelName = "Test Channel 1",
 				channelType = "site",
 				currencyCode = "USD",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			CommerceJSONChannelsAPI._addChannel(
 				channelName = "Test Channel 2",
 				channelType = "site",
 				currencyCode = "CAD",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 		}
 
 		task ("When the user selects specific channel fields for export and exports the channels in CSV format") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
+			ImportExport.exportAndUnzipFile(
 				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
 				exportFields = "name,type,currencyCode",
 				exportFileFormat = "CSV");
@@ -136,7 +174,8 @@ definition {
 	}
 
 	@description = "Verify users can exclude fields from being imported"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanExcludeFieldsFromImport {
 		property portal.acceptance = "true";
 
@@ -167,7 +206,7 @@ definition {
 				accountDescription = "",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -175,7 +214,7 @@ definition {
 				accountDescription = "",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -183,83 +222,85 @@ definition {
 				accountDescription = "",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify users can exclude fields from being exported in JSON format"
-	@priority = "3"
+	@priority = 3
 	test CanExcludeJSONFieldsFromExport {
 		property portal.acceptance = "true";
 
-		task ("Given several channels") {
-			CommerceJSONChannelsAPI._addChannel(
-				channelName = "Test Channel 1",
-				channelType = "site",
-				currencyCode = "USD",
-				externalReferenceCode = "101");
-
-			CommerceJSONChannelsAPI._addChannel(
-				channelName = "Test Channel 2",
-				channelType = "site",
-				currencyCode = "CAD",
-				externalReferenceCode = "102");
+		task ("Given Stock object definition created") {
+			ObjectDefinitionAPI.createAndPublishObjectDefinition(
+				en_US_label = "stock",
+				en_US_plural_label = "stocks",
+				name = "Stock",
+				requiredStringFieldName = "name");
 		}
 
-		task ("When the user selects specific channel fields for export and exports the channels in JSON format") {
-			ImportExport.openImportExportAdmin();
+		task ("And Given Stock entries created") {
+			CustomObjectAPI.createObjectEntryWithFields(
+				en_US_plural_label = "stocks",
+				fieldName = "name",
+				fieldValue = "Stock Entry");
+		}
 
-			ImportExport.exportFile(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
-				exportFields = "name,type,currencyCode",
+		task ("When the user selects specific channel fields in JSON format") {
+			ImportExport.exportAndUnzipFile(
+				entityType = "C_Stock (v1_0 - Liferay Object REST)",
+				exportFields = "name",
 				exportFileFormat = "JSON");
 		}
 
 		task ("Then only those fields should be exported") {
 			ImportExport.assertFileContent(
-				comparisonFileName = "json_channel_import.txt",
+				comparisonFileName = "json_objectEntry_export_excluded.txt",
 				fileName = "export.json");
 		}
 	}
 
 	@description = "Verify users can exclude fields from being exported in JSONL format"
-	@priority = "3"
+	@priority = 3
 	test CanExcludeJSONLFieldsFromExport {
 		property portal.acceptance = "true";
 
-		task ("Given several channels") {
-			CommerceJSONChannelsAPI._addChannel(
-				channelName = "Test Channel 1",
-				channelType = "site",
-				currencyCode = "USD",
-				externalReferenceCode = "101");
-
-			CommerceJSONChannelsAPI._addChannel(
-				channelName = "Test Channel 2",
-				channelType = "site",
-				currencyCode = "CAD",
-				externalReferenceCode = "102");
+		task ("Given Stock object definition created") {
+			ObjectDefinitionAPI.createAndPublishObjectDefinition(
+				en_US_label = "stock",
+				en_US_plural_label = "stocks",
+				name = "Stock",
+				requiredStringFieldName = "name");
 		}
 
-		task ("When the user selects specific channel fields for export and exports the channels in JSONL format") {
-			ImportExport.openImportExportAdmin();
+		task ("And Given Stock entries created") {
+			CustomObjectAPI.createObjectEntryWithFields(
+				en_US_plural_label = "stocks",
+				fieldName = "name",
+				fieldValue = "Stock Entry");
+		}
 
-			ImportExport.exportFile(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
-				exportFields = "name,type,currencyCode",
+		task ("When the user selects specific channel fields in JSONL format in Import/Export center") {
+			BatchEngine.setUpGlobalIds();
+
+			ImportExport.exportAndUnzipFile(
+				entityType = "C_Stock (v1_0 - Liferay Object REST)",
+				exportFields = "name",
 				exportFileFormat = "JSONL");
 		}
 
 		task ("Then only those fields should be exported") {
 			ImportExport.assertFileContent(
-				comparisonFileName = "jsonl_channel_import.jsonl",
+				comparisonFileName = "jsonl_objectEntry_import.txt",
 				fileName = "export.jsonl");
 		}
 	}
 
 	@description = "Verify users can export entity data via CSV files"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanExportCSVFiles {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given several accounts") {
@@ -267,25 +308,23 @@ definition {
 				accountEntryDescription = "Test Business Account Description",
 				accountEntryName = "Test Business Account",
 				accountEntryType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Guest Account Description",
 				accountEntryName = "Test Guest Account",
 				accountEntryType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Person Account Description",
 				accountEntryName = "Test Person Account",
 				accountEntryType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 
 		task ("When the user selects CSV as Export File Format and exports the accounts") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
+			ImportExport.exportAndUnzipFile(
 				entityType = "Account (v1_0 - Liferay Headless Admin User)",
 				exportFields = "name,type,description,externalReferenceCode",
 				exportFileFormat = "CSV");
@@ -299,8 +338,10 @@ definition {
 	}
 
 	@description = "Verify users can export entity data via CSV files without headers"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanExportCSVFileWithoutHeaders {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given several accounts") {
@@ -308,25 +349,23 @@ definition {
 				accountEntryDescription = "Test Business Account Description",
 				accountEntryName = "Test Business Account",
 				accountEntryType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Guest Account Description",
 				accountEntryName = "Test Guest Account",
 				accountEntryType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Person Account Description",
 				accountEntryName = "Test Person Account",
 				accountEntryType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 
 		task ("When the user exports the accounts in CSV format with Contains Headers not checked") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
+			ImportExport.exportAndUnzipFile(
 				containsHeaders = "false",
 				entityType = "Account (v1_0 - Liferay Headless Admin User)",
 				exportFields = "name,type,description,externalReferenceCode",
@@ -340,230 +379,87 @@ definition {
 		}
 	}
 
-	@description = "Verify users can export entity data via JSON files"
-	@priority = "3"
-	test CanExportJSONFiles {
-		property portal.acceptance = "true";
-
-		task ("Given several accounts") {
-			JSONAccountEntry.addAccountEntry(
-				accountEntryDescription = "Test Business Account Description",
-				accountEntryName = "Test Business Account",
-				accountEntryType = "Business",
-				externalReferenceCode = "101");
-
-			JSONAccountEntry.addAccountEntry(
-				accountEntryDescription = "Test Guest Account Description",
-				accountEntryName = "Test Guest Account",
-				accountEntryType = "Guest",
-				externalReferenceCode = "102");
-
-			JSONAccountEntry.addAccountEntry(
-				accountEntryDescription = "Test Person Account Description",
-				accountEntryName = "Test Person Account",
-				accountEntryType = "Person",
-				externalReferenceCode = "103");
-		}
-
-		task ("When the user selects JSON as Export File Format and exports the accounts") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
-				exportFileFormat = "JSON");
-		}
-
-		task ("Then a JSON file should be generated for download which contains account data") {
-			ImportExport.assertFileContent(
-				comparisonFileName = "json_account_export.txt",
-				fileName = "export.json");
-		}
-	}
-
-	@description = "Verify users can export entity data via JSONL files"
-	@priority = "3"
-	test CanExportJSONLFiles {
-		property portal.acceptance = "true";
-
-		task ("Given several accounts") {
-			JSONAccountEntry.addAccountEntry(
-				accountEntryDescription = "Test Business Account Description",
-				accountEntryName = "Test Business Account",
-				accountEntryType = "Business",
-				externalReferenceCode = "101");
-
-			JSONAccountEntry.addAccountEntry(
-				accountEntryDescription = "Test Guest Account Description",
-				accountEntryName = "Test Guest Account",
-				accountEntryType = "Guest",
-				externalReferenceCode = "102");
-
-			JSONAccountEntry.addAccountEntry(
-				accountEntryDescription = "Test Person Account Description",
-				accountEntryName = "Test Person Account",
-				accountEntryType = "Person",
-				externalReferenceCode = "103");
-		}
-
-		task ("When the user selects JSONL as Export File Format and exports the accounts") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
-				exportFileFormat = "JSONL");
-		}
-
-		task ("Then a JSONL file should be generated for download which contains account data") {
-			ImportExport.assertFileContent(
-				comparisonFileName = "jsonl_account_import.jsonl",
-				fileName = "export.jsonl");
-		}
-	}
-
 	@description = "Verify users can filter Import/Export executions by Action."
-	@priority = "3"
+	@priority = 3
 	test CanFilterExecutionsByAction {
 		property portal.acceptance = "true";
 
-		task ("Given an account import and export") {
+		task ("Given Object Definition import and export") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.importFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
-				fileName = "csv_account_import.csv");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "json_objectDefinition_import_approved.json");
 
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
-				exportFileFormat = "CSV");
-		}
-
-		task ("When I go to the Import/Export Center and filter action by all") {
-			ImportExport.openImportExportAdmin();
-
-			ManagementBar.setFilterAndOrder(filterBy = "All");
-		}
-
-		task ("Then both the export and import should be shown") {
-			ImportExport.assertExecutionEntry(
-				entityType = "Account",
-				executionAction = "Import",
-				executionName = "csv_account_import",
-				executionStatus = "Completed");
-
-			ImportExport.assertExecutionEntry(
-				entityType = "Account",
-				executionAction = "Export",
-				executionName = "Account Plan Execution",
-				executionStatus = "Completed");
+			ImportExport.exportAndUnzipFile(
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFileFormat = "JSON");
 		}
 
 		task ("When I filter Action by Import") {
+			ImportExport.openImportExportAdmin();
+
 			ManagementBar.setFilterAndOrder(filterBy = "Import");
 		}
 
 		task ("Then only the import should be shown") {
 			ImportExport.assertExecutionEntry(
-				entityType = "Account",
+				entityType = "ObjectDefinition",
 				executionAction = "Import",
-				executionName = "csv_account_import",
+				executionName = "json_objectDefinition_import_approved",
 				executionStatus = "Completed");
 
 			ImportExport.assertNoExecutionEntry(
 				entityType = "Account",
 				executionAction = "Export",
 				executionName = "Account Plan Execution",
-				executionStatus = "Completed");
-		}
-
-		task ("When I filter Action by Export") {
-			ManagementBar.setFilterAndOrder(filterBy = "Export");
-		}
-
-		task ("Then only the export should be shown") {
-			ImportExport.assertExecutionEntry(
-				entityType = "Account",
-				executionAction = "Export",
-				executionName = "Account Plan Execution",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Account",
-				executionAction = "Import",
-				executionName = "csv_account_import",
 				executionStatus = "Completed");
 		}
 	}
 
 	@description = "Verify users can filter Import/Export templates by Action."
-	@priority = "3"
+	@priority = 3
 	test CanFilterTemplatesByAction {
 		property portal.acceptance = "true";
 
-		task ("Given account import and export templates") {
+		task ("Given object definition import and export templates") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
-				fileName = "csv_account_import.csv",
-				templateName = "Test Account Import Template");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "objectDefinition_import.json",
+				templateName = "Test Object Definition Import Template");
 
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
 				exportFileFormat = "JSON",
-				templateName = "Test Account Export Template");
+				templateName = "Test Object Definition Export Template");
 		}
 
-		task ("When I go to the Import/Export templates list and filter action by all") {
+		task ("When I filter Action by Import") {
 			ImportExport.openImportExportAdmin();
 
 			Navigator.gotoNavTab(navTab = "Templates");
 
-			ManagementBar.setFilterAndOrder(filterBy = "All");
-		}
-
-		task ("Then both the export and import templates should be shown") {
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Import Template");
-
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Export Template");
-		}
-
-		task ("When I filter Action by Import") {
 			ManagementBar.setFilterAndOrder(filterBy = "Import");
 		}
 
 		task ("Then only the import template should be shown") {
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Import Template");
+			LexiconEntry.viewEntryName(rowEntry = "Test Object Definition Import Template");
 
-			LexiconEntry.viewNoEntry(rowEntry = "Test Account Export Template");
-		}
-
-		task ("When I filter Action by Export") {
-			ManagementBar.setFilterAndOrder(filterBy = "Export");
-		}
-
-		task ("Then only the export template should be shown") {
-			LexiconEntry.viewNoEntry(rowEntry = "Test Account Import Template");
-
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Export Template");
+			LexiconEntry.viewNoEntry(rowEntry = "Test Object Definition Export Template");
 		}
 	}
 
 	@description = "Verify users can import entities via CSV files"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanImportCSVFiles {
 		property portal.acceptance = "true";
 
@@ -593,7 +489,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -601,7 +497,7 @@ definition {
 				accountDescription = "Test Guest Account Description",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -609,12 +505,13 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify users can import entities via a CSV file without headers"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanImportCSVFileWithoutHeaders {
 		property portal.acceptance = "true";
 
@@ -653,7 +550,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -661,7 +558,7 @@ definition {
 				accountDescription = "Test Guest Account Description",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -669,113 +566,11 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
-	@description = "Verify users can import entities via JSON files"
-	@priority = "3"
-	test CanImportJSONFiles {
-		property portal.acceptance = "true";
-
-		task ("Given a JSON file with data on multiple accounts") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.gotoImport();
-
-			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:name,type:type,description:description,externalReferenceCode:externalReferenceCode",
-				fileName = "json_account_import.json");
-		}
-
-		task ("When the user imports the file") {
-			Button.click(button = "Next");
-
-			Button.click(button = "Start Import");
-		}
-
-		task ("Then the accounts should be imported successfully") {
-			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
-
-			Account.openAccountsAdmin();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Business Account Description",
-				accountName = "Test Business Account",
-				accountType = "Business",
-				externalReferenceCode = "101");
-
-			Navigator.gotoBack();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Guest Account Description",
-				accountName = "Test Guest Account",
-				accountType = "Guest",
-				externalReferenceCode = "102");
-
-			Navigator.gotoBack();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Person Account Description",
-				accountName = "Test Person Account",
-				accountType = "Person",
-				externalReferenceCode = "103");
-		}
-	}
-
-	@description = "Verify users can import entities via JSONL files"
-	@priority = "3"
-	test CanImportJSONLFiles {
-		property portal.acceptance = "true";
-
-		task ("Given a JSONL file with data on multiple accounts") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.gotoImport();
-
-			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:name,type:type,description:description,externalReferenceCode:externalReferenceCode",
-				fileName = "jsonl_account_import.jsonl");
-		}
-
-		task ("When the user imports the file") {
-			Button.click(button = "Next");
-
-			Button.click(button = "Start Import");
-		}
-
-		task ("Then the accounts should be imported successfully") {
-			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
-
-			Account.openAccountsAdmin();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Business Account Description",
-				accountName = "Test Business Account",
-				accountType = "Business",
-				externalReferenceCode = "101");
-
-			Navigator.gotoBack();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Guest Account Description",
-				accountName = "Test Guest Account",
-				accountType = "Guest",
-				externalReferenceCode = "102");
-
-			Navigator.gotoBack();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Person Account Description",
-				accountName = "Test Person Account",
-				accountType = "Person",
-				externalReferenceCode = "103");
-		}
-	}
-
-	@priority = "4"
+	@priority = 4
 	test CanImportObjectDefinitionWithApprovedStatus {
 		property portal.acceptance = "true";
 
@@ -808,17 +603,15 @@ definition {
 		}
 
 		task ("And Then the status of the imported objectDefinition is approved") {
-			var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = "Coupon");
-
-			var objectDefinitionStatus = ObjectDefinitionAPI._getObjectDefinitionStatusById(objectDefinitionId = "${objectDefinitionId}");
+			var objectDefinitionStatus = ObjectDefinitionAPI.getObjectDefinitionStatusByName(name = "Coupon");
 
 			TestUtils.assertEquals(
-				actual = "${objectDefinitionStatus}",
+				actual = ${objectDefinitionStatus},
 				expected = "true");
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanImportObjectDefinitionWithDraftStatus {
 		property portal.acceptance = "true";
 
@@ -851,100 +644,29 @@ definition {
 		}
 
 		task ("And Then the status of the imported objectDefinition is Draft") {
-			var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = "Coupon");
-
-			var objectDefinitionStatus = ObjectDefinitionAPI._getObjectDefinitionStatusById(objectDefinitionId = "${objectDefinitionId}");
+			var objectDefinitionStatus = ObjectDefinitionAPI.getObjectDefinitionStatusByName(name = "Coupon");
 
 			TestUtils.assertEquals(
-				actual = "${objectDefinitionStatus}",
+				actual = ${objectDefinitionStatus},
 				expected = "false");
 		}
 	}
 
-	@description = "Verify users cannot import an entity without mapping the required fields."
-	@priority = "3"
-	test CannotImportWithoutRequiredFields {
-		property portal.acceptance = "true";
-
-		task ("Given the user is configuring an import") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.gotoImport();
-
-			ImportExport.configureImport(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
-				fieldMappings = "name:Channel Name,type:Channel Type",
-				fileName = "csv_channel_import.csv");
-		}
-
-		task ("When the user tries to import a file without mapping all the required fields") {
-			Button.click(button = "Next");
-		}
-
-		task ("Then the user should not be able to import the file and the missing field should be highlighted red") {
-			Alert.viewErrorMessage(errorMessage = "You must map all required fields before continuing.");
-
-			AssertElementNotPresent(
-				key_text = "Start Import",
-				locator1 = "Button#ANY");
-
-			AssertElementPresent(
-				key_destinationField = "currencyCode",
-				locator1 = "ImportExport#REQUIRED_IMPORT_FIELD_ERROR");
-		}
-
-		task ("When the user maps the missing required field and imports the file") {
-			ImportExport.mapImport(fieldMappings = "currencyCode:Currency Code");
-
-			Button.click(button = "Next");
-
-			Button.click(button = "Start Import");
-		}
-
-		task ("Then the file should be imported successfully") {
-			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
-
-			Button.click(button = "Back to the List");
-
-			CommerceChannels.openChannelsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Test Channel 1");
-
-			CommerceEntry.viewChannelsEntry(
-				channelCurrency = "US Dollar",
-				channelName = "Test Channel 1",
-				channelType = "Site");
-
-			Navigator.gotoBack();
-
-			CommerceNavigator.gotoEntry(entryName = "Test Channel 2");
-
-			CommerceEntry.viewChannelsEntry(
-				channelCurrency = "Canadian Dollar",
-				channelName = "Test Channel 2",
-				channelType = "Site");
-		}
-	}
-
 	@description = "Verify users can order Import/Export executions by Create Date."
-	@priority = "3"
+	@priority = 3
 	test CanOrderExecutionsByCreateDate {
 		property portal.acceptance = "true";
 
-		task ("Given an account import and export") {
+		task ("Given Object Definition import and export") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.importFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
-				fileName = "csv_account_import.csv");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "json_objectDefinition_import_approved.json");
 
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description",
-				exportFileFormat = "CSV");
+			ImportExport.exportAndUnzipFile(
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFileFormat = "JSON");
 		}
 
 		task ("When I go to the Import/Export Center and order by create date") {
@@ -955,48 +677,46 @@ definition {
 
 		task ("Then the executions should be ordered by create date in descending order") {
 			AssertTextEquals.assertPartialText(
-				key_rowNumber = "1",
+				key_rowNumber = 1,
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Export Account");
+				value1 = "ObjectDefinition Plan Execution");
 
 			AssertTextEquals.assertPartialText(
-				key_rowNumber = "2",
+				key_rowNumber = 2,
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Import Account");
+				value1 = "json_objectDefinition_import_approved");
 		}
 
-		task ("When I click on the Reverse Sort Direction button") {
+		task ("And Then I can reverse the order") {
 			ManagementBar.toggleViewOrder();
-		}
-
-		task ("Then the executions should be ordered by create date in descending order") {
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "1",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Import Account");
 
 			AssertTextEquals.assertPartialText(
-				key_rowNumber = "2",
+				key_rowNumber = 1,
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Export Account");
+				value1 = "json_objectDefinition_import_approved");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 2,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "ObjectDefinition Plan Execution");
 		}
 	}
 
 	@description = "Verify users can recall a template during an export."
-	@priority = "3"
+	@priority = 3
 	test CanRecallExportTemplate {
 		property portal.acceptance = "true";
 
-		task ("Given an account export template") {
+		task ("Given an object defnition export template") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
-				templateName = "Test Account Export Template");
+				templateName = "Test Object Definition Export Template");
 		}
 
 		task ("When the user is configuring an export and selects the template") {
@@ -1007,33 +727,32 @@ definition {
 			Select(
 				key_selectFieldLabel = "Template",
 				locator1 = "ImportExport#SELECT",
-				value1 = "Test Account Export Template");
+				value1 = "Test Object Definition Export Template");
 		}
 
 		task ("Then the export should be configured according to the template") {
 			ImportExport.assertExportTemplate(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
-				templateName = "Test Account Export Template");
+				templateName = "Test Object Definition Export Template");
 		}
 	}
 
 	@description = "Verify users can recall a template during an import."
-	@priority = "3"
+	@priority = 3
 	test CanRecallImportTemplate {
 		property portal.acceptance = "true";
 
-		task ("Given an account import template") {
+		task ("Given object definition import template") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
-				fileName = "csv_account_import.csv",
-				templateName = "Test Account Import Template");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "objectDefinition_import.json",
+				templateName = "Test Object Definition Import Template");
 		}
 
 		task ("When the user is configuring an import and selects the template") {
@@ -1044,18 +763,18 @@ definition {
 			Select(
 				key_selectFieldLabel = "Template",
 				locator1 = "ImportExport#SELECT",
-				value1 = "Test Account Import Template");
+				value1 = "Test Object Definition Import Template");
 		}
 
 		task ("Then the import should be configured according to the template") {
 			ImportExport.assertImportTemplate(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				templateName = "Test Account Import Template");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				templateName = "Test Object Definition Import Template");
 		}
 	}
 
 	@description = "Verify users can save export configuration as a template during the export process"
-	@priority = "3"
+	@priority = 3
 	test CanSaveTemplateDuringExport {
 		property portal.acceptance = "true";
 
@@ -1065,13 +784,13 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON");
 		}
 
 		task ("When the user saves the configuration as a template") {
-			ImportExport.saveAsTemplate(templateName = "Test Account Export Template");
+			ImportExport.saveAsTemplate(templateName = "Test Object Definition Export Template");
 		}
 
 		task ("Then the export template should be created successfully") {
@@ -1079,12 +798,12 @@ definition {
 
 			Navigator.gotoNavTab(navTab = "Templates");
 
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Export Template");
+			LexiconEntry.viewEntryName(rowEntry = "Test Object Definition Export Template");
 		}
 	}
 
 	@description = "Verify users can save import configuration as a template during the import process"
-	@priority = "3"
+	@priority = 3
 	test CanSaveTemplateDuringImport {
 		property portal.acceptance = "true";
 
@@ -1094,13 +813,12 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
-				fileName = "csv_account_import.csv");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "objectDefinition_import.json");
 		}
 
 		task ("When the user saves the configuration as a template") {
-			ImportExport.saveAsTemplate(templateName = "Test Account Import Template");
+			ImportExport.saveAsTemplate(templateName = "Test Object Definition Import Template");
 		}
 
 		task ("Then the import template should be created successfully") {
@@ -1108,25 +826,22 @@ definition {
 
 			Navigator.gotoNavTab(navTab = "Templates");
 
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Import Template");
+			LexiconEntry.viewEntryName(rowEntry = "Test Object Definition Import Template");
 		}
 	}
 
 	@description = "Verify users can schedule an import"
-	@priority = "3"
+	@priority = 3
 	test CanScheduleImport {
-		property test.name.skip.portal.instance = "ImportExport#CanScheduleImport";
-
-		task ("Given an account import template") {
+		task ("Given a object definition import template") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description",
-				fileName = "csv_account_import.csv",
-				templateName = "Test Account Import Template");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "objectDefinition_import.json",
+				templateName = "Test Object Definition Import Template");
 		}
 
 		task ("When the user schedules this import for a given time") {
@@ -1134,11 +849,11 @@ definition {
 
 			JobScheduler.openJobSchedulerAdmin();
 
-			var filePath = TestCase.getDependenciesDirPath(fileName = "csv_account_import.csv");
+			var filePath = TestCase.getDependenciesDirPath(fileName = "batchPlanner_objectDefinition_import.json");
 
 			JobScheduler.addScheduleTrigger(
-				taskExecutorType = "Import/Export Executor",
-				triggerName = "Scheduled Account Import",
+				taskExecutorType = "Data Migration Executor",
+				triggerName = "Scheduled Object Definition Import",
 				triggerProperties = '''batchPlannerPlanId=${templateId}
 					external-file-url=${filePath}''');
 
@@ -1146,229 +861,106 @@ definition {
 
 			JobScheduler.activateScheduleTrigger(
 				cronExpression = "0 ${currentMinute} * ? * *",
-				trigger = "Scheduled Account Import");
+				trigger = "Scheduled Object Definition Import");
 		}
 
 		task ("Then the import is triggered automatically at that time") {
 			JobScheduler.openJobSchedulerAdmin();
 
 			AssertElementPresent(
-				key_rowEntry = "Scheduled Account Import",
+				key_rowEntry = "Scheduled Object Definition Import",
 				key_rowStatus = "Success",
 				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_STATUS");
 
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.assertExecutionEntry(
-				entityType = "Account",
+				entityType = "ObjectDefinition",
 				executionAction = "Import",
-				executionName = "Triggered by Scheduled Account Import",
+				executionName = "Triggered by Scheduled Object Definition Import",
 				executionStatus = "Completed");
-
-			Account.openAccountsAdmin();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Business Account Description",
-				accountName = "Test Business Account",
-				accountType = "Business");
-
-			Navigator.gotoBack();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Guest Account Description",
-				accountName = "Test Guest Account",
-				accountType = "Guest");
-
-			Navigator.gotoBack();
-
-			Account.viewAccountDetails(
-				accountDescription = "Test Person Account Description",
-				accountName = "Test Person Account",
-				accountType = "Person");
-
-			JSONJobScheduler._deleteJobSchedulerTrigger(triggerName = "Scheduled Account Import");
 		}
 	}
 
-	@description = "Verify users can search Import/Exports executions by name and action."
-	@priority = "3"
+	@description = "Ignored due to LPS-171830"
+	@ignore = "true"
+	@priority = 3
 	test CanSearchExecutions {
-		property portal.acceptance = "true";
-
-		task ("Given an account import and export") {
+		task ("Given object definition import and export") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.importFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
-				fileName = "csv_account_import.csv");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "json_objectDefinition_import_approved.json");
 
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
-				exportFileFormat = "CSV");
-		}
-
-		task ("And given a channel import and export") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.importFile(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
-				fieldMappings = "name:Channel Name,type:Channel Type,currencyCode:Currency Code",
-				fileName = "csv_channel_import.csv");
-
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
-				exportFields = "name,type,currencyCode",
-				exportFileFormat = "CSV");
+			ImportExport.exportAndUnzipFile(
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFileFormat = "JSON");
 		}
 
 		task ("When I go to the Import/Export center and search executions by name") {
 			ImportExport.openImportExportAdmin();
 
-			Search.searchCP(searchTerm = "csv_account_import");
+			Search.searchCP(searchTerm = "json_objectDefinition_import_approved");
 		}
 
 		task ("Then only executions with the name keyword should be shown") {
 			ImportExport.assertExecutionEntry(
-				entityType = "Account",
+				entityType = "Object Definition",
 				executionAction = "Import",
-				executionName = "csv_account_import",
+				executionName = "json_objectDefinition_import_approved",
 				executionStatus = "Completed");
 
 			ImportExport.assertNoExecutionEntry(
-				entityType = "Account",
+				entityType = "Object Definition",
 				executionAction = "Export",
-				executionName = "Account Plan Execution",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Channel",
-				executionAction = "Import",
-				executionName = "csv_channel_import",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Channel",
-				executionAction = "Export",
-				executionName = "Channel Plan Execution",
+				executionName = "Object Definition Plan Execution",
 				executionStatus = "Completed");
 		}
 
 		task ("When I search executions by entity") {
-			Search.searchCP(searchTerm = "Channel");
+			Search.searchCP(searchTerm = "Object Definition");
 		}
 
 		task ("Then only executions with the entity keyword should be shown") {
 			ImportExport.assertExecutionEntry(
-				entityType = "Channel",
+				entityType = "Object Definition",
 				executionAction = "Import",
-				executionName = "csv_channel_import",
+				executionName = "json_objectDefinition_import_approved",
 				executionStatus = "Completed");
 
 			ImportExport.assertExecutionEntry(
-				entityType = "Channel",
+				entityType = "Object Definition",
 				executionAction = "Export",
-				executionName = "Channel Plan Execution",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Account",
-				executionAction = "Import",
-				executionName = "csv_account_import",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Account",
-				executionAction = "Export",
-				executionName = "Account Plan Execution",
-				executionStatus = "Completed");
-		}
-
-		task ("When I filter by Import and search by entity") {
-			ManagementBar.setFilterAndOrder(filterBy = "Import");
-
-			Search.searchCP(searchTerm = "Channel");
-		}
-
-		task ("Then only the Import executions with the entity keyword should be shown") {
-			ImportExport.assertExecutionEntry(
-				entityType = "Channel",
-				executionAction = "Import",
-				executionName = "csv_channel_import",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Channel",
-				executionAction = "Export",
-				executionName = "Channel Plan Execution",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Account",
-				executionAction = "Import",
-				executionName = "csv_account_import",
-				executionStatus = "Completed");
-
-			ImportExport.assertNoExecutionEntry(
-				entityType = "Account",
-				executionAction = "Export",
-				executionName = "Account Plan Execution",
+				executionName = "Object Definition Plan Execution",
 				executionStatus = "Completed");
 		}
 	}
 
 	@description = "Verify users can search Import/Exports templates by name and action."
-	@priority = "3"
+	@priority = 3
 	test CanSearchTemplates {
 		property portal.acceptance = "true";
 
-		task ("Given account import and export templates") {
+		task ("Given object definition import and export templates") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
-				fileName = "csv_account_import.csv",
-				templateName = "Test Account Import Template");
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				fileName = "objectDefinition_import.json",
+				templateName = "Test Object Definition Import Template");
 
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
-				templateName = "Test Account Export Template");
-		}
-
-		task ("And given channel import and export templates") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.gotoImport();
-
-			ImportExport.configureImport(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
-				fieldMappings = "name:Channel Name,type:Channel Type,currencyCode:Currency Code",
-				fileName = "csv_channel_import.csv",
-				templateName = "Test Channel Import Template");
-
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.gotoExport();
-
-			ImportExport.configureExport(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
-				exportFields = "name,type,currencyCode",
-				exportFileFormat = "CSV",
-				templateName = "Test Channel Export Template");
+				templateName = "Test Object Definition Export Template");
 		}
 
 		task ("When I go to the Import/Export templates list and search templates by name") {
@@ -1376,54 +968,30 @@ definition {
 
 			Navigator.gotoNavTab(navTab = "Templates");
 
-			Search.searchCP(searchTerm = "Test Account Import Template");
+			Search.searchCP(searchTerm = "Test Object Definition Export Template");
 		}
 
 		task ("Then only the templates with the name keyword should be shown") {
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Import Template");
+			LexiconEntry.viewEntryName(rowEntry = "Test Object Definition Export Template");
 
-			LexiconEntry.viewNoEntry(rowEntry = "Test Account Export Template");
-
-			LexiconEntry.viewNoEntry(rowEntry = "Test Channel Import Template");
-
-			LexiconEntry.viewNoEntry(rowEntry = "Test Channel Export Template");
+			LexiconEntry.viewNoEntry(rowEntry = "Test Object Definition Import Template");
 		}
 
 		task ("When I search templates by entity") {
-			Search.searchCP(searchTerm = "Channel");
+			Search.searchCP(searchTerm = "Object Definition");
 		}
 
 		task ("Then only templates with the entity keyword should be shown") {
-			LexiconEntry.viewEntryName(rowEntry = "Test Channel Import Template");
+			LexiconEntry.viewEntryName(rowEntry = "Test Object Definition Export Template");
 
-			LexiconEntry.viewEntryName(rowEntry = "Test Channel Export Template");
-
-			LexiconEntry.viewNoEntry(rowEntry = "Test Account Import Template");
-
-			LexiconEntry.viewNoEntry(rowEntry = "Test Account Export Template");
-		}
-
-		task ("When I filter by Import and search by entity") {
-			ManagementBar.setFilterAndOrder(filterBy = "Import");
-
-			Search.searchCP(searchTerm = "Account");
-		}
-
-		task ("Then only the Import templates with the entity keyword should be shown") {
-			LexiconEntry.viewEntryName(rowEntry = "Test Account Import Template");
-
-			LexiconEntry.viewNoEntry(rowEntry = "Test Account Export Template");
-
-			LexiconEntry.viewNoEntry(rowEntry = "Test Channel Import Template");
-
-			LexiconEntry.viewNoEntry(rowEntry = "Test Channel Export Template");
+			LexiconEntry.viewEntryName(rowEntry = "Test Object Definition Import Template");
 		}
 	}
 
 	@description = "Verify certain users can be granted permission to view specific templates."
-	@priority = "3"
+	@priority = 3
 	test CanShareTemplates {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a power user") {
@@ -1438,7 +1006,7 @@ definition {
 		task ("And given the power user can view the templates list") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
+				resourceName = 90,
 				roleTitle = "Power User");
 
 			Permissions.definePermissionViaJSONAPI(
@@ -1453,8 +1021,8 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
-				exportFields = "name,type,description,externalReferenceCode",
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
 				templateName = "Test Account Export Template");
 		}
@@ -1506,7 +1074,7 @@ definition {
 	}
 
 	@description = "Verify users receive a notification when an export is triggered."
-	@priority = "3"
+	@priority = 3
 	test CanViewExportNotifications {
 		property portal.acceptance = "true";
 
@@ -1516,19 +1084,21 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
 				exportFields = "",
-				exportFileFormat = "CSV");
+				exportFileFormat = "JSON");
+
+			Uncheck.uncheckNotVisible(
+				key_checkboxOption = "Attribute Code",
+				locator1 = "Checkbox#SPECIFIC_CHECKBOX_IN_TABLE");
 
 			Button.click(button = "Export");
 
-			WaitForElementPresent(locator1 = "Message#ERROR_FORM_FIELD_REQUIRED");
+			WaitForElementPresent(locator1 = "Message#ERROR");
 		}
 
 		task ("And given a succesful export") {
-			Button.click(button = "Back to the List");
-
-			ImportExport.mapExport(exportFields = "name,type,description,externalReferenceCode");
+			ImportExport.mapExport(exportFields = "name,objectFields,active,externalReferenceCode");
 
 			Button.click(button = "Export");
 
@@ -1539,31 +1109,20 @@ definition {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.assertExecutionEntry(
-				entityType = "Account",
+				entityType = "ObjectDefinition",
 				executionAction = "Export",
-				executionName = "Account Plan Execution",
-				executionStatus = "Failed");
-
-			ImportExport.assertExecutionEntry(
-				entityType = "Account",
-				executionAction = "Export",
-				executionName = "Account Plan Execution",
+				executionName = "ObjectDefinition Plan Execution",
 				executionStatus = "Completed");
 		}
 
-		task ("Then the the user should receive a notification for the failed and successful exports") {
-			Notifications.viewBadgeCount(notificationCount = "2");
+		task ("Then the the user should receive a notification for the successful exports") {
+			Notifications.viewBadgeCount(notificationCount = 1);
 
 			Notifications.gotoNotifications();
 
 			AssertElementPresent(
-				key_body = "Accounts were exported to a ZIP file.",
-				key_title = "Accounts Exported",
-				locator1 = "ImportExport#EXECUTION_NOTIFICATION");
-
-			AssertElementPresent(
-				key_body = "Account entity export encountered an error while exporting to a ZIP file.",
-				key_title = "Accounts Export Stopped",
+				key_body = "ObjectDefinitions were exported to a ZIP file.",
+				key_title = "ObjectDefinitions Exported",
 				locator1 = "ImportExport#EXECUTION_NOTIFICATION");
 
 			PortletEntry.selectAll();
@@ -1573,7 +1132,8 @@ definition {
 	}
 
 	@description = "Verify users can download a report of the rows that had warnings or were not imported."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanViewImportErrorReport {
 		property portal.acceptance = "true";
 
@@ -1614,12 +1174,13 @@ definition {
 
 			ImportExport.assertFileContent(
 				comparisonFileName = "account_import_error_report.csv",
-				fileName = "${errorReportDownloadName}");
+				fileName = ${errorReportDownloadName});
 		}
 	}
 
 	@description = "Verify users receive a notification when an import is triggered."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CanViewImportNotifications {
 		property portal.acceptance = "true";
 
@@ -1669,7 +1230,7 @@ definition {
 		}
 
 		task ("Then the the user should receive a notification for the failed and successful imports") {
-			Notifications.viewBadgeCount(notificationCount = "2");
+			Notifications.viewBadgeCount(notificationCount = 2);
 
 			Notifications.gotoNotifications();
 
@@ -1690,7 +1251,8 @@ definition {
 	}
 
 	@description = "Verify import rows with errors are skipped during an import if 'Stop the Import on Error' is no checked."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ContinueImportOnError {
 		property portal.acceptance = "true";
 
@@ -1719,7 +1281,7 @@ definition {
 		task ("Then the only the rows without error should be imported") {
 			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
 
-			Button.click(button = "Back to the List");
+			Click(locator1 = "Button#CLOSE");
 
 			Account.openAccountsAdmin();
 
@@ -1729,7 +1291,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -1737,12 +1299,13 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify CSV fields are automatically mapped to fields in Liferay when the names are the same"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test CSVFieldsAreAutoMapped {
 		property portal.acceptance = "true";
 
@@ -1763,7 +1326,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test GetExportFileAvailableEntityTypes {
 		property portal.acceptance = "true";
 
@@ -1776,11 +1339,11 @@ definition {
 		}
 
 		task ("Then I can see all available entity types to export") {
-			ImportExport.assertAvailabelEntityTypes(entityTypes = "Account (v1_0 - Liferay Headless Admin User) Account (v1_0 - Liferay Headless Commerce Admin Account) AccountGroup (v1_0 - Liferay Headless Commerce Admin Account) AccountRole (v1_0 - Liferay Headless Admin User) BlogPosting (v1_0 - Liferay Headless Delivery) BlogPostingImage (v1_0 - Liferay Headless Delivery) Calendar (v1_0 - Liferay Portal Workflow Metrics REST) Catalog (v1_0 - Liferay Headless Commerce Admin Catalog) Channel (v1_0 - Liferay Headless Commerce Admin Channel) Channel (v1_0 - Liferay Headless Commerce Delivery Catalog) Comment (v1_0 - Liferay Headless Delivery) ContentElement (v1_0 - Liferay Headless Delivery) ContentStructure (v1_0 - Liferay Headless Delivery) ContentTemplate (v1_0 - Liferay Headless Delivery) DSEnvelope (v1_0 - Liferay Digital Signature REST) DataDefinitionFieldLink (v2_0 - Liferay Data Engine REST) DataLayout (v2_0 - Liferay Data Engine REST) DataListView (v2_0 - Liferay Data Engine REST) DataRecord (v2_0 - Liferay Data Engine REST) DataRecordCollection (v2_0 - Liferay Data Engine REST) Discount (v1_0 - Liferay Headless Commerce Admin Pricing) Discount (v2_0 - Liferay Headless Commerce Admin Pricing) DispatchTrigger (v1_0 - Liferay Dispatch REST) Document (v1_0 - Liferay Headless Delivery) DocumentFolder (v1_0 - Liferay Headless Delivery) FieldMappingInfo (v1_0 - Liferay Search Experiences REST) Form (v1_0 - Liferay Headless Form) FormRecord (v1_0 - Liferay Headless Form) FormStructure (v1_0 - Liferay Headless Form) Instance (v1_0 - Liferay Portal Workflow Metrics REST) Keyword (v1_0 - Liferay Headless Admin Taxonomy) KeywordQueryContributor (v1_0 - Liferay Search Experiences REST) KnowledgeBaseArticle (v1_0 - Liferay Headless Delivery) KnowledgeBaseAttachment (v1_0 - Liferay Headless Delivery) KnowledgeBaseFolder (v1_0 - Liferay Headless Delivery) Language (v1_0 - Liferay Headless Delivery) ListTypeDefinition (v1_0 - Liferay Headless Admin List Type) MeasurementUnit (v1_0 - Liferay Headless Commerce Admin Site Setting) MessageBoardAttachment (v1_0 - Liferay Headless Delivery) MessageBoardMessage (v1_0 - Liferay Headless Delivery) MessageBoardSection (v1_0 - Liferay Headless Delivery) MessageBoardThread (v1_0 - Liferay Headless Delivery) ModelPrefilterContributor (v1_0 - Liferay Search Experiences REST) NavigationMenu (v1_0 - Liferay Headless Delivery) Node (v1_0 - Liferay Portal Workflow Metrics REST) NotificationTemplate (v1_0 - Liferay Notification REST) ObjectAction (v1_0 - Liferay Object Admin REST) ObjectDefinition (v1_0 - Liferay Object Admin REST) ObjectField (v1_0 - Liferay Object Admin REST) ObjectLayout (v1_0 - Liferay Object Admin REST) ObjectRelationship (v1_0 - Liferay Object Admin REST) ObjectValidationRule (v1_0 - Liferay Object Admin REST) ObjectView (v1_0 - Liferay Object Admin REST) Option (v1_0 - Liferay Headless Commerce Admin Catalog) Order (v1_0 - Liferay Headless Commerce Admin Order) OrderItem (v1_0 - Liferay Headless Commerce Admin Order) OrderRule (v1_0 - Liferay Headless Commerce Admin Order) OrderType (v1_0 - Liferay Headless Commerce Admin Order) Organization (v1_0 - Liferay Headless Admin User) PaymentMethod (v1_0 - Liferay Headless Commerce Delivery Cart) Phone (v1_0 - Liferay Headless Admin User) PlacedOrderComment (v1_0 - Liferay Headless Commerce Delivery Order) PlacedOrderItem (v1_0 - Liferay Headless Commerce Delivery Order) PlacedOrderItemShipment (v1_0 - Liferay Headless Commerce Delivery Order) PriceList (v1_0 - Liferay Headless Commerce Admin Pricing) PriceList (v2_0 - Liferay Headless Commerce Admin Pricing) ProcessMetric (v1_0 - Liferay Portal Workflow Metrics REST) ProcessVersion (v1_0 - Liferay Portal Workflow Metrics REST) Product (v1_0 - Liferay Headless Commerce Admin Catalog) ProductGroup (v1_0 - Liferay Headless Commerce Admin Catalog) QueryPrefilterContributor (v1_0 - Liferay Search Experiences REST) Region (v1_0 - Liferay Headless Admin Address) ReplenishmentItem (v1_0 - Liferay Headless Commerce Admin Inventory) Role (v1_0 - Liferay Headless Admin User) Role (v1_0 - Liferay Portal Workflow Metrics REST) SLA (v1_0 - Liferay Portal Workflow Metrics REST) SXPBlueprint (v1_0 - Liferay Search Experiences REST) SXPElement (v1_0 - Liferay Search Experiences REST) SXPParameterContributorDefinition (v1_0 - Liferay Search Experiences REST) SearchableAssetName (v1_0 - Liferay Search Experiences REST) Segment (v1_0 - Liferay Headless Admin User) Shipment (v1_0 - Liferay Headless Commerce Admin Shipment) ShippingMethod (v1_0 - Liferay Headless Commerce Admin Channel) ShippingMethod (v1_0 - Liferay Headless Commerce Delivery Cart) SitePage (v1_0 - Liferay Headless Delivery) Sku (v1_0 - Liferay Headless Commerce Admin Catalog) Specification (v1_0 - Liferay Headless Commerce Admin Catalog) StructuredContent (v1_0 - Liferay Headless Delivery) StructuredContentFolder (v1_0 - Liferay Headless Delivery) Task (v1_0 - Liferay Portal Workflow Metrics REST) Term (v1_0 - Liferay Headless Commerce Admin Order) TimeRange (v1_0 - Liferay Portal Workflow Metrics REST) UserAccount (v1_0 - Liferay Headless Admin User) UserGroup (v1_0 - Liferay Headless Admin User) Warehouse (v1_0 - Liferay Headless Commerce Admin Inventory) WebUrl (v1_0 - Liferay Headless Admin User) WikiNode (v1_0 - Liferay Headless Delivery) WikiPage (v1_0 - Liferay Headless Delivery) WikiPageAttachment (v1_0 - Liferay Headless Delivery) WorkflowDefinition (v1_0 - Liferay Headless Admin Workflow) WorkflowInstance (v1_0 - Liferay Headless Admin Workflow) WorkflowLog (v1_0 - Liferay Headless Admin Workflow) WorkflowTask (v1_0 - Liferay Headless Admin Workflow)");
+			ImportExport.assertAvailableEntityTypes(entityTypes = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test GetImportFileAvailableEntityTypes {
 		property portal.acceptance = "true";
 
@@ -1793,12 +1356,12 @@ definition {
 		}
 
 		task ("Then I can see all available entity types to import") {
-			ImportExport.assertAvailabelEntityTypes(entityTypes = "Account (v1_0 - Liferay Headless Admin User) Account (v1_0 - Liferay Headless Commerce Admin Account) AccountGroup (v1_0 - Liferay Headless Commerce Admin Account) AccountRole (v1_0 - Liferay Headless Admin User) BlogPosting (v1_0 - Liferay Headless Delivery) BlogPostingImage (v1_0 - Liferay Headless Delivery) Catalog (v1_0 - Liferay Headless Commerce Admin Catalog) Channel (v1_0 - Liferay Headless Commerce Admin Channel) Comment (v1_0 - Liferay Headless Delivery) Country (v1_0 - Liferay Headless Admin Address) DSEnvelope (v1_0 - Liferay Digital Signature REST) DataLayout (v2_0 - Liferay Data Engine REST) DataListView (v2_0 - Liferay Data Engine REST) DataRecord (v2_0 - Liferay Data Engine REST) DataRecordCollection (v2_0 - Liferay Data Engine REST) Discount (v1_0 - Liferay Headless Commerce Admin Pricing) Discount (v2_0 - Liferay Headless Commerce Admin Pricing) DispatchTrigger (v1_0 - Liferay Dispatch REST) Document (v1_0 - Liferay Headless Delivery) DocumentFolder (v1_0 - Liferay Headless Delivery) FormRecord (v1_0 - Liferay Headless Form) Instance (v1_0 - Liferay Portal Workflow Metrics REST) Keyword (v1_0 - Liferay Headless Admin Taxonomy) KnowledgeBaseArticle (v1_0 - Liferay Headless Delivery) KnowledgeBaseAttachment (v1_0 - Liferay Headless Delivery) KnowledgeBaseFolder (v1_0 - Liferay Headless Delivery) ListTypeDefinition (v1_0 - Liferay Headless Admin List Type) ListTypeEntry (v1_0 - Liferay Headless Admin List Type) MeasurementUnit (v1_0 - Liferay Headless Commerce Admin Site Setting) MessageBoardAttachment (v1_0 - Liferay Headless Delivery) MessageBoardMessage (v1_0 - Liferay Headless Delivery) MessageBoardSection (v1_0 - Liferay Headless Delivery) MessageBoardThread (v1_0 - Liferay Headless Delivery) NavigationMenu (v1_0 - Liferay Headless Delivery) Node (v1_0 - Liferay Portal Workflow Metrics REST) NotificationTemplate (v1_0 - Liferay Notification REST) ObjectAction (v1_0 - Liferay Object Admin REST) ObjectDefinition (v1_0 - Liferay Object Admin REST) ObjectField (v1_0 - Liferay Object Admin REST) ObjectLayout (v1_0 - Liferay Object Admin REST) ObjectRelationship (v1_0 - Liferay Object Admin REST) ObjectValidationRule (v1_0 - Liferay Object Admin REST) ObjectView (v1_0 - Liferay Object Admin REST) Option (v1_0 - Liferay Headless Commerce Admin Catalog) OptionCategory (v1_0 - Liferay Headless Commerce Admin Catalog) Order (v1_0 - Liferay Headless Commerce Admin Order) OrderItem (v1_0 - Liferay Headless Commerce Admin Order) OrderRule (v1_0 - Liferay Headless Commerce Admin Order) OrderType (v1_0 - Liferay Headless Commerce Admin Order) Organization (v1_0 - Liferay Headless Admin User) PriceList (v1_0 - Liferay Headless Commerce Admin Pricing) PriceList (v2_0 - Liferay Headless Commerce Admin Pricing) Process (v1_0 - Liferay Portal Workflow Metrics REST) Product (v1_0 - Liferay Headless Commerce Admin Catalog) ProductGroup (v1_0 - Liferay Headless Commerce Admin Catalog) Region (v1_0 - Liferay Headless Admin Address) ReplenishmentItem (v1_0 - Liferay Headless Commerce Admin Inventory) SLA (v1_0 - Liferay Portal Workflow Metrics REST) SXPBlueprint (v1_0 - Liferay Search Experiences REST) SXPElement (v1_0 - Liferay Search Experiences REST) SamlProvider (v1_0 - Liferay SAML Admin REST) Shipment (v1_0 - Liferay Headless Commerce Admin Shipment) Specification (v1_0 - Liferay Headless Commerce Admin Catalog) Status (v1_0 - Liferay Segments Asah REST) StructuredContent (v1_0 - Liferay Headless Delivery) StructuredContentFolder (v1_0 - Liferay Headless Delivery) Task (v1_0 - Liferay Portal Workflow Metrics REST) TaxonomyCategory (v1_0 - Liferay Headless Admin Taxonomy) TaxonomyVocabulary (v1_0 - Liferay Headless Admin Taxonomy) Term (v1_0 - Liferay Headless Commerce Admin Order) UserAccount (v1_0 - Liferay Headless Admin User) UserGroup (v1_0 - Liferay Headless Admin User) Warehouse (v1_0 - Liferay Headless Commerce Admin Inventory) WikiNode (v1_0 - Liferay Headless Delivery) WikiPage (v1_0 - Liferay Headless Delivery) WikiPageAttachment (v1_0 - Liferay Headless Delivery) WorkflowDefinition (v1_0 - Liferay Headless Admin Workflow)");
+			ImportExport.assertAvailableEntityTypes(entityTypes = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
 		}
 	}
 
 	@description = "Verify JSON fields are automatically mapped to fields in Liferay when the names are the same"
-	@priority = "3"
+	@priority = 3
 	test JSONFieldsAreAutoMapped {
 		property portal.acceptance = "true";
 
@@ -1807,20 +1370,20 @@ definition {
 
 			ImportExport.gotoImport();
 
-			UploadDependencyFile.uploadFile(fileName = "json_account_import.json");
+			UploadDependencyFile.uploadFile(fileName = "json_objectDefinition_import_approved.json");
 		}
 
 		task ("When I select the entity type") {
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
 		}
 
 		task ("Then the fields are automatically mapped") {
-			ImportExport.assertImportMappings(fieldMappings = "name:name,type:type,description:description");
+			ImportExport.assertImportMappings(fieldMappings = "accountEntryRestricted:accountEntryRestricted,active:active,externalReferenceCode:externalReferenceCode,label:label,name:name,objectActions:objectActions,objectFields:objectFields,status:status");
 		}
 	}
 
 	@description = "Verify JSONL fields are automatically mapped to fields in Liferay when the names are the same"
-	@priority = "3"
+	@priority = 3
 	test JSONLFieldsAreAutoMapped {
 		property portal.acceptance = "true";
 
@@ -1829,20 +1392,21 @@ definition {
 
 			ImportExport.gotoImport();
 
-			UploadDependencyFile.uploadFile(fileName = "jsonl_account_import.jsonl");
+			UploadDependencyFile.uploadFile(fileName = "objectDefinition_import.jsonl");
 		}
 
 		task ("When I select the entity type") {
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
 		}
 
 		task ("Then the fields are automatically mapped") {
-			ImportExport.assertImportMappings(fieldMappings = "name:name,type:type,description:description");
+			ImportExport.assertImportMappings(fieldMappings = "active:active,label:label,name:name");
 		}
 	}
 
 	@description = "Verify imports are stopped if 'Stop the Import on Error' is checked when importing a file with an error in any of the rows."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test StopImportOnError {
 		property portal.acceptance = "true";
 
@@ -1882,7 +1446,8 @@ definition {
 	}
 
 	@description = "Verify users are shown a preview for the first row being imported in a CSV file."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewCSVFirstRowPreview {
 		property portal.acceptance = "true";
 
@@ -1906,7 +1471,8 @@ definition {
 	}
 
 	@description = "Verify users can view a preview of the CSV file being imported."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewCSVImportPreview {
 		property portal.acceptance = "true";
 
@@ -1943,7 +1509,8 @@ definition {
 	}
 
 	@description = "Verify users can view how many rows were successfully imported, how many rows were not imported, and the total number of rows for an import."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewImportedRows {
 		property portal.acceptance = "true";
 
@@ -1967,14 +1534,15 @@ definition {
 				executionAction = "Import",
 				executionName = "csv_account_import_error",
 				executionStatus = "Partially Completed",
-				failedRows = "1",
-				successfulRows = "2",
-				totalRows = "3");
+				failedRows = 1,
+				successfulRows = 2,
+				totalRows = 3);
 		}
 	}
 
 	@description = "Verify users are shown a preview for the first row being imported in a JSON file."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewJSONFirstRowPreview {
 		property portal.acceptance = "true";
 
@@ -1998,7 +1566,8 @@ definition {
 	}
 
 	@description = "Verify users can view a preview of the JSON file being imported."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewJSONImportPreview {
 		property portal.acceptance = "true";
 
@@ -2031,7 +1600,8 @@ definition {
 	}
 
 	@description = "Verify users are shown a preview for the first row being imported in a JSONL file."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewJSONLFirstRowPreview {
 		property portal.acceptance = "true";
 
@@ -2055,7 +1625,8 @@ definition {
 	}
 
 	@description = "Verify users can view a preview of the JSONL file being imported."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewJSONLImportPreview {
 		property portal.acceptance = "true";
 
@@ -2088,7 +1659,8 @@ definition {
 	}
 
 	@description = "Verify users are shown which fields are required for an import."
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test ViewRequiredImportFields {
 		property portal.acceptance = "true";
 

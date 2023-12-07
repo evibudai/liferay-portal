@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -22,7 +13,13 @@ EditClientExtensionEntryDisplayContext<CustomElementCET> editClientExtensionEntr
 CustomElementCET customElementCET = editClientExtensionEntryDisplayContext.getCET();
 %>
 
-<aui:input label="html-element-name" name="htmlElementName" type="text" value="<%= customElementCET.getHTMLElementName() %>" />
+<aui:field-wrapper cssClass="form-group">
+	<aui:input label="html-element-name" name="htmlElementName" required="<%= true %>" type="text" value="<%= customElementCET.getHTMLElementName() %>" />
+
+	<div class="form-text">
+		<liferay-ui:message key="specify-the-name-for-the-custom-element-thats-declared-in-its-javascript-file" />
+	</div>
+</aui:field-wrapper>
 
 <aui:input label="use-esm" name="useESM" type="checkbox" value="<%= customElementCET.isUseESM() %>" />
 
@@ -33,7 +30,13 @@ CustomElementCET customElementCET = editClientExtensionEntryDisplayContext.getCE
 	%>
 
 		<div class="lfr-form-row">
-			<aui:input ignoreRequestValue="<%= true %>" label="url" name="urls" type="text" value="<%= url %>" />
+			<aui:field-wrapper cssClass="form-group">
+				<aui:input ignoreRequestValue="<%= true %>" label="js-url" name="urls" required="<%= true %>" type="text" value="<%= url %>" />
+
+				<div class="form-text form-text-repeat">
+					<liferay-ui:message key="enter-individual-urls-for-each-of-your-client-extension-javascript-files" />
+				</div>
+			</aui:field-wrapper>
 		</div>
 
 	<%
@@ -49,7 +52,13 @@ CustomElementCET customElementCET = editClientExtensionEntryDisplayContext.getCE
 	%>
 
 		<div class="lfr-form-row">
-			<aui:input ignoreRequestValue="<%= true %>" label="css-url" name="cssURLs" type="text" value="<%= cssURL %>" />
+			<aui:field-wrapper cssClass="form-group">
+				<aui:input ignoreRequestValue="<%= true %>" label="css-url" name="cssURLs" type="text" value="<%= cssURL %>" />
+
+				<div class="form-text form-text-repeat">
+					<liferay-ui:message key="enter-individual-urls-for-each-of-your-client-extension-css-files" />
+				</div>
+			</aui:field-wrapper>
 		</div>
 
 	<%
@@ -59,7 +68,7 @@ CustomElementCET customElementCET = editClientExtensionEntryDisplayContext.getCE
 </div>
 
 <c:choose>
-	<c:when test="<%= editClientExtensionEntryDisplayContext.isNew() %>">
+	<c:when test="<%= editClientExtensionEntryDisplayContext.isAdding() %>">
 		<aui:input label="instanceable" name="instanceable" type="checkbox" value="<%= customElementCET.isInstanceable() %>" />
 	</c:when>
 	<c:otherwise>
@@ -74,7 +83,13 @@ CustomElementCET customElementCET = editClientExtensionEntryDisplayContext.getCE
 	options="<%= editClientExtensionEntryDisplayContext.getPortletCategoryNameSelectOptions(customElementCET.getPortletCategoryName()) %>"
 />
 
-<aui:input label="friendly-url-mapping" name="friendlyURLMapping" type="text" value="<%= customElementCET.getFriendlyURLMapping() %>" />
+<aui:field-wrapper cssClass="form-group">
+	<aui:input label="friendly-url-mapping" name="friendlyURLMapping" type="text" value="<%= customElementCET.getFriendlyURLMapping() %>" />
+
+	<div class="form-text">
+		<liferay-ui:message key="define-the-widgets-friendly-url-mapping-so-you-can-refer-to-it-using-a-more-user-readable-url" />
+	</div>
+</aui:field-wrapper>
 
 <aui:script use="liferay-auto-fields">
 	new Liferay.AutoFields({

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {render} from '@liferay/frontend-js-react-web';
@@ -42,6 +33,8 @@ function dispose() {
 
 function openSimpleInputModalImplementation({
 	alert,
+	buttonSubmitLabel,
+	center,
 	checkboxFieldLabel,
 	checkboxFieldName,
 	checkboxFieldValue,
@@ -49,6 +42,7 @@ function openSimpleInputModalImplementation({
 	formSubmitURL,
 	idFieldName,
 	idFieldValue,
+	mainFieldComponent,
 	mainFieldLabel,
 	mainFieldName,
 	mainFieldValue,
@@ -56,12 +50,16 @@ function openSimpleInputModalImplementation({
 	namespace,
 	onFormSuccess,
 	placeholder,
+	required,
+	size,
 }) {
 	dispose();
 
 	render(
 		<SimpleInputModal
 			alert={alert}
+			buttonSubmitLabel={buttonSubmitLabel}
+			center={center}
 			checkboxFieldLabel={checkboxFieldLabel}
 			checkboxFieldName={checkboxFieldName}
 			checkboxFieldValue={checkboxFieldValue}
@@ -71,6 +69,7 @@ function openSimpleInputModalImplementation({
 			idFieldName={idFieldName}
 			idFieldValue={idFieldValue}
 			initialVisible="true"
+			mainFieldComponent={mainFieldComponent}
 			mainFieldLabel={mainFieldLabel}
 			mainFieldName={mainFieldName}
 			mainFieldValue={mainFieldValue}
@@ -78,6 +77,8 @@ function openSimpleInputModalImplementation({
 			namespace={namespace}
 			onFormSuccess={onFormSuccess}
 			placeholder={placeholder}
+			required={required}
+			size={size}
 		/>,
 		DEFAULT_RENDER_DATA,
 		getDefaultModalContainer()

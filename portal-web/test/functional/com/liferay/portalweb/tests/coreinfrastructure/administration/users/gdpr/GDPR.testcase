@@ -1,4 +1,4 @@
-@component-name = "portal-user-management-and-portal-configuration"
+@component-name = "portal-user-management"
 definition {
 
 	property custom.properties = "jsonws.web.service.paths.excludes=";
@@ -32,9 +32,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -52,8 +52,87 @@ definition {
 		}
 	}
 
-	@priority = "4"
-	test AnonymizeAllEntries {
+	@description = "This test asserts that all applications that do not have items are visible but disabled, test with Blogs, WC and MB entries."
+	@priority = 4
+	test AppsWithNoEntriesAreDisabledInNewDataExport {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given sign in as New User and add entries supported by GDPR") {
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title",
+				userEmailAddress = "userea@liferay.com",
+				userPassword = "test");
+
+			JSONWebcontent.addWebContent(
+				content = "This is a WC Content for GDPR Export testing.",
+				groupName = "Guest",
+				title = "GDPR Export Article",
+				userEmailAddress = "userea@liferay.com",
+				userPassword = "test");
+
+			JSONMBMessage.addMessage(
+				groupName = "Guest",
+				threadBody = "MB Thread Message Body",
+				threadSubject = "MB Thread Message Subject",
+				userEmailAddress = "userea@liferay.com",
+				userPassword = "test");
+		}
+
+		task ("When sign in as Super User and add a data export progress to export all added entries") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			User.openUsersAdmin();
+
+			User.exportPersonalDataCP(
+				userFirstName = "userfn",
+				userLastName = "userln");
+
+			LexiconEntry.gotoAdd();
+
+			PortletEntry.selectAll();
+
+			task ("And assert the application with entries are selectable and application with no entries are displayed but not selectable") {
+				for (var application : list "Blogs,Web Content,Message Boards") {
+					AssertChecked(
+						key_application = ${application},
+						locator1 = "ExportPersonalData#APPLICATION_CHECKBOX");
+				}
+
+				for (var application : list "Announcements,Contacts Center,Documents and Media,Forms,Wiki") {
+					AssertNotChecked(
+						key_application = ${application},
+						locator1 = "ExportPersonalData#APPLICATION_CHECKBOX",
+						value1 = "disabled");
+				}
+			}
+
+			AssertClick(
+				locator1 = "Button#EXPORT",
+				value1 = "Export");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then assert selected entries are exported, but no entry is exported for the unselectable items") {
+			for (var tableEntry : list "Blogs,Web Content,Message Boards") {
+				GDPR.viewEntryRowInApplicationCP(
+					tableEntry = ${tableEntry},
+					tableEntryPartialTextList = "${tableEntry},Create Date,Completion Date");
+			}
+
+			for (var rowEntry : list "Announcements,Contacts Center,Documents and Media,Forms,Wiki") {
+				LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
+			}
+		}
+	}
+
+	@description = "This test adds entries from different application and anonymizes all entries via Select All"
+	@priority = 4
+	test CanAnonymizeAllEntries {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title",
@@ -134,7 +213,7 @@ definition {
 		for (var entryTitle : list "WC GDPR Folder,GDPR Anonymize Article") {
 			WebContent.viewEntryListAuthor(
 				author = "Anonymous Anonymous",
-				entryTitle = "${entryTitle}");
+				entryTitle = ${entryTitle});
 		}
 
 		WebContentFolder.gotoCP(
@@ -159,7 +238,7 @@ definition {
 
 		MessageboardsThread.gotoPG(
 			lastPostUserName = "Anonymous Anonymous",
-			replyCount = "0",
+			replyCount = 0,
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject");
 
@@ -181,117 +260,8 @@ definition {
 			value1 = "Anonymous Anonymous");
 	}
 
-	@priority = "5"
-	test AnonymizeEntryFromApplication {
-		property portal.acceptance = "true";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "DM Document Title");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.anonymizeDataViaReviewData(application = "Documents and Media");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
-
-		DMDocument.expandInfo();
-
-		AssertTextEquals(
-			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
-			value1 = "Anonymous Anonymous");
-	}
-
-	@description = "This test asserts that all applications that do not have items are visible but disabled, test with Blogs, WC and MB entries."
-	@priority = "2"
-	test AppsWithNoEntriesAreDisabledInNewDataExport {
-		task ("Given sign in as New User and add entries supported by GDPR") {
-			JSONBlog.addEntry(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title",
-				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
-
-			JSONWebcontent.addWebContent(
-				content = "This is a WC Content for GDPR Export testing.",
-				groupName = "Guest",
-				title = "GDPR Export Article",
-				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
-
-			JSONMBMessage.addMessage(
-				groupName = "Guest",
-				threadBody = "MB Thread Message Body",
-				threadSubject = "MB Thread Message Subject",
-				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
-		}
-
-		task ("When sign in as Super User and add a data export progress to export all added entries") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
-
-			User.openUsersAdmin();
-
-			User.exportPersonalDataCP(
-				userFirstName = "userfn",
-				userLastName = "userln");
-
-			LexiconEntry.gotoAdd();
-
-			PortletEntry.selectAll();
-
-			task ("And assert the application with entries are selectable and application with no entries are displayed but not selectable") {
-				for (var application : list "Blogs,Web Content,Message Boards") {
-					AssertChecked(
-						key_application = "${application}",
-						locator1 = "ExportPersonalData#APPLICATION_CHECKBOX");
-				}
-
-				for (var application : list "Announcements,Contacts Center,Documents and Media,Forms,Wiki") {
-					AssertNotChecked(
-						key_application = "${application}",
-						locator1 = "ExportPersonalData#APPLICATION_CHECKBOX",
-						value1 = "disabled");
-				}
-			}
-
-			AssertClick(
-				locator1 = "Button#EXPORT",
-				value1 = "Export");
-
-			Alert.viewSuccessMessage();
-		}
-
-		task ("Then assert selected entries are exported, but no entry is exported for the unselectable items") {
-			for (var tableEntry : list "Blogs,Web Content,Message Boards") {
-				GDPR.viewEntryRowInApplicationCP(
-					tableEntry = "${tableEntry}",
-					tableEntryPartialTextList = "${tableEntry},Create Date,Completion Date");
-			}
-
-			for (var rowEntry : list "Announcements,Contacts Center,Documents and Media,Forms,Wiki") {
-				LexiconEntry.viewNoEntry(rowEntry = "${rowEntry}");
-			}
-		}
-	}
-
 	@description = "This test anonymizes all entries from an application"
-	@priority = "3"
+	@priority = 4
 	test CanAnonymizeAllEntriesFromAnApplication {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -308,16 +278,16 @@ definition {
 			userLastName = "userln");
 
 		GDPR.anonymizeAllEntriesinApplicationCP(
-			applicationItemsCount = "3",
+			applicationItemsCount = 3,
 			applications = "Documents and Media",
-			totalItemsCount = "3");
+			totalItemsCount = 3);
 
 		GDPR.viewNoEntryInApplicationCP(applications = "Documents and Media");
 
 		for (var entryTitle : list "Document_1,Document_2,Document_3") {
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-			DMNavigator.gotoDocumentCP(dmDocumentTitle = "${entryTitle}");
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = ${entryTitle});
 
 			DMDocument.expandInfo();
 
@@ -328,9 +298,9 @@ definition {
 	}
 
 	@description = "This test anonymizes all staged data from an application, test with DM entries."
-	@priority = "3"
+	@priority = 4
 	test CanAnonymizeAllStagedDataFromDM {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -359,18 +329,18 @@ definition {
 			userLastName = "userln");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "6",
+			applicationItemsCount = 6,
 			applications = "Documents and Media",
-			totalItemsCount = "6");
+			totalItemsCount = 6);
 
 		for (var rowIndexNum : list "1,2,3") {
-			GDPR.anonymizeTheSpecificEntry(rowIndexNumber = "${rowIndexNum}");
+			GDPR.anonymizeTheSpecificEntry(rowIndexNumber = ${rowIndexNum});
 		}
 
 		for (var entryTitle : list "Document_1,Document_2,Document_3") {
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
 
-			DMNavigator.gotoDocumentCP(dmDocumentTitle = "${entryTitle}");
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = ${entryTitle});
 
 			DMDocument.expandInfo();
 
@@ -382,7 +352,7 @@ definition {
 		for (var entryTitle : list "Document_1,Document_2,Document_3") {
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
-			DMNavigator.gotoDocumentCP(dmDocumentTitle = "${entryTitle}");
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = ${entryTitle});
 
 			DMDocument.expandInfo();
 
@@ -393,7 +363,7 @@ definition {
 	}
 
 	@description = "This test asserts a related asset can be anonymized from an application."
-	@priority = "3"
+	@priority = 4
 	test CanAnonymizeARelatedAsset {
 		task ("Login as user whose data will be deleted and add a blog entry and document to be added as Related Assets") {
 			JSONBlog.addEntry(
@@ -436,7 +406,7 @@ definition {
 
 			for (var assetTitle : list "Blogs Entry Title,DM Document Title") {
 				AssertElementPresent(
-					key_relatedAssetTitle = "${assetTitle}",
+					key_relatedAssetTitle = ${assetTitle},
 					locator1 = "AssetRelatedAssets#ASSET_TITLE");
 			}
 		}
@@ -500,10 +470,10 @@ definition {
 	}
 
 	@description = "This test anonymizes a staged and a live entry from an applciation, test with WC entries."
-	@priority = "3"
+	@priority = 4
 	test CanAnonymizeASingleStagedAndLiveWebContentEntry {
 		task ("Given Publish the staged web content entries to live as a new admin user") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -543,13 +513,13 @@ definition {
 
 			task ("And select anonymize staged 'GDPR Anonymize Article 1' entry and lived 'GDPR Anonymize Article 2' entry") {
 				GDPR.filterByApplications(
-					applicationItemsCount = "6",
+					applicationItemsCount = 6,
 					applications = "Web Content",
-					totalItemsCount = "6",
+					totalItemsCount = 6,
 					webContent = "JournalArticle (6)");
 
 				for (var rowIndexNum : list "1,3") {
-					GDPR.anonymizeTheSpecificEntry(rowIndexNumber = "${rowIndexNum}");
+					GDPR.anonymizeTheSpecificEntry(rowIndexNumber = ${rowIndexNum});
 				}
 			}
 		}
@@ -564,7 +534,7 @@ definition {
 			for (var entryTitle : list "GDPR Anonymize Article 2,GDPR Anonymize Article 3") {
 				WebContent.viewEntryListAuthor(
 					author = "userfn userln",
-					entryTitle = "${entryTitle}");
+					entryTitle = ${entryTitle});
 			}
 
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
@@ -576,22 +546,57 @@ definition {
 			for (var entryTitle : list "GDPR Anonymize Article 1,GDPR Anonymize Article 3") {
 				WebContent.viewEntryListAuthor(
 					author = "userfn userln",
-					entryTitle = "${entryTitle}");
+					entryTitle = ${entryTitle});
 			}
 		}
 	}
 
 	@description = "This test anonymizes entries from an application that has hierarachy"
 	@ignore = "Test Stub"
-	@priority = "3"
+	@priority = 4
 	test CanAnonymizeEntriesFromAnApplicationWithHierarchy {
 
 		// TODO LRQA-50731 Data Erasure - Anonymize entries from an Application that has a hierarchy
 
 	}
 
-	@description = "LPS-77748"
-	@priority = "3"
+	@description = "This test anonymizes a single entry from an application"
+	@priority = 4
+	test CanAnonymizeEntryFromApplication {
+		property portal.acceptance = "true";
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "DM Document Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		GDPR.anonymizeDataViaReviewData(application = "Documents and Media");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.expandInfo();
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
+			value1 = "Anonymous Anonymous");
+	}
+
+	@description = "This tests LPS-77748. This test anonymizes multiple entries from a single application"
+	@priority = 4
 	test CanAnonymizeMultipleEntriesFromAnApplication {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -610,9 +615,9 @@ definition {
 			userLastName = "userln");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "5",
+			applicationItemsCount = 5,
 			applications = "Documents and Media",
-			totalItemsCount = "5");
+			totalItemsCount = 5);
 
 		GDPR.anonymizeMultipleEntriesCP(rowEntry = "Folder1,Document_2.docx");
 
@@ -638,7 +643,7 @@ definition {
 	}
 
 	@description = "This test anonymizes only one entry from an application via the Info panel"
-	@priority = "2"
+	@priority = 4
 	test CanAnonymizeViaInfoPanel {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
@@ -661,9 +666,9 @@ definition {
 			userLastName = "userln");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "2",
+			applicationItemsCount = 2,
 			applications = "Blogs",
-			totalItemsCount = "2");
+			totalItemsCount = 2);
 
 		GDPR.anonymizeSingleEntryViaInfoPanel(rowEntry = "Blogs Entry 1");
 
@@ -676,10 +681,283 @@ definition {
 			entryTitle = "Blogs Entry 1");
 	}
 
+	@description = "This test covers LPS-168719. It ensures that changing the password length does not affect anonymization"
+	@priority = 4
+	test CanAnonymizeWithPasswordLengthChange {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given publish the document entry as the new admin user") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMDocument.addCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentFile = "Document_1.txt",
+				dmDocumentTitle = "DM Document Title");
+		}
+
+		task ("And add an initial password for usersn and change the password length in the Default Password Policy") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			Navigator.openSpecificURL(url = "${portalURL}/group/control_panel/manage?p_p_id=com_liferay_users_admin_web_portlet_UsersAdminPortlet");
+
+			UserNavigator.gotoUser(userScreenName = "usersn");
+
+			User.editPassword(newPassword = "test");
+
+			PasswordPolicies.openPasswordPoliciesAdmin();
+
+			PasswordPolicies.enableSyntaxChecking(
+				minimumLength = 9,
+				passwordPolicyName = "Default Password Policy");
+		}
+
+		task ("When sign in as Test Test and deactivate the user usersn") {
+			User.openUsersAdmin();
+
+			User.deletePersonalDataCP(
+				userFirstName = "userfn",
+				userLastName = "userln");
+
+			GDPR.anonymizeDataViaReviewData(application = "Documents and Media");
+		}
+
+		task ("Then the document published by user usersn is successfully anonymized") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+			DMDocument.expandInfo();
+
+			AssertTextEquals(
+				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
+				value1 = "Anonymous Anonymous");
+		}
+	}
+
+	@description = "This test covers LPS-169408. It ensures that changing the password minimum upper case does not affect anonymization"
+	@priority = 4
+	test CanAnonymizeWithPasswordMinimumUpperCaseChange {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given publish the document entry as the new admin user") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMDocument.addCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentFile = "Document_1.txt",
+				dmDocumentTitle = "DM Document Title");
+		}
+
+		task ("And add an initial password for usersn and change the password minimum upper in the Default Password Policy") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			Navigator.openSpecificURL(url = "${portalURL}/group/control_panel/manage?p_p_id=com_liferay_users_admin_web_portlet_UsersAdminPortlet");
+
+			UserNavigator.gotoUser(userScreenName = "usersn");
+
+			User.editPassword(newPassword = "test");
+
+			PasswordPolicies.openPasswordPoliciesAdmin();
+
+			PasswordPolicies.enableSyntaxChecking(
+				minimumUpperCase = 2,
+				passwordPolicyName = "Default Password Policy");
+		}
+
+		task ("When sign in as Test Test and deactivate the user usersn") {
+			User.openUsersAdmin();
+
+			User.deletePersonalDataCP(
+				userFirstName = "userfn",
+				userLastName = "userln");
+
+			GDPR.anonymizeDataViaReviewData(application = "Documents and Media");
+		}
+
+		task ("Then the document published by user usersn is successfully anonymized") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+			DMDocument.expandInfo();
+
+			AssertTextEquals(
+				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
+				value1 = "Anonymous Anonymous");
+		}
+	}
+
+	@description = "This test deletes all entries when filtered by Instance scope"
+	@priority = 4
+	test CanDeleteAllEntriesFromInstanceScope {
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Announcements Page");
+
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Announcements Page",
+			layoutTemplate = "1 Column");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Announcements Page",
+			widgetName = "Announcements");
+
+		JSONAnnouncement.addAnnouncement(
+			announcementContent = "This is an announcement added via json.",
+			announcementTitle = "Announcement Entry Title",
+			announcementURL = "http://www.liferay.com",
+			userEmailAddress = "userea@liferay.com",
+			userPassword = "test");
+
+		Navigator.gotoPage(pageName = "Announcements Page");
+
+		AnnouncementsEntry.viewPG(
+			distributionScope = "General",
+			entryContent = "This is an announcement added via json.",
+			entryTitle = "Announcement Entry Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		GDPR.filterByScope(scope = "Instance");
+
+		GDPR.filterByApplications(
+			applicationItemsCount = 1,
+			applications = "All Applications",
+			totalItemsCount = 1);
+
+		GDPR.deleteAllEntriesCP();
+
+		Navigator.gotoPage(pageName = "Announcements Page");
+
+		AnnouncementsEntry.viewNoPG(entryTitle = "Announcement Entry Title");
+	}
+
+	@description = "This test deletes all entries when filtered by Personal Site scope"
+	@priority = 4
+	test CanDeleteAllEntriesFromPersonalSiteScope {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Profile");
+
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Blogs");
+
+		Blogs.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry in My Profile");
+
+		Navigator.openURL();
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Dashboard");
+
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Blogs");
+
+		Blogs.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry in My Dashboard");
+
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Message Boards");
+
+		MessageboardsThread.addCP(
+			threadBody = "MB Thread Message Body",
+			threadSubject = "MB Thread Message Subject in My Dashboard");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		GDPR.filterByScope(scope = "Personal Site");
+
+		GDPR.filterByApplications(
+			applicationItemsCount = 4,
+			applications = "All Applications",
+			totalItemsCount = 4);
+
+		GDPR.deleteAllEntriesCP();
+
+		GDPR.viewNoEntryInApplicationCP(applications = "All Applications");
+	}
+
+	@description = "This test deletes all entries when filtered by Regular Sites scope"
+	@priority = 4
+	test CanDeleteAllEntriesFromRegularSitesScope {
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page 1");
+
+		JSONUser.addUserToSite(
+			groupName = "Site Name",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title",
+			groupName = "Site Name",
+			userEmailAddress = "userea@liferay.com",
+			userPassword = "test");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		GDPR.filterByScope(scope = "Regular Sites");
+
+		GDPR.filterByApplications(
+			applicationItemsCount = 1,
+			applications = "All Applications",
+			totalItemsCount = 1);
+
+		GDPR.deleteAllEntriesCP();
+
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Blogs Entry Title");
+	}
+
 	@description = "This test deletes multiple staged data from an application, tests with Blogs and DM entries."
-	@priority = "3"
+	@priority = 4
 	test CanDeleteAllStagedDataFromAnApplication {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -728,21 +1006,21 @@ definition {
 			userLastName = "userln");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "4",
+			applicationItemsCount = 4,
 			applications = "Blogs",
-			totalItemsCount = "10");
+			totalItemsCount = 10);
 
 		for (var rowIndexNum : list "1,2") {
-			GDPR.deleteTheSpecificEntry(rowIndexNumber = "${rowIndexNum}");
+			GDPR.deleteTheSpecificEntry(rowIndexNumber = ${rowIndexNum});
 		}
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "6",
+			applicationItemsCount = 6,
 			applications = "Documents and Media",
-			totalItemsCount = "8");
+			totalItemsCount = 8);
 
 		for (var rowIndexNum : list "1,2,3") {
-			GDPR.deleteTheSpecificEntry(rowIndexNumber = "${rowIndexNum}");
+			GDPR.deleteTheSpecificEntry(rowIndexNumber = ${rowIndexNum});
 		}
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
@@ -762,13 +1040,16 @@ definition {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		for (var rowEntry : list "Document_1,Document_2,Document_3") {
-			LexiconEntry.viewEntryName(rowEntry = "${rowEntry}");
+			LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
 		}
 	}
 
 	@description = "This test deletes and anonymizes all entries from all applications"
-	@priority = "3"
+	@priority = 4
 	test CanDeleteAndAnonymizeAllEntries {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMDocument.addCP(
@@ -792,13 +1073,13 @@ definition {
 			userLastName = "userln");
 
 		GDPR.deleteAndAnonymizeAllEntriesCP(
-			applicationItemsCount = "2",
-			totalItemsCount = "2",
+			applicationItemsCount = 2,
+			totalItemsCount = 2,
 			userName = "userfn userln");
 	}
 
 	@description = "This test deletes export process"
-	@priority = "3"
+	@priority = 4
 	test CanDeleteAnExportProcess {
 		task ("Log in as new user and create data across several different applications") {
 			JSONBlog.addEntry(
@@ -876,14 +1157,14 @@ definition {
 		task ("Delete all export processes and assert no processes can be found or listed") {
 			GDPR.deleteExportedPersonalData(applications = "Web Content,Wiki,Message Boards,Blogs,Documents and Media");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "No personal data export processes were found. Please create a data export process.");
 		}
 	}
 
 	@description = "This test asserts a related asset can be deleted from an application."
-	@priority = "3"
+	@priority = 4
 	test CanDeleteARelatedAsset {
 		task ("Login as user whose data will be deleted and add a blog entry and document to be added as Related Assets") {
 			JSONBlog.addEntry(
@@ -926,7 +1207,7 @@ definition {
 
 			for (var assetTitle : list "Blogs Entry Title,DM Document Title") {
 				AssertElementPresent(
-					key_relatedAssetTitle = "${assetTitle}",
+					key_relatedAssetTitle = ${assetTitle},
 					locator1 = "AssetRelatedAssets#ASSET_TITLE");
 			}
 		}
@@ -967,10 +1248,13 @@ definition {
 	}
 
 	@description = "This test deletes a staged and a live entry from an application, tests with Blogs entries."
-	@priority = "3"
+	@priority = 4
 	test CanDeleteASingleStagedAndLiveBlogsEntry {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given Publish the staged blogs entries to live as a new admin user") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -1010,12 +1294,12 @@ definition {
 
 			task ("And deleted staged 'Blogs Entry Title 1' entry and lived 'Blogs Entry Title 2' entry") {
 				GDPR.filterByApplications(
-					applicationItemsCount = "6",
+					applicationItemsCount = 6,
 					applications = "Blogs",
-					totalItemsCount = "6");
+					totalItemsCount = 6);
 
 				for (var rowIndexNum : list "1,3") {
-					GDPR.deleteTheSpecificEntry(rowIndexNumber = "${rowIndexNum}");
+					GDPR.deleteTheSpecificEntry(rowIndexNumber = ${rowIndexNum});
 				}
 			}
 		}
@@ -1026,7 +1310,7 @@ definition {
 			Blogs.viewEntryNotPresent(entryTitle = "Blogs Entry Title 1");
 
 			for (var rowEntry : list "Blogs Entry Title 2,Blogs Entry Title 3") {
-				LexiconEntry.viewEntryName(rowEntry = "${rowEntry}");
+				LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
 			}
 
 			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
@@ -1034,22 +1318,60 @@ definition {
 			Blogs.viewEntryNotPresent(entryTitle = "Blogs Entry Title 2");
 
 			for (var rowEntry : list "Blogs Entry Title 1,Blogs Entry Title 3") {
-				LexiconEntry.viewEntryName(rowEntry = "${rowEntry}");
+				LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
 			}
 		}
 	}
 
 	@description = "This test deletes entries from an application that has hierarchy"
 	@ignore = "Test Stub"
-	@priority = "3"
+	@priority = 4
 	test CanDeleteEntriesFromAnApplicationWithHierarchy {
 
 		// TODO LRQA-50724 Data Erasure - Delete entries from an Application that has a hierarchy
 
 	}
 
+	@description = "This test deletes a single entry from a single application"
+	@priority = 4
+	test CanDeleteEntryFromApplication {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title",
+			userEmailAddress = "userea@liferay.com",
+			userPassword = "test");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		GDPR.filterByApplications(
+			applicationItemsCount = 1,
+			applications = "Blogs",
+			totalItemsCount = 1);
+
+		GDPR.deleteSingleEntryCP(rowEntry = "Blogs Entry Title");
+
+		GDPR.viewNoEntryInApplicationCP(applications = "Blogs");
+
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Blogs Entry Title");
+	}
+
 	@description = "This is a use case for LPS-77748. This test deletes multiple selected entries from a single application."
-	@priority = "3"
+	@priority = 4
 	test CanDeleteMultipleEntriesFromAnApplication {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -1068,9 +1390,9 @@ definition {
 			userLastName = "userln");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "5",
+			applicationItemsCount = 5,
 			applications = "Documents and Media",
-			totalItemsCount = "5");
+			totalItemsCount = 5);
 
 		AssertTextPresent(value1 = "DLFOLDER");
 
@@ -1079,9 +1401,9 @@ definition {
 		GDPR.deleteMultipleEntriesCP(rowEntry = "Folder1,Document_2.docx");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "3",
+			applicationItemsCount = 3,
 			applications = "Documents and Media",
-			totalItemsCount = "3");
+			totalItemsCount = 3);
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -1090,540 +1412,9 @@ definition {
 		AssertTextNotPresent(value1 = "Document_2");
 	}
 
-	@description = "This test filters and orders data from the export data process"
-	@priority = "2"
-	test CanFilterAndOrderExportProcesses {
-		task ("Sign in as New User and create data from various applications") {
-			JSONBlog.addEntry(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title",
-				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
-
-			Navigator.openURL();
-
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-			DMDocument.addCP(
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentFile = "Document_1.txt",
-				dmDocumentTitle = "DM Document Title");
-
-			JSONMBMessage.addMessage(
-				groupName = "Guest",
-				threadBody = "MB Thread Message Body",
-				threadSubject = "MB Thread Message Subject",
-				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
-		}
-
-		task ("Sign in as Super User and begin data export process") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
-
-			User.openUsersAdmin();
-
-			User.exportPersonalDataCP(
-				userFirstName = "userfn",
-				userLastName = "userln");
-
-			GDPR.addExportProcessCP(
-				userFirstName = "userfn",
-				userLastName = "userln");
-		}
-
-		task ("Filter by Successful and assert that only succesful exports are listed") {
-			ManagementBar.setFilterAndOrder(orderBy = "Successful");
-
-			AssertElementPresent(
-				key_status = "Successful",
-				locator1 = "ExportPersonalData#EXPORT_PROCESS_STATUS");
-
-			AssertElementNotPresent(
-				key_status = "In Progress",
-				locator1 = "ExportPersonalData#EXPORT_PROCESS_STATUS");
-
-			AssertElementNotPresent(
-				key_status = "Failed",
-				locator1 = "ExportPersonalData#EXPORT_PROCESS_STATUS");
-		}
-
-		task ("Filter by name and assert that data exports are listed alphabetically") {
-			ManagementBar.toggleViewOrder(order = "list-up");
-
-			ManagementBar.setFilterAndOrder(orderBy = "Name");
-
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "1",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Message Boards");
-
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "2",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Documents and Media");
-
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "3",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Blogs");
-		}
-	}
-
-	@description = "This test filters application to Forms, Web Content and Contacts and views all filtered data in Review Data section"
-	@priority = "3"
-	test CanFilterAndViewData {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Forms");
-
-		FormsAdminNavigator.gotoAddForm();
-
-		Form.editName();
-
-		Form.editDescription();
-
-		Form.addTextField(fieldPositionNumber = "0");
-
-		var fieldTextField = FormFields.getFieldName();
-
-		Form.editFieldLabelMetal(fieldValue = "Text Field");
-
-		Form.closeSidebar();
-
-		PortletEntry.publish();
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		PagesAdmin.addPage(pageName = "Form Page");
-
-		Navigator.gotoPage(pageName = "Form Page");
-
-		Portlet.addPG(
-			pageName = "Form Page",
-			portletName = "Form");
-
-		FormPortletNavigator.gotoSelectForm();
-
-		FormPortletConfiguration.selectForm();
-
-		PortletEntry.save();
-
-		Navigator.gotoPage(pageName = "Form Page");
-
-		FormPortlet.waitFormRenderer(text = "Submit");
-
-		FormFields.viewTextLabel(
-			fieldLabel = "Text Field",
-			fieldName = "${fieldTextField}");
-
-		FormFields.editText(
-			fieldName = "${fieldTextField}",
-			fieldValue = "Text Field Value");
-
-		FormPortlet.submitSuccessfully();
-
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Contacts Center Page");
-
-		JSONLayout.updateLayoutTemplateOfPublicLayout(
-			groupName = "Guest",
-			layoutName = "Contacts Center Page",
-			layoutTemplate = "1 Column");
-
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Guest",
-			layoutName = "Contacts Center Page",
-			widgetName = "Contacts Center");
-
-		Navigator.gotoPage(pageName = "Contacts Center Page");
-
-		ContactsCenter.addPG(
-			contactName = "testfn testln",
-			emailAddress = "test1@liferay.com");
-
-		ContactsCenter.viewContactPG(
-			contactName = "testfn testln",
-			emailAddress = "test1@liferay.com");
-
-		JSONWebcontent.addWebContent(
-			content = "This is a WC Content for GDPR testing.",
-			groupName = "Guest",
-			title = "GDPR Article",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		Click.clickNoWaitForVisible(
-			key_selectData = "Contacts Center",
-			locator1 = "DataErasure#REVIEW_DATA_SELECT");
-
-		AssertElementPresent(
-			key_rowEntry = "testfn testln",
-			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
-
-		GDPR.filterByScope(scope = "Regular Sites");
-
-		Click.clickNoWaitForVisible(
-			key_selectData = "Forms",
-			locator1 = "DataErasure#REVIEW_DATA_SELECT");
-
-		AssertElementPresent(
-			key_rowEntry = "Created Form Name",
-			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
-
-		Click.clickNoWaitForVisible(
-			key_selectData = "Web Content",
-			locator1 = "DataErasure#REVIEW_DATA_SELECT");
-
-		Click.clickNoWaitForVisible(
-			key_selectData = "JournalArticle",
-			locator1 = "DataErasure#REVIEW_DATA_SELECT");
-
-		AssertElementPresent(
-			key_rowEntry = "gdpr-article",
-			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
-	}
-
-	@description = "LPS-77749"
-	@priority = "2"
-	test CanOrderDataInViewData {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "A",
-			dmDocumentFile = "Document_1.jpeg",
-			dmDocumentTitle = "Document_1");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "B",
-			dmDocumentFile = "Document_2.docx",
-			dmDocumentTitle = "Document_2");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "C",
-			dmDocumentFile = "Document_3.txt",
-			dmDocumentTitle = "Document_3");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.filterByApplications(
-			applicationItemsCount = "3",
-			applications = "Documents and Media",
-			totalItemsCount = "3");
-
-		for (var orderBy : list "Name,Description") {
-			ManagementBar.setFilterAndOrder(orderBy = "${orderBy}");
-
-			ManagementBar.toggleViewOrder(order = "list-up");
-
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "1",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Document_3.txt");
-
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "3",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Document_1.jpeg");
-
-			ManagementBar.toggleViewOrder(order = "list-down");
-
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "1",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Document_1.jpeg");
-
-			AssertTextEquals.assertPartialText(
-				key_rowNumber = "3",
-				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
-				value1 = "Document_3.txt");
-		}
-	}
-
-	@description = "This test publishes a staged entry to live after deleting live entry, test with Blog entries."
-	@priority = "3"
-	test CanPublishToLiveADeletedLiveEntry {
-		task ("Given add staged entry with related asset and publish to live this entry.") {
-			JSONGroup.addGroup(groupName = "Site Name");
-
-			JSONLayout.addPublicLayout(
-				groupName = "Site Name",
-				layoutName = "Staging Test Page");
-
-			JSONUser.addUserToSite(
-				groupName = "Site Name",
-				userEmailAddress = "userea@liferay.com");
-
-			JSONStaging.enableLocalStaging(groupName = "Site Name");
-
-			JSONBlog.addEntry(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title",
-				groupName = "Site Name (Staging)",
-				site = "false",
-				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
-
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
-
-			Staging.publishViaSAP(
-				confirmMessage = "Are you sure you want to publish to live?",
-				entry = "Blogs Entry Title");
-		}
-
-		task ("When delete only the live entry using Personal Data Erasure.") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
-
-			User.openUsersAdmin();
-
-			User.deletePersonalDataCP(
-				userFirstName = "userfn",
-				userLastName = "userln");
-
-			GDPR.filterByScope(scope = "Regular Sites");
-
-			GDPR.filterByApplications(
-				applicationItemsCount = "2",
-				applications = "Blogs",
-				totalItemsCount = "2");
-
-			GDPR.deleteTheSpecificEntry(rowIndexNumber = "2");
-
-			task ("And assert entry is deleted from live.") {
-				BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-				Blogs.viewNoEntryCP();
-			}
-
-			task ("And publish to live entry again.") {
-				BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
-
-				Staging.publishViaSAP(
-					confirmMessage = "Are you sure you want to publish to live?",
-					entry = "Blogs Entry Title");
-			}
-		}
-
-		task ("Then assert entry is present on live.") {
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-			Blogs.viewEntryPresent(entryTitle = "Blogs Entry Title");
-		}
-	}
-
-	@priority = "4"
-	test DeleteAllEntriesFromInstanceScope {
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Announcements Page");
-
-		JSONLayout.updateLayoutTemplateOfPublicLayout(
-			groupName = "Guest",
-			layoutName = "Announcements Page",
-			layoutTemplate = "1 Column");
-
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Guest",
-			layoutName = "Announcements Page",
-			widgetName = "Announcements");
-
-		JSONAnnouncement.addAnnouncement(
-			announcementContent = "This is an announcement added via json.",
-			announcementTitle = "Announcement Entry Title",
-			announcementURL = "http://www.liferay.com",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		Navigator.gotoPage(pageName = "Announcements Page");
-
-		AnnouncementsEntry.viewPG(
-			distributionScope = "General",
-			entryContent = "This is an announcement added via json.",
-			entryTitle = "Announcement Entry Title");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.filterByScope(scope = "Instance");
-
-		GDPR.filterByApplications(
-			applicationItemsCount = "1",
-			applications = "All Applications",
-			totalItemsCount = "1");
-
-		GDPR.deleteAllEntriesCP();
-
-		Navigator.gotoPage(pageName = "Announcements Page");
-
-		AnnouncementsEntry.viewNoPG(entryTitle = "Announcement Entry Title");
-	}
-
-	@priority = "4"
-	test DeleteAllEntriesFromPersonalSiteScope {
-		property test.name.skip.portal.instance = "GDPR#DeleteEntryFromPersonalSiteScope";
-
-		UserBar.gotoDropdownItem(dropdownItem = "My Profile");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry in My Profile");
-
-		Navigator.openURL();
-
-		UserBar.gotoDropdownItem(dropdownItem = "My Dashboard");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Blogs");
-
-		Blogs.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry in My Dashboard");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Message Boards");
-
-		MessageboardsThread.addCP(
-			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject in My Dashboard");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.filterByScope(scope = "Personal Site");
-
-		GDPR.filterByApplications(
-			applicationItemsCount = "4",
-			applications = "All Applications",
-			totalItemsCount = "4");
-
-		GDPR.deleteAllEntriesCP();
-
-		GDPR.viewNoEntryInApplicationCP(applications = "All Applications");
-	}
-
-	@priority = "4"
-	test DeleteAllEntriesFromRegularSitesScope {
-		JSONGroup.addGroup(groupName = "Site Name");
-
-		JSONLayout.addPublicLayout(
-			groupName = "Site Name",
-			layoutName = "Site Page 1");
-
-		JSONUser.addUserToSite(
-			groupName = "Site Name",
-			userEmailAddress = "userea@liferay.com");
-
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			groupName = "Site Name",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.filterByScope(scope = "Regular Sites");
-
-		GDPR.filterByApplications(
-			applicationItemsCount = "1",
-			applications = "All Applications",
-			totalItemsCount = "1");
-
-		GDPR.deleteAllEntriesCP();
-
-		BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-		LexiconEntry.viewNoEntry(rowEntry = "Blogs Entry Title");
-	}
-
-	@priority = "5"
-	test DeleteEntryFromApplication {
-		property portal.acceptance = "true";
-
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.filterByApplications(
-			applicationItemsCount = "1",
-			applications = "Blogs",
-			totalItemsCount = "1");
-
-		GDPR.deleteSingleEntryCP(rowEntry = "Blogs Entry Title");
-
-		GDPR.viewNoEntryInApplicationCP(applications = "Blogs");
-
-		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
-
-		LexiconEntry.viewNoEntry(rowEntry = "Blogs Entry Title");
-	}
-
-	@priority = "4"
-	test EditEntryFromApplication {
+	@description = "This test edits an entry in Delete Personal Data"
+	@priority = 4
+	test CanEditEntryFromApplication {
 		ProductMenuHelper.openProductMenu();
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
@@ -1644,9 +1435,9 @@ definition {
 			userLastName = "userln");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "1",
+			applicationItemsCount = 1,
 			applications = "Documents and Media",
-			totalItemsCount = "1");
+			totalItemsCount = 1);
 
 		GDPR.editEntryCP(
 			applicationsTitle = "DM Document Title",
@@ -1668,151 +1459,9 @@ definition {
 			tableEntryPartialTextList = "Document_1.txt,Edit DM Document Description");
 	}
 
-	@description = "Test is asserting that entries are still anonymous after activating user."
-	@priority = "3"
-	test EntriesAreStillAnonymousAfterActivatingUser {
-		task ("Sign in as User and add DM folder1 and Document_2.docx.") {
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-			DMFolder.addCP(dmFolderName = "Folder1");
-
-			DMDocument.addCP(
-				dmDocumentFile = "Document_2.docx",
-				dmDocumentTitle = "Document_2");
-		}
-
-		task ("Sign in as Test Test and deactivate the user usersn.") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
-
-			User.openUsersAdmin();
-
-			User.deletePersonalDataCP(
-				userFirstName = "userfn",
-				userLastName = "userln");
-		}
-
-		task ("Select multiple entries and anonymize Folder1 and Document_2.docx.") {
-			GDPR.filterByApplications(
-				applicationItemsCount = "2",
-				applications = "Documents and Media",
-				totalItemsCount = "2");
-
-			GDPR.anonymizeMultipleEntriesCP(rowEntry = "Folder1,Document_2.docx");
-		}
-
-		task ("Assert Folder1 and Document_2.docx have been anonymized.") {
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-			DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_2");
-
-			DMDocument.expandInfo();
-
-			AssertTextEquals(
-				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
-				value1 = "Anonymous Anonymous");
-
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-			DMNavigator.gotoFolder(dmFolderName = "Folder1");
-
-			Click.clickAt(locator1 = "Icon#INFO");
-
-			AssertTextPresent(
-				locator1 = "Sidebar#SIDEBAR",
-				value1 = "Anonymous Anonymous");
-		}
-
-		task ("Activate user usersn from inactive list.") {
-			User.openUsersAdmin();
-
-			User.activateCP(
-				userName = "userfn userln",
-				userScreenName = "usersn");
-		}
-
-		task ("Assert Folder1 and Document_2.docx are still anonymous.") {
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-			DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_2");
-
-			DMDocument.expandInfo();
-
-			AssertTextEquals(
-				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
-				value1 = "Anonymous Anonymous");
-
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-			DMNavigator.gotoFolder(dmFolderName = "Folder1");
-
-			Click.clickAt(locator1 = "Icon#INFO");
-
-			AssertTextPresent(
-				locator1 = "Sidebar#SIDEBAR",
-				value1 = "Anonymous Anonymous");
-		}
-	}
-
-	@description = "LPS-77750 This test asserts that the details of the entry display when user clicks on the Info icon."
-	@priority = "3"
-	test EntryDetailsDisplayInInfoPanel {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMFolder.addCP(
-			dmFolderDescription = "Folder_1 Description",
-			dmFolderName = "Folder_1");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "Document_1 Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "Document_1 Title");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.filterByApplications(
-			applicationItemsCount = "2",
-			applications = "Documents and Media",
-			totalItemsCount = "2");
-
-		AssertTextPresent(value1 = "DLFOLDER");
-
-		AssertTextPresent(value1 = "DLFILEENTRY");
-
-		LexiconEntry.selectEntry(rowEntry = "Folder_1");
-
-		Click.clickAt(locator1 = "Icon#INFO");
-
-		for (var infoPanel : list "Folder_1,Folder_1 Description") {
-			AssertTextEquals.assertPartialText(
-				locator1 = "DocumentsAndMedia#SIDEBAR_INFO_ACTIVE",
-				value1 = "${infoPanel}");
-		}
-
-		LexiconEntry.selectEntry(rowEntry = "Document_1.txt");
-
-		Uncheck(
-			key_rowEntry = "Folder_1",
-			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
-
-		for (var infoPanel : list "Document_1 Title,Document_1 Description,txt") {
-			AssertTextEquals.assertPartialText(
-				locator1 = "DocumentsAndMedia#SIDEBAR_INFO_ACTIVE",
-				value1 = "${infoPanel}");
-		}
-	}
-
-	@priority = "4"
-	test ExportAllEntries {
+	@description = "This test exports multiple entries from different applications"
+	@priority = 4
+	test CanExportMultipleEntries {
 		property portal.acceptance = "true";
 
 		JSONLayout.addPublicLayout(
@@ -1945,7 +1594,7 @@ definition {
 
 		for (var tableEntry : list "Web Content,Wiki,Message Boards,Contacts Center,Blogs,Announcements,Documents and Media") {
 			GDPR.viewEntryRowInApplicationCP(
-				tableEntry = "${tableEntry}",
+				tableEntry = ${tableEntry},
 				tableEntryPartialTextList = "${tableEntry},Create Date,Completion Date");
 		}
 
@@ -1956,9 +1605,499 @@ definition {
 		}
 	}
 
+	@description = "This test filters and orders data from the export data process"
+	@priority = 4
+	test CanFilterAndOrderExportProcesses {
+		task ("Sign in as New User and create data from various applications") {
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title",
+				userEmailAddress = "userea@liferay.com",
+				userPassword = "test");
+
+			Navigator.openURL();
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMDocument.addCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentFile = "Document_1.txt",
+				dmDocumentTitle = "DM Document Title");
+
+			JSONMBMessage.addMessage(
+				groupName = "Guest",
+				threadBody = "MB Thread Message Body",
+				threadSubject = "MB Thread Message Subject",
+				userEmailAddress = "userea@liferay.com",
+				userPassword = "test");
+		}
+
+		task ("Sign in as Super User and begin data export process") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			User.openUsersAdmin();
+
+			User.exportPersonalDataCP(
+				userFirstName = "userfn",
+				userLastName = "userln");
+
+			GDPR.addExportProcessCP(
+				userFirstName = "userfn",
+				userLastName = "userln");
+		}
+
+		task ("Filter by Successful and assert that only succesful exports are listed") {
+			ManagementBar.setFilterAndOrder(orderBy = "Successful");
+
+			AssertElementPresent(
+				key_status = "Successful",
+				locator1 = "ExportPersonalData#EXPORT_PROCESS_STATUS");
+
+			AssertElementNotPresent(
+				key_status = "In Progress",
+				locator1 = "ExportPersonalData#EXPORT_PROCESS_STATUS");
+
+			AssertElementNotPresent(
+				key_status = "Failed",
+				locator1 = "ExportPersonalData#EXPORT_PROCESS_STATUS");
+		}
+
+		task ("Filter by name and assert that data exports are listed alphabetically") {
+			ManagementBar.toggleViewOrder(order = "list-up");
+
+			ManagementBar.setFilterAndOrder(orderBy = "Name");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 1,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "Message Boards");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 2,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "Documents and Media");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 3,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "Blogs");
+		}
+	}
+
+	@description = "This test filters application to Forms, Web Content and Contacts and views all filtered data in Review Data section"
+	@priority = 4
+	test CanFilterAndViewData {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		FormsAdmin.addForm();
+
+		Form.editName();
+
+		Form.editDescription();
+
+		Form.addTextField(fieldPositionNumber = 0);
+
+		var fieldTextField = FormFields.getFieldName();
+
+		Form.editFieldLabelMetal(fieldValue = "Text Field");
+
+		Form.closeSidebar();
+
+		PortletEntry.publish();
+
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			portlet = "Pages");
+
+		PagesAdmin.addPage(pageName = "Form Page");
+
+		Navigator.gotoPage(pageName = "Form Page");
+
+		Portlet.addPG(
+			pageName = "Form Page",
+			portletName = "Form");
+
+		FormPortletNavigator.gotoSelectForm();
+
+		FormPortletConfiguration.selectForm();
+
+		PortletEntry.save();
+
+		Navigator.gotoPage(pageName = "Form Page");
+
+		FormPortlet.waitFormRenderer(text = "Submit");
+
+		FormFields.viewTextLabel(
+			fieldLabel = "Text Field",
+			fieldName = ${fieldTextField});
+
+		FormFields.editText(
+			fieldName = ${fieldTextField},
+			fieldValue = "Text Field Value");
+
+		FormPortlet.submitSuccessfully();
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Contacts Center Page");
+
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Contacts Center Page",
+			layoutTemplate = "1 Column");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Contacts Center Page",
+			widgetName = "Contacts Center");
+
+		Navigator.gotoPage(pageName = "Contacts Center Page");
+
+		ContactsCenter.addPG(
+			contactName = "testfn testln",
+			emailAddress = "test1@liferay.com");
+
+		ContactsCenter.viewContactPG(
+			contactName = "testfn testln",
+			emailAddress = "test1@liferay.com");
+
+		JSONWebcontent.addWebContent(
+			content = "This is a WC Content for GDPR testing.",
+			groupName = "Guest",
+			title = "GDPR Article",
+			userEmailAddress = "userea@liferay.com",
+			userPassword = "test");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		Click.clickNoWaitForVisible(
+			key_selectData = "Contacts Center",
+			locator1 = "DataErasure#REVIEW_DATA_SELECT");
+
+		AssertElementPresent(
+			key_rowEntry = "testfn testln",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
+
+		GDPR.filterByScope(scope = "Regular Sites");
+
+		Click.clickNoWaitForVisible(
+			key_selectData = "Forms",
+			locator1 = "DataErasure#REVIEW_DATA_SELECT");
+
+		AssertElementPresent(
+			key_rowEntry = "Created Form Name",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
+
+		Click.clickNoWaitForVisible(
+			key_selectData = "Web Content",
+			locator1 = "DataErasure#REVIEW_DATA_SELECT");
+
+		Click.clickNoWaitForVisible(
+			key_selectData = "JournalArticle",
+			locator1 = "DataErasure#REVIEW_DATA_SELECT");
+
+		AssertElementPresent(
+			key_rowEntry = "gdpr-article",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
+	}
+
+	@description = "LPS-77749. This test orders entries by Name and by Description"
+	@priority = 4
+	test CanOrderDataInViewData {
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "A",
+			dmDocumentFile = "Document_1.jpeg",
+			dmDocumentTitle = "Document_1");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "B",
+			dmDocumentFile = "Document_2.docx",
+			dmDocumentTitle = "Document_2");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "C",
+			dmDocumentFile = "Document_3.txt",
+			dmDocumentTitle = "Document_3");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		GDPR.filterByApplications(
+			applicationItemsCount = 3,
+			applications = "Documents and Media",
+			totalItemsCount = 3);
+
+		for (var orderBy : list "Name,Description") {
+			ManagementBar.setFilterAndOrder(orderBy = ${orderBy});
+
+			ManagementBar.toggleViewOrder(order = "list-up");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 1,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "Document_3.txt");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 3,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "Document_1.jpeg");
+
+			ManagementBar.toggleViewOrder(order = "list-down");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 1,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "Document_1.jpeg");
+
+			AssertTextEquals.assertPartialText(
+				key_rowNumber = 3,
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "Document_3.txt");
+		}
+	}
+
+	@description = "This test publishes a staged entry to live after deleting live entry, test with Blog entries."
+	@priority = 4
+	test CanPublishToLiveADeletedLiveEntry {
+		task ("Given add staged entry with related asset and publish to live this entry.") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Site Name",
+				layoutName = "Staging Test Page");
+
+			JSONUser.addUserToSite(
+				groupName = "Site Name",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONStaging.enableLocalStaging(groupName = "Site Name");
+
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title",
+				groupName = "Site Name (Staging)",
+				site = "false",
+				userEmailAddress = "userea@liferay.com",
+				userPassword = "test");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
+
+			Staging.publishViaSAP(
+				confirmMessage = "Are you sure you want to publish to live?",
+				entry = "Blogs Entry Title");
+		}
+
+		task ("When delete only the live entry using Personal Data Erasure.") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			User.openUsersAdmin();
+
+			User.deletePersonalDataCP(
+				userFirstName = "userfn",
+				userLastName = "userln");
+
+			GDPR.filterByScope(scope = "Regular Sites");
+
+			GDPR.filterByApplications(
+				applicationItemsCount = 2,
+				applications = "Blogs",
+				totalItemsCount = 2);
+
+			GDPR.deleteTheSpecificEntry(rowIndexNumber = 2);
+
+			task ("And assert entry is deleted from live.") {
+				BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
+
+				Blogs.viewNoEntryCP();
+			}
+
+			task ("And publish to live entry again.") {
+				BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
+
+				Staging.publishViaSAP(
+					confirmMessage = "Are you sure you want to publish to live?",
+					entry = "Blogs Entry Title");
+			}
+		}
+
+		task ("Then assert entry is present on live.") {
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
+
+			Blogs.viewEntryPresent(entryTitle = "Blogs Entry Title");
+		}
+	}
+
+	@description = "Test is asserting that entries are still anonymous after activating user."
+	@priority = 4
+	test EntriesAreStillAnonymousAfterActivatingUser {
+		task ("Sign in as User and add DM folder1 and Document_2.docx.") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMFolder.addCP(dmFolderName = "Folder1");
+
+			DMDocument.addCP(
+				dmDocumentFile = "Document_2.docx",
+				dmDocumentTitle = "Document_2");
+		}
+
+		task ("Sign in as Test Test and deactivate the user usersn.") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			User.openUsersAdmin();
+
+			User.deletePersonalDataCP(
+				userFirstName = "userfn",
+				userLastName = "userln");
+		}
+
+		task ("Select multiple entries and anonymize Folder1 and Document_2.docx.") {
+			GDPR.filterByApplications(
+				applicationItemsCount = 2,
+				applications = "Documents and Media",
+				totalItemsCount = 2);
+
+			GDPR.anonymizeMultipleEntriesCP(rowEntry = "Folder1,Document_2.docx");
+		}
+
+		task ("Assert Folder1 and Document_2.docx have been anonymized.") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_2");
+
+			DMDocument.expandInfo();
+
+			AssertTextEquals(
+				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
+				value1 = "Anonymous Anonymous");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMNavigator.gotoFolder(dmFolderName = "Folder1");
+
+			Click.clickAt(locator1 = "Icon#INFO");
+
+			AssertTextPresent(
+				locator1 = "Sidebar#SIDEBAR",
+				value1 = "Anonymous Anonymous");
+		}
+
+		task ("Activate user usersn from inactive list.") {
+			User.openUsersAdmin();
+
+			User.activateCP(
+				userName = "userfn userln",
+				userScreenName = "usersn");
+		}
+
+		task ("Assert Folder1 and Document_2.docx are still anonymous.") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_2");
+
+			DMDocument.expandInfo();
+
+			AssertTextEquals(
+				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
+				value1 = "Anonymous Anonymous");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMNavigator.gotoFolder(dmFolderName = "Folder1");
+
+			Click.clickAt(locator1 = "Icon#INFO");
+
+			AssertTextPresent(
+				locator1 = "Sidebar#SIDEBAR",
+				value1 = "Anonymous Anonymous");
+		}
+	}
+
+	@description = "LPS-77750 This test asserts that the details of the entry display when user clicks on the Info icon."
+	@priority = 4
+	test EntryDetailsDisplayInInfoPanel {
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMFolder.addCP(
+			dmFolderDescription = "Folder_1 Description",
+			dmFolderName = "Folder_1");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "Document_1 Description",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "Document_1 Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		User.openUsersAdmin();
+
+		User.deletePersonalDataCP(
+			userFirstName = "userfn",
+			userLastName = "userln");
+
+		GDPR.filterByApplications(
+			applicationItemsCount = 2,
+			applications = "Documents and Media",
+			totalItemsCount = 2);
+
+		AssertTextPresent(value1 = "DLFOLDER");
+
+		AssertTextPresent(value1 = "DLFILEENTRY");
+
+		LexiconEntry.selectEntry(rowEntry = "Folder_1");
+
+		Click.clickAt(locator1 = "Icon#INFO");
+
+		for (var infoPanel : list "Folder_1,Folder_1 Description") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "DocumentsAndMedia#SIDEBAR_INFO_ACTIVE",
+				value1 = ${infoPanel});
+		}
+
+		LexiconEntry.selectEntry(rowEntry = "Document_1.txt");
+
+		Uncheck(
+			key_rowEntry = "Folder_1",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
+
+		for (var infoPanel : list "Document_1 Title,Document_1 Description,txt") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "DocumentsAndMedia#SIDEBAR_INFO_ACTIVE",
+				value1 = ${infoPanel});
+		}
+	}
+
 	@description = "This test changes pagination and assert export processes display properly."
-	@priority = "2"
+	@priority = 4
 	test PaginationWorksInExportPersonalData {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		task ("Given there are data across several different applications") {
 			JSONBlog.addEntry(
 				entryContent = "Blogs Entry Content",
@@ -2036,13 +2175,13 @@ definition {
 
 		task ("When pagination is changed, assert the correct number of entries are listed") {
 			for (var listEntries : list "4,8,20,40,60") {
-				Pagination.changePagination(itemsPerPage = "${listEntries}");
+				Pagination.changePagination(itemsPerPage = ${listEntries});
 
-				if ("${listEntries}" == "4") {
+				if (${listEntries} == 4) {
 					Pagination.viewResults(results = "Showing 1 to 4 of 5 entries.");
 
 					for (var exportEntries : list "Blogs,Documents and Media,Message Boards,Web Content") {
-						LexiconEntry.viewEntryName(rowEntry = "${exportEntries}");
+						LexiconEntry.viewEntryName(rowEntry = ${exportEntries});
 					}
 
 					LexiconEntry.viewNoEntry(rowEntry = "Wiki");
@@ -2054,14 +2193,16 @@ definition {
 					LexiconEntry.viewEntryName(rowEntry = "Wiki");
 
 					for (var exportEntries : list "Blogs,Documents and Media,Message Boards,Web Content") {
-						LexiconEntry.viewNoEntry(rowEntry = "${exportEntries}");
+						LexiconEntry.viewNoEntry(rowEntry = ${exportEntries});
 					}
+
+					Click(locator1 = "Pagination#PREVIOUS_LINK");
 				}
 				else {
 					Pagination.viewResults(results = "Showing 1 to 5 of 5 entries.");
 
 					for (var allEntries : list "Blogs,Documents and Media,Message Boards,Web Content,Wiki") {
-						LexiconEntry.viewEntryName(rowEntry = "${allEntries}");
+						LexiconEntry.viewEntryName(rowEntry = ${allEntries});
 					}
 				}
 			}
@@ -2069,7 +2210,7 @@ definition {
 	}
 
 	@description = "This test changes pagination and assert entries display properly."
-	@priority = "2"
+	@priority = 4
 	test PaginationWorksInNewDataExport {
 		property portal.release = "false";
 
@@ -2096,9 +2237,9 @@ definition {
 
 		task ("When pagination is changed, the correct number of entries are listed") {
 			for (var listEntries : list "4,8,20,40,60") {
-				Pagination.changePagination(itemsPerPage = "${listEntries}");
+				Pagination.changePagination(itemsPerPage = ${listEntries});
 
-				if ("${listEntries}" == "4") {
+				if (${listEntries} == 4) {
 					Click(locator1 = "Pagination#NEXT_LINK");
 
 					Click(locator1 = "Pagination#NEXT_LINK");
@@ -2107,11 +2248,11 @@ definition {
 						Pagination.viewResults(results = "Showing 9 to 10 of 10 entries.");
 
 						for (var listedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 
 						Click(locator1 = "Pagination#PREVIOUS_LINK");
@@ -2119,22 +2260,22 @@ definition {
 						Pagination.viewResults(results = "Showing 5 to 8 of 10 entries.");
 
 						for (var listedEntries : list "Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,com.liferay.portal.tools.service.builder.test.uad,Wiki") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 					}
 					else {
 						Pagination.viewResults(results = "Showing 9 to 9 of 9 entries.");
 
 						for (var listedEntries : list "Wiki") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 
 						Click(locator1 = "Pagination#PREVIOUS_LINK");
@@ -2142,26 +2283,24 @@ definition {
 						Pagination.viewResults(results = "Showing 5 to 8 of 9 entries.");
 
 						for (var listedEntries : list "Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Wiki") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 					}
 				}
-				else if ("${listEntries}" == "8") {
-					Click(locator1 = "Pagination#NEXT_LINK");
-
+				else if (${listEntries} == 8) {
 					if (IsElementPresent(key_rowEntry = "com.liferay.portal.tools.service.builder.test.uad", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
 						Pagination.viewResults(results = "Showing 9 to 10 of 10 entries.");
 
 						for (var listedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 
 						Click(locator1 = "Pagination#PREVIOUS_LINK");
@@ -2169,22 +2308,22 @@ definition {
 						Pagination.viewResults(results = "Showing 1 to 8 of 10 entries.");
 
 						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 					}
 					else {
 						Pagination.viewResults(results = "Showing 9 to 9 of 9 entries.");
 
 						for (var listedEntries : list "Wiki") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 
 						Click(locator1 = "Pagination#PREVIOUS_LINK");
@@ -2192,11 +2331,11 @@ definition {
 						Pagination.viewResults(results = "Showing 1 to 8 of 9 entries.");
 
 						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
 						for (var unlistedEntries : list "Wiki") {
-							LexiconEntry.viewNoEntry(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 					}
 				}
@@ -2205,14 +2344,14 @@ definition {
 						Pagination.viewResults(results = "Showing 1 to 10 of 10 entries.");
 
 						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards,com.liferay.portal.tools.service.builder.test.uad,Wiki") {
-							LexiconEntry.viewEntryName(rowEntry = "${listedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 					}
 					else if (IsElementNotPresent(key_rowEntry = "com.liferay.portal.tools.service.builder.test.uad", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
 						Pagination.viewResults(results = "Showing 1 to 9 of 9 entries.");
 
 						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards,Wiki") {
-							LexiconEntry.viewEntryName(rowEntry = "${unlistedEntries}");
+							LexiconEntry.viewEntryName(rowEntry = ${unlistedEntries});
 						}
 					}
 				}
@@ -2221,7 +2360,7 @@ definition {
 	}
 
 	@description = "LPS-91766. This test asserts that the Remaining Items count under Status Summary is accurate"
-	@priority = "3"
+	@priority = 4
 	test RemainingItemsCountIsAccurate {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -2250,12 +2389,12 @@ definition {
 			userLastName = "userln");
 
 		GDPR.filterByApplications(
-			applicationItemsCount = "6",
+			applicationItemsCount = 6,
 			applications = "All Applications",
-			totalItemsCount = "6");
+			totalItemsCount = 6);
 
 		for (var applicationsCount : list "Blogs (2),Documents and Media (4)") {
-			AssertTextPresent(value1 = "${applicationsCount}");
+			AssertTextPresent(value1 = ${applicationsCount});
 		}
 
 		GDPR.deleteAllEntriesCP();

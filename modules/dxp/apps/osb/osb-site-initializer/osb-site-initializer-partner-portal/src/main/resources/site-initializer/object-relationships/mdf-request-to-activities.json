@@ -1,9 +1,9 @@
 {
 	"deletionType": "cascade",
 	"label": {
-		"en-US": "MDF Request"
+		"en-US": "MDF Request to Activities"
 	},
-	"name": "mdfRequestToActivities",
+	"name": "mdfReqToActs",
 	"objectDefinitionId1": "[$OBJECT_DEFINITION_ID:MDFRequest$]",
 	"objectDefinitionId2": "[$OBJECT_DEFINITION_ID:Activity$]",
 	"objectDefinitionName2": "Activity",

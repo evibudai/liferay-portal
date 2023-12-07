@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.internal.servlet.filter;
@@ -23,6 +14,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.Constants;
@@ -93,7 +85,12 @@ public class CTCollectionPreviewFilter extends BasePortalFilter {
 				return;
 			}
 
-			if (ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) {
+			if ((ctCollection.getStatus() !=
+					WorkflowConstants.STATUS_APPROVED) &&
+				(ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
+				(ctCollection.getStatus() !=
+					WorkflowConstants.STATUS_EXPIRED)) {
+
 				_portal.sendError(
 					new PortalException("Collection is not available"),
 					httpServletRequest, httpServletResponse);
@@ -103,6 +100,11 @@ public class CTCollectionPreviewFilter extends BasePortalFilter {
 
 			PermissionChecker permissionChecker =
 				PermissionThreadLocal.getPermissionChecker();
+
+			if (permissionChecker == null) {
+				permissionChecker = permissionCheckerFactory.create(
+					_portal.getUser(httpServletRequest));
+			}
 
 			if (!_modelResourcePermission.contains(
 					permissionChecker, ctCollection, ActionKeys.VIEW)) {
@@ -123,6 +125,9 @@ public class CTCollectionPreviewFilter extends BasePortalFilter {
 			CTCollectionPreviewFilter.class.getName(), httpServletRequest,
 			httpServletResponse, filterChain);
 	}
+
+	@Reference
+	protected PermissionCheckerFactory permissionCheckerFactory;
 
 	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;

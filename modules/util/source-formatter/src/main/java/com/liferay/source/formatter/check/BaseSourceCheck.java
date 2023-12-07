@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -32,6 +23,10 @@ import com.liferay.source.formatter.SourceFormatterExcludes;
 import com.liferay.source.formatter.SourceFormatterMessage;
 import com.liferay.source.formatter.check.util.JSPSourceUtil;
 import com.liferay.source.formatter.check.util.SourceUtil;
+import com.liferay.source.formatter.parser.JavaClass;
+import com.liferay.source.formatter.parser.JavaClassParser;
+import com.liferay.source.formatter.parser.JavaTerm;
+import com.liferay.source.formatter.parser.JavaVariable;
 import com.liferay.source.formatter.processor.JSPSourceProcessor;
 import com.liferay.source.formatter.processor.JavaSourceProcessor;
 import com.liferay.source.formatter.processor.SourceProcessor;
@@ -55,7 +50,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
@@ -337,9 +331,8 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	}
 
 	protected Document getCustomSQLDocument(
-			String fileName, String absolutePath,
-			Document portalCustomSQLDocument)
-		throws DocumentException {
+		String fileName, String absolutePath,
+		Document portalCustomSQLDocument) {
 
 		if (isPortalSource() && !isModulesFile(absolutePath)) {
 			return portalCustomSQLDocument;
@@ -385,7 +378,7 @@ public abstract class BaseSourceCheck implements SourceCheck {
 			String baseDirName, String[] excludes, String[] includes)
 		throws IOException {
 
-		return SourceFormatterUtil.scanForFiles(
+		return SourceFormatterUtil.scanForFileNames(
 			baseDirName, excludes, includes, _sourceFormatterExcludes, true);
 	}
 
@@ -494,7 +487,7 @@ public abstract class BaseSourceCheck implements SourceCheck {
 
 	protected synchronized Document getPortalCustomSQLDocument(
 			String absolutePath)
-		throws DocumentException, IOException {
+		throws IOException {
 
 		if (_portalCustomSQLDocument != null) {
 			return _portalCustomSQLDocument;
@@ -518,6 +511,10 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		Document customSQLDefaultDocument = SourceUtil.readXML(
 			portalCustomSQLDefaultContent);
 
+		if (customSQLDefaultDocument == null) {
+			return null;
+		}
+
 		Element customSQLDefaultRootElement =
 			customSQLDefaultDocument.getRootElement();
 
@@ -534,6 +531,10 @@ public abstract class BaseSourceCheck implements SourceCheck {
 
 			Document customSQLDocument = SourceUtil.readXML(
 				customSQLFileContent);
+
+			if (customSQLDocument == null) {
+				continue;
+			}
 
 			Element customSQLRootElement = customSQLDocument.getRootElement();
 
@@ -603,15 +604,25 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return _sourceProcessor;
 	}
 
-	protected String getVariableTypeName(
-		String content, String fileContent, String variableName) {
+	protected String getVariableName(String methodCall) {
+		if (methodCall != null) {
+			return methodCall.substring(0, methodCall.indexOf(CharPool.PERIOD));
+		}
 
-		return getVariableTypeName(content, fileContent, variableName, false);
+		return StringPool.BLANK;
 	}
 
 	protected String getVariableTypeName(
-		String content, String fileContent, String variableName,
-		boolean includeArrayOrCollectionTypes) {
+		String content, JavaTerm javaTerm, String fileContent, String fileName,
+		String variableName) {
+
+		return getVariableTypeName(
+			content, javaTerm, fileContent, fileName, variableName, false);
+	}
+
+	protected String getVariableTypeName(
+		String content, JavaTerm javaTerm, String fileContent, String fileName,
+		String variableName, boolean includeArrayOrCollectionTypes) {
 
 		if (variableName == null) {
 			return null;
@@ -624,8 +635,58 @@ public abstract class BaseSourceCheck implements SourceCheck {
 			return variableTypeName;
 		}
 
-		return _getVariableTypeName(
-			fileContent, variableName, includeArrayOrCollectionTypes);
+		JavaClass javaClass = null;
+
+		try {
+			javaClass = _getJavaClass(javaTerm, fileName, fileContent);
+
+			if (javaClass == null) {
+				return variableTypeName;
+			}
+
+			for (JavaTerm childJavaTerm : javaClass.getChildJavaTerms()) {
+				if (childJavaTerm.isJavaVariable()) {
+					JavaVariable javaVariable = (JavaVariable)childJavaTerm;
+
+					String variableContent = javaVariable.getContent();
+
+					variableTypeName = _getVariableTypeName(
+						variableContent, variableName,
+						includeArrayOrCollectionTypes);
+
+					if (variableTypeName != null) {
+						return variableTypeName;
+					}
+				}
+			}
+		}
+		catch (Exception exception) {
+			return variableTypeName;
+		}
+
+		return variableTypeName;
+	}
+
+	protected boolean hasClassOrVariableName(
+		String className, String content, String fileContent, String fileName,
+		String methodCall) {
+
+		String variable = getVariableName(methodCall);
+
+		if (variable.isEmpty()) {
+			return false;
+		}
+
+		String variableTypeName = getVariableTypeName(
+			content, null, fileContent, fileName, variable.trim(), true);
+
+		if ((variableTypeName != null) &&
+			variableTypeName.startsWith(className)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	protected boolean isAttributeValue(
@@ -776,24 +837,43 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	protected static final String RUN_OUTSIDE_PORTAL_EXCLUDES =
 		"run.outside.portal.excludes";
 
+	private JavaClass _getJavaClass(
+			JavaTerm javaTerm, String fileName, String fileContent)
+		throws Exception {
+
+		if (javaTerm == null) {
+			return JavaClassParser.parseJavaClass(fileName, fileContent);
+		}
+
+		if (javaTerm.isJavaClass()) {
+			return (JavaClass)javaTerm;
+		}
+
+		return javaTerm.getParentJavaClass();
+	}
+
 	private String _getVariableTypeName(
 		String content, String variableName,
 		boolean includeArrayOrCollectionTypes) {
 
 		Pattern pattern = Pattern.compile(
-			"\\W(\\w+)\\s+" + variableName + "\\s*[;=),]");
+			"\\W(\\w+)\\s+" + variableName + "\\s*[;=),:]");
 
 		Matcher matcher = pattern.matcher(content);
 
-		if (matcher.find()) {
-			return matcher.group(1);
+		while (matcher.find()) {
+			String group = matcher.group(1);
+
+			if (!group.equals("return")) {
+				return group;
+			}
 		}
 
 		if (!includeArrayOrCollectionTypes) {
 			return null;
 		}
 
-		pattern = Pattern.compile("[\\]>]\\s+" + variableName + "\\s*[;=),]");
+		pattern = Pattern.compile("[\\]>]\\s+" + variableName + "\\s*[;=),:]");
 
 		matcher = pattern.matcher(content);
 

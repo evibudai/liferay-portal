@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,10 +31,11 @@ definition {
 	}
 
 	@description = "This ensures that a depot can be accessed through the Product Menu when the Applications Menu is disabled."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAccessAppsViaProductMenu {
-		property test.name.skip.portal.instance = "DepotEntry#CanAccessAppsViaProductMenu";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -51,17 +52,17 @@ definition {
 
 			DepotNavigator.gotoDepot(depotName = "Test Depot Name");
 
-			DepotNavigator.gotoPortlet(portlet = "${application}");
+			DepotNavigator.gotoPortlet(portlet = ${application});
 		}
 	}
 
 	@description = "This tests the basic flow the user will take to add a depot through the UI."
 	@e2e
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAddDepot {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		ApplicationsMenu.gotoPortlet(
@@ -79,7 +80,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot containing a folder and some files can be deleted."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDeleteDepotWithContent {
 		JSONDepot.addDepot(
@@ -112,7 +113,7 @@ definition {
 	}
 
 	@description = "This ensures that an empty depot can be deleted."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanDeleteEmptyDepot {
 		JSONDepot.addDepot(
@@ -128,7 +129,7 @@ definition {
 
 	@description = "This ensures that a depot can be deleted in the list view."
 	@e2e
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanDeleteInListView {
 		JSONDepot.addDepot(
@@ -146,7 +147,7 @@ definition {
 
 	@description = "This ensures that a depot can be deleted in the table view."
 	@e2e
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanDeleteInTableView {
 		JSONDepot.addDepot(
@@ -163,38 +164,38 @@ definition {
 	}
 
 	@description = "This ensures that a user can deselect depots and delete the reselected ones in cards view."
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanDeselectAndDeleteInCardsView {
 		for (var depotName : list "Test Depot Name 1,Test Depot Name 2,Test Depot Name 3") {
 			JSONDepot.addDepot(
 				depotDescription = "This is the description of a depot",
-				depotName = "${depotName}");
+				depotName = ${depotName});
 		}
 
 		DepotNavigator.openDepotAdmin();
 
 		PortletEntry.selectAll();
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "All Selected");
+			value1 = "All Selected (3 of 3 Items Selected)");
 
 		Click.clickNoWaitForVisible(
 			key_card = "Test Depot Name 1",
 			locator1 = "Card#CARD_CHECKBOX");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "2 of 3 Selected");
+			value1 = "2 of 3 Items Selected");
 
 		Depot.deleteCP(deletions = "true");
 
 		LexiconCard.checkCardCheckbox(card = "Test Depot Name 1");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "All Selected");
+			value1 = "All Selected (1 of 1 Items Selected)");
 
 		Depot.deleteCP(deletions = "true");
 
@@ -202,13 +203,13 @@ definition {
 	}
 
 	@description = "This ensures that a user can deselect depots and delete the reselected ones in list view."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDeselectAndDeleteInListView {
 		for (var depotName : list "Test Depot Name 1,Test Depot Name 2,Test Depot Name 3") {
 			JSONDepot.addDepot(
 				depotDescription = "This is the description of a depot",
-				depotName = "${depotName}");
+				depotName = ${depotName});
 		}
 
 		DepotNavigator.openDepotAdmin();
@@ -217,17 +218,17 @@ definition {
 
 		PortletEntry.selectAll();
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "All Selected");
+			value1 = "All Selected (3 of 3 Items Selected)");
 
 		Uncheck(
 			key_listEntry = "Test Depot Name 1",
 			locator1 = "LexiconList#LIST_ENTRY_CHECKBOX");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "2 of 3 Selected");
+			value1 = "2 of 3 Items Selected");
 
 		Depot.deleteCP(deletions = "true");
 
@@ -235,9 +236,9 @@ definition {
 			key_listEntry = "Test Depot Name 1",
 			locator1 = "LexiconList#LIST_ENTRY_CHECKBOX");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "All Selected");
+			value1 = "All Selected (1 of 1 Items Selected)");
 
 		Depot.deleteCP(deletions = "true");
 
@@ -245,13 +246,13 @@ definition {
 	}
 
 	@description = "This ensures that a user can deselect depots and delete the reselected ones in table view."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDeselectAndDeleteInTableView {
 		for (var depotName : list "Test Depot Name 1,Test Depot Name 2,Test Depot Name 3") {
 			JSONDepot.addDepot(
 				depotDescription = "This is the description of a depot",
-				depotName = "${depotName}");
+				depotName = ${depotName});
 		}
 
 		DepotNavigator.openDepotAdmin();
@@ -260,17 +261,17 @@ definition {
 
 		PortletEntry.selectAll();
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "All Selected");
+			value1 = "All Selected (3 of 3 Items Selected)");
 
 		Uncheck(
 			key_rowEntry = "Test Depot Name 1",
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "2 of 3 Selected");
+			value1 = "2 of 3 Items Selected");
 
 		Depot.deleteCP(deletions = "true");
 
@@ -278,7 +279,7 @@ definition {
 			key_rowEntry = "Test Depot Name 1",
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
 			value1 = "All Selected");
 
@@ -289,7 +290,7 @@ definition {
 
 	@description = "This ensures that a depot can be edited in the list view."
 	@e2e
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanEditInListView {
 		JSONDepot.addDepot(
@@ -323,7 +324,7 @@ definition {
 
 	@description = "This ensures that a depot can be edited in the table view."
 	@e2e
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanEditInTableView {
 		JSONDepot.addDepot(
@@ -356,7 +357,7 @@ definition {
 	}
 
 	@description = "This ensures that the depot name and description can be edited."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditNameAndDescription {
 		property portal.acceptance = "true";
@@ -379,7 +380,7 @@ definition {
 
 	@description = "This ensures that a depot can be edited via settings. Also covers LPS-146116, it ensures that there is no kebab menu on depot admin page."
 	@e2e
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanEditNameViaSettings {
 		JSONDepot.addDepot(
@@ -406,7 +407,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-120834. It ensures that a user can not redirect to the depot via Space icon."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CannotAccessDepotViaSite {
 		property portal.acceptance = "true";
@@ -421,7 +422,7 @@ definition {
 
 		WaitForVisible(
 			locator1 = "NavBar#NAV_ITEM_LINK",
-			value1 = "${navItem}");
+			value1 = ${navItem});
 
 		AssertElementNotPresent(
 			locator1 = "NavBar#NAV_ITEM_LINK",
@@ -432,7 +433,7 @@ definition {
 	// May need to update test after LPS-133688 is fixed
 
 	@description = "This ensures that a user can not create a repository with the same escape characters name as another repository."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CannotAddDuplicateWithEscapeCharacters {
 		DepotNavigator.openDepotAdmin();
@@ -451,15 +452,15 @@ definition {
 
 		AssertElementNotPresent(
 			key_card = "&",
-			key_index = "2",
+			key_index = 2,
 			locator1 = "Card#CARD_PAGE_ITEM");
 	}
 
 	@description = "This ensures that users cannot create the same name as another site name."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CannotAddNameThatDuplicatesSite {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		DepotNavigator.openDepotAdmin();
 
@@ -473,7 +474,7 @@ definition {
 	}
 
 	@description = "This ensures that users cannot create the same name as another translated repository name."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CannotAddNameThatDuplicatesTranslation {
 		JSONDepot.addDepot(
@@ -503,7 +504,7 @@ definition {
 	}
 
 	@description = "This ensures that users cannot create a site with the same name as an existing depot."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CannotAddSiteThatDuplicatesName {
 		JSONDepot.addDepot(
@@ -518,7 +519,7 @@ definition {
 	}
 
 	@description = "This ensures that users cannot edit repository name same as another repository name."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CannotRenameWithDuplicateTitle {
 		JSONDepot.addDepot(
@@ -542,7 +543,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot's description can be searched."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanSearchForDepotDescription {
 		JSONDepot.addDepot(
@@ -568,20 +569,20 @@ definition {
 		Depot.viewSearchResult(
 			excludedResults = "Should not be returned in search",
 			includedResults = "Depot 1,Depot 2,Depot 3",
-			resultCount = "3",
+			resultCount = 3,
 			searchTerm = "Description");
 
 		DepotNavigator.gotoDepot(depotName = "Depot 1");
 	}
 
 	@description = "This ensures that a depot's title can be searched."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanSearchForDepotTitle {
 		for (var depotName : list "Depot 1,Depot 2,Depot 3") {
 			JSONDepot.addDepot(
 				depotDescription = "",
-				depotName = "${depotName}");
+				depotName = ${depotName});
 		}
 
 		JSONDepot.addDepot(
@@ -599,20 +600,20 @@ definition {
 		Depot.viewSearchResult(
 			excludedResults = "Should not be returned in search",
 			includedResults = "Depot 1,Depot 2,Depot 3",
-			resultCount = "3",
+			resultCount = 3,
 			searchTerm = "Depot");
 
 		DepotNavigator.gotoDepot(depotName = "Depot 1");
 	}
 
 	@description = "This ensures that all depots can be deleted when the user selects all."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanSelectAllAndDelete {
 		for (var depotName : list "Test Depot Name 1,Test Depot Name 2,Test Depot Name 3") {
 			JSONDepot.addDepot(
 				depotDescription = "This is the description of a depot",
-				depotName = "${depotName}");
+				depotName = ${depotName});
 		}
 
 		DepotNavigator.openDepotAdmin();
@@ -625,13 +626,13 @@ definition {
 	}
 
 	@description = "This ensures that all depots can be deleted in the list view when the user selects all."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanSelectAllAndDeleteInListView {
 		for (var depotName : list "Test Depot Name 1,Test Depot Name 2,Test Depot Name 3") {
 			JSONDepot.addDepot(
 				depotDescription = "This is the description of a depot",
-				depotName = "${depotName}");
+				depotName = ${depotName});
 		}
 
 		DepotNavigator.openDepotAdmin();
@@ -646,13 +647,13 @@ definition {
 	}
 
 	@description = "This ensures that all depots can be deleted in the table view when the user selects all."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanSelectAllAndDeleteInTableView {
 		for (var depotName : list "Test Depot Name 1,Test Depot Name 2,Test Depot Name 3") {
 			JSONDepot.addDepot(
 				depotDescription = "This is the description of a depot",
-				depotName = "${depotName}");
+				depotName = ${depotName});
 		}
 
 		DepotNavigator.openDepotAdmin();
@@ -667,11 +668,11 @@ definition {
 	}
 
 	@description = "This ensures that the number of connected sites can be viewed in the card view."
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanViewConnectionsInCardView {
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
-			JSONGroup.addGroup(groupName = "${siteName}");
+			HeadlessSite.addSite(siteName = ${siteName});
 		}
 
 		JSONDepot.addDepot(
@@ -682,31 +683,31 @@ definition {
 
 		Depot.viewConnectedSiteNumber(
 			cardView = "true",
-			connectedSiteNumber = "0",
+			connectedSiteNumber = 0,
 			depotName = "Test Depot Name");
 
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
 			JSONDepot.connectSite(
 				depotName = "Test Depot Name",
-				groupName = "${siteName}");
+				groupName = ${siteName});
 		}
 
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
 			cardView = "true",
-			connectedSiteNumber = "3",
+			connectedSiteNumber = 3,
 			depotName = "Test Depot Name");
 
 		for (var siteName : list "Site Name 2,Site Name 3") {
-			JSONDepot.disconnectSite(groupName = "${siteName}");
+			JSONDepot.disconnectSite(groupName = ${siteName});
 		}
 
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
 			cardView = "true",
-			connectedSiteNumber = "1",
+			connectedSiteNumber = 1,
 			depotName = "Test Depot Name");
 
 		JSONDepot.disconnectSite(groupName = "Site Name 1");
@@ -715,16 +716,16 @@ definition {
 
 		Depot.viewConnectedSiteNumber(
 			cardView = "true",
-			connectedSiteNumber = "0",
+			connectedSiteNumber = 0,
 			depotName = "Test Depot Name");
 	}
 
 	@description = "This ensures that the number of connected sites can be viewed in the table view."
-	@priority = "5"
+	@priority = 3
 	@refactordone
 	test CanViewConnectionsInTableView {
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
-			JSONGroup.addGroup(groupName = "${siteName}");
+			HeadlessSite.addSite(siteName = ${siteName});
 		}
 
 		JSONDepot.addDepot(
@@ -734,31 +735,31 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "0",
+			connectedSiteNumber = 0,
 			depotName = "Test Depot Name",
 			tableView = "true");
 
 		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
 			JSONDepot.connectSite(
 				depotName = "Test Depot Name",
-				groupName = "${siteName}");
+				groupName = ${siteName});
 		}
 
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "3",
+			connectedSiteNumber = 3,
 			depotName = "Test Depot Name",
 			tableView = "true");
 
 		for (var siteName : list "Site Name 2,Site Name 3") {
-			JSONDepot.disconnectSite(groupName = "${siteName}");
+			JSONDepot.disconnectSite(groupName = ${siteName});
 		}
 
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "1",
+			connectedSiteNumber = 1,
 			depotName = "Test Depot Name",
 			tableView = "true");
 
@@ -767,7 +768,7 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "0",
+			connectedSiteNumber = 0,
 			depotName = "Test Depot Name",
 			tableView = "true");
 	}

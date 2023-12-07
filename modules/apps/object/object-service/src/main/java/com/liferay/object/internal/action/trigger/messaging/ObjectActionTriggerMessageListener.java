@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.action.trigger.messaging;
@@ -18,6 +9,7 @@ import com.liferay.object.action.engine.ObjectActionEngine;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.util.GetterUtil;
 
 /**
@@ -40,7 +32,25 @@ public class ObjectActionTriggerMessageListener extends BaseMessageListener {
 		_objectActionEngine.executeObjectActions(
 			_className, GetterUtil.getLong(message.get("companyId")),
 			_objectActionTriggerKey, (JSONObject)message.getPayload(),
-			GetterUtil.getLong(message.get("principalName")));
+			_getUserId(message));
+	}
+
+	private long _getUserId(Message message) {
+		long userId = GetterUtil.getLong(message.get("principalName"));
+
+		if (userId != 0L) {
+			return userId;
+		}
+
+		Object object = message.get("permissionChecker");
+
+		if (!(object instanceof PermissionChecker)) {
+			return 0L;
+		}
+
+		PermissionChecker permissionChecker = (PermissionChecker)object;
+
+		return permissionChecker.getUserId();
 	}
 
 	private final String _className;

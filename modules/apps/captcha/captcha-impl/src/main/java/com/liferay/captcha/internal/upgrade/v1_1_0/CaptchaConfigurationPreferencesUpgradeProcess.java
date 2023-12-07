@@ -1,27 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.captcha.internal.upgrade.v1_1_0;
 
 import com.liferay.captcha.internal.constants.LegacyCaptchaPropsKeys;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 
-import java.util.Arrays;
 import java.util.Dictionary;
-import java.util.stream.Stream;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -91,13 +81,9 @@ public class CaptchaConfigurationPreferencesUpgradeProcess
 	private String[] _replaceArrayValue(
 		String[] array, String target, String replacement) {
 
-		Stream<String> stream = Arrays.stream(array);
-
-		return stream.map(
-			s -> target.equals(s.trim()) ? replacement : s
-		).toArray(
-			size -> new String[size]
-		);
+		return TransformUtil.transform(
+			array, s -> target.equals(s.trim()) ? replacement : s,
+			String.class);
 	}
 
 	private final ConfigurationAdmin _configurationAdmin;

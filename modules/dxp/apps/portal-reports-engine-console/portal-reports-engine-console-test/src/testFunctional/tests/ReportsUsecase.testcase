@@ -1,7 +1,7 @@
 @component-name = "portal-workflow-ee"
 definition {
 
-	property portal.acceptance = "true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "false";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
@@ -14,9 +14,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,7 +33,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-51226."
-	@priority = "4"
+	@priority = 4
 	test AddDefinitionNoTemplate {
 		Navigator.openURL();
 
@@ -52,7 +52,7 @@ definition {
 		Alert.viewErrorMessage(errorMessage = "Please enter a valid file.");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test DownloadReportPG {
 		Navigator.openURL();
 
@@ -90,7 +90,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-50501."
-	@priority = "4"
+	@priority = 4
 	test ViewDefinitionsPagination {
 		Navigator.openURL();
 
@@ -110,7 +110,7 @@ definition {
 
 		ReportsAdmin.gotoDefinitions();
 
-		Pagination.changePagination(itemsPerPage = "4");
+		Pagination.changePagination(itemsPerPage = 4);
 
 		var key_reportsDefinitionName = "Reports Definition 6";
 
@@ -129,17 +129,15 @@ definition {
 
 	@description = "This is a use case for LPS-51009."
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test ViewReportEmailNewConfiguration {
 		property test.assert.javascript.errors = "false";
-		property test.name.skip.portal.instance = "ReportsUsecase#ViewReportEmailNewConfiguration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.configureMailServerSettings(
 			userName = PropsUtil.get("email.address.2"),
@@ -193,45 +191,26 @@ definition {
 			reportFormat = "pdf",
 			reportsDefinitionName = "Reports Definition Name");
 
-		Pause(locator1 = "30000");
+		Pause(value1 = 30000);
 
 		Gmail.login(
 			userEmailAddress = PropsUtil.get("email.address.4"),
 			userPassword = PropsUtil.get("email.password.4"));
 
-		Gmail.gotoHtmlMode();
-
-		Gmail.viewMail(
-			emailFromUserName = "Liferay QA",
-			gmailAssetType = "New Report From QA: reports_admin_template_source_sample_class_name.pdf",
-			gmailMessageBody = "You have a new report from your friends in QA.",
-			gmailMessageTitle = "New Report From QA: reports_admin_template_source_sample_class_name.pdf");
-
-		Gmail.gotoHtmlMode();
+		Gmail.gotoMail(gmailMessageTitle = "New Report From QA: reports_admin_template_source_sample_class_name.pdf");
 
 		Gmail.deleteSpecificMail(gmailMessageTitleList = "New Report From QA: reports_admin_template_source_sample_class_name.pdf");
 
-		Gmail.logoutAndLogin(
-			userEmailAddress = PropsUtil.get("email.address.3"),
-			userPassword = PropsUtil.get("email.password.3"));
+		TestUtils.hardRefresh();
 
-		Gmail.gotoHtmlMode();
-
-		Gmail.viewMail(
-			emailFromUserName = "Liferay QA",
-			gmailAssetType = "New Report From QA: reports_admin_template_source_sample_class_name.pdf",
-			gmailMessageAttachment = "reports_admin_template_source_sample_class_name.pdf",
-			gmailMessageBody = "Please review the attached report from your friends in QA!",
-			gmailMessageTitle = "New Report From QA: reports_admin_template_source_sample_class_name.pdf");
-
-		Gmail.gotoHtmlMode();
+		Gmail.gotoMail(gmailMessageTitle = "New Report From QA: reports_admin_template_source_sample_class_name.pdf");
 
 		Gmail.deleteSpecificMail(gmailMessageTitleList = "New Report From QA: reports_admin_template_source_sample_class_name.pdf");
 
-		Navigator.openSpecificURL(url = "${portalURL}");
+		Navigator.openSpecificURL(url = ${portalURL});
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewReportPG {
 		Navigator.openURL();
 

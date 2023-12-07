@@ -1,16 +1,18 @@
 definition {
 
-	@summary = "This calls the JSON WS API to add a Depot entry"
-	macro addDepot {
+	@summary = "Default summary"
+	macro addDepot(depotName = null, depotDescription = null) {
 		if (!(isSet(portalURL))) {
 			var portalURL = JSONCompany.getPortalURL();
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/depot.depotentry/add-depot-entry \
-			-u test@liferay.com:test \
-			-d nameMap={"en_US": "${depotName}"} \
-			-d descriptionMap={"en_US": "${depotDescription}"}
+				-u ${userLoginInfo} \
+				-d nameMap={"en_US": "${depotName}"} \
+				-d descriptionMap={"en_US": "${depotDescription}"}
 		''';
 
 		echo("## Adding a 'Depot' with the following info using JSONWS:");
@@ -19,28 +21,29 @@ definition {
 
 		echo("## * Description: ${depotDescription}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to connect the depot to a site"
-	macro connectSite {
-		var depotId = JSONGroupAPI._getDepotIdByName(depotName = "${depotName}");
+	@summary = "Default summary"
+	macro connectSite(depotName = null, groupName = null) {
+		var depotId = JSONGroupAPI._getDepotIdByName(depotName = ${depotName});
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/depot.depotentrygrouprel/add-depot-entry-group-rel \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d depotEntryId=${depotId}
 				-d toGroupId=${groupId}
-			''';
+		''';
 
 		echo("## Connect a 'Depot' to a site with the following info using JSONWS:");
 
@@ -48,56 +51,59 @@ definition {
 
 		echo("## * ID: ${groupId}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to delete a Depot entry"
-	macro deleteDepot {
+	@summary = "Default summary"
+	macro deleteDepot(noSelenium = null, depotName = null) {
 		var depotId = JSONGroupAPI._getDepotIdByName(
-			depotName = "${depotName}",
-			noSelenium = "${noSelenium}");
+			depotName = ${depotName},
+			noSelenium = ${noSelenium});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/depot.depotentry/delete-depot-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d depotEntryId=${depotId}
-			''';
+		''';
 
 		echo("## Deleting a 'Depot' with the following info using JSONWS:");
 
 		echo("## * ID: ${depotId}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to disconnect the depot to a site"
-	macro disconnectSite {
+	@summary = "Default summary"
+	macro disconnectSite(groupName = null, groupId = null) {
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		var depotEntryGroupRelId = JSONGroupAPI._getDepotEntryGroupRelIdByGroupName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/depot.depotentrygrouprel/delete-depot-entry-group-rel \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d depotEntryGroupRelId=${depotEntryGroupRelId}
-			''';
+		''';
 
 		echo("## Disconnect a 'Depot' to a site with the following info using JSONWS:");
 
 		echo("## * ID: ${groupId}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	macro remoteStagingSetUp {
+	@summary = "Default summary"
+	macro remoteStagingSetUp(site = null, branchingPublic = null, groupName = null, branchingPrivate = null) {
 		if (!(isSet(remotePort))) {
-			var remotePort = "8080";
+			var remotePort = 8080;
 		}
 
 		JSONDepot.addDepot(
@@ -108,46 +114,47 @@ definition {
 		var remoteGroupId = JSONGroupSetter.setGroupId(
 			groupName = "Remote Depot",
 			portalURL = "http://localhost:${remotePort}",
-			site = "${site}");
+			site = ${site});
 
 		JSONStaging.enableRemoteStaging(
-			branchingPrivate = "${branchingPrivate}",
-			branchingPublic = "${branchingPublic}",
-			groupName = "${groupName}",
-			remoteGroupId = "${remoteGroupId}",
-			remotePort = "${remotePort}",
-			site = "${site}");
+			branchingPrivate = ${branchingPrivate},
+			branchingPublic = ${branchingPublic},
+			groupName = ${groupName},
+			remoteGroupId = ${remoteGroupId},
+			remotePort = ${remotePort},
+			site = ${site});
 	}
 
-	@summary = "This calls the JSON WS API to make structure available or unavailable."
-	macro updateStructureState {
+	@summary = "Default summary"
+	macro updateStructureState(groupName = null, structureState = null) {
 		Variables.assertDefined(parameterList = "${groupName},${structureState}");
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
-		if ("${structureState}" == "Available") {
+		if (${structureState} == "Available") {
 			var ddmStructuresAvailable = "true";
 		}
 
-		if ("${structureState}" == "Unavailable") {
+		if (${structureState} == "Unavailable") {
 			var ddmStructuresAvailable = "false";
 		}
 
 		var depotEntryGroupRelId = JSONGroupAPI._getDepotEntryGroupRelIdByGroupName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/depot.depotentrygrouprel/update-ddm-structures-available \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d depotEntryGroupRelId=${depotEntryGroupRelId} \
 				-d ddmStructuresAvailable=${ddmStructuresAvailable}
-			''';
+		''';
 
-		JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post(${curl});
 	}
 
 }

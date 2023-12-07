@@ -1,24 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.scripting.internal.executor;
 
 import com.liferay.object.scripting.executor.ObjectScriptingExecutor;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.scripting.ScriptingExecutor;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.scripting.ScriptingExecutorRegistry;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -40,18 +36,19 @@ public class GroovyObjectScriptingExecutor implements ObjectScriptingExecutor {
 		Map<String, Object> inputObjects, Set<String> outputNames,
 		String script) {
 
-		Thread currentThread = Thread.currentThread();
+		ScriptingExecutor scriptingExecutor =
+			_scriptingExecutorRegistry.getScriptingExecutor("groovy");
 
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		Class<?> clazz = getClass();
+		if (scriptingExecutor == null) {
+			return Collections.emptyMap();
+		}
 
 		Map<String, Object> results = new HashMap<>();
 
-		currentThread.setContextClassLoader(clazz.getClassLoader());
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				GroovyObjectScriptingExecutor.class.getClassLoader())) {
 
-		try {
-			results = _scriptingExecutor.eval(
+			results = scriptingExecutor.eval(
 				null, inputObjects, outputNames, script);
 
 			results.put("invalidScript", false);
@@ -61,9 +58,10 @@ public class GroovyObjectScriptingExecutor implements ObjectScriptingExecutor {
 
 			results.put("invalidScript", true);
 		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
-		}
+
+		results.putIfAbsent(
+			"validationCriteriaMet",
+			!GetterUtil.getBoolean(results.get("invalidFields")));
 
 		return results;
 	}
@@ -71,7 +69,7 @@ public class GroovyObjectScriptingExecutor implements ObjectScriptingExecutor {
 	private static final Log _log = LogFactoryUtil.getLog(
 		GroovyObjectScriptingExecutor.class);
 
-	@Reference(target = "(scripting.language=groovy)")
-	private ScriptingExecutor _scriptingExecutor;
+	@Reference
+	private ScriptingExecutorRegistry _scriptingExecutorRegistry;
 
 }

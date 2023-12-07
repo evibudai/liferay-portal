@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service.http;
@@ -384,6 +375,51 @@ public class CPTaxCategoryServiceHttp {
 		}
 	}
 
+	public static com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.commerce.product.model.CPTaxCategory>
+				searchCPTaxCategories(
+					HttpPrincipal httpPrincipal, long companyId,
+					String keywords, int start, int end,
+					com.liferay.portal.kernel.search.Sort sort)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				CPTaxCategoryServiceUtil.class, "searchCPTaxCategories",
+				_searchCPTaxCategoriesParameterTypes8);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId, keywords, start, end, sort);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.portal.kernel.search.BaseModelSearchResult
+				<com.liferay.commerce.product.model.CPTaxCategory>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	public static com.liferay.commerce.product.model.CPTaxCategory
 			updateCPTaxCategory(
 				HttpPrincipal httpPrincipal, String externalReferenceCode,
@@ -395,7 +431,7 @@ public class CPTaxCategoryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				CPTaxCategoryServiceUtil.class, "updateCPTaxCategory",
-				_updateCPTaxCategoryParameterTypes8);
+				_updateCPTaxCategoryParameterTypes9);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, cpTaxCategoryId, nameMap,
@@ -458,7 +494,12 @@ public class CPTaxCategoryServiceHttp {
 		new Class[] {long.class};
 	private static final Class<?>[] _getCPTaxCategoryParameterTypes7 =
 		new Class[] {long.class};
-	private static final Class<?>[] _updateCPTaxCategoryParameterTypes8 =
+	private static final Class<?>[] _searchCPTaxCategoriesParameterTypes8 =
+		new Class[] {
+			long.class, String.class, int.class, int.class,
+			com.liferay.portal.kernel.search.Sort.class
+		};
+	private static final Class<?>[] _updateCPTaxCategoryParameterTypes9 =
 		new Class[] {
 			String.class, long.class, java.util.Map.class, java.util.Map.class
 		};

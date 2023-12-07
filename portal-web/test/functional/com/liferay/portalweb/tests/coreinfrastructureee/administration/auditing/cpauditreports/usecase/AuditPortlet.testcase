@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,14 +28,12 @@ definition {
 	}
 
 	@description = "This test Audit can capture events when assign, unassign user to user group or role, and event details contain the correct info."
-	@priority = "3"
+	@priority = 4
 	test CanCaptureEventsAboutAssignAndUnassignUserToUserGroupAndRole {
-		property test.name.skip.portal.instance = "AuditPortlet#CanCaptureEventsAboutAssignAndUnassignUserToUserGroupAndRole";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "User Groups");
+		UserGroup.openUserGroupsAdmin();
 
 		UserGroup.addCP(userGroupName = "User Group1");
 
@@ -43,94 +41,70 @@ definition {
 			userGroupName = "User Group1",
 			userScreenName = "test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		var browserIPAddress = PropsUtil.get("browser.ip.address");
 
 		Audit.viewAuditDetails(
 			additionalInformation = "User Group1",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "ASSIGN",
 			key_resourceName = "User",
 			resourceAction = "ASSIGN",
 			resourceName = "User",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "User Groups");
+		UserGroup.openUserGroupsAdmin();
 
 		UserGroup.removeMemberCP(
 			userGroupName = "User Group1",
 			userScreenName = "test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "User Group1",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "UNASSIGN",
 			key_resourceName = "User",
 			resourceAction = "UNASSIGN",
 			resourceName = "User",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		Role.add(roleTitle = "Role1 Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		Role.addAssignee(
 			assigneeName = "Test Test",
 			assigneeType = "Users",
 			roleTitle = "Role1 Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "Role1 Name",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "ASSIGN",
 			key_resourceName = "User",
 			resourceAction = "ASSIGN",
 			resourceName = "User",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		Role.removeAssignee(
 			assigneeName = "Test Test",
 			assigneeType = "Users",
 			roleTitle = "Role1 Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "Role1 Name",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "UNASSIGN",
 			key_resourceName = "User",
 			resourceAction = "UNASSIGN",
@@ -139,15 +113,13 @@ definition {
 	}
 
 	@description = "This test Audit can capture events when add, update, delete, impersonate user, and event details contain the correct info."
-	@priority = "5"
+	@priority = 4
 	test CanCaptureEventsAboutUserActions {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "AuditPortlet#CanCaptureEventsAboutUserActions";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.addCP(
 			userEmailAddress = "test1@liferay.com",
@@ -155,76 +127,58 @@ definition {
 			userLastName = "test1",
 			userScreenName = "test1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		var browserIPAddress = PropsUtil.get("browser.ip.address");
 
 		Audit.viewAuditDetails(
 			additionalInformation = "test1@liferay.com",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "ADD",
 			key_resourceName = "User",
 			resourceAction = "ADD",
 			resourceName = "User",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UserNavigator.gotoUser(userScreenName = "test1");
 
 		User.editUserInformation(userMiddleNameEdit = "test1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "middleName",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "UPDATE",
 			key_resourceName = "User",
 			resourceAction = "UPDATE",
 			resourceName = "User",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.impersonateCP(
-			siteName = "${siteName}",
+			siteName = ${siteName},
 			userScreenName = "test1");
 
 		Close.closeWindow(locator1 = "title=Home - ${siteName}");
 
 		Navigator.selectSpecificWindow(windowTitle = "Users and Organizations - Liferay DXP");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "test1 test1 test1",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "IMPERSONATE",
 			key_resourceName = "User",
 			resourceAction = "IMPERSONATE",
 			resourceName = "User",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.deactivateCP(
 			deactivateType = "Actions",
@@ -234,14 +188,11 @@ definition {
 			deactivateType = "Actions",
 			userFirstName = "test1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "test1@liferay.com",
-			clientIp = "${browserIPAddress}",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "DELETE",
 			key_resourceName = "User",
 			resourceAction = "DELETE",
@@ -250,100 +201,76 @@ definition {
 	}
 
 	@description = "This test Audit can capture events when assign, unassign user to user group or role, and event details contain the correct info."
-	@priority = "3"
+	@priority = 4
 	test CanCaptureEventsAboutUserGroupAndRole {
-		property test.name.skip.portal.instance = "AuditPortlet#CanCaptureEventsAboutUserGroupAndRole";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "User Groups");
+		UserGroup.openUserGroupsAdmin();
 
 		UserGroup.addCP(userGroupName = "User Group1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
+
+		var browserIPAddress = PropsUtil.get("browser.ip.address");
 
 		Audit.viewAuditDetails(
 			additionalInformation = "",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "ADD",
 			key_resourceName = "UserGroup",
 			resourceAction = "ADD",
 			resourceName = "UserGroup",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "User Groups");
+		UserGroup.openUserGroupsAdmin();
 
 		UserGroup.editCP(
 			userGroupDescriptionEdit = "This is only for test",
 			userGroupName = "User Group1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "This is only for test",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "UPDATE",
 			key_resourceName = "UserGroup",
 			resourceAction = "UPDATE",
 			resourceName = "UserGroup",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "User Groups");
+		UserGroup.openUserGroupsAdmin();
 
 		UserGroup.deleteCP(userGroupName = "User Group1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "DELETE",
 			key_resourceName = "UserGroup",
 			resourceAction = "DELETE",
 			resourceName = "UserGroup",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		Role.add(roleTitle = "Role1 Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "ADD",
 			key_resourceName = "Role",
 			resourceAction = "ADD",
 			resourceName = "Role",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		Search.searchCP(searchTerm = "Role1 Name");
 
@@ -359,35 +286,26 @@ definition {
 
 		Alert.viewSuccessMessage();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "Role2 Name",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "UPDATE",
 			key_resourceName = "Role",
 			resourceAction = "UPDATE",
 			resourceName = "Role",
 			userName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		LexiconEntry.delete(rowEntry = "Role1 Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "DELETE",
 			key_resourceName = "Role",
 			resourceAction = "DELETE",
@@ -396,19 +314,19 @@ definition {
 	}
 
 	@description = "This test Audit can capture events when user login, logout, login fail, view pages, and event details contain the correct info."
-	@priority = "4"
+	@priority = 4
 	test CanCaptureEventsAboutUserLoginLogoutLoginFailAndViewPages {
 		property custom.properties = "audit.message.com.liferay.portal.kernel.model.Layout.VIEW=true";
-		property test.name.skip.portal.instance = "AuditPortlet#CanCaptureEventsAboutUserLoginLogoutLoginFailAndViewPages";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
+
+		var browserIPAddress = PropsUtil.get("browser.ip.address");
 
 		Audit.viewAuditDetails(
 			additionalInformation = "",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "LOGIN",
 			key_resourceName = "User",
 			resourceAction = "LOGIN",
@@ -417,14 +335,11 @@ definition {
 
 		Navigator.openURL();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "VIEW",
 			key_resourceName = "Layout",
 			resourceAction = "VIEW",
@@ -437,14 +352,11 @@ definition {
 			password = "test",
 			userEmailAddress = "test@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "LOGOUT",
 			key_resourceName = "User",
 			resourceAction = "LOGOUT",
@@ -461,14 +373,11 @@ definition {
 			password = "test",
 			userEmailAddress = "test@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.viewAuditDetails(
 			additionalInformation = "Failed to authenticate by email address",
-			clientIp = "127.0.0.1",
+			clientIp = ${browserIPAddress},
 			key_resourceAction = "LOGIN_FAILURE",
 			key_resourceName = "User",
 			resourceAction = "LOGIN_FAILURE",
@@ -477,14 +386,12 @@ definition {
 	}
 
 	@description = "This test Audit events can be searched with the Audit app's advanced search by various search criteria."
-	@priority = "4"
+	@priority = 4
 	test CanSearchEventsInAuditAdvancedSearch {
-		property test.name.skip.portal.instance = "AuditPortlet#CanSearchEventsInAuditAdvancedSearch";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		AssertTextEquals(
 			key_resourceAction = "LOGIN",
@@ -492,10 +399,7 @@ definition {
 			locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
 			value1 = "LOGIN");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.searchCP(
 			match = "All",
@@ -509,10 +413,7 @@ definition {
 			locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
 			value1 = "LOGIN");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.searchCP(
 			match = "Any",
@@ -526,10 +427,7 @@ definition {
 			locator1 = "AuditReports#REPORTS_TABLE_RESOURCE_ACTION",
 			value1 = "LOGIN");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "Audit");
+		Audit.openAuditAdmin();
 
 		Audit.searchCP(
 			match = "All",

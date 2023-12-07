@@ -1,7 +1,8 @@
 definition {
 
 	@description = "Get Cookie '${cookieName}' and check if it's value equals: '${expectedCookieValue}'"
-	macro _checkSelectedCookieValue {
+	@summary = "Default summary"
+	macro _checkSelectedCookieValue(expectedCookieValue = null) {
 		Variables.assertDefined(parameterList = "${cookieName},${expectedCookieValue}");
 
 		var javascript = '''var cookieName = "${cookieName}";
@@ -14,14 +15,14 @@ definition {
                         	}
                         	return value;''';
 
-		var cookieValue = selenium.getEval("${javascript}");
+		var cookieValue = selenium.getEval(${javascript});
 
-		if ("${cookieValue}" != "empty") {
+		if (${cookieValue} != "empty") {
 			echo("Cookie with name: ${cookieName} has the following value: ${cookieValue}");
 
 			TestUtils.assertEquals(
-				actual = "${cookieValue}",
-				expected = "${expectedCookieValue}");
+				actual = ${cookieValue},
+				expected = ${expectedCookieValue});
 		}
 		else {
 			fail("Cookie with name ${cookieName} is not exists");
@@ -29,7 +30,8 @@ definition {
 	}
 
 	@description = "Verifying if all Cookies are saved with true as value"
-	macro checkAllCookieAreAcceptedAndSaved {
+	@summary = "Default summary"
+	macro checkAllCookieAreAcceptedAndSaved() {
 		CookieHelper._checkSelectedCookieValue(
 			cookieName = "CONSENT_TYPE_PERFORMANCE",
 			expectedCookieValue = "true");
@@ -48,7 +50,8 @@ definition {
 	}
 
 	@description = "Verifying if all Cookies are saved with false as value"
-	macro checkAllCookieAreDeclinedAndSaved {
+	@summary = "Default summary"
+	macro checkAllCookieAreDeclinedAndSaved() {
 		CookieHelper._checkSelectedCookieValue(
 			cookieName = "CONSENT_TYPE_PERFORMANCE",
 			expectedCookieValue = "false");
@@ -66,31 +69,33 @@ definition {
 			expectedCookieValue = "true");
 	}
 
-	macro checkEachCookiesSavedValue {
+	@summary = "Default summary"
+	macro checkEachCookiesSavedValue(cookieNameListWithTrueValue = null, cookieNameListWithFalseValue = null) {
 		if (isSet(cookieNameListWithTrueValue)) {
-			for (var cookieName : list "${cookieNameListWithTrueValue}") {
+			for (var cookieName : list ${cookieNameListWithTrueValue}) {
 				CookieHelper._checkSelectedCookieValue(
-					cookieName = "${cookieName}",
+					cookieName = ${cookieName},
 					expectedCookieValue = "true");
 			}
 		}
 
 		if (isSet(cookieNameListWithFalseValue)) {
-			for (var cookieName : list "${cookieNameListWithFalseValue}") {
+			for (var cookieName : list ${cookieNameListWithFalseValue}) {
 				CookieHelper._checkSelectedCookieValue(
-					cookieName = "${cookieName}",
+					cookieName = ${cookieName},
 					expectedCookieValue = "false");
 			}
 		}
 	}
 
-	@description = "Check if cookie named as '${cookieName}' lasts for 6 months. Requires Chrome 87."
-	macro checkSelectedCookieExpirationDate {
-		Variables.assertDefined(parameterList = "${cookieName}");
+	@description = "Check if cookie named as '${cookieName}' lasts for 12 months. Requires Chrome 87."
+	@summary = "Default summary"
+	macro checkSelectedCookieExpirationDate() {
+		Variables.assertDefined(parameterList = ${cookieName});
 
-		var javascriptForTargetDate = '''var targetDate = new Date( Date.now() - 1000 * (60 * 5) ); targetDate.setMonth(targetDate.getMonth() + 6); return targetDate.toISOString().slice(0,13);''';
+		var javascriptForTargetDate = '''var targetDate = new Date( Date.now() - (1 * 24 * 60 * 60 * 1000) ); targetDate.setMonth(targetDate.getMonth() + 12); return targetDate.toISOString().slice(0,13);''';
 
-		var targetDate = selenium.getEval("${javascriptForTargetDate}");
+		var targetDate = selenium.getEval(${javascriptForTargetDate});
 		var javascriptForCookieExpirationDate = '''var cookieName = "${cookieName}";
 													async function getCookieExpirationDate(){
 													try {
@@ -104,15 +109,70 @@ definition {
 
 			return getCookieExpirationDate();''';
 
-		var cookieExpirationDate = selenium.getEval("${javascriptForCookieExpirationDate}");
+		var cookieExpirationDate = selenium.getEval(${javascriptForCookieExpirationDate});
 
-		if ("${targetDate}" != "${cookieExpirationDate}") {
+		if (${targetDate} != ${cookieExpirationDate}) {
 			TestUtils.fail(message = "Cookie expiration date is not 6 months ahead. The expected expiration date is:'${targetDate}' while the actual cookie has '${cookieExpirationDate}'.");
 		}
 	}
 
+	@description = "Get Cookie check if it's exist."
+	@summary = "Default summary"
+	macro checkSelectedCookieIsExist() {
+		Variables.assertDefined(parameterList = ${cookieName});
+
+		var javascript = '''var cookieName = "${cookieName}";
+                                var allCookies = document.cookie.split(';');
+        						var value="empty";
+                                for (var i = 0; i < allCookies.length; i++){
+                                	if(allCookies[i].includes(cookieName)){
+                                		value = "true";
+                                	}
+                                }
+                                return value;''';
+
+		var cookieExistValue = selenium.getEval(${javascript});
+
+		if (${cookieExistValue} == "true") {
+			echo("Cookie with name: ${cookieName} is exist");
+
+			TestUtils.pass(message = "Cookie named: ${cookieName} is exist.");
+		}
+		else if (${cookieExistValue} != "true") {
+			fail("Cookie with name ${cookieName} is not exist.");
+		}
+	}
+
+	@description = "Get Cookie check if it's not exist."
+	@summary = "Default summary"
+	macro checkSelectedCookieIsNotExist() {
+		Variables.assertDefined(parameterList = ${cookieName});
+
+		var javascript = '''var cookieName = "${cookieName}";
+                                var allCookies = document.cookie.split(';');
+        						var value="empty";
+                                for (var i = 0; i < allCookies.length; i++){
+                                	if(allCookies[i].includes(cookieName)){
+                                		value = "true";
+                                	}
+                                }
+                                return value;''';
+
+		var cookieExistValue = selenium.getEval(${javascript});
+
+		if (${cookieExistValue} != "true") {
+			echo("Cookie with name: ${cookieName} is not exist");
+
+			TestUtils.pass(message = "Cookie named: ${cookieName} is not exist.");
+		}
+		else if (${cookieExistValue} == "true") {
+			fail("Cookie with name ${cookieName} is exist.");
+		}
+	}
+
 	@description = "Get Cookie check if it's not present."
-	macro checkSelectedCookieIsNotPresent {
+	@summary = "Default summary"
+	macro checkSelectedCookieIsNotPresent(expectedCookieValue = null) {
 		Variables.assertDefined(parameterList = "${cookieName},${expectedCookieValue}");
 
 		var javascript = '''var cookieName = "${cookieName}";
@@ -125,9 +185,9 @@ definition {
                                 }
                                 return value;''';
 
-		var cookieValue = selenium.getEval("${javascript}");
+		var cookieValue = selenium.getEval(${javascript});
 
-		if ("${cookieValue}" == "empty") {
+		if (${cookieValue} == "empty") {
 			echo("Cookie with name: ${cookieName} has the following value: ${cookieValue}");
 
 			TestUtils.pass(message = "Cookie named: ${cookieName} is not present.");
@@ -138,46 +198,49 @@ definition {
 	}
 
 	@description = "Adding site with Cookie Banner Configuration portlet"
-	macro createSitePageWithCookieBannerConfigurationPortlet {
-		var groupName = "${groupName}";
+	@summary = "Default summary"
+	macro createSitePageWithCookieBannerConfigurationPortlet() {
+		var groupName = ${groupName};
 
 		if (!(isSet(groupName))) {
 			var groupName = "Guest";
 		}
 
 		JSONLayout.addPublicLayout(
-			groupName = "${groupName}",
+			groupName = ${groupName},
 			layoutName = "Cookie Consent Test Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			groupName = "${groupName}",
+			groupName = ${groupName},
 			layoutName = "Cookie Consent Test Page",
 			widgetName = "Cookies Banner Configuration");
 
 		Navigator.gotoSitePage(
 			pageName = "Cookie Consent Test Page",
-			siteName = "${groupName}");
+			siteName = ${groupName});
 	}
 
 	@description = "Delete all cookies and Refresh page"
-	macro deleteAllCookiesAndRefreshPage {
+	@summary = "Default summary"
+	macro deleteAllCookiesAndRefreshPage() {
 		var javascript = '''document.cookie.split(";").forEach(function(c) {
     document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
 });''';
 
-		var deleted = selenium.getEval("${javascript}");
+		var deleted = selenium.getEval(${javascript});
 
-		echo("${deleted}");
+		echo(${deleted});
 
 		Navigator.openURL();
 	}
 
 	@description = "Navigate to home page"
-	macro siteVisit {
+	@summary = "Default summary"
+	macro siteVisit(domain = null, virtualHostsURL = null) {
 		if (isSet(virtualHostsURL)) {
 			Navigator.openSpecificURL(
-				domain = "${domain}",
-				url = "${virtualHostsURL}");
+				domain = ${domain},
+				url = ${virtualHostsURL});
 		}
 		else {
 			Navigator.openURL();
@@ -185,10 +248,11 @@ definition {
 	}
 
 	@description = "Verify if Policy Page is visible"
-	macro verifyPolicyPageIsVisible {
-		Variables.assertDefined(parameterList = "${policyLink}");
+	@summary = "Default summary"
+	macro verifyPolicyPageIsVisible(policyLink = null) {
+		Variables.assertDefined(parameterList = ${policyLink});
 
-		SelectWindow(locator1 = "PolicyPage - Liferay DXP");
+		SelectWindow(value1 = "PolicyPage - Liferay DXP");
 
 		AssertElementPresent(locator1 = "//h2[contains(.,'Type Facet')]");
 	}

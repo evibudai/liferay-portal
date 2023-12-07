@@ -1,41 +1,55 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.exception;
 
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Marco Leo
  */
 public class RequiredObjectRelationshipException extends PortalException {
 
-	public RequiredObjectRelationshipException() {
-	}
-
-	public RequiredObjectRelationshipException(String msg) {
-		super(msg);
-	}
-
 	public RequiredObjectRelationshipException(
-		String msg, Throwable throwable) {
+		ObjectRelationship objectRelationship) {
 
-		super(msg, throwable);
+		super(
+			StringBundler.concat(
+				"Object relationship ",
+				objectRelationship.getObjectRelationshipId(),
+				" does not allow deletes"));
+
+		ObjectDefinition objectDefinition2 =
+			ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
+				objectRelationship.getObjectDefinitionId2());
+
+		_arguments = Arrays.asList(
+			objectRelationship.getName(), objectDefinition2.getShortName());
+
+		_messageKey =
+			"the-prevent-deletion-type-in-the-object-relationship-x-with-" +
+				"object-definition-x-is-preventing-this-object-entry-from-" +
+					"being-deleted";
 	}
 
-	public RequiredObjectRelationshipException(Throwable throwable) {
-		super(throwable);
+	public List<Object> getArguments() {
+		return _arguments;
 	}
+
+	public String getMessageKey() {
+		return _messageKey;
+	}
+
+	private final List<Object> _arguments;
+	private final String _messageKey;
 
 }

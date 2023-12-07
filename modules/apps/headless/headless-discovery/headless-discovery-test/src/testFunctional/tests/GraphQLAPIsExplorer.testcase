@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Headless";
+	property testray.main.component.name = "Headless Discovery";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -12,17 +12,19 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "Validate if the user can change the configuration of the API explorer to disable, into the Liferay portal"
-	@priority = "5"
+	@priority = 5
 	test disableApiEplorer {
-		property test.name.skip.portal.instance = "GraphQLAPIsExplorer#disableApiEplorer";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -44,9 +46,11 @@ definition {
 	}
 
 	@description = "Validate if the user can change the configuration of the API explorer to enable, into the Liferay portal"
-	@priority = "5"
+	@priority = 5
 	test enableApiEplorer {
-		property test.name.skip.portal.instance = "GraphQLAPIsExplorer#enableApiEplorers";
+		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 

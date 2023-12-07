@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -37,6 +28,7 @@ request.setAttribute("view.jsp-orderByType", wikiNodesManagementToolbarDisplayCo
 	filterDropdownItems="<%= wikiNodesManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	infoPanelId="infoPanelId"
 	itemsTotal="<%= wikiNodesManagementToolbarDisplayContext.getTotalItems() %>"
+	orderDropdownItems="<%= wikiNodesManagementToolbarDisplayContext.getOrderByDropdownItems() %>"
 	propsTransformer="wiki_admin/js/WikiNodesManagementToolbarPropsTransformer"
 	searchContainerId="wikiNodes"
 	selectable="<%= wikiNodesManagementToolbarDisplayContext.isSelectable() %>"
@@ -166,7 +158,7 @@ request.setAttribute("view.jsp-orderByType", wikiNodesManagementToolbarDisplayCo
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smaller table-cell-ws-nowrap"
 								name="last-post-date"
-								value='<%= (node.getLastPostDate() == null) ? LanguageUtil.get(request, "never") : dateFormatDateTime.format(node.getLastPostDate()) %>'
+								value='<%= (node.getLastPostDate() == null) ? LanguageUtil.get(request, "never") : dateTimeFormat.format(node.getLastPostDate()) %>'
 							/>
 
 							<liferay-ui:search-container-column-jsp

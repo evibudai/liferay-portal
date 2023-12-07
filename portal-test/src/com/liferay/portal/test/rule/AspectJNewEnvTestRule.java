@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.test.rule;
 
 import com.liferay.petra.io.Deserializer;
 import com.liferay.petra.io.Serializer;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.process.ClassPathUtil;
 import com.liferay.petra.process.ProcessCallable;
 import com.liferay.petra.process.ProcessException;
@@ -202,20 +195,19 @@ public class AspectJNewEnvTestRule extends NewEnvTestRule {
 						ClassPathUtil.getJVMClassPath(true)),
 					aspectClasses, _dumpDir);
 
-				currentThread.setContextClassLoader(weavingClassLoader);
+				try (SafeCloseable safeCloseable =
+						ThreadContextClassLoaderUtil.swap(weavingClassLoader)) {
 
-				Deserializer deserializer = new Deserializer(
-					ByteBuffer.wrap(_encodedProcessCallable));
+					Deserializer deserializer = new Deserializer(
+						ByteBuffer.wrap(_encodedProcessCallable));
 
-				return ReflectionTestUtil.invoke(
-					(ProcessCallable)deserializer.readObject(), "call",
-					new Class<?>[0]);
+					return ReflectionTestUtil.invoke(
+						(ProcessCallable)deserializer.readObject(), "call",
+						new Class<?>[0]);
+				}
 			}
 			catch (Exception exception) {
 				throw new ProcessException(exception);
-			}
-			finally {
-				currentThread.setContextClassLoader(contextClassLoader);
 			}
 		}
 

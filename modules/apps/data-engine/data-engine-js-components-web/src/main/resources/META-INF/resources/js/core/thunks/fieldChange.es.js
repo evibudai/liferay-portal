@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {evaluate, mergePages} from '../../utils/evaluation.es';
@@ -18,6 +9,31 @@ import {EVENT_TYPES} from '../actions/eventTypes.es';
 import {disableSubmitButton} from '../utils/submitButtonController.es';
 
 let REVALIDATE_UPDATES = [];
+
+const requireUpdatePageFieldNames = [
+	'alphabeticalOrder',
+	'autocomplete',
+	'dataSourceType',
+	'ddmDataProviderInstanceId',
+	'expirationDate',
+	'hideField',
+	'inputMask',
+	'limitToOneSubmissionPerUser',
+	'multiple',
+	'neverExpire',
+	'numericInputMask',
+	'options',
+	'predefinedValue',
+	'requireConfirmation',
+	'required',
+	'sendEmailNotification',
+	'storageType',
+	'validation',
+];
+
+const needsPageUpdate = (fieldName) => {
+	return requireUpdatePageFieldNames.includes(fieldName);
+};
 
 const getEditedPages = ({
 	editingLanguageId,
@@ -64,6 +80,7 @@ let lastEditedPages = [];
 export default function fieldChange({
 	defaultLanguageId,
 	editingLanguageId,
+	formId,
 	objectFields,
 	pages,
 	portletNamespace,
@@ -91,13 +108,14 @@ export default function fieldChange({
 
 		dispatch({payload: editedPages, type: EVENT_TYPES.PAGE.UPDATE});
 
-		if (evaluable) {
+		if (evaluable && (viewMode || needsPageUpdate(fieldName))) {
 			try {
 				disableSubmitButton(submitButtonId);
 
 				let evaluatedPages = await evaluate(fieldName, {
 					defaultLanguageId,
 					editingLanguageId,
+					formId,
 					objectFields,
 					pages: editedPages,
 					portletNamespace,

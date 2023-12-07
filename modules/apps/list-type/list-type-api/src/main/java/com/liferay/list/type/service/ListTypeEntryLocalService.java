@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.list.type.service;
@@ -81,8 +72,8 @@ public interface ListTypeEntryLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ListTypeEntry addListTypeEntry(
-			long userId, long listTypeDefinitionId, String key,
-			Map<Locale, String> nameMap)
+			String externalReferenceCode, long userId,
+			long listTypeDefinitionId, String key, Map<Locale, String> nameMap)
 		throws PortalException;
 
 	/**
@@ -109,9 +100,11 @@ public interface ListTypeEntryLocalService
 	 *
 	 * @param listTypeEntry the list type entry
 	 * @return the list type entry that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
-	public ListTypeEntry deleteListTypeEntry(ListTypeEntry listTypeEntry);
+	public ListTypeEntry deleteListTypeEntry(ListTypeEntry listTypeEntry)
+		throws PortalException;
 
 	/**
 	 * Deletes the list type entry with the primary key from the database. Also notifies the appropriate model listeners.
@@ -126,6 +119,10 @@ public interface ListTypeEntryLocalService
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	public ListTypeEntry deleteListTypeEntry(long listTypeEntryId)
+		throws PortalException;
+
+	public void deleteListTypeEntryByListTypeDefinitionId(
+			long listTypeDefinitionId)
 		throws PortalException;
 
 	/**
@@ -214,6 +211,11 @@ public interface ListTypeEntryLocalService
 	public ListTypeEntry fetchListTypeEntry(
 		long listTypeDefinitionId, String key);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ListTypeEntry fetchListTypeEntryByExternalReferenceCode(
+		String externalReferenceCode, long companyId,
+		long listTypeDefinitionId);
+
 	/**
 	 * Returns the list type entry with the matching UUID and company.
 	 *
@@ -256,6 +258,11 @@ public interface ListTypeEntryLocalService
 	public List<ListTypeEntry> getListTypeEntries(
 		long listTypeDefinitionId, int start, int end);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ListTypeEntry> getListTypeEntries(
+		long listTypeDefinitionId, int start, int end,
+		OrderByComparator<ListTypeEntry> orderByComparator);
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -280,6 +287,12 @@ public interface ListTypeEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ListTypeEntry getListTypeEntry(long listTypeDefinitionId, String key)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ListTypeEntry getListTypeEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId,
+			long listTypeDefinitionId)
 		throws PortalException;
 
 	/**
@@ -325,7 +338,8 @@ public interface ListTypeEntryLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ListTypeEntry updateListTypeEntry(
-			long listTypeEntryId, Map<Locale, String> nameMap)
+			String externalReferenceCode, long listTypeEntryId,
+			Map<Locale, String> nameMap)
 		throws PortalException;
 
 }

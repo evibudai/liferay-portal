@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -33,21 +33,18 @@ definition {
 	}
 
 	@description = "COMMERCE-9723. The default Delivery Terms and Conditions should persist at checkout."
-	@priority = "4"
+	@priority = 5
 	test CanAddDefaultDeliveryTermWithCheckout {
 		property portal.acceptance = "true";
 
 		task ("Given two delivery terms with different priorities") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "2",
+				termsCount = 2,
 				termsType = "Delivery");
 		}
 
 		task ("and a delivery term is linked to a shipping method") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -80,7 +77,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -94,8 +91,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -104,14 +101,14 @@ definition {
 				deliveryTerm = "Delivery Term 2",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9854. The default discount for the account should persist when viewing an item."
-	@priority = "5"
+	@priority = 5
 	test CanAddDefaultDiscount {
 		property portal.acceptance = "true";
 
@@ -119,7 +116,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "10",
+				percentageLevel1 = 10,
 				target = "products",
 				title = "Discount 1 10% off",
 				usePercentage = "true");
@@ -131,7 +128,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "20",
+				percentageLevel1 = 20,
 				target = "products",
 				title = "Discount 2 20% off",
 				usePercentage = "true");
@@ -161,28 +158,25 @@ definition {
 			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "20",
+				discountPercentage = 20,
 				productDiscountedPrice = "19.20",
 				productListPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9724. The default Payment Terms and Conditions should persist at checkout."
-	@priority = "4"
+	@priority = 5
 	test CanAddDefaultPaymentTermWithCheckout {
 		property portal.acceptance = "true";
 
 		task ("Given two payment terms with different priorities") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "2",
+				termsCount = 2,
 				termsType = "Payment");
 		}
 
 		task ("and a payment term is linked to a payment method") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -216,7 +210,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -230,8 +224,8 @@ definition {
 				newAddressZipCode = "Test Zip Code",
 				paymentTerm = "Payment Term 2",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -240,15 +234,17 @@ definition {
 				paymentTerm = "Payment Term 2",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9931 and COMMERCE-9937. A default currency can be deleted and should not be visible in the Minium site."
-	@priority = "4"
+	@priority = 4
 	test CanDeleteDefaultCurrency {
+		property portal.acceptance = "false";
+
 		task ("Given an account with a default Currency") {
 			Account.openAccountsAdmin();
 
@@ -291,7 +287,7 @@ definition {
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "$");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_productName = "U-Joint",
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "€");
@@ -299,7 +295,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9704. We can edit and delete a default price list entry"
-	@priority = "3"
+	@priority = 5
 	test CanEditAndDeleteDefaultPriceList {
 		property portal.acceptance = "true";
 
@@ -308,7 +304,7 @@ definition {
 				CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
 					catalogName = "Minium",
 					currencyCode = "USD",
-					priceListName = "${priceLists}");
+					priceListName = ${priceLists});
 			}
 		}
 
@@ -355,8 +351,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9934. Default currency can be edited."
-	@priority = "5"
+	@priority = 5
 	test CanEditDefaultCurrency {
+		property portal.acceptance = "true";
+
 		task ("Given an account with a default Currency") {
 			Account.openAccountsAdmin();
 
@@ -396,11 +394,13 @@ definition {
 	}
 
 	@description = "COMMERCE-9729. As a sales manager, I want to set default account delivery terms per channel"
-	@priority = "3"
+	@priority = 5
 	test CanHaveAllChannelsLinkedToADeliveryTerm {
+		property portal.acceptance = "true";
+
 		task ("Given the admin creates two delivery terms entries with different priorities") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "2",
+				termsCount = 2,
 				termsType = "Delivery");
 		}
 
@@ -425,14 +425,14 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Other Channels");
 		}
 
@@ -461,13 +461,13 @@ definition {
 			AssertTextEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Other Channels");
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Channels");
 
 			Account.openAccountsAdmin();
@@ -514,11 +514,13 @@ definition {
 	}
 
 	@description = "COMMERCE-9730. As a sales manager, I want to set default account payment terms per channel"
-	@priority = "3"
+	@priority = 5
 	test CanHaveAllChannelsLinkedToAPaymentTerm {
+		property portal.acceptance = "true";
+
 		task ("Given the admin creates two payment terms entries with different priorities") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "2",
+				termsCount = 2,
 				termsType = "Payment");
 		}
 
@@ -543,14 +545,14 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Other Channels");
 		}
 
@@ -579,13 +581,13 @@ definition {
 			AssertTextEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Other Channels");
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Channels");
 
 			Account.openAccountsAdmin();
@@ -632,8 +634,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9923. All channels can be linked to a currency."
-	@priority = "4"
+	@priority = 5
 	test CanLinkAllChannelsToACurrency {
+		property portal.acceptance = "true";
+
 		task ("Given a second channel (the Minium site is the first channel)") {
 			CommerceJSONChannelsAPI._addChannel(
 				channelName = "Channel2",
@@ -650,7 +654,7 @@ definition {
 				Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
 
 				Account.setDefaultCurrency(
-					channelEntry = "${channelNames}",
+					channelEntry = ${channelNames},
 					currencyName = "Euro");
 			}
 		}
@@ -678,16 +682,22 @@ definition {
 	}
 
 	@description = "COMMERCE-9885. Assert that can not assign default addresses to the same Channel."
-	@priority = "3"
+	@priority = 3
 	test CanNotAssignDefaultAddressesToTheSameChannel {
+		property portal.acceptance = "false";
+
 		task ("Given 3 addresses: one billing, one shipping and one shipping and billing for the account") {
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 			Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 			Account.addAddress(
 				addressCity = "Chicago",
 				addressCountry = "United States",
 				addressName = "Test Billing Address",
-				addressPostalCode = "60606",
+				addressPostalCode = 60606,
 				addressRegion = "Illinois",
 				addressStreet1 = "205 W. Wacker Dr",
 				addressStreet2 = "Suite 720",
@@ -709,7 +719,7 @@ definition {
 				addressCity = "Diamond Bar",
 				addressCountry = "United States",
 				addressName = "Test Billing and Shipping Address",
-				addressPostalCode = "91765",
+				addressPostalCode = 91765,
 				addressRegion = "California",
 				addressStreet1 = "1400 Montefino Ave",
 				addressType = "Billing and Shipping",
@@ -719,7 +729,7 @@ definition {
 		task ("And two more channels("Test Channel 1" and "Test Channel 2")") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -755,15 +765,17 @@ definition {
 		task ("Then an error message appears on the modal") {
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-			AssertTextEquals.assertPartialText(
+			AssertTextEquals.assertText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "There is already an address defined for the selected channel.");
+				value1 = "Close Error:There is already an address defined for the selected channel.");
 		}
 	}
 
 	@description = "COMMERCE-9734. As admin, I want to set a default billing and default shipping address for one account and channel, then buyer cannot use the default addresses in a different channel to make an order"
-	@priority = "3"
+	@priority = 3
 	test CanNotUseDefaultAddressesInADifferentChannel {
+		property portal.acceptance = "false";
+
 		task ("Given 2 minium sites, 2 accounts and 2 buyer users are created and associated with the respected accounts and sites") {
 			for (var num : list "1,2") {
 				CommerceAccelerators.initializeNewSiteViaAccelerator(
@@ -783,6 +795,10 @@ definition {
 					userScreenName = "buyeruser${num}",
 					userSiteMembership = "Minium ${num}");
 
+				Account.openAccountsAdmin();
+
+				LexiconEntry.gotoEntry(rowEntry = "Test Account ${num}");
+
 				Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 				task ("And each account having 3 addresses: one billing, one shipping and one shipping and billing for the account") {
@@ -791,10 +807,10 @@ definition {
 							addressCity = "Diamond Bar",
 							addressCountry = "United States",
 							addressName = "${typeList} Address Entry 1",
-							addressPostalCode = "91765",
+							addressPostalCode = 91765,
 							addressRegion = "California",
 							addressStreet1 = "1400 Montefino Ave",
-							addressType = "${typeList}",
+							addressType = ${typeList},
 							phoneNumber = "+1-877-543-3729");
 					}
 				}
@@ -811,7 +827,7 @@ definition {
 			for (var typeList : list "Billing,Shipping") {
 				Account.addDefaultCommerceAddressEntry(
 					addressEntry = "${typeList} Address Entry 1",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					channelEntry = "Minium 1 Portal");
 			}
 		}
@@ -826,7 +842,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 		}
@@ -839,7 +855,7 @@ definition {
 
 			for (var fieldNames : list "Name,Address,Zip,City") {
 				AssertElementNotPresent(
-					key_fieldName = "${fieldNames}",
+					key_fieldName = ${fieldNames},
 					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
 			}
 		}
@@ -857,16 +873,18 @@ definition {
 				newAddressName = "New Shipping Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard",
 				viewBillingAddressPermission = "true");
 		}
 	}
 
 	@description = "COMMERCE-9936. A disabled default currency should not be usable."
-	@priority = "4"
+	@priority = 4
 	test CannotUseDisabledCurrency {
+		property portal.acceptance = "false";
+
 		task ("Given an account with a default Currency") {
 			Account.openAccountsAdmin();
 
@@ -916,7 +934,7 @@ definition {
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "$");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_productName = "U-Joint",
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "€");
@@ -924,19 +942,18 @@ definition {
 	}
 
 	@description = "COMMERCE-9725. A default delivery term that has been disabled should not be displayed at checkout."
-	@priority = "4"
+	@priority = 4
 	test CannotUseDisabledDefaultDeliveryTerm {
+		property portal.acceptance = "false";
+
 		task ("Given three delivery term entries with different priorities") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "3",
+				termsCount = 3,
 				termsType = "Delivery");
 		}
 
 		task ("and two delivery terms are linked to a payment method") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -947,10 +964,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -974,13 +988,13 @@ definition {
 		}
 
 		task ("and the default delivery term is deactivated") {
-			CommercePaymentTerms.openTermsAndConditionAdmin();
+			CommercePaymentTerms.openTermsAndConditionsAdmin();
 
 			CommercePaymentTerms.gotoEntryMenuItem(
 				menuItem = "Edit",
-				termsAndConditionName = "Delivery Term 2");
+				termsAndConditionsName = "Delivery Term 2");
 
-			CommercePaymentTerms.editTermsAndCondition(deactivate = "true");
+			CommercePaymentTerms.editTermsAndConditions(deactivate = "true");
 		}
 
 		task ("When a buyer checks out an order and view order details") {
@@ -993,7 +1007,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -1007,8 +1021,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -1017,26 +1031,25 @@ definition {
 				deliveryTerm = "Delivery Term 1",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9726. A default payment term that has been disabled should not be displayed at checkout."
-	@priority = "4"
+	@priority = 4
 	test CannotUseDisabledDefaultPaymentTerms {
+		property portal.acceptance = "false";
+
 		task ("Given three payment term entries with different priorities") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "3",
+				termsCount = 3,
 				termsType = "Payment");
 		}
 
 		task ("and two payment terms are linked to a payment method") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1048,10 +1061,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1074,13 +1084,13 @@ definition {
 		}
 
 		task ("and the default payment term is deactivated") {
-			CommercePaymentTerms.openTermsAndConditionAdmin();
+			CommercePaymentTerms.openTermsAndConditionsAdmin();
 
 			CommercePaymentTerms.gotoEntryMenuItem(
 				menuItem = "Edit",
-				termsAndConditionName = "Payment Term 2");
+				termsAndConditionsName = "Payment Term 2");
 
-			CommercePaymentTerms.editTermsAndCondition(deactivate = "true");
+			CommercePaymentTerms.editTermsAndConditions(deactivate = "true");
 		}
 
 		task ("When a buyer checks out an order and view order details") {
@@ -1093,7 +1103,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -1107,8 +1117,8 @@ definition {
 				newAddressZipCode = "Test Zip Code",
 				paymentTerm = "Payment Term 1",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -1117,16 +1127,22 @@ definition {
 				paymentTerm = "Payment Term 1",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9876. As a Sales Manager, I want to remove default billing and shipping addresses from the account"
-	@priority = "3"
+	@priority = 3
 	test CanRemoveDefaultAddresses {
+		property portal.acceptance = "false";
+
 		task ("Given 3 addresses: one billing, one shipping and one shipping and billing for the account") {
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 			Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 			for (var typeList : list "Billing,Shipping,Billing and Shipping") {
@@ -1134,10 +1150,10 @@ definition {
 					addressCity = "Diamond Bar",
 					addressCountry = "United States",
 					addressName = "${typeList} Address Entry 1",
-					addressPostalCode = "91765",
+					addressPostalCode = 91765,
 					addressRegion = "California",
 					addressStreet1 = "1400 Montefino Ave",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					phoneNumber = "+1-877-543-3729");
 			}
 		}
@@ -1145,7 +1161,7 @@ definition {
 		task ("And two more channels("Test Channel 1" and "Test Channel 2")") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -1173,7 +1189,7 @@ definition {
 			for (var typeList : list "Billing,Shipping") {
 				Account.removeDefaultCommerceTerms(
 					entryDetails = "${typeList} Address Entry 1",
-					termType = "${typeList}");
+					termType = ${typeList});
 			}
 		}
 
@@ -1187,7 +1203,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 		}
 
 		task ("Then during the checkout there is no default address pre-selected") {
@@ -1200,7 +1216,7 @@ definition {
 
 			for (var fieldNames : list "Name,Address,Zip,City") {
 				AssertElementNotPresent(
-					key_fieldName = "${fieldNames}",
+					key_fieldName = ${fieldNames},
 					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
 			}
 		}
@@ -1213,16 +1229,16 @@ definition {
 				newAddressName = "New Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-9704. We can see the price list price that has the highest priority in hierarchy mode(default mode)."
-	@priority = "3"
+	@priority = 5
 	test CanSeeHighestPriorityPriceListPriceInHierarchyMode {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given Test Price List 1 with priority 1 and Test Price List 2 with priority 2") {
 			for (var priority : list "1,2") {
@@ -1230,20 +1246,20 @@ definition {
 					catalogName = "Minium",
 					currencyCode = "USD",
 					priceListName = "Test Price List ${priority}",
-					priority = "${priority}");
+					priority = ${priority});
 			}
 		}
 
 		task ("And Test Price List 1 entry for U-Joint with price set as 20.00 ") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "20",
+				entryPrice = 20,
 				priceListName = "Test Price List 1",
 				productSKU = "MIN55861");
 		}
 
 		task ("And Test Price List 2 entry for U-Joint with price set as 18.00 ") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "18",
+				entryPrice = 18,
 				priceListName = "Test Price List 2",
 				productSKU = "MIN55861");
 		}
@@ -1313,18 +1329,18 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9704. We can see the lowest price list price in the Catalog when the lowest mode is set."
-	@priority = "3"
+	@priority = 5
 	test CanSeeLowestPriceListPriceInLowestMode {
 		property osgi.module.configuration.file.names = "com.liferay.commerce.pricing.configuration.CommercePricingConfiguration.config";
 		property osgi.module.configurations = "commercePriceListDiscovery=\"lowest\"";
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given Test Price List 1 with priority 1") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
 				catalogName = "Minium",
 				currencyCode = "USD",
 				priceListName = "Test Price List 1",
-				priority = "1");
+				priority = 1);
 		}
 
 		task ("And Test Price List 2 with priority 0") {
@@ -1336,14 +1352,14 @@ definition {
 
 		task ("And a Test Price List 1 entry for U-Joint with price set as 20.00 ") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "20",
+				entryPrice = 20,
 				priceListName = "Test Price List 1",
 				productSKU = "MIN55861");
 		}
 
 		task ("And a Test Price List 2 entry for U-Joint with price set as 18.00 ") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "18",
+				entryPrice = 18,
 				priceListName = "Test Price List 2",
 				productSKU = "MIN55861");
 		}
@@ -1383,8 +1399,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9857. All sites should display the product discount when the discount is set to All Channels."
-	@priority = "4"
+	@priority = 5
 	test CanSelectAllOtherChannelsForDefaultDiscount {
+		property portal.acceptance = "true";
+
 		task ("Given a second Minium site") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
 				siteName = "Minium 2",
@@ -1395,7 +1413,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "10",
+				percentageLevel1 = 10,
 				target = "products",
 				title = "Discount 1 10% off",
 				usePercentage = "true");
@@ -1421,7 +1439,7 @@ definition {
 			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "10",
+				discountPercentage = 10,
 				productDiscountedPrice = "21.60",
 				productListPrice = "24.00");
 
@@ -1430,16 +1448,22 @@ definition {
 			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "10",
+				discountPercentage = 10,
 				productDiscountedPrice = "21.60",
 				productListPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9829. As a sales manager, I want to check channel options after setting a default account billing address for each channel"
-	@priority = "3"
+	@priority = 5
 	test CanSelectOnlyAllOtherChannelsForDefaultBillingAddress {
+		property portal.acceptance = "true";
+
 		task ("Given 3 addresses: one billing, one shipping and one shipping and billing for the account") {
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 			Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 			for (var typeList : list "Billing,Shipping,Billing and Shipping") {
@@ -1447,10 +1471,10 @@ definition {
 					addressCity = "Diamond Bar",
 					addressCountry = "United States",
 					addressName = "${typeList} Address Entry 1",
-					addressPostalCode = "91765",
+					addressPostalCode = 91765,
 					addressRegion = "California",
 					addressStreet1 = "1400 Montefino Ave",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					phoneNumber = "+1-877-543-3729");
 			}
 		}
@@ -1458,7 +1482,7 @@ definition {
 		task ("And two more channels("Test Channel 1" and "Test Channel 2")") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -1475,7 +1499,7 @@ definition {
 				Account.addDefaultCommerceAddressEntry(
 					addressEntry = "Billing Address Entry 1",
 					addressType = "Billing",
-					channelEntry = "${channelEntries}");
+					channelEntry = ${channelEntries});
 			}
 		}
 
@@ -1492,27 +1516,27 @@ definition {
 				AssertTextNotEquals(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 
 			AssertTextEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Other Channels");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-9704. We can select only All Other Channels option after selecting default for each channel."
-	@priority = "3"
+	@priority = 5
 	test CanSelectOnlyAllOtherChannelsForDefaultPriceList {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given two more channels Test Channel 1 and Test Channel 2") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -1523,7 +1547,7 @@ definition {
 				CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
 					catalogName = "Minium",
 					currencyCode = "USD",
-					priceListName = "${priceLists}");
+					priceListName = ${priceLists});
 			}
 		}
 
@@ -1561,7 +1585,7 @@ definition {
 
 			for (var channelEntry : list "Minium Portal, Test Channel 1,Test Channel 2") {
 				AssertElementNotPresent(
-					key_value = "${channelEntry}",
+					key_value = ${channelEntry},
 					locator1 = "CommerceEntry#CHANNEL_ACCOUNT_DEFAULTS_MODAL_DROPDOWN");
 			}
 
@@ -1585,9 +1609,15 @@ definition {
 	}
 
 	@description = "COMMERCE-9829. As a sales manager, I want to check channel options after setting a default account shipping address for each channel"
-	@priority = "3"
+	@priority = 5
 	test CanSelectOnlyAllOtherChannelsForDefaultShippingAddress {
+		property portal.acceptance = "true";
+
 		task ("Given 3 addresses: one billing, one shipping and one shipping and billing for the account") {
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 			Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 			for (var typeList : list "Billing,Shipping,Billing and Shipping") {
@@ -1595,10 +1625,10 @@ definition {
 					addressCity = "Diamond Bar",
 					addressCountry = "United States",
 					addressName = "${typeList} Address Entry 1",
-					addressPostalCode = "91765",
+					addressPostalCode = 91765,
 					addressRegion = "California",
 					addressStreet1 = "1400 Montefino Ave",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					phoneNumber = "+1-877-543-3729");
 			}
 		}
@@ -1606,7 +1636,7 @@ definition {
 		task ("And two more channels("Test Channel 1" and "Test Channel 2")") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -1623,7 +1653,7 @@ definition {
 				Account.addDefaultCommerceAddressEntry(
 					addressEntry = "Shipping Address Entry 1",
 					addressType = "Shipping",
-					channelEntry = "${channelEntries}");
+					channelEntry = ${channelEntries});
 			}
 		}
 
@@ -1640,22 +1670,28 @@ definition {
 				AssertTextNotEquals(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 
 			AssertTextEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Other Channels");
 		}
 	}
 
 	@description = "COMMERCE-9873. As a sales manager, I want to set default billing and shipping addresses per channel from details tab"
-	@priority = "3"
+	@priority = 5
 	test CanSetDefaultAddressFromDetailsTab {
+		property portal.acceptance = "true";
+
 		task ("Given 2 Minium sites and a buyer user is associated with both sites, and 3 addresses: one billing, one shipping and one shipping and billing for the account") {
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 			Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 			for (var typeList : list "Billing,Shipping,Billing and Shipping") {
@@ -1663,10 +1699,10 @@ definition {
 					addressCity = "Diamond Bar",
 					addressCountry = "United States",
 					addressName = "${typeList} Address Entry 1",
-					addressPostalCode = "91765",
+					addressPostalCode = 91765,
 					addressRegion = "California",
 					addressStreet1 = "1400 Montefino Ave",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					phoneNumber = "+1-877-543-3729");
 			}
 
@@ -1699,13 +1735,13 @@ definition {
 			for (var typeList : list "Billing,Shipping") {
 				Account.viewDefaultDeliveryCommerceTermsEntry(
 					termEntry = "All Channels,${typeList} Address Entry 1",
-					termType = "${typeList}");
+					termType = ${typeList});
 			}
 
 			for (var typeList : list "Billing,Shipping") {
 				Account.removeDefaultCommerceTerms(
 					entryDetails = "${typeList} Address Entry 1",
-					termType = "${typeList}");
+					termType = ${typeList});
 			}
 		}
 
@@ -1713,7 +1749,7 @@ definition {
 			for (var typeList : list "Billing,Shipping") {
 				Account.addDefaultCommerceAddressEntry(
 					addressEntry = "${typeList} Address Entry 1",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					channelEntry = "Minium 1 Portal");
 			}
 		}
@@ -1728,7 +1764,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 
@@ -1739,7 +1775,7 @@ definition {
 
 			for (var fieldNames : list "Name,Address,Zip,City") {
 				AssertElementPresent(
-					key_fieldName = "${fieldNames}",
+					key_fieldName = ${fieldNames},
 					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
 			}
 
@@ -1754,7 +1790,7 @@ definition {
 
 			for (var fieldNames : list "Name,Address,Zip,City") {
 				AssertElementPresent(
-					key_fieldName = "${fieldNames}",
+					key_fieldName = ${fieldNames},
 					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
 			}
 
@@ -1772,8 +1808,8 @@ definition {
 				billingAddressCountry = "United States",
 				billingAddressName = "Billing Address Entry 1",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -1796,9 +1832,9 @@ definition {
 
 			for (var typeList : list "Billing,Shipping") {
 				Account.viewDefaultDeliveryCommerceTermsEntry(
-					row = "2",
+					row = 2,
 					termEntry = "All Other Channels,${typeList} Address Entry 1",
-					termType = "${typeList}");
+					termType = ${typeList});
 			}
 		}
 
@@ -1812,7 +1848,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 
@@ -1823,7 +1859,7 @@ definition {
 
 			for (var fieldNames : list "Name,Address,Zip,City") {
 				AssertElementPresent(
-					key_fieldName = "${fieldNames}",
+					key_fieldName = ${fieldNames},
 					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
 			}
 
@@ -1847,16 +1883,22 @@ definition {
 				billingAddressCountry = "United States",
 				billingAddressName = "Billing and Shipping Address Entry 1",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 	}
 
 	@description = "COMMERCE-9733. As a sales manager, I want to set a default account billing address per channel when the buyer users are placing orders"
-	@priority = "3"
+	@priority = 5
 	test CanSetDefaultBillingAddressPerChannel {
+		property portal.acceptance = "true";
+
 		task ("Given 3 addresses: one billing, one shipping and one shipping and billing for the account") {
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 			Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 			for (var typeList : list "Billing,Shipping,Billing and Shipping") {
@@ -1864,10 +1906,10 @@ definition {
 					addressCity = "Diamond Bar",
 					addressCountry = "United States",
 					addressName = "${typeList} Address Entry 1",
-					addressPostalCode = "91765",
+					addressPostalCode = 91765,
 					addressRegion = "California",
 					addressStreet1 = "1400 Montefino Ave",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					phoneNumber = "+1-877-543-3729");
 			}
 		}
@@ -1875,7 +1917,7 @@ definition {
 		task ("And two more channels("Test Channel 1" and "Test Channel 2")") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -1900,8 +1942,8 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 		}
 
@@ -1910,14 +1952,14 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Address",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${addressEntries}");
+					row = 1,
+					value1 = ${addressEntries});
 			}
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Address",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "Shipping Address Entry 1");
 		}
 
@@ -1953,14 +1995,14 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Channels");
 		}
 
@@ -1974,7 +2016,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 		}
@@ -2002,7 +2044,7 @@ definition {
 
 			for (var fieldNames : list "Name,Address,Zip,City") {
 				AssertElementPresent(
-					key_fieldName = "${fieldNames}",
+					key_fieldName = ${fieldNames},
 					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
 			}
 
@@ -2020,15 +2062,17 @@ definition {
 				billingAddressCountry = "United States",
 				billingAddressName = "Billing Address Entry 1",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 	}
 
 	@description = "COMMERCE-9922. The default currency can be set for a channel."
-	@priority = "5"
+	@priority = 5
 	test CanSetDefaultCurrencyPerChannel {
+		property portal.acceptance = "true";
+
 		task ("Given an account with a default Currency") {
 			Account.openAccountsAdmin();
 
@@ -2056,9 +2100,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9704. We can set a default price list per channel and account."
-	@priority = "3"
+	@priority = 5
 	test CanSetDefaultPriceListPerChannel {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given a second Minium site and a second account with a user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
@@ -2082,7 +2126,7 @@ definition {
 		task ("And two more channels(Test Channel 1 and Test Channel 2)") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -2093,20 +2137,20 @@ definition {
 				CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
 					catalogName = "Minium",
 					currencyCode = "USD",
-					priceListName = "${priceLists}");
+					priceListName = ${priceLists});
 			}
 		}
 
 		task ("And a Test Price List 1 entry for U-Joint with price set as 20.00 ") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "20",
+				entryPrice = 20,
 				priceListName = "Test Price List 1",
 				productSKU = "MIN55861");
 		}
 
 		task ("And a Test Price List 2 entry for U-Joint with price set as 18.00 ") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "18",
+				entryPrice = 18,
 				priceListName = "Test Price List 2",
 				productSKU = "MIN55861");
 		}
@@ -2171,9 +2215,15 @@ definition {
 	}
 
 	@description = "COMMERCE-9732. As a sales manager, I want to set a default account shipping address per channel when the buyer users are placing orders"
-	@priority = "3"
+	@priority = 5
 	test CanSetDefaultShippingAddressPerChannel {
+		property portal.acceptance = "true";
+
 		task ("Given 3 addresses: one billing, one shipping and one shipping and billing for the account") {
+			Account.openAccountsAdmin();
+
+			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
+
 			Account.gotoAssigneeTab(assigneeTab = "Addresses");
 
 			for (var typeList : list "Billing,Shipping,Billing and Shipping") {
@@ -2181,10 +2231,10 @@ definition {
 					addressCity = "Diamond Bar",
 					addressCountry = "United States",
 					addressName = "${typeList} Address Entry 1",
-					addressPostalCode = "91765",
+					addressPostalCode = 91765,
 					addressRegion = "California",
 					addressStreet1 = "1400 Montefino Ave",
-					addressType = "${typeList}",
+					addressType = ${typeList},
 					phoneNumber = "+1-877-543-3729");
 			}
 		}
@@ -2192,7 +2242,7 @@ definition {
 		task ("And two more channels("Test Channel 1" and "Test Channel 2")") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -2217,8 +2267,8 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 		}
 
@@ -2227,14 +2277,14 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Address",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${addressEntries}");
+					row = 1,
+					value1 = ${addressEntries});
 			}
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Address",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "Billing Address Entry 1");
 		}
 
@@ -2270,14 +2320,14 @@ definition {
 				AssertTextPresent(
 					key_fieldLabel = "Channel",
 					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-					row = "1",
-					value1 = "${channelEntries}");
+					row = 1,
+					value1 = ${channelEntries});
 			}
 
 			AssertTextNotEquals(
 				key_fieldLabel = "Channel",
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
-				row = "1",
+				row = 1,
 				value1 = "All Channels");
 		}
 
@@ -2291,7 +2341,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 		}
@@ -2304,7 +2354,7 @@ definition {
 
 			for (var fieldNames : list "Name,Address,Zip,City") {
 				AssertElementPresent(
-					key_fieldName = "${fieldNames}",
+					key_fieldName = ${fieldNames},
 					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
 			}
 		}
@@ -2324,20 +2374,22 @@ definition {
 				addressCountry = "United States",
 				addressName = "Shipping Address Entry 1",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 	}
 
 	@description = "COMMERCE-9858. The default discount can be updated."
-	@priority = "4"
+	@priority = 5
 	test CanUpdateDefaultDiscountsEntry {
+		property portal.acceptance = "true";
+
 		task ("Given two active discounts applied to the U-joint product") {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "10",
+				percentageLevel1 = 10,
 				target = "products",
 				title = "Discount 1 10% off",
 				usePercentage = "true");
@@ -2349,7 +2401,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "20",
+				percentageLevel1 = 20,
 				target = "products",
 				title = "Discount 2 20% off",
 				usePercentage = "true");
@@ -2375,7 +2427,7 @@ definition {
 			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "20",
+				discountPercentage = 20,
 				productDiscountedPrice = "19.20",
 				productListPrice = "24.00");
 		}
@@ -2401,15 +2453,17 @@ definition {
 			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "10",
+				discountPercentage = 10,
 				productDiscountedPrice = "21.60",
 				productListPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9938. Only active currencies can be viewed and disabled currency should not be available to be selected."
-	@priority = "4"
+	@priority = 4
 	test CanViewOnlyActiveCurrencies {
+		property portal.acceptance = "false";
+
 		task ("Given a disabled currency") {
 			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_commerce_currency_web_internal_portlet_CommerceCurrencyPortlet");
 
@@ -2432,8 +2486,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9925. Default currency rules works on the storefront"
-	@priority = "4"
+	@priority = 4
 	test DefaultCurrencyRulesCanWorkOnStoreFront {
+		property portal.acceptance = "false";
+
 		task ("Given a second account (first one is created at setup)") {
 			CommerceEntry.addAccountEntryUser(
 				accountName = "Commerce Account 2",
@@ -2475,7 +2531,7 @@ definition {
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "€");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_productName = "U-Joint",
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "$");
@@ -2496,7 +2552,7 @@ definition {
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "€");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_productName = "U-Joint",
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "$");
@@ -2517,7 +2573,7 @@ definition {
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "$");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_productName = "U-Joint",
 				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
 				value1 = "€");
@@ -2525,8 +2581,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9782. Default delivery set to override should be default regardless of other eligibility criteria."
-	@priority = "4"
+	@priority = 5
 	test DefaultDeliveryTermCanOverrideOtherEligibilities {
+		property portal.acceptance = "true";
+
 		task ("Given a new Test Channel with an active Shipping method") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
 				siteName = "Test Channel",
@@ -2535,13 +2593,10 @@ definition {
 
 		task ("and four delivery term entries with different priorities and eligibility scopes") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "4",
+				termsCount = 4,
 				termsType = "Delivery");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2552,10 +2607,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2566,10 +2618,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Test Channel Portal");
 
@@ -2580,13 +2629,13 @@ definition {
 		}
 
 		task ("and a fourth delivery term set to inactive") {
-			CommercePaymentTerms.openTermsAndConditionAdmin();
+			CommercePaymentTerms.openTermsAndConditionsAdmin();
 
 			CommercePaymentTerms.gotoEntryMenuItem(
 				menuItem = "Edit",
-				termsAndConditionName = "Delivery Term 4");
+				termsAndConditionsName = "Delivery Term 4");
 
-			CommercePaymentTerms.editTermsAndCondition(deactivate = "true");
+			CommercePaymentTerms.editTermsAndConditions(deactivate = "true");
 		}
 
 		task ("and the delivery term is set as the default for the Account") {
@@ -2614,7 +2663,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -2629,8 +2678,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -2639,15 +2688,17 @@ definition {
 				deliveryTerm = "Delivery Term 2",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9856. The default discount can override Account eligibility."
-	@priority = "4"
+	@priority = 5
 	test DefaultDiscountCanOverrideAccountEligibility {
+		property portal.acceptance = "true";
+
 		task ("Given a second Minium site and a second account") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
 				siteName = "Minium 2",
@@ -2671,7 +2722,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "10",
+				percentageLevel1 = 10,
 				target = "products",
 				title = "Discount 1 10% off",
 				usePercentage = "true");
@@ -2680,9 +2731,7 @@ definition {
 				discountTitle = "Discount 1 10% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 1 10% off");
 
@@ -2695,7 +2744,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "20",
+				percentageLevel1 = 20,
 				target = "products",
 				title = "Discount 2 20% off",
 				usePercentage = "true");
@@ -2704,9 +2753,7 @@ definition {
 				discountTitle = "Discount 2 20% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 2 20% off");
 
@@ -2719,7 +2766,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "30",
+				percentageLevel1 = 30,
 				target = "products",
 				title = "Discount 3 30% off",
 				usePercentage = "true");
@@ -2728,9 +2775,7 @@ definition {
 				discountTitle = "Discount 3 30% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 3 30% off");
 
@@ -2757,15 +2802,17 @@ definition {
 			CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = "Commerce Account 2");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "10",
+				discountPercentage = 10,
 				productDiscountedPrice = "21.60",
 				productListPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9856. The default discount can override Channel eligibility."
-	@priority = "4"
+	@priority = 5
 	test DefaultDiscountCanOverrideChannelEligibility {
+		property portal.acceptance = "true";
+
 		task ("Given a second Minium site and a second account") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
 				siteName = "Minium 2",
@@ -2789,7 +2836,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "10",
+				percentageLevel1 = 10,
 				target = "products",
 				title = "Discount 1 10% off",
 				usePercentage = "true");
@@ -2798,9 +2845,7 @@ definition {
 				discountTitle = "Discount 1 10% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 1 10% off");
 
@@ -2813,7 +2858,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "20",
+				percentageLevel1 = 20,
 				target = "products",
 				title = "Discount 2 20% off",
 				usePercentage = "true");
@@ -2822,9 +2867,7 @@ definition {
 				discountTitle = "Discount 2 20% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 2 20% off");
 
@@ -2837,7 +2880,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "30",
+				percentageLevel1 = 30,
 				target = "products",
 				title = "Discount 3 30% off",
 				usePercentage = "true");
@@ -2846,9 +2889,7 @@ definition {
 				discountTitle = "Discount 3 30% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 3 30% off");
 
@@ -2876,7 +2917,7 @@ definition {
 			CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = "Commerce Account 2");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "20",
+				discountPercentage = 20,
 				productDiscountedPrice = "19.20",
 				productListPrice = "24.00");
 		}
@@ -2884,8 +2925,9 @@ definition {
 
 	@description = "COMMERCE-9856. The default discount can override Order Type eligibility."
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test DefaultDiscountCanOverrideOrderTypeEligibility {
+		property portal.acceptance = "false";
 
 		// Ignore until steps are verified. COMMERCE-9856.
 
@@ -2912,7 +2954,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "10",
+				percentageLevel1 = 10,
 				target = "products",
 				title = "Discount 1 10% off",
 				usePercentage = "true");
@@ -2921,9 +2963,7 @@ definition {
 				discountTitle = "Discount 1 10% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 1 10% off");
 
@@ -2936,7 +2976,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "20",
+				percentageLevel1 = 20,
 				target = "products",
 				title = "Discount 2 20% off",
 				usePercentage = "true");
@@ -2945,9 +2985,7 @@ definition {
 				discountTitle = "Discount 2 20% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 2 20% off");
 
@@ -2960,7 +2998,7 @@ definition {
 			CommerceJSONDiscountsAPI._addDiscount(
 				active = "true",
 				level = "L1",
-				percentageLevel1 = "30",
+				percentageLevel1 = 30,
 				target = "products",
 				title = "Discount 3 30% off",
 				usePercentage = "true");
@@ -2969,9 +3007,7 @@ definition {
 				discountTitle = "Discount 3 30% off",
 				productName = "U-Joint");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Discount 3 30% off");
 
@@ -3000,15 +3036,17 @@ definition {
 			CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = "Commerce Account 2");
 
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = "30",
+				discountPercentage = 30,
 				productDiscountedPrice = "16.80",
 				productListPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9782. Default payment set to override should be default regardless of other eligibility criteria."
-	@priority = "4"
+	@priority = 5
 	test DefaultPaymentTermCanOverrideOtherEligibilities {
+		property portal.acceptance = "true";
+
 		task ("Given a new Test Channel with an active Shipping method") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
 				siteName = "Test Channel",
@@ -3017,13 +3055,10 @@ definition {
 
 		task ("and four delivery term entries with different priorities and eligibility scopes") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "4",
+				termsCount = 4,
 				termsType = "Payment");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3035,10 +3070,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3048,10 +3080,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Test Channel Portal");
 
@@ -3063,13 +3092,13 @@ definition {
 		}
 
 		task ("and a fourth payment term set to inactive") {
-			CommercePaymentTerms.openTermsAndConditionAdmin();
+			CommercePaymentTerms.openTermsAndConditionsAdmin();
 
 			CommercePaymentTerms.gotoEntryMenuItem(
 				menuItem = "Edit",
-				termsAndConditionName = "Payment Term 4");
+				termsAndConditionsName = "Payment Term 4");
 
-			CommercePaymentTerms.editTermsAndCondition(deactivate = "true");
+			CommercePaymentTerms.editTermsAndConditions(deactivate = "true");
 		}
 
 		task ("and the payment term is set as the default for the Account") {
@@ -3097,7 +3126,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -3112,8 +3141,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -3122,16 +3151,16 @@ definition {
 				deliveryTerm = "Payment Term 2",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-9704. We can use Override Eligibility option while selecting a default price list to override other eligibilities."
-	@priority = "3"
+	@priority = 5
 	test DefaultPriceListCanOverrideOtherEligibilities {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given a second site and account with a user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
@@ -3155,7 +3184,7 @@ definition {
 		task ("And two more channels(Test Channel 1 and Test Channel 2)") {
 			for (var channelNames : list "Test Channel 1,Test Channel 2") {
 				CommerceJSONChannelsAPI._addChannel(
-					channelName = "${channelNames}",
+					channelName = ${channelNames},
 					channelType = "site",
 					currencyCode = "USD");
 			}
@@ -3167,7 +3196,7 @@ definition {
 					catalogName = "Minium",
 					currencyCode = "USD",
 					priceListName = "Test Price List ${priority}",
-					priority = "${priority}");
+					priority = ${priority});
 			}
 		}
 
@@ -3176,7 +3205,7 @@ definition {
 				catalogName = "Minium",
 				currencyCode = "USD",
 				priceListName = "Test Price List 3",
-				priority = "0");
+				priority = 0);
 		}
 
 		task ("And Test Price List 1 entry for U-Joint with price set as 20.00 and eligible for Minium Portal") {
@@ -3191,7 +3220,7 @@ definition {
 				channelsEligibility = "Minium Portal");
 
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "20",
+				entryPrice = 20,
 				priceListName = "Test Price List 1",
 				productSKU = "MIN55861");
 
@@ -3208,14 +3237,14 @@ definition {
 				channelsEligibility = "Test Channel 2");
 
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "30",
+				entryPrice = 30,
 				priceListName = "Test Price List 2",
 				productSKU = "MIN55861");
 		}
 
 		task ("And Test Price List 3 entry for U-Joint with price set as 50.00") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "50",
+				entryPrice = 50,
 				priceListName = "Test Price List 3",
 				productSKU = "MIN55861");
 		}
@@ -3317,8 +3346,10 @@ definition {
 	}
 
 	@description = "COMMERCE-9785. Delivery eligibility rules scoped to channels should persist at checkout."
-	@priority = "4"
+	@priority = 5
 	test DeliveryEligibilityRulesCanPersistAtCheckout {
+		property portal.acceptance = "true";
+
 		task ("Given a new Test Channel with an active Shipping method") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
 				siteName = "Test Channel",
@@ -3327,13 +3358,10 @@ definition {
 
 		task ("and four delivery term entries with different priorities and eligibility scopes") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "4",
+				termsCount = 4,
 				termsType = "Delivery");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3344,10 +3372,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3358,10 +3383,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Test Channel Portal");
 
@@ -3372,13 +3394,13 @@ definition {
 		}
 
 		task ("and a fourth delivery term set to inactive") {
-			CommercePaymentTerms.openTermsAndConditionAdmin();
+			CommercePaymentTerms.openTermsAndConditionsAdmin();
 
 			CommercePaymentTerms.gotoEntryMenuItem(
 				menuItem = "Edit",
-				termsAndConditionName = "Delivery Term 4");
+				termsAndConditionsName = "Delivery Term 4");
 
-			CommercePaymentTerms.editTermsAndCondition(deactivate = "true");
+			CommercePaymentTerms.editTermsAndConditions(deactivate = "true");
 		}
 
 		task ("and the delivery term is set as the default for the Account") {
@@ -3404,7 +3426,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -3418,8 +3440,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -3428,15 +3450,17 @@ definition {
 				deliveryTerm = "Delivery Term 2",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}
 	}
 
 	@description = "COMMERCE-9785. Payment eligibility rules scoped to channels should persist at checkout."
-	@priority = "4"
+	@priority = 5
 	test PaymentEligibilityRulesCanPersistAtCheckout {
+		property portal.acceptance = "true";
+
 		task ("Given a new Test Channel with an active Shipping method") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(
 				siteName = "Test Channel",
@@ -3445,13 +3469,10 @@ definition {
 
 		task ("and four delivery term entries with different priorities and eligibility scopes") {
 			CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-				termsCount = "4",
+				termsCount = 4,
 				termsType = "Payment");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3463,10 +3484,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3476,10 +3494,7 @@ definition {
 
 			SelectFrame.selectFrameTop();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Test Channel Portal");
 
@@ -3491,13 +3506,13 @@ definition {
 		}
 
 		task ("and a fourth payment term set to inactive") {
-			CommercePaymentTerms.openTermsAndConditionAdmin();
+			CommercePaymentTerms.openTermsAndConditionsAdmin();
 
 			CommercePaymentTerms.gotoEntryMenuItem(
 				menuItem = "Edit",
-				termsAndConditionName = "Payment Term 4");
+				termsAndConditionsName = "Payment Term 4");
 
-			CommercePaymentTerms.editTermsAndCondition(deactivate = "true");
+			CommercePaymentTerms.editTermsAndConditions(deactivate = "true");
 		}
 
 		task ("and the payment term is set as the default for the Account") {
@@ -3523,7 +3538,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 		}
@@ -3537,8 +3552,8 @@ definition {
 				newAddressZipCode = "Test Zip Code",
 				paymentTerm = "Payment Term 2",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
 			Button.click(button = "Go to Order Details");
@@ -3547,7 +3562,7 @@ definition {
 				paymentTerm = "Payment Term 2",
 				productListPrice = "24.00",
 				productName = "U-Joint",
-				productQuantity = "1",
+				productQuantity = 1,
 				productSku = "MIN55861",
 				productTotalPrice = "24.00");
 		}

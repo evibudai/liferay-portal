@@ -1,29 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import classNames from 'classnames';
 import {useCallback, useEffect, useState} from 'react';
 
+import ActionDetail from '../../../../common/components/action-detail/action-content';
+import NoActionRequired from '../../../../common/components/action-detail/action-content/no-action-required';
 import MultiSteps from '../../../../common/components/multi-steps';
 import {getApplicationByExternalReferenceCode} from '../../../../common/services';
 import {setFirstLetterUpperCase} from '../../../../common/utils';
 import {CONSTANTS} from '../../../../common/utils/constants';
 import {redirectTo} from '../../../../common/utils/liferay';
-import ActionDetail from './components/action-detail';
 import QuotedSummary from './components/quoted-summary';
-import BoundContent from './components/status-content/bound-content';
 import IncompleteContent from './components/status-content/incomplete-content';
+import UnderwritingContent from './components/status-content/reviewed-rejected-content';
 import Summary from './components/summary';
 
 enum STEP {
@@ -32,7 +24,8 @@ enum STEP {
 	QUOTED = 2,
 	UNDERWRITING = 3,
 	REVIEWED = 4,
-	BOUND = 5,
+	REJECTED = 5,
+	BOUND = 6,
 }
 
 const classes = {
@@ -47,71 +40,78 @@ const ApplicationDetails = () => {
 		{
 			active: currentStep === STEP.OPEN,
 			complete: currentStep > STEP.OPEN,
-			show: currentStep === STEP.BOUND || currentStep === STEP.INCOMPLETE,
-			title: setFirstLetterUpperCase(CONSTANTS.APPLICATION_STATUS.OPEN),
+			show:
+				currentStep === STEP.BOUND ||
+				currentStep === STEP.INCOMPLETE ||
+				currentStep === STEP.REVIEWED ||
+				currentStep === STEP.REJECTED,
+			title: setFirstLetterUpperCase(
+				CONSTANTS.APPLICATION_STATUS['open'].NAME
+			),
 		},
 		{
 			active: currentStep === STEP.INCOMPLETE,
 			complete: currentStep > STEP.INCOMPLETE,
 			show: false || currentStep === STEP.INCOMPLETE,
 			title: setFirstLetterUpperCase(
-				CONSTANTS.APPLICATION_STATUS.INCOMPLETE
+				CONSTANTS.APPLICATION_STATUS['incomplete'].NAME
 			),
 		},
 		{
 			active: currentStep === STEP.QUOTED,
 			complete: currentStep > STEP.QUOTED,
-			show: currentStep === STEP.BOUND || currentStep === STEP.INCOMPLETE,
-			title: setFirstLetterUpperCase(CONSTANTS.APPLICATION_STATUS.QUOTED),
+			show:
+				currentStep === STEP.BOUND ||
+				currentStep === STEP.INCOMPLETE ||
+				currentStep === STEP.REVIEWED ||
+				currentStep === STEP.REJECTED,
+			title: setFirstLetterUpperCase(
+				CONSTANTS.APPLICATION_STATUS['quoted'].NAME
+			),
 		},
 		{
 			active: currentStep === STEP.UNDERWRITING,
 			complete: currentStep > STEP.UNDERWRITING,
-			show: false || currentStep === STEP.INCOMPLETE,
+			show:
+				false ||
+				currentStep === STEP.INCOMPLETE ||
+				currentStep === STEP.REVIEWED ||
+				currentStep === STEP.REJECTED,
 			title: setFirstLetterUpperCase(
-				CONSTANTS.APPLICATION_STATUS.UNDERWRITING
+				CONSTANTS.APPLICATION_STATUS['underwriting'].NAME
 			),
 		},
 		{
-			active: currentStep === STEP.REVIEWED,
+			active:
+				currentStep === STEP.REVIEWED || currentStep === STEP.REJECTED,
 			complete: currentStep > STEP.REVIEWED,
-			show: false || currentStep === STEP.INCOMPLETE,
+			show:
+				false ||
+				currentStep === STEP.INCOMPLETE ||
+				currentStep === STEP.REVIEWED ||
+				currentStep === STEP.REJECTED,
 			title: setFirstLetterUpperCase(
-				CONSTANTS.APPLICATION_STATUS.REVIEWED
+				CONSTANTS.APPLICATION_STATUS['reviewed'].NAME
 			),
 		},
 		{
 			active: currentStep === STEP.BOUND,
 			complete: currentStep > STEP.BOUND,
-			show: currentStep === STEP.BOUND || currentStep === STEP.INCOMPLETE,
-			title: setFirstLetterUpperCase(CONSTANTS.APPLICATION_STATUS.BOUND),
+			show:
+				currentStep === STEP.BOUND ||
+				currentStep === STEP.INCOMPLETE ||
+				currentStep === STEP.REVIEWED ||
+				currentStep === STEP.REJECTED,
+			title: setFirstLetterUpperCase(
+				CONSTANTS.APPLICATION_STATUS['bound'].NAME
+			),
 		},
 	];
 
 	const selectCurrentStep = (applicationStatus: string) => {
-		if (applicationStatus === CONSTANTS.APPLICATION_STATUS.OPEN) {
-			return setCurrentStep(STEP.OPEN);
-		}
+		const status = CONSTANTS.APPLICATION_STATUS[applicationStatus].INDEX;
 
-		if (applicationStatus === CONSTANTS.APPLICATION_STATUS.INCOMPLETE) {
-			return setCurrentStep(STEP.INCOMPLETE);
-		}
-
-		if (applicationStatus === CONSTANTS.APPLICATION_STATUS.QUOTED) {
-			return setCurrentStep(STEP.QUOTED);
-		}
-
-		if (applicationStatus === CONSTANTS.APPLICATION_STATUS.UNDERWRITING) {
-			return setCurrentStep(STEP.UNDERWRITING);
-		}
-
-		if (applicationStatus === CONSTANTS.APPLICATION_STATUS.REVIEWED) {
-			return setCurrentStep(STEP.REVIEWED);
-		}
-
-		if (applicationStatus === CONSTANTS.APPLICATION_STATUS.BOUND) {
-			return setCurrentStep(STEP.BOUND);
-		}
+		setCurrentStep(status);
 	};
 
 	const getApplication = async (externalReferenceCode: string) => {
@@ -153,18 +153,30 @@ const ApplicationDetails = () => {
 					/>
 				</div>
 
-				<div className="application-detail-content py-4 row">
-					<div className="application-summary-content col-12 col-lg-12 col-md-12 col-sm-12 col-xl-3 mb-4">
+				<div className="application-detail-content d-flex py-4 row">
+					<div className="application-summary-content col-12 col-lg-12 col-md-12 col-sm-12 col-xl-3 d-flex mb-4">
 						<Summary application={app} />
 					</div>
 
-					<div className="application-action-detail-content col-12 col-lg-12 col-md-12 col-sm-12 col-xl-9 mb-4">
+					<div className="application-action-detail-content col-12 col-lg-12 col-md-12 col-sm-12 col-xl-9 d-flex mb-4">
 						<ActionDetail>
 							{currentStep === STEP.INCOMPLETE && (
 								<IncompleteContent onClick={handleClick} />
 							)}
 
-							{currentStep === STEP.BOUND && <BoundContent />}
+							{currentStep === STEP.BOUND && <NoActionRequired />}
+
+							{currentStep === STEP.REVIEWED && (
+								<UnderwritingContent
+									externalReferenceCode={
+										app?.data?.externalReferenceCode
+									}
+								/>
+							)}
+
+							{currentStep === STEP.REJECTED && (
+								<UnderwritingContent id={app?.data?.id} />
+							)}
 						</ActionDetail>
 					</div>
 				</div>

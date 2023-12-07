@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6226. Price Entry lifecycle"
-	@priority = "3"
+	@priority = 5
 	test AddEditAndDeletePriceEntry {
 		property portal.acceptance = "true";
 
@@ -64,9 +64,7 @@ definition {
 			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
 			value1 = "100.00");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "pricelist1");
 
@@ -86,9 +84,7 @@ definition {
 			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
 			value1 = "80.00");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "pricelist1");
 
@@ -111,504 +107,19 @@ definition {
 			value1 = "24.00");
 	}
 
-	@description = "This is a test for COMMERCE-6225. Price Modifier lifecycle"
-	@priority = "3"
-	test AddEditAndDeletePriceModifier {
-		property portal.acceptance = "false";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
-
-		Click(locator1 = "Button#PLUS");
-
-		CommerceEntry.addNewPriceListsEntry(
-			priceListCatalog = "Minium",
-			priceListCurrency = "USD",
-			priceListName = "Price List Test");
-
-		AssertClickNoError(
-			locator1 = "Button#SUBMIT",
-			value1 = "Submit");
-
-		SelectFrameTop();
-
-		CommerceNavigator.gotoEntry(entryName = "Price List Test");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
-
-		CommercePriceLists.addNewPriceModifier(
-			modifier = "Percentage",
-			name = "CASE A",
-			target = "Products");
-
-		Click(
-			key_value = "CASE A",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Type(
-			key_fieldLabel = "Amount",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		CommerceEntry.gotoMenuTab(menuTab = "Products");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "ABS Sensor",
-			title = "Add Product");
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
-
-		Type(
-			locator1 = "AppBuilder#SEARCH_BAR_INPUT",
-			value1 = "ABS Sensor");
-
-		Click(locator1 = "Button#SUBMIT");
-
-		Click(
-			key_productName = "ABS Sensor",
-			locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
-
-		AssertTextEquals(
-			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
-			value1 = "$ 55.00");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
-
-		CommerceNavigator.gotoEntry(entryName = "Price List Test");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
-
-		Click(
-			key_value = "CASE A",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Refresh();
-
-		CommercePriceLists.addNewPriceModifier(
-			modifier = "Replace",
-			name = "CASE B",
-			target = "Products");
-
-		Click(
-			key_value = "CASE B",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Type(
-			key_fieldLabel = "Amount",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		CommerceEntry.gotoMenuTab(menuTab = "Products");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "ABS Sensor",
-			title = "Add Product");
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
-
-		Type(
-			locator1 = "AppBuilder#SEARCH_BAR_INPUT",
-			value1 = "ABS Sensor");
-
-		Click(locator1 = "Button#SUBMIT");
-
-		Click(
-			key_productName = "ABS Sensor",
-			locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
-
-		AssertTextEquals(
-			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
-			value1 = "$ 10.00");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
-
-		CommerceNavigator.gotoEntry(entryName = "Price List Test");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
-
-		Click(
-			key_value = "CASE B",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Refresh();
-
-		CommercePriceLists.addNewPriceModifier(
-			modifier = "Fixed Amount",
-			name = "CASE C",
-			target = "Products");
-
-		Click(
-			key_value = "CASE C",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Type(
-			key_fieldLabel = "Amount",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		CommerceEntry.gotoMenuTab(menuTab = "Products");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "ABS Sensor",
-			title = "Add Product");
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
-
-		Type(
-			locator1 = "AppBuilder#SEARCH_BAR_INPUT",
-			value1 = "ABS Sensor");
-
-		Click(locator1 = "Button#SUBMIT");
-
-		Click(
-			key_productName = "ABS Sensor",
-			locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
-
-		AssertTextEquals(
-			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
-			value1 = "$ 60.00");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
-
-		CommerceProducts.searchProduct(search = "U-Joint");
-
-		CommerceNavigator.gotoEntry(entryName = "U-Joint");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Product Groups");
-
-		Type(
-			key_title = "Select Product Group",
-			locator1 = "CommerceEntry#ADD_RELATION_FIELD",
-			value1 = "PG1");
-
-		WaitForElementPresent(locator1 = "Button#CREATE_NEW");
-
-		ClickNoError(locator1 = "Button#CREATE_NEW");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
-
-		CommerceNavigator.gotoEntry(entryName = "Price List Test");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
-
-		Click(
-			key_value = "CASE C",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Refresh();
-
-		CommercePriceLists.addNewPriceModifier(
-			modifier = "Percentage",
-			name = "CASE D",
-			target = "Product Groups");
-
-		Click(
-			key_value = "CASE D",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Type(
-			key_fieldLabel = "Amount",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		CommerceEntry.gotoMenuTab(menuTab = "Product Groups");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "PG1",
-			title = "Select Product Group");
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
-
-		Click(
-			key_productName = "U-Joint",
-			locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME");
-
-		AssertTextEquals(
-			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
-			value1 = "$ 26.40");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
-
-		CommerceNavigator.gotoEntry(entryName = "Price List Test");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
-
-		Click(
-			key_value = "CASE D",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
-
-		var curr_productName = "";
-		var curr_price = "";
-		var decreasedPrice = "";
-		var productAndPriceArray = "";
-		var isLessThan21 = "";
-		var isLessThan41 = "";
-		var aux_iterator = "1";
-
-		for (var iterator : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49") {
-			var isLessThan41 = MathUtil.isLessThan("${iterator}", "41");
-
-			if ("${aux_iterator}" == "21") {
-				var aux_iterator = "1";
-			}
-
-			if ("${isLessThan41}" == "false") {
-				var isLessThan21 = "true";
-			}
-			else {
-				var isLessThan21 = MathUtil.isLessThan("${iterator}", "21");
-			}
-
-			if ("${isLessThan21}" == "false") {
-				Click(
-					key_pageNumber = "2",
-					locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
-
-				WaitForElementPresent(
-					key_index = "${aux_iterator}",
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX");
-			}
-			else if ("${isLessThan41}" == "false") {
-				Click(
-					key_pageNumber = "3",
-					locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
-
-				WaitForElementPresent(
-					key_index = "${aux_iterator}",
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX");
-			}
-
-			ClickNoError(
-				key_index = "${aux_iterator}",
-				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX");
-
-			WaitForElementPresent(locator1 = "CommerceFrontStore#FS_PRODUCT_NAME");
-
-			var curr_productName = selenium.getText("CommerceFrontStore#FS_PRODUCT_NAME");
-
-			if (IsElementPresent(locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE_INACTIVE")) {
-				var curr_price = selenium.getText("CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE_INACTIVE");
-			}
-			else {
-				var curr_price = selenium.getText("CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE");
-			}
-
-			var curr_price = StringUtil.replace("${curr_price}", "$ ", "");
-
-			var curr_price = StringUtil.replace("${curr_price}", ".00", "");
-
-			var length = StringUtil.length("${curr_price}");
-
-			var index = ${length} - 1;
-
-			var intPart = StringUtil.substring("${curr_price}", "0", "${index}");
-
-			if ("${intPart}" == "") {
-				var intPart = "0";
-			}
-
-			var decPart = StringUtil.substring("${curr_price}", "${index}", "${length}");
-
-			if ("${decPart}" != "0") {
-				var intPart = ${intPart} + 1;
-				var aux = 10 - ${decPart};
-			}
-			else {
-				var aux = "0";
-			}
-
-			var decreasedPrice = ${curr_price} - ${intPart};
-
-			var decreasedPrice = "$ ${decreasedPrice}.${aux}0";
-
-			if ("${iterator}" == "1") {
-				var productAndPriceArray = "${curr_productName};${decreasedPrice}";
-			}
-			else {
-				var productAndPriceArray = "${productAndPriceArray},${curr_productName};${decreasedPrice}";
-			}
-
-			var aux_iterator = ${aux_iterator} + 1;
-
-			ApplicationsMenu.gotoSite(site = "Minium");
-		}
-
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
-
-		CommerceNavigator.gotoEntry(entryName = "Price List Test");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
-
-		CommercePriceLists.addNewPriceModifier(
-			modifier = "Percentage",
-			name = "CASE E",
-			target = "Catalog");
-
-		Click(
-			key_value = "CASE E",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(key_menuItem = "Edit");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Type(
-			key_fieldLabel = "Amount",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "-10");
-
-		Click(locator1 = "ToggleSwitch#ACTIVE");
-
-		Button.clickSave();
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
-
-		AnnouncementsPortlet.configurePaginationCP(itemsPerPage = "60");
-
-		var aux = "37";
-
-		for (var curr_productAndPrice : list "${productAndPriceArray}") {
-			var curr_productName = StringUtil.extractFirst("${curr_productAndPrice}", ";");
-			var curr_price = StringUtil.extractLast("${curr_productAndPrice}", ";");
-
-			if (("${curr_productName}" == "Hoses") || ("${curr_productName}" == "Brake Fluid")) {
-				AssertTextEquals(
-					key_productName = "${curr_productName}",
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE",
-					value1 = "From ${curr_price}");
-			}
-			else if ("${curr_productName}" == "Master Cylinder") {
-				AssertTextEquals(
-					key_index = "${aux}",
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE_BY_INDEX",
-					value1 = "${curr_price}");
-
-				var aux = ${aux} + 1;
-			}
-			else {
-				AssertTextEquals(
-					key_productName = "${curr_productName}",
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE",
-					value1 = "${curr_price}");
-			}
-		}
-	}
-
 	@description = "This is a test for COMMERCE-6227. Tier Price Entry lifecycle"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AddEditAndDeleteTierPriceEntry {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6227 AddEditAndDeleteTierPriceEntry Pending Implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6234. Price List Qualifier Lifecycle"
-	@priority = "3"
+	@priority = 5
 	test AddEditAndRemovePLQualifier {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -644,16 +155,13 @@ definition {
 
 		Button.clickAssign();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Discounts");
+		CommerceNavigator.goToDiscountAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewDiscountsEntry(
 			channelsEligibility = "Minium Portal",
-			discountAmount = "25",
+			discountAmount = 25,
 			discountName = "Test Discount",
 			discountTarget = "Products",
 			discountType = "Percentage");
@@ -740,9 +248,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6235. Product Group Lifecycle"
-	@priority = "3"
+	@priority = 5
 	test AddEditAndRemoveProductGroupFromPL {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -774,7 +282,7 @@ definition {
 
 		for (var product : list "U-Joint,Mount,Shock Absorber") {
 			CommerceRelations.assignSingleRelationToProductsEntry(
-				entryName = "${product}",
+				entryName = ${product},
 				title = "Add Products");
 		}
 
@@ -783,7 +291,7 @@ definition {
 		AssertElementPresent(
 			key_name = "test1",
 			locator1 = "CommerceEntry#PRODUCT_GROUPS_COLUMN_VALUE",
-			value1 = "3");
+			value1 = 3);
 
 		CommerceNavigator.gotoEntry(entryName = "test1");
 
@@ -806,7 +314,7 @@ definition {
 		AssertElementPresent(
 			key_name = "test1",
 			locator1 = "CommerceEntry#PRODUCT_GROUPS_COLUMN_VALUE",
-			value1 = "2");
+			value1 = 2);
 
 		Click(
 			key_value = "test1",
@@ -816,11 +324,11 @@ definition {
 
 		AssertElementNotPresent(
 			key_tableEntryName = "test1",
-			locator1 = "RemoteApps#TABLE_ENTRY_NAME_REMOTE_TABLE");
+			locator1 = "ClientExtension#TABLE_ENTRY_NAME_REMOTE_TABLE");
 	}
 
 	@description = "This is a test for COMMERCE-6069. Price List Qualifier"
-	@priority = "3"
+	@priority = 3
 	test AddPriceListQualifier {
 		property portal.acceptance = "false";
 
@@ -849,9 +357,7 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Account2");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -924,7 +430,7 @@ definition {
 		var priceListEntryProduct = "MIN55861";
 
 		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "${priceListEntryProduct}",
+			entryName = ${priceListEntryProduct},
 			title = "Add SKUs");
 
 		Refresh();
@@ -942,7 +448,7 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "Entries");
 
 		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "${priceListEntryProduct}",
+			entryName = ${priceListEntryProduct},
 			title = "Add SKUs");
 
 		Refresh();
@@ -1017,9 +523,7 @@ definition {
 			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
 			value1 = "7.45");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "pricelist1");
 
@@ -1095,9 +599,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8568. Verify multiple Price Entries can be set on the same Price List for the same SKU"
-	@priority = "3"
+	@priority = 5
 	test AllowMultiplePriceEntriesInTheSamePriceList {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property osgi.module.configuration.file.names = "com.liferay.commerce.price.list.configuration.CommercePriceEntryConfiguration.config";
 		property osgi.module.configurations = "checkInterval=\"1\"";
 		property portal.acceptance = "true";
@@ -1137,7 +641,7 @@ definition {
 			CommerceEntry.gotoMenuTab(menuTab = "Entries");
 
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "20",
+				entryPrice = 20,
 				priceListName = "Test Price List",
 				productSKU = "MIN55861");
 
@@ -1147,26 +651,24 @@ definition {
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
-			CommerceEntry.setExpirationTime(minutesToExpire = "2");
-
-			Button.clickSave();
+			CommerceEntry.setExpirationTime(minutesToExpire = 2);
 		}
 
 		task ("And given a Test Price List entry for U-Joint that is set to publish in 3 minutes") {
 			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
-				entryPrice = "10",
+				entryPrice = 10,
 				priceListName = "Test Price List",
 				productSKU = "MIN55861");
 
 			Refresh();
 
 			Click(
-				key_rowNumber = "2",
+				key_rowNumber = 2,
 				locator1 = "CommerceNavigation#ENTRY_NAME_N");
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
-			CommerceEntry.setPublishTime(minutesToPublish = "3");
+			CommerceEntry.setPublishTime(minutesToPublish = 3);
 
 			Button.clickSave();
 		}
@@ -1194,7 +696,7 @@ definition {
 
 				// We need this pause for waiting for the Price List to expire
 
-				Pause(locator1 = "8000");
+				Pause(value1 = 8000);
 
 				Refresh();
 			}
@@ -1212,7 +714,7 @@ definition {
 
 				// We need this pause for waiting for the second price entry to be published
 
-				Pause(locator1 = "8000");
+				Pause(value1 = 8000);
 
 				Refresh();
 			}
@@ -1226,6 +728,7 @@ definition {
 		}
 	}
 
+	@priority = 3
 	test AssertPriceEntriesAreProductsInTheSameCatalogAsPriceList {
 		property portal.acceptance = "false";
 		property portal.upstream = "true";
@@ -1262,9 +765,7 @@ definition {
 
 		SelectFrameTop();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1279,27 +780,21 @@ definition {
 
 		SelectFrameTop();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Test Catalog",
 			productName = "Simple T-Shirt",
 			productType = "Simple");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Test Catalog 2",
 			productName = "Simple Jeans",
 			productType = "Simple");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Test Price List");
 
@@ -1320,8 +815,9 @@ definition {
 			locator1 = "CommerceEntry#ITEM_FINDER_ENTRY_NAME");
 	}
 
+	@priority = 5
 	test AssertPriceListCanBeAssociatedWithAccountAndAccountGroup {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 		property portal.upstream = "true";
 
 		for (var entryNumber : list "1,2") {
@@ -1347,10 +843,7 @@ definition {
 
 		Navigator.openURL();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1388,6 +881,7 @@ definition {
 		Button.clickPublish();
 	}
 
+	@priority = 3
 	test AssertPriceListCannotBeMovedToADifferentCatalog {
 		property portal.acceptance = "false";
 		property portal.upstream = "true";
@@ -1411,9 +905,7 @@ definition {
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1435,6 +927,7 @@ definition {
 			locator1 = "Select#ANY_DISABLED");
 	}
 
+	@priority = 3
 	test AssertPriceListHaveRequiredNameAndCurrency {
 		property portal.acceptance = "false";
 		property portal.upstream = "true";
@@ -1455,10 +948,7 @@ definition {
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1506,6 +996,7 @@ definition {
 		Alert.viewSpecificRequiredField(fieldFieldLabel = "Currency");
 	}
 
+	@priority = 5
 	test AssertPriceListIsAppliedToAllAssociatedAccounts {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -1518,17 +1009,15 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 1");
 
-		Navigator.gotoBack();
+		Click(locator1 = "CommerceNavigation#BACK");
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 2");
 
-		Navigator.gotoBack();
+		Click(locator1 = "CommerceNavigation#BACK");
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 3");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1590,8 +1079,723 @@ definition {
 			value1 = "50.00");
 	}
 
+	@description = "This is a test for COMMERCE-9409. As an admin, I can add an SKU to the price list when the product for the SKU is in draft status"
+	@priority = 3
+	test CanAddADraftProductSKUToAPriceList {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a draft simple product with master catalog is created") {
+			CommerceProducts.openProductsAdmin();
+
+			CPCommerceCatalog.newProductsEntry(
+				compileDescription = "false",
+				productName = "Simple T-Shirt",
+				productType = "Simple",
+				publishProduct = "false");
+
+			AssertElementPresent(
+				key_status = "Draft",
+				locator1 = "CommerceEntry#WORKFLOW_STATUS");
+		}
+
+		task ("When the admin tries to add the SKU for the simple product in the Master Base Price List admin details page") {
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Master Base Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Entries");
+
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_STATE_INFO",
+				value1 = "No Results Found");
+
+			Type(
+				key_placeHolder = "Find a SKU",
+				locator1 = "TextInput#ANY_PLACEHOLDER",
+				value1 = "default");
+
+			AssertElementPresent(
+				key_formViewName = "default",
+				locator1 = "FormViewBuilder#ASSERT_FORM");
+
+			Click(
+				key_text = "Select",
+				locator1 = "Button#ANY");
+		}
+
+		task ("Then no alert can be viewed after selecting") {
+			AssertAlertNotPresent();
+		}
+
+		task ("And the SKU can be added successfully to the master price list") {
+			AssertTextEquals(
+				key_cellName1 = "default",
+				key_cellName2 = "Simple T-Shirt",
+				key_columnNumber = 2,
+				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
+				value1 = "default");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-6225. As admin, I can add, edit and delete Price Modifier."
+	@priority = 5
+	test CanAddEditAndDeletePriceModifier {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a new Test Price List is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("And a new Price Modifier is added") {
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Test Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
+
+			CommercePriceLists.addNewPriceModifier(
+				modifier = "Fixed Amount",
+				name = "Test Price Modifier",
+				target = "Products");
+
+			CommercePriceLists.editPriceModifier(
+				active = "true",
+				amountValue = 10,
+				entryName = "ABS Sensor",
+				priceModifierName = "Test Price Modifier",
+				relation = "Add Product",
+				target = "Products");
+		}
+
+		task ("When admin navigates to ABS Sensor's product details page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
+		}
+
+		task ("Then can verify the price modifier is applied to ABS Sensor") {
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 60.00");
+		}
+
+		task ("Given U-Joint is added in a product group") {
+			CommmerceJSONProductGroupsAPI._postProductGroups(
+				productGroupName = "PG1",
+				productNames = "U-Joint");
+		}
+
+		task ("When the price modifier is edited") {
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Test Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
+
+			CommercePriceLists.editPriceModifier(
+				active = "false",
+				amountValue = 30,
+				entryName = "PG1",
+				modifier = "Replace",
+				modifierTarget = "Product Groups",
+				priceModifierName = "Test Price Modifier",
+				relation = "Select Product Group",
+				target = "Product Groups");
+		}
+
+		task ("Then can verify the price modifier is applied to U-Joint") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/u-joint");
+
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 30.00");
+		}
+
+		task ("When the price modifier is deleted") {
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Test Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price Modifiers");
+
+			CommercePriceLists.deletePriceModifier(priceModifierName = "Test Price Modifier");
+		}
+
+		task ("Then can verify the price list price is applied to U-Joint") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/u-joint");
+
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 24.00");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12475. As an admin, I can use the expiration date for the bulk pricing in a product's SKU"
+	@priority = 3
+	test CanAssertExpirationDateForBulkPricing {
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property osgi.module.configuration.file.names = "com.liferay.commerce.price.list.configuration.CommerceTierPriceEntryConfiguration.config";
+		property osgi.module.configurations = "checkInterval=\"1\"";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site with a buyer user") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a new Test Price List is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("And a Bulk Pricing for SKU MIN93015 is set to expire in 2 minutes") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
+				entryPrice = 20,
+				priceListName = "Test Price List",
+				productSKU = "MIN93015");
+
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Test Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Entries");
+
+			CommerceNavigator.gotoEntry(entryName = "MIN93015");
+
+			CommercePriceLists.createPriceListPriceTiers(
+				key_pricingType = "Bulk Pricing",
+				key_quantity = 10,
+				key_value = 10,
+				minutesToExpire = 2);
+		}
+
+		task ("And the buyer navigates to the product ABS Sensor's details page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
+		}
+
+		task ("When the buyer adds the product to the cart with reaches the quantity:10 to active the Bulk Pricing") {
+			FrontStore.addInitializerProductToCartFromProductDetails(
+				productName = "ABS Sensor",
+				productQuantity = 10);
+		}
+
+		task ("Then the ABS Sensor price is the Bulk Pricing(10.00)") {
+			CommerceNavigator.gotoMiniCart();
+
+			AssertTextEquals.assertPartialText(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_PRICE_VALUE",
+				value1 = "$ 10.00");
+		}
+
+		task ("But when the Bulk Price expires") {
+			while ((IsElementPresent(key_cartItemSku = "MIN93015", key_productPrice = "10.00", locator1 = "CommerceAccelerators#MINI_CART_ITEM_LIST_PRICE_VALUE")) && (maxIterations = "40")) {
+				Button.click(button = "Remove All Items");
+
+				Button.click(button = "Yes");
+
+				AssertElementNotPresent(
+					key_cartItemSku = "MIN93015",
+					locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME_USING_SKU");
+
+				FrontStore.addInitializerProductToCartFromProductDetails(
+					productName = "ABS Sensor",
+					productQuantity = 10);
+
+				CommerceNavigator.gotoMiniCart();
+			}
+		}
+
+		task ("Then the ABS Sensor price is the base price(20.00)") {
+			AssertTextEquals.assertPartialText(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_PRICE_VALUE",
+				value1 = "$ 20.00");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12474. As an admin, I can use the expiration date for the tiered pricing in a product's SKU"
+	@priority = 3
+	test CanAssertExpirationDateForTieredPricing {
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property osgi.module.configuration.file.names = "com.liferay.commerce.price.list.configuration.CommerceTierPriceEntryConfiguration.config";
+		property osgi.module.configurations = "checkInterval=\"1\"";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site with a buyer user") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a new Test Price List is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("And a Tiered Pricing for SKU MIN93015 is set to expire in 2 minutes") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceListEntry(
+				entryPrice = 20,
+				priceListName = "Test Price List",
+				productSKU = "MIN93015");
+
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Test Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Entries");
+
+			CommerceNavigator.gotoEntry(entryName = "MIN93015");
+
+			CommercePriceLists.createPriceListPriceTiers(
+				key_pricingType = "Tiered Pricing",
+				key_quantity = 10,
+				key_value = 10,
+				minutesToExpire = 2);
+		}
+
+		task ("And the buyer navigates to the product ABS Sensor's details page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
+		}
+
+		task ("When the buyer adds the product to the cart with reaches the quantity:10 to active the Tiered Pricing") {
+			FrontStore.addInitializerProductToCartFromProductDetails(
+				productName = "ABS Sensor",
+				productQuantity = 10);
+		}
+
+		task ("Then the ABS Sensor price is the Tiered Pricing(19.00)") {
+			CommerceNavigator.gotoMiniCart();
+
+			AssertTextEquals.assertPartialText(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_PRICE_VALUE",
+				value1 = "$ 19.00");
+		}
+
+		task ("But when the Tiered Price expires") {
+			while ((IsElementPresent(key_cartItemSku = "MIN93015", key_productPrice = "19.00", locator1 = "CommerceAccelerators#MINI_CART_ITEM_LIST_PRICE_VALUE")) && (maxIterations = "40")) {
+				Button.click(button = "Remove All Items");
+
+				Button.click(button = "Yes");
+
+				AssertElementNotPresent(
+					key_cartItemSku = "MIN93015",
+					locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME_USING_SKU");
+
+				FrontStore.addInitializerProductToCartFromProductDetails(
+					productName = "ABS Sensor",
+					productQuantity = 10);
+
+				CommerceNavigator.gotoMiniCart();
+			}
+		}
+
+		task ("Then the ABS Sensor price is the base price(20.00)") {
+			AssertTextEquals.assertPartialText(
+				key_cartItemSku = "MIN93015",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_PRICE_VALUE",
+				value1 = "$ 20.00");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-6225. As admin, I can verify Fixed Amount type Price Modifier is applied to a specific product."
+	@priority = 3
+	test CanAssertFixedAmountTypePriceModifierIsAppliedOnProduct {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a new Test Price List is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("And a new Price Modifier is added") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifier(
+				modifierAmount = 10,
+				modifierType = "fixed-amount",
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE C",
+				target = "products");
+
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifierProduct(
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE C",
+				productName = "ABS Sensor");
+		}
+
+		task ("When admin navigates to ABS Sensor's product details page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
+		}
+
+		task ("Then can verify the price modifier CASE C is applied to ABS Sensor") {
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 60.00");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-6225. As admin, I can verify Percentage type Price Modifier is applied to a specific product."
+	@priority = 3
+	test CanAssertPercentageTypePriceModifierIsAppliedOnProduct {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a new Test Price List is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("And a new Price Modifier is added via API") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifier(
+				modifierAmount = 10,
+				modifierType = "percentage",
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE A",
+				target = "products");
+
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifierProduct(
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE A",
+				productName = "ABS Sensor");
+		}
+
+		task ("When admin navigates to ABS Sensor's product details page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
+		}
+
+		task ("Then can verify the price modifier CASE A is applied to ABS Sensor") {
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 55.00");
+		}
+
+		task ("When the price modifier CASE A is deactivated") {
+			CommerceJSONPriceListsAndPromotionsAPI._patchPriceModifier(
+				active = "false",
+				modifierAmount = 10,
+				modifierType = "percentage",
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE A",
+				priority = 1,
+				target = "products");
+		}
+
+		task ("And admin navigates to ABS Sensor's product details page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
+		}
+
+		task ("Then can verify the Minium Base Price List price is applied to ABS Sensor") {
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 50.00");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-6225. As admin, I can verify Price Modifier is applied to a specific Product Group and to the products on the Catalog."
+	@priority = 3
+	test CanAssertPriceModifierIsAppliedOnProductGroupAndCatalog {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a new Test Price List is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("And U-Joint is added in a product group") {
+			CommmerceJSONProductGroupsAPI._postProductGroups(
+				productGroupName = "PG1",
+				productNames = "U-Joint");
+		}
+
+		task ("And a new Price Modifier is added") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifier(
+				modifierAmount = 10,
+				modifierType = "percentage",
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE D",
+				target = "product-groups");
+
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifierProductGroup(
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE D",
+				productGroupNames = "PG1");
+		}
+
+		task ("When admin navigates to U-Joint's product details page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/u-joint");
+		}
+
+		task ("Then can verify the price modifier CASE D is applied to U-Joint") {
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 26.40");
+		}
+
+		task ("When the price modifier CASE D is deactivated") {
+			CommerceJSONPriceListsAndPromotionsAPI._patchPriceModifier(
+				active = "false",
+				modifierAmount = 10,
+				modifierType = "percentage",
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE D",
+				priority = 1,
+				target = "product-groups");
+		}
+
+		task ("Then the Minium Base Price List price is shown for all the products on the Catalog Page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			var curr_productName = "";
+			var curr_price = "";
+			var decreasedPrice = "";
+			var productAndPriceArray = "";
+			var isLessThan21 = "";
+			var isLessThan41 = "";
+			var aux_iterator = 1;
+
+			for (var iterator : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49") {
+				var isLessThan41 = MathUtil.isLessThan(${iterator}, 41);
+
+				if (${aux_iterator} == 21) {
+					var aux_iterator = 1;
+				}
+
+				if (${isLessThan41} == "false") {
+					var isLessThan21 = "true";
+				}
+				else {
+					var isLessThan21 = MathUtil.isLessThan(${iterator}, 21);
+				}
+
+				if (${isLessThan21} == "false") {
+					Click(
+						key_pageNumber = 2,
+						locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
+
+					WaitForElementPresent(
+						key_index = ${aux_iterator},
+						locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX");
+				}
+				else if (${isLessThan41} == "false") {
+					Click(
+						key_pageNumber = 3,
+						locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
+
+					WaitForElementPresent(
+						key_index = ${aux_iterator},
+						locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX");
+				}
+
+				ClickNoError(
+					key_index = ${aux_iterator},
+					locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX");
+
+				WaitForElementPresent(locator1 = "CommerceFrontStore#FS_PRODUCT_NAME");
+
+				var curr_productName = selenium.getText("CommerceFrontStore#FS_PRODUCT_NAME");
+
+				if (IsElementPresent(locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE_INACTIVE")) {
+					var curr_price = selenium.getText("CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE_INACTIVE");
+				}
+				else {
+					var curr_price = selenium.getText("CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE");
+				}
+
+				var curr_price = StringUtil.replace(${curr_price}, "$ ", "");
+
+				var curr_price = StringUtil.replace(${curr_price}, ".00", "");
+
+				var length = StringUtil.length(${curr_price});
+
+				var index = ${length} - 1;
+
+				var intPart = StringUtil.substring(${curr_price}, 0, ${index});
+
+				if (${intPart} == "") {
+					var intPart = 0;
+				}
+
+				var decPart = StringUtil.substring(${curr_price}, ${index}, ${length});
+
+				if (${decPart} != 0) {
+					var intPart = ${intPart} + 1;
+					var aux = 10 - ${decPart};
+				}
+				else {
+					var aux = 0;
+				}
+
+				var decreasedPrice = ${curr_price} - ${intPart};
+
+				var decreasedPrice = "$ ${decreasedPrice}.${aux}0";
+
+				if (${iterator} == 1) {
+					var productAndPriceArray = "${curr_productName};${decreasedPrice}";
+				}
+				else {
+					var productAndPriceArray = "${productAndPriceArray},${curr_productName};${decreasedPrice}";
+				}
+
+				var aux_iterator = ${aux_iterator} + 1;
+
+				Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+			}
+		}
+
+		task ("When a new Price Modifier is added") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifier(
+				modifierAmount = "-10",
+				modifierType = "percentage",
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE E",
+				target = "catalog");
+		}
+
+		task ("Then the price modifier CASE E is applied to the products on the Catalog Page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			AnnouncementsPortlet.configurePaginationCP(itemsPerPage = 60);
+
+			var aux = 37;
+
+			for (var curr_productAndPrice : list ${productAndPriceArray}) {
+				var curr_productName = StringUtil.extractFirst(${curr_productAndPrice}, ";");
+				var curr_price = StringUtil.extractLast(${curr_productAndPrice}, ";");
+
+				if ((${curr_productName} == "Hoses") || (${curr_productName} == "Brake Fluid")) {
+					AssertTextEquals(
+						key_productName = ${curr_productName},
+						locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE",
+						value1 = "From ${curr_price}");
+				}
+				else if (${curr_productName} == "Master Cylinder") {
+					AssertTextEquals(
+						key_index = ${aux},
+						locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE_BY_INDEX",
+						value1 = ${curr_price});
+
+					var aux = ${aux} + 1;
+				}
+				else {
+					AssertTextEquals(
+						key_productName = ${curr_productName},
+						locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE",
+						value1 = ${curr_price});
+				}
+			}
+		}
+	}
+
+	@description = "This is a test for COMMERCE-6225. As admin, I can verify Replace type Price Modifier is applied to a specific product."
+	@priority = 3
+	test CanAssertReplaceTypePriceModifierIsAppliedOnProduct {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a new Test Price List is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("And a new Price Modifier is added") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifier(
+				modifierAmount = 10,
+				modifierType = "replace",
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE B",
+				target = "products");
+
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceModifierProduct(
+				priceListName = "Test Price List",
+				priceModifierTitle = "CASE B",
+				productName = "ABS Sensor");
+		}
+
+		task ("When admin navigates to ABS Sensor's product details page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
+		}
+
+		task ("Then can verify the price modifier CASE B is applied to ABS Sensor") {
+			AssertTextEquals(
+				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE",
+				value1 = "$ 10.00");
+		}
+	}
+
 	@description = "Test for COMMERCE-9405. User with Discount Manager role can add price list entries"
-	@priority = "3"
+	@priority = 3
 	test CanDiscountManagerViewPriceLists {
 		property portal.acceptance = "false";
 
@@ -1608,7 +1812,7 @@ definition {
 
 			Role.viewPermissionCP(
 				permissionDefinitionValue = "View",
-				permissionNavigationValue = "Catalogs > Commerce Catalog");
+				permissionNavigationValue = "Catalogs > Catalog");
 		}
 
 		task ("And a user with Discount Manager role is created") {
@@ -1634,35 +1838,145 @@ definition {
 			for (var portlet : list "Catalogs,Channels,Inventory,Orders,Products,Shipments") {
 				AssertElementNotPresent(
 					key_category = "",
-					key_portlet = "${portlet}",
+					key_portlet = ${portlet},
 					locator1 = "ApplicationsMenu#PORTLET");
 			}
 
 			for (var portlet : list "Price Lists,Promotions") {
 				AssertElementPresent(
 					key_category = "Pricing",
-					key_portlet = "${portlet}",
+					key_portlet = ${portlet},
 					locator1 = "ApplicationsMenu#PORTLET");
 			}
 		}
 
 		task ("When the Discount Manager navigates to Price Lists page") {
-			ApplicationsMenuHelper.gotoPortlet(
-				category = "Pricing",
-				portlet = "Price Lists");
+			CommerceNavigator.goToPriceListAdmin();
 		}
 
 		task ("Then the user is able to create a new price list") {
 			for (var entry : list "Master Base Price List,Minium Base Price List") {
 				AssertElementPresent(
-					key_entryName = "${entry}",
+					key_entryName = ${entry},
 					locator1 = "CommerceNavigation#ENTRY_NAME");
 			}
 		}
 	}
 
+	@description = "COMMERCE-12301 | Verify that is possible to see the created UOMs in the item finder for Price List"
+	@priority = 4
+	test CanItemFinderShowsUOMPriceList {
+		property custom.properties = "feature.flag.COMMERCE-11287=true";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site with 2 UOMs is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceJSONSKUsAPI._addCommerceUOM(
+				basePrice = 10,
+				productSKU = "MIN93015",
+				uomKey = "Liter",
+				uomName = "Liter");
+
+			CommerceJSONSKUsAPI._addCommerceUOM(
+				basePrice = 20,
+				productSKU = "MIN93015",
+				uomKey = "Gallon",
+				uomName = "Gallon");
+		}
+
+		task ("And the admin uses the item search for the Price List") {
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Entries");
+
+			Type(
+				key_title = "Add SKUs",
+				locator1 = "CommerceEntry#ADD_RELATION_FIELD",
+				value1 = "MIN93015");
+
+			while ((IsElementNotPresent(key_entryName = "MIN93015", key_title = "Add SKUs", locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT")) && (maxIterations = "5")) {
+				echo("The element is not present, retrying...");
+
+				Click(locator1 = "WorkflowMetricsProcessListView#METRICS_WORKFLOW_SEARCH_BAR_BUTTON");
+
+				Type(
+					key_title = "Add SKUs",
+					locator1 = "CommerceEntry#ADD_RELATION_FIELD",
+					value1 = "MIN93015");
+			}
+		}
+
+		task ("Then is possible to see all the created UOMs for a particular SKU") {
+			for (var rowList : list "Liter:1,Gallon:2") {
+				var entry = StringUtil.extractFirst(${rowList}, ":");
+				var row = StringUtil.extractLast(${rowList}, ":");
+
+				AssertElementPresent(
+					key_entry = ${entry},
+					key_rowNumber = ${row},
+					locator1 = "CommerceEntry#ENTRY_CONTENT_ROW_NUMBER_DATASET");
+
+				echo("The UOM ${entry} at the ${row} is present");
+			}
+		}
+	}
+
+	@description = "This is a test for COMMERCE-9767. Verify that a Tier Price entry cannot be saved with 0 quantity and an alert is shown"
+	@priority = 3
+	test CannotCreateTierPriceWithZeroQuantity {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("When admin goes to the Price Lists navigating in Entries tab") {
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Entries");
+		}
+
+		task ("And clicks on a SKU to add a Tier Price giving Quantity as 0") {
+			CommerceNavigator.gotoEntry(entryName = "MIN93015");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			Click(locator1 = "Button#PLUS");
+
+			SelectFrameTop();
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+			Type(
+				key_text = "Quantity",
+				locator1 = "TextInput#ANY",
+				value1 = 0);
+
+			Click(locator1 = "Button#SUBMIT");
+		}
+
+		task ("Then an alert message is shown on the modal") {
+			Alert.viewErrorMessage(errorMessage = "Error:The specified quantity is not allowed.");
+		}
+
+		task ("And the Tier Price is not saved") {
+			Click(locator1 = "Icon#CLOSE");
+
+			SelectFrameTop();
+
+			AssertElementNotPresent(
+				key_field = "Tier Price",
+				locator1 = "FrontendDataSet#TABLE_ITEM_COLUMN");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-7597. We cannot delete base price lists and base promotions."
-	@priority = "3"
+	@priority = 3
 	test CanNotDeleteBasePriceListsAndPromotions {
 		property portal.acceptance = "false";
 
@@ -1671,15 +1985,12 @@ definition {
 		}
 
 		task ("When admin goes to the Price Lists section") {
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				panel = "Commerce",
-				portlet = "Price Lists");
+			CommerceNavigator.goToPriceListAdmin();
 		}
 
 		task ("Then verifies that there is no Delete button for Master and Minium Base Price Lists") {
 			for (var basePriceListName : list "Master Base Price List,Minium Base Price List") {
-				CommercePriceLists.assertDeleteButtonNotPresent(baseEntryName = "${basePriceListName}");
+				CommercePriceLists.assertDeleteButtonNotPresent(baseEntryName = ${basePriceListName});
 			}
 		}
 
@@ -1711,7 +2022,7 @@ definition {
 
 		task ("Then verifies that there is no Delete button for Master and Minium Base Promotions") {
 			for (var basePromotionName : list "Master Base Promotion,Minium Base Promotion") {
-				CommercePriceLists.assertDeleteButtonNotPresent(baseEntryName = "${basePromotionName}");
+				CommercePriceLists.assertDeleteButtonNotPresent(baseEntryName = ${basePromotionName});
 			}
 		}
 
@@ -1735,18 +2046,154 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-10053. An error message shows up when the eligibility element is already linked"
+	@priority = 3
+	test CannotSelectPriceListEligibilitiesTwice {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And an order type is created") {
+			CommerceJSONOrdersAPI._addOrderType(
+				active = "true",
+				orderTypeName = "Order Type Test");
+		}
+
+		task ("And a price list is created") {
+			CommerceJSONPriceListsAndPromotionsAPI._addPriceList(
+				catalogName = "Minium",
+				currencyCode = "USD",
+				priceListName = "Test Price List");
+		}
+
+		task ("When the admin navigates to the price list entry") {
+			CommercePriceLists.openPriceListsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Test Price List");
+		}
+
+		task ("And sets the eligibilities for the promotion") {
+			CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
+
+			CommerceEntry.setEntryEligibility(
+				accountsEligibility = "Commerce Account",
+				channelsEligibility = "Minium Portal",
+				orderTypesEligibility = "Order Type Test");
+		}
+
+		task ("And sets again the same eligibility for channel") {
+			CommerceEntry.setEntryEligibility(
+				channelsEligibility = "Minium Portal",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The channel relation already exists.");
+		}
+
+		task ("When the admin sets again the same eligibility for account") {
+			CommerceEntry.setEntryEligibility(
+				accountsEligibility = "Commerce Account",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The account relation already exists.");
+		}
+
+		task ("When the admin sets again the same eligibility for order type") {
+			CommerceEntry.setEntryEligibility(
+				orderTypesEligibility = "Order Type Test",
+				unpublish = "true");
+		}
+
+		task ("Then an error message shows up") {
+			Alert.viewErrorMessage(errorMessage = "The order type relation already exists.");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12371. Can view Sort By Price is working properly "
+	@priority = 5
+	test CanViewSortByPrice {
+		property portal.acceptance = "true";
+
+		task ("Given a minium site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a new price list is created") {
+			CommerceNavigator.goToPriceListAdmin();
+
+			Click(locator1 = "Button#PLUS");
+
+			CommerceEntry.addNewPriceListsEntry(
+				priceListCatalog = "Minium",
+				priceListCurrency = "USD",
+				priceListName = "pricelist1");
+
+			AssertClickNoError(
+				locator1 = "Button#SUBMIT",
+				value1 = "Submit");
+		}
+
+		task ("When a new entry is added to the new price list") {
+			SelectFrameTop();
+
+			CommerceNavigator.gotoEntry(entryName = "pricelist1");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Entries");
+
+			CommerceRelations.assignSingleRelationToProductsEntry(
+				entryName = "MIN00674",
+				title = "Add SKUs");
+
+			SelectFrameTop();
+
+			CommerceEntry.gotoMenuTab(menuTab = "Entries");
+
+			CommerceNavigator.gotoEntry(entryName = "MIN00674");
+
+			CommercePriceLists.editPriceListEntryPrice(priceListEntryPrice = "150.00");
+
+			SelectFrameTop();
+		}
+
+		task ("Then the Sorty By is going to show the products in order based on the Base Price") {
+			ApplicationsMenu.gotoSite(site = "Minium");
+
+			CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Price High to Low");
+
+			AssertTextEquals(
+				key_index = 1,
+				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX",
+				value1 = "Cams");
+
+			AssertTextEquals.assertPartialText(
+				key_productName = "Cams",
+				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
+				value1 = "150.00");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-6220. When creating a price list only catalogs for which the user has permission should be visible in the drop down"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test CheckOnlyPermittedCatalogIsSelectable {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6220 CheckOnlyPermittedCatalogIsSelectable Pending Implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6236. Check info about where a product group is used"
-	@priority = "3"
+	@priority = 3
 	test CheckPLProductGroupUsageInfo {
 		property portal.acceptance = "false";
 
@@ -1773,19 +2220,17 @@ definition {
 
 		for (var product : list "U-Joint,Mount") {
 			CommerceRelations.assignSingleRelationToProductsEntry(
-				entryName = "${product}",
+				entryName = ${product},
 				title = "Add Products");
 		}
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Discounts");
+		CommerceNavigator.goToDiscountAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewDiscountsEntry(
 			channelsEligibility = "Minium Portal",
-			discountAmount = "20",
+			discountAmount = 20,
 			discountName = "Test Discount",
 			discountTarget = "Product Groups",
 			discountType = "Percentage");
@@ -1794,9 +2239,7 @@ definition {
 			entryName = "Test Group",
 			title = "Select Product Group");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1859,6 +2302,7 @@ definition {
 			locator1 = "CommerceNavigation#ENTRY_NAME");
 	}
 
+	@priority = 5
 	test CreateNewPriceList {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
@@ -1882,9 +2326,7 @@ definition {
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1901,21 +2343,19 @@ definition {
 
 		SelectFrameTop();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Test Price List");
 
-		CommerceEntry.viewPriceListEntry(
+		CommercePriceLists.viewPriceListEntry(
 			priceListCatalog = "Test Catalog",
 			priceListCurrency = "USD",
 			priceListName = "Test Price List");
 	}
 
+	@priority = 3
 	test PriceListExistsOnlyInOneCatalog {
 		property portal.acceptance = "false";
-		property portal.upstream = "true";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
@@ -1949,9 +2389,7 @@ definition {
 
 		SelectFrameTop();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1994,10 +2432,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6221. Price List expiration management"
-	@priority = "3"
+	@priority = 3
 	test ViewExpiredPL {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "CPCommercePriceLists#ViewExpiredPL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// TODO Review
 
@@ -2019,16 +2458,13 @@ definition {
 		Type(
 			key_text = "Check Interval",
 			locator1 = "TextInput#ANY",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
 		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -2047,17 +2483,19 @@ definition {
 
 		var timeString = selenium.getElementValue("TextInput#DATE_TIME_PRICE_LISTS");
 
-		var ampm = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "3");
-		var hours = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "1");
-		var minutes = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "2");
+		var timeString = DateUtil.format(${timeString}, "HH:mm", "hh:mm a");
 
-		if ("${minutes}" == "58") {
-			var minutes = "00";
+		var ampm = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 3);
+		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 1);
+		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 2);
 
-			if ("${hours}" == "12") {
-				var hours = "01";
+		if (${minutes} == 58) {
+			var minutes = 00;
 
-				if ("${ampm}" == "PM") {
+			if (${hours} == 12) {
+				var hours = 01;
+
+				if (${ampm} == "PM") {
 					var ampm = "AM";
 				}
 				else {
@@ -2068,13 +2506,13 @@ definition {
 				var hours = ${hours} + 1;
 			}
 		}
-		else if ("${minutes}" == "59") {
-			var minutes = "01";
+		else if (${minutes} == 59) {
+			var minutes = 01;
 
-			if ("${hours}" == "12") {
-				var hours = "01";
+			if (${hours} == 12) {
+				var hours = 01;
 
-				if ("${ampm}" == "PM") {
+				if (${ampm} == "PM") {
 					var ampm = "AM";
 				}
 				else {
@@ -2093,23 +2531,20 @@ definition {
 			checkboxName = "Never Expire",
 			locator1 = "Checkbox#ANY_CHECKBOX");
 
-		Type(
+		Type.sendKeys(
 			inputFieldId = "expirationDateTime",
 			locator1 = "TextInput#INPUT_ID",
-			value1 = "${hours}:${minutes} ${ampm}");
+			value1 = "${hours}:${minutes}${ampm}");
 
 		Button.clickPublish();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		while ((IsTextEqual(key_name = "Test Price List", locator1 = "CommerceEntry#ASSERT_PRICE_LIST_STATUS", value1 = "APPROVED")) && (maxIterations = "40")) {
 
 			// We need this pause for waiting for the Price List to expire
 
-			Pause(locator1 = "5000");
+			Pause(value1 = 5000);
 
 			Refresh();
 		}
@@ -2121,10 +2556,11 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6222. Price Entry expiration management"
-	@priority = "3"
+	@priority = 3
 	test ViewExpiredPriceEntry {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "CPCommercePriceLists#ViewExpiredPriceEntry";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// TODO Review
 
@@ -2146,16 +2582,13 @@ definition {
 		Type(
 			key_text = "Check Interval",
 			locator1 = "TextInput#ANY",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
 		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -2177,33 +2610,35 @@ definition {
 		var sku = "MIN55861";
 
 		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "${sku}",
+			entryName = ${sku},
 			title = "Add SKUs");
 
 		Refresh();
 
-		CommerceNavigator.gotoEntry(entryName = "${sku}");
+		CommerceNavigator.gotoEntry(entryName = ${sku});
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 		Type(
 			key_text = "Price List Price",
 			locator1 = "TextInput#ANY",
-			value1 = "30");
+			value1 = 30);
 
 		var timeString = selenium.getElementValue("TextInput#DATE_TIME_PRICE_LISTS");
 
-		var ampm = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "3");
-		var hours = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "1");
-		var minutes = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "2");
+		var timeString = DateUtil.format(${timeString}, "HH:mm", "hh:mm a");
 
-		if ("${minutes}" == "58") {
-			var minutes = "00";
+		var ampm = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 3);
+		var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 1);
+		var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 2);
 
-			if ("${hours}" == "12") {
-				var hours = "01";
+		if (${minutes} == 58) {
+			var minutes = 00;
 
-				if ("${ampm}" == "PM") {
+			if (${hours} == 12) {
+				var hours = 01;
+
+				if (${ampm} == "PM") {
 					var ampm = "AM";
 				}
 				else {
@@ -2214,13 +2649,13 @@ definition {
 				var hours = ${hours} + 1;
 			}
 		}
-		else if ("${minutes}" == "59") {
-			var minutes = "01";
+		else if (${minutes} == 59) {
+			var minutes = 01;
 
-			if ("${hours}" == "12") {
-				var hours = "01";
+			if (${hours} == 12) {
+				var hours = 01;
 
-				if ("${ampm}" == "PM") {
+				if (${ampm} == "PM") {
 					var ampm = "AM";
 				}
 				else {
@@ -2239,10 +2674,10 @@ definition {
 			checkboxName = "Never Expire",
 			locator1 = "Checkbox#ANY_CHECKBOX");
 
-		Type(
+		Type.sendKeys(
 			inputFieldId = "expirationDateTime",
 			locator1 = "TextInput#INPUT_ID",
-			value1 = "${hours}:${minutes} ${ampm}");
+			value1 = "${hours}:${minutes}${ampm}");
 
 		Button.clickSave();
 
@@ -2261,7 +2696,7 @@ definition {
 
 			// We need this pause for waiting for the Price List to expire
 
-			Pause(locator1 = "5000");
+			Pause(value1 = 5000);
 
 			Refresh();
 		}
@@ -2274,201 +2709,19 @@ definition {
 
 	@description = "This is a test for COMMERCE-6224. Price Modifier expiration management"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test ViewExpiredPriceModifier {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6224 ViewExpiredPriceModifier Pending Implementation
 
 	}
 
-	@description = "This is a test for COMMERCE-6223. Tier Price Entry expiration management"
-	@priority = "3"
-	test ViewExpiredTierPriceEntry {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
-		property osgi.module.configuration.file.names = "com.liferay.commerce.price.list.configuration.CommerceTierPriceEntryConfiguration.config";
-		property osgi.module.configurations = "checkInterval=\"1\"";
-		property portal.acceptance = "false";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		CommerceEntry.addAccountEntryUser(
-			accountName = "Commerce Account",
-			accountType = "Business",
-			agreeToTermsAndAnswerReminderQuery = "true",
-			createNewAccount = "true",
-			requireReset = "false",
-			userEmailAddress = "buyer@liferay.com",
-			userFirstName = "Buyer",
-			userLastName = "User",
-			userRole = "Buyer",
-			userScreenName = "buyeruser",
-			userSiteMembership = "Minium");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Price Lists");
-
-		Click(locator1 = "Button#PLUS");
-
-		CommerceEntry.addNewPriceListsEntry(
-			priceListCatalog = "Minium",
-			priceListCurrency = "USD",
-			priceListName = "Test Price List");
-
-		AssertClickNoError(
-			locator1 = "Button#SUBMIT",
-			value1 = "Submit");
-
-		SelectFrameTop();
-
-		CommerceNavigator.gotoEntry(entryName = "Test Price List");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Entries");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "MIN55861",
-			title = "Add SKUs");
-
-		Refresh();
-
-		CommerceNavigator.gotoEntry(entryName = "MIN55861");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Type(
-			key_text = "Price List Price",
-			locator1 = "TextInput#ANY",
-			value1 = "30");
-
-		Click(
-			key_radioOption = "Bulk Pricing",
-			locator1 = "CommerceEntry#RADIO_BUTTON");
-
-		Click(locator1 = "Button#PLUS");
-
-		SelectFrameTop();
-
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-		var timeString = selenium.getElementValue("TextInput#DATE_TIME_PRICE_LISTS");
-
-		var ampm = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "3");
-		var hours = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "1");
-		var minutes = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "2");
-
-		if ("${minutes}" == "58") {
-			var minutes = "00";
-
-			if ("${hours}" == "12") {
-				var hours = "01";
-
-				if ("${ampm}" == "PM") {
-					var ampm = "AM";
-				}
-				else {
-					var ampm = "PM";
-				}
-			}
-			else {
-				var hours = ${hours} + 1;
-			}
-		}
-		else if ("${minutes}" == "59") {
-			var minutes = "01";
-
-			if ("${hours}" == "12") {
-				var hours = "01";
-
-				if ("${ampm}" == "PM") {
-					var ampm = "AM";
-				}
-				else {
-					var ampm = "PM";
-				}
-			}
-			else {
-				var hours = ${hours} + 1;
-			}
-		}
-		else {
-			var minutes = ${minutes} + 2;
-		}
-
-		Type(
-			key_fieldLabel = "Quantity",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
-
-		Type(
-			key_fieldLabel = "Tier Price",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
-
-		Uncheck.uncheckToggleSwitch(
-			checkboxName = "Never Expire",
-			locator1 = "Checkbox#ANY_CHECKBOX");
-
-		Type(
-			inputFieldId = "expirationDateTime",
-			locator1 = "TextInput#INPUT_ID",
-			value1 = "${hours}:${minutes} ${ampm}");
-
-		Button.clickSubmitButton();
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Button.clickSave();
-
-		Click(locator1 = "Icon#CLOSE");
-
-		Refresh();
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		FrontStore.addInitializerProductToCart(
-			productName = "U-Joint",
-			productQuantity = "10");
-
-		CommerceNavigator.gotoMiniCart();
-
-		AssertTextEquals.assertPartialText(
-			key_cartItemSku = "MIN55861",
-			locator1 = "CommerceAccelerators#MINI_CART_ITEM_PRICE_VALUE",
-			value1 = "$ 10.00");
-
-		while ((IsElementPresent(key_cartItemSku = "MIN55861", key_productPrice = "10.00", locator1 = "CommerceAccelerators#MINI_CART_ITEM_LIST_PRICE_VALUE")) && (maxIterations = "40")) {
-			Button.click(button = "Remove All Items");
-
-			Button.click(button = "Yes");
-
-			AssertElementNotPresent(
-				key_cartItemSku = "MIN55861",
-				locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME_USING_SKU");
-
-			Refresh();
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = "10");
-
-			CommerceNavigator.gotoMiniCart();
-		}
-
-		AssertTextEquals.assertPartialText(
-			key_cartItemSku = "MIN55861",
-			locator1 = "CommerceAccelerators#MINI_CART_ITEM_PRICE_VALUE",
-			value1 = "$ 30.00");
-	}
-
 	@description = "This is a test for COMMERCE-6228. Check that an expired entity is not considered in the price calculation"
-	@priority = "3"
+	@priority = 3
 	test ViewPriceNotAffectedByExpiredPriceEntities {
 		property portal.acceptance = "false";
-		property test.name.skip.portal.instance = "CPCommercePriceLists#ViewPriceNotAffectedByExpiredPriceEntities";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// TODO Review
 
@@ -2490,16 +2743,13 @@ definition {
 		Type(
 			key_text = "Check Interval",
 			locator1 = "TextInput#ANY",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
 		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Pricing",
-			panel = "Commerce",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -2520,33 +2770,35 @@ definition {
 
 		for (var sku : list "MIN55861,MIN93015") {
 			CommerceRelations.assignSingleRelationToProductsEntry(
-				entryName = "${sku}",
+				entryName = ${sku},
 				title = "Add SKUs");
 
 			Refresh();
 
-			CommerceNavigator.gotoEntry(entryName = "${sku}");
+			CommerceNavigator.gotoEntry(entryName = ${sku});
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 			Type(
 				key_text = "Price List Price",
 				locator1 = "TextInput#ANY",
-				value1 = "30");
+				value1 = 30);
 
 			var timeString = selenium.getElementValue("TextInput#DATE_TIME_PRICE_LISTS");
 
-			var ampm = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "3");
-			var hours = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "1");
-			var minutes = RegexUtil.replace("${timeString}", "([0-9]*):([0-9]*) ([A-Z]*)", "2");
+			var timeString = DateUtil.format(${timeString}, "HH:mm", "hh:mm a");
 
-			if ("${minutes}" == "58") {
-				var minutes = "00";
+			var ampm = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 3);
+			var hours = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 1);
+			var minutes = RegexUtil.replace(${timeString}, "([0-9]*):([0-9]*) ([A-Z]*)", 2);
 
-				if ("${hours}" == "12") {
-					var hours = "01";
+			if (${minutes} == 58) {
+				var minutes = 00;
 
-					if ("${ampm}" == "PM") {
+				if (${hours} == 12) {
+					var hours = 01;
+
+					if (${ampm} == "PM") {
 						var ampm = "AM";
 					}
 					else {
@@ -2557,13 +2809,13 @@ definition {
 					var hours = ${hours} + 1;
 				}
 			}
-			else if ("${minutes}" == "59") {
-				var minutes = "01";
+			else if (${minutes} == 59) {
+				var minutes = 01;
 
-				if ("${hours}" == "12") {
-					var hours = "01";
+				if (${hours} == 12) {
+					var hours = 01;
 
-					if ("${ampm}" == "PM") {
+					if (${ampm} == "PM") {
 						var ampm = "AM";
 					}
 					else {
@@ -2582,10 +2834,10 @@ definition {
 				checkboxName = "Never Expire",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 
-			Type(
+			Type.sendKeys(
 				inputFieldId = "expirationDateTime",
 				locator1 = "TextInput#INPUT_ID",
-				value1 = "${hours}:${minutes} ${ampm}");
+				value1 = "${hours}:${minutes}${ampm}");
 
 			Button.clickSave();
 
@@ -2597,12 +2849,12 @@ definition {
 		ApplicationsMenu.gotoSite(site = "Minium");
 
 		for (var productName : list "U-Joint,ABS Sensor") {
-			if ("${productName}" == "ABS Sensor") {
+			if (${productName} == "ABS Sensor") {
 				CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
 			}
 
 			AssertTextEquals(
-				key_productName = "${productName}",
+				key_productName = ${productName},
 				locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE",
 				value1 = "$ 30.00");
 		}
@@ -2613,21 +2865,21 @@ definition {
 
 			// We need this pause for waiting for the Price List to expire
 
-			Pause(locator1 = "5000");
+			Pause(value1 = 5000);
 
 			Refresh();
 		}
 
 		for (var productNamePrice : list "U-Joint;24,ABS Sensor;50") {
-			var productName = StringUtil.extractFirst("${productNamePrice}", ";");
-			var price = StringUtil.extractLast("${productNamePrice}", ";");
+			var productName = StringUtil.extractFirst(${productNamePrice}, ";");
+			var price = StringUtil.extractLast(${productNamePrice}, ";");
 
-			if ("${productName}" == "ABS Sensor") {
+			if (${productName} == "ABS Sensor") {
 				CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
 			}
 
 			AssertTextEquals(
-				key_productName = "${productName}",
+				key_productName = ${productName},
 				locator1 = "CommerceAccelerators#PRODUCT_CARD_PRICE",
 				value1 = "$ ${price}.00");
 		}

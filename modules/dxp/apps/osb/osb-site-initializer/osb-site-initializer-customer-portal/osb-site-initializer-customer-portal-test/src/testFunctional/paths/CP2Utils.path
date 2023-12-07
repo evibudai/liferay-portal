@@ -11,6 +11,16 @@
 
 <tbody>
 <tr>
+	<td>ANY_ACCOUNT_ELLIPSIS_BUTTON</td>
+	<td>//*[text()='${key_accountName}']/parent::*//following-sibling::*[contains(@class, 'item-actions')]//*[@type='button']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>BUTTON_MANAGE_USERS</td>
+	<td>//*[contains(@class, 'cp-manage-product-users')]/parent::div//*[contains(text(), 'Manage ${key_product} Users')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>OBJECT_ENTRY_ELLIPSIS_BUTTON</td>
 	<td>//*[text()='${key_text}']/parent::*//following-sibling::*[contains(@class, 'item-actions')]//*[@type='button']</td>
 	<td></td>
@@ -21,8 +31,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>LABEL_GENERIC_SELECT</td>
+	<td>//label[contains(text(),'${key_fieldLabel}')]/..//select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NEWS_TITLE</td>
+	<td>//h6[contains(@class,'font-weight-semi') and contains(., '${key_title}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MODAL</td>
 	<td>//div[contains(@class,'modal-content')]//p[contains(text(), '${value}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MODAL_DELETE_ENTRY</td>
+	<td>//div//*[normalize-space(text())='It may affect many records. Are you sure you want to delete this entry?']</td>
 	<td></td>
 </tr>
 <tr>
@@ -57,7 +82,7 @@
 </tr>
 <tr>
 	<td>SVG_DROPDOWN_LIST</td>
-	<td>//*[contains(@class, 'cp-project-breadcrumbs')]//*[contains(@class, 'dropdown-item') and contains(text(),'${key_project}')]</td>
+	<td>//div[contains(@class, 'cp-project-breadcrumbs')]/ul//a[contains(.,'${key_project}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -82,7 +107,47 @@
 </tr>
 <tr>
 	<td>MODAL_TEXT</td>
-	<td>//*[contains(@class, 'modal-content')]//*[text()='${key_text}']</td>
+	<td>//*[contains(@class, 'container-view')]//*[contains(@class, 'text-secondary') and contains(text(), '${key_text}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_TEXT</td>
+	<td>//*[contains(text(), '${key_text}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GUEST_FORM_FIELDS</td>
+	<td>//form[contains(@enctype,'multipart/form-data')]//div[contains(@id,'form-group') and contains(., '${key_fieldsname}')]//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GUEST_FORM_OPTIONS</td>
+	<td>//div[contains(@class,'from-list')]//*[contains(.,'${key_option}')]//*[contains(@id,'from-list')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GUEST_FORM_CONGRATS</td>
+	<td>//div[normalize-space(text())= "Thank you. Your information was successfully received."]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACTIVE_LIFERAY_SUBSCRIPTION_GUESTFORM</td>
+	<td>//div//input[contains(@name,'activeLiferaySubscription')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>USER_AVATAR_DROPDOWN_ITEM</td>
+	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//a//*[normalize-space(text())='${dropdownItem}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>USER_AVATAR_DROPDOWN</td>
+	<td>//*[name()='svg'][@role='presentation']//following::span[@class='account-dropdown-icon opacity-30 pr-2']//*[name()='svg']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>USER_SIGN_IN</td>
+	<td>//span[contains(@class,'sign-in')]</td>
 	<td></td>
 </tr>
 </tbody>

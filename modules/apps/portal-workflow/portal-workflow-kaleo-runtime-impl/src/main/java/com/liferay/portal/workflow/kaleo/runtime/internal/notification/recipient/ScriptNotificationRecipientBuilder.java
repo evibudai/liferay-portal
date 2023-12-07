@@ -1,28 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.runtime.internal.notification.recipient;
 
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.workflow.kaleo.definition.NotificationReceptionType;
 import com.liferay.portal.workflow.kaleo.model.KaleoNotificationRecipient;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignmentInstance;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
+import com.liferay.portal.workflow.kaleo.runtime.internal.util.ServiceSelectorUtil;
 import com.liferay.portal.workflow.kaleo.runtime.notification.NotificationRecipient;
 import com.liferay.portal.workflow.kaleo.runtime.notification.recipient.NotificationRecipientBuilder;
 import com.liferay.portal.workflow.kaleo.runtime.notification.recipient.script.NotificationRecipientEvaluator;
@@ -39,7 +30,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael C. Han
@@ -49,6 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = NotificationRecipientBuilder.class
 )
 public class ScriptNotificationRecipientBuilder
+	extends RoleNotificationRecipientBuilder
 	implements NotificationRecipientBuilder {
 
 	@Override
@@ -85,7 +76,7 @@ public class ScriptNotificationRecipientBuilder
 				ScriptingNotificationRecipientConstants.ROLES_RECIPIENT);
 
 			for (Role role : roles) {
-				_roleNotificationRecipientBuilder.addRoleRecipientAddresses(
+				addRoleRecipientAddresses(
 					notificationRecipients, role, notificationReceptionType,
 					executionContext);
 			}
@@ -103,9 +94,9 @@ public class ScriptNotificationRecipientBuilder
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			bundleContext, NotificationRecipientEvaluator.class,
-			"component.name");
+			"scripting.language");
 	}
 
 	@Deactivate
@@ -119,28 +110,22 @@ public class ScriptNotificationRecipientBuilder
 		throws Exception {
 
 		NotificationRecipientEvaluator notificationRecipientEvaluator =
-			_serviceTrackerMap.getService(
-				kaleoNotificationRecipient.getRecipientScript());
+			ServiceSelectorUtil.getServiceByScriptLanguage(
+				kaleoNotificationRecipient.getRecipientScript(),
+				kaleoNotificationRecipient.getRecipientScriptLanguage(),
+				_serviceTrackerMap);
 
-		if ((notificationRecipientEvaluator == null) ||
-			!notificationRecipientEvaluator.canEvaluate(
-				kaleoNotificationRecipient.getRecipientScriptLanguage())) {
-
+		if (notificationRecipientEvaluator == null) {
 			throw new IllegalArgumentException(
-				StringBundler.concat(
-					"No notification recipient evaluator found for script ",
-					"language ",
-					kaleoNotificationRecipient.getRecipientScriptLanguage()));
+				"No notification recipient evaluator for script language " +
+					kaleoNotificationRecipient.getRecipientScriptLanguage());
 		}
 
 		return notificationRecipientEvaluator.evaluate(
 			kaleoNotificationRecipient, executionContext);
 	}
 
-	@Reference
-	private RoleNotificationRecipientBuilder _roleNotificationRecipientBuilder;
-
-	private ServiceTrackerMap<String, NotificationRecipientEvaluator>
+	private ServiceTrackerMap<String, List<NotificationRecipientEvaluator>>
 		_serviceTrackerMap;
 
 }

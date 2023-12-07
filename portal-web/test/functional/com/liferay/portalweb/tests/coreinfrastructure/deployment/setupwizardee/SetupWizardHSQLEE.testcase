@@ -1,6 +1,7 @@
 @component-name = "portal-deployment-hypersonic-ee"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property setup.wizard.enabled = "true";
@@ -9,10 +10,11 @@ definition {
 	property testray.component.names = "Training";
 	property testray.main.component.name = "Setup Wizard";
 
-	@priority = "4"
+	@priority = 4
 	test HSQLtoDB2 {
 		property database.types = "db2";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoDB2";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -29,11 +31,12 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test HSQLtoDB2SampleDataEnabled {
 		property database.types = "db2";
 		property databases.size = "1";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoDB2SampleDataEnabled";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			addSampleData = "true",
@@ -56,11 +59,12 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test HSQLtoOracle {
 		property database.types = "oracle";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoOracle";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -77,11 +81,12 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test HSQLtoOracleSampleDataEnabled {
 		property database.types = "oracle";
 		property databases.size = "1";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoOracleSampleDataEnabled";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			addSampleData = "true",
@@ -104,11 +109,12 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test HSQLtoSQLServer {
 		property database.types = "sqlserver";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoSQLServer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -125,11 +131,12 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test HSQLtoSQLServerSampleDataEnabled {
 		property database.types = "sqlserver";
 		property databases.size = "1";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoSQLServerSampleDataEnabled";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			addSampleData = "true",
@@ -152,10 +159,11 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test HSQLtoSybase {
 		property database.types = "sybase";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoSybase";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -172,11 +180,12 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test HSQLtoSybaseSampleDataEnabled {
 		property database.types = "sybase";
 		property databases.size = "1";
-		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoSybaseSampleDataEnabled";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			addSampleData = "true",

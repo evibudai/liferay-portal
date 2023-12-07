@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.service.impl;
@@ -28,7 +19,6 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
@@ -162,7 +152,7 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * extracted from the original one. This method supports defining a new name
 	 * and description.
 	 *
-	 * @param  templateId the primary key of the template to be copied
+	 * @param  sourceTemplateId the primary key of the template to be copied
 	 * @param  nameMap the new template's locales and localized names
 	 * @param  descriptionMap the new template's locales and localized
 	 *         descriptions
@@ -174,35 +164,38 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 */
 	@Override
 	public DDMTemplate copyTemplate(
-			long templateId, Map<Locale, String> nameMap,
+			long sourceTemplateId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMTemplate template = ddmTemplatePersistence.findByPrimaryKey(
-			templateId);
+		DDMTemplate sourceTemplate = ddmTemplatePersistence.findByPrimaryKey(
+			sourceTemplateId);
 
 		_ddmPermissionSupport.checkAddTemplatePermission(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			template.getClassNameId(), template.getResourceClassName());
+			sourceTemplate.getClassNameId(),
+			sourceTemplate.getResourceClassName());
 
 		return ddmTemplateLocalService.copyTemplate(
-			getUserId(), templateId, nameMap, descriptionMap, serviceContext);
+			getUserId(), sourceTemplateId, nameMap, descriptionMap,
+			serviceContext);
 	}
 
 	@Override
 	public DDMTemplate copyTemplate(
-			long templateId, ServiceContext serviceContext)
+			long sourceTemplateId, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMTemplate template = ddmTemplatePersistence.findByPrimaryKey(
-			templateId);
+		DDMTemplate sourceTemplate = ddmTemplatePersistence.findByPrimaryKey(
+			sourceTemplateId);
 
 		_ddmPermissionSupport.checkAddTemplatePermission(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			template.getClassNameId(), template.getResourceClassName());
+			sourceTemplate.getClassNameId(),
+			sourceTemplate.getResourceClassName());
 
 		return ddmTemplateLocalService.copyTemplate(
-			getUserId(), templateId, serviceContext);
+			getUserId(), sourceTemplateId, serviceContext);
 	}
 
 	/**
@@ -212,10 +205,10 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 *
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
-	 * @param  oldClassPK the primary key of the old template's related entity
+	 * @param  sourceClassPK the primary key of the old template's related entity
 	 * @param  resourceClassNameId the primary key of the class name for
 	 *         template's resource model
-	 * @param  newClassPK the primary key of the new template's related entity
+	 * @param  targetClassPK the primary key of the new template's related entity
 	 * @param  type the template's type. For more information, see
 	 *         DDMTemplateConstants in the dynamic-data-mapping-api module.
 	 * @param  serviceContext the service context to be applied. Must have the
@@ -226,8 +219,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 */
 	@Override
 	public List<DDMTemplate> copyTemplates(
-			long classNameId, long oldClassPK, long resourceClassNameId,
-			long newClassPK, String type, ServiceContext serviceContext)
+			long classNameId, long sourceClassPK, long resourceClassNameId,
+			long targetClassPK, String type, ServiceContext serviceContext)
 		throws PortalException {
 
 		_ddmPermissionSupport.checkAddTemplatePermission(
@@ -235,7 +228,7 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 			classNameId, resourceClassNameId);
 
 		return ddmTemplateLocalService.copyTemplates(
-			getUserId(), classNameId, oldClassPK, newClassPK, type,
+			getUserId(), classNameId, sourceClassPK, targetClassPK, type,
 			serviceContext);
 	}
 
@@ -1094,17 +1087,17 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMTemplateServiceImpl.class);
 
-	private static volatile ModelResourcePermission<DDMTemplate>
-		_ddmTemplateModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				DDMTemplateServiceImpl.class,
-				"_ddmTemplateModelResourcePermission", DDMTemplate.class);
-
 	@Reference
 	private DDMPermissionSupport _ddmPermissionSupport;
 
 	@Reference
 	private DDMSearchHelper _ddmSearchHelper;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"
+	)
+	private ModelResourcePermission<DDMTemplate>
+		_ddmTemplateModelResourcePermission;
 
 	@Reference
 	private Portal _portal;

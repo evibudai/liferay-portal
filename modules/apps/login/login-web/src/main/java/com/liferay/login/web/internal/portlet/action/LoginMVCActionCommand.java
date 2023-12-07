@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.login.web.internal.portlet.action;
@@ -35,7 +26,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.AuthException;
-import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManager;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Http;
@@ -45,6 +35,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.util.PropsValues;
 
 import javax.portlet.ActionRequest;
@@ -56,7 +47,6 @@ import javax.portlet.WindowState;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -183,7 +173,7 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 
 			String authType = portletPreferences.getValue("authType", null);
 
-			_authenticatedSessionManager.login(
+			AuthenticatedSessionManagerUtil.login(
 				httpServletRequest, httpServletResponse, login, password,
 				rememberMe, authType);
 		}
@@ -226,8 +216,11 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 			if (Validator.isNotNull(redirect) &&
 				!redirect.startsWith(Http.HTTP)) {
 
-				redirect = _getCompleteRedirectURL(
-					httpServletRequest, redirect);
+				redirect = _portal.getPortalURL(
+					httpServletRequest
+				).concat(
+					redirect
+				);
 			}
 		}
 
@@ -244,29 +237,6 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 
 			actionResponse.sendRedirect(mainPath);
 		}
-	}
-
-	private String _getCompleteRedirectURL(
-		HttpServletRequest httpServletRequest, String redirect) {
-
-		HttpSession httpSession = httpServletRequest.getSession();
-
-		Boolean httpsInitial = (Boolean)httpSession.getAttribute(
-			WebKeys.HTTPS_INITIAL);
-
-		String portalURL = null;
-
-		if (PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS &&
-			!PropsValues.SESSION_ENABLE_PHISHING_PROTECTION &&
-			(httpsInitial != null) && !httpsInitial.booleanValue()) {
-
-			portalURL = _portal.getPortalURL(httpServletRequest, false);
-		}
-		else {
-			portalURL = _portal.getPortalURL(httpServletRequest);
-		}
-
-		return portalURL.concat(redirect);
 	}
 
 	private void _postProcessAuthFailure(
@@ -317,9 +287,6 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LoginMVCActionCommand.class);
-
-	@Reference
-	private AuthenticatedSessionManager _authenticatedSessionManager;
 
 	@Reference
 	private Portal _portal;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util;
@@ -20,6 +11,7 @@ import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodParameter;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodSignature;
+import com.liferay.portal.tools.rest.builder.internal.freemarker.util.ConfigUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.util.OpenAPIUtil;
 import com.liferay.portal.tools.rest.builder.internal.util.FileUtil;
 import com.liferay.portal.tools.rest.builder.internal.yaml.YAMLUtil;
@@ -35,6 +27,7 @@ import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.RequestBody;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Response;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.ResponseCode;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Schema;
+import com.liferay.portal.vulcan.permission.Permission;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +44,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -61,7 +53,9 @@ import java.util.TreeSet;
  */
 public class OpenAPIParserUtil {
 
-	public static Map<String, Schema> getAllOfPropertySchemas(Schema schema) {
+	public static Map<String, Schema> getAllOfPropertySchemas(
+		ConfigYAML configYAML, Schema schema, Map<String, Schema> schemas) {
+
 		List<Schema> allOfSchemas = schema.getAllOfSchemas();
 
 		if (allOfSchemas.size() == 1) {
@@ -72,16 +66,26 @@ public class OpenAPIParserUtil {
 
 		for (Schema allOfSchema : allOfSchemas) {
 			if (allOfSchema.getReference() != null) {
-				Schema itemSchema = new Schema();
+				if (allOfSchema.isMergeProperties() &&
+					ConfigUtil.isVersionCompatible(configYAML, 4)) {
 
-				String reference = allOfSchema.getReference();
+					allOfSchema = schemas.get(
+						getReferenceName(allOfSchema.getReference()));
 
-				itemSchema.setReference(reference);
+					propertySchemas.putAll(allOfSchema.getPropertySchemas());
+				}
+				else {
+					Schema itemSchema = new Schema();
 
-				propertySchemas.put(
-					StringUtil.lowerCaseFirstLetter(
-						getReferenceName(reference)),
-					itemSchema);
+					String reference = allOfSchema.getReference();
+
+					itemSchema.setReference(reference);
+
+					propertySchemas.put(
+						StringUtil.lowerCaseFirstLetter(
+							getReferenceName(reference)),
+						itemSchema);
+				}
 			}
 			else {
 				propertySchemas.putAll(allOfSchema.getPropertySchemas());
@@ -124,9 +128,8 @@ public class OpenAPIParserUtil {
 		else if (name.equals(long.class.getName())) {
 			return "[J";
 		}
-		else {
-			return "[L" + name + ";";
-		}
+
+		return "[L" + name + ";";
 	}
 
 	public static String getElementClassName(String name) {
@@ -148,6 +151,9 @@ public class OpenAPIParserUtil {
 		else if (name.startsWith("[L") && name.endsWith(";")) {
 			return name.substring(2, name.length() - 1);
 		}
+		else if (name.startsWith("[[")) {
+			return getElementClassName(name.substring(1)) + "[]";
+		}
 
 		return name;
 	}
@@ -157,13 +163,13 @@ public class OpenAPIParserUtil {
 
 		Map<String, PathItem> pathItems = openAPIYAML.getPathItems();
 
-		Map<String, Schema> schemas = Optional.ofNullable(
-			openAPIYAML.getComponents()
-		).map(
-			Components::getSchemas
-		).orElse(
-			new HashMap<>()
-		);
+		Map<String, Schema> schemas = new HashMap<>();
+
+		Components components = openAPIYAML.getComponents();
+
+		if ((components != null) && (components.getSchemas() != null)) {
+			schemas = components.getSchemas();
+		}
 
 		if (pathItems != null) {
 			for (PathItem pathItem : pathItems.values()) {
@@ -210,7 +216,7 @@ public class OpenAPIParserUtil {
 	}
 
 	public static Map<String, Schema> getExternalSchemas(
-			OpenAPIYAML openAPIYAML)
+			ConfigYAML configYAML, OpenAPIYAML openAPIYAML)
 		throws Exception {
 
 		Map<String, Schema> externalReferencesMap = new HashMap<>();
@@ -235,7 +241,7 @@ public class OpenAPIParserUtil {
 				FileUtil.read(new File(path)));
 
 			externalReferencesMap.putAll(
-				OpenAPIUtil.getAllSchemas(openAPIYAML));
+				OpenAPIUtil.getAllSchemas(configYAML, openAPIYAML));
 
 			for (String curExternalReference :
 					getExternalReferences(openAPIYAML)) {
@@ -274,22 +280,7 @@ public class OpenAPIParserUtil {
 		}
 
 		if (schema.getItems() != null) {
-			Items items = schema.getItems();
-
-			String javaDataType = _openAPIDataTypeMap.get(
-				new AbstractMap.SimpleImmutableEntry<>(
-					items.getType(), items.getFormat()));
-
-			if (items.getAdditionalPropertySchema() != null) {
-				javaDataType = Map.class.getName();
-			}
-
-			if (items.getReference() != null) {
-				javaDataType = javaDataTypeMap.get(
-					getReferenceName(items.getReference()));
-			}
-
-			return getArrayClassName(javaDataType);
+			return _getItemsDataType(javaDataTypeMap, schema.getItems());
 		}
 
 		if (Objects.equals(schema.getType(), "object")) {
@@ -360,7 +351,8 @@ public class OpenAPIParserUtil {
 			throw new RuntimeException(ioException);
 		}
 
-		Map<String, Schema> allSchemas = OpenAPIUtil.getAllSchemas(openAPIYAML);
+		Map<String, Schema> allSchemas = OpenAPIUtil.getAllSchemas(
+			configYAML, openAPIYAML);
 
 		for (String schemaName : allSchemas.keySet()) {
 			StringBuilder sb = new StringBuilder();
@@ -397,7 +389,7 @@ public class OpenAPIParserUtil {
 		}
 
 		Map<String, Schema> globalEnumSchemas =
-			OpenAPIUtil.getGlobalEnumSchemas(openAPIYAML);
+			OpenAPIUtil.getGlobalEnumSchemas(configYAML, allSchemas);
 
 		for (String schemaName : globalEnumSchemas.keySet()) {
 			javaDataTypeMap.put(
@@ -595,6 +587,34 @@ public class OpenAPIParserUtil {
 		}
 	}
 
+	private static String _getItemsDataType(
+		Map<String, String> javaDataTypeMap, Items items) {
+
+		String type = items.getType();
+
+		if (StringUtil.equals(type, "array")) {
+			Items childItems = items.getItems();
+
+			if (childItems != null) {
+				return "[" + _getItemsDataType(javaDataTypeMap, childItems);
+			}
+		}
+
+		String javaDataType = _openAPIDataTypeMap.get(
+			new AbstractMap.SimpleImmutableEntry<>(type, items.getFormat()));
+
+		if (items.getAdditionalPropertySchema() != null) {
+			javaDataType = Map.class.getName();
+		}
+
+		if (items.getReference() != null) {
+			javaDataType = javaDataTypeMap.get(
+				getReferenceName(items.getReference()));
+		}
+
+		return getArrayClassName(javaDataType);
+	}
+
 	private static String _getMapType(
 		Map<String, String> javaDataTypeMap, Schema schema) {
 
@@ -656,6 +676,9 @@ public class OpenAPIParserUtil {
 				put(
 					new AbstractMap.SimpleImmutableEntry<>("object", null),
 					Object.class.getName());
+				put(
+					new AbstractMap.SimpleImmutableEntry<>("permission", null),
+					Permission.class.getName());
 				put(
 					new AbstractMap.SimpleImmutableEntry<>("string", null),
 					String.class.getName());

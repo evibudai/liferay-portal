@@ -15,15 +15,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6066. AddANewProductGroup"
-	@priority = "3"
+	@priority = 3
 	test AddANewProductGroup {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -46,13 +44,13 @@ definition {
 
 		AssertElementPresent(
 			key_tableEntryName = "PG2",
-			locator1 = "RemoteApps#TABLE_ENTRY_NAME_REMOTE_TABLE");
+			locator1 = "ClientExtension#TABLE_ENTRY_NAME_REMOTE_TABLE");
 
 		Button.clickPublish();
 	}
 
 	@description = "This is a test for COMMERCE-6065. AddAPreExistingProductGroup"
-	@priority = "3"
+	@priority = 5
 	test AddAPreExistingProductGroup {
 		property portal.acceptance = "true";
 
@@ -73,9 +71,7 @@ definition {
 
 		Button.clickSubmitButton();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -96,7 +92,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6068. EditAProductGroup"
-	@priority = "3"
+	@priority = 5
 	test EditAProductGroup {
 		property portal.acceptance = "true";
 
@@ -104,20 +100,15 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Custom Fields");
+		CustomFields.openCustomFieldAdmin();
 
 		CustomFields.addCP(
 			customFieldName = "Custom Field",
 			customFieldType = "Input Field",
 			customInputDataType = "Text",
-			resourceName = "Commerce Product Group");
+			resourceName = "Product Group");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -152,15 +143,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6067. RemoveAProductGroup"
-	@priority = "3"
+	@priority = 3
 	test RemoveAProductGroup {
 		property portal.acceptance = "false";
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -182,7 +171,7 @@ definition {
 		Refresh();
 
 		Click(
-			key_value = "",
+			key_value = "PG2",
 			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
 
 		Click(

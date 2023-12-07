@@ -1,22 +1,22 @@
 definition {
 
-	@summary = "This calls the JSON WS API to add a DL Folder"
-	macro addFolder {
+	@summary = "Default summary"
+	macro addFolder(parentFolderName = null, groupName = null, dmFolderName = null) {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
-		var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = "${groupName}");
+		var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${groupName});
 
 		if (isSet(parentFolderName)) {
 			var parentFolderId = JSONDocumentAPI._getFolderIdByFolderName(
-				groupName = "${groupName}",
-				name = "${parentFolderName}");
+				groupName = ${groupName},
+				name = ${parentFolderName});
 		}
 		else {
-			var parentFolderId = "0";
+			var parentFolderId = 0;
 		}
 
 		if (!(isSet(guestPermissions))) {
@@ -32,17 +32,19 @@ definition {
 		}
 
 		var serviceContext = JSONServiceContextUtil.setServiceContext(
-			addGroupPermissions = "${groupPermissions}",
-			addGuestPermissions = "${guestPermissions}");
+			addGroupPermissions = ${groupPermissions},
+			addGuestPermissions = ${guestPermissions});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlapp/add-folder \
-			-u test@liferay.com:test \
-			-d repositoryId=${repositoryId} \
-			-d parentFolderId=${parentFolderId} \
-			-d name=${dmFolderName} \
-		 	-d description=${dmFolderDescription} \
-			-d serviceContext=${serviceContext}
+				-u ${userLoginInfo} \
+				-d externalReferenceCode= \
+				-d repositoryId=${repositoryId} \
+				-d parentFolderId=${parentFolderId} \
+				-d name=${dmFolderName} \
+				-d description=${dmFolderDescription} \
+				-d serviceContext=${serviceContext}
 		''';
 
 		echo("## Adding a 'Folder' with the following info using JSONWS:");
@@ -51,37 +53,39 @@ definition {
 
 		echo("## * Description: ${dmFolderDescription}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "This calls the JSON WS API to delete a folder"
-	macro deleteFolder {
+	@summary = "Default summary"
+	macro deleteFolder(groupName = null, folderName = null) {
 		var portalURL = JSONCompany.getPortalURL();
 		var folderId = JSONDocumentAPI._getFolderIdByFolderName(
-			groupName = "${groupName}",
-			name = "${folderName}");
+			groupName = ${groupName},
+			name = ${folderName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfolder/delete-folder \
-			-u test@liferay.com:test \
-			-d folderId=${folderId}
+				-u ${userLoginInfo} \
+				-d folderId=${folderId}
 		''';
 	}
 
-	@summary = "This calls the JSON WS API to move a folder to trash"
-	macro moveFolderToTrash {
+	@summary = "Default summary"
+	macro moveFolderToTrash(groupName = null, folderName = null) {
 		var portalURL = JSONCompany.getPortalURL();
 		var folderId = JSONDocumentAPI._getFolderIdByFolderName(
-			groupName = "${groupName}",
-			name = "${folderName}");
+			groupName = ${groupName},
+			name = ${folderName});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dltrash/move-folder-to-trash \
-			-u test@liferay.com:test \
-			-d folderId=${folderId}
+				-u ${userLoginInfo} \
+				-d folderId=${folderId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

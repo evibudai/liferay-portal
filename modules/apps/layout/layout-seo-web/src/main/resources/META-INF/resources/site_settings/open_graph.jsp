@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -66,15 +57,27 @@ OpenGraphSettingsDisplayContext openGraphSettingsDisplayContext = (OpenGraphSett
 	<aui:input id="openGraphImageFileEntryId" name="openGraphImageFileEntryId" type="hidden" value="<%= openGraphSettingsDisplayContext.getOpenGraphImageFileEntryId() %>" />
 
 	<div class="form-group">
-		<label><liferay-ui:message key="preview" /> <liferay-ui:icon-help message="preview-help" /></label>
+		<label>
+			<div class="align-items-center d-flex">
+				<liferay-ui:message key="preview" />
+
+				<span>
+					<clay:icon
+						aria-label='<%= LanguageUtil.get(request, "preview-help") %>'
+						cssClass="lfr-portal-tooltip ml-1"
+						symbol="question-circle-full"
+						title='<%= LanguageUtil.get(request, "preview-help") %>'
+					/>
+				</span>
+			</div>
+		</label>
 
 		<div class="preview-seo preview-seo-og" dir="ltr">
 			<div class="aspect-ratio aspect-ratio-191-to-100 bg-light mb-0 preview-seo-image">
 				<div class="preview-seo-placeholder" id="<portlet:namespace />openGraphPreviewPlaceholder">
-					<liferay-ui:icon
-						icon="picture"
-						iconCssClass="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid preview-seo-placeholder-icon"
-						markupView="lexicon"
+					<clay:icon
+						cssClass="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid preview-seo-placeholder-icon"
+						symbol="picture"
 					/>
 
 					<div class="preview-seo-placeholder-text"><liferay-ui:message key="open-graph-image-placeholder" /></div>
@@ -92,6 +95,6 @@ OpenGraphSettingsDisplayContext openGraphSettingsDisplayContext = (OpenGraphSett
 			"uploadOpenGraphImageURL", openGraphSettingsDisplayContext.getItemSelectorURL()
 		).build()
 	%>'
-	module="js/seo/openGraphSettings.es"
+	module="js/seo/openGraphSettings"
 	servletContext="<%= application %>"
 />

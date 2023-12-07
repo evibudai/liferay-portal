@@ -1,77 +1,81 @@
 definition {
 
-	@summary = "Helper function to add a Bookmarks entry via JSON"
-	macro _addBookmarks {
+	@summary = "Default summary"
+	macro _addBookmarks(groupId = null, name = null, serviceContext = null, folderId = null, url = null) {
 		Variables.assertDefined(parameterList = "${groupId},${folderId},${serviceContext},${url}");
 
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(description)) {
-			var description = "${description}";
+			var description = ${description};
 		}
 		else {
 			var description = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/bookmarks.bookmarksentry/add-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d folderId=${folderId} \
 				-d name=${name} \
 				-d url=${url}
 				-d description=${description}
 				-d serviceContext=${serviceContext}
-
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to add a Bookmarks Folder via JSON"
-	macro _addFolder {
+	@summary = "Default summary"
+	macro _addFolder(folderDescription = null, parentFolderId = null, folderName = null, serviceContext = null) {
 		Variables.assertDefined(parameterList = "${folderName},${parentFolderId},${serviceContext}");
 
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(folderDescription)) {
-			var description = "${folderDescription}";
+			var description = ${folderDescription};
 		}
 		else {
 			var description = "";
 		}
 
+		var userLoginInfo = JSONUtil2.formatJSONUser();
+
 		var curl = '''
 			${portalURL}/api/jsonws/bookmarks.bookmarksfolder/add-folder \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d parentFolderId=${parentFolderId} \
 				-d name=${folderName} \
 				-d description=${description} \
 				-d serviceContext=${serviceContext}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Helper function to get the 'folderId' for the folder '${folderName}'"
-	macro _getFolderIdByFolderName {
+	@summary = "Default summary"
+	macro _getFolderIdByFolderName(groupId = null, folderName = null) {
 		Variables.assertDefined(parameterList = "${groupId},${folderName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/bookmarks.bookmarksfolder/get-folders \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId}
 		''';
 
-		var folderId = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${folderName}')]['folderId']");
+		var folderId = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${folderName}')]['folderId']");
 
-		if ("${folderId}" == "") {
+		if (${folderId} == "") {
 			fail("FAIL. Cannot find folder.");
 		}
 		else {
-			return "${folderId}";
+			return ${folderId};
 		}
 	}
 

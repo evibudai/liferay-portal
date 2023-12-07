@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.js.spa.web.internal.servlet.taglib.helper;
@@ -34,6 +25,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -81,6 +73,10 @@ public class SPAHelper {
 
 	public JSONArray getExcludedPathsJSONArray() {
 		return _spaExcludedPathsJSONArray;
+	}
+
+	public JSONArray getExcludedTargetPortletsJSONArray() {
+		return _spaExcludedTargetPortletsJSONArray;
 	}
 
 	public ResourceBundle getLanguageResourceBundle(
@@ -181,6 +177,9 @@ public class SPAHelper {
 		_spaExcludedPathsJSONArray = _getExcludedPathsJSONArray(
 			_spaConfiguration);
 
+		_spaExcludedTargetPortletsJSONArray =
+			_getExcludedTargetPortletsJSONArray();
+
 		Collections.addAll(
 			_navigationExceptionSelectors,
 			_spaConfiguration.navigationExceptionSelectors());
@@ -215,6 +214,9 @@ public class SPAHelper {
 		_cacheExpirationTime = _getCacheExpirationTime(_spaConfiguration);
 		_spaExcludedPathsJSONArray = _getExcludedPathsJSONArray(
 			_spaConfiguration);
+
+		_spaExcludedTargetPortletsJSONArray =
+			_getExcludedTargetPortletsJSONArray();
 
 		Collections.addAll(
 			_navigationExceptionSelectors,
@@ -254,6 +256,11 @@ public class SPAHelper {
 		}
 
 		return jsonArray;
+	}
+
+	private JSONArray _getExcludedTargetPortletsJSONArray() {
+		return _jsonFactory.createJSONArray(
+			new String[] {PortletKeys.USERS_ADMIN, PortletKeys.SERVER_ADMIN});
 	}
 
 	private static final String _REDIRECT_PARAM_NAME;
@@ -312,6 +319,7 @@ public class SPAHelper {
 
 	private volatile SPAConfiguration _spaConfiguration;
 	private volatile JSONArray _spaExcludedPathsJSONArray;
+	private volatile JSONArray _spaExcludedTargetPortletsJSONArray;
 
 	private static final class NavigationExceptionSelectorTrackerCustomizer
 		implements ServiceTrackerCustomizer<Object, Object> {

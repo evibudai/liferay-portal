@@ -1,72 +1,99 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayLabel from '@clayui/label';
 import {
 	API,
-	AutoComplete,
 	FormError,
 	Input,
+	REQUIRED_MSG,
 	SingleSelect,
-	filterArrayByQuery,
+	getLocalizableLabel,
 	invalidateRequired,
 	useForm,
 } from '@liferay/object-js-components-web';
-import React, {useEffect, useMemo, useState} from 'react';
+import {createResourceURL} from 'frontend-js-web';
+import React, {useEffect, useState} from 'react';
 
-export enum ObjectRelationshipType {
-	MANY_TO_MANY = 'manyToMany',
-	ONE_TO_MANY = 'oneToMany',
-	ONE_TO_ONE = 'oneToOne',
+import {defaultLanguageId} from '../../utils/constants';
+import CurrentObjectDefinition from './CurrentObjectDefinition';
+import SelectObjectDefinition from './SelectObjectDefinition';
+
+interface ObjectRelationshipFormBaseProps {
+	baseResourceURL: string;
+	className?: string;
+	errors: FormError<ObjectRelationship>;
+	handleChange: React.ChangeEventHandler<HTMLInputElement>;
+	hasDefinedObjectDefinitionTarget?: boolean;
+	objectDefinitionExternalReferenceCode1: string;
+	objectDefinitionExternalReferenceCode2?: string;
+	readonly?: boolean;
+	setValues: (values: Partial<ObjectRelationship>) => void;
+	values: Partial<ObjectRelationship>;
 }
+
+interface UseObjectRelationshipFormProps {
+	initialValues: Partial<ObjectRelationship>;
+	onSubmit: (relationship: ObjectRelationship) => void;
+	parameterRequired: boolean;
+}
+
+export type ObjectRelationshipType = 'manyToMany' | 'oneToMany' | 'oneToOne';
+
+type ObjectRelationshipTypeInfo = {
+	description: string;
+	label: string;
+	objectInputLabel1: string;
+	objectInputLabel2: string;
+	value: ObjectRelationshipType;
+};
 
 const MANY_TO_MANY = {
 	description: Liferay.Language.get(
 		"multiple-object's-entries-can-interact-with-many-others-object's-entries"
 	),
 	label: Liferay.Language.get('many-to-many'),
-	value: ObjectRelationshipType.MANY_TO_MANY,
-};
+	objectInputLabel1: Liferay.Language.get('many-records-of'),
+	objectInputLabel2: Liferay.Language.get('many-records-of'),
+	value: 'manyToMany',
+} as ObjectRelationshipTypeInfo;
+
 const ONE_TO_MANY = {
 	description: Liferay.Language.get(
 		"one-object's-entry-interacts-with-many-others-object's-entries"
 	),
 	label: Liferay.Language.get('one-to-many'),
-	value: ObjectRelationshipType.ONE_TO_MANY,
-};
+	objectInputLabel1: Liferay.Language.get('one-record-of'),
+	objectInputLabel2: Liferay.Language.get('many-records-of'),
+	value: 'oneToMany',
+} as ObjectRelationshipTypeInfo;
+
 const ONE_TO_ONE = {
 	description: Liferay.Language.get(
 		"one-object's-entry-interacts-only-with-one-other-object's-entry"
 	),
 	label: Liferay.Language.get('one-to-one'),
-	value: ObjectRelationshipType.ONE_TO_ONE,
-};
+	objectInputLabel1: Liferay.Language.get('one-record-of'),
+	objectInputLabel2: Liferay.Language.get('one-record-of'),
+	value: 'oneToOne',
+} as ObjectRelationshipTypeInfo;
 
-const REQUIRED_MSG = Liferay.Language.get('required');
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+export const OBJECT_RELATIONSHIP_TYPES = [
+	MANY_TO_MANY,
+	ONE_TO_MANY,
+	ONE_TO_ONE,
+];
 
 export function useObjectRelationshipForm({
 	initialValues,
 	onSubmit,
 	parameterRequired,
-}: IUseObjectRelationshipForm) {
+}: UseObjectRelationshipFormProps) {
 	const validate = (relationship: Partial<ObjectRelationship>) => {
 		const errors: FormError<ObjectRelationship> = {};
 
-		const label =
-			relationship.label?.[Liferay.ThemeDisplay.getDefaultLanguageId()];
+		const label = relationship.label?.[defaultLanguageId];
 
 		if (invalidateRequired(label)) {
 			errors.label = REQUIRED_MSG;
@@ -80,13 +107,17 @@ export function useObjectRelationshipForm({
 			errors.type = REQUIRED_MSG;
 		}
 
+		if (!relationship.objectDefinitionId1) {
+			errors.objectDefinitionId1 = REQUIRED_MSG;
+		}
+
 		if (!relationship.objectDefinitionId2) {
 			errors.objectDefinitionId2 = REQUIRED_MSG;
 		}
 
 		if (
 			parameterRequired &&
-			relationship.type === ObjectRelationshipType.ONE_TO_MANY &&
+			relationship.type === 'oneToMany' &&
 			!relationship.parameterObjectFieldName
 		) {
 			errors.parameterObjectFieldName = REQUIRED_MSG;
@@ -95,54 +126,189 @@ export function useObjectRelationshipForm({
 		return errors;
 	};
 
-	const {errors, handleChange, handleSubmit, setValues, values} = useForm({
+	const {
+		errors,
+		handleChange,
+		handleSubmit,
+		handleValidate,
+		setValues,
+		values,
+	} = useForm({
 		initialValues,
 		onSubmit,
 		validate,
 	});
 
-	return {errors, handleChange, handleSubmit, setValues, values};
+	return {
+		errors,
+		handleChange,
+		handleSubmit,
+		handleValidate,
+		setValues,
+		values,
+	};
 }
 
 export function ObjectRelationshipFormBase({
+	baseResourceURL,
+	className,
 	errors,
-	ffOneToOneRelationshipConfigurationEnabled,
 	handleChange,
+	hasDefinedObjectDefinitionTarget,
+	objectDefinitionExternalReferenceCode1,
+	objectDefinitionExternalReferenceCode2,
 	readonly,
 	setValues,
 	values,
-}: IPros) {
+}: ObjectRelationshipFormBaseProps) {
+	const [creationLanguageId, setCreationLanguageId] = useState<
+		Liferay.Language.Locale
+	>();
+	const [currentObjectDefinition, setCurrentObjectDefinition] = useState<
+		Partial<ObjectDefinition>
+	>();
+	const [objectDefinition1, setObjectDefinition1] = useState<
+		Partial<ObjectDefinition>
+	>();
+	const [objectDefinition2, setObjectDefinition2] = useState<
+		Partial<ObjectDefinition>
+	>();
 	const [objectDefinitions, setObjectDefinitions] = useState<
-		ObjectDefinition[]
+		Partial<ObjectDefinition>[]
 	>([]);
-	const [query, setQuery] = useState<string>('');
+	const [objectRelationshipTypes, setObjectRelationshipTypes] = useState<
+		ObjectRelationshipTypeInfo[]
+	>([ONE_TO_MANY]);
+	const [reverseOrder, setReverseOrder] = useState<boolean>(false);
 
-	const [types, selectedType] = useMemo(() => {
-		const types = [ONE_TO_MANY, MANY_TO_MANY];
-		if (ffOneToOneRelationshipConfigurationEnabled) {
-			types.push(ONE_TO_ONE);
+	const switchObjects = () => {
+		const previousObjectDefinition1 = {
+			...objectDefinition1,
+		};
+
+		setObjectDefinition1(objectDefinition2);
+
+		setObjectDefinition2(previousObjectDefinition1);
+	};
+
+	const handleHideReverseButton = () => {
+		return (
+			values.type !== 'oneToMany' ||
+			!!readonly ||
+			currentObjectDefinition?.externalReferenceCode ===
+				'L_POSTAL_ADDRESS'
+		);
+	};
+
+	const handleObjectRelationshipTypes = async (
+		objectDefinition: Partial<ObjectDefinition> | undefined
+	) => {
+		const url = createResourceURL(baseResourceURL, {
+			objectDefinitionId: objectDefinition?.id,
+			p_p_resource_id: '/object_definitions/get_object_relationship_info',
+		}).href;
+
+		const {objectRelationshipTypes} = await API.fetchJSON<{
+			objectRelationshipTypes: any;
+		}>(url);
+
+		const types = OBJECT_RELATIONSHIP_TYPES.filter((relationshipType) =>
+			objectRelationshipTypes?.includes(relationshipType.value)
+		);
+
+		if (
+			!objectRelationshipTypes.includes(values?.type) &&
+			values.objectDefinitionExternalReferenceCode2
+		) {
+			setValues({type: objectRelationshipTypes[0]});
 		}
 
-		return [types, types.find(({value}) => value === values.type)?.label];
-	}, [ffOneToOneRelationshipConfigurationEnabled, values.type]);
+		setObjectRelationshipTypes(types);
+	};
+
+	const handleReverseOrder = () => {
+		setValues({
+			objectDefinitionExternalReferenceCode1:
+				objectDefinition2?.externalReferenceCode,
+			objectDefinitionExternalReferenceCode2:
+				objectDefinition1?.externalReferenceCode,
+			objectDefinitionId1: objectDefinition2?.id,
+			objectDefinitionId2: objectDefinition1?.id,
+			objectDefinitionName2: objectDefinition1?.name,
+		});
+
+		switchObjects();
+
+		setReverseOrder(!reverseOrder);
+	};
+
+	useEffect(() => {
+		if (objectDefinition1) {
+			handleObjectRelationshipTypes(objectDefinition1);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [values.objectDefinitionExternalReferenceCode1]);
+
+	useEffect(() => {
+		const fetchObjectDefinition = async () => {
+			const objectDefinition1 = await API.getObjectDefinitionByExternalReferenceCode(
+				objectDefinitionExternalReferenceCode1 as string
+			);
+			let newObjectRelationshipValues: Partial<ObjectRelationship> = {
+				objectDefinitionExternalReferenceCode1:
+					objectDefinition1.externalReferenceCode,
+				objectDefinitionId1: objectDefinition1.id,
+			};
+
+			if (objectDefinitionExternalReferenceCode2) {
+				const objectDefinition2 = await API.getObjectDefinitionByExternalReferenceCode(
+					objectDefinitionExternalReferenceCode2 as string
+				);
+
+				setObjectDefinition2(objectDefinition2);
+
+				newObjectRelationshipValues = {
+					...newObjectRelationshipValues,
+					objectDefinitionExternalReferenceCode2:
+						objectDefinition2?.externalReferenceCode,
+					objectDefinitionId2: objectDefinition2?.id,
+				};
+			}
+			setCurrentObjectDefinition(objectDefinition1);
+			setCreationLanguageId(objectDefinition1.defaultLanguageId);
+			setObjectDefinition1(objectDefinition1);
+
+			setValues(newObjectRelationshipValues);
+
+			handleObjectRelationshipTypes(objectDefinition1);
+		};
+
+		fetchObjectDefinition();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectDefinitionExternalReferenceCode1]);
 
 	useEffect(() => {
 		const fetchObjectDefinitions = async () => {
 			const items = await API.getAllObjectDefinitions();
 
-			const currentObjectDefinition = items.find(
+			const objectDefinition = items.find(
 				({externalReferenceCode}) =>
-					values.objectDefinitionExternalReferenceCode1 ===
+					objectDefinitionExternalReferenceCode1 ===
 					externalReferenceCode
 			)!;
 
 			const objectDefinitions = items.filter(
-				({parameterRequired, storageType, system}) =>
-					(!currentObjectDefinition.system || !system) &&
-					(!Liferay.FeatureFlags['LPS-135430'] ||
-						storageType === 'default') &&
-					!parameterRequired
+				({modifiable, parameterRequired, storageType}) => {
+					return (
+						(objectDefinition.modifiable || modifiable) &&
+						(!Liferay.FeatureFlags['LPS-135430'] ||
+							storageType === 'default') &&
+						!parameterRequired
+					);
+				}
 			);
+
+			setCreationLanguageId(objectDefinition.defaultLanguageId);
 
 			setObjectDefinitions(objectDefinitions);
 		};
@@ -162,11 +328,7 @@ export function ObjectRelationshipFormBase({
 			fetchObjectDefinitions();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [readonly, values.objectDefinitionId1]);
-
-	const filteredRelationships = useMemo(() => {
-		return filterArrayByQuery(objectDefinitions, 'label', query);
-	}, [objectDefinitions, query]);
+	}, [objectDefinitionExternalReferenceCode1, readonly]);
 
 	return (
 		<>
@@ -181,71 +343,162 @@ export function ObjectRelationshipFormBase({
 			/>
 
 			<SingleSelect
+				className={className}
 				disabled={readonly}
 				error={errors.type}
+				items={objectRelationshipTypes}
 				label={Liferay.Language.get('type')}
-				onChange={({value}) => setValues({type: value})}
-				options={types}
+				onSelectionChange={(value) => {
+					if (
+						(value === 'manyToMany' || value === 'oneToOne') &&
+						currentObjectDefinition?.id !== objectDefinition1?.id
+					) {
+						setValues({
+							objectDefinitionExternalReferenceCode1:
+								objectDefinition2?.externalReferenceCode,
+							objectDefinitionExternalReferenceCode2:
+								objectDefinition1?.externalReferenceCode,
+							objectDefinitionId1: objectDefinition2?.id,
+							objectDefinitionId2: objectDefinition1?.id,
+							objectDefinitionName2: objectDefinition1?.name,
+							type: value,
+						});
+
+						switchObjects();
+
+						setReverseOrder(!reverseOrder);
+					}
+					else {
+						setValues({
+							objectDefinitionExternalReferenceCode1:
+								objectDefinition1?.externalReferenceCode,
+							objectDefinitionId1: objectDefinition1?.id,
+							type: value as ObjectRelationshipType,
+						});
+					}
+				}}
 				required
-				value={selectedType}
+				selectedKey={values.type}
 			/>
 
-			<AutoComplete<ObjectDefinition>
-				disabled={readonly}
-				emptyStateMessage={Liferay.Language.get(
-					'no-objects-were-found'
-				)}
-				error={errors.objectDefinitionId2}
-				items={filteredRelationships}
-				label={Liferay.Language.get('object')}
-				onChangeQuery={setQuery}
-				onSelectItem={(item) => {
-					setValues({
-						objectDefinitionExternalReferenceCode2:
-							item.externalReferenceCode,
-						objectDefinitionId2: item.id,
-						objectDefinitionName2: item.name,
-					});
-				}}
-				query={query}
-				required
-				value={values.objectDefinitionName2}
-			>
-				{({label, name, system}) => (
-					<div className="d-flex justify-content-between">
-						<div>{label[defaultLanguageId] ?? name}</div>
+			{values.type &&
+				(!reverseOrder ? (
+					<>
+						<CurrentObjectDefinition
+							currentObjectDefinition={currentObjectDefinition}
+							disableReverseButton={
+								!values.objectDefinitionExternalReferenceCode2
+							}
+							disabled={readonly}
+							error={errors.objectDefinitionId1}
+							handleReverseOrder={handleReverseOrder}
+							hideReverseButton={handleHideReverseButton()}
+							label={
+								OBJECT_RELATIONSHIP_TYPES.find(
+									({value}) => value === values.type
+								)?.objectInputLabel1
+							}
+						/>
+						{objectDefinition2?.label &&
+						hasDefinedObjectDefinitionTarget ? (
+							<Input
+								label={
+									OBJECT_RELATIONSHIP_TYPES.find(
+										({value}) => value === values.type
+									)?.objectInputLabel2
+								}
+								name="currentObjectInput"
+								readOnly={true}
+								required
+								value={getLocalizableLabel(
+									objectDefinition2?.defaultLanguageId as Liferay.Language.Locale,
+									objectDefinition2?.label,
+									objectDefinition2?.name
+								)}
+							/>
+						) : (
+							<SelectObjectDefinition
+								creationLanguageId={
+									creationLanguageId as Liferay.Language.Locale
+								}
+								disabled={readonly}
+								error={errors.objectDefinitionId2}
+								label={
+									OBJECT_RELATIONSHIP_TYPES.find(
+										({value}) => value === values.type
+									)?.objectInputLabel2
+								}
+								objectDefinition={objectDefinition2}
+								objectDefinitionExternalReferenceCode={
+									values.objectDefinitionExternalReferenceCode2
+								}
+								objectDefinitions={objectDefinitions}
+								readOnly={readonly}
+								reverseOrder={reverseOrder}
+								setObjectDefinition={setObjectDefinition2}
+								setValues={setValues}
+							/>
+						)}
+					</>
+				) : (
+					<>
+						{objectDefinition1?.label &&
+						hasDefinedObjectDefinitionTarget ? (
+							<Input
+								label={
+									OBJECT_RELATIONSHIP_TYPES.find(
+										({value}) => value === values.type
+									)?.objectInputLabel1
+								}
+								name="currentObjectInput"
+								readOnly={true}
+								required
+								value={getLocalizableLabel(
+									objectDefinition1?.defaultLanguageId as Liferay.Language.Locale,
+									objectDefinition1?.label,
+									objectDefinition1?.name
+								)}
+							/>
+						) : (
+							<SelectObjectDefinition
+								creationLanguageId={
+									creationLanguageId as Liferay.Language.Locale
+								}
+								disabled={readonly}
+								error={errors.objectDefinitionId1}
+								label={
+									OBJECT_RELATIONSHIP_TYPES.find(
+										({value}) => value === values.type
+									)?.objectInputLabel1
+								}
+								objectDefinition={objectDefinition1}
+								objectDefinitionExternalReferenceCode={
+									values.objectDefinitionExternalReferenceCode1
+								}
+								objectDefinitions={objectDefinitions}
+								readOnly={readonly}
+								reverseOrder={reverseOrder}
+								setObjectDefinition={setObjectDefinition1}
+								setValues={setValues}
+							/>
+						)}
 
-						<ClayLabel displayType={system ? 'info' : 'warning'}>
-							{system
-								? Liferay.Language.get('system')
-								: Liferay.Language.get('custom')}
-						</ClayLabel>
-					</div>
-				)}
-			</AutoComplete>
+						<CurrentObjectDefinition
+							currentObjectDefinition={currentObjectDefinition}
+							disableReverseButton={
+								!values.objectDefinitionExternalReferenceCode2
+							}
+							error={errors.objectDefinitionId2}
+							handleReverseOrder={handleReverseOrder}
+							hideReverseButton={handleHideReverseButton()}
+							label={
+								OBJECT_RELATIONSHIP_TYPES.find(
+									({value}) => value === values.type
+								)?.objectInputLabel2
+							}
+						/>
+					</>
+				))}
 		</>
 	);
 }
-
-interface IUseObjectRelationshipForm {
-	initialValues: Partial<ObjectRelationship>;
-	onSubmit: (relationship: ObjectRelationship) => void;
-	parameterRequired: boolean;
-}
-
-interface IPros {
-	errors: FormError<ObjectRelationship>;
-	ffOneToOneRelationshipConfigurationEnabled?: boolean;
-	handleChange: React.ChangeEventHandler<HTMLInputElement>;
-	readonly?: boolean;
-	setValues: (values: Partial<ObjectRelationship>) => void;
-	values: Partial<ObjectRelationship>;
-}
-
-type ObjectDefinition = {
-	externalReferenceCode: string;
-	id: number;
-	label: LocalizedValue<string>;
-	name: string;
-	system: boolean;
-};

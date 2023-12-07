@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		DMNavigator.openToConfigInSystemSettings(portlet = "Azure Translator");
 
@@ -22,9 +22,10 @@ definition {
 	}
 
 	@description = "This ensures that Azure translation can be used to auto-translate a content page."
-	@priority = "5"
+	@priority = 5
 	test CanTranslateContentPage {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateContentPage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -55,9 +56,10 @@ definition {
 	}
 
 	@description = "This ensures that the fragment filed on content page can be translated independently."
-	@priority = "5"
+	@priority = 5
 	test CanTranslateContentPageFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateContentPageFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -110,9 +112,10 @@ definition {
 	}
 
 	@description = "This ensures that Azure translation can be used to auto-translate a web content."
-	@priority = "5"
+	@priority = 5
 	test CanTranslateWC {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateWC";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addWebContent(
 			content = "WC content",
@@ -130,9 +133,9 @@ definition {
 		Translations.autoTranslate();
 
 		Translations.viewTargetFields(
-			webContentContent = "Contenido del WC",
+			webContentContent = "Contenido de WC",
 			webContentDescription = "",
-			webContentTitle = "Título WC");
+			webContentTitle = "Título de WC");
 
 		PortletEntry.publish();
 
@@ -144,15 +147,16 @@ definition {
 			webContentTitle = "WC title");
 
 		Translations.viewTargetFields(
-			webContentContent = "Contenido del WC",
+			webContentContent = "Contenido de WC",
 			webContentDescription = "",
-			webContentTitle = "Título WC");
+			webContentTitle = "Título de WC");
 	}
 
 	@description = "This ensures that the web content title and content filed can be translated independently"
-	@priority = "5"
+	@priority = 5
 	test CanTranslateWCFieldIndependently {
-		property test.name.skip.portal.instance = "AutoTranslationAzure#CanTranslateWCFieldIndependently";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONWebcontent.addWebContent(
 			content = "This is the content of a web article",
@@ -171,16 +175,16 @@ definition {
 		Translations.translateSpecificField(fieldName = "Content");
 
 		Translations.viewTargetFields(
-			webContentContent = "これはウェブ記事の内容です",
+			webContentContent = "これはWeb記事の内容です",
 			webContentDescription = "WC description",
 			webContentTitle = "This is the title of a web article");
 
 		Translations.translateSpecificField(fieldName = "Title");
 
 		Translations.viewTargetFields(
-			webContentContent = "これはウェブ記事の内容です",
+			webContentContent = "これはWeb記事の内容です",
 			webContentDescription = "WC description",
-			webContentTitle = "これはウェブ記事のタイトルです");
+			webContentTitle = "これはWeb記事のタイトルです");
 
 		PortletEntry.publish();
 
@@ -192,9 +196,9 @@ definition {
 			webContentTitle = "This is the title of a web article");
 
 		Translations.viewTargetFields(
-			webContentContent = "これはウェブ記事の内容です",
+			webContentContent = "これはWeb記事の内容です",
 			webContentDescription = "WC description",
-			webContentTitle = "これはウェブ記事のタイトルです");
+			webContentTitle = "これはWeb記事のタイトルです");
 	}
 
 }

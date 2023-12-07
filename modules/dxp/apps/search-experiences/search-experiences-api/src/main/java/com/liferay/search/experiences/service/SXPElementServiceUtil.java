@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.service;
@@ -39,15 +30,17 @@ public class SXPElementServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.search.experiences.service.impl.SXPElementServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static SXPElement addSXPElement(
+			String externalReferenceCode,
 			Map<java.util.Locale, String> descriptionMap,
-			String elementDefinitionJSON, boolean readOnly,
-			String schemaVersion, Map<java.util.Locale, String> titleMap,
-			int type,
+			String elementDefinitionJSON, String fallbackDescription,
+			String fallbackTitle, boolean readOnly, String schemaVersion,
+			Map<java.util.Locale, String> titleMap, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addSXPElement(
-			descriptionMap, elementDefinitionJSON, readOnly, schemaVersion,
+			externalReferenceCode, descriptionMap, elementDefinitionJSON,
+			fallbackDescription, fallbackTitle, readOnly, schemaVersion,
 			titleMap, type, serviceContext);
 	}
 
@@ -55,6 +48,20 @@ public class SXPElementServiceUtil {
 		throws PortalException {
 
 		return getService().deleteSXPElement(sxpElementId);
+	}
+
+	public static SXPElement fetchSXPElement(long sxpElementId)
+		throws PortalException {
+
+		return getService().fetchSXPElement(sxpElementId);
+	}
+
+	public static SXPElement fetchSXPElementByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchSXPElementByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -72,20 +79,34 @@ public class SXPElementServiceUtil {
 		return getService().getSXPElement(sxpElementId);
 	}
 
+	public static SXPElement getSXPElementByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getSXPElementByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	public static SXPElement updateSXPElement(
-			long sxpElementId, Map<java.util.Locale, String> descriptionMap,
+			String externalReferenceCode, long sxpElementId,
+			Map<java.util.Locale, String> descriptionMap,
 			String elementDefinitionJSON, String schemaVersion, boolean hidden,
 			Map<java.util.Locale, String> titleMap,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateSXPElement(
-			sxpElementId, descriptionMap, elementDefinitionJSON, schemaVersion,
-			hidden, titleMap, serviceContext);
+			externalReferenceCode, sxpElementId, descriptionMap,
+			elementDefinitionJSON, schemaVersion, hidden, titleMap,
+			serviceContext);
 	}
 
 	public static SXPElementService getService() {
 		return _service;
+	}
+
+	public static void setService(SXPElementService service) {
+		_service = service;
 	}
 
 	private static volatile SXPElementService _service;

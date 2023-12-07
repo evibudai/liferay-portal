@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a content page") {
@@ -25,9 +26,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -36,7 +37,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-130453. Display video from Documents and Media in External Video fragment."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test DisplayVideoFromDocumentsAndMediaInExternalVideo {
 		property portal.acceptance = "true";
@@ -99,6 +100,8 @@ definition {
 				value1 = "Liferay Digital Experience Platform");
 
 			PageEditor.publish();
+
+			Alert.closeMessage(messageType = "SUCCESS");
 		}
 
 		task ("View the video displayed in view mode") {
@@ -111,10 +114,11 @@ definition {
 	}
 
 	@description = "This is a test for LPS-130453. Display video from URL in External Video fragment."
-	@priority = "5"
+	@priority = 5
 	@uitest
 	test DisplayVideoFromURLInExternalVideo {
 		property portal.acceptance = "true";
+		property timeout.explicit.wait = "30";
 
 		task ("Add an External Video fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
@@ -166,6 +170,8 @@ definition {
 				value1 = "Liferay Digital Experience Platform");
 
 			PageEditor.publish();
+
+			Alert.closeMessage(messageType = "SUCCESS");
 		}
 
 		task ("View the video displayed in view mode") {
@@ -178,7 +184,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-151368. It checks that the video URL is saved when adding external video shortcut in non-default language."
-	@priority = "4"
+	@priority = 4
 	test VideoURLIsSavedWhenUsingNonDefaultLanguage {
 		var portalURL = PropsUtil.get("portal.url");
 

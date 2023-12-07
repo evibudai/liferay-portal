@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.jaxrs.context.provider;
 
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.jaxrs.constants.JaxRsConstants;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.util.Arrays;
@@ -66,10 +58,12 @@ public class ContextProviderUtil {
 	public static Object getMatchedResource(Message message) {
 		Exchange exchange = message.getExchange();
 
-		Object root = exchange.get(JAXRSUtils.ROOT_INSTANCE);
+		Object resource = _fetchExistingResource(
+			exchange, JAXRSUtils.ROOT_INSTANCE,
+			JaxRsConstants.LAST_SERVICE_OBJECT);
 
-		if (root != null) {
-			return root;
+		if (resource != null) {
+			return resource;
 		}
 
 		OperationResourceInfo operationResourceInfo = exchange.get(
@@ -111,6 +105,18 @@ public class ContextProviderUtil {
 				}
 			}
 		};
+	}
+
+	private static Object _fetchExistingResource(
+		Exchange exchange, String... keys) {
+
+		Object resource = null;
+
+		for (int i = 0; (i < keys.length) && (resource == null); i++) {
+			resource = exchange.get(keys[i]);
+		}
+
+		return resource;
 	}
 
 	private static MultivaluedMap<String, String> _getPathParameters(

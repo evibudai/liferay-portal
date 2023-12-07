@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "Verify users can add new payment terms."
-	@priority = "3"
+	@priority = 3
 	test AddANewPaymentTerm {
 		property portal.acceptance = "false";
 
@@ -24,10 +24,10 @@ definition {
 		}
 
 		task ("When the sales manager creates a payment term entry") {
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "0");
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 0);
 		}
 
 		task ("And the sales manager goes back to the Terms and Conditions Page") {
@@ -35,11 +35,11 @@ definition {
 		}
 
 		task ("Then the new entry is present") {
-			CommercePaymentTerms.viewTermsAndConditionEntry(
-				termsAndConditionActiveStatus = "No",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "0");
+			CommercePaymentTerms.viewTermsAndConditionsEntry(
+				termsAndConditionsActiveStatus = "No",
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 0);
 		}
 
 		task ("When the Sales Manager opens the new payment term entry") {
@@ -47,14 +47,14 @@ definition {
 		}
 
 		task ("Then the correct payment term data is shown") {
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "Test Terms and Condition",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "Test Terms and Condition",
 				valuePosition = "0.0");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8295. Assert Payment terms are automatically sorted by Priority by default"
-	@priority = "4"
+	@priority = 4
 	test AssertPaymentTermIsSortedByPriority {
 		property portal.acceptance = "false";
 
@@ -63,33 +63,33 @@ definition {
 				category = "Order Management",
 				portlet = "Terms and Conditions");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 1",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "2");
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 1",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 2);
 
 			Click(locator1 = "Button#BACK");
 		}
 
 		task ("When the Sales Manager create a new entry with "Priority" set to 1.") {
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 2",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "1");
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 2",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 1);
 
 			Click(locator1 = "Button#BACK");
 		}
 
 		task ("Then after the redirect if the Sales Manager return on the dashboard the second entry that we created it's the first.") {
-			CommercePaymentTerms.viewTermsAndConditionEntrySortByPriority(
-				rowNumber = "1",
-				termsAndConditionName = "Terms and Condition Entry 2",
-				valuePosition = "1");
+			CommercePaymentTerms.viewTermsAndConditionsEntrySortByPriority(
+				rowNumber = 1,
+				termsAndConditionsName = "Terms and Condition Entry 2",
+				valuePosition = 1);
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8283. Payment Term Name needs to be unique"
-	@priority = "4"
+	@priority = 4
 	test AssertPaymentTermNameIsUnique {
 		property portal.acceptance = "false";
 
@@ -98,30 +98,32 @@ definition {
 				category = "Order Management",
 				portlet = "Terms and Conditions");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 1",
-				termsAndConditionType = "Payment Terms",
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 1",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "");
 
 			Click(locator1 = "Button#BACK");
 		}
 
 		task ("When the Sales Manager tries to create another new entry with the same name, and the Type is set as "Delivery Terms".") {
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 1",
-				termsAndConditionType = "Delivery Terms",
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 1",
+				termsAndConditionsType = "Delivery Terms",
 				valuePosition = "");
 		}
 
 		task ("Then the Sales Manager receives an error.") {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
 
-			Alert.viewErrorMessage(errorMessage = "Error:Please enter a valid name.");
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Error:Please enter a valid name.");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8293. Assert payment term priority using different field types."
-	@priority = "4"
+	@priority = 4
 	test AssertPaymentTermPriority {
 		property portal.acceptance = "false";
 
@@ -132,66 +134,66 @@ definition {
 		}
 
 		task ("When I add a new entry with the priority field as a number") {
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 1",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "1");
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 1",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 1);
 		}
 
 		task ("Then I am redirected to the details page, and the number value of the priority field is correctly shown") {
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "Terms and Condition Entry 1",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "Terms and Condition Entry 1",
 				valuePosition = "1.0");
 		}
 
 		task ("When I add a new entry with the priority field as a decimal number") {
 			Click(locator1 = "Button#BACK");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 2",
-				termsAndConditionType = "Payment Terms",
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 2",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "1.2");
 		}
 
 		task ("Then I am redirected to the details page, and the decimal value of the priority field is correctly shown") {
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "Terms and Condition Entry 2",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "Terms and Condition Entry 2",
 				valuePosition = "1.2");
 		}
 
 		task ("When I add a new entry with the priority field as a negative number") {
 			Click(locator1 = "Button#BACK");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 3",
-				termsAndConditionType = "Payment Terms",
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 3",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "-1");
 		}
 
 		task ("Then I am redirected to the details page, and the negative value of the priority field is correctly shown") {
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "Terms and Condition Entry 3",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "Terms and Condition Entry 3",
 				valuePosition = "-1.0");
 		}
 
 		task ("When I add a new entry with the priority field as empty ") {
 			Click(locator1 = "Button#BACK");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 4",
-				termsAndConditionType = "Payment Terms",
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 4",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "");
 		}
 
 		task ("Then I am redirected to the details page, and the value of the priority field defaults to 0") {
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "Terms and Condition Entry 4",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "Terms and Condition Entry 4",
 				valuePosition = "0.0");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8296. Payment Term Priority needs to be unique"
-	@priority = "4"
+	@priority = 4
 	test AssertPaymentTermPriorityIsUnique {
 		property portal.acceptance = "false";
 
@@ -200,30 +202,32 @@ definition {
 				category = "Order Management",
 				portlet = "Terms and Conditions");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Test",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "1");
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Test",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 1);
 
 			Click(locator1 = "Button#BACK");
 		}
 
 		task ("When the Sales Manager create a new entry with a different name from "Test".") {
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms and Condition Entry 1",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "1");
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms and Condition Entry 1",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 1);
 		}
 
 		task ("Then the Sales Manager receives an error because the priority is not unique.") {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
 
-			Alert.viewErrorMessage(errorMessage = "Error:Please enter a valid priority.");
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Error:Please enter a valid priority.");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8286. Cancel the creation of a new entry and return to the dashboard view"
-	@priority = "4"
+	@priority = 4
 	test CanCancelTheCreationOfANewEntry {
 		property portal.acceptance = "false";
 
@@ -234,9 +238,9 @@ definition {
 		}
 
 		task ("When I cancel creating the entry") {
-			CommercePaymentTerms.cancelAddTermsAndCondition(
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
+			CommercePaymentTerms.cancelAddTermsAndConditions(
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "");
 
 			SelectFrameTop();
@@ -252,7 +256,7 @@ definition {
 	}
 
 	@description = "COMMERCE-8281. Delete a new payment term to Terms and Conditions."
-	@priority = "3"
+	@priority = 5
 	test CanDeleteAPaymentTerm {
 		property portal.acceptance = "true";
 
@@ -261,25 +265,25 @@ definition {
 				category = "Order Management",
 				portlet = "Terms and Conditions");
 
-			CommercePaymentTerms.addTermsAndCondition(
+			CommercePaymentTerms.addTermsAndConditions(
 				active = "true",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "");
 
 			Click(locator1 = "Icon#BACK");
 
-			CommercePaymentTerms.viewTermsAndConditionEntry(
-				termsAndConditionActiveStatus = "Yes",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "0");
+			CommercePaymentTerms.viewTermsAndConditionsEntry(
+				termsAndConditionsActiveStatus = "Yes",
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 0);
 		}
 
 		task ("When I delete the terms and conditions") {
 			CommercePaymentTerms.gotoEntryMenuItem(
 				menuItem = "Delete",
-				termsAndConditionName = "Test Terms and Condition");
+				termsAndConditionsName = "Test Terms and Condition");
 		}
 
 		task ("Then the entry is deleted") {
@@ -288,7 +292,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8282. Verify can edit payment term"
-	@priority = "4"
+	@priority = 5
 	test CanEditAPaymentTerm {
 		property portal.acceptance = "true";
 
@@ -297,21 +301,21 @@ definition {
 				category = "Order Management",
 				portlet = "Terms and Conditions");
 
-			CommercePaymentTerms.addTermsAndCondition(
+			CommercePaymentTerms.addTermsAndConditions(
 				active = "true",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "");
 		}
 
 		task ("When I edit the name and description of the payment term and publish it") {
-			CommercePaymentTerms.openTermsAndConditionAdmin();
+			CommercePaymentTerms.openTermsAndConditionsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Test Terms and Condition");
 
-			CommercePaymentTerms.editTermsAndCondition(
-				termsAndConditionDescription = "Test Terms and Condition Description Edit",
-				termsAndConditionName = "Test Terms and Condition Edit");
+			CommercePaymentTerms.editTermsAndConditions(
+				termsAndConditionsDescription = "Test Terms and Condition Description Edit",
+				termsAndConditionsName = "Test Terms and Condition Edit");
 		}
 
 		task ("Then the payment term name and description should be updated") {
@@ -319,14 +323,14 @@ definition {
 
 			CommerceNavigator.gotoEntry(entryName = "Test Terms and Condition Edit");
 
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionDescription = "Test Terms and Condition Description Edit",
-				termsAndConditionName = "Test Terms and Condition Edit");
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsDescription = "Test Terms and Condition Description Edit",
+				termsAndConditionsName = "Test Terms and Condition Edit");
 		}
 	}
 
 	@description = "COMMERCE-8291. The Sales Manager can use the search bar to search a specific entry."
-	@priority = "4"
+	@priority = 4
 	test CanSearchForSpecificEntry {
 		property portal.acceptance = "false";
 
@@ -335,17 +339,17 @@ definition {
 				category = "Order Management",
 				portlet = "Terms and Conditions");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms1",
-				termsAndConditionType = "Payment Terms",
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms1",
+				termsAndConditionsType = "Payment Terms",
 				valuePosition = "");
 
 			Click(locator1 = "Icon#BACK");
 
-			CommercePaymentTerms.addTermsAndCondition(
-				termsAndConditionName = "Terms2",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "1");
+			CommercePaymentTerms.addTermsAndConditions(
+				termsAndConditionsName = "Terms2",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 1);
 
 			Click(locator1 = "Icon#BACK");
 		}
@@ -366,7 +370,7 @@ definition {
 	}
 
 	@description = "COMMERCE-8284. The Sales Manager can use the localization to change the entry's name based on a language."
-	@priority = "4"
+	@priority = 4
 	test CanUseLocalization {
 		property portal.acceptance = "false";
 
@@ -375,11 +379,11 @@ definition {
 				category = "Order Management",
 				portlet = "Terms and Conditions");
 
-			CommercePaymentTerms.addTermsAndCondition(
+			CommercePaymentTerms.addTermsAndConditions(
 				active = "true",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "1");
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 1);
 
 			Click(locator1 = "Icon#BACK");
 		}
@@ -387,8 +391,8 @@ definition {
 		task ("When I open the new entry, presented on the details page of the entry") {
 			CommerceNavigator.gotoEntry(entryName = "Test Terms and Condition");
 
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "Test Terms and Condition",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "Test Terms and Condition",
 				valuePosition = "1.0");
 		}
 
@@ -401,33 +405,33 @@ definition {
 
 			CommercePaymentTerms.changeLocale(locale = "en-US");
 
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "Test Terms and Condition",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "Test Terms and Condition",
 				valuePosition = "1.0");
 
 			CommercePaymentTerms.changeLocale(locale = "zh-CN");
 		}
 
 		task ("Then the entry name should be localized") {
-			CommercePaymentTerms.assertTermsAndConditionEntry(
-				termsAndConditionName = "测试条款和条件",
+			CommercePaymentTerms.assertTermsAndConditionsEntry(
+				termsAndConditionsName = "测试条款和条件",
 				valuePosition = "1.0");
 		}
 	}
 
 	@description = "Verify the sales manager is able to change the status of payment terms."
-	@priority = "3"
+	@priority = 5
 	test ChangeTheStatus {
 		property portal.acceptance = "true";
 
 		task ("Given an active payment term") {
 			CommerceOrders.openTermsAndConditionsAdmin();
 
-			CommercePaymentTerms.addTermsAndCondition(
+			CommercePaymentTerms.addTermsAndConditions(
 				active = "true",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "0");
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 0);
 
 			CommerceOrders.openTermsAndConditionsAdmin();
 		}
@@ -443,11 +447,11 @@ definition {
 		task ("Then the entry appears as inactive in the Terms and Conditions dashboard") {
 			CommerceOrders.openTermsAndConditionsAdmin();
 
-			CommercePaymentTerms.viewTermsAndConditionEntry(
-				termsAndConditionActiveStatus = "No",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "0");
+			CommercePaymentTerms.viewTermsAndConditionsEntry(
+				termsAndConditionsActiveStatus = "No",
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 0);
 		}
 
 		task ("When the sales manager opens the payment term entry and enables the active switch") {
@@ -461,11 +465,11 @@ definition {
 		task ("Then the entry appears as active in the Terms and Conditions dashboard") {
 			CommerceOrders.openTermsAndConditionsAdmin();
 
-			CommercePaymentTerms.viewTermsAndConditionEntry(
-				termsAndConditionActiveStatus = "Yes",
-				termsAndConditionName = "Test Terms and Condition",
-				termsAndConditionType = "Payment Terms",
-				valuePosition = "0");
+			CommercePaymentTerms.viewTermsAndConditionsEntry(
+				termsAndConditionsActiveStatus = "Yes",
+				termsAndConditionsName = "Test Terms and Condition",
+				termsAndConditionsType = "Payment Terms",
+				valuePosition = 0);
 		}
 	}
 

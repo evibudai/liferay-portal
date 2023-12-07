@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.expando.model.impl;
@@ -215,74 +206,99 @@ public class ExpandoColumnModelImpl
 	public Map<String, Function<ExpandoColumn, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ExpandoColumn, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ExpandoColumn, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ExpandoColumn, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ExpandoColumn, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<ExpandoColumn, Object>>();
-		Map<String, BiConsumer<ExpandoColumn, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<ExpandoColumn, ?>>();
+		private static final Map<String, Function<ExpandoColumn, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", ExpandoColumn::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", ExpandoColumn::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setCtCollectionId);
-		attributeGetterFunctions.put("columnId", ExpandoColumn::getColumnId);
-		attributeSetterBiConsumers.put(
-			"columnId",
-			(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setColumnId);
-		attributeGetterFunctions.put("companyId", ExpandoColumn::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setCompanyId);
-		attributeGetterFunctions.put(
-			"modifiedDate", ExpandoColumn::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<ExpandoColumn, Date>)ExpandoColumn::setModifiedDate);
-		attributeGetterFunctions.put("tableId", ExpandoColumn::getTableId);
-		attributeSetterBiConsumers.put(
-			"tableId",
-			(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setTableId);
-		attributeGetterFunctions.put("name", ExpandoColumn::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<ExpandoColumn, String>)ExpandoColumn::setName);
-		attributeGetterFunctions.put("type", ExpandoColumn::getType);
-		attributeSetterBiConsumers.put(
-			"type", (BiConsumer<ExpandoColumn, Integer>)ExpandoColumn::setType);
-		attributeGetterFunctions.put(
-			"defaultData", ExpandoColumn::getDefaultData);
-		attributeSetterBiConsumers.put(
-			"defaultData",
-			(BiConsumer<ExpandoColumn, String>)ExpandoColumn::setDefaultData);
-		attributeGetterFunctions.put(
-			"typeSettings", ExpandoColumn::getTypeSettings);
-		attributeSetterBiConsumers.put(
-			"typeSettings",
-			(BiConsumer<ExpandoColumn, String>)ExpandoColumn::setTypeSettings);
+		static {
+			Map<String, Function<ExpandoColumn, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<ExpandoColumn, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", ExpandoColumn::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", ExpandoColumn::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"columnId", ExpandoColumn::getColumnId);
+			attributeGetterFunctions.put(
+				"companyId", ExpandoColumn::getCompanyId);
+			attributeGetterFunctions.put(
+				"modifiedDate", ExpandoColumn::getModifiedDate);
+			attributeGetterFunctions.put("tableId", ExpandoColumn::getTableId);
+			attributeGetterFunctions.put("name", ExpandoColumn::getName);
+			attributeGetterFunctions.put("type", ExpandoColumn::getType);
+			attributeGetterFunctions.put(
+				"defaultData", ExpandoColumn::getDefaultData);
+			attributeGetterFunctions.put(
+				"typeSettings", ExpandoColumn::getTypeSettings);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ExpandoColumn, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ExpandoColumn, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<ExpandoColumn, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<ExpandoColumn, Long>)
+					ExpandoColumn::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"columnId",
+				(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setColumnId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<ExpandoColumn, Date>)
+					ExpandoColumn::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"tableId",
+				(BiConsumer<ExpandoColumn, Long>)ExpandoColumn::setTableId);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<ExpandoColumn, String>)ExpandoColumn::setName);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<ExpandoColumn, Integer>)ExpandoColumn::setType);
+			attributeSetterBiConsumers.put(
+				"defaultData",
+				(BiConsumer<ExpandoColumn, String>)
+					ExpandoColumn::setDefaultData);
+			attributeSetterBiConsumers.put(
+				"typeSettings",
+				(BiConsumer<ExpandoColumn, String>)
+					ExpandoColumn::setTypeSettings);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -754,7 +770,8 @@ public class ExpandoColumnModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<ExpandoColumn, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

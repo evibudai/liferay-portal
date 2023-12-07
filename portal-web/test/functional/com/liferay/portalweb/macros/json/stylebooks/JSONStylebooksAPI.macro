@@ -1,26 +1,27 @@
 definition {
 
-	@summary = "Directly calls the JSON WS API to add a style book entry"
-	macro _addStylebookEntry {
+	@summary = "Default summary"
+	macro _addStylebookEntry(groupId = null, styleBookEntryName = null) {
 		Variables.assertDefined(parameterList = "${groupId},${styleBookEntryName}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/stylebook.stylebookentry/add-style-book-entry \
-			  -u test@liferay.com:test \
-			  -d groupId=${groupId} \
-			  -d name=${styleBookEntryName} \
-			  -d styleBookEntryKey=
+				-u ${userLoginInfo} \
+				-d groupId=${groupId} \
+				-d name=${styleBookEntryName} \
+				-d styleBookEntryKey=
 		''';
 
-		var styleBookEntryId = JSONCurlUtil.post("${curl}", "$.styleBookEntryId");
+		var styleBookEntryId = JSONCurlUtil.post(${curl}, "$.styleBookEntryId");
 
-		if ("${styleBookEntryId}" == "") {
+		if (${styleBookEntryId} == "") {
 			fail("FAIL. Cannot add style book entry.");
 		}
 
-		return "${styleBookEntryId}";
+		return ${styleBookEntryId};
 	}
 
 }

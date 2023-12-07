@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.service.impl;
 
 import com.liferay.notification.constants.NotificationQueueEntryConstants;
 import com.liferay.notification.context.NotificationContext;
+import com.liferay.notification.exception.NotificationQueueEntryStatusException;
 import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
@@ -23,6 +15,8 @@ import com.liferay.notification.service.NotificationQueueEntryAttachmentLocalSer
 import com.liferay.notification.service.NotificationRecipientLocalService;
 import com.liferay.notification.service.NotificationRecipientSettingLocalService;
 import com.liferay.notification.service.base.NotificationQueueEntryLocalServiceBaseImpl;
+import com.liferay.notification.type.NotificationType;
+import com.liferay.notification.type.NotificationTypeServiceTracker;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -30,7 +24,6 @@ import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.ResourceLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -58,6 +51,12 @@ public class NotificationQueueEntryLocalServiceImpl
 
 		NotificationQueueEntry notificationQueueEntry =
 			notificationContext.getNotificationQueueEntry();
+
+		NotificationType notificationType =
+			_notificationTypeServiceTracker.getNotificationType(
+				notificationQueueEntry.getType());
+
+		notificationType.validateNotificationQueueEntry(notificationContext);
 
 		notificationQueueEntry.setNotificationQueueEntryId(
 			counterLocalService.increment());
@@ -89,8 +88,9 @@ public class NotificationQueueEntryLocalServiceImpl
 		notificationRecipient.setClassPK(
 			notificationQueueEntry.getNotificationQueueEntryId());
 
-		_notificationRecipientLocalService.updateNotificationRecipient(
-			notificationRecipient);
+		notificationRecipient =
+			_notificationRecipientLocalService.updateNotificationRecipient(
+				notificationRecipient);
 
 		for (NotificationRecipientSetting notificationRecipientSetting :
 				notificationContext.getNotificationRecipientSettings()) {
@@ -115,11 +115,8 @@ public class NotificationQueueEntryLocalServiceImpl
 		for (NotificationQueueEntry notificationQueueEntry :
 				notificationQueueEntryPersistence.findByLtSentDate(sentDate)) {
 
-			notificationQueueEntryPersistence.remove(notificationQueueEntry);
-
-			_notificationQueueEntryAttachmentLocalService.
-				deleteNotificationQueueEntryAttachments(
-					notificationQueueEntry.getNotificationQueueEntryId());
+			notificationQueueEntryLocalService.deleteNotificationQueueEntry(
+				notificationQueueEntry);
 		}
 	}
 
@@ -136,6 +133,7 @@ public class NotificationQueueEntryLocalServiceImpl
 			notificationQueueEntry);
 	}
 
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public NotificationQueueEntry deleteNotificationQueueEntry(
@@ -170,11 +168,10 @@ public class NotificationQueueEntryLocalServiceImpl
 	}
 
 	@Override
-	public List<NotificationQueueEntry> getUnsentNotificationEntries(
-		String type) {
+	public List<NotificationQueueEntry> getNotificationEntries(
+		String type, int status) {
 
-		return notificationQueueEntryPersistence.findByT_S(
-			type, NotificationQueueEntryConstants.STATUS_UNSENT);
+		return notificationQueueEntryPersistence.findByT_S(type, status);
 	}
 
 	@Override
@@ -182,9 +179,25 @@ public class NotificationQueueEntryLocalServiceImpl
 			long notificationQueueEntryId)
 		throws PortalException {
 
-		return notificationQueueEntryLocalService.updateStatus(
-			notificationQueueEntryId,
-			NotificationQueueEntryConstants.STATUS_UNSENT);
+		NotificationQueueEntry notificationQueueEntry =
+			getNotificationQueueEntry(notificationQueueEntryId);
+
+		if (notificationQueueEntry.getStatus() ==
+				NotificationQueueEntryConstants.STATUS_SENT) {
+
+			throw new NotificationQueueEntryStatusException(
+				"Notification queue entry " +
+					notificationQueueEntry.getNotificationQueueEntryId() +
+						" was already sent");
+		}
+
+		NotificationType notificationType =
+			_notificationTypeServiceTracker.getNotificationType(
+				notificationQueueEntry.getType());
+
+		notificationType.resendNotification(notificationQueueEntry);
+
+		return getNotificationQueueEntry(notificationQueueEntryId);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -230,12 +243,12 @@ public class NotificationQueueEntryLocalServiceImpl
 		_notificationRecipientSettingLocalService;
 
 	@Reference
+	private NotificationTypeServiceTracker _notificationTypeServiceTracker;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
-
-	@Reference
-	private UserLocalService _userLocalService;
 
 }

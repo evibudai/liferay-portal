@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
@@ -270,59 +261,75 @@ public class LVEntryModelImpl
 	public Map<String, Function<LVEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<LVEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<LVEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<LVEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<LVEntry, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<LVEntry, Object>>();
-		Map<String, BiConsumer<LVEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<LVEntry, ?>>();
+		private static final Map<String, Function<LVEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", LVEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion", (BiConsumer<LVEntry, Long>)LVEntry::setMvccVersion);
-		attributeGetterFunctions.put("uuid", LVEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<LVEntry, String>)LVEntry::setUuid);
-		attributeGetterFunctions.put("headId", LVEntry::getHeadId);
-		attributeSetterBiConsumers.put(
-			"headId", (BiConsumer<LVEntry, Long>)LVEntry::setHeadId);
-		attributeGetterFunctions.put(
-			"defaultLanguageId", LVEntry::getDefaultLanguageId);
-		attributeSetterBiConsumers.put(
-			"defaultLanguageId",
-			(BiConsumer<LVEntry, String>)LVEntry::setDefaultLanguageId);
-		attributeGetterFunctions.put("lvEntryId", LVEntry::getLvEntryId);
-		attributeSetterBiConsumers.put(
-			"lvEntryId", (BiConsumer<LVEntry, Long>)LVEntry::setLvEntryId);
-		attributeGetterFunctions.put("companyId", LVEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<LVEntry, Long>)LVEntry::setCompanyId);
-		attributeGetterFunctions.put("groupId", LVEntry::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId", (BiConsumer<LVEntry, Long>)LVEntry::setGroupId);
-		attributeGetterFunctions.put(
-			"uniqueGroupKey", LVEntry::getUniqueGroupKey);
-		attributeSetterBiConsumers.put(
-			"uniqueGroupKey",
-			(BiConsumer<LVEntry, String>)LVEntry::setUniqueGroupKey);
+		static {
+			Map<String, Function<LVEntry, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<LVEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", LVEntry::getMvccVersion);
+			attributeGetterFunctions.put("uuid", LVEntry::getUuid);
+			attributeGetterFunctions.put("headId", LVEntry::getHeadId);
+			attributeGetterFunctions.put(
+				"defaultLanguageId", LVEntry::getDefaultLanguageId);
+			attributeGetterFunctions.put("lvEntryId", LVEntry::getLvEntryId);
+			attributeGetterFunctions.put("companyId", LVEntry::getCompanyId);
+			attributeGetterFunctions.put("groupId", LVEntry::getGroupId);
+			attributeGetterFunctions.put(
+				"uniqueGroupKey", LVEntry::getUniqueGroupKey);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<LVEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<LVEntry, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<LVEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<LVEntry, Long>)LVEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<LVEntry, String>)LVEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"headId", (BiConsumer<LVEntry, Long>)LVEntry::setHeadId);
+			attributeSetterBiConsumers.put(
+				"defaultLanguageId",
+				(BiConsumer<LVEntry, String>)LVEntry::setDefaultLanguageId);
+			attributeSetterBiConsumers.put(
+				"lvEntryId", (BiConsumer<LVEntry, Long>)LVEntry::setLvEntryId);
+			attributeSetterBiConsumers.put(
+				"companyId", (BiConsumer<LVEntry, Long>)LVEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"groupId", (BiConsumer<LVEntry, Long>)LVEntry::setGroupId);
+			attributeSetterBiConsumers.put(
+				"uniqueGroupKey",
+				(BiConsumer<LVEntry, String>)LVEntry::setUniqueGroupKey);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -960,8 +967,9 @@ public class LVEntryModelImpl
 
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<LVEntry, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<LVEntry, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

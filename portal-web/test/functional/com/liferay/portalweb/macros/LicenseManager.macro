@@ -1,6 +1,7 @@
 definition {
 
-	macro viewDefaultCP {
+	@summary = "Default summary"
+	macro viewDefaultCP(tableTexts = null) {
 		AssertTextEquals(
 			locator1 = "Portlet#HEADER",
 			value1 = "License Manager");
@@ -11,11 +12,11 @@ definition {
 
 		AssertElementPresent(locator1 = "LicenseManager#LICENSE_FORM");
 
-		for (var tableText : list "${tableTexts}") {
+		for (var tableText : list ${tableTexts}) {
 			AssertTextEquals(
-				key_tableText = "${tableText}",
+				key_tableText = ${tableText},
 				locator1 = "LicenseManager#LICENSE_TABLE_TEXT",
-				value1 = "${tableText}");
+				value1 = ${tableText});
 		}
 
 		AssertTextEquals(

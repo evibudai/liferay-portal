@@ -76,6 +76,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ADD_SHIPMENT_ITEMS_CHECKBOX_WITH_ORDER_ID</td>
+	<td>//div[contains(text(), '${key_productSku}')]/../div[contains(text(), '${key_orderId}')]/preceding-sibling::div[@class='dnd-td item-selector']//input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>BLOGS_ENTRY</td>
 	<td>//input[contains(@id,'BlogsEntry')]</td>
 	<td></td>
@@ -86,8 +91,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CHECKBOX_ID</td>
+	<td>//input[contains(@type,'checkbox')][contains(@id,'${checkboxId}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CHECKBOX_LABEL</td>
 	<td>//label[input]//*[normalize-space(text())='${key_fieldLabel}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CHECKBOX_NAME</td>
+	<td>//input[@name='${key_fieldName}'][@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -137,7 +152,7 @@
 </tr>
 <tr>
 	<td>ENABLE_CHECKBOX</td>
-	<td>//tr[contains(@data-name,'${key_checkboxName}')]//input[contains(@type,'checkbox')]</td>
+	<td>//tr[contains(@data-name,'${key_checkboxName}')]//input[contains(@type,'checkbox')] | //tr[contains(@data-value,'"name":"${key_checkboxName}"')]//input[contains(@type,'checkbox')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -178,6 +193,11 @@
 <tr>
 	<td>ENABLE_CONVERSION_TXT</td>
 	<td>//label[contains(.,'TXT')]/input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENABLE_DESCRIPTION_CHECKBOX</td>
+	<td>//label[contains(@for,'enableKBArticleDescription')]//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -256,6 +276,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ENTRY_BY_TITLE</td>
+	<td>//dd[@data-title='${content_title}']//input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FACEBOOK</td>
 	<td>//input[contains(@id,'facebook')]</td>
 	<td></td>
@@ -288,6 +313,11 @@
 <tr>
 	<td>LEXICON_SELECT_ALL_CONTAINER</td>
 	<td>//nav[contains(@class,'management-bar')]//div[contains(@class,'custom-checkbox')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LEXICON_SELECT_ALL_CONTAINER_DISABLED</td>
+	<td>//nav[contains(@class,'management-bar')]//div[contains(@class,'custom-checkbox')]/label/input[@disabled]</td>
 	<td></td>
 </tr>
 <tr>
@@ -418,6 +448,11 @@
 <tr>
 	<td>SHOW_ADD_CONTENT_BUTTON</td>
 	<td>//label[contains(.,'Show Add Content Button')]/input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SHOW_EMAIL_ADDRESS_CHECKBOX</td>
+	<td>//label[contains(@for,'showEmailAddress')]//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>

@@ -1,15 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {fetch} from 'frontend-js-web';
+
+import {contextUrl} from '../constants';
 
 const userBaseURL = '/o/headless-admin-user/v1.0';
 const workflowBaseURL = '/o/headless-admin-workflow/v1.0';
@@ -36,11 +32,11 @@ function retrieveAccountRoles(accountId) {
 	});
 }
 
-function retrieveDefinitionRequest(definitionId, versionNumber) {
-	let url = `${workflowBaseURL}/workflow-definitions/by-name/${definitionId}`;
+function retrieveDefinitionRequest(definitionName, versionNumber) {
+	let url = `${workflowBaseURL}/workflow-definitions/by-name/${definitionName}?contentFormat=xml`;
 
 	if (versionNumber) {
-		url = `${url}?version=${versionNumber}`;
+		url = `${url}&version=${versionNumber}`;
 	}
 
 	return fetch(url, {
@@ -49,16 +45,24 @@ function retrieveDefinitionRequest(definitionId, versionNumber) {
 	});
 }
 
-function retrieveRolesBy(filterType, keywords) {
-	if (filterType === 'roleId') {
-		return fetch(
-			`${window.location.origin}${userBaseURL}/roles/` + keywords,
-			{
-				headers,
-				method: 'GET',
-			}
-		);
-	}
+function retrieveRoleById(roleId) {
+	return fetch(
+		`${window.location.origin}${contextUrl}${userBaseURL}/roles/${roleId}`,
+		{
+			headers,
+			method: 'GET',
+		}
+	);
+}
+
+function retrieveRoles() {
+	return fetch(
+		`${window.location.origin}${contextUrl}${userBaseURL}/roles?pageSize=-1`,
+		{
+			headers,
+			method: 'GET',
+		}
+	);
 }
 
 function retrieveUsersBy(filterType, keywords) {
@@ -72,7 +76,7 @@ function retrieveUsersBy(filterType, keywords) {
 		.slice(0, -8);
 
 	const url = new URL(
-		`${window.location.origin}${userBaseURL}/user-accounts?filter=${filterParameter}`
+		`${window.location.origin}${contextUrl}${userBaseURL}/user-accounts?filter=${filterParameter}`
 	);
 
 	return fetch(url, {
@@ -99,7 +103,8 @@ export {
 	publishDefinitionRequest,
 	retrieveAccountRoles,
 	retrieveDefinitionRequest,
-	retrieveRolesBy,
+	retrieveRoleById,
+	retrieveRoles,
 	retrieveUsersBy,
 	saveDefinitionRequest,
 };

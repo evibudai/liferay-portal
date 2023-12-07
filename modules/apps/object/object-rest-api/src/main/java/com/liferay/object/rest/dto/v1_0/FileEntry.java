@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.dto.v1_0;
@@ -57,6 +48,67 @@ public class FileEntry implements Serializable {
 	public static FileEntry unsafeToDTO(String json) {
 		return ObjectMapperUtil.unsafeReadValue(FileEntry.class, json);
 	}
+
+	@Schema(
+		description = "optional field with the content of the document in Base64, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileBase64`)"
+	)
+	public String getFileBase64() {
+		return fileBase64;
+	}
+
+	public void setFileBase64(String fileBase64) {
+		this.fileBase64 = fileBase64;
+	}
+
+	@JsonIgnore
+	public void setFileBase64(
+		UnsafeSupplier<String, Exception> fileBase64UnsafeSupplier) {
+
+		try {
+			fileBase64 = fileBase64UnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "optional field with the content of the document in Base64, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileBase64`)"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String fileBase64;
+
+	@Schema
+	@Valid
+	public Folder getFolder() {
+		return folder;
+	}
+
+	public void setFolder(Folder folder) {
+		this.folder = folder;
+	}
+
+	@JsonIgnore
+	public void setFolder(
+		UnsafeSupplier<Folder, Exception> folderUnsafeSupplier) {
+
+		try {
+			folder = folderUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Folder folder;
 
 	@Schema
 	public Long getId() {
@@ -163,6 +215,30 @@ public class FileEntry implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		if (fileBase64 != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fileBase64\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fileBase64));
+
+			sb.append("\"");
+		}
+
+		if (folder != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"folder\": ");
+
+			sb.append(String.valueOf(folder));
+		}
 
 		if (id != null) {
 			if (sb.length() > 1) {
@@ -292,5 +368,7 @@ public class FileEntry implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

@@ -1,31 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import {useModal} from '@clayui/modal';
-import {openConfirmModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext} from 'react';
 
 import SegmentsExperimentsContext from '../context.es';
 import {
 	closeReviewAndRunExperiment,
+	openTerminateModal,
 	reviewAndRunExperiment,
 	runExperiment,
-	updateSegmentsExperimentStatus,
 } from '../state/actions.es';
 import {
-	STATUS_COMPLETED,
 	STATUS_DRAFT,
 	STATUS_FINISHED_NO_WINNER,
 	STATUS_FINISHED_WINNER,
@@ -36,7 +28,11 @@ import {
 import {DispatchContext, StateContext} from './../state/context.es';
 import {ReviewExperimentModal} from './ReviewExperimentModal.es';
 
-function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
+function SegmentsExperimentsActions({
+	onCreateSegmentsExperiment,
+	onDeleteSegmentsExperiment,
+	onEditSegmentsExperimentStatus,
+}) {
 	const {
 		experiment,
 		reviewExperimentModal,
@@ -65,21 +61,7 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 				<ClayButton
 					className="w-100"
 					displayType="secondary"
-					onClick={() => {
-						openConfirmModal({
-							message: Liferay.Language.get(
-								'are-you-sure-you-want-to-terminate-this-test'
-							),
-							onConfirm: (isConfirmed) => {
-								if (isConfirmed) {
-									onEditSegmentsExperimentStatus(
-										experiment,
-										STATUS_TERMINATED
-									);
-								}
-							},
-						});
-					}}
+					onClick={() => dispatch(openTerminateModal())}
 				>
 					{Liferay.Language.get('terminate-test')}
 				</ClayButton>
@@ -101,25 +83,26 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 				</>
 			)}
 
-			{experiment.status.value === STATUS_FINISHED_WINNER && (
+			{(experiment.status.value === STATUS_FINISHED_WINNER ||
+				experiment.status.value === STATUS_FINISHED_NO_WINNER) && (
 				<>
 					<ClayButton
 						className="w-100"
 						displayType="secondary"
-						onClick={_handleDiscardExperiment}
+						onClick={onDeleteSegmentsExperiment}
 					>
 						{Liferay.Language.get('discard-test')}
 					</ClayButton>
 				</>
 			)}
 
-			{experiment.status.value === STATUS_FINISHED_NO_WINNER && (
+			{experiment.status.value === STATUS_TERMINATED && (
 				<ClayButton
 					className="w-100"
 					displayType="primary"
-					onClick={_handleDiscardExperiment}
+					onClick={onCreateSegmentsExperiment}
 				>
-					{Liferay.Language.get('discard-test')}
+					{Liferay.Language.get('create-new-test')}
 				</ClayButton>
 			)}
 
@@ -131,6 +114,7 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 					variants={variants}
 				/>
 			)}
+
 			{viewExperimentDetailsURL && (
 				<ClayLink
 					className="btn btn-secondary btn-sm mt-3 w-100"
@@ -165,21 +149,10 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 			);
 		});
 	}
-
-	function _handleDiscardExperiment() {
-		const body = {
-			segmentsExperimentId: experiment.segmentsExperimentId,
-			status: STATUS_COMPLETED,
-			winnerSegmentsExperienceId: experiment.segmentsExperienceId,
-		};
-
-		APIService.publishExperience(body).then(({segmentsExperiment}) => {
-			dispatch(updateSegmentsExperimentStatus(segmentsExperiment));
-		});
-	}
 }
 
 SegmentsExperimentsActions.propTypes = {
+	onCreateSegmentsExperiment: PropTypes.func.isRequired,
 	onEditSegmentsExperimentStatus: PropTypes.func.isRequired,
 };
 

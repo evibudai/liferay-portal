@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayDropDown from '@clayui/drop-down';
@@ -15,10 +9,20 @@ import React, {useContext} from 'react';
 
 import ChartContext from '../ChartContext';
 import {deleteAccount, updateAccount} from '../data/accounts';
-import {ACTION_KEYS} from '../utils/constants';
+import {
+	ACTION_KEYS,
+	INFO_PANEL_MODE_MAP,
+	INFO_PANEL_OPEN_EVENT,
+	MODEL_TYPE_MAP,
+} from '../utils/constants';
 import {hasPermission} from '../utils/index';
 
-export default function AccountMenuContent({closeMenu, data, parentData}) {
+export default function AccountMenuContent({
+	closeMenu,
+	data,
+	namespace,
+	parentData,
+}) {
 	const {chartInstanceRef} = useContext(ChartContext);
 
 	function handleDelete() {
@@ -34,6 +38,16 @@ export default function AccountMenuContent({closeMenu, data, parentData}) {
 				}
 			},
 		});
+	}
+
+	function handleEdit() {
+		Liferay.fire(`${namespace}${INFO_PANEL_OPEN_EVENT}`, {
+			data,
+			mode: INFO_PANEL_MODE_MAP.edit,
+			type: MODEL_TYPE_MAP.account,
+		});
+
+		closeMenu();
 	}
 
 	function handleRemove() {
@@ -59,7 +73,25 @@ export default function AccountMenuContent({closeMenu, data, parentData}) {
 		});
 	}
 
+	function handleView() {
+		Liferay.fire(`${namespace}${INFO_PANEL_OPEN_EVENT}`, {
+			data,
+			mode: INFO_PANEL_MODE_MAP.view,
+			type: MODEL_TYPE_MAP.account,
+		});
+
+		closeMenu();
+	}
+
 	const actions = [];
+
+	if (Liferay.FeatureFlags['COMMERCE-12192']) {
+		actions.push(
+			<ClayDropDown.Item key="view" onClick={handleView}>
+				{Liferay.Language.get('view')}
+			</ClayDropDown.Item>
+		);
+	}
 
 	if (hasPermission(data, ACTION_KEYS.account.REMOVE)) {
 		actions.push(
@@ -73,6 +105,17 @@ export default function AccountMenuContent({closeMenu, data, parentData}) {
 		actions.push(
 			<ClayDropDown.Item key="delete" onClick={handleDelete}>
 				{Liferay.Language.get('delete')}
+			</ClayDropDown.Item>
+		);
+	}
+
+	if (
+		Liferay.FeatureFlags['COMMERCE-12192'] &&
+		hasPermission(data, ACTION_KEYS.account.UPDATE)
+	) {
+		actions.push(
+			<ClayDropDown.Item key="edit" onClick={handleEdit}>
+				{Liferay.Language.get('edit')}
 			</ClayDropDown.Item>
 		);
 	}

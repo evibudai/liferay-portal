@@ -1,16 +1,9 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
+
+import {escapeHTML} from 'frontend-js-web';
 
 function attachListener(element, eventType, callback) {
 	element?.addEventListener(eventType, callback);
@@ -22,7 +15,12 @@ function attachListener(element, eventType, callback) {
 	};
 }
 
-export default function EditKBArticle({kbArticle, namespace, publishAction}) {
+export default function EditKBArticle({
+	kbArticle,
+	namespace,
+	publishAction,
+	schedulerEnabled,
+}) {
 	const contextualSidebarButton = document.getElementById(
 		`${namespace}contextualSidebarButton`
 	);
@@ -54,7 +52,69 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 		event.currentTarget.dataset.customUrl = urlTitleInput.value !== '';
 	};
 
-	const publishButton = document.getElementById(`${namespace}publishButton`);
+	const openScheduleModal = () => {
+		Liferay.componentReady(`${namespace}ScheduleKBArticleComponent`).then(
+			(component) => {
+				component.open((displayDate) => {
+					const displayDateInput = document.getElementById(
+						`${namespace}displayDate`
+					);
+					displayDateInput.value = displayDate;
+
+					publishButtonOnClick();
+				});
+			}
+		);
+	};
+
+	const form = document.getElementById(`${namespace}fm`);
+
+	let publishButton;
+	let scheduleItem;
+	let scheduledButton;
+
+	if (schedulerEnabled) {
+		publishButton = document.getElementById(`${namespace}publishItem`);
+
+		scheduledButton = document.getElementById(
+			`${namespace}scheduledButton`
+		);
+
+		scheduleItem = document.getElementById(`${namespace}scheduleItem`);
+	}
+	else {
+		publishButton = document.getElementById(`${namespace}publishButton`);
+	}
+
+	const updateMultipleKBArticleAttachments = function () {
+		const selectedFileNameContainer = document.getElementById(
+			`${namespace}selectedFileNameContainer`
+		);
+		const buffer = [];
+		const filesChecked = form.querySelectorAll(
+			`input[name=${namespace}selectUploadedFile]:checked`
+		);
+
+		for (let i = 0; i < filesChecked.length; i++) {
+			buffer.push(
+				`<input id="${namespace}selectedFileName${i}"
+					name="${namespace}selectedFileName"
+					type="hidden"
+					value="${escapeHTML(filesChecked[i].value)}"
+				/>`
+			);
+		}
+
+		selectedFileNameContainer.innerHTML = buffer.join('');
+	};
+
+	const beforeSubmit = function () {
+		document.getElementById(`${namespace}content`).value = window[
+			`${namespace}contentEditor`
+		].getHTML();
+
+		updateMultipleKBArticleAttachments();
+	};
 
 	const publishButtonOnClick = () => {
 		const workflowActionInput = document.getElementById(
@@ -72,30 +132,11 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 				urlTitleInput.value = '';
 			}
 		}
-	};
 
-	const form = document.getElementById(`${namespace}fm`);
-
-	const updateMultipleKBArticleAttachments = function () {
-		const selectedFileNameContainer = document.getElementById(
-			`${namespace}selectedFileNameContainer`
-		);
-		const buffer = [];
-		const filesChecked = form.querySelectorAll(
-			`input[name=${namespace}selectUploadedFile]:checked`
-		);
-
-		for (let i = 0; i < filesChecked.length; i++) {
-			buffer.push(
-				`<input id="${namespace}selectedFileName${i}"
-					name="${namespace}selectedFileName"
-					type="hidden"
-					value="${filesChecked[i].value}"
-				/>`
-			);
+		if (schedulerEnabled) {
+			beforeSubmit();
+			submitForm(form);
 		}
-
-		selectedFileNameContainer.innerHTML = buffer.join('');
 	};
 
 	const eventHandlers = [
@@ -106,13 +147,18 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 			contextualSidebarButtonOnClick
 		),
 		attachListener(form, 'submit', () => {
-			document.getElementById(`${namespace}content`).value = window[
-				`${namespace}contentEditor`
-			].getHTML();
-
-			updateMultipleKBArticleAttachments();
+			beforeSubmit();
 		}),
 	];
+
+	if (schedulerEnabled) {
+		eventHandlers.push(
+			attachListener(scheduleItem, 'click', openScheduleModal)
+		);
+		eventHandlers.push(
+			attachListener(scheduledButton, 'click', openScheduleModal)
+		);
+	}
 
 	if (!kbArticle) {
 		eventHandlers.push(

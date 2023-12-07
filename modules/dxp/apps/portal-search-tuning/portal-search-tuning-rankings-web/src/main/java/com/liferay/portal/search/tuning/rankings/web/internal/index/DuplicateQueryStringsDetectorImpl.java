@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.tuning.rankings.web.internal.index;
@@ -29,14 +20,12 @@ import com.liferay.portal.search.query.TermsQuery;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexNameBuilder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -76,17 +65,14 @@ public class DuplicateQueryStringsDetectorImpl
 
 		SearchHits searchHits = searchSearchResponse.getSearchHits();
 
-		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+		List<String> duplicateQueryStrings = new ArrayList<>();
 
-		Stream<SearchHit> stream = searchHitsList.stream();
+		for (SearchHit searchHit : searchHits.getSearchHits()) {
+			duplicateQueryStrings.addAll(
+				_getDuplicateQueryStrings(searchHit, queryStrings));
+		}
 
-		return stream.map(
-			searchHit -> _getDuplicateQueryStrings(searchHit, queryStrings)
-		).flatMap(
-			Collection::stream
-		).collect(
-			Collectors.toList()
-		);
+		return duplicateQueryStrings;
 	}
 
 	@Reference
@@ -99,6 +85,11 @@ public class DuplicateQueryStringsDetectorImpl
 	protected SearchEngineAdapter searchEngineAdapter;
 
 	protected static class CriteriaImpl implements Criteria {
+
+		@Override
+		public String getGroupExternalReferenceCode() {
+			return _groupExternalReferenceCode;
+		}
 
 		@Override
 		public String getIndex() {
@@ -116,6 +107,11 @@ public class DuplicateQueryStringsDetectorImpl
 		}
 
 		@Override
+		public String getSXPBlueprintExternalReferenceCode() {
+			return _sxpBlueprintExternalReferenceCode;
+		}
+
+		@Override
 		public String getUnlessRankingDocumentId() {
 			return _unlessRankingDocumentId;
 		}
@@ -125,9 +121,13 @@ public class DuplicateQueryStringsDetectorImpl
 				return;
 			}
 
+			_groupExternalReferenceCode =
+				criteriaImpl._groupExternalReferenceCode;
 			_index = criteriaImpl._index;
 			_queryStrings = new HashSet<>(criteriaImpl._queryStrings);
 			_rankingIndexName = criteriaImpl._rankingIndexName;
+			_sxpBlueprintExternalReferenceCode =
+				criteriaImpl._sxpBlueprintExternalReferenceCode;
 			_unlessRankingDocumentId = criteriaImpl._unlessRankingDocumentId;
 		}
 
@@ -136,6 +136,16 @@ public class DuplicateQueryStringsDetectorImpl
 			@Override
 			public Criteria build() {
 				return new CriteriaImpl(_criteriaImpl);
+			}
+
+			@Override
+			public BuilderImpl groupExternalReferenceCode(
+				String groupExternalReferenceCode) {
+
+				_criteriaImpl._groupExternalReferenceCode =
+					groupExternalReferenceCode;
+
+				return this;
 			}
 
 			@Override
@@ -165,6 +175,16 @@ public class DuplicateQueryStringsDetectorImpl
 			}
 
 			@Override
+			public BuilderImpl sxpBlueprintExternalReferenceCode(
+				String sxpBlueprintExternalReferenceCode) {
+
+				_criteriaImpl._sxpBlueprintExternalReferenceCode =
+					sxpBlueprintExternalReferenceCode;
+
+				return this;
+			}
+
+			@Override
 			public BuilderImpl unlessRankingDocumentId(
 				String unlessRankingDocumentId) {
 
@@ -178,21 +198,21 @@ public class DuplicateQueryStringsDetectorImpl
 
 		}
 
+		private String _groupExternalReferenceCode;
 		private String _index;
 		private Collection<String> _queryStrings = new HashSet<>();
 		private RankingIndexName _rankingIndexName;
+		private String _sxpBlueprintExternalReferenceCode;
 		private String _unlessRankingDocumentId;
 
 	}
 
 	private void _addQueryClauses(Consumer<Query> consumer, Query... queries) {
-		Stream.of(
-			queries
-		).filter(
-			Objects::nonNull
-		).forEach(
-			consumer
-		);
+		for (Query query : queries) {
+			if (query != null) {
+				consumer.accept(query);
+			}
+		}
 	}
 
 	private BooleanQuery _getCriteriaQuery(Criteria criteria) {
@@ -200,7 +220,9 @@ public class DuplicateQueryStringsDetectorImpl
 
 		_addQueryClauses(
 			booleanQuery::addFilterQueryClauses,
-			_getQueryStringsQuery(criteria), _getIndexQuery(criteria));
+			_getGroupExternalReferenceCodeQuery(criteria),
+			_getIndexQuery(criteria), _getQueryStringsQuery(criteria),
+			_getSXPBlueprintExternalReferenceCodeQuery(criteria));
 		_addQueryClauses(
 			booleanQuery::addMustNotQueryClauses,
 			queries.term(RankingFields.INACTIVE, true),
@@ -222,6 +244,12 @@ public class DuplicateQueryStringsDetectorImpl
 		return documentQueryStrings;
 	}
 
+	private Query _getGroupExternalReferenceCodeQuery(Criteria criteria) {
+		return queries.term(
+			RankingFields.GROUP_EXTERNAL_REFERENCE_CODE,
+			criteria.getGroupExternalReferenceCode());
+	}
+
 	private Query _getIndexQuery(Criteria criteria) {
 		if (Validator.isBlank(criteria.getIndex())) {
 			return null;
@@ -239,6 +267,14 @@ public class DuplicateQueryStringsDetectorImpl
 		termsQuery.addValues(queryStrings.toArray());
 
 		return termsQuery;
+	}
+
+	private Query _getSXPBlueprintExternalReferenceCodeQuery(
+		Criteria criteria) {
+
+		return queries.term(
+			RankingFields.SXP_BLUEPRINT_EXTERNAL_REFERENCE_CODE,
+			criteria.getSXPBlueprintExternalReferenceCode());
 	}
 
 	private IdsQuery _getUnlessRankingIdQuery(Criteria criteria) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.internal.configuration;
@@ -18,6 +9,7 @@ import com.liferay.oauth2.provider.configuration.OAuth2ProviderApplicationUserAg
 import com.liferay.oauth2.provider.constants.ClientProfile;
 import com.liferay.oauth2.provider.constants.GrantType;
 import com.liferay.oauth2.provider.model.OAuth2Application;
+import com.liferay.oauth2.provider.redirect.OAuth2RedirectURIInterpolator;
 import com.liferay.oauth2.provider.util.OAuth2SecureRandomGenerator;
 import com.liferay.osgi.util.configuration.ConfigurationFactoryUtil;
 import com.liferay.petra.string.StringBundler;
@@ -30,6 +22,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.Arrays;
@@ -58,64 +51,70 @@ public class OAuth2ProviderApplicationUserAgentConfigurationFactory
 			_log.debug("Activate " + properties);
 		}
 
-		long companyId = ConfigurationFactoryUtil.getCompanyId(
-			companyLocalService, properties);
-		String externalReferenceCode =
-			ConfigurationFactoryUtil.getExternalReferenceCode(properties);
+		ConfigurationFactoryUtil.executeAsCompany(
+			companyLocalService, properties,
+			companyId -> {
+				String externalReferenceCode =
+					ConfigurationFactoryUtil.getExternalReferenceCode(
+						properties);
 
-		OAuth2ProviderApplicationUserAgentConfiguration
-			oAuth2ProviderApplicationUserAgentConfiguration =
-				ConfigurableUtil.createConfigurable(
-					OAuth2ProviderApplicationUserAgentConfiguration.class,
+				OAuth2ProviderApplicationUserAgentConfiguration
+					oAuth2ProviderApplicationUserAgentConfiguration =
+						ConfigurableUtil.createConfigurable(
+							OAuth2ProviderApplicationUserAgentConfiguration.
+								class,
+							properties);
+
+				Company company = companyLocalService.getCompanyById(companyId);
+
+				List<String> redirectURIsList = Collections.singletonList(
+					StringBundler.concat(
+						OAuth2RedirectURIInterpolator.TOKEN_PROTOCOL,
+						Http.PROTOCOL_DELIMITER, company.getVirtualHostname(),
+						OAuth2RedirectURIInterpolator.TOKEN_PORT_WITH_COLON,
+						"/o/oauth2/redirect"));
+
+				List<String> scopeAliasesList = ListUtil.fromArray(
+					oAuth2ProviderApplicationUserAgentConfiguration.scopes());
+
+				oAuth2Application = _addOrUpdateOAuth2Application(
+					companyId, externalReferenceCode,
+					oAuth2ProviderApplicationUserAgentConfiguration,
+					redirectURIsList, scopeAliasesList);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("OAuth 2 application " + oAuth2Application);
+				}
+
+				modifyConfigMap(
+					company,
+					HashMapBuilder.put(
+						externalReferenceCode + ".oauth2.authorization.uri",
+						"/o/oauth2/authorize"
+					).put(
+						externalReferenceCode + ".oauth2.introspection.uri",
+						"/o/oauth2/introspect"
+					).put(
+						externalReferenceCode + ".oauth2.jwks.uri",
+						"/o/oauth2/jwks"
+					).put(
+						externalReferenceCode + ".oauth2.redirect.uris",
+						"/o/oauth2/redirect"
+					).put(
+						externalReferenceCode + ".oauth2.token.uri",
+						"/o/oauth2/token"
+					).put(
+						externalReferenceCode + ".oauth2.user.agent.audience",
+						oAuth2Application.getHomePageURL()
+					).put(
+						externalReferenceCode + ".oauth2.user.agent.client.id",
+						oAuth2Application.getClientId()
+					).put(
+						externalReferenceCode + ".oauth2.user.agent.scopes",
+						StringUtil.merge(scopeAliasesList, StringPool.NEW_LINE)
+					).build(),
 					properties);
-
-		Company company = companyLocalService.getCompanyById(companyId);
-
-		String serviceAddress = getServiceAddress(company);
-
-		List<String> redirectURIsList = Collections.singletonList(
-			serviceAddress.concat("/o/oauth2/redirect"));
-
-		List<String> scopeAliasesList = ListUtil.fromArray(
-			oAuth2ProviderApplicationUserAgentConfiguration.scopes());
-
-		oAuth2Application = _addOrUpdateOAuth2Application(
-			companyId, externalReferenceCode,
-			oAuth2ProviderApplicationUserAgentConfiguration, redirectURIsList,
-			scopeAliasesList);
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("OAuth 2 application " + oAuth2Application);
-		}
-
-		modifyConfigMap(
-			company,
-			HashMapBuilder.put(
-				externalReferenceCode + ".oauth2.authorization.uri",
-				serviceAddress.concat("/o/oauth2/authorize")
-			).put(
-				externalReferenceCode + ".oauth2.introspection.uri",
-				serviceAddress.concat("/o/oauth2/introspect")
-			).put(
-				externalReferenceCode + ".oauth2.jwks.uri",
-				serviceAddress.concat("/o/oauth2/jwks")
-			).put(
-				externalReferenceCode + ".oauth2.redirect.uris",
-				StringUtil.merge(redirectURIsList, StringPool.NEW_LINE)
-			).put(
-				externalReferenceCode + ".oauth2.token.uri",
-				serviceAddress.concat("/o/oauth2/token")
-			).put(
-				externalReferenceCode + ".oauth2.user.agent.audience",
-				oAuth2Application.getHomePageURL()
-			).put(
-				externalReferenceCode + ".oauth2.user.agent.client.id",
-				oAuth2Application.getClientId()
-			).put(
-				externalReferenceCode + ".oauth2.user.agent.scopes",
-				StringUtil.merge(scopeAliasesList, StringPool.NEW_LINE)
-			).build(),
-			properties);
+			});
 	}
 
 	@Override
@@ -130,20 +129,35 @@ public class OAuth2ProviderApplicationUserAgentConfigurationFactory
 			List<String> redirectURIsList, List<String> scopeAliasesList)
 		throws Exception {
 
-		User user = userLocalService.getDefaultUser(companyId);
+		User user = userLocalService.getGuestUser(companyId);
+
+		String clientId = OAuth2SecureRandomGenerator.generateClientId();
 
 		OAuth2Application oAuth2Application =
+			oAuth2ApplicationLocalService.
+				fetchOAuth2ApplicationByExternalReferenceCode(
+					externalReferenceCode, companyId);
+
+		if (oAuth2Application != null) {
+			clientId = oAuth2Application.getClientId();
+		}
+
+		String homePageURL = getHomePageURL(
+			oAuth2ProviderApplicationUserAgentConfiguration.homePageURL(),
+			oAuth2ProviderApplicationUserAgentConfiguration.baseURL());
+
+		oAuth2Application =
 			oAuth2ApplicationLocalService.addOrUpdateOAuth2Application(
 				externalReferenceCode, user.getUserId(), user.getScreenName(),
 				ListUtil.fromArray(
 					GrantType.AUTHORIZATION_CODE_PKCE, GrantType.JWT_BEARER),
-				"none", user.getUserId(),
-				OAuth2SecureRandomGenerator.generateClientId(),
+				"none", user.getUserId(), clientId,
 				ClientProfile.USER_AGENT_APPLICATION.id(), null,
 				oAuth2ProviderApplicationUserAgentConfiguration.description(),
-				Arrays.asList("token.introspection"),
-				oAuth2ProviderApplicationUserAgentConfiguration.homePageURL(),
-				0, null, externalReferenceCode,
+				Arrays.asList("token.introspection"), homePageURL, 0, null,
+				getName(
+					oAuth2ProviderApplicationUserAgentConfiguration.name(),
+					externalReferenceCode),
 				oAuth2ProviderApplicationUserAgentConfiguration.
 					privacyPolicyURL(),
 				redirectURIsList, false, true, null, new ServiceContext());
@@ -161,11 +175,7 @@ public class OAuth2ProviderApplicationUserAgentConfigurationFactory
 					" has client ID ", oAuth2Application.getClientId()));
 		}
 
-		Class<?> clazz = getClass();
-
-		return oAuth2ApplicationLocalService.updateIcon(
-			oAuth2Application.getOAuth2ApplicationId(),
-			clazz.getResourceAsStream("dependencies/logo.png"));
+		return oAuth2Application;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

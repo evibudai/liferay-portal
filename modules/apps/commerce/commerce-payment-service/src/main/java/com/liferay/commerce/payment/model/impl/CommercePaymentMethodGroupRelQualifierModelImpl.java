@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.model.impl;
@@ -121,20 +112,20 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
+	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long CLASSPK_COLUMN_BITMASK = 2L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMMERCEPAYMENTMETHODGROUPRELID_COLUMN_BITMASK =
-		1L;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
-	 */
-	@Deprecated
-	public static final long CLASSNAMEID_COLUMN_BITMASK = 2L;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
-	 */
-	@Deprecated
-	public static final long CLASSPK_COLUMN_BITMASK = 4L;
+		4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
@@ -238,111 +229,131 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 	public Map<String, Function<CommercePaymentMethodGroupRelQualifier, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map
 		<String, BiConsumer<CommercePaymentMethodGroupRelQualifier, Object>>
 			getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map
-		<String, Function<CommercePaymentMethodGroupRelQualifier, Object>>
-			_attributeGetterFunctions;
-	private static final Map
-		<String, BiConsumer<CommercePaymentMethodGroupRelQualifier, Object>>
-			_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CommercePaymentMethodGroupRelQualifier, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap
-					<String,
-					 Function
-						 <CommercePaymentMethodGroupRelQualifier, Object>>();
-		Map<String, BiConsumer<CommercePaymentMethodGroupRelQualifier, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap
-					<String,
-					 BiConsumer<CommercePaymentMethodGroupRelQualifier, ?>>();
+		private static final Map
+			<String, Function<CommercePaymentMethodGroupRelQualifier, Object>>
+				_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion",
-			CommercePaymentMethodGroupRelQualifier::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
-				CommercePaymentMethodGroupRelQualifier::setMvccVersion);
-		attributeGetterFunctions.put(
-			"commercePaymentMethodGroupRelQualifierId",
-			CommercePaymentMethodGroupRelQualifier::
-				getCommercePaymentMethodGroupRelQualifierId);
-		attributeSetterBiConsumers.put(
-			"commercePaymentMethodGroupRelQualifierId",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+		static {
+			Map
+				<String,
+				 Function<CommercePaymentMethodGroupRelQualifier, Object>>
+					attributeGetterFunctions =
+						new LinkedHashMap
+							<String,
+							 Function
+								 <CommercePaymentMethodGroupRelQualifier,
+								  Object>>();
+
+			attributeGetterFunctions.put(
+				"mvccVersion",
+				CommercePaymentMethodGroupRelQualifier::getMvccVersion);
+			attributeGetterFunctions.put(
+				"commercePaymentMethodGroupRelQualifierId",
 				CommercePaymentMethodGroupRelQualifier::
-					setCommercePaymentMethodGroupRelQualifierId);
-		attributeGetterFunctions.put(
-			"companyId", CommercePaymentMethodGroupRelQualifier::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
-				CommercePaymentMethodGroupRelQualifier::setCompanyId);
-		attributeGetterFunctions.put(
-			"userId", CommercePaymentMethodGroupRelQualifier::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
-				CommercePaymentMethodGroupRelQualifier::setUserId);
-		attributeGetterFunctions.put(
-			"userName", CommercePaymentMethodGroupRelQualifier::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, String>)
-				CommercePaymentMethodGroupRelQualifier::setUserName);
-		attributeGetterFunctions.put(
-			"createDate",
-			CommercePaymentMethodGroupRelQualifier::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Date>)
-				CommercePaymentMethodGroupRelQualifier::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate",
-			CommercePaymentMethodGroupRelQualifier::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Date>)
-				CommercePaymentMethodGroupRelQualifier::setModifiedDate);
-		attributeGetterFunctions.put(
-			"classNameId",
-			CommercePaymentMethodGroupRelQualifier::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
-				CommercePaymentMethodGroupRelQualifier::setClassNameId);
-		attributeGetterFunctions.put(
-			"classPK", CommercePaymentMethodGroupRelQualifier::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
-				CommercePaymentMethodGroupRelQualifier::setClassPK);
-		attributeGetterFunctions.put(
-			"CommercePaymentMethodGroupRelId",
-			CommercePaymentMethodGroupRelQualifier::
-				getCommercePaymentMethodGroupRelId);
-		attributeSetterBiConsumers.put(
-			"CommercePaymentMethodGroupRelId",
-			(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					getCommercePaymentMethodGroupRelQualifierId);
+			attributeGetterFunctions.put(
+				"companyId",
+				CommercePaymentMethodGroupRelQualifier::getCompanyId);
+			attributeGetterFunctions.put(
+				"userId", CommercePaymentMethodGroupRelQualifier::getUserId);
+			attributeGetterFunctions.put(
+				"userName",
+				CommercePaymentMethodGroupRelQualifier::getUserName);
+			attributeGetterFunctions.put(
+				"createDate",
+				CommercePaymentMethodGroupRelQualifier::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate",
+				CommercePaymentMethodGroupRelQualifier::getModifiedDate);
+			attributeGetterFunctions.put(
+				"classNameId",
+				CommercePaymentMethodGroupRelQualifier::getClassNameId);
+			attributeGetterFunctions.put(
+				"classPK", CommercePaymentMethodGroupRelQualifier::getClassPK);
+			attributeGetterFunctions.put(
+				"commercePaymentMethodGroupRelId",
 				CommercePaymentMethodGroupRelQualifier::
-					setCommercePaymentMethodGroupRelId);
+					getCommercePaymentMethodGroupRelId);
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map
+			<String, BiConsumer<CommercePaymentMethodGroupRelQualifier, Object>>
+				_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CommercePaymentMethodGroupRelQualifier, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String,
+						 BiConsumer
+							 <CommercePaymentMethodGroupRelQualifier, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					CommercePaymentMethodGroupRelQualifier::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"commercePaymentMethodGroupRelQualifierId",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					CommercePaymentMethodGroupRelQualifier::
+						setCommercePaymentMethodGroupRelQualifierId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					CommercePaymentMethodGroupRelQualifier::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					CommercePaymentMethodGroupRelQualifier::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, String>)
+					CommercePaymentMethodGroupRelQualifier::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Date>)
+					CommercePaymentMethodGroupRelQualifier::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Date>)
+					CommercePaymentMethodGroupRelQualifier::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					CommercePaymentMethodGroupRelQualifier::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					CommercePaymentMethodGroupRelQualifier::setClassPK);
+			attributeSetterBiConsumers.put(
+				"commercePaymentMethodGroupRelId",
+				(BiConsumer<CommercePaymentMethodGroupRelQualifier, Long>)
+					CommercePaymentMethodGroupRelQualifier::
+						setCommercePaymentMethodGroupRelId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -552,18 +563,18 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 	@JSON
 	@Override
 	public long getCommercePaymentMethodGroupRelId() {
-		return _CommercePaymentMethodGroupRelId;
+		return _commercePaymentMethodGroupRelId;
 	}
 
 	@Override
 	public void setCommercePaymentMethodGroupRelId(
-		long CommercePaymentMethodGroupRelId) {
+		long commercePaymentMethodGroupRelId) {
 
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_CommercePaymentMethodGroupRelId = CommercePaymentMethodGroupRelId;
+		_commercePaymentMethodGroupRelId = commercePaymentMethodGroupRelId;
 	}
 
 	/**
@@ -826,7 +837,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 		commercePaymentMethodGroupRelQualifierCacheModel.classPK = getClassPK();
 
 		commercePaymentMethodGroupRelQualifierCacheModel.
-			CommercePaymentMethodGroupRelId =
+			commercePaymentMethodGroupRelId =
 				getCommercePaymentMethodGroupRelId();
 
 		return commercePaymentMethodGroupRelQualifierCacheModel;
@@ -905,13 +916,14 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 	private boolean _setModifiedDate;
 	private long _classNameId;
 	private long _classPK;
-	private long _CommercePaymentMethodGroupRelId;
+	private long _commercePaymentMethodGroupRelId;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CommercePaymentMethodGroupRelQualifier, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -948,7 +960,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 		_columnOriginalValues.put("classNameId", _classNameId);
 		_columnOriginalValues.put("classPK", _classPK);
 		_columnOriginalValues.put(
-			"CPaymentMethodGroupRelId", _CommercePaymentMethodGroupRelId);
+			"CPaymentMethodGroupRelId", _commercePaymentMethodGroupRelId);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -960,7 +972,7 @@ public class CommercePaymentMethodGroupRelQualifierModelImpl
 			"CPMethodGroupRelQualifierId",
 			"commercePaymentMethodGroupRelQualifierId");
 		attributeNames.put(
-			"CPaymentMethodGroupRelId", "CommercePaymentMethodGroupRelId");
+			"CPaymentMethodGroupRelId", "commercePaymentMethodGroupRelId");
 
 		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}

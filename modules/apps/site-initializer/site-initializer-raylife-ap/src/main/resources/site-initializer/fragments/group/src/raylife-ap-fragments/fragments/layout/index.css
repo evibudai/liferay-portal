@@ -12,6 +12,13 @@
 	padding-left: 12px;
 }
 
+.layout-container .ray-sticky-top,
+.ray-sidebar-container.ray-sticky-top {
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+}
+
 .ray-sidebar-container .footer-bar .avatar-container,
 .ray-sidebar-container .footer-bar .notification-container,
 .ray-sidebar-container .top-bar {
@@ -36,6 +43,7 @@
 .ray-sidebar-container .footer-bar .avatar-container,
 .ray-sidebar-container .middle-bar .menu-item-name {
 	overflow: hidden;
+	padding-left: 5px;
 }
 
 .ray-sidebar-container .middle-bar div {
@@ -113,8 +121,8 @@
 }
 
 .ray-sidebar-container .footer-bar .notification-container {
-	height: 24px;
-	width: 24px;
+	height: 50px;
+	width: 50px;
 }
 
 .ray-sidebar-container .footer-bar .indicator-icon {
@@ -132,12 +140,29 @@
 	top: 0;
 }
 
+.layout-container .icon-tools {
+	margin-right: 20px;
+	margin-top: 3px !important;
+}
+
+.layout-container .notification-span {
+	margin-left: 20px;
+}
+
+.layout-container .notifications-sidebar-header {
+	box-shadow: 0 5px 15px rgb(77 133 255 / 12%);
+	padding-bottom: 18px;
+	padding-top: 18px;
+}
+
 .layout-container .mobile-header-container .search-icon,
 .layout-container .mobile-header-container .menu-icon,
 .page-header-container .header-content .search-icon {
 	cursor: pointer;
 }
 
+.layout-container #Account .header-content .search-icon,
+.layout-container #Notifications .header-content .search-icon,
 .layout-container #Details .header-content .search-icon {
 	display: none !important;
 }
@@ -189,4 +214,58 @@
 
 .raylife-agent-portal-content .container-fluid {
 	padding: 0;
+}
+
+.layout-container .notification-open-side-bar {
+	opacity: 1 !important;
+	width: 450px !important;
+}
+
+.layout-container .notification-panel {
+	opacity: 0;
+	overflow: hidden;
+	top: 0;
+	transition: all 0.15s ease-in;
+	width: 0;
+}
+
+.layout-container .notification-sidebar {
+	height: 100%;
+	opacity: 0;
+	overflow-x: none;
+	overflow-y: auto;
+	width: 0px;
+}
+
+.panel-notifications-count {
+	color: #fff;
+	font-size: 0.75rem;
+	font-weight: 600;
+	height: 19px;
+	margin-bottom: -1px;
+}
+
+.badge-danger {
+	background-color: #ec0d6b;
+	color: #fff;
+}
+
+.badge {
+	display: inline-flex;
+	margin-left: 15px;
+}
+
+.layout-container .icon-tools {
+	margin-right: 20px;
+	margin-top: 3px !important;
+}
+
+.layout-container .notification-span {
+	margin-left: 20px;
+}
+
+.layout-container .notifications-sidebar-header {
+	box-shadow: 0 5px 15px rgb(77 133 255 / 12%);
+	padding-bottom: 18px;
+	padding-top: 18px;
 }

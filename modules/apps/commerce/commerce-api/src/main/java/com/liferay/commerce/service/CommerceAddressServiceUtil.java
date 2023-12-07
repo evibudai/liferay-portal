@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service;
@@ -114,20 +105,39 @@ public class CommerceAddressServiceUtil {
 	}
 
 	public static List<CommerceAddress> getBillingCommerceAddresses(
-			long companyId, String className, long classPK, String keywords,
-			int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			long channelId, String className, long classPK, int start, int end)
 		throws PortalException {
 
 		return getService().getBillingCommerceAddresses(
-			companyId, className, classPK, keywords, start, end, sort);
+			channelId, className, classPK, start, end);
 	}
 
-	public static int getBillingCommerceAddressesCount(
-			long companyId, String className, long classPK, String keywords)
+	public static List<CommerceAddress> getBillingCommerceAddresses(
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords, int start, int end,
+			com.liferay.portal.kernel.search.Sort sort)
+		throws PortalException {
+
+		return getService().getBillingCommerceAddresses(
+			companyId, className, classPK, commerceChannelId, keywords, start,
+			end, sort);
+	}
+
+	public static List<CommerceAddress> getBillingCommerceAddressesCount(
+			long channelId, String className, long classPK, int start, int end)
 		throws PortalException {
 
 		return getService().getBillingCommerceAddressesCount(
-			companyId, className, classPK, keywords);
+			channelId, className, classPK, start, end);
+	}
+
+	public static int getBillingCommerceAddressesCount(
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords)
+		throws PortalException {
+
+		return getService().getBillingCommerceAddressesCount(
+			companyId, className, classPK, commerceChannelId, keywords);
 	}
 
 	public static CommerceAddress getCommerceAddress(long commerceAddressId)
@@ -230,20 +240,39 @@ public class CommerceAddressServiceUtil {
 	}
 
 	public static List<CommerceAddress> getShippingCommerceAddresses(
-			long companyId, String className, long classPK, String keywords,
-			int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			long channelId, String className, long classPK, int start, int end)
 		throws PortalException {
 
 		return getService().getShippingCommerceAddresses(
-			companyId, className, classPK, keywords, start, end, sort);
+			channelId, className, classPK, start, end);
 	}
 
-	public static int getShippingCommerceAddressesCount(
-			long companyId, String className, long classPK, String keywords)
+	public static List<CommerceAddress> getShippingCommerceAddresses(
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords, int start, int end,
+			com.liferay.portal.kernel.search.Sort sort)
+		throws PortalException {
+
+		return getService().getShippingCommerceAddresses(
+			companyId, className, classPK, commerceChannelId, keywords, start,
+			end, sort);
+	}
+
+	public static List<CommerceAddress> getShippingCommerceAddressesCount(
+			long channelId, String className, long classPK, int start, int end)
 		throws PortalException {
 
 		return getService().getShippingCommerceAddressesCount(
-			companyId, className, classPK, keywords);
+			channelId, className, classPK, start, end);
+	}
+
+	public static int getShippingCommerceAddressesCount(
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords)
+		throws PortalException {
+
+		return getService().getShippingCommerceAddressesCount(
+			companyId, className, classPK, commerceChannelId, keywords);
 	}
 
 	/**
@@ -304,6 +333,10 @@ public class CommerceAddressServiceUtil {
 
 	public static CommerceAddressService getService() {
 		return _service;
+	}
+
+	public static void setService(CommerceAddressService service) {
+		_service = service;
 	}
 
 	private static volatile CommerceAddressService _service;

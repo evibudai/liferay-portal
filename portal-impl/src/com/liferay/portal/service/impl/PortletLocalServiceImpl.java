@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -54,7 +45,6 @@ import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
-import com.liferay.portal.kernel.portlet.PortletContextFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletInstanceFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletLayoutListener;
@@ -64,8 +54,7 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletQNameUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEntryImpl;
 import com.liferay.portal.kernel.scheduler.TimeUnit;
-import com.liferay.portal.kernel.scheduler.Trigger;
-import com.liferay.portal.kernel.scheduler.TriggerFactoryUtil;
+import com.liferay.portal.kernel.scheduler.TriggerConfiguration;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -104,6 +93,7 @@ import com.liferay.portal.servlet.ComboServlet;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebAppPool;
 import com.liferay.portlet.PortletBagFactory;
+import com.liferay.portlet.PortletContextFactoryUtil;
 import com.liferay.portlet.UndeployedPortlet;
 import com.liferay.portlet.extra.config.ExtraPortletAppConfig;
 import com.liferay.portlet.extra.config.ExtraPortletAppConfigRegistry;
@@ -292,6 +282,7 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 		}
 	}
 
+	@CTAware
 	@Override
 	public void deletePortlets(long companyId, String[] portletIds, long plid)
 		throws PortalException {
@@ -559,11 +550,10 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 
 			portlet = new PortletImpl(CompanyConstants.SYSTEM, portletId);
 
-			portlet.setPortletApp(getPortletApp(StringPool.BLANK));
-
-			portlet.setPortletName(portletId);
 			portlet.setDisplayName(portletId);
+			portlet.setPortletApp(getPortletApp(StringPool.BLANK));
 			portlet.setPortletClass(UndeployedPortlet.class.getName());
+			portlet.setPortletName(portletId);
 
 			Set<String> mimeTypePortletModes = new HashSet<>();
 
@@ -969,6 +959,10 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 			portlet.setCompanyId(companyId);
 
 			portletsMap.put(portlet.getPortletId(), portlet);
+		}
+
+		if (companyId == CompanyConstants.SYSTEM) {
+			return portletsMap;
 		}
 
 		List<Portlet> portlets = portletPersistence.findByCompanyId(companyId);
@@ -1436,12 +1430,12 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 				schedulerEntryElement.elementText(
 					"scheduler-event-listener-class"));
 
-			Trigger trigger = null;
-
 			Element triggerElement = schedulerEntryElement.element("trigger");
 
 			Element cronElement = triggerElement.element("cron");
 			Element simpleElement = triggerElement.element("simple");
+
+			TriggerConfiguration triggerConfiguration = null;
 
 			if (cronElement != null) {
 				Element propertyKeyElement = cronElement.element(
@@ -1458,8 +1452,9 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 						"cron-trigger-value");
 				}
 
-				trigger = TriggerFactoryUtil.createTrigger(
-					eventListenerClass, eventListenerClass, cronException);
+				triggerConfiguration =
+					TriggerConfiguration.createTriggerConfiguration(
+						cronException);
 			}
 			else if (simpleElement != null) {
 				Element propertyKeyElement = simpleElement.element(
@@ -1483,14 +1478,14 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 						simpleElement.elementText("time-unit"),
 						TimeUnit.SECOND.getValue()));
 
-				trigger = TriggerFactoryUtil.createTrigger(
-					eventListenerClass, eventListenerClass,
-					GetterUtil.getIntegerStrict(intervalString),
-					TimeUnit.valueOf(timeUnitString));
+				triggerConfiguration =
+					TriggerConfiguration.createTriggerConfiguration(
+						GetterUtil.getIntegerStrict(intervalString),
+						TimeUnit.valueOf(timeUnitString));
 			}
 
 			SchedulerEntryImpl schedulerEntryImpl = new SchedulerEntryImpl(
-				eventListenerClass, trigger, description);
+				eventListenerClass, triggerConfiguration, description);
 
 			portletModel.addSchedulerEntry(schedulerEntryImpl);
 		}
@@ -2038,16 +2033,15 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 			portletModel = new PortletImpl(CompanyConstants.SYSTEM, portletId);
 		}
 
-		portletModel.setPluginPackage(pluginPackage);
-		portletModel.setPortletApp(portletApp);
-
-		portletModel.setPortletName(portletName);
 		portletModel.setDisplayName(
 			GetterUtil.getString(
 				portletElement.elementText("display-name"),
 				portletModel.getDisplayName()));
+		portletModel.setPluginPackage(pluginPackage);
+		portletModel.setPortletApp(portletApp);
 		portletModel.setPortletClass(
 			GetterUtil.getString(portletElement.elementText("portlet-class")));
+		portletModel.setPortletName(portletName);
 
 		Map<String, String> initParams = new HashMap<>();
 

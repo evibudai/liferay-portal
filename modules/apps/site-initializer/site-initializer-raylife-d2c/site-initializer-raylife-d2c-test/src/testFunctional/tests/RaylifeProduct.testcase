@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,9 +34,14 @@ definition {
 	}
 
 	@description = "LPS-142241 - Verify if when the 'Dismiss' button is clicked, the information panel for 'More Info' is dismissed"
-	@priority = "3"
+	@priority = 3
 	test CanDismissProductInfoPanel {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -49,9 +57,14 @@ definition {
 	}
 
 	@description = "LPS-142540 - Verify if clicking on Previous returns to Previous Screen (Contact Information/'Just the business basics!')"
-	@priority = "3"
+	@priority = 3
 	test CanGoBackOnProductSelectionKeepingAllData {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -71,9 +84,14 @@ definition {
 	}
 
 	@description = "LPS-142237 - Verify if only one product can be selected at a time"
-	@priority = "3"
+	@priority = 3
 	test CanSelectOnlyOneProduct {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -83,9 +101,14 @@ definition {
 	}
 
 	@description = "LPS-142239 - Verify if when selecting 'More Info' in a product, information panel is opened"
-	@priority = "3"
+	@priority = 3
 	test CanViewProductInfoPanel {
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
+
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 

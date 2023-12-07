@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -18,11 +9,12 @@ import {useModal} from '@clayui/modal';
 import {useEffect, useState} from 'react';
 
 import Header from '../../../common/components/header';
-import Table from '../../../common/components/table';
+import Table, {TableRowContentType} from '../../../common/components/table';
 import {
 	deleteApplicationByExternalReferenceCode,
 	getApplications,
 } from '../../../common/services';
+import {Liferay} from '../../../common/services/liferay/liferay';
 import formatDate from '../../../common/utils/dateFormatter';
 import {redirectTo} from '../../../common/utils/liferay';
 import LoadingIndicator from '../../applications/components/LoadingIndicator';
@@ -86,7 +78,7 @@ type RecentApplication = {
 	productName: string;
 };
 
-type TableContent = {[keys: string]: string};
+type TableContent = {[keys: string]: string | any};
 
 enum ModalType {
 	insurance = 1,
@@ -106,8 +98,6 @@ type TableItemType = {
 	type?: string;
 	value: string;
 };
-
-type TableRowContentType = {[keys: string]: string};
 
 type StateSortType = {
 	[keys: string]: boolean;
@@ -172,7 +162,7 @@ const RecentApplications = () => {
 	};
 
 	useEffect(() => {
-		localStorage.removeItem('raylife-ap-storage');
+		Liferay.Util.LocalStorage.removeItem('raylife-ap-storage');
 		getApplications(PARAMETERS).then((results) => {
 			const applicationsList: TableContent[] = [];
 			results?.data?.items.forEach(
@@ -187,6 +177,7 @@ const RecentApplications = () => {
 							new Date(applicationCreateDate)
 						),
 						externalReferenceCode,
+						isClickable: true,
 						key: externalReferenceCode,
 						name,
 						productName,
@@ -270,7 +261,7 @@ const RecentApplications = () => {
 		rowContent: TableRowContentType
 	) => {
 		if (item.clickable && item.key === 'email') {
-			handleRedirectToGmail(rowContent[item.key]);
+			handleRedirectToGmail(rowContent[item.key] as string);
 		}
 
 		if (
@@ -280,7 +271,7 @@ const RecentApplications = () => {
 				item.key === 'applicationCreateDate')
 		) {
 			handleRedirectToDetailsPages(
-				rowContent['externalReferenceCode'],
+				rowContent['externalReferenceCode'] as string,
 				'app-details'
 			);
 		}

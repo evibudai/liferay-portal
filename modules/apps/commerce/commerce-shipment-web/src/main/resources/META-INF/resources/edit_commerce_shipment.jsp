@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -21,16 +12,7 @@ CommerceShipmentDisplayContext commerceShipmentDisplayContext = (CommerceShipmen
 
 CommerceShipment commerceShipment = commerceShipmentDisplayContext.getCommerceShipment();
 
-CommerceAccount commerceAccount = commerceShipment.getCommerceAccount();
-
-portletDisplay.setShowBackIcon(true);
-
-if (Validator.isNull(redirect)) {
-	portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
-}
-else {
-	portletDisplay.setURLBack(redirect);
-}
+AccountEntry accountEntry = commerceShipment.getAccountEntry();
 %>
 
 <liferay-ui:error embed="<%= false %>" exception="<%= CommerceShipmentStatusException.class %>" message="please-select-a-valid-warehouse-and-quantity-for-all-shipment-items" />
@@ -48,7 +30,7 @@ else {
 	externalReferenceCode="<%= commerceShipment.getExternalReferenceCode() %>"
 	externalReferenceCodeEditUrl="<%= editCommerceShipmentExternalReferenceCodeURL %>"
 	model="<%= CommerceShipment.class %>"
-	thumbnailUrl="<%= commerceShipmentDisplayContext.getCommerceAccountThumbnailURL(commerceAccount, themeDisplay.getPathImage()) %>"
+	thumbnailUrl="<%= commerceShipmentDisplayContext.getCommerceAccountThumbnailURL(accountEntry, themeDisplay.getPathImage()) %>"
 	title="<%= String.valueOf(commerceShipment.getCommerceShipmentId()) %>"
 	wrapperCssClasses="side-panel-top-anchor"
 />

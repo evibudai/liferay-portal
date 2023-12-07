@@ -1,33 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.comment.demo.data.creator.internal;
 
 import com.liferay.comment.demo.data.creator.CommentDemoDataCreator;
 import com.liferay.comment.demo.data.creator.MultipleCommentDemoDataCreator;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.UserModel;
 import com.liferay.portal.kernel.security.RandomUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,20 +30,18 @@ public class MultipleCommentDemoDataCreatorImpl
 
 	@Override
 	public void create(ClassedModel classedModel) throws PortalException {
-		List<User> users = _userLocalService.getUsers(
-			0, Math.min(_userLocalService.getUsersCount(), _MAX_USERS));
-
-		Stream<User> usersStream = users.stream();
-
-		usersStream = usersStream.filter(this::_isRegularUser);
-
-		Stream<Long> userIdsStream = usersStream.map(UserModel::getUserId);
-
-		List<Long> userIds = userIdsStream.collect(Collectors.toList());
-
 		_addComments(
-			userIds, classedModel, _COMMENT_ID,
-			RandomUtil.nextInt(_MAX_COMMENTS), 1);
+			TransformUtil.transform(
+				_userLocalService.getUsers(
+					0, Math.min(_userLocalService.getUsersCount(), _MAX_USERS)),
+				user -> {
+					if (_isRegularUser(user)) {
+						return user.getUserId();
+					}
+
+					return null;
+				}),
+			classedModel, _COMMENT_ID, RandomUtil.nextInt(_MAX_COMMENTS), 1);
 	}
 
 	@Override

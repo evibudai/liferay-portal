@@ -1,8 +1,9 @@
 definition {
 
-	macro assertOptionsInShipmentSteps {
+	@summary = "Default summary"
+	macro assertOptionsInShipmentSteps(key_ercColumnValue = null) {
 		AssertElementPresent(
-			key_ercColumnValue = "${key_ercColumnValue}",
+			key_ercColumnValue = ${key_ercColumnValue},
 			locator1 = "CommerceOrders#SHIPMENT_ITEM_ERC_COLUMN");
 
 		AssertElementNotPresent(
@@ -10,33 +11,93 @@ definition {
 			locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
 	}
 
-	macro assertShipmentItemWarehouseAndQuantityInShipment {
-		AssertTextEquals(
-			key_columnNumber = "4",
-			key_entryName = "${shipmentItemSku}",
-			locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
-			value1 = "${warehouseName}");
+	@summary = "Default summary"
+	macro assertOrderItemShipmentInPlacedOrders(carrier = null, quantity = null, shipmentId = null, entryName = null, trackingNumber = null) {
+		Variables.assertDefined(parameterList = "${entryName},${shipmentId}");
 
-		AssertTextEquals(
-			key_columnNumber = "6",
-			key_entryName = "${shipmentItemSku}",
-			locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
-			value1 = "${quantityInShipment}");
+		ClickNoError(
+			key_entryName = ${entryName},
+			locator1 = "CommerceEntry#ENTRY_NAME_BODY_VERTICAL_ELLIPSIS");
+
+		CommerceEntry.clickNoError(menuItem = "Shipments");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		if (isSet(status)) {
+			if (${status} == "Finish Processing") {
+				var status = "Ready to Ship";
+			}
+
+			AssertTextEquals(
+				key_entry = ${shipmentId},
+				key_index = 1,
+				locator1 = "CommerceEntry#MODAL_DATASET_ROW_ITEM",
+				value1 = ${status});
+		}
+
+		AssertElementPresent(
+			key_entry = ${shipmentId},
+			key_index = 2,
+			locator1 = "CommerceEntry#MODAL_DATASET_ROW_ITEM");
+
+		if (isSet(carrier)) {
+			AssertTextEquals(
+				key_entry = ${shipmentId},
+				key_index = 3,
+				locator1 = "CommerceEntry#MODAL_DATASET_ROW_ITEM",
+				value1 = ${carrier});
+		}
+
+		if (isSet(trackingNumber)) {
+			AssertTextEquals(
+				key_entry = ${shipmentId},
+				key_index = 4,
+				locator1 = "CommerceEntry#MODAL_DATASET_ROW_ITEM",
+				value1 = ${trackingNumber});
+		}
+
+		if (isSet(quantity)) {
+			AssertTextEquals(
+				key_entry = ${shipmentId},
+				key_index = 5,
+				locator1 = "CommerceEntry#MODAL_DATASET_ROW_ITEM",
+				value1 = ${quantity});
+		}
+
+		Click(locator1 = "Icon#CLOSE");
+
+		SelectFrame.selectFrameTop();
 	}
 
-	macro editShipmentCarrierDetails {
+	@summary = "Default summary"
+	macro assertShipmentItemWarehouseAndQuantityInShipment(shipmentItemSku = null, warehouseName = null, quantityInShipment = null) {
+		AssertTextEquals(
+			key_columnNumber = 4,
+			key_entryName = ${shipmentItemSku},
+			locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
+			value1 = ${warehouseName});
+
+		AssertTextEquals(
+			key_columnNumber = 6,
+			key_entryName = ${shipmentItemSku},
+			locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
+			value1 = ${quantityInShipment});
+	}
+
+	@summary = "Default summary"
+	macro editShipmentCarrierDetails(trackingURL = null, shippingMethod = null, carrierDetail = null, trackingNumber = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
 
 		Type(
 			key_fieldLabel = "Carrier",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${carrierDetail}");
+			value1 = ${carrierDetail});
 
 		if (isSet(trackingNumber)) {
 			Type(
 				key_fieldLabel = "Tracking Number",
 				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = "${trackingNumber}");
+				value1 = ${trackingNumber});
 		}
 		else {
 			Type(
@@ -49,46 +110,48 @@ definition {
 			Select(
 				key_fieldLabel = "Shipping Method",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "${shippingMethod}");
+				value1 = ${shippingMethod});
 		}
 
 		if (isSet(trackingURL)) {
 			Type(
 				locator1 = "CommerceOrders#CARRIER_DETAILS_URL_TEXTAREA",
-				value1 = "${trackingURL}");
+				value1 = ${trackingURL});
 		}
 
 		Button.clickSubmitButton();
 	}
 
-	macro editShipmentCustomFields {
+	@summary = "Default summary"
+	macro editShipmentCustomFields(textValue = null, customFieldType = null) {
 		Click(
-			key_customFieldType = "${customFieldType}",
+			key_customFieldType = ${customFieldType},
 			locator1 = "CustomFields#CUSTOM_FIELD_TYPE");
 
 		Type(
 			locator1 = "TextInput#CUSTOM_FIELD",
-			value1 = "${textValue}");
+			value1 = ${textValue});
 
 		Button.clickSave();
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro moveItemQuantitiesInShipment {
+	@summary = "Default summary"
+	macro moveItemQuantitiesInShipment(productSkuList = null, warehouseName = null) {
 		Variables.assertDefined(parameterList = "${productSkuList},${warehouseName}");
 
-		for (var productSku : list "${productSkuList}") {
+		for (var productSku : list ${productSkuList}) {
 			WaitForPageLoad();
 
-			CommerceNavigator.gotoEntry(entryName = "${productSku}");
+			CommerceNavigator.gotoEntry(entryName = ${productSku});
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 			Type(
-				key_warehouseName = "${warehouseName}",
+				key_warehouseName = ${warehouseName},
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.click(button = "Save");
 
@@ -100,16 +163,17 @@ definition {
 		}
 	}
 
-	macro moveOrderItemsInShipment {
-		Variables.assertDefined(parameterList = "${productSkuList}");
+	@summary = "Default summary"
+	macro moveOrderItemsInShipment(productSkuList = null) {
+		Variables.assertDefined(parameterList = ${productSkuList});
 
 		Click(locator1 = "Button#PLUS");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
 
-		for (var productSku : list "${productSkuList}") {
+		for (var productSku : list ${productSkuList}) {
 			Check.checkToggleSwitch(
-				key_productSku = "${productSku}",
+				key_productSku = ${productSku},
 				locator1 = "Checkbox#ADD_SHIPMENT_ITEMS_CHECKBOX");
 		}
 
@@ -118,6 +182,13 @@ definition {
 		Refresh.refreshNoSPARefresh();
 
 		SelectFrameTop();
+	}
+
+	@summary = "Default summary"
+	macro openShipmentsAdmin(baseURL = null) {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = ${baseURL},
+			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_shipment_web_internal_portlet_CommerceShipmentPortlet");
 	}
 
 }

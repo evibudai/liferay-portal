@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.web.internal.exportimport.staged.model.repository;
@@ -43,6 +34,9 @@ public class ClientExtensionEntryRelStagedModelRepository
 			ClientExtensionEntryRel clientExtensionEntryRel)
 		throws PortalException {
 
+		long userId = portletDataContext.getUserId(
+			clientExtensionEntryRel.getUserUuid());
+
 		ServiceContext serviceContext = portletDataContext.createServiceContext(
 			clientExtensionEntryRel);
 
@@ -51,13 +45,12 @@ public class ClientExtensionEntryRelStagedModelRepository
 		}
 
 		return _clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
-			clientExtensionEntryRel.getUserId(),
-			clientExtensionEntryRel.getGroupId(),
+			userId, clientExtensionEntryRel.getGroupId(),
 			clientExtensionEntryRel.getClassNameId(),
 			clientExtensionEntryRel.getClassPK(),
 			clientExtensionEntryRel.getCETExternalReferenceCode(),
 			clientExtensionEntryRel.getType(),
-			clientExtensionEntryRel.getTypeSettings());
+			clientExtensionEntryRel.getTypeSettings(), serviceContext);
 	}
 
 	@Override
@@ -112,6 +105,14 @@ public class ClientExtensionEntryRelStagedModelRepository
 	}
 
 	@Override
+	public ClientExtensionEntryRel getStagedModel(long id)
+		throws PortalException {
+
+		return _clientExtensionEntryRelLocalService.getClientExtensionEntryRel(
+			id);
+	}
+
+	@Override
 	public ClientExtensionEntryRel saveStagedModel(
 			ClientExtensionEntryRel clientExtensionEntryRel)
 		throws PortalException {
@@ -127,7 +128,13 @@ public class ClientExtensionEntryRelStagedModelRepository
 		throws PortalException {
 
 		return _clientExtensionEntryRelLocalService.
-			updateClientExtensionEntryRel(clientExtensionEntryRel);
+			updateClientExtensionEntryRel(
+				clientExtensionEntryRel.getClientExtensionEntryRelId(),
+				clientExtensionEntryRel.getClassNameId(),
+				clientExtensionEntryRel.getClassPK(),
+				clientExtensionEntryRel.getCETExternalReferenceCode(),
+				clientExtensionEntryRel.getType(),
+				clientExtensionEntryRel.getTypeSettings());
 	}
 
 	@Reference

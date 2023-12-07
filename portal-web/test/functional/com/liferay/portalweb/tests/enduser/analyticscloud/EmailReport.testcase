@@ -27,22 +27,22 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Story: LRAC-11664 | Automation ID: LRAC-11844 | Test Summary: Check that cancel button does not enable email report"
-	@priority = "3"
+	@priority = 3
 	test CanCancelChangesToEmailReport {
 		task ("Sign in AC as Test Test user") {
 			ACUtils.launchAC();
@@ -53,7 +53,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("Configure Email Report then cancel") {
@@ -72,7 +72,7 @@ definition {
 	}
 
 	@description = "Story: LRAC-11664 | Automation ID: LRAC-11841 | Test Summary: Can change email report frequency to daily, weekly or monthly"
-	@priority = "3"
+	@priority = 3
 	test CanChangeEmailReportFrequency {
 		var frequencyList = "Daily,Weekly,Monthly";
 
@@ -83,12 +83,12 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("Click on the email report widget and enable it and then save the report to: daily, weekly and monthly") {
-			for (var frequencyOption : list "${frequencyList}") {
-				ACEmailReport.enableEmailReport(frequency = "${frequencyOption}");
+			for (var frequencyOption : list ${frequencyList}) {
+				ACEmailReport.enableEmailReport(frequency = ${frequencyOption});
 
 				ACUtils.viewGenericText(textValueList = "Email Reports: ,Enabled");
 
@@ -100,7 +100,7 @@ definition {
 	}
 
 	@description = "Story: LRAC-11664 | Automation ID: LRAC-11846 | Test Summary: Disable email report after enabling"
-	@priority = "3"
+	@priority = 3
 	test CanDisableEmailReportAfterEnabling {
 		task ("Go to AC > Go to Settings > Go to Properties > Open the new property") {
 			ACUtils.launchAC();
@@ -109,7 +109,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("Enable the email report") {
@@ -134,7 +134,7 @@ definition {
 	}
 
 	@description = "Story: LRAC-11664 | Automation ID: LRAC-11845 | Test Summary: Check email report edit disabled"
-	@priority = "3"
+	@priority = 3
 	test CheckEmailReportEditDisabled {
 		task ("Sign in AC as Test Test user") {
 			ACUtils.launchAC();
@@ -145,7 +145,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("Access email report") {
@@ -166,19 +166,22 @@ definition {
 	}
 
 	@description = "Story: LRAC-11663 | Automation ID: LRAC-11835 | Test Summary: Check that the Email Reports widget appears on the property settings page for all users"
-	@priority = "2"
+	@ignore = "true"
+	@priority = 2
 	test CheckEmailReportsAppearsForAllUsers {
 		var emailAddressList = "bryan.cheung@faro.io,michelle.hoshi@faro.io,corbin.murakami@faro.io";
+
+		// The default AC users do not appear in Users and Organizations. The bug will be resolved after LRAC-14468
 
 		task ("Sign in AC as Test Test user") {
 			ACUtils.launchAC();
 		}
 
-		for (var emailAddress : list "${emailAddressList}") {
+		for (var emailAddress : list ${emailAddressList}) {
 			task ("Sign in AC") {
 				ACWorkspace.signOut();
 
-				ACLogin.loginAs(emailAddress = "${emailAddress}");
+				ACLogin.loginAs(emailAddress = ${emailAddress});
 
 				ACWorkspace.openWorkspace();
 			}
@@ -188,7 +191,7 @@ definition {
 
 				ACSettings.goToProperties();
 
-				ACNavigation.openItem(itemName = "${assignedPropertyName}");
+				ACNavigation.openItem(itemName = ${assignedPropertyName});
 			}
 
 			task ("Check that email report is disabled") {
@@ -206,7 +209,7 @@ definition {
 	}
 
 	@description = "Story: LRAC-11664 | Automation ID: LRAC-11847 | Test Summary: Check that change the email report settings on one account will not affect the other accounts"
-	@priority = "4"
+	@priority = 4
 	test CheckEmailReportSettingsDifferentUsers {
 		task ("Go to AC > Go to Settings > Go to Properties > Open the new property") {
 			ACUtils.launchAC();
@@ -215,7 +218,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("Enable email reports with the daily option and then see in the property that the email report has the status of enabled") {
@@ -233,7 +236,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("See that the changes made in another account did not affect the actual account") {
@@ -255,7 +258,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("Click on the email reports widget and see if the frequency is still Daily") {
@@ -283,7 +286,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACNavigation.openItem(itemName = "${assignedPropertyName}");
+			ACNavigation.openItem(itemName = ${assignedPropertyName});
 		}
 
 		task ("Observe that the change made to another account did not affect the current account") {
@@ -298,7 +301,7 @@ definition {
 	}
 
 	@description = "Story: LRAC-11663 | Automation ID: LRAC-11836 | Test Summary: Check that the Email Reports widget does not appear on the property settings page when the property is not synced with any site"
-	@priority = "2"
+	@priority = 2
 	test CheckEmailReportWidgetDisabledWhenPropertyNotSyncedWithSite {
 		var propertyName = "Email Report Test";
 
@@ -311,7 +314,7 @@ definition {
 
 			ACSettings.goToProperties();
 
-			ACProperties.addNewProperty(propertyName = "${propertyName}");
+			ACProperties.addNewProperty(propertyName = ${propertyName});
 		}
 
 		task ("Check that the Email Reports field appears and has the status disabled") {
@@ -326,10 +329,16 @@ definition {
 	}
 
 	@description = "Story: LRAC-11665 | Automation ID: LRAC-11890 | Test Summary: Open the email report and see if the links are pointing to the right places"
-	@priority = "2"
+	@priority = 2
 	test CheckLinksInEmailReportAreCorrect {
-		property test.name.skip.portal.instance = "EmailReport#CheckLinksInEmailReportAreCorrect";
+		property portal.upstream = "quarantine";
 
+		// AC Quarantine Reason: Test fix look into mockmock page
+		// AC Quarantine Ticket: LRAC-12253
+
+		property test.run.type = "single";
+
+		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
 		var reportDetailsNameList = "Workspace,Property";
 		var reportDetailsValueList = "FARO-DEV-liferay,${assignedPropertyName}";
 		var activitiesNameList = "Unique Visitors,Sessions / Visitor,Session Duration,Bounce Rate";
@@ -337,27 +346,21 @@ definition {
 		var emailAddress = "test@liferay.com";
 
 		task ("Launch AC") {
-			var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
-
-			Open(locator1 = "${analyticsCloudURL}");
+			ACUtils.launchAC();
 		}
 
 		task ("Go to admin page") {
-			ACAdmin.goToACAdmin();
+			ACAdmin.goToACAdmin(userScreenNameToResetPassword = "test");
 		}
 
 		task ("Go to Server Administration > Change SMTP Server Port") {
 			var extractedIPAddress = ACUtils.getIPAddress();
 
-			ACAdmin.configureMailSettings(outgoingSMTPServer = "${extractedIPAddress}");
+			ACAdmin.configureMailSettings(outgoingSMTPServer = ${extractedIPAddress});
 		}
 
 		task ("Navigate to users page") {
-			ProductMenuHelper.expandPanel(panel = "control panel");
-
-			ProductMenuHelper.expandCategory(category = "Users");
-
-			ProductMenuHelper.gotoPortlet(portlet = "Users and Organizations");
+			User.openUsersAdmin(baseURL = ${analyticsCloudURL});
 		}
 
 		task ("Go to user data page") {
@@ -375,14 +378,14 @@ definition {
 		}
 
 		task ("Run the API to send the email report") {
-			var channelId = ACSettings.getPropertyId(propertyName = "${assignedPropertyName}");
+			var channelId = ACSettings.getPropertyId(propertyName = ${assignedPropertyName});
 			var groupId = ACUtils.getGroupId();
 
 			ACApi.sendEmailReport(
-				channelId = "${channelId}",
+				channelId = ${channelId},
 				frequency = "daily",
-				groupId = "${groupId}",
-				userID = "${userID}");
+				groupId = ${groupId},
+				userID = ${userID});
 		}
 
 		task ("Go to the Mock Mock page > Access the email that was received") {
@@ -400,13 +403,13 @@ definition {
 		task ("Check that the Full Report link is redirected to the AC page in the correct property") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "SEE FULL REPORT");
 
-			SelectWindow(locator1 = "title=Analytics Cloud");
+			SelectWindow(value1 = "title=Analytics Cloud");
 
 			if (IsElementPresent(locator1 = "ACLogin#EMAIL_LOGIN_FIELD")) {
-				ACLogin.loginAs(emailAddress = "${emailAddress}");
+				ACLogin.loginAs(emailAddress = ${emailAddress});
 			}
 
-			ACProperties.assertCurrentActiveProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.assertCurrentActiveProperty(propertyName = ${assignedPropertyName});
 
 			Close.closeWindow();
 		}
@@ -414,7 +417,7 @@ definition {
 		task ("Check Liferay.com page link") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Liferay, Inc.");
 
-			SelectWindow(locator1 = "title=Digital Experience Software Tailored to Your Needs | Liferay");
+			SelectWindow(value1 = "title=Digital Experience Software Tailored to Your Needs | Liferay");
 
 			ACUtils.viewGenericText(textValueList = "Introducing Liferay Experience Cloud");
 
@@ -424,7 +427,7 @@ definition {
 		task ("Check the Contact Support page link") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Contact Support");
 
-			SelectWindow(locator1 = "title=Liferay Help Center");
+			SelectWindow(value1 = "title=Liferay Help Center");
 
 			ACUtils.viewGenericText(textValueList = "Help Center,How can we help?");
 
@@ -434,9 +437,9 @@ definition {
 		task ("Check the Learn Liferay page link") {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Learn Liferay");
 
-			SelectWindow(locator1 = "title=Liferay Learn — Liferay Learn");
+			SelectWindow(value1 = "title=Liferay Learn - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Documentation,Welcome to Liferay Docs");
+			ACUtils.viewGenericText(textValueList = "Welcome to Liferay Docs");
 
 			Close.closeWindow();
 		}

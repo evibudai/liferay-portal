@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.web.internal.display.context;
@@ -38,7 +29,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -64,21 +55,20 @@ public class DLViewFileEntryDisplayContext {
 
 	public DLViewFileEntryDisplayContext(
 		DLAdminDisplayContext dlAdminDisplayContext,
-		DLDisplayContextProvider dlDisplayContextProvider, Html html,
+		DLDisplayContextProvider dlDisplayContextProvider,
 		HttpServletRequest httpServletRequest, Language language, Portal portal,
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
 		_dlAdminDisplayContext = dlAdminDisplayContext;
 		_dlDisplayContextProvider = dlDisplayContextProvider;
-		_html = html;
 		_httpServletRequest = httpServletRequest;
 		_language = language;
 		_portal = portal;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_httpServletResponse = _portal.getHttpServletResponse(renderResponse);
-		_themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
+		_httpServletResponse = portal.getHttpServletResponse(renderResponse);
+		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_dlRequestHelper = new DLRequestHelper(_httpServletRequest);
@@ -181,14 +171,14 @@ public class DLViewFileEntryDisplayContext {
 		return _fileVersion;
 	}
 
-	public String getLockInfoCssClass() {
+	public String getLockInfoDisplayType() {
 		FileEntry fileEntry = getFileEntry();
 
 		if (!fileEntry.hasLock()) {
-			return "alert-danger";
+			return "danger";
 		}
 
-		return "alert-info";
+		return "info";
 	}
 
 	public String getLockInfoMessage(Locale locale) {
@@ -197,7 +187,7 @@ public class DLViewFileEntryDisplayContext {
 		if (!fileEntry.hasLock()) {
 			Lock lock = _getLock();
 
-			Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
+			Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
 				locale, _themeDisplay.getTimeZone());
 
 			return _language.format(
@@ -205,11 +195,11 @@ public class DLViewFileEntryDisplayContext {
 				"you-cannot-modify-this-document-because-it-was-locked-by-x-" +
 					"on-x",
 				new Object[] {
-					_html.escape(
+					HtmlUtil.escape(
 						_portal.getUserName(
 							lock.getUserId(),
 							String.valueOf(lock.getUserId()))),
-					dateFormatDateTime.format(lock.getCreateDate())
+					dateTimeFormat.format(lock.getCreateDate())
 				},
 				false);
 		}
@@ -234,7 +224,8 @@ public class DLViewFileEntryDisplayContext {
 			return _redirect;
 		}
 
-		_redirect = ParamUtil.getString(_renderRequest, "redirect");
+		_redirect = _portal.escapeRedirect(
+			ParamUtil.getString(_renderRequest, "redirect"));
 
 		if (Validator.isNotNull(_redirect)) {
 			return _redirect;
@@ -415,7 +406,6 @@ public class DLViewFileEntryDisplayContext {
 	private String _documentTitle;
 	private FileEntry _fileEntry;
 	private FileVersion _fileVersion;
-	private final Html _html;
 	private final HttpServletRequest _httpServletRequest;
 	private final HttpServletResponse _httpServletResponse;
 	private final Language _language;

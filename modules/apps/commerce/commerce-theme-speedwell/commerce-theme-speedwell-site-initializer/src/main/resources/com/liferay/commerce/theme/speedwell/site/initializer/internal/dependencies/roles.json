@@ -11,7 +11,19 @@
 				"actionIds": [
 					"MANAGE_ORGANIZATIONS"
 				],
-				"resource": "com.liferay.commerce.account.model.CommerceAccount"
+				"resource": "com.liferay.account.model.AccountEntry"
+			},
+			{
+				"actionIds": [
+					"MANAGE_USERS"
+				],
+				"resource": "com.liferay.account.model.AccountEntry"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.account.model.AccountRole"
 			}
 		],
 		"name": "Sales Agent",

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.internal.util;
@@ -23,6 +14,7 @@ import com.liferay.portal.kernel.comment.DuplicateCommentException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -36,11 +28,10 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.xmlrpc.Fault;
-import com.liferay.portal.kernel.xmlrpc.XmlRpc;
 import com.liferay.portal.kernel.xmlrpc.XmlRpcConstants;
-import com.liferay.portal.kernel.xmlrpc.XmlRpcUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.xmlrpc.Fault;
+import com.liferay.portal.xmlrpc.XmlRpcUtil;
 
 import java.io.IOException;
 
@@ -50,13 +41,18 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author André de Oliveira
@@ -71,7 +67,7 @@ public class PingbackMethodImplTest {
 	@Before
 	public void setUp() throws Exception {
 		_setUpBlogsEntryLocalService();
-		_setUpHttpUtil();
+		_setUpHttp();
 		_setUpInetAddressLookup();
 		_setUpLanguageUtil();
 		_setUpPingbackProperties();
@@ -81,6 +77,17 @@ public class PingbackMethodImplTest {
 		_setUpPropsTestUtil();
 		_setUpUserLocalService();
 		_setUpXmlRpcUtil();
+	}
+
+	@After
+	public void tearDown() {
+		if (_serviceRegistration != null) {
+			_serviceRegistration.unregister();
+
+			_serviceRegistration = null;
+		}
+
+		_xmlRpcUtilMockedStatic.close();
 	}
 
 	@Test
@@ -348,11 +355,10 @@ public class PingbackMethodImplTest {
 
 			pingbackMethodImpl.execute(_COMPANY_ID);
 
-			Mockito.verify(
-				_xmlRpc, Mockito.times(i + 1)
-			).createFault(
-				PingbackMethodImpl.ACCESS_DENIED, "Access Denied"
-			);
+			_xmlRpcUtilMockedStatic.verify(
+				() -> XmlRpcUtil.createFault(
+					PingbackMethodImpl.ACCESS_DENIED, "Access Denied"),
+				Mockito.times(i + 1));
 		}
 	}
 
@@ -424,8 +430,6 @@ public class PingbackMethodImplTest {
 			pingbackMethodImpl, "_portletLocalService", _portletLocalService);
 		ReflectionTestUtil.setFieldValue(
 			pingbackMethodImpl, "_userLocalService", _userLocalService);
-		ReflectionTestUtil.setFieldValue(
-			pingbackMethodImpl, "_xmlRpc", _xmlRpc);
 
 		return pingbackMethodImpl;
 	}
@@ -463,13 +467,14 @@ public class PingbackMethodImplTest {
 		);
 	}
 
-	private void _setUpHttpUtil() throws Exception {
+	private void _setUpHttp() throws Exception {
 		_whenHttpURLToString(
 			StringBundler.concat(
 				"<body><a href='http://", _TARGET_URI, "'>", _EXCERPT_BODY,
 				"</a></body>"));
 
-		ReflectionTestUtil.setFieldValue(HttpUtil.class, "_http", _http);
+		_serviceRegistration = _bundleContext.registerService(
+			Http.class, _http, null);
 	}
 
 	private void _setUpInetAddressLookup() throws Exception {
@@ -606,25 +611,21 @@ public class PingbackMethodImplTest {
 
 	private void _setUpUserLocalService() throws Exception {
 		Mockito.when(
-			_userLocalService.getDefaultUserId(Mockito.anyLong())
+			_userLocalService.getGuestUserId(Mockito.anyLong())
 		).thenReturn(
 			_USER_ID
 		);
 	}
 
 	private void _setUpXmlRpcUtil() {
-		Fault fault = Mockito.mock(Fault.class);
+		_xmlRpcUtilMockedStatic = Mockito.mockStatic(XmlRpcUtil.class);
 
-		Mockito.when(
-			_xmlRpc.createFault(
+		_xmlRpcUtilMockedStatic.when(
+			() -> XmlRpcUtil.createFault(
 				Mockito.anyInt(), Mockito.nullable(String.class))
 		).thenReturn(
-			fault
+			Mockito.mock(Fault.class)
 		);
-
-		XmlRpcUtil xmlRpcUtil = new XmlRpcUtil();
-
-		xmlRpcUtil.setXmlRpc(_xmlRpc);
 	}
 
 	private void _verifyExcerpt(String excerpt) throws Exception {
@@ -644,19 +645,13 @@ public class PingbackMethodImplTest {
 	}
 
 	private void _verifyFault(int code, String description) {
-		Mockito.verify(
-			_xmlRpc
-		).createFault(
-			code, description
-		);
+		_xmlRpcUtilMockedStatic.verify(
+			() -> XmlRpcUtil.createFault(code, description));
 	}
 
 	private void _verifySuccess() {
-		Mockito.verify(
-			_xmlRpc
-		).createSuccess(
-			"Pingback accepted"
-		);
+		_xmlRpcUtilMockedStatic.verify(
+			() -> XmlRpcUtil.createSuccess("Pingback accepted"));
 	}
 
 	private void _whenFriendlyURLMapperPopulateParams(
@@ -723,6 +718,10 @@ public class PingbackMethodImplTest {
 
 	private static final long _USER_ID = RandomTestUtil.randomLong();
 
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
+	private static MockedStatic<XmlRpcUtil> _xmlRpcUtilMockedStatic;
+
 	private final BlogsEntry _blogsEntry = Mockito.mock(BlogsEntry.class);
 	private final BlogsEntryLocalService _blogsEntryLocalService = Mockito.mock(
 		BlogsEntryLocalService.class);
@@ -742,8 +741,8 @@ public class PingbackMethodImplTest {
 		Mockito.mock(PingbackMethodImpl.PortletIdLookup.class);
 	private final PortletLocalService _portletLocalService = Mockito.mock(
 		PortletLocalService.class);
+	private ServiceRegistration<Http> _serviceRegistration;
 	private final UserLocalService _userLocalService = Mockito.mock(
 		UserLocalService.class);
-	private final XmlRpc _xmlRpc = Mockito.mock(XmlRpc.class);
 
 }

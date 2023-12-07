@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openConfirmModal} from 'frontend-js-web';
+import {navigate, openConfirmModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
 import FrontendDataSetContext from '../FrontendDataSetContext';
 import {ACTION_ITEM_TARGETS} from '../utils/actionItems/constants';
 import {formatActionURL} from '../utils/index';
-import {openPermissionsModal, resolveModalSize} from '../utils/modals/index';
+import {openPermissionsModal} from '../utils/modals/openPermissionsModal';
+import {resolveModalSize} from '../utils/modals/resolveModalSize';
 import ViewsContext from '../views/ViewsContext';
 import ActionsDropdown from './ActionsDropdown';
 import QuickActions from './QuickActions';
@@ -36,7 +28,14 @@ const formatActions = (actions, itemData) => {
 	return actions
 		? actions.reduce((actions, action) => {
 				if (action.data?.permissionKey) {
-					if (itemData.actions[action.data.permissionKey]) {
+					if (
+						itemData.actions &&
+						Object.keys(itemData.actions).some(
+							(itemAction) =>
+								itemAction.toLowerCase() ===
+								action.data.permissionKey.toLowerCase()
+						)
+					) {
 						if (action.target === 'headless') {
 							return [
 								...actions,
@@ -61,109 +60,23 @@ const formatActions = (actions, itemData) => {
 		: [];
 };
 
-export function handleAction(
-	{
-		confirmationMessage,
-		errorMessage,
-		event,
-		itemId,
-		method,
-		onClick,
-		setLoading,
-		size,
-		successMessage,
-		target,
-		title,
-		url,
-	},
-	{
+function Actions({actions, itemData, itemId, menuActive, onMenuActiveChange}) {
+	const {
 		executeAsyncItemAction,
 		highlightItems,
+		inlineEditingSettings,
+		loadData,
+		onActionDropdownItemClick,
 		openModal,
 		openSidePanel,
 		toggleItemInlineEdit,
-	}
-) {
-	const doAction = () => {
-		if (target?.includes('modal')) {
-			event.preventDefault();
+	} = useContext(FrontendDataSetContext);
 
-			if (target === MODAL_PERMISSIONS) {
-				openPermissionsModal(url);
-			}
-			else {
-				openModal({
-					size: resolveModalSize(target),
-					title,
-					url,
-				});
-			}
-		}
-		else if (target === 'sidePanel') {
-			event.preventDefault();
-
-			highlightItems([itemId]);
-			openSidePanel({
-				size: size || 'lg',
-				title,
-				url,
-			});
-		}
-		else if (target === 'async' || target === 'headless') {
-			event.preventDefault();
-
-			setLoading(true);
-
-			executeAsyncItemAction({
-				errorMessage,
-				method,
-				setActionItemLoading: setLoading,
-				successMessage,
-				url,
-			});
-		}
-		else if (target === 'inlineEdit') {
-			event.preventDefault();
-
-			toggleItemInlineEdit(itemId);
-		}
-		else if (target === 'blank') {
-			event.preventDefault();
-
-			window.open(url);
-		}
-		else if (onClick) {
-			event.preventDefault();
-
-			event.target.setAttribute('onClick', onClick);
-			event.target.onclick();
-			event.target.removeAttribute('onClick');
-		}
-	};
-
-	if (confirmationMessage) {
-		openConfirmModal({
-			message: confirmationMessage,
-			onConfirm: (isConfirmed) => {
-				if (isConfirmed) {
-					doAction();
-				}
-			},
-		});
-	}
-	else {
-		doAction();
-	}
-}
-function Actions({actions, itemData, itemId, menuActive, onMenuActiveChange}) {
-	const context = useContext(FrontendDataSetContext);
 	const [
 		{
 			activeView: {quickActionsEnabled},
 		},
 	] = useContext(ViewsContext);
-
-	const {inlineEditingSettings, onActionDropdownItemClick} = context;
 
 	const [loading, setLoading] = useState(false);
 
@@ -182,43 +95,113 @@ function Actions({actions, itemData, itemId, menuActive, onMenuActiveChange}) {
 		});
 	}
 
-	const handleClick = ({
-		action,
-		closeMenu,
-		event,
-		itemData,
-		itemId,
-		size = 'lg',
-	}) => {
-		if (onActionDropdownItemClick) {
-			onActionDropdownItemClick({
+	const handleClick = ({action, closeMenu, event}) => {
+		const {data, href, method, onClick, target} = action;
+
+		const {
+			confirmationMessage,
+			errorMessage,
+			size,
+			status,
+			successMessage,
+			title,
+		} = data ?? {};
+
+		const url = formatActionURL(href, itemData);
+
+		const doAction = ({defaultPrevented}) => {
+			if (target?.includes('modal')) {
+				event.preventDefault();
+
+				if (target === MODAL_PERMISSIONS) {
+					openPermissionsModal(url);
+				}
+				else {
+					openModal({
+						size: size || resolveModalSize(target),
+						title,
+						url,
+					});
+				}
+			}
+			else if (target === 'sidePanel') {
+				event.preventDefault();
+
+				highlightItems([itemId]);
+
+				openSidePanel({
+					size: 'lg',
+					title,
+					url,
+				});
+			}
+			else if (target === 'async' || target === 'headless') {
+				event.preventDefault();
+
+				setLoading(true);
+
+				executeAsyncItemAction({
+					errorMessage,
+					method: method ?? data?.method,
+					setActionItemLoading: setLoading,
+					successMessage,
+					url,
+				});
+			}
+			else if (target === 'inlineEdit') {
+				event.preventDefault();
+
+				toggleItemInlineEdit(itemId);
+			}
+			else if (target === 'blank') {
+				event.preventDefault();
+
+				window.open(url);
+			}
+
+			const exposedProps = {
 				action,
 				event,
 				itemData,
+				loadData,
+				openSidePanel,
+			};
+
+			if (onClick) {
+				onClick(exposedProps);
+			}
+
+			if (onActionDropdownItemClick) {
+				onActionDropdownItemClick(exposedProps);
+			}
+
+			if (target === 'link' && defaultPrevented) {
+				navigate(url);
+			}
+		};
+
+		if (confirmationMessage) {
+			let defaultPrevented = false;
+
+			if (target === 'link') {
+				event.preventDefault();
+
+				defaultPrevented = true;
+			}
+
+			openConfirmModal({
+				message: confirmationMessage,
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						doAction({defaultPrevented});
+					}
+				},
+				status,
+				title,
 			});
 		}
-
-		if (!isLink(action.target, action.onClick)) {
-			event.preventDefault();
-
-			const {data, onClick, target} = action;
-
-			handleAction(
-				{
-					confirmationMessage: data?.confirmationMessage,
-					errorMessage: data?.errorMessage,
-					event,
-					itemId,
-					method: action.method ?? action.data?.method,
-					onClick,
-					setLoading,
-					size,
-					successMessage: data?.successMessage,
-					target,
-					url: formatActionURL(action.href, itemData),
-				},
-				context
-			);
+		else {
+			doAction({defaultPrevented: false});
 		}
 
 		if (closeMenu) {
@@ -240,7 +223,6 @@ function Actions({actions, itemData, itemId, menuActive, onMenuActiveChange}) {
 			)}
 			<ActionsDropdown
 				actions={formattedActions}
-				handleAction={handleAction}
 				itemData={itemData}
 				itemId={itemId}
 				loading={loading}
@@ -259,13 +241,15 @@ const actionType = PropTypes.shape({
 		errorMessage: PropTypes.string,
 		method: PropTypes.oneOf(['delete', 'get', 'patch', 'post']),
 		permissionKey: PropTypes.string,
+		size: PropTypes.oneOf(['sm', 'lg', 'full-screen']),
 		successMessage: PropTypes.string,
+		title: PropTypes.string,
 	}),
 	href: PropTypes.string,
 	icon: PropTypes.string,
-	label: PropTypes.string.isRequired,
+	label: PropTypes.string,
 	method: PropTypes.oneOf(['delete', 'get', 'patch', 'post']),
-	onClick: PropTypes.string,
+	onClick: PropTypes.func,
 	target: PropTypes.oneOf([
 		'async',
 		'headless',

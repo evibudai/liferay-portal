@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.preview.audio.internal;
 
 import com.liferay.document.library.constants.DLFileVersionPreviewConstants;
-import com.liferay.document.library.kernel.util.AudioProcessor;
-import com.liferay.document.library.kernel.util.DLProcessorRegistryUtil;
+import com.liferay.document.library.kernel.model.DLProcessorConstants;
+import com.liferay.document.library.kernel.processor.AudioProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessorHelperUtil;
 import com.liferay.document.library.preview.DLPreviewRenderer;
 import com.liferay.document.library.preview.DLPreviewRendererProvider;
 import com.liferay.document.library.preview.audio.internal.constants.DLPreviewAudioWebKeys;
@@ -43,7 +36,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Alejandro Tardín
@@ -54,15 +46,19 @@ public class AudioDLPreviewRendererProvider
 
 	@Override
 	public Set<String> getMimeTypes() {
-		return _audioProcessor.getAudioMimeTypes();
+		AudioProcessor audioProcessor = (AudioProcessor)_dlProcessor;
+
+		return audioProcessor.getAudioMimeTypes();
 	}
 
 	@Override
 	public DLPreviewRenderer getPreviewDLPreviewRenderer(
 		FileVersion fileVersion) {
 
-		if (!_audioProcessor.hasAudio(fileVersion) &&
-			!_audioProcessor.isAudioSupported(fileVersion)) {
+		AudioProcessor audioProcessor = (AudioProcessor)_dlProcessor;
+
+		if (!audioProcessor.hasAudio(fileVersion) &&
+			!audioProcessor.isAudioSupported(fileVersion.getMimeType())) {
 
 			return null;
 		}
@@ -100,9 +96,13 @@ public class AudioDLPreviewRendererProvider
 			throw new DLFileEntryPreviewGenerationException();
 		}
 
-		if (!_audioProcessor.hasAudio(fileVersion)) {
-			if (!DLProcessorRegistryUtil.isPreviewableSize(fileVersion)) {
-				throw new DLPreviewSizeException();
+		AudioProcessor audioProcessor = (AudioProcessor)_dlProcessor;
+
+		if (!audioProcessor.hasAudio(fileVersion)) {
+			if (!DLProcessorHelperUtil.isPreviewableSize(fileVersion)) {
+				throw new DLPreviewSizeException(
+					DLProcessorHelperUtil.getPreviewableProcessorMaxSize(
+						fileVersion.getGroupId()));
 			}
 
 			throw new DLPreviewGenerationInProcessException();
@@ -129,10 +129,12 @@ public class AudioDLPreviewRendererProvider
 		List<String> previewFileURLs = new ArrayList<>();
 
 		try {
+			AudioProcessor audioProcessor = (AudioProcessor)_dlProcessor;
+
 			for (String dlFileEntryPreviewAudioContainer :
 					PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS) {
 
-				long previewFileSize = _audioProcessor.getPreviewFileSize(
+				long previewFileSize = audioProcessor.getPreviewFileSize(
 					fileVersion, dlFileEntryPreviewAudioContainer);
 
 				if (previewFileSize > 0) {
@@ -157,11 +159,11 @@ public class AudioDLPreviewRendererProvider
 		return previewFileURLs;
 	}
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private AudioProcessor _audioProcessor;
-
 	@Reference
 	private DLFileVersionPreviewLocalService _dlFileVersionPreviewLocalService;
+
+	@Reference(target = "(type=" + DLProcessorConstants.AUDIO_PROCESSOR + ")")
+	private DLProcessor _dlProcessor;
 
 	@Reference
 	private DLURLHelper _dlURLHelper;

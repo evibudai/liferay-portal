@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.multi.factor.authentication.web.internal.policy;
@@ -21,14 +12,13 @@ import com.liferay.multi.factor.authentication.web.internal.system.configuration
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -54,13 +44,9 @@ public class MFAPolicy {
 			return Collections.emptyList();
 		}
 
-		Stream<BrowserMFAChecker> stream = browserMFACheckers.stream();
-
-		return stream.filter(
-			browserMFAChecker -> browserMFAChecker.isAvailable(userId)
-		).collect(
-			Collectors.toList()
-		);
+		return ListUtil.filter(
+			browserMFACheckers,
+			browserMFAChecker -> browserMFAChecker.isAvailable(userId));
 	}
 
 	public List<HeadlessMFAChecker> getAvailableHeadlessMFACheckers(
@@ -73,13 +59,9 @@ public class MFAPolicy {
 			return Collections.emptyList();
 		}
 
-		Stream<HeadlessMFAChecker> stream = headlessMFACheckers.stream();
-
-		return stream.filter(
-			headlessMFAChecker -> headlessMFAChecker.isAvailable(userId)
-		).collect(
-			Collectors.toList()
-		);
+		return ListUtil.filter(
+			headlessMFACheckers,
+			headlessMFAChecker -> headlessMFAChecker.isAvailable(userId));
 	}
 
 	public boolean isMFAEnabled(long companyId) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayTabs from '@clayui/tabs';
@@ -22,6 +13,7 @@ import {
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
 
+import {defaultLanguageId} from '../../utils/constants';
 import BasicInfoScreen from './BasicInfoScreen/BasicInfoScreen';
 import {DefaultSortScreen} from './DefaultSortScreen/DefaultSortScreen';
 import {FilterScreen} from './FilterScreen/FilterScreen';
@@ -75,7 +67,11 @@ const CustomView: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 				`/o/object-admin/v1.0/object-views/${objectViewId}`
 			);
 
-			const objectFields = await API.getObjectFieldsByExternalReferenceCode(
+			const objectFields = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
+				objectDefinitionExternalReferenceCode
+			);
+
+			const objectDefinition = await API.getObjectDefinitionByExternalReferenceCode(
 				objectDefinitionExternalReferenceCode
 			);
 
@@ -90,6 +86,7 @@ const CustomView: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 
 			dispatch({
 				payload: {
+					creationLanguageId: objectDefinition.defaultLanguageId,
 					objectFields,
 					objectView,
 				},
@@ -156,11 +153,7 @@ const CustomView: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 
 		const {objectViewColumns} = newObjectView;
 
-		if (
-			invalidateRequired(
-				objectView.name[Liferay.ThemeDisplay.getDefaultLanguageId()]
-			)
-		) {
+		if (invalidateRequired(objectView.name[defaultLanguageId])) {
 			openToast({
 				message: Liferay.Language.get('a-name-is-required'),
 				type: 'danger',
@@ -171,10 +164,10 @@ const CustomView: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 
 		if (!objectView.defaultObjectView || objectViewColumns.length !== 0) {
 			try {
-				await API.save(
-					`/o/object-admin/v1.0/object-views/${objectViewId}`,
-					newObjectView
-				);
+				await API.save({
+					item: newObjectView,
+					url: `/o/object-admin/v1.0/object-views/${objectViewId}`,
+				});
 				saveAndReload();
 
 				openToast({
@@ -233,7 +226,7 @@ interface ICustomViewWrapperProps extends React.HTMLAttributes<HTMLElement> {
 	isViewOnly: boolean;
 	objectDefinitionExternalReferenceCode: string;
 	objectViewId: string;
-	workflowStatusJSONArray: TWorkflowStatus[];
+	workflowStatuses: TWorkflowStatus[];
 }
 
 const CustomViewWrapper: React.FC<ICustomViewWrapperProps> = ({
@@ -241,7 +234,7 @@ const CustomViewWrapper: React.FC<ICustomViewWrapperProps> = ({
 	isViewOnly,
 	objectDefinitionExternalReferenceCode,
 	objectViewId,
-	workflowStatusJSONArray,
+	workflowStatuses,
 }) => {
 	return (
 		<ViewContextProvider
@@ -250,7 +243,7 @@ const CustomViewWrapper: React.FC<ICustomViewWrapperProps> = ({
 				isViewOnly,
 				objectDefinitionExternalReferenceCode,
 				objectViewId,
-				workflowStatusJSONArray,
+				workflowStatuses,
 			}}
 		>
 			<CustomView />

@@ -1,22 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.view.count.service.impl.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.lang.SafeCloseable;
-import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.orm.Session;
@@ -72,14 +62,13 @@ public class ViewCountEntryLocalServiceTest {
 	public void setUp() {
 		_className = _classNameLocalService.getClassName(
 			ViewCountEntryLocalServiceTest.class.getName());
-		_db = DBManagerUtil.getDB();
 	}
 
 	@Test
 	public void testLazyCreationWithRaceCondition() throws Throwable {
 		Assume.assumeFalse(
 			"HSQL does not allow concurrent Session assess, skip test.",
-			_db.getDBType() == DBType.HYPERSONIC);
+			DBManagerUtil.getDBType() == DBType.HYPERSONIC);
 
 		long classPK = 0;
 		int viewCount = 100;
@@ -150,7 +139,7 @@ public class ViewCountEntryLocalServiceTest {
 			SessionFactory.class.getClassLoader(),
 			new Class<?>[] {SessionFactory.class},
 			(proxy, method, args) -> {
-				if (Objects.equals("openSession", method.getName())) {
+				if (Objects.equals(method.getName(), "openSession")) {
 					return _createSessionProxy(
 						countDownLatch, sessionFactory.openSession(),
 						viewCountEntries);
@@ -167,7 +156,7 @@ public class ViewCountEntryLocalServiceTest {
 		return ProxyUtil.newProxyInstance(
 			Session.class.getClassLoader(), new Class<?>[] {Session.class},
 			(proxy, method, args) -> {
-				if (Objects.equals("get", method.getName()) &&
+				if (Objects.equals(method.getName(), "get") &&
 					(countDownLatch.getCount() > 0)) {
 
 					countDownLatch.countDown();
@@ -182,7 +171,7 @@ public class ViewCountEntryLocalServiceTest {
 					Assert.assertNull(viewCountEntries.get(0));
 
 					if (viewCountEntries.size() == 2) {
-						if (_db.getDBType() == DBType.SQLSERVER) {
+						if (DBManagerUtil.getDBType() == DBType.SQLSERVER) {
 							Assert.assertNotNull(viewCountEntries.get(1));
 						}
 						else {
@@ -213,8 +202,6 @@ public class ViewCountEntryLocalServiceTest {
 
 	@Inject
 	private static ViewCountEntryLocalService _viewCountEntryLocalService;
-
-	private DB _db;
 
 	@DeleteAfterTestRun
 	private ViewCountEntry _viewCountEntry;

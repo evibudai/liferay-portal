@@ -6,6 +6,10 @@
 	<namespace>Object</namespace>
 	<entity local-service="true" name="ObjectAction" remote-service="true" uuid="true">
 
+		<!-- External reference code -->
+
+		<column name="externalReferenceCode" type="String" />
+
 		<!-- PK fields -->
 
 		<column name="objectActionId" primary="true" type="long" />
@@ -30,6 +34,7 @@
 		<column name="objectActionExecutorKey" type="String" />
 		<column name="objectActionTriggerKey" type="String" />
 		<column name="parameters" type="String" />
+		<column name="system" type="boolean" />
 		<column name="status" type="int" />
 
 		<!-- Finder methods -->
@@ -40,6 +45,11 @@
 		<finder name="ODI_N" return-type="ObjectAction">
 			<finder-column name="objectDefinitionId" />
 			<finder-column name="name" />
+		</finder>
+		<finder name="ERC_C_ODI" return-type="ObjectEntry" unique="true">
+			<finder-column name="externalReferenceCode" />
+			<finder-column name="companyId" />
+			<finder-column name="objectDefinitionId" />
 		</finder>
 		<finder name="O_A_OATK" return-type="Collection">
 			<finder-column name="objectDefinitionId" />
@@ -71,6 +81,8 @@
 
 		<column db-name="accountERObjectFieldId" name="accountEntryRestrictedObjectFieldId" type="long" />
 		<column name="descriptionObjectFieldId" type="long" />
+		<column name="objectFolderId" type="long" />
+		<column name="rootObjectDefinitionId" type="long" />
 		<column name="titleObjectFieldId" type="long" />
 		<column name="accountEntryRestricted" type="boolean" />
 		<column name="active" type="boolean" />
@@ -79,7 +91,10 @@
 		<column name="className" type="String" />
 		<column name="enableCategorization" type="boolean" />
 		<column name="enableComments" type="boolean" />
+		<column name="enableLocalization" type="boolean" />
+		<column name="enableObjectEntryDraft" type="boolean" />
 		<column name="enableObjectEntryHistory" type="boolean" />
+		<column name="modifiable" type="boolean" />
 		<column name="name" type="String" />
 		<column name="panelAppOrder" type="String" />
 		<column name="panelCategoryKey" type="String" />
@@ -104,6 +119,9 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
+		<finder name="ObjectFolderId" return-type="Collection">
+			<finder-column name="objectFolderId" />
+		</finder>
 		<finder name="System" return-type="Collection">
 			<finder-column name="system" />
 		</finder>
@@ -115,6 +133,10 @@
 			<finder-column name="companyId" />
 			<finder-column name="name" />
 		</finder>
+		<finder name="C_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="status" />
+		</finder>
 		<finder name="S_S" return-type="Collection">
 			<finder-column name="system" />
 			<finder-column name="status" />
@@ -123,6 +145,11 @@
 			<finder-column name="companyId" />
 			<finder-column name="active" />
 			<finder-column name="status" />
+		</finder>
+		<finder name="C_M_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="modifiable" />
+			<finder-column name="system" />
 		</finder>
 		<finder name="C_A_S_S" return-type="Collection">
 			<finder-column name="companyId" />
@@ -156,6 +183,7 @@
 		<!-- Other fields -->
 
 		<column name="objectDefinitionId" type="long" />
+		<column name="rootObjectEntryId" type="long" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
@@ -227,12 +255,14 @@
 		<column method-name="DBColumnName" name="dbColumnName" type="String" />
 		<column method-name="DBTableName" name="dbTableName" type="String" />
 		<column method-name="DBType" name="dbType" type="String" />
-		<column name="defaultValue" type="String" />
 		<column name="indexed" type="boolean" />
 		<column name="indexedAsKeyword" type="boolean" />
 		<column name="indexedLanguageId" type="String" />
 		<column localized="true" name="label" type="String" />
+		<column name="localized" type="boolean" />
 		<column name="name" type="String" />
+		<column name="readOnly" type="String" />
+		<column name="readOnlyConditionExpression" type="String" />
 		<column name="relationshipType" type="String" />
 		<column name="required" type="boolean" />
 		<column name="state" type="boolean" />
@@ -263,6 +293,10 @@
 		<finder name="ODI_I" return-type="Collection">
 			<finder-column name="objectDefinitionId" />
 			<finder-column name="indexed" />
+		</finder>
+		<finder name="ODI_L" return-type="Collection">
+			<finder-column name="objectDefinitionId" />
+			<finder-column name="localized" />
 		</finder>
 		<finder name="ODI_N" return-type="ObjectDefinition">
 			<finder-column name="objectDefinitionId" />
@@ -338,6 +372,69 @@
 
 		<finder name="ObjectFieldId" return-type="Collection">
 			<finder-column name="objectFieldId" />
+		</finder>
+	</entity>
+	<entity external-reference-code="company" local-service="true" name="ObjectFolder" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="objectFolderId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column localized="true" name="label" type="String" />
+		<column name="name" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
+		</finder>
+		<finder name="C_N" return-type="ObjectFolder">
+			<finder-column name="companyId" />
+			<finder-column name="name" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ObjectFolderItem" remote-service="false" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="objectFolderItemId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="objectDefinitionId" type="long" />
+		<column name="objectFolderId" type="long" />
+		<column name="positionX" type="int" />
+		<column name="positionY" type="int" />
+
+		<!-- Finder methods -->
+
+		<finder name="ObjectDefinitionId" return-type="Collection">
+			<finder-column name="objectDefinitionId" />
+		</finder>
+		<finder name="ObjectFolderId" return-type="Collection">
+			<finder-column name="objectFolderId" />
+		</finder>
+		<finder name="ODI_OFI" return-type="ObjectFolderItem" unique="true">
+			<finder-column name="objectDefinitionId" />
+			<finder-column name="objectFolderId" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="ObjectLayout" remote-service="true" uuid="true">
@@ -453,7 +550,7 @@
 			<finder-column name="objectLayoutBoxId" />
 		</finder>
 	</entity>
-	<entity local-service="false" name="ObjectLayoutTab" remote-service="true" uuid="true">
+	<entity local-service="true" name="ObjectLayoutTab" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -485,6 +582,10 @@
 	</entity>
 	<entity local-service="true" name="ObjectRelationship" remote-service="true" uuid="true">
 
+		<!-- External reference code -->
+
+		<column name="externalReferenceCode" type="String" />
+
 		<!-- PK fields -->
 
 		<column name="objectRelationshipId" primary="true" type="long" />
@@ -505,9 +606,11 @@
 		<column name="parameterObjectFieldId" type="long" />
 		<column name="deletionType" type="String" />
 		<column method-name="DBTableName" name="dbTableName" type="String" />
+		<column name="edge" type="boolean" />
 		<column localized="true" name="label" type="String" />
 		<column name="name" type="String" />
 		<column name="reverse" type="boolean" />
+		<column name="system" type="boolean" />
 		<column name="type" type="String" />
 
 		<!-- Finder methods -->
@@ -521,6 +624,13 @@
 		<finder name="ObjectFieldId2" return-type="ObjectRelationship">
 			<finder-column name="objectFieldId2" />
 		</finder>
+		<finder name="ParameterObjectFieldId" return-type="Collection">
+			<finder-column name="parameterObjectFieldId" />
+		</finder>
+		<finder name="ODI1_E" return-type="Collection">
+			<finder-column name="objectDefinitionId1" />
+			<finder-column name="edge" />
+		</finder>
 		<finder name="ODI1_N" return-type="Collection">
 			<finder-column name="objectDefinitionId1" />
 			<finder-column name="name" />
@@ -532,6 +642,15 @@
 		<finder name="ODI2_R" return-type="Collection">
 			<finder-column name="objectDefinitionId2" />
 			<finder-column name="reverse" />
+		</finder>
+		<finder name="DTN_R" return-type="ObjectRelationship">
+			<finder-column name="dbTableName" />
+			<finder-column name="reverse" />
+		</finder>
+		<finder name="ERC_C_ODI1" return-type="ObjectRelationship">
+			<finder-column name="externalReferenceCode" />
+			<finder-column name="companyId" />
+			<finder-column name="objectDefinitionId1" />
 		</finder>
 		<finder name="ODI1_ODI2_T" return-type="Collection">
 			<finder-column name="objectDefinitionId1" />
@@ -657,6 +776,10 @@
 	</entity>
 	<entity local-service="true" name="ObjectValidationRule" remote-service="true" uuid="true">
 
+		<!-- External reference code -->
+
+		<column name="externalReferenceCode" type="String" />
+
 		<!-- PK fields -->
 
 		<column name="objectValidationRuleId" primary="true" type="long" />
@@ -676,7 +799,9 @@
 		<column name="engine" type="String" />
 		<column localized="true" name="errorLabel" type="String" />
 		<column localized="true" name="name" type="String" />
+		<column name="outputType" type="String" />
 		<column name="script" type="String" />
+		<column name="system" type="boolean" />
 
 		<!-- Finder methods -->
 
@@ -686,6 +811,58 @@
 		<finder name="ODI_A" return-type="Collection">
 			<finder-column name="objectDefinitionId" />
 			<finder-column name="active" />
+		</finder>
+		<finder name="ODI_E" return-type="Collection">
+			<finder-column name="objectDefinitionId" />
+			<finder-column name="engine" />
+		</finder>
+		<finder name="ODI_O" return-type="Collection">
+			<finder-column name="objectDefinitionId" />
+			<finder-column name="outputType" />
+		</finder>
+		<finder name="ERC_C_ODI" return-type="ObjectEntry" unique="true">
+			<finder-column name="externalReferenceCode" />
+			<finder-column name="companyId" />
+			<finder-column name="objectDefinitionId" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ObjectValidationRuleSetting" remote-service="false" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="objectValidationRuleSettingId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="objectValidationRuleId" type="long" />
+		<column name="name" type="String" />
+		<column name="value" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="ObjectValidationRuleId" return-type="Collection">
+			<finder-column name="objectValidationRuleId" />
+		</finder>
+		<finder name="OVRI_N" return-type="Collection">
+			<finder-column name="objectValidationRuleId" />
+			<finder-column name="name" />
+		</finder>
+		<finder name="N_V" return-type="ObjectValidationRuleSetting">
+			<finder-column name="name" />
+			<finder-column name="value" />
+		</finder>
+		<finder name="OVRI_N_V" return-type="ObjectValidationRuleSetting" unique="true">
+			<finder-column name="objectValidationRuleId" />
+			<finder-column name="name" />
+			<finder-column name="value" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="ObjectView" remote-service="true" uuid="true">
@@ -816,46 +993,69 @@
 		<exception>DefaultObjectView</exception>
 		<exception>DuplicateObjectFieldExternalReferenceCode</exception>
 		<exception>DuplicateObjectRelationship</exception>
+		<exception>DuplicateObjectRelationshipExternalReferenceCode</exception>
 		<exception>ObjectActionConditionExpression</exception>
 		<exception>ObjectActionErrorMessage</exception>
+		<exception>ObjectActionExecutorKey</exception>
 		<exception>ObjectActionLabel</exception>
 		<exception>ObjectActionName</exception>
 		<exception>ObjectActionParameters</exception>
+		<exception>ObjectActionSystem</exception>
 		<exception>ObjectActionTriggerKey</exception>
 		<exception>ObjectDefinitionAccountEntryRestricted</exception>
 		<exception>ObjectDefinitionAccountEntryRestrictedObjectFieldId</exception>
 		<exception>ObjectDefinitionActive</exception>
 		<exception>ObjectDefinitionEnableCategorization</exception>
 		<exception>ObjectDefinitionEnableComments</exception>
+		<exception>ObjectDefinitionEnableLocalization</exception>
 		<exception>ObjectDefinitionEnableObjectEntryHistory</exception>
+		<exception>ObjectDefinitionExternalReferenceCode</exception>
 		<exception>ObjectDefinitionLabel</exception>
+		<exception>ObjectDefinitionModifiable</exception>
 		<exception>ObjectDefinitionName</exception>
+		<exception>ObjectDefinitionPanelCategoryKey</exception>
 		<exception>ObjectDefinitionPluralLabel</exception>
+		<exception>ObjectDefinitionPortlet</exception>
+		<exception>ObjectDefinitionRootObjectDefinitionId</exception>
 		<exception>ObjectDefinitionScope</exception>
 		<exception>ObjectDefinitionStatus</exception>
+		<exception>ObjectDefinitionSystem</exception>
 		<exception>ObjectDefinitionVersion</exception>
 		<exception>ObjectEntryCount</exception>
 		<exception>ObjectEntryValues</exception>
 		<exception>ObjectFieldBusinessType</exception>
 		<exception>ObjectFieldDBType</exception>
-		<exception>ObjectFieldDefaultValue</exception>
 		<exception>ObjectFieldLabel</exception>
 		<exception>ObjectFieldListTypeDefinitionId</exception>
+		<exception>ObjectFieldLocalized</exception>
 		<exception>ObjectFieldName</exception>
+		<exception>ObjectFieldReadOnly</exception>
+		<exception>ObjectFieldReadOnlyConditionExpression</exception>
 		<exception>ObjectFieldRelationshipType</exception>
+		<exception>ObjectFieldRequired</exception>
 		<exception>ObjectFieldSettingName</exception>
 		<exception>ObjectFieldSettingValue</exception>
 		<exception>ObjectFieldState</exception>
+		<exception>ObjectFieldSystem</exception>
 		<exception>ObjectFilter</exception>
+		<exception>ObjectFolderLabel</exception>
+		<exception>ObjectFolderName</exception>
 		<exception>ObjectLayoutBoxCategorizationType</exception>
 		<exception>ObjectLayoutColumnSize</exception>
+		<exception>ObjectRelationshipDeletionType</exception>
+		<exception>ObjectRelationshipEdge</exception>
 		<exception>ObjectRelationshipName</exception>
 		<exception>ObjectRelationshipParameterObjectFieldId</exception>
 		<exception>ObjectRelationshipReverse</exception>
+		<exception>ObjectRelationshipSystem</exception>
 		<exception>ObjectRelationshipType</exception>
 		<exception>ObjectValidationRuleEngine</exception>
 		<exception>ObjectValidationRuleName</exception>
+		<exception>ObjectValidationRuleOutputType</exception>
 		<exception>ObjectValidationRuleScript</exception>
+		<exception>ObjectValidationRuleSettingName</exception>
+		<exception>ObjectValidationRuleSettingValue</exception>
+		<exception>ObjectValidationRuleSystem</exception>
 		<exception>ObjectViewColumnFieldName</exception>
 		<exception>ObjectViewFilterColumn</exception>
 		<exception>ObjectViewSortColumn</exception>
@@ -863,5 +1063,6 @@
 		<exception>RequiredObjectDefinition</exception>
 		<exception>RequiredObjectField</exception>
 		<exception>RequiredObjectRelationship</exception>
+		<exception>RequiredObjectValidationRuleSetting</exception>
 	</exceptions>
 </service-builder>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.internal.facet.nested;
@@ -17,6 +8,8 @@ package com.liferay.portal.search.internal.facet.nested;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
+import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.search.aggregation.Aggregation;
 import com.liferay.portal.search.aggregation.Aggregations;
 import com.liferay.portal.search.facet.Facet;
 import com.liferay.portal.search.facet.nested.NestedFacetFactory;
@@ -32,6 +25,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jorge Díaz
+ * @author Petteri Karttunen
  */
 @Component(service = NestedFacetSearchContributor.class)
 public class NestedFacetSearchContributorImpl
@@ -71,6 +65,15 @@ public class NestedFacetSearchContributorImpl
 			_searchContext = searchContext;
 		}
 
+		public NestedFacetBuilder additionalFacetConfigurationData(
+			JSONObject additionalFacetConfigurationDataJSONObject) {
+
+			_additionalFacetConfigurationDataJSONObject =
+				additionalFacetConfigurationDataJSONObject;
+
+			return this;
+		}
+
 		@Override
 		public NestedFacetBuilder aggregationName(String aggregationName) {
 			_aggregationName = aggregationName;
@@ -83,8 +86,12 @@ public class NestedFacetSearchContributorImpl
 				(NestedFacetImpl)nestedFacetFactory.newInstance(_searchContext);
 
 			nestedFacetImpl.setAggregationName(_aggregationName);
+
+			nestedFacetImpl.setChildAggregation(_childAggregation);
+			nestedFacetImpl.setChildAggregationValuesFilter(
+				_childAggregationValuesFilter);
 			nestedFacetImpl.setFacetConfiguration(
-				buildFacetConfiguration(nestedFacetImpl));
+				buildFacetConfiguration(nestedFacetImpl.getFieldName()));
 			nestedFacetImpl.setFieldName(_fieldToAggregate);
 			nestedFacetImpl.setFilterField(_filterField);
 			nestedFacetImpl.setFilterValue(_filterValue);
@@ -93,6 +100,24 @@ public class NestedFacetSearchContributorImpl
 			nestedFacetImpl.select(_selectedValues);
 
 			return nestedFacetImpl;
+		}
+
+		@Override
+		public NestedFacetBuilder childAggregation(
+			Aggregation childAggregation) {
+
+			_childAggregation = childAggregation;
+
+			return this;
+		}
+
+		@Override
+		public NestedFacetBuilder childAggregationValuesFilter(
+			Filter childAggregationFilter) {
+
+			_childAggregationValuesFilter = childAggregationFilter;
+
+			return this;
 		}
 
 		@Override
@@ -144,10 +169,10 @@ public class NestedFacetSearchContributorImpl
 			return this;
 		}
 
-		protected FacetConfiguration buildFacetConfiguration(Facet facet) {
+		protected FacetConfiguration buildFacetConfiguration(String fieldName) {
 			FacetConfiguration facetConfiguration = new FacetConfiguration();
 
-			facetConfiguration.setFieldName(facet.getFieldName());
+			facetConfiguration.setFieldName(fieldName);
 			facetConfiguration.setOrder("OrderHitsDesc");
 			facetConfiguration.setStatic(false);
 			facetConfiguration.setWeight(1.1);
@@ -160,10 +185,26 @@ public class NestedFacetSearchContributorImpl
 				"maxTerms", _maxTerms
 			);
 
+			if (_additionalFacetConfigurationDataJSONObject != null) {
+				for (String key :
+						_additionalFacetConfigurationDataJSONObject.keySet()) {
+
+					if (!jsonObject.has(key)) {
+						jsonObject.put(
+							key,
+							_additionalFacetConfigurationDataJSONObject.get(
+								key));
+					}
+				}
+			}
+
 			return facetConfiguration;
 		}
 
+		private JSONObject _additionalFacetConfigurationDataJSONObject;
 		private String _aggregationName;
+		private Aggregation _childAggregation;
+		private Filter _childAggregationValuesFilter;
 		private String _fieldToAggregate;
 		private String _filterField;
 		private String _filterValue;

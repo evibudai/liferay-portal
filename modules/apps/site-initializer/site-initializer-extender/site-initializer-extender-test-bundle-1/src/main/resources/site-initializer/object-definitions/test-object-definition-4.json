@@ -1,0 +1,24 @@
+{
+	"accountEntryRestricted": true,
+	"accountEntryRestrictedObjectFieldName": "r_accountEntryToTestObjectDefinition4_accountEntryId",
+	"label": {
+		"en_US": "Test Object Definition 4"
+	},
+	"name": "TestObjectDefinition4",
+	"objectFields": [
+		{
+			"DBType": "String",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Field 4"
+			},
+			"name": "field4",
+			"required": false
+		}
+	],
+	"pluralLabel": {
+		"en_US": "Test Object Definitions 4"
+	},
+	"scope": "site"
+}

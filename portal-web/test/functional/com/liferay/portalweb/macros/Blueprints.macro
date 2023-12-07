@@ -1,28 +1,41 @@
 definition {
 
-	macro addElement {
+	@summary = "Default summary"
+	macro addElement(element = null) {
 		AssertVisible(locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_HEADER");
 
-		if (IsElementPresent(locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_SEARCH_CLEAR")) {
-			Click.clickNoMouseOver(locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_SEARCH_CLEAR");
-		}
-
-		Type.sendKeysApplicationSearch(
-			locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_SEARCH_BAR",
-			value1 = "${element}");
+		Blueprints.searchAddElementsSidebar(element = ${element});
 
 		MouseOver(
-			element = "${element}",
+			key_element = ${element},
 			locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_NAME");
 
 		Click.clickNoMouseOverNoWaitForVisible(
-			element = "${element}",
+			key_element = ${element},
 			locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_ADD_BUTTON");
 	}
 
-	macro applyBlueprintViaOptionsWidget {
+	@summary = "Default summary"
+	macro addElementViaDescription(searchTerm = null, element = null) {
+		AssertVisible(locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_HEADER");
+
+		Blueprints.searchAddElementsSidebar(element = ${searchTerm});
+
+		MouseOver(
+			key_element = ${element},
+			locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_DESCRIPTION");
+
+		Click.clickNoMouseOverNoWaitForVisible(
+			key_element = ${element},
+			locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_ADD_BUTTON");
+	}
+
+	@summary = "Default summary"
+	macro applyBlueprintViaOptionsWidget(blueprintTitle = null) {
 		if (!(IsElementPresent(key_portletName = "Blueprints Options", locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON"))) {
-			SearchPortlets.addWidgets(searchPortletList = "Blueprints Options");
+			SearchPage.addWidgets(searchPortletList = "Blueprints Options");
+
+			Refresh();
 		}
 
 		Portlet.gotoPortletOptions(
@@ -33,8 +46,12 @@ definition {
 
 		Button.clickSelect();
 
+		WaitForElementPresent(
+			key_blueprintTitle = ${blueprintTitle},
+			locator1 = "Blueprints#BLUEPRINTS_OPTION_WIDGET_SELECT_BLUEPRINT");
+
 		Click(
-			blueprintTitle = "${blueprintTitle}",
+			key_blueprintTitle = ${blueprintTitle},
 			locator1 = "Blueprints#BLUEPRINTS_OPTION_WIDGET_SELECT_BLUEPRINT");
 
 		SelectFrameTop();
@@ -52,18 +69,20 @@ definition {
 			portletName = "Blueprints Options");
 	}
 
-	macro configureElementDropdown {
+	@summary = "Default summary"
+	macro configureElementDropdown(dropdownName = null, option = null) {
 		Click(
-			dropdownName = "${dropdownName}",
+			key_dropdownName = ${dropdownName},
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_GENERIC_DROPDOWN");
 
 		Click.clickNoMouseOver(
-			dropdownName = "${dropdownName}",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_GENERIC_DROPDOWN_OPTION",
-			option = "${option}");
+			key_dropdownName = ${dropdownName},
+			key_option = ${option},
+			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_GENERIC_DROPDOWN_OPTION");
 	}
 
-	macro configureFederatedSearchKeyForOptionsWidget {
+	@summary = "Default summary"
+	macro configureFederatedSearchKeyForOptionsWidget(federatedSearchKey = null) {
 		Portlet.gotoPortletOptions(
 			portletName = "Blueprints Options",
 			portletOption = "Configuration");
@@ -73,7 +92,7 @@ definition {
 		Type(
 			key_fieldLabel = "Federated Search Key",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${federatedSearchKey}");
+			value1 = ${federatedSearchKey});
 
 		Button.clickSave();
 
@@ -82,111 +101,121 @@ definition {
 		IFrame.closeFrame();
 	}
 
-	macro createBlueprint {
+	@summary = "Default summary"
+	macro createBlueprint(description = null, title = null) {
 		Click(locator1 = "Button#PLUS");
 
-		PortletEntry.inputTitle(title = "${title}");
+		PortletEntry.inputTitle(title = ${title});
 
 		if (isSet(description)) {
-			PortletEntry.inputDescription(description = "${description}");
+			PortletEntry.inputDescription(description = ${description});
 		}
 
 		PortletEntry.create();
 	}
 
-	macro createElement {
+	@summary = "Default summary"
+	macro createElement(title = null, elementSourceJson = null) {
 		Navigator.gotoNavItem(navItem = "Elements");
 
 		Click(locator1 = "Button#PLUS");
 
-		PortletEntry.inputTitle(title = "${title}");
+		PortletEntry.inputTitle(title = ${title});
 
 		Button.click(button = "Create");
 
 		if (isSet(elementSourceJson)) {
 			Type.typeCodeMirrorEditorNoError(
 				locator1 = "Blueprints#CODE_MIRROR_EDITOR",
-				value1 = "${elementSourceJson}");
+				value1 = ${elementSourceJson});
 		}
 
 		PortletEntry.save();
 	}
 
-	macro deleteEntry {
+	@summary = "Default summary"
+	macro deleteEntry(title = null) {
 		Blueprints.gotoEntryMenuItem(
 			menuItem = "Delete",
-			title = "${title}");
+			title = ${title});
 
-		Confirm();
+		Confirm(value1 = "null");
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro getBlueprintID {
-		Variables.assertDefined(parameterList = "${title}");
+	@summary = "Default summary"
+	macro getBlueprintID(title = null) {
+		Variables.assertDefined(parameterList = ${title});
 
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
-				${portalURL}/o/search-experiences-rest/v1.0/sxp-blueprints?search=${title} \
+			${portalURL}/o/search-experiences-rest/v1.0/sxp-blueprints?search=${title} \
 				-H 'accept: application/json' \
 				-u test@liferay.com:test
 		''';
 
-		var blueprintId = JSONCurlUtil.get("${curl}", "$.items[?(@['title'] == '${title}')]['id']");
+		var blueprintId = JSONCurlUtil.get(${curl}, "$.items[?(@['title'] == '${title}')]['id']");
 
 		echo("## ID for Blueprint ${title}: ${blueprintId}");
 
-		return "${blueprintId}";
+		return ${blueprintId};
 	}
 
-	macro getElementID {
-		Variables.assertDefined(parameterList = "${title}");
+	@summary = "Default summary"
+	macro getElementID(title = null) {
+		Variables.assertDefined(parameterList = ${title});
 
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
-				${portalURL}/o/search-experiences-rest/v1.0/sxp-elements?search=${title} \
+			${portalURL}/o/search-experiences-rest/v1.0/sxp-elements?search=${title} \
 				-H 'accept: application/json' \
 				-u test@liferay.com:test
 		''';
 
-		var elementId = JSONCurlUtil.get("${curl}", "$.items[?(@['title'] == '${title}')]['id']");
+		var elementId = JSONCurlUtil.get(${curl}, "$.items[?(@['title'] == '${title}')]['id']");
 
 		echo("## ID for Element ${title}: ${elementId}");
 
-		return "${elementId}";
+		return ${elementId};
 	}
 
-	macro gotoBlueprint {
-		Blueprints.gotoEntry(title = "${title}");
+	@summary = "Default summary"
+	macro gotoBlueprint(title = null) {
+		Blueprints.gotoEntry(title = ${title});
 	}
 
-	macro gotoElement {
+	@summary = "Default summary"
+	macro gotoElement(searchForElement = null, element = null) {
 		Navigator.gotoNavItem(navItem = "Elements");
 
-		if ("${searchForElement}" == "true") {
-			Search.searchCP(searchTerm = "${element}");
+		if (${searchForElement} == "true") {
+			Search.searchCP(searchTerm = ${element});
 		}
 
-		Blueprints.gotoEntry(title = "${element}");
+		Blueprints.gotoEntry(title = ${element});
 	}
 
-	macro gotoEntry {
+	@summary = "Default summary"
+	macro gotoEntry(title = null) {
 		Click(
-			entryTitle = "${title}",
+			key_entryTitle = ${title},
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_TITLE");
 	}
 
-	macro gotoEntryMenuItem {
+	@summary = "Default summary"
+	macro gotoEntryMenuItem(title = null, menuItem = null) {
 		if (IsElementNotPresent(locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_DROPDOWN_MENU_OPEN")) {
-			Blueprints.openEntryMenu(title = "${title}");
+			Blueprints.openEntryMenu(title = ${title});
 		}
 
-		MenuItem.clickNoError(menuItem = "${menuItem}");
+		MenuItem.clickNoError(menuItem = ${menuItem});
 	}
 
-	macro openBlueprintsAdmin {
+	@summary = "Default summary"
+	macro openBlueprintsAdmin(locale = null) {
 		if (!(isSet(siteURLKey))) {
 			var siteURLKey = "guest";
 		}
@@ -199,13 +228,26 @@ definition {
 		}
 	}
 
-	macro openEntryMenu {
+	@summary = "Default summary"
+	macro openEntryMenu(title = null) {
 		Click.waitForMenuToggleJSClick(
-			entryTitle = "${title}",
+			key_entryTitle = ${title},
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_VERTICAL_ELLIPSIS");
 	}
 
-	macro searchBlueprintsPreview {
+	@summary = "Default summary"
+	macro searchAddElementsSidebar(element = null) {
+		if (IsElementPresent(locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_SEARCH_CLEAR")) {
+			Click.clickNoMouseOver(locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_SEARCH_CLEAR");
+		}
+
+		Type.sendKeysApplicationSearch(
+			locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_SEARCH_BAR",
+			value1 = ${element});
+	}
+
+	@summary = "Default summary"
+	macro searchBlueprintsPreview(searchTerm = null, attributesKey = null, attributesValue = null) {
 		if (IsNotVisible(locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_BAR")) {
 			Click(locator1 = "Button#PREVIEW");
 		}
@@ -217,23 +259,23 @@ definition {
 
 			Type(
 				locator1 = "TextInput#KEY",
-				value1 = "${attributesKey}");
+				value1 = ${attributesKey});
 
 			Type(
 				key_fieldLabel = "Value",
 				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = "${attributesValue}");
+				value1 = ${attributesValue});
 
 			Button.clickDone();
 		}
 
 		Type(
 			locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_BAR",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
 
 		var browserType = PropsUtil.get("browser.type");
 
-		if ("${browserType}" == "safari") {
+		if (${browserType} == "safari") {
 			Click(locator1 = "Icon#BASIC_SEARCH");
 		}
 		else {
@@ -245,38 +287,41 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	macro selectAddedElementMenuItem {
+	@summary = "Default summary"
+	macro selectAddedElementMenuItem(menuItem = null, element = null) {
 		Click(
-			element = "${element}",
+			key_element = ${element},
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_VERTICAL_ELLIPSIS");
 
-		MenuItem.clickNoError(menuItem = "${menuItem}");
+		MenuItem.clickNoError(menuItem = ${menuItem});
 	}
 
-	macro setTitleAndDescriptionLocalization {
+	@summary = "Default summary"
+	macro setTitleAndDescriptionLocalization(currentLocale = null, description = null, locale = null, title = null) {
 		Click(
-			key_currentLocale = StringUtil.lowerCase("${currentLocale}"),
+			key_currentLocale = StringUtil.lowerCase(${currentLocale}),
 			locator1 = "Button#TRANSLATIONS_LOCALIZATION");
 
 		Click(
-			key_locale = "${locale}",
+			key_locale = ${locale},
 			locator1 = "Translation#DROPDOWN_MENU_ITEM");
 
 		AssertVisible(
-			key_currentLocale = StringUtil.lowerCase("${locale}"),
+			key_currentLocale = StringUtil.lowerCase(${locale}),
 			locator1 = "Button#TRANSLATIONS_LOCALIZATION");
 
-		PortletEntry.inputTitle(title = "${title}");
+		PortletEntry.inputTitle(title = ${title});
 
-		PortletEntry.inputDescription(description = "${description}");
+		PortletEntry.inputDescription(description = ${description});
 	}
 
-	macro viewDownloadedContent {
+	@summary = "Default summary"
+	macro viewDownloadedContent(fileName = null, text = null) {
 		var tempDir = PropsUtil.get("output.dir.name");
 
 		var fileContent = FileUtil.read("${tempDir}/${fileName}");
 
-		if (contains("${fileContent}", "${text}")) {
+		if (contains(${fileContent}, ${text})) {
 			echo("File ${fileName} contains text ${text}");
 		}
 		else {
@@ -284,51 +329,63 @@ definition {
 		}
 	}
 
-	macro viewEntriesSpecificOrder {
-		var entryOrder = "0";
+	@summary = "Default summary"
+	macro viewEntriesSpecificOrder(entryList = null) {
+		var entryOrder = 0;
 
-		for (var entryTitle : list "${entryList}") {
+		for (var entryTitle : list ${entryList}) {
 			var entryOrder = ${entryOrder} + 1;
 
 			AssertTextEquals.assertPartialText(
+				key_rowNumber = ${entryOrder},
 				locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_ROW_NUMBER",
-				rowNumber = "${entryOrder}",
-				value1 = "${entryTitle}");
+				value1 = ${entryTitle});
 		}
 	}
 
-	macro viewEntryTitle {
+	@summary = "Default summary"
+	macro viewEntryDescription(description = null, title = null) {
+		AssertTextEquals.assertPartialText(
+			key_entryTitle = ${title},
+			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_DESCRIPTION",
+			value1 = ${description});
+	}
+
+	@summary = "Default summary"
+	macro viewEntryTitle(title = null) {
 		AssertElementPresent(
-			entryTitle = "${title}",
+			key_entryTitle = ${title},
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_TITLE");
 	}
 
-	macro viewNoEntry {
+	@summary = "Default summary"
+	macro viewNoEntry(title = null) {
 		AssertElementNotPresent(
-			entryTitle = "${title}",
+			key_entryTitle = ${title},
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_TITLE");
 	}
 
-	macro viewTitleAndDescriptionLocalization {
+	@summary = "Default summary"
+	macro viewTitleAndDescriptionLocalization(currentLocale = null, description = null, locale = null, title = null) {
 		Click(
-			key_currentLocale = StringUtil.lowerCase("${currentLocale}"),
+			key_currentLocale = StringUtil.lowerCase(${currentLocale}),
 			locator1 = "Button#TRANSLATIONS_LOCALIZATION");
 
 		AssertElementPresent(
-			key_locale = "${locale}",
+			key_locale = ${locale},
 			locator1 = "Blueprints#LANGUAGE_TRANSLATED_LABEL");
 
 		Click(
-			key_locale = "${locale}",
+			key_locale = ${locale},
 			locator1 = "Translation#DROPDOWN_MENU_ITEM");
 
 		AssertElementPresent(
 			locator1 = "TextInput#TITLE",
-			value1 = "${title}");
+			value1 = ${title});
 
 		AssertElementPresent(
 			locator1 = "TextArea#DESCRIPTION",
-			value1 = "${description}");
+			value1 = ${description});
 	}
 
 }

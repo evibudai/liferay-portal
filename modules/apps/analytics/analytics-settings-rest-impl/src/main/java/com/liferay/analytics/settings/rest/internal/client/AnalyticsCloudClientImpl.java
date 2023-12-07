@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.settings.rest.internal.client;
@@ -27,7 +18,9 @@ import com.liferay.analytics.settings.rest.internal.client.model.AnalyticsChanne
 import com.liferay.analytics.settings.rest.internal.client.model.AnalyticsDataSource;
 import com.liferay.analytics.settings.rest.internal.client.pagination.Page;
 import com.liferay.analytics.settings.rest.internal.client.pagination.Pagination;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -38,19 +31,16 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
-import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.net.HttpURLConnection;
@@ -100,9 +90,10 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 		if (response.getResponseCode() == HttpURLConnection.HTTP_OK) {
 			TypeFactory typeFactory = TypeFactory.defaultInstance();
 
-			ObjectReader objectReader = _objectMapper.readerFor(
-				typeFactory.constructCollectionType(
-					ArrayList.class, AnalyticsChannel.class));
+			ObjectReader objectReader =
+				ObjectMapperHolder._objectMapper.readerFor(
+					typeFactory.constructCollectionType(
+						ArrayList.class, AnalyticsChannel.class));
 
 			List<AnalyticsChannel> analyticsChannels = objectReader.readValue(
 				content);
@@ -127,17 +118,10 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 
 		Http.Options options = new Http.Options();
 
-		String url = HttpComponentsUtil.addParameter(
-			connectionTokenJSONObject.getString("url"), "name",
-			company.getName());
-
-		url = HttpComponentsUtil.addParameter(
-			url, "portalURL", company.getPortalURL(0));
-		url = HttpComponentsUtil.addParameter(
-			url, "token", connectionTokenJSONObject.getString("token"));
-
-		options.setLocation(url);
-
+		options.addPart("name", company.getName());
+		options.addPart("portalURL", company.getPortalURL(0));
+		options.addPart("token", connectionTokenJSONObject.getString("token"));
+		options.setLocation(connectionTokenJSONObject.getString("url"));
 		options.setPost(true);
 
 		String content = _http.URLtoString(options);
@@ -181,7 +165,7 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 			Http.Response response = options.getResponse();
 
 			if (response.getResponseCode() == HttpURLConnection.HTTP_OK) {
-				return _objectMapper.readValue(
+				return ObjectMapperHolder._objectMapper.readValue(
 					content, AnalyticsDataSource.class);
 			}
 
@@ -253,16 +237,18 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 				List<AnalyticsChannel> analyticsChannels =
 					Collections.emptyList();
 
-				JsonNode jsonNode = _objectMapper.readTree(content);
+				JsonNode jsonNode = ObjectMapperHolder._objectMapper.readTree(
+					content);
 
 				JsonNode embeddedJsonNode = jsonNode.get("_embedded");
 
 				if (embeddedJsonNode != null) {
 					TypeFactory typeFactory = TypeFactory.defaultInstance();
 
-					ObjectReader objectReader = _objectMapper.readerFor(
-						typeFactory.constructCollectionType(
-							ArrayList.class, AnalyticsChannel.class));
+					ObjectReader objectReader =
+						ObjectMapperHolder._objectMapper.readerFor(
+							typeFactory.constructCollectionType(
+								ArrayList.class, AnalyticsChannel.class));
 
 					analyticsChannels = objectReader.readValue(
 						embeddedJsonNode.get("channels"));
@@ -344,10 +330,12 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 			Http.Response response = options.getResponse();
 
 			if (response.getResponseCode() == HttpURLConnection.HTTP_OK) {
-				JsonNode jsonNode = _objectMapper.readTree(content);
+				JsonNode jsonNode = ObjectMapperHolder._objectMapper.readTree(
+					content);
 
-				ObjectReader objectReader = _objectMapper.readerFor(
-					AnalyticsChannel.class);
+				ObjectReader objectReader =
+					ObjectMapperHolder._objectMapper.readerFor(
+						AnalyticsChannel.class);
 
 				return objectReader.readValue(jsonNode.get("channel"));
 			}
@@ -405,7 +393,7 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 			Http.Response response = options.getResponse();
 
 			if (response.getResponseCode() == HttpURLConnection.HTTP_OK) {
-				return _objectMapper.readValue(
+				return ObjectMapperHolder._objectMapper.readValue(
 					content, AnalyticsDataSource.class);
 			}
 
@@ -500,13 +488,6 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 	private static final Log _log = LogFactoryUtil.getLog(
 		AnalyticsCloudClientImpl.class);
 
-	private static final ObjectMapper _objectMapper = new ObjectMapper() {
-		{
-			configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		}
-	};
-
 	private long _commerceChannelClassNameId;
 
 	@Reference
@@ -530,7 +511,16 @@ public class AnalyticsCloudClientImpl implements AnalyticsCloudClient {
 	@Reference
 	private Portal _portal;
 
-	@Reference
-	private SettingsFactory _settingsFactory;
+	private static class ObjectMapperHolder {
+
+		private static final ObjectMapper _objectMapper = new ObjectMapper() {
+			{
+				configure(
+					DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+			}
+		};
+
+	}
 
 }

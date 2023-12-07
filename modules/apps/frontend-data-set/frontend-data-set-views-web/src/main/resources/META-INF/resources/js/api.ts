@@ -1,0 +1,145 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {fetch} from 'frontend-js-web';
+
+import {OBJECT_RELATIONSHIP} from './Constants';
+import {FDSViewType} from './FDSViews';
+import {EFieldFormat, EFieldType, IField, IPickList} from './types';
+import openDefaultFailureToast from './utils/openDefaultFailureToast';
+
+const INVALID_FIELDS = ['actions', 'scopeKey', 'x-class-name', 'x-schema-name'];
+
+const LOCALIZABLE_PROPERTY_SUFFIX = '_i18n';
+
+interface IProperty {
+	$ref?: string;
+	format?: EFieldFormat;
+	type: EFieldType;
+}
+
+interface IProperties {
+	[key: string]: IProperty;
+}
+
+interface ISchemas {
+	[key: string]: {
+		properties: IProperties;
+		type: string;
+	};
+}
+
+function getValidFields({
+	contextPath,
+	schemaName,
+	schemas,
+}: {
+	contextPath: string;
+	schemaName: string;
+	schemas: ISchemas;
+}): Array<IField> {
+	const fields: Array<IField> = [];
+
+	const properties: IProperties = schemas[schemaName]?.properties;
+
+	Object.keys(properties).map((propertyKey) => {
+		const propertyValue = properties[propertyKey];
+
+		if (INVALID_FIELDS.includes(propertyKey)) {
+			return;
+		}
+
+		if (propertyKey.includes(LOCALIZABLE_PROPERTY_SUFFIX)) {
+			return;
+		}
+
+		const type = propertyValue.type;
+
+		if (type === EFieldType.ARRAY) {
+			return;
+		}
+
+		if (propertyValue.$ref) {
+			if (Liferay.FeatureFlags['LPS-186871']) {
+				fields.push({
+					children: getValidFields({
+						contextPath: `${contextPath}${propertyKey}.`,
+						schemaName: propertyValue.$ref.replace(/^.*\//, ''),
+						schemas,
+					}),
+					label: propertyKey,
+					name: `${contextPath}${propertyKey}`,
+					type,
+				});
+			}
+
+			return;
+		}
+
+		fields.push({
+			format: propertyValue.format,
+			label: propertyKey,
+			name: `${contextPath}${propertyKey}`,
+			type,
+		});
+	});
+
+	return fields;
+}
+
+export async function getFields(fdsView: FDSViewType) {
+	const {restApplication, restSchema} = fdsView[
+		OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW
+	];
+
+	const response = await fetch(`/o${restApplication}/openapi.json`);
+
+	if (!response.ok) {
+		openDefaultFailureToast();
+
+		return [];
+	}
+
+	const responseJSON = await response.json();
+
+	const schemas = responseJSON?.components?.schemas;
+
+	if (!schemas?.[restSchema]?.properties) {
+		openDefaultFailureToast();
+
+		return [];
+	}
+
+	return getValidFields({
+		contextPath: '',
+		schemaName: restSchema,
+		schemas,
+	});
+}
+
+export async function getAllPicklists(
+	page: number = 1,
+	items: IPickList[] = []
+) {
+	const response = await fetch(
+		`/o/headless-admin-list-type/v1.0/list-type-definitions?pageSize=100&page=${page}`
+	);
+
+	if (!response.ok) {
+		openDefaultFailureToast();
+
+		return [];
+	}
+
+	const responseJSON = await response.json();
+
+	items = [...items, ...responseJSON.items];
+
+	if (responseJSON.lastPage > page) {
+		items = await getAllPicklists(page + 1, items);
+	}
+
+	return items;
+}

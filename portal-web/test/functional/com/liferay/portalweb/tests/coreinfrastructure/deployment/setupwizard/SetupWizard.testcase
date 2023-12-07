@@ -1,15 +1,16 @@
 @component-name = "portal-deployment-hypersonic"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.prepare.bundle.properties = "false";
 	property testray.main.component.name = "Setup Wizard";
 
 	@description = "This is a use case for LPS-107347. It asserts that an admin is still required to change password with Setup Wizard disabled."
-	@priority = "4"
+	@priority = 4
 	test AdminIsRequiredToChangePasswordWithSetupWizardDisabled {
-		property custom.properties = "setup.wizard.enabled=false${line.separator}passwords.default.policy.change.required=true";
+		property custom.properties = "passwords.default.policy.change.required=true${line.separator}setup.wizard.enabled=false";
 		property database.types = "mysql";
 		property test.prepare.bundle.properties = "true";
 		property testray.main.component.name = "Users and Organizations";
@@ -51,25 +52,118 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test BasicConfigurationVisualLook {
 		property database.types = "mysql";
-		property test.name.skip.portal.instance = "SetupWizard#BasicConfigurationVisualLook";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.viewDefaultPortalNamePG();
 
 		WaitForElementPresent(locator1 = "SetupWizard#BASIC_CONFIGURATION");
 
-		SikuliAssertElementPresent(locator1 = "SetupWizard#SETUP_WIZARD_BASIC_CONFIGURATION_PNG");
-
 		takeScreenshot();
+
+		// Temporarily remove sikuli assertion until fix in LRQA-65984
+
+		//SikuliAssertElementPresent(locator1 = "SetupWizard#SETUP_WIZARD_BASIC_CONFIGURATION_PNG");
+
 	}
 
-	@priority = "4"
+	@priority = 4
+	test CannnotUseTestConnectionWithInvalidDriverClass {
+		property database.types = "mysql";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		SetupWizard.configureAdministratorUserPG(
+			administratorEmail = "test@liferay.com",
+			administratorFirstName = "Test",
+			administratorLastName = "Test");
+
+		AssertClick(
+			locator1 = "SetupWizard#DATABASE_CHANGE_LINK",
+			value1 = "(Change)");
+
+		Type(
+			locator1 = "SetupWizard#DATABASE_CHANGE_JDBC_DRIVER_CLASS_NAME_FIELD",
+			value1 = "java.lang.String");
+
+		TestUtils.changeElementValueById(
+			elementId = "cmd",
+			newValue = "test");
+
+		SetupWizard.finishConfigurationPG();
+
+		WaitForConsoleTextPresent(value1 = "java.lang.String is not specified in the portal property \"setup.database.driverClassName\"");
+
+		AssertElementNotPresent(locator1 = "//body[contains(.,'Database connection was established successfully')]");
+	}
+
+	@description = "This is a use case for LPS-187661. Verify the admin user can be configured to a non liferay domain via setup wizard."
+	@priority = 5
+	test ConfigureNonLiferayDomain {
+		property database.types = "mysql";
+		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		SetupWizard.configurePG(
+			administratorEmail = "test@test.com",
+			administratorFirstName = "Test",
+			administratorLastName = "Test",
+			databasePassword = PropsUtil.get("database.mysql.password"),
+			databaseType = "MySQL",
+			databaseUserName = PropsUtil.get("database.mysql.username"),
+			jdbcDriverClassName = PropsUtil.get("database.mysql.driver"),
+			jdbcURL = PropsUtil.get("database.mysql.url"));
+
+		Smoke.viewWelcomeContentPage();
+
+		Smoke.runSmoke();
+	}
+
+	@description = "This is a use case for LPS-187661. Verify there are no errors after configuring a non liferay domain via editing the admin email."
+	@priority = 5
+	test ConfigureNonLiferayDomainViaUserEdit {
+		property custom.properties = "company.security.strangers.verify=false${line.separator}setup.wizard.enabled=false";
+		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.prepare.bundle.properties = "true";
+		property test.run.type = "single";
+
+		User.firstLoginPG();
+
+		User.openUsersAdmin();
+
+		User.editEmailAddressCP(
+			password = "test",
+			userEmailAddress = "test@test.com",
+			userScreenName = "test");
+
+		User.logoutPG();
+
+		User.firstLoginUI(
+			password = "test",
+			userEmailAddress = "test@test.com");
+
+		Portlet.shutdownServer();
+
+		Portlet.startServer(deleteLiferayHome = "false");
+
+		User.logoutPG();
+
+		User.firstLoginUI(
+			password = "test",
+			userEmailAddress = "test@test.com");
+	}
+
+	@priority = 4
 	test HypersonicToMySQL {
 		property database.types = "mysql";
 		property test.assert.warning.exceptions = "true";
-		property test.name.skip.portal.instance = "SetupWizard#HypersonicToMySQL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -86,10 +180,11 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test HypersonicWithSpecialContent {
 		property database.types = "hypersonic";
-		property test.name.skip.portal.instance = "SetupWizard#HypersonicWithSpecialContent";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePortalNamePG(portalName = "");
 
@@ -110,11 +205,11 @@ definition {
 		SetupWizard.finishConfigurationPG();
 
 		for (var fieldName : list "Portal Name,First Name,Last Name,Email,JDBC URL,JDBC Driver Class Name") {
-			var key_fieldName = "${fieldName}";
+			var key_fieldName = ${fieldName};
 
 			AssertTextEquals.assertPartialText(
-				locator1 = "TextInput#REQUIRED_ALERT",
-				value1 = "This field is required.");
+				locator1 = "TextInput#SPECIFIC_REQUIRED_ALERT",
+				value1 = "field is required.");
 		}
 
 		AssertTextEquals(
@@ -153,10 +248,62 @@ definition {
 			value1 = "Please enter a valid email address.");
 	}
 
-	@priority = "5"
+	@description = "This is a use case for LPS-187661. Verify a user created with default liferay admin credentials is not given admin rights by default if created by an admin with a non liferay domain."
+	@priority = 5
+	test NonLiferayDomainDoesNotGiveAdminRightsByDefault {
+		property database.types = "mysql";
+		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		AntCommands.runCommand("build-test.xml", "portal-ext-properties-update -Dadd.new.properties=true -Dupdate.properties=company.security.strangers.verify=false");
+
+		SetupWizard.configurePG(
+			administratorEmail = "test@test.com",
+			administratorFirstName = "Test1",
+			administratorLastName = "Test1",
+			databasePassword = PropsUtil.get("database.mysql.password"),
+			databaseType = "MySQL",
+			databaseUserName = PropsUtil.get("database.mysql.username"),
+			jdbcDriverClassName = PropsUtil.get("database.mysql.driver"),
+			jdbcURL = PropsUtil.get("database.mysql.url"));
+
+		User.openUsersAdmin();
+
+		UserNavigator.gotoUser(userScreenName = "test");
+
+		User.editUserInformation(userScreenNameEdit = "test1");
+
+		User.openUsersAdmin();
+
+		User.addCP(
+			userEmailAddress = "test@liferay.com",
+			userFirstName = "test",
+			userLastName = "test",
+			userScreenName = "test");
+
+		User.openUsersAdmin();
+
+		UserNavigator.gotoUser(userScreenName = "test");
+
+		User.editPassword(
+			newPassword = "tester",
+			requirePasswordReset = "true");
+
+		User.logoutPG();
+
+		User.firstLoginUI(
+			password = "tester",
+			userEmailAddress = "test@liferay.com");
+
+		AssertElementNotPresent(locator1 = "ProductMenu#TOGGLE");
+	}
+
+	@priority = 5
 	test ViewConfiguredSetupWizardValue {
 		property database.types = "mysql";
-		property test.name.skip.portal.instance = "SetupWizard#ViewConfiguredSetupWizardValue";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.viewDefaultPortalNamePG();
 
@@ -183,23 +330,24 @@ definition {
 		Portlet.shutdownServer();
 
 		Portlet.startServer(
-			base_branch = "${base_branch}",
+			base_branch = ${base_branch},
 			deleteLiferayHome = "false");
 
-		SetupWizard.viewConfiguredDatabaseInConsole(databaseType = "${databaseType}");
+		SetupWizard.viewConfiguredDatabaseInConsole(databaseType = ${databaseType});
 
-		User.firstLoginUI(
-			localization = "ES",
-			localizedAgree = "Acepto",
-			localizedAnswer = "Respuesta",
+		Navigator.openURL();
+
+		User.acceptEndUserLicenseAgreementLocalized(localizedAgree = "Acepto");
+
+		User.resetPassword(
 			localizedSaveButton = "Guardar",
-			newPassword = "test1",
-			password = "test",
-			userEmailAddress = "user@liferay.com");
+			newPassword = "test1");
 
-		var testRunEnvironment = PropsUtil.get("test.run.environment");
+		User.answerPasswordReminderLocalized(
+			localizedAnswer = "Respuesta",
+			localizedSaveButton = "Guardar");
 
-		if ("${testRunEnvironment}" == "EE") {
+		if (IsElementPresent(key_text = "Finalizado", locator1 = "Button#ANY")) {
 			Button.click(button = "Finalizado");
 		}
 
@@ -211,7 +359,7 @@ definition {
 
 		var fileContent = FileUtil.read("${liferayHome}/portal-setup-wizard.properties");
 
-		if (contains("${fileContent}", "admin.email.from.address=user@liferay.com") && contains("${fileContent}", "admin.email.from.name=User User") && contains("${fileContent}", "default.admin.email.address.prefix=user") && contains("${fileContent}", "default.admin.first.name=User") && contains("${fileContent}", "default.admin.last.name=User") && contains("${fileContent}", "company.default.locale=es_ES") && contains("${fileContent}", "company.default.name=Custom")) {
+		if (contains(${fileContent}, "admin.email.from.address=user@liferay.com") && contains(${fileContent}, "admin.email.from.name=User User") && contains(${fileContent}, "default.admin.email.address.prefix=user") && contains(${fileContent}, "default.admin.first.name=User") && contains(${fileContent}, "default.admin.last.name=User") && contains(${fileContent}, "company.default.locale=es_ES") && contains(${fileContent}, "company.default.name=Custom")) {
 			echo("The configuration was saved successfully in portal-setup-wizard.properties!");
 		}
 		else {

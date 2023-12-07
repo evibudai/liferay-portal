@@ -1,34 +1,39 @@
 definition {
 
-	macro _searchSite {
-		if (contains("${site}", "Liferay")) {
+	@summary = "Default summary"
+	macro _searchSite(site = null) {
+		if (contains(${site}, "Liferay")) {
 			var searchTerm = "guest";
 		}
 		else {
-			var searchTerm = "${site}";
+			var searchTerm = ${site};
 		}
 
-		Search.searchCP(searchTerm = "${searchTerm}");
+		Search.searchCP(searchTerm = ${searchTerm});
 	}
 
-	macro selectSite {
+	@summary = "Default summary"
+	macro selectSite(site = null) {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
-		SiteSelector._searchSite(site = "${site}");
+		SiteSelector._searchSite(site = ${site});
 
-		LexiconEntry.gotoEntry(rowEntry = "${site}");
+		LexiconEntry.gotoEntry(rowEntry = ${site});
 
 		SelectFrameTop();
 	}
 
-	macro viewSite {
+	@summary = "Default summary"
+	macro viewSite(site = null) {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
-		SiteSelector._searchSite(site = "${site}");
+		SiteSelector._searchSite(site = ${site});
 
-		AssertElementPresent(
-			key_rowEntry = "${site}",
-			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK");
+		AssertTextEquals(
+			key_columnName = "title",
+			key_tableEntry = ${site},
+			locator1 = "LexiconTable#TABLE_ENTRY_INFO",
+			value1 = ${site});
 
 		SelectFrameTop();
 	}

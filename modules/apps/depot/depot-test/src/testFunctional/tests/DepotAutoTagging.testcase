@@ -17,9 +17,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,10 +38,11 @@ definition {
 	}
 
 	@description = "This ensures that a document in a depot can be auto tagged and have its tag replaced manually."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test AutoTagCanBeReplacedInDocument {
-		property test.name.skip.portal.instance = "DepotAutoTagging#AutoTagCanBeReplacedInDocument";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -80,10 +81,11 @@ definition {
 	}
 
 	@description = "This test asserts that an auto-tagged web content can be deleted in a depot when OpenNLP Auto-Tagging is enabled."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanDeleteAutotaggedWebContent {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDeleteAutotaggedWebContent";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Web Content Article",
@@ -101,6 +103,10 @@ definition {
 
 		Panel.expandPanel(panel = "Categorization");
 
+		ScrollWebElementIntoView(
+			key_panel = "Schedule",
+			locator1 = "Panel#PANEL");
+
 		AssetCategorization.viewTag(tagName = "dxp");
 
 		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
@@ -111,10 +117,11 @@ definition {
 	}
 
 	@description = "This ensures that the depot auto-tagging can be disabled and enabled at the instance level."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDisableAtInstanceScope {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableAtInstanceScope";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.disableAutoTagging(disableAutoTaggingFor = "Instance Settings");
 
@@ -134,10 +141,11 @@ definition {
 	}
 
 	@description = "This ensures that the depot auto-tagging can be disabled and enabled at the system level."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDisableAtSystemScope {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableAtSystemScope";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.disableAutoTagging(disableAutoTaggingFor = "System Settings");
 
@@ -157,10 +165,11 @@ definition {
 	}
 
 	@description = "This test asserts that no auto-tag is generated when an image is uploaded to a depot that has auto-tagging disabled."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanDisableForImage {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableForImage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableTensorFlow();
 
@@ -185,10 +194,11 @@ definition {
 	}
 
 	@description = "This test asserts that no auto-tag is generated when a text document is uploaded to a depot that has auto-tagging disabled."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanDisableForTextDocument {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableForTextDocument";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -215,10 +225,11 @@ definition {
 	}
 
 	@description = "This test asserts that no auto-tag is generated when a web content article is uploaded to a depot that has auto-tagging disabled."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanDisableForWebContent {
-		property test.name.skip.portal.instance = "DepotAutoTagging#CanDisableForWebContent";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Web Content Article",
@@ -245,10 +256,11 @@ definition {
 
 	@description = "This test asserts that an image is auto-tagged in a depot."
 	@e2e
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test ImageCanBeAutoTagged {
-		property test.name.skip.portal.instance = "DepotAutoTagging#ImageCanBeAutoTagged";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableTensorFlow();
 
@@ -279,10 +291,11 @@ definition {
 	}
 
 	@description = "This test asserts that a text document is auto-tagged in a depot."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test TextDocumentCanBeAutoTagged {
-		property test.name.skip.portal.instance = "DepotAutoTagging#TextDocumentCanBeAutoTagged";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Document",
@@ -305,10 +318,11 @@ definition {
 	}
 
 	@description = "This test asserts that a web content article is auto-tagged in a depot."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test WebContentCanBeAutoTagged {
-		property test.name.skip.portal.instance = "DepotAutoTagging#WebContentCanBeAutoTagged";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		AutoTagging.enableOpenNLP(
 			assetType = "Web Content Article",
@@ -325,6 +339,10 @@ definition {
 			webContentTitle = "Digital Transformation or Digital Experience");
 
 		Panel.expandPanel(panel = "Categorization");
+
+		ScrollWebElementIntoView(
+			key_panel = "Schedule",
+			locator1 = "Panel#PANEL");
 
 		AssetCategorization.viewTag(tagName = "dxp");
 	}

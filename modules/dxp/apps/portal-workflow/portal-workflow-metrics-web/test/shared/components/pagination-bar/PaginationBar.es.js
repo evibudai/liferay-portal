@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {cleanup, fireEvent, render} from '@testing-library/react';
@@ -48,7 +42,7 @@ describe('The PaginationBar component should', () => {
 
 		expect(pageSizeOptions.length).toBe(6);
 
-		let pageLinks = baseElement.querySelectorAll('a.page-link');
+		let pageLinks = baseElement.querySelectorAll('.page-link');
 
 		expect(pageLinks.length).toBe(3);
 
@@ -58,7 +52,7 @@ describe('The PaginationBar component should', () => {
 
 		fireEvent.click(pageSizeOptions[0]);
 
-		pageLinks = baseElement.querySelectorAll('a.page-link');
+		pageLinks = baseElement.querySelectorAll('.page-link');
 		let pageItems = baseElement.querySelectorAll('.page-item');
 
 		expect(pageLinks.length).toBe(6);
@@ -95,7 +89,7 @@ describe('The PaginationBar component should', () => {
 
 		expect(pageSizeOptions.length).toBe(6);
 
-		let pageLinks = baseElement.querySelectorAll('a.page-link');
+		let pageLinks = baseElement.querySelectorAll('.page-link');
 		let pageItems = baseElement.querySelectorAll('.page-item');
 
 		expect(pageLinks.length).toBe(5);
@@ -121,7 +115,7 @@ describe('The PaginationBar component should', () => {
 
 		fireEvent.click(pageSizeOptions[4]);
 
-		pageLinks = baseElement.querySelectorAll('a.page-link');
+		pageLinks = baseElement.querySelectorAll('.page-link');
 		pageItems = baseElement.querySelectorAll('.page-item');
 
 		expect(pageLinks.length).toBe(3);

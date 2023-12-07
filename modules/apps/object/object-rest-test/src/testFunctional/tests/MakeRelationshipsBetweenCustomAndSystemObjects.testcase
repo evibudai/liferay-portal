@@ -1,17 +1,18 @@
 @component-name = "portal-headless"
 definition {
 
-	property custom.properties = "feature.flag.LPS-162966=true${line.separator}feature.flag.LPS-153324=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless";
+	property testray.main.component.name = "Object Entries REST APIs";
 
 	setUp {
 		TestCase.setUpPortalInstanceNoSelenium();
 
 		task ("Given University and Subject object definitions created") {
-			ObjectDefinitionAPI.setUpGlobalobjectDefinitionId();
+			ObjectDefinitionAPI.staticUniversityObjectId();
+
+			ObjectDefinitionAPI.staticSubjectObjectId();
 		}
 
 		task ("And Given manyToMany universitiesAccounts relationship created") {
@@ -21,8 +22,8 @@ definition {
 				deletionType = "cascade",
 				en_US_label = "UniversitiesAccounts",
 				name = "universitiesAccounts",
-				objectDefinitionId1 = "${staticObjectId1}",
-				objectDefinitionId2 = "${staticObjectId}",
+				objectDefinitionId1 = ${staticUniversityObjectId},
+				objectDefinitionId2 = ${staticObjectId},
 				type = "manyToMany");
 		}
 
@@ -31,8 +32,8 @@ definition {
 				deletionType = "cascade",
 				en_US_label = "AccountSubjects",
 				name = "accountSubjects",
-				objectDefinitionId1 = "${staticObjectId}",
-				objectDefinitionId2 = "${staticObjectId2}",
+				objectDefinitionId1 = ${staticObjectId},
+				objectDefinitionId2 = ${staticSubjectObjectId},
 				type = "oneToMany");
 		}
 
@@ -46,16 +47,19 @@ definition {
 	}
 
 	tearDown {
-		for (var objectName : list "University,Subject") {
-			ObjectAdmin.deleteObjectViaAPI(objectName = "${objectName}");
-		}
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		AccountAPI.deleteAccount(accountId = "${staticAccountId}");
+		ObjectAdmin.deleteAllCustomObjectsViaAPI();
+
+		JSONUser.tearDownNonAdminUsersNoSelenium();
+
+		if (${testLiferayVirtualInstance} == "true") {
+			PortalInstances.tearDownCPNoSelenium();
+		}
 	}
 
 	@disable-webdriver = "true"
-	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanCreateMultipleManyToManyRelationshipsBetweenTwoObjects {
 		property portal.acceptance = "true";
 
@@ -64,31 +68,30 @@ definition {
 				deletionType = "cascade",
 				en_US_label = "AccountsUniversities",
 				name = "accountsUniversities",
-				objectDefinitionId1 = "${staticObjectId}",
-				objectDefinitionId2 = "${staticObjectId1}",
+				objectDefinitionId1 = ${staticObjectId},
+				objectDefinitionId2 = ${staticUniversityObjectId},
 				type = "manyToMany");
 		}
 
 		task ("When I request PUT to relate University entry to the Account entry with /o/c/universities/{universityId}/accountsUniversities/{accountId}") {
 			ObjectDefinitionAPI.relateObjectEntries(
 				en_US_plural_label = "universities",
-				objectEntry1 = "${staticUniversityId}",
-				objectEntry2 = "${staticAccountId}",
+				objectEntry1 = ${staticUniversityId},
+				objectEntry2 = ${staticAccountId},
 				relationshipName = "accountsUniversities");
 		}
 
 		task ("Then university is not associated to the account in GET /o/headless-admin-user/v1.0/accounts/{accountId}/universitiesAccounts") {
 			var response = AccountAPI.getRelationshipByAccountId(
-				accountId = "${staticAccountId}",
+				accountId = ${staticAccountId},
 				relationshipName = "universitiesAccounts");
 
-			ObjectDefinitionAPI.assertNoItemsInResponse(responseToParse = "${response}");
+			ObjectDefinitionAPI.assertNoItemsInResponse(responseToParse = ${response});
 		}
 	}
 
 	@disable-webdriver = "true"
-	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CanCreateMultipleOneToManyRelationshipsBetweenTwoObjects {
 		property portal.acceptance = "true";
 
@@ -97,8 +100,8 @@ definition {
 				deletionType = "cascade",
 				en_US_label = "SubjectAccounts",
 				name = "subjectAccounts",
-				objectDefinitionId1 = "${staticObjectId2}",
-				objectDefinitionId2 = "${staticObjectId}",
+				objectDefinitionId1 = ${staticSubjectObjectId},
+				objectDefinitionId2 = ${staticObjectId},
 				type = "oneToMany");
 		}
 
@@ -111,45 +114,44 @@ definition {
 		task ("When I request PUT to relate Subject entry to the Account entry with /o/c/subjects/{subjectId}/subjectAccounts/{accountId}") {
 			ObjectDefinitionAPI.relateObjectEntries(
 				en_US_plural_label = "subjects",
-				objectEntry1 = "${subjectId}",
-				objectEntry2 = "${staticAccountId}",
+				objectEntry1 = ${subjectId},
+				objectEntry2 = ${staticAccountId},
 				relationshipName = "subjectAccounts");
 		}
 
 		task ("Then subject is not associated to the account in GET /o/headless-admin-user/v1.0/accounts/{accountId}/accountSubjects") {
 			var response = AccountAPI.getRelationshipByAccountId(
-				accountId = "${staticAccountId}",
+				accountId = ${staticAccountId},
 				relationshipName = "accountSubjects");
 
-			ObjectDefinitionAPI.assertNoItemsInResponse(responseToParse = "${response}");
+			ObjectDefinitionAPI.assertNoItemsInResponse(responseToParse = ${response});
 		}
 	}
 
 	@disable-webdriver = "true"
-	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanGetEmptyPageWithNoEntriesRelated {
 		property portal.acceptance = "true";
 
 		task ("And Given I request PUT to relate University entry to the Account entry with /o/c/universities/{universityId}/universitiesAccounts/{accountId}") {
 			ObjectDefinitionAPI.relateObjectEntries(
 				en_US_plural_label = "universities",
-				objectEntry1 = "${staticUniversityId}",
-				objectEntry2 = "${staticAccountId}",
+				objectEntry1 = ${staticUniversityId},
+				objectEntry2 = ${staticAccountId},
 				relationshipName = "universitiesAccounts");
 		}
 
 		task ("When I delete the Account entry") {
-			AccountAPI.deleteAccount(accountId = "${staticAccountId}");
+			AccountAPI.deleteAccount(accountId = ${staticAccountId});
 		}
 
 		task ("Then GET /o/c/universities/{universityId}/universitiesAccounts returns an empty Page") {
-			var response = ObjectDefinitionAPI.getObjectEntryRelation(
+			var response = ObjectDefinitionAPI.getObjectEntryRelationship(
 				en_US_plural_label = "universities",
-				objectId = "${staticUniversityId}",
+				objectId = ${staticUniversityId},
 				relationshipName = "universitiesAccounts");
 
-			ObjectDefinitionAPI.assertNoItemsInResponse(responseToParse = "${response}");
+			ObjectDefinitionAPI.assertNoItemsInResponse(responseToParse = ${response});
 		}
 	}
 

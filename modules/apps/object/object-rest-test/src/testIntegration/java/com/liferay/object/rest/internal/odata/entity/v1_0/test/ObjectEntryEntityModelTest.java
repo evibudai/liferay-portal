@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.odata.entity.v1_0.test;
@@ -21,24 +12,22 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.builder.ObjectFieldBuilder;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
-import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.CollectionEntityField;
+import com.liferay.portal.odata.entity.ComplexEntityField;
 import com.liferay.portal.odata.entity.DateTimeEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
@@ -48,6 +37,7 @@ import com.liferay.portal.odata.entity.StringEntityField;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.lang.reflect.Method;
 
@@ -57,7 +47,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,21 +89,6 @@ public class ObjectEntryEntityModelTest {
 		String value = "A" + RandomTestUtil.randomString();
 
 		List<ObjectField> customObjectFields = Arrays.asList(
-			new ObjectFieldBuilder(
-			).businessType(
-				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT
-			).dbType(
-				ObjectFieldConstants.DB_TYPE_LONG
-			).name(
-				"a" + RandomTestUtil.randomString()
-			).objectFieldSettings(
-				Arrays.asList(
-					_createObjectFieldSetting("acceptedFileExtensions", "txt"),
-					_createObjectFieldSetting("fileSource", "userComputer"),
-					_createObjectFieldSetting("maximumFileSize", "100"))
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(value)
-			).build(),
 			_createObjectField(ObjectFieldConstants.DB_TYPE_BIG_DECIMAL),
 			_createObjectField(ObjectFieldConstants.DB_TYPE_BOOLEAN),
 			_createObjectField(ObjectFieldConstants.DB_TYPE_CLOB),
@@ -156,6 +130,11 @@ public class ObjectEntryEntityModelTest {
 			).put(
 				"id", new IdEntityField("id", locale -> "id", String::valueOf)
 			).put(
+				"keywords",
+				new CollectionEntityField(
+					new StringEntityField(
+						"keywords", locale -> "assetTagNames.raw"))
+			).put(
 				"objectDefinitionId",
 				new IntegerEntityField(
 					"objectDefinitionId", locale -> "objectDefinitionId")
@@ -166,6 +145,11 @@ public class ObjectEntryEntityModelTest {
 				"status",
 				new CollectionEntityField(
 					new IntegerEntityField("status", locale -> Field.STATUS))
+			).put(
+				"taxonomyCategoryIds",
+				new CollectionEntityField(
+					new IntegerEntityField(
+						"taxonomyCategoryIds", locale -> "assetCategoryIds"))
 			).put(
 				"userId",
 				new IntegerEntityField("userId", locale -> Field.USER_ID)
@@ -184,13 +168,13 @@ public class ObjectEntryEntityModelTest {
 
 		ObjectRelationship objectRelationship =
 			_objectRelationshipLocalService.addObjectRelationship(
-				TestPropsValues.getUserId(),
+				null, TestPropsValues.getUserId(),
 				relatedObjectDefinition.getObjectDefinitionId(),
 				objectDefinition.getObjectDefinitionId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				StringUtil.randomId(),
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				StringUtil.randomId(), false,
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_objectRelationships.add(objectRelationship);
 
@@ -229,21 +213,7 @@ public class ObjectEntryEntityModelTest {
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
 		).name(
 			"a" + RandomTestUtil.randomString()
-		).objectFieldSettings(
-			Collections.emptyList()
 		).build();
-	}
-
-	private ObjectFieldSetting _createObjectFieldSetting(
-		String name, String value) {
-
-		ObjectFieldSetting objectFieldSetting =
-			_objectFieldSettingLocalService.createObjectFieldSetting(0L);
-
-		objectFieldSetting.setName(name);
-		objectFieldSetting.setValue(value);
-
-		return objectFieldSetting;
 	}
 
 	private Map<String, EntityField> _getExpectedEntityFieldsMap(
@@ -292,6 +262,11 @@ public class ObjectEntryEntityModelTest {
 				expectedRelatedObjectDefinitionIdObjectFieldName,
 				locale -> expectedObjectFieldName, String::valueOf));
 
+		expectedEntityFieldsMap.put(
+			objectRelationship.getName(),
+			new ComplexEntityField(
+				objectRelationship.getName(), Collections.emptyList()));
+
 		return expectedEntityFieldsMap;
 	}
 
@@ -338,10 +313,10 @@ public class ObjectEntryEntityModelTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), false,
+				TestPropsValues.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(objectDefinitionName),
 				objectDefinitionName, null, null,
-				LocalizedMapUtil.getLocalizedMap(objectDefinitionName),
+				LocalizedMapUtil.getLocalizedMap(objectDefinitionName), true,
 				ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
 
@@ -356,14 +331,6 @@ public class ObjectEntryEntityModelTest {
 	}
 
 	private EntityField _toExpectedEntityField(ObjectField objectField) {
-		if (Objects.equals(
-				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT,
-				objectField.getBusinessType())) {
-
-			return new StringEntityField(
-				objectField.getName(), locale -> objectField.getName());
-		}
-
 		return new EntityField(
 			objectField.getName(),
 			_objectFieldDBTypeEntityFieldTypeMap.get(objectField.getDBType()),
@@ -394,9 +361,6 @@ public class ObjectEntryEntityModelTest {
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	private final List<ObjectDefinition> _objectDefinitions = new ArrayList<>();
-
-	@Inject
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Inject
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;

@@ -47,13 +47,11 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -61,13 +59,19 @@ definition {
 
 			CustomFields.tearDownCP();
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8565 | Test Summary: Add segment using an individual property 'role'"
-	@priority = "4"
+	@ignore = "true"
+	@priority = 4
 	test CanAddSegmentUsingIndividualPropertyRole {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentUsingIndividualPropertyRole";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		task ("Add a new regular role and assign to the user") {
 			JSONRole.addRegularRole(
@@ -100,7 +104,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment using Individual Property Role") {
@@ -118,7 +122,7 @@ definition {
 
 			ACSegments.selectDocument(
 				documentTitle = "AC Seg Reg Role",
-				indexField = "1");
+				indexField = 1);
 		}
 
 		task ("View the user showns on the Preview mode") {
@@ -129,7 +133,7 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8564 | Test Summary: Add segment using an individual property 'site'"
-	@priority = "4"
+	@priority = 4
 	test CanAddSegmentUsingIndividualPropertySite {
 		property portal.upstream = "quarantine";
 
@@ -162,7 +166,7 @@ definition {
 			ACUtils.navigateToSitePageWithUser(
 				actionType = "View Blog",
 				documentTitleList = "Blogs AC Title,Blogs AC Title",
-				emailList = "${emailList}",
+				emailList = ${emailList},
 				pageName = "AC Page",
 				siteName = "Site Name");
 		}
@@ -174,7 +178,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment using Individual Property Site") {
@@ -192,7 +196,7 @@ definition {
 
 			ACSegments.selectDocument(
 				documentTitle = "Site Name",
-				indexField = "1");
+				indexField = 1);
 		}
 
 		task ("View the user showns on the Preview mode and save segment") {
@@ -218,7 +222,7 @@ definition {
 
 			ACSegments.selectDocument(
 				documentTitle = "Site Name",
-				indexField = "1");
+				indexField = 1);
 
 			ACSegments.previewSegmentMembership();
 
@@ -252,11 +256,11 @@ definition {
 
 			ACSegments.selectDocument(
 				documentTitle = "Site Name",
-				indexField = "1");
+				indexField = 1);
 
 			ACSegments.selectDocument(
 				documentTitle = "Site Name",
-				indexField = "2");
+				indexField = 2);
 
 			ACSegments.editConjunction();
 		}
@@ -279,10 +283,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8566 | Test Summary: Add segment using an individual property 'team'"
-	@priority = "4"
+	@ignore = "true"
+	@priority = 4
 	test CanAddSegmentUsingIndividualPropertyTeam {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentUsingIndividualPropertyTeam";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		task ("Assign the site to user") {
 			JSONGroup.assignUserToGroup(
@@ -323,7 +331,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment using Individual Property Team") {
@@ -341,7 +349,7 @@ definition {
 
 			ACSegments.selectDocument(
 				documentTitle = "Site Team Name",
-				indexField = "1");
+				indexField = 1);
 		}
 
 		task ("View the user showns on the Preview mode") {
@@ -353,7 +361,7 @@ definition {
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8568 | Test Summary: Add segment using an individual property 'user'"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanAddSegmentUsingIndividualPropertyUser {
 
 		// AC Refactor ticket: LRAC-9332
@@ -380,7 +388,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment using Individual Property User criteria") {
@@ -398,7 +406,7 @@ definition {
 
 			ACSegments.selectDocument(
 				documentTitle = "ac ac",
-				indexField = "1");
+				indexField = 1);
 		}
 
 		task ("View and assert that the user is in the list") {
@@ -417,10 +425,9 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8567 | Test Summary: Add segment using an individual property 'user group'"
-	@priority = "4"
+	@priority = 4
 	test CanAddSegmentUsingIndividualPropertyUserGroup {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentUsingIndividualPropertyUserGroup";
+		property test.run.type = "single";
 
 		task ("Add a new user group and assign to the user") {
 			JSONUserGroup.addUserGroup(
@@ -453,7 +460,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment using Individual Property User Group") {
@@ -471,7 +478,7 @@ definition {
 
 			ACSegments.selectDocument(
 				documentTitle = "UG UserGroup Name",
-				indexField = "1");
+				indexField = 1);
 		}
 
 		task ("View the user showns on the Preview mode") {
@@ -482,10 +489,9 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8569 | Test Summary: Add segment with custom field for individuals"
-	@priority = "4"
+	@priority = 4
 	test CanAddSegmentWithCustomFieldsForIndividuals {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentWithCustomFieldsForIndividuals";
+		property test.run.type = "single";
 
 		task ("Add a user custom field") {
 			CustomFields.openCustomFieldAdmin();
@@ -498,10 +504,7 @@ definition {
 		}
 
 		task ("Define the value of custom field for new user") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			UserNavigator.gotoUser(userScreenName = "ac");
 
@@ -510,15 +513,14 @@ definition {
 				userCustomFieldLabel = "User Custom Field");
 		}
 
-		task ("Sync the Contact Data") {
-			ACDXPSettings.syncNewUserData(fieldNameList = "user custom field");
+		task ("Sync the Custom Field") {
+			ACDXPSettings.syncAttributes(
+				attributeCategory = "People",
+				attributeNameList = "user custom field");
 		}
 
 		task ("Redefine the value of the custom field") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			UserNavigator.gotoUser(userScreenName = "ac");
 
@@ -548,7 +550,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment using Individual Property Custom Fields") {
@@ -575,10 +577,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8570 | Test Summary: Add segment with custom fields for organizations"
-	@priority = "4"
+	@ignore = "true"
+	@priority = 4
 	test CanAddSegmentWithCustomFieldsForOrganizations {
-		property analytics.cloud.upstream = "false";
-		property test.name.skip.portal.instance = "SegmentsCreationIndividualAttributes#CanAddSegmentWithCustomFieldsForOrganizations";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
+
+		property test.run.type = "single";
 
 		task ("Add a new organization and assign to the user") {
 			JSONOrganization.addOrganization(organizationName = "Organization Name");
@@ -618,7 +624,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment using Organization Custom Fields") {
@@ -645,7 +651,7 @@ definition {
 	}
 
 	@description = "Bug: LRAC-11848 | Automation ID: LRAC-12005 | Test Summary: Add a segment using custom field of type Breakdwon, Checkbox and Radio"
-	@priority = "4"
+	@priority = 4
 	test CanAddSegmentWithCustomFieldThatUsesList {
 		property portal.upstream = "quarantine";
 
@@ -658,16 +664,16 @@ definition {
 
 		var customFieldNameList = "${customFieldDropdown},${customFieldCheckbox},${customFieldRadio}";
 		var autocompleteTextList = "Option2,QA,LXC";
-		var list1 = ListUtil.newListFromString("${customFieldNameList}");
-		var list2 = ListUtil.newListFromString("${autocompleteTextList}");
-		var size = ListUtil.size("${list1}");
-		var i = "0";
+		var list1 = ListUtil.newListFromString(${customFieldNameList});
+		var list2 = ListUtil.newListFromString(${autocompleteTextList});
+		var size = ListUtil.size(${list1});
+		var i = 0;
 
 		task ("Add new custom fields") {
 			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
-				customFieldName = "${customFieldDropdown}",
+				customFieldName = ${customFieldDropdown},
 				customFieldType = "Dropdown",
 				resourceName = "User",
 				startingValue = '''Option1
@@ -677,7 +683,7 @@ definition {
 			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
-				customFieldName = "${customFieldCheckbox}",
+				customFieldName = ${customFieldCheckbox},
 				customFieldType = "Checkbox",
 				resourceName = "User",
 				startingValue = '''QA
@@ -687,7 +693,7 @@ definition {
 			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
-				customFieldName = "${customFieldRadio}",
+				customFieldName = ${customFieldRadio},
 				customFieldType = "Radio",
 				resourceName = "User",
 				startingValue = '''AC
@@ -696,42 +702,35 @@ definition {
 		}
 
 		task ("Go to a user and add information for the custom fields created") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			User.editCustomFieldInformation(
-				customFieldName = "${customFieldDropdown}",
+				customFieldName = ${customFieldDropdown},
 				customFieldType = "Dropdown",
 				customFieldValue = "Option2",
 				userScreenName = "ac");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			User.editCustomFieldInformation(
-				customFieldName = "${customFieldCheckbox}",
+				customFieldName = ${customFieldCheckbox},
 				customFieldType = "Checkbox",
 				customFieldValue = "QA",
 				userScreenName = "ac");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			User.editCustomFieldInformation(
-				customFieldName = "${customFieldRadio}",
+				customFieldName = ${customFieldRadio},
 				customFieldType = "Radio",
 				customFieldValue = "LXC",
 				userScreenName = "ac");
 		}
 
-		task ("Sync the Contact Data") {
-			ACDXPSettings.syncNewUserData(fieldNameList = "${customFieldNameList}");
+		task ("Sync the Custom Field") {
+			ACDXPSettings.syncAttributes(
+				attributeCategory = "People",
+				attributeNameList = ${customFieldNameList});
 		}
 
 		task ("View the page as the new added user") {
@@ -753,7 +752,7 @@ definition {
 		task ("Switch to new property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Add a new dynamic segment with one of the custom fields created") {
@@ -765,13 +764,13 @@ definition {
 
 			ACSegments.goToSidebarAttributes(criterion = "Individual Attributes");
 
-			ACSegments.addSegmentField(segmentField = "${customFieldDropdown}");
+			ACSegments.addSegmentField(segmentField = ${customFieldDropdown});
 
 			ACSegments.selectOperator(operator = "contains");
 
 			ACSegments.selectAutocompleteOption(
 				autocompleteText = "Option2",
-				criteriaName = "${customFieldDropdown}");
+				criteriaName = ${customFieldDropdown});
 		}
 
 		task ("View the user shown on the Preview mode") {
@@ -797,21 +796,21 @@ definition {
 
 			ACSegments.goToSidebarAttributes(criterion = "Individual Attributes");
 
-			while ("${i}" != "${size}") {
-				var customFieldName = ListUtil.get("${list1}", "${i}");
-				var autocompleteText = ListUtil.get("${list2}", "${i}");
+			while (${i} != ${size}) {
+				var customFieldName = ListUtil.get(${list1}, ${i});
+				var autocompleteText = ListUtil.get(${list2}, ${i});
 
-				ACSegments.addSegmentField(segmentField = "${customFieldName}");
+				ACSegments.addSegmentField(segmentField = ${customFieldName});
 
 				ACSegments.selectOperator(operator = "contains");
 
 				ACSegments.selectAutocompleteOption(
-					autocompleteText = "${autocompleteText}",
-					criteriaName = "${customFieldName}");
+					autocompleteText = ${autocompleteText},
+					criteriaName = ${customFieldName});
 
 				var i = ${i} + 1;
 
-				var i = StringUtil.valueOf("${i}");
+				var i = StringUtil.valueOf(${i});
 			}
 		}
 
@@ -831,10 +830,8 @@ definition {
 	}
 
 	@description = "Bug: LRAC-11460 | Automation ID: LRAC-11634 | Test Summary: Add a dynamic segment using an individual property "email" selecting one of the suggested autocomplete options and assert in the Known Individuals tab search this individual exists"
-	@priority = "3"
+	@priority = 3
 	test CheckIfAutocompleteSuggestionEmailPresentInKnownIndividualsList {
-		property analytics.cloud.upstream = "false";
-
 		var username = "ac ac";
 		var individualEmail = "ac@liferay.com";
 
@@ -846,7 +843,7 @@ definition {
 			ACUtils.navigateToSitePageWithUser(
 				actionType = "View Blog",
 				documentTitleList = "Blogs AC Title",
-				emailList = "${individualEmail}",
+				emailList = ${individualEmail},
 				pageName = "AC Page",
 				siteName = "Site Name");
 
@@ -856,7 +853,7 @@ definition {
 		task ("Go to AC > Go to segments") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToSegments();
 		}
@@ -872,19 +869,19 @@ definition {
 		}
 
 		task ("See that there's only one user email suggested by the autocomplete") {
-			ACSegments.viewAutocompleteSuggestions(autocompleteText = "${individualEmail}");
+			ACSegments.viewAutocompleteSuggestions(autocompleteText = ${individualEmail});
 
 			AssertElementNotPresent(
-				key_index = "2",
+				key_index = 2,
 				locator1 = "ACSegments#SEGMENT_AUTOCOMPLETE_DROPDOWN_BY_INDEX");
 		}
 
 		task ("Select the user email suggested by the autocomplete and see in the preview icon there's one user matching that email") {
-			ACSegments.editTextCriterion(textInput = "${individualEmail}");
+			ACSegments.editTextCriterion(textInput = ${individualEmail});
 
 			ACSegments.previewSegmentMembership();
 
-			ACUtils.viewNameList(nameList = "${username}");
+			ACUtils.viewNameList(nameList = ${username});
 
 			ACSegments.cancelSegment();
 		}
@@ -896,7 +893,7 @@ definition {
 		}
 
 		task ("Go to the search bar and see that the individual was returned") {
-			ACUtils.viewNameList(nameList = "${username}");
+			ACUtils.viewNameList(nameList = ${username});
 		}
 	}
 

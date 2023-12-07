@@ -1,7 +1,8 @@
 definition {
 
-	macro gotoDefineRolePermissions {
-		if (contains("Account,Asset Library,Organization,Site", "${roleType}")) {
+	@summary = "Default summary"
+	macro gotoDefineRolePermissions(permissionNavItem = null, roleTitle = null, roleType = null, permissionNavHeader = null) {
+		if (contains("Account,Asset Library,Organization,Site", ${roleType})) {
 			Navigator.gotoNavItem(navItem = "${roleType} Roles");
 		}
 		else {
@@ -9,29 +10,32 @@ definition {
 		}
 
 		AssertClick(
-			key_itemName = "${roleTitle}",
+			key_itemName = ${roleTitle},
 			locator1 = "ListGroupItem#ITEM_NAME_LINK",
-			value1 = "${roleTitle}");
+			value1 = ${roleTitle});
 
 		Navigator.gotoNavItem(navItem = "Define Permissions");
 
-		if (isSet(portlet)) {
+		if (isSet(permissionNavItem)) {
 			Type(
 				locator1 = "RolesPermissionsNavigation#SEARCH_FIELD",
-				value1 = "${portlet}");
+				value1 = ${permissionNavItem});
 
 			AssertClick(
-				locator1 = "RolesPermissionsNavigation#${permissionNavigationKey}",
-				value1 = "${portlet}");
+				key_permissionNavHeader = ${permissionNavHeader},
+				key_permissionNavItem = ${permissionNavItem},
+				locator1 = "RolesPermissionsNavigation#PERMISSIONS_NAVIGATION",
+				value1 = ${permissionNavItem});
 
 			AssertTextEquals(
-				locator1 = "RolesPermissions#PERMISSION_HEADER",
-				permissionNavigationValue = "${portlet}",
-				value1 = "${portlet}");
+				key_title = ${permissionNavItem},
+				locator1 = "Header#H3_TITLE",
+				value1 = ${permissionNavItem});
 		}
 	}
 
-	macro gotoRoleType {
+	@summary = "Default summary"
+	macro gotoRoleType() {
 		if (!(isSet(roleType))) {
 			var roleType = "Regular";
 		}
@@ -39,8 +43,9 @@ definition {
 		Navigator.gotoNavItem(navItem = "${roleType} Roles");
 	}
 
-	macro gotoViewNotHaveRolePermissions {
-		if (contains("Asset Library,Organization,Site", "${roleType}")) {
+	@summary = "Default summary"
+	macro gotoViewNotHaveRolePermissions(roleTitle = null, roleType = null) {
+		if (contains("Asset Library,Organization,Site", ${roleType})) {
 			Navigator.gotoNavItem(navItem = "${roleType} Roles");
 		}
 		else {
@@ -48,9 +53,9 @@ definition {
 		}
 
 		AssertClick(
-			key_itemName = "${roleTitle}",
+			key_itemName = ${roleTitle},
 			locator1 = "ListGroupItem#ITEM_NAME_LINK",
-			value1 = "${roleTitle}");
+			value1 = ${roleTitle});
 
 		Navigator.gotoNavItem(navItem = "Define Permissions");
 

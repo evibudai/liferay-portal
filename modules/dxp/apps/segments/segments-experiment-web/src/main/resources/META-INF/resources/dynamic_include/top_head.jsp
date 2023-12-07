@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -22,15 +13,32 @@ SegmentsExperiment segmentsExperiment = (SegmentsExperiment)request.getAttribute
 
 <aui:script sandbox="<%= true %>">
 	<c:if test='<%= (segmentsExperiment != null) && Objects.equals(segmentsExperiment.getGoal(), "click") && Validator.isNotNull(segmentsExperiment.getGoalTarget()) %>'>
-		var element = document.querySelector(
-			'<%= segmentsExperiment.getGoalTarget() %>'
+		var elements = [];
+
+		var targetableCollectionElements = document.querySelectorAll(
+			'[id^=analytics-targetable-collection]'
 		);
 
-		if (element) {
-			element.addEventListener('click', (event) => {
-				if (window.Analytics) {
-					Analytics.send('ctaClicked', 'Page', {elementId: event.target.id});
+		if (targetableCollectionElements.length) {
+			targetableCollectionElements.forEach((element, index) => {
+				if ('#' + element.id === '<%= segmentsExperiment.getGoalTarget() %>') {
+					elements.push(element);
 				}
+			});
+		}
+		else {
+			elements.push(
+				document.querySelector('<%= segmentsExperiment.getGoalTarget() %>')
+			);
+		}
+
+		if (elements.length) {
+			elements.forEach((element) => {
+				element.addEventListener('click', () => {
+					if (window.Analytics) {
+						Analytics.send('ctaClicked', 'Page', {elementId: element.id});
+					}
+				});
 			});
 		}
 	</c:if>

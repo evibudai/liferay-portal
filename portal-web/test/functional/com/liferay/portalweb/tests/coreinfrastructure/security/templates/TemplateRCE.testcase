@@ -1,6 +1,7 @@
 @component-name = "core-infrastructure"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Templates Engine";
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -23,9 +24,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -33,7 +34,40 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@description = "This is a usecase for LPS-153227."
+	@priority = 3
+	test CreateBreadcumbTemplate {
+		property test.assert.warning.exceptions = "true";
+
+		ProductMenu.gotoPortlet(
+			category = "Design",
+			portlet = "Templates");
+
+		Navigator.gotoNavTab(navTab = "Widget Templates");
+
+		WidgetTemplates.addCP(
+			adtFile = "adt_breadcrumb.ftl",
+			adtType = "Breadcrumb");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Breadcrumb Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Breadcrumb Page",
+			widgetName = "Breadcrumb");
+
+		Navigator.gotoPage(pageName = "Test Breadcrumb Page");
+
+		WidgetTemplates.selectPortletADT(
+			portletName = "Breadcrumb",
+			templateName = "Breadcrumb Test ADT");
+
+		Refresh();
+	}
+
+	@priority = 4
 	test ViewInstanceManager {
 		property app.server.types = "tomcat";
 
@@ -75,7 +109,7 @@ definition {
 ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apache.bcel.internal.util.ClassLoader')}
 ''';
 
-		WebContentTemplates.inputScript(templateScript = "${templateScript}");
+		WebContentTemplates.inputScript(templateScript = ${templateScript});
 
 		PortletEntry.save();
 
@@ -90,7 +124,7 @@ ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apac
 ${Application['org.apache.catalina.resources'].getContext().getInstanceManager()}
 ''';
 
-		WebContentTemplates.inputScript(templateScript = "${templateScript}");
+		WebContentTemplates.inputScript(templateScript = ${templateScript});
 
 		PortletEntry.save();
 
@@ -121,7 +155,7 @@ ${Application['org.apache.catalina.resources'].getContext().getInstanceManager()
 			portletName = "WC Title 2");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewInstanceManagerVelocity {
 		SetWindowSize(value1 = "1920,1080");
 
@@ -174,7 +208,7 @@ $request.servletContext.getAttribute("org.apache.tomcat.InstanceManager"))
 		DDLTemplate.addDisplayTemplateTemplateViaDDLDisplayPG(
 			ddlDisplayTemplateLanguage = "Velocity (.vm)",
 			ddlDisplayTemplateName = "Velocity Template",
-			ddlDisplayTemplateScript = "${templateScript}");
+			ddlDisplayTemplateScript = ${templateScript});
 
 		Navigator.gotoSitePage(
 			pageName = "Test Page",
@@ -183,7 +217,7 @@ $request.servletContext.getAttribute("org.apache.tomcat.InstanceManager"))
 		AssertConsoleTextPresent(value1 = "java.lang.IllegalArgumentException: Denied resolving class org.apache.catalina.core.ApplicationContextFacade by org.apache");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewInstanceManagerWildfly {
 		property app.server.types = "wildfly";
 		property test.assert.warning.exceptions = "false";
@@ -217,7 +251,7 @@ $request.servletContext.getAttribute("org.apache.tomcat.InstanceManager"))
 ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apache.bcel.internal.util.ClassLoader')}
 ''';
 
-		WebContentTemplates.inputScript(templateScript = "${templateScript}");
+		WebContentTemplates.inputScript(templateScript = ${templateScript});
 
 		PortletEntry.save();
 
@@ -235,9 +269,11 @@ ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apac
 			portletName = "WC Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewServletContext {
 		property app.server.types = "tomcat,weblogic,websphere,wildfly";
+		property ci.retries.disabled = "false";
+		property test.assert.warning.exceptions = "false";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -270,7 +306,7 @@ ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apac
 </#list>
 ''';
 
-		WebContentTemplates.inputScript(templateScript = "${templateScript}");
+		WebContentTemplates.inputScript(templateScript = ${templateScript});
 
 		PortletEntry.save();
 
@@ -288,7 +324,7 @@ ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apac
 			portletName = "WC Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewSpringBeans {
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -322,7 +358,7 @@ ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apac
 </#list>
 ''';
 
-		WebContentTemplates.inputScript(templateScript = "${templateScript}");
+		WebContentTemplates.inputScript(templateScript = ${templateScript});
 
 		PortletEntry.save();
 

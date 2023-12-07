@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.security.permission.support;
@@ -21,7 +12,10 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
 import com.liferay.dynamic.data.mapping.util.DDMStructurePermissionSupport;
 import com.liferay.dynamic.data.mapping.util.DDMTemplatePermissionSupport;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory.ServiceWrapper;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -32,7 +26,10 @@ import com.liferay.portal.kernel.util.Portal;
 
 import java.util.List;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -51,9 +48,8 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 
 			ServiceWrapper<DDMStructurePermissionSupport>
 				structurePermissionSupportServiceWrapper =
-					_ddmPermissionSupportRegistry.
-						getDDMStructurePermissionSupportServiceWrapper(
-							classNameId);
+					_ddmStructurePermissionSupportServiceTrackerMap.getService(
+						_portal.getClassName(classNameId));
 
 			throw new PrincipalException.MustHavePermission(
 				permissionChecker,
@@ -72,9 +68,8 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 
 		ServiceWrapper<DDMTemplatePermissionSupport>
 			templatePermissionSupportServiceWrapper =
-				_ddmPermissionSupportRegistry.
-					getDDMTemplatePermissionSupportServiceWrapper(
-						resourceClassNameId);
+				_getDDMTemplatePermissionSupportServiceWrapper(
+					_portal.getClassName(resourceClassNameId));
 
 		_checkAddTemplatePermission(
 			permissionChecker, groupId, classNameId,
@@ -89,9 +84,8 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 
 		ServiceWrapper<DDMTemplatePermissionSupport>
 			templatePermissionSupportServiceWrapper =
-				_ddmPermissionSupportRegistry.
-					getDDMTemplatePermissionSupportServiceWrapper(
-						resourceClassName);
+				_getDDMTemplatePermissionSupportServiceWrapper(
+					resourceClassName);
 
 		_checkAddTemplatePermission(
 			permissionChecker, groupId, classNameId,
@@ -105,8 +99,8 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 
 		ServiceWrapper<DDMStructurePermissionSupport>
 			structurePermissionSupportServiceWrapper =
-				_ddmPermissionSupportRegistry.
-					getDDMStructurePermissionSupportServiceWrapper(classNameId);
+				_ddmStructurePermissionSupportServiceTrackerMap.getService(
+					_portal.getClassName(classNameId));
 
 		return _ddmPermissionSupportHelper.contains(
 			permissionChecker,
@@ -122,9 +116,8 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 
 		ServiceWrapper<DDMTemplatePermissionSupport>
 			templatePermissionSupportServiceWrapper =
-				_ddmPermissionSupportRegistry.
-					getDDMTemplatePermissionSupportServiceWrapper(
-						resourceClassNameId);
+				_getDDMTemplatePermissionSupportServiceWrapper(
+					_portal.getClassName(resourceClassNameId));
 
 		return _containsAddTemplatePermission(
 			permissionChecker, groupId, classNameId,
@@ -139,9 +132,8 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 
 		ServiceWrapper<DDMTemplatePermissionSupport>
 			templatePermissionSupportServiceWrapper =
-				_ddmPermissionSupportRegistry.
-					getDDMTemplatePermissionSupportServiceWrapper(
-						resourceClassName);
+				_getDDMTemplatePermissionSupportServiceWrapper(
+					resourceClassName);
 
 		return _containsAddTemplatePermission(
 			permissionChecker, groupId, classNameId,
@@ -149,20 +141,16 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 	}
 
 	@Override
-	public String getStructureModelResourceName(long classNameId)
-		throws PortalException {
-
+	public String getStructureModelResourceName(long classNameId) {
 		return getStructureModelResourceName(_portal.getClassName(classNameId));
 	}
 
 	@Override
-	public String getStructureModelResourceName(String className)
-		throws PortalException {
-
+	public String getStructureModelResourceName(String className) {
 		ServiceWrapper<DDMStructurePermissionSupport>
 			structurePermissionSupportServiceWrapper =
-				_ddmPermissionSupportRegistry.
-					getDDMStructurePermissionSupportServiceWrapper(className);
+				_ddmStructurePermissionSupportServiceTrackerMap.getService(
+					className);
 
 		if (structurePermissionSupportServiceWrapper == null) {
 			return ResourceActionsUtil.getCompositeModelName(
@@ -196,12 +184,37 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 
 		ServiceWrapper<DDMTemplatePermissionSupport>
 			templatePermissionSupportServiceWrapper =
-				_ddmPermissionSupportRegistry.
-					getDDMTemplatePermissionSupportServiceWrapper(
-						resourceClassName);
+				_getDDMTemplatePermissionSupportServiceWrapper(
+					resourceClassName);
 
 		return _getTemplateModelResourceName(
 			resourceClassName, templatePermissionSupportServiceWrapper);
+	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_ddmStructurePermissionSupportServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext, DDMStructurePermissionSupport.class,
+				"model.class.name",
+				ServiceTrackerCustomizerFactory.
+					<DDMStructurePermissionSupport>serviceWrapper(
+						bundleContext));
+
+		_ddmTemplatePermissionSupportServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext, DDMTemplatePermissionSupport.class,
+				"model.class.name",
+				ServiceTrackerCustomizerFactory.
+					<DDMTemplatePermissionSupport>serviceWrapper(
+						bundleContext));
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_ddmStructurePermissionSupportServiceTrackerMap.close();
+
+		_ddmTemplatePermissionSupportServiceTrackerMap.close();
 	}
 
 	protected String getResourceName(
@@ -286,11 +299,29 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 			"add.template.action.id", DDMActionKeys.ADD_TEMPLATE);
 	}
 
-	private String _getTemplateModelResourceName(
-			String resourceClassName,
-			ServiceWrapper<DDMTemplatePermissionSupport>
-				templatePermissionSupportServiceWrapper)
+	private ServiceWrapper<DDMTemplatePermissionSupport>
+			_getDDMTemplatePermissionSupportServiceWrapper(
+				String resourceClassName)
 		throws PortalException {
+
+		ServiceWrapper<DDMTemplatePermissionSupport>
+			ddmTemplatePermissionSupportServiceWrapper =
+				_ddmTemplatePermissionSupportServiceTrackerMap.getService(
+					resourceClassName);
+
+		if (ddmTemplatePermissionSupportServiceWrapper == null) {
+			throw new PortalException(
+				"The model does not support DDMTemplate permission checking " +
+					resourceClassName);
+		}
+
+		return ddmTemplatePermissionSupportServiceWrapper;
+	}
+
+	private String _getTemplateModelResourceName(
+		String resourceClassName,
+		ServiceWrapper<DDMTemplatePermissionSupport>
+			templatePermissionSupportServiceWrapper) {
 
 		boolean defaultModelResourceName = MapUtil.getBoolean(
 			templatePermissionSupportServiceWrapper.getProperties(),
@@ -307,8 +338,12 @@ public class DDMPermissionSupportImpl implements DDMPermissionSupport {
 	@Reference
 	private DDMPermissionSupportHelper _ddmPermissionSupportHelper;
 
-	@Reference
-	private DDMPermissionSupportRegistry _ddmPermissionSupportRegistry;
+	private ServiceTrackerMap
+		<String, ServiceWrapper<DDMStructurePermissionSupport>>
+			_ddmStructurePermissionSupportServiceTrackerMap;
+	private ServiceTrackerMap
+		<String, ServiceWrapper<DDMTemplatePermissionSupport>>
+			_ddmTemplatePermissionSupportServiceTrackerMap;
 
 	@Reference
 	private Portal _portal;

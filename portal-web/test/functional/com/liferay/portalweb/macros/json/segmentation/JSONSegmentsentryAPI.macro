@@ -1,14 +1,15 @@
 definition {
 
-	@summary = "Add a segment of via JSONWS"
-	macro _addSegment {
+	@summary = "Default summary"
+	macro _addSegment(nameMap = null, criteria = null, descriptionMap = null, serviceContext = null) {
 		Variables.assertDefined(parameterList = "${criteria},${descriptionMap},${nameMap},${serviceContext}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/segments.segmentsentry/add-segments-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d segmentsEntryKey= \
 				-d nameMap=${nameMap} \
 				-d descriptionMap=${descriptionMap} \
@@ -18,25 +19,27 @@ definition {
 				-d serviceContext=${serviceContext}
 		''';
 
-		var segmentId = JSONCurlUtil.post("${curl}", "$.segmentsEntryId");
+		var segmentId = JSONCurlUtil.post(${curl}, "$.segmentsEntryId");
 
-		return "${segmentId}";
+		return ${segmentId};
 	}
 
-	macro _deleteSegment {
-		Variables.assertDefined(parameterList = "${segmentsId}");
+	@summary = "Default summary"
+	macro _deleteSegment(segmentsId = null) {
+		Variables.assertDefined(parameterList = ${segmentsId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/segments.segmentsentry/delete-segments-entry \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d segmentsEntryId=${segmentsId}
 		''';
 
 		echo("curl: ${curl}");
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.internal.search.spi.model.index.contributor;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.exception.NoSuchRegionException;
@@ -23,11 +15,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.search.Document;
@@ -38,7 +28,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.TeamLocalService;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -50,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -74,10 +63,12 @@ public class UserModelDocumentContributor
 				user.getUserId());
 
 			document.addKeyword(Field.COMPANY_ID, user.getCompanyId());
+			document.addDate(Field.CREATE_DATE, user.getCreateDate());
 			document.addKeyword(Field.GROUP_ID, activeTransitiveGroupIds);
 			document.addDate(Field.MODIFIED_DATE, user.getModifiedDate());
 			document.addKeyword(Field.SCOPE_GROUP_ID, activeTransitiveGroupIds);
 			document.addKeyword(Field.STATUS, user.getStatus());
+			document.addKeyword(Field.TYPE, user.getType());
 			document.addKeyword(Field.USER_ID, user.getUserId());
 			document.addKeyword(Field.USER_NAME, user.getFullName(), true);
 			document.addKeyword(
@@ -152,17 +143,16 @@ public class UserModelDocumentContributor
 	private long[] _getActiveTransitiveGroupIds(long userId)
 		throws PortalException {
 
-		List<Group> groups = groupLocalService.getUserGroups(userId, true);
+		return ArrayUtil.toLongArray(
+			TransformUtil.transform(
+				groupLocalService.getUserGroups(userId, true),
+				group -> {
+					if (group.isActive() && group.isSite()) {
+						return group.getGroupId();
+					}
 
-		Stream<Group> stream = groups.stream();
-
-		return stream.filter(
-			Group::isSite
-		).filter(
-			Group::isActive
-		).mapToLong(
-			Group::getGroupId
-		).toArray();
+					return null;
+				}));
 	}
 
 	private long[] _getAncestorOrganizationIds(long[] organizationIds)
@@ -209,15 +199,15 @@ public class UserModelDocumentContributor
 			return user.getTeamIds();
 		}
 
-		List<Team> teams = new ArrayList<>();
+		long[] teamIds = user.getTeamIds();
 
 		for (long userGroupId : user.getUserGroupIds()) {
-			teams.addAll(_teamLocalService.getUserGroupTeams(userGroupId));
+			teamIds = ArrayUtil.append(
+				teamIds,
+				_userGroupLocalService.getTeamPrimaryKeys(userGroupId));
 		}
 
-		return ArrayUtil.append(
-			ListUtil.toLongArray(teams, Team.TEAM_ID_ACCESSOR),
-			user.getTeamIds());
+		return teamIds;
 	}
 
 	private long[] _getUserGroupRoleIds(long userId) {
@@ -304,6 +294,6 @@ public class UserModelDocumentContributor
 	private RoleLocalService _roleLocalService;
 
 	@Reference
-	private TeamLocalService _teamLocalService;
+	private UserGroupLocalService _userGroupLocalService;
 
 }

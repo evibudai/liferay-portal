@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.gradle.plugins.poshi.runner;
@@ -37,7 +28,7 @@ public class PoshiRunnerResourcesExtension {
 	public PoshiRunnerResourcesExtension(Project project) {
 		_project = project;
 
-		Gradle gradle = _project.getGradle();
+		Gradle gradle = project.getGradle();
 
 		gradle.addBuildListener(_gitRepositoryBuildAdapter);
 
@@ -45,7 +36,7 @@ public class PoshiRunnerResourcesExtension {
 
 			@Override
 			public String call() throws Exception {
-				return _gitRepositoryBuildAdapter.getBranchName(_project);
+				return _gitRepositoryBuildAdapter.getBranchName(project);
 			}
 
 		};
@@ -56,10 +47,10 @@ public class PoshiRunnerResourcesExtension {
 			public String call() throws Exception {
 				Date date = new Date();
 
-				DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+				DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
 
 				return dateFormat.format(date) + "-" +
-					_gitRepositoryBuildAdapter.getHeadHash(_project);
+					_gitRepositoryBuildAdapter.getHeadHash(project);
 			}
 
 		};

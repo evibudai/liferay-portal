@@ -1,20 +1,22 @@
 definition {
 
-	macro _selectAssetType {
-		var key_assetType = "${assetType}";
+	@summary = "Default summary"
+	macro _selectAssetType(assetType = null) {
+		var key_assetType = ${assetType};
 
 		AssertClick(
 			locator1 = "AssetRelatedAssets#RELATED_ASSETS_SELECT",
 			value1 = "Select");
 
-		var assetTypeLocator = StringUtil.replace("${assetType}", " ", "_");
+		var assetTypeLocator = StringUtil.replace(${assetType}, " ", "_");
 
-		var assetTypeLocator = StringUtil.upperCase("${assetTypeLocator}");
+		var assetTypeLocator = StringUtil.upperCase(${assetTypeLocator});
 
-		MenuItem.click(menuItem = "${assetType}");
+		MenuItem.click(menuItem = ${assetType});
 	}
 
-	macro gotoBookmarksSelectionPG {
+	@summary = "Default summary"
+	macro gotoBookmarksSelectionPG(assetType = null) {
 		Portlet.clickPortletPlusIconPG(portletName = "Bookmarks");
 
 		MenuItem.click(menuItem = "Bookmark");
@@ -25,16 +27,17 @@ definition {
 			locator1 = "AssetRelatedAssets#RELATED_ASSETS_SELECT",
 			value1 = "Select");
 
-		var key_assetType = "${assetType}";
+		var key_assetType = ${assetType};
 
-		MenuItem.click(menuItem = "${assetType}");
+		MenuItem.click(menuItem = ${assetType});
 	}
 
-	macro removeAsset {
+	@summary = "Default summary"
+	macro removeAsset() {
 		Panel.expandPanel(panel = "Related Assets");
 
-		for (var removeAssetTitle : list "${removeAssetTitle}") {
-			var key_assetTitle = "${removeAssetTitle}";
+		for (var removeAssetTitle : list ${removeAssetTitle}) {
+			var key_assetTitle = ${removeAssetTitle};
 
 			Click(locator1 = "AssetRelatedAssets#RELATED_ASSETS_TABLE_REMOVE_LINK");
 
@@ -42,10 +45,11 @@ definition {
 		}
 	}
 
-	macro selectAsset {
+	@summary = "Default summary"
+	macro selectAsset(scopeSite = null, depotName = null, otherSite = null, assetTitle = null, assetType = null) {
 		Panel.expandPanel(panel = "Related Assets");
 
-		RelatedAssets._selectAssetType(assetType = "${assetType}");
+		RelatedAssets._selectAssetType(assetType = ${assetType});
 
 		SelectFrame(value1 = "relative=top");
 
@@ -56,7 +60,7 @@ definition {
 		if (isSet(scopeSite)) {
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 
-			MenuItem.click(menuItem = "${scopeSite}");
+			MenuItem.click(menuItem = ${scopeSite});
 		}
 
 		if (isSet(assetAll)) {
@@ -74,20 +78,20 @@ definition {
 					locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
 					value1 = "Asset Library");
 
-				LexiconCard.clickCard(card = "${depotName}");
+				LexiconCard.clickCard(card = ${depotName});
 			}
 			else if (isSet(otherSite)) {
 				Click(
 					key_breadcrumbName = "Sites and Libraries",
 					locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
 
-				LexiconCard.clickCard(card = "${otherSite}");
+				LexiconCard.clickCard(card = ${otherSite});
 			}
 
 			LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 			Click(
-				key_assetTitle = "${assetTitle}",
+				key_assetTitle = ${assetTitle},
 				locator1 = "AssetRelatedAssets#ASSET_TABLE_CHECKBOX");
 		}
 
@@ -96,7 +100,8 @@ definition {
 		Button.clickDone();
 	}
 
-	macro viewDefaultPG {
+	@summary = "Default summary"
+	macro viewDefaultPG() {
 		var key_portletName = "Related Assets";
 
 		AssertTextEquals(
@@ -106,20 +111,22 @@ definition {
 		AssertTextEquals(
 			key_widgetName = "Related Assets",
 			locator1 = "Message#INFO_SPECIFIC_WIDGET",
-			value1 = "There are no related assets available. This application will show all assets related to the main asset of the current page.");
+			value1 = "Info: There are no related assets available. This application will show all assets related to the main asset of the current page.");
 	}
 
-	macro viewNoPG {
-		for (var assetTitle : list "${assetTitleList}") {
-			var key_assetTitle = "${assetTitle}";
+	@summary = "Default summary"
+	macro viewNoPG(assetTitleList = null) {
+		for (var assetTitle : list ${assetTitleList}) {
+			var key_assetTitle = ${assetTitle};
 
 			AssertElementNotPresent(locator1 = "Relatedassets#ASSET_TITLE");
 		}
 	}
 
-	macro viewPG {
+	@summary = "Default summary"
+	macro viewPG(relatedAssetTitle = null) {
 		if (!(isSet(rowNumber))) {
-			var rowNumber = "1";
+			var rowNumber = 1;
 		}
 
 		if (IsElementPresent(locator1 = "Relatedassets#ASSET_ENTRY_STICKER")) {
@@ -127,9 +134,9 @@ definition {
 		}
 
 		AssertTextEquals(
-			key_assetTitle = "${relatedAssetTitle}",
+			key_assetTitle = ${relatedAssetTitle},
 			locator1 = "Relatedassets#ASSET_TITLE",
-			value1 = "${relatedAssetTitle}");
+			value1 = ${relatedAssetTitle});
 	}
 
 }

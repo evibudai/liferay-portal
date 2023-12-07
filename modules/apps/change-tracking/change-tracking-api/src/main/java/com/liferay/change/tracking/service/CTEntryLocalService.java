@@ -1,23 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.service;
 
 import com.liferay.change.tracking.model.CTEntry;
+import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -76,9 +69,11 @@ public interface CTEntryLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CTEntry addCTEntry(CTEntry ctEntry);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public CTEntry addCTEntry(
-			long ctCollectionId, long modelClassNameId, CTModel<?> ctModel,
-			long userId, int changeType)
+			String externalReferenceCode, long ctCollectionId,
+			long modelClassNameId, CTModel<?> ctModel, long userId,
+			int changeType)
 		throws PortalException;
 
 	/**
@@ -211,6 +206,20 @@ public interface CTEntryLocalService
 		long ctCollectionId, long modelClassNameId, long modelClassPK);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTEntry fetchCTEntryByExternalReferenceCode(
+		String externalReferenceCode, long companyId);
+
+	/**
+	 * Returns the ct entry with the matching UUID and company.
+	 *
+	 * @param uuid the ct entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct entry, or <code>null</code> if a matching ct entry could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTEntry fetchCTEntryByUuidAndCompanyId(String uuid, long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -261,11 +270,32 @@ public interface CTEntryLocalService
 	public CTEntry getCTEntry(long ctEntryId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTEntry getCTEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException;
+
+	/**
+	 * Returns the ct entry with the matching UUID and company.
+	 *
+	 * @param uuid the ct entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching ct entry
+	 * @throws PortalException if a matching ct entry could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CTEntry getCTEntryByUuidAndCompanyId(String uuid, long companyId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long getCTRowCTCollectionId(CTEntry ctEntry) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Long> getExclusiveModelClassPKs(
 		long ctCollectionId, long modelClassNameId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
+		PortletDataContext portletDataContext);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
@@ -304,5 +334,8 @@ public interface CTEntryLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public CTEntry updateCTEntry(CTEntry ctEntry);
+
+	public CTEntry updateModelMvccVersion(
+		long ctEntryId, long modelMvccVersion);
 
 }

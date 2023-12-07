@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.upgrade.helper;
@@ -31,7 +22,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -202,7 +193,8 @@ public class JournalArticleImageUpgradeHelper {
 
 		long groupId = GetterUtil.getLong(splitURL[2]);
 		long folderId = GetterUtil.getLong(splitURL[3]);
-		String title = HttpComponentsUtil.decodeURL(_html.escape(splitURL[4]));
+		String title = HttpComponentsUtil.decodeURL(
+			HtmlUtil.escape(splitURL[4]));
 
 		try {
 			FileEntry fileEntry = _dlAppLocalService.getFileEntry(
@@ -234,9 +226,6 @@ public class JournalArticleImageUpgradeHelper {
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
-
-	@Reference
-	private Html _html;
 
 	@Reference
 	private PortletFileRepository _portletFileRepository;

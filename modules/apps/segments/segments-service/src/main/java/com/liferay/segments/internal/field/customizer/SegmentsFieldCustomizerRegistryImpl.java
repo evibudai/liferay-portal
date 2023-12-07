@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.internal.field.customizer;
@@ -19,14 +10,13 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.osgi.util.StringPlus;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.field.customizer.SegmentsFieldCustomizer;
 import com.liferay.segments.field.customizer.SegmentsFieldCustomizerRegistry;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -42,23 +32,27 @@ public class SegmentsFieldCustomizerRegistryImpl
 	implements SegmentsFieldCustomizerRegistry {
 
 	@Override
-	public Optional<SegmentsFieldCustomizer> getSegmentsFieldCustomizerOptional(
+	public SegmentsFieldCustomizer getSegmentsFieldCustomizer(
 		String entityName, String fieldName) {
 
 		List<SegmentsFieldCustomizer> segmentsFieldCustomizers =
 			_getSegmentsFieldCustomizers(entityName);
 
-		Stream<SegmentsFieldCustomizer> stream =
-			segmentsFieldCustomizers.stream();
+		if (ListUtil.isEmpty(segmentsFieldCustomizers)) {
+			return null;
+		}
 
-		return stream.filter(
-			segmentsFieldCustomizer -> {
-				List<String> fieldNames =
-					segmentsFieldCustomizer.getFieldNames();
+		for (SegmentsFieldCustomizer segmentsFieldCustomizer :
+				segmentsFieldCustomizers) {
 
-				return fieldNames.contains(fieldName);
+			List<String> fieldNames = segmentsFieldCustomizer.getFieldNames();
+
+			if (fieldNames.contains(fieldName)) {
+				return segmentsFieldCustomizer;
 			}
-		).findFirst();
+		}
+
+		return null;
 	}
 
 	@Activate

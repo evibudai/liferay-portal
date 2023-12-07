@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Asset Publisher";
@@ -10,12 +11,11 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
-		JSONStaging.enableLocalStaging(
-			branchingPrivate = "false",
-			branchingPublic = "false",
-			groupName = "Site Name");
+		Staging.openStagingAdmin(siteURLKey = "site-name");
+
+		Staging.activateStagingCP(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name (Staging)",
@@ -30,9 +30,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +41,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-82674. Publish the deleted WC Folder with WC to Live."
-	@priority = "4"
+	@priority = 4
 	test PublishDeletedWCFolderWithWCToLive {
 		task ("Add a web content folder") {
 			JSONWebcontent.addFolder(
@@ -120,7 +120,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-81196. Publish the filter defined in Asset Publisher to Live."
-	@priority = "3"
+	@priority = 3
 	test PublishFilterDefinedInAssetPublisherToLive {
 		task ("Add a vocabulary") {
 			JSONCategory.addVocabulary(
@@ -144,7 +144,7 @@ definition {
 
 		task ("Add the first web content with the first category") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${firstCategoryId}",
+				assetCategoryIds = ${firstCategoryId},
 				content = "Web Content With One Category",
 				groupName = "Site Name (Staging)",
 				site = "false",

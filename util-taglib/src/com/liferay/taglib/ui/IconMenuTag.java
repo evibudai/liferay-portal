@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.taglib.ui;
@@ -99,6 +90,7 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 			_id = null;
 			_localizeMessage = true;
 			_maxDisplayItems = _DEFAULT_MAX_DISPLAY_ITEMS;
+			_triggerAriaLabel = null;
 			_message = "actions";
 			_scroll = false;
 			_select = false;
@@ -241,6 +233,10 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 
 	public void setStartPage(String startPage) {
 		_startPage = startPage;
+	}
+
+	public void setTriggerAriaLabel(String triggerAriaLabel) {
+		_triggerAriaLabel = triggerAriaLabel;
 	}
 
 	public void setTriggerCssClass(String triggerCssClass) {
@@ -492,11 +488,11 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 
 		httpServletRequest.setAttribute("liferay-ui:icon-menu:scroll", _scroll);
 		httpServletRequest.setAttribute(
+			"liferay-ui:icon-menu:triggerAriaLabel", _triggerAriaLabel);
+		httpServletRequest.setAttribute(
 			"liferay-ui:icon-menu:triggerCssClass", _triggerCssClass);
-
 		httpServletRequest.setAttribute(
 			"liferay-ui:icon-menu:triggerLabel", _triggerLabel);
-
 		httpServletRequest.setAttribute(
 			"liferay-ui:icon-menu:triggerType", _triggerType);
 	}
@@ -525,6 +521,7 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 	private boolean _showExpanded;
 	private boolean _showWhenSingleIcon;
 	private String _startPage;
+	private String _triggerAriaLabel;
 	private String _triggerCssClass;
 	private String _triggerLabel;
 	private String _triggerType;

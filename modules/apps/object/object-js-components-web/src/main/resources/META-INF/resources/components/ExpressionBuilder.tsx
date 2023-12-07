@@ -1,25 +1,17 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {ClayInput} from '@clayui/form';
 import ClayModal, {useModal} from '@clayui/modal';
+import {FieldBase} from 'frontend-js-components-web';
 import {createResourceURL, fetch} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
 
+import {REQUIRED_MSG} from '../utils/constants';
 import CodeEditor, {SidebarCategory} from './CodeEditor/index';
-import {FieldBase} from './FieldBase';
 
 export function ExpressionBuilder({
 	buttonDisabled,
@@ -32,6 +24,7 @@ export function ExpressionBuilder({
 	id,
 	label,
 	name,
+	onBlur,
 	onChange,
 	onInput,
 	onOpenModal,
@@ -59,6 +52,7 @@ export function ExpressionBuilder({
 						disabled={disabled}
 						id={id}
 						name={name}
+						onBlur={onBlur}
 						onChange={onChange}
 						onInput={onInput}
 						type={type}
@@ -86,6 +80,7 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 	const [
 		{
 			error,
+			eventSidebarElements,
 			header,
 			onSave,
 			placeholder,
@@ -96,6 +91,7 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 		setState,
 	] = useState<{
 		error?: string;
+		eventSidebarElements?: SidebarCategory[];
 		header?: string;
 		onSave?: Callback;
 		placeholder?: string;
@@ -110,6 +106,7 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 
 	useEffect(() => {
 		const openModal = (params: {
+			eventSidebarElements: SidebarCategory[];
 			header: string;
 			onSave: Callback;
 			placeholder: string;
@@ -143,7 +140,7 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 		let error: string | undefined;
 
 		if (required && !source?.trim()) {
-			error = Liferay.Language.get('required');
+			error = REQUIRED_MSG;
 		}
 		else if (source?.trim() && validateExpressionURL) {
 			const response = await fetch(
@@ -173,6 +170,7 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 
 	return (
 		<ClayModal
+			center
 			className="lfr-objects__expression-builder-modal"
 			observer={observer}
 			size="lg"
@@ -195,7 +193,7 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 						)} -->`
 					}
 					ref={editorRef}
-					sidebarElements={sidebarElements}
+					sidebarElements={eventSidebarElements || sidebarElements}
 					value={source}
 				/>
 			</ClayModal.Body>

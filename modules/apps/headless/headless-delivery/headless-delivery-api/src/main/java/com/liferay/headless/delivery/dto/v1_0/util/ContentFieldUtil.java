@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.dto.v1_0.util;
@@ -52,18 +43,18 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.text.ParseException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -117,16 +108,16 @@ public class ContentFieldUtil {
 
 						Map<String, ContentFieldValue> map = new HashMap<>();
 
-						Map<Locale, String> valueValues = Optional.ofNullable(
-							ddmFormFieldValue.getValue()
-						).map(
-							Value::getValues
-						).orElse(
-							Collections.emptyMap()
-						);
+						Value value = ddmFormFieldValue.getValue();
+
+						Map<Locale, String> values = value.getValues();
+
+						if (values == null) {
+							values = Collections.emptyMap();
+						}
 
 						for (Map.Entry<Locale, String> entry :
-								valueValues.entrySet()) {
+								values.entrySet()) {
 
 							Locale locale = entry.getKey();
 
@@ -153,11 +144,10 @@ public class ContentFieldUtil {
 		String valueString) {
 
 		try {
-			Optional<UriInfo> uriInfoOptional =
-				dtoConverterContext.getUriInfoOptional();
+			UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
 			if (Objects.equals(DDMFormFieldType.DATE, ddmFormField.getType()) ||
-				Objects.equals("date", ddmFormField.getType())) {
+				Objects.equals(ddmFormField.getType(), "date")) {
 
 				return new ContentFieldValue() {
 					{
@@ -183,7 +173,7 @@ public class ContentFieldUtil {
 						document = ContentDocumentUtil.toContentDocument(
 							dlURLHelper,
 							"contentFields.contentFieldValue.document",
-							fileEntry, uriInfoOptional);
+							fileEntry, uriInfo);
 					}
 				};
 			}
@@ -223,6 +213,55 @@ public class ContentFieldUtil {
 				};
 			}
 			else if (Objects.equals(
+						DDMFormFieldTypeConstants.GRID,
+						ddmFormField.getType())) {
+
+				Map<String, Object> properties = ddmFormField.getProperties();
+
+				DDMFormFieldOptions rowsDDMFormFieldOptions =
+					(DDMFormFieldOptions)properties.get("rows");
+				DDMFormFieldOptions columnsDDMFormFieldOptions =
+					(DDMFormFieldOptions)properties.get("columns");
+
+				JSONObject localizedSelectedDataJSONObject =
+					JSONFactoryUtil.createJSONObject();
+				JSONObject selectedValuesJSONObject =
+					JSONFactoryUtil.createJSONObject();
+
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+					valueString);
+
+				Iterator<String> iterator = jsonObject.keys();
+
+				while (iterator.hasNext()) {
+					String key = iterator.next();
+
+					LocalizedValue optionKeyLabelsLocalizedValue =
+						rowsDDMFormFieldOptions.getOptionLabels(key);
+
+					String value = jsonObject.getString(key);
+
+					LocalizedValue optionValueLabelsLocalizedValue =
+						columnsDDMFormFieldOptions.getOptionLabels(value);
+
+					localizedSelectedDataJSONObject.put(
+						optionKeyLabelsLocalizedValue.getString(locale),
+						optionValueLabelsLocalizedValue.getString(locale));
+
+					selectedValuesJSONObject.put(
+						rowsDDMFormFieldOptions.getOptionReference(key),
+						columnsDDMFormFieldOptions.getOptionReference(value));
+				}
+
+				return new ContentFieldValue() {
+					{
+						data = JSONUtil.toString(
+							localizedSelectedDataJSONObject);
+						value = JSONUtil.toString(selectedValuesJSONObject);
+					}
+				};
+			}
+			else if (Objects.equals(
 						DDMFormFieldType.IMAGE, ddmFormField.getType()) ||
 					 Objects.equals(
 						 DDMFormFieldTypeConstants.IMAGE,
@@ -242,12 +281,13 @@ public class ContentFieldUtil {
 						image = ContentDocumentUtil.toContentDocument(
 							dlURLHelper,
 							"contentFields.contentFieldValue.image",
-							dlAppService.getFileEntry(fileEntryId),
-							uriInfoOptional);
+							dlAppService.getFileEntry(fileEntryId), uriInfo);
 
 						String alt = jsonObject.getString("alt");
 
-						if (Validator.isNotNull(alt) && JSONUtil.isValid(alt)) {
+						if (Validator.isNotNull(alt) &&
+							JSONUtil.isJSONObject(alt)) {
+
 							JSONObject altJSONObject = jsonObject.getJSONObject(
 								"alt");
 
@@ -329,25 +369,38 @@ public class ContentFieldUtil {
 						 ddmFormField.getType(),
 						 DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE)) {
 
-				List<String> list = JSONUtil.toStringList(
-					JSONFactoryUtil.createJSONArray(valueString));
-
 				DDMFormFieldOptions ddmFormFieldOptions =
 					ddmFormField.getDDMFormFieldOptions();
 
-				Stream<String> stream = list.stream();
+				List<String> values = new ArrayList<>();
 
-				List<String> values = stream.map(
-					ddmFormFieldOptions::getOptionLabels
-				).map(
-					localizedValue -> localizedValue.getString(locale)
-				).collect(
-					Collectors.toList()
-				);
+				List<String> list = TransformUtil.transform(
+					JSONUtil.toStringList(
+						JSONFactoryUtil.createJSONArray(valueString)),
+					value -> {
+						LocalizedValue localizedValue =
+							ddmFormFieldOptions.getOptionLabels(value);
+
+						values.add(
+							ddmFormFieldOptions.getOptionReference(value));
+
+						return localizedValue.getString(locale);
+					});
 
 				return new ContentFieldValue() {
 					{
 						setData(
+							() -> {
+								if (!ddmFormField.isMultiple() &&
+									(list.size() == 1)) {
+
+									return list.get(0);
+								}
+
+								return String.valueOf(
+									JSONFactoryUtil.createJSONArray(list));
+							});
+						setValue(
 							() -> {
 								if (!ddmFormField.isMultiple() &&
 									(values.size() == 1)) {
@@ -375,6 +428,8 @@ public class ContentFieldUtil {
 					{
 						data = selectedOptionLabelLocalizedValue.getString(
 							locale);
+						value = ddmFormFieldOptions.getOptionReference(
+							valueString);
 					}
 				};
 			}
@@ -455,42 +510,40 @@ public class ContentFieldUtil {
 			long classPK, DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-		if (uriInfoOptional.map(
-				UriInfo::getQueryParameters
-			).map(
-				queryParameters -> queryParameters.getFirst("nestedFields")
-			).map(
-				nestedFields -> nestedFields.contains(
-					"embeddedStructuredContent")
-			).orElse(
-				false
-			)) {
-
-			DTOConverterRegistry dtoConverterRegistry =
-				dtoConverterContext.getDTOConverterRegistry();
-
-			DTOConverter<?, ?> dtoConverter =
-				dtoConverterRegistry.getDTOConverter(
-					JournalArticle.class.getName());
-
-			if (dtoConverter == null) {
-				return null;
-			}
-
-			return (StructuredContent)dtoConverter.toDTO(
-				new DefaultDTOConverterContext(
-					dtoConverterContext.isAcceptAllLanguages(),
-					Collections.emptyMap(), dtoConverterRegistry,
-					dtoConverterContext.getHttpServletRequest(), classPK,
-					dtoConverterContext.getLocale(),
-					uriInfoOptional.orElse(null),
-					dtoConverterContext.getUser()));
+		if (uriInfo == null) {
+			return null;
 		}
 
-		return null;
+		MultivaluedMap<String, String> queryParameters =
+			uriInfo.getQueryParameters();
+
+		String nestedFields = queryParameters.getFirst("nestedFields");
+
+		if ((nestedFields == null) ||
+			!nestedFields.contains("embeddedStructuredContent")) {
+
+			return null;
+		}
+
+		DTOConverterRegistry dtoConverterRegistry =
+			dtoConverterContext.getDTOConverterRegistry();
+
+		DTOConverter<?, ?> dtoConverter = dtoConverterRegistry.getDTOConverter(
+			JournalArticle.class.getName());
+
+		if (dtoConverter == null) {
+			return null;
+		}
+
+		return (StructuredContent)dtoConverter.toDTO(
+			new DefaultDTOConverterContext(
+				dtoConverterContext.isAcceptAllLanguages(),
+				Collections.emptyMap(), dtoConverterRegistry,
+				dtoConverterContext.getHttpServletRequest(), classPK,
+				dtoConverterContext.getLocale(), uriInfo,
+				dtoConverterContext.getUser()));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

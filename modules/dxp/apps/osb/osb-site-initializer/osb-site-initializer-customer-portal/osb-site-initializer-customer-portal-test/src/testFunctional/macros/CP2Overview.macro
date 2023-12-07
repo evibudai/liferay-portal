@@ -1,49 +1,55 @@
 definition {
 
-	macro _getBackgroundColor {
-		if ("${slaCardtitle}" == "Platinum") {
+	@summary = "Default summary"
+	macro _getBackgroundColor(slaCardtitle = null) {
+		if (${slaCardtitle} == "Platinum") {
 			var color = "rgba(255, 255, 255, 1)";
 		}
 
-		if ("${slaCardtitle}" == "Premium") {
+		if (${slaCardtitle} == "Premium") {
 			var color = "rgba(231, 239, 255, 1)";
 		}
 
-		if ("${slaCardtitle}" == "Gold") {
+		if (${slaCardtitle} == "Gold") {
 			var color = "rgba(255, 251, 240, 1)";
 		}
 
-		return "${color}";
+		return ${color};
 	}
 
-	macro assertEmptySLACardMessage {
+	@summary = "Default summary"
+	macro assertEmptySLACardMessage(message = null) {
 		AssertTextEquals(
 			locator1 = "CP2Overview#EMPTY_SLA_CARD_MESSAGE",
-			value1 = "${message}");
+			value1 = ${message});
 	}
 
-	macro assertSLACardBackgroundColor {
-		var color = CP2Overview._getBackgroundColor(slaCardtitle = "${slaCardTitle}");
+	@summary = "Default summary"
+	macro assertSLACardBackgroundColor(slaCardTitle = null) {
+		var color = CP2Overview._getBackgroundColor(slaCardtitle = ${slaCardTitle});
 
 		AssertCssValue(
 			locator1 = "CP2Overview#SLA_CARD_CONTAINER",
 			locator2 = "background-color",
-			value1 = "${color}");
+			value1 = ${color});
 	}
 
-	macro assertSLACardContentIsVisible {
-		var key_cardContent = "${cardContent}";
+	@summary = "Default summary"
+	macro assertSLACardContentIsVisible(cardContent = null) {
+		var key_cardContent = ${cardContent};
 
 		AssertVisible(locator1 = "CP2Overview#SLA_CARD_CONTENT");
 	}
 
-	macro assertSLACardUnicContentIsVisible {
-		var key_cardContent = "${cardContent}";
+	@summary = "Default summary"
+	macro assertSLACardUnicContentIsVisible(cardContent = null) {
+		var key_cardContent = ${cardContent};
 
 		AssertVisible(locator1 = "CP2Overview#SLA_CARD_UNIC_CONTENT");
 	}
 
-	macro switchSLACard {
+	@summary = "Default summary"
+	macro switchSLACard() {
 		MouseOver(locator1 = "CP2Overview#SLA_CARD_CONTAINER");
 
 		Click(locator1 = "CP2Overview#SLA_CARD_SHIFT_BUTTON");

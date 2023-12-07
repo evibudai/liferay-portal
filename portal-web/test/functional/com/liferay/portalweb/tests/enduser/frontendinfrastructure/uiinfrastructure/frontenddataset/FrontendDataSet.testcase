@@ -2,11 +2,10 @@
 definition {
 
 	property osgi.modules.includes = "frontend-data-set-sample-web";
-	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Frontend Dataset";
-	property testray.main.component.name = "User Interface";
+	property testray.component.names = "Frontend Data Set";
+	property testray.main.component.name = "Frontend Data Set";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -35,9 +34,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -47,8 +46,8 @@ definition {
 		}
 	}
 
-	@description = "LPS-147914: Verify alert message is present when action button is clicked"
-	@priority = "4"
+	@description = "LPS-144477. Verify alert message is present when action button is clicked"
+	@priority = 4
 	test ActionsCanBeCustomized {
 		task ("When Click on 1st action button in FDS sample") {
 			MouseOver(

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -71,6 +62,7 @@ page import="com.liferay.document.library.kernel.exception.FolderNameException" 
 page import="com.liferay.document.library.kernel.exception.InvalidFileVersionException" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchFileEntryException" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchFileException" %><%@
+page import="com.liferay.document.library.kernel.exception.NoSuchFileShortcutException" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchFolderException" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchMetadataSetException" %><%@
 page import="com.liferay.document.library.kernel.exception.RepositoryNameException" %><%@
@@ -86,17 +78,17 @@ page import="com.liferay.document.library.kernel.model.DLFileShortcutConstants" 
 page import="com.liferay.document.library.kernel.model.DLFileVersion" %><%@
 page import="com.liferay.document.library.kernel.model.DLFolder" %><%@
 page import="com.liferay.document.library.kernel.model.DLFolderConstants" %><%@
+page import="com.liferay.document.library.kernel.processor.AudioProcessorUtil" %><%@
+page import="com.liferay.document.library.kernel.processor.ImageProcessorUtil" %><%@
+page import="com.liferay.document.library.kernel.processor.PDFProcessorUtil" %><%@
+page import="com.liferay.document.library.kernel.processor.RawMetadataProcessor" %><%@
+page import="com.liferay.document.library.kernel.processor.VideoProcessorUtil" %><%@
 page import="com.liferay.document.library.kernel.service.DLAppLocalServiceUtil" %><%@
 page import="com.liferay.document.library.kernel.service.DLAppServiceUtil" %><%@
 page import="com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServiceUtil" %><%@
 page import="com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil" %><%@
 page import="com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil" %><%@
-page import="com.liferay.document.library.kernel.util.AudioProcessorUtil" %><%@
 page import="com.liferay.document.library.kernel.util.DLUtil" %><%@
-page import="com.liferay.document.library.kernel.util.ImageProcessorUtil" %><%@
-page import="com.liferay.document.library.kernel.util.PDFProcessorUtil" %><%@
-page import="com.liferay.document.library.kernel.util.RawMetadataProcessor" %><%@
-page import="com.liferay.document.library.kernel.util.VideoProcessorUtil" %><%@
 page import="com.liferay.document.library.preview.exception.DLPreviewGenerationInProcessException" %><%@
 page import="com.liferay.document.library.preview.exception.DLPreviewSizeException" %><%@
 page import="com.liferay.document.library.util.DLURLHelperUtil" %><%@
@@ -106,6 +98,7 @@ page import="com.liferay.document.library.web.internal.dao.search.IGResultRowSpl
 page import="com.liferay.document.library.web.internal.display.context.DLAdminDisplayContext" %><%@
 page import="com.liferay.document.library.web.internal.display.context.DLAdminManagementToolbarDisplayContext" %><%@
 page import="com.liferay.document.library.web.internal.display.context.DLAdminNavigationDisplayContext" %><%@
+page import="com.liferay.document.library.web.internal.display.context.DLConfigurationDisplaycontext" %><%@
 page import="com.liferay.document.library.web.internal.display.context.DLEditDDMStructureDisplayContext" %><%@
 page import="com.liferay.document.library.web.internal.display.context.DLSelectRestrictedFileEntryTypesDisplayContext" %><%@
 page import="com.liferay.document.library.web.internal.display.context.DLViewFileEntryMetadataSetsDisplayContext" %><%@
@@ -117,6 +110,7 @@ page import="com.liferay.document.library.web.internal.display.context.IGViewDis
 page import="com.liferay.document.library.web.internal.display.context.helper.DLPortletInstanceSettingsHelper" %><%@
 page import="com.liferay.document.library.web.internal.display.context.helper.DLRequestHelper" %><%@
 page import="com.liferay.document.library.web.internal.display.context.helper.IGRequestHelper" %><%@
+page import="com.liferay.document.library.web.internal.exception.DLObjectSizeLimitExceededException" %><%@
 page import="com.liferay.document.library.web.internal.exception.FileNameExtensionException" %><%@
 page import="com.liferay.document.library.web.internal.helper.DLTrashHelper" %><%@
 page import="com.liferay.document.library.web.internal.portlet.action.EditFileEntryMVCActionCommand" %><%@
@@ -132,24 +126,22 @@ page import="com.liferay.document.library.web.internal.util.DLBreadcrumbUtil" %>
 page import="com.liferay.document.library.web.internal.util.DLSubscriptionUtil" %><%@
 page import="com.liferay.document.library.web.internal.util.DLWebComponentProvider" %><%@
 page import="com.liferay.document.library.web.internal.util.IGUtil" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.DDMStructure" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.DDMStructureManager" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.NoSuchStructureException" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.StorageFieldRequiredException" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.StructureDefinitionException" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.StructureDuplicateElementException" %><%@
-page import="com.liferay.dynamic.data.mapping.kernel.StructureNameException" %><%@
+page import="com.liferay.dynamic.data.mapping.exception.NoSuchStructureException" %><%@
+page import="com.liferay.dynamic.data.mapping.exception.StorageFieldRequiredException" %><%@
+page import="com.liferay.dynamic.data.mapping.exception.StructureDefinitionException" %><%@
+page import="com.liferay.dynamic.data.mapping.exception.StructureDuplicateElementException" %><%@
+page import="com.liferay.dynamic.data.mapping.exception.StructureNameException" %><%@
+page import="com.liferay.dynamic.data.mapping.model.DDMStructure" %><%@
 page import="com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalServiceUtil" %><%@
 page import="com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil" %><%@
 page import="com.liferay.dynamic.data.mapping.storage.DDMFormValues" %><%@
 page import="com.liferay.dynamic.data.mapping.storage.StorageType" %><%@
+page import="com.liferay.dynamic.data.mapping.util.comparator.StructureStructureKeyComparator" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.JSPDropdownItemList" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.JSPNavigationItemList" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
-page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.exception.InvalidRepositoryException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchRepositoryException" %><%@
@@ -176,7 +168,6 @@ page import="com.liferay.portal.kernel.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.PortletLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.UserLocalServiceUtil" %><%@
-page import="com.liferay.portal.kernel.servlet.taglib.ui.MenuItem" %><%@
 page import="com.liferay.portal.kernel.theme.ThemeDisplay" %><%@
 page import="com.liferay.portal.kernel.upload.FileItem" %><%@
 page import="com.liferay.portal.kernel.upload.LiferayFileItemException" %><%@
@@ -223,8 +214,7 @@ page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.Objects" %>
 
-<%@ page import="javax.portlet.PortletURL" %><%@
-page import="javax.portlet.WindowState" %>
+<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 
@@ -235,13 +225,11 @@ page import="javax.portlet.WindowState" %>
 <%
 DLTrashHelper dlTrashHelper = (DLTrashHelper)request.getAttribute(DLWebKeys.DOCUMENT_LIBRARY_TRASH_HELPER);
 
-DLWebComponentProvider dlWebComponentProvider = DLWebComponentProvider.getDLWebComponentProvider();
+DLDisplayContextProvider dlDisplayContextProvider = DLWebComponentProvider.getDLDisplayContextProvider();
+IGDisplayContextProvider igDisplayContextProvider = DLWebComponentProvider.getIGDisplayContextProvider();
 
-DLDisplayContextProvider dlDisplayContextProvider = dlWebComponentProvider.getDLDisplayContextProvider();
-IGDisplayContextProvider igDisplayContextProvider = dlWebComponentProvider.getIGDisplayContextProvider();
-
-Format dateFormatDate = FastDateFormatFactoryUtil.getDate(locale, timeZone);
-Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
+Format dateFormat = FastDateFormatFactoryUtil.getDate(locale, timeZone);
+Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 %>
 
 <%@ include file="/init-ext.jsp" %>

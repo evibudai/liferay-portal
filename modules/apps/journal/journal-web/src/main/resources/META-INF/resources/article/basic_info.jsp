@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,7 +15,7 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 %>
 
-<aui:input name="ddmStructureKey" type="hidden" value="<%= ddmStructure.getStructureKey() %>" />
+<aui:input name="ddmStructureId" type="hidden" value="<%= ddmStructure.getStructureId() %>" />
 
 <c:if test="<%= journalWebConfiguration.changeableDefaultLanguage() %>">
 	<div id="<%= liferayPortletResponse.getNamespace() %>-change-default-language">
@@ -46,7 +37,11 @@ DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 	</div>
 
 	<div class="form-group">
-		<aui:button name="selectFolderButton" value="select" />
+		<clay:button
+			displayType="secondary"
+			id='<%= liferayPortletResponse.getNamespace() + "selectFolderButton" %>'
+			label="select"
+		/>
 	</div>
 
 	<liferay-frontend:component
@@ -129,19 +124,21 @@ DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 	</c:otherwise>
 </c:choose>
 
-<div>
-	<label for="<portlet:namespace />descriptionMapAsXML"><liferay-ui:message key="description" /></label>
+<c:if test='<%= !FeatureFlagManagerUtil.isEnabled("LPS-114700") %>'>
+	<div>
+		<label for="<portlet:namespace />descriptionMapAsXML" id="<portlet:namespace />Aria"><liferay-ui:message key="description" /></label>
 
-	<liferay-ui:input-localized
-		availableLocales="<%= journalEditArticleDisplayContext.getAvailableLocales() %>"
-		cssClass="form-control"
-		defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>"
-		editorName="ckeditor"
-		formName="fm"
-		ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>"
-		name="descriptionMapAsXML"
-		selectedLanguageId="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>"
-		type="editor"
-		xml="<%= (article != null) ? article.getDescriptionMapAsXML() : StringPool.BLANK %>"
-	/>
-</div>
+		<liferay-ui:input-localized
+			availableLocales="<%= journalEditArticleDisplayContext.getAvailableLocales() %>"
+			cssClass="form-control"
+			defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>"
+			editorName="ckeditor"
+			formName="fm"
+			ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>"
+			name="descriptionMapAsXML"
+			selectedLanguageId="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>"
+			type="editor"
+			xml="<%= (article != null) ? article.getDescriptionMapAsXML() : StringPool.BLANK %>"
+		/>
+	</div>
+</c:if>

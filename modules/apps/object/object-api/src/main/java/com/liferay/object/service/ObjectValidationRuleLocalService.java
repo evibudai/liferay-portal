@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectValidationRule;
+import com.liferay.object.model.ObjectValidationRuleSetting;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -69,12 +62,6 @@ public interface ObjectValidationRuleLocalService
 	 *
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.object.service.impl.ObjectValidationRuleLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the object validation rule local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ObjectValidationRuleLocalServiceUtil} if injection and service tracking are not available.
 	 */
-	@Indexable(type = IndexableType.REINDEX)
-	public ObjectValidationRule addObjectValidationRule(
-			long userId, long objectDefinitionId, boolean active, String engine,
-			Map<Locale, String> errorLabelMap, Map<Locale, String> nameMap,
-			String script)
-		throws PortalException;
 
 	/**
 	 * Adds the object validation rule to the database. Also notifies the appropriate model listeners.
@@ -89,6 +76,15 @@ public interface ObjectValidationRuleLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectValidationRule addObjectValidationRule(
 		ObjectValidationRule objectValidationRule);
+
+	@Indexable(type = IndexableType.REINDEX)
+	public ObjectValidationRule addObjectValidationRule(
+			String externalReferenceCode, long userId, long objectDefinitionId,
+			boolean active, String engine, Map<Locale, String> errorLabelMap,
+			Map<Locale, String> nameMap, String outputType, String script,
+			boolean system,
+			List<ObjectValidationRuleSetting> objectValidationRuleSettings)
+		throws PortalException;
 
 	/**
 	 * Creates a new object validation rule with the primary key. Does not add the object validation rule to the database.
@@ -131,11 +127,13 @@ public interface ObjectValidationRuleLocalService
 	 *
 	 * @param objectValidationRule the object validation rule
 	 * @return the object validation rule that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public ObjectValidationRule deleteObjectValidationRule(
-		ObjectValidationRule objectValidationRule);
+			ObjectValidationRule objectValidationRule)
+		throws PortalException;
 
 	public void deleteObjectValidationRules(Long objectDefinitionId)
 		throws PortalException;
@@ -223,6 +221,10 @@ public interface ObjectValidationRuleLocalService
 	public ObjectValidationRule fetchObjectValidationRule(
 		long objectValidationRuleId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectValidationRule fetchObjectValidationRule(
+		String externalReferenceCode, long objectDefinitionId);
+
 	/**
 	 * Returns the object validation rule with the matching UUID and company.
 	 *
@@ -292,6 +294,10 @@ public interface ObjectValidationRuleLocalService
 	public List<ObjectValidationRule> getObjectValidationRules(
 		long objectDefinitionId, boolean active);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectValidationRule> getObjectValidationRules(
+		long objectDefinitionId, String engine);
+
 	/**
 	 * Returns the number of object validation rules.
 	 *
@@ -299,6 +305,10 @@ public interface ObjectValidationRuleLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectValidationRulesCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getObjectValidationRulesCount(
+		long objectDefinitionId, boolean active);
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -315,12 +325,7 @@ public interface ObjectValidationRuleLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
-	@Indexable(type = IndexableType.REINDEX)
-	public ObjectValidationRule updateObjectValidationRule(
-			long objectValidationRuleId, boolean active, String engine,
-			Map<Locale, String> errorLabelMap, Map<Locale, String> nameMap,
-			String script)
-		throws PortalException;
+	public void unassociateObjectField(ObjectField objectField);
 
 	/**
 	 * Updates the object validation rule in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
@@ -335,6 +340,14 @@ public interface ObjectValidationRuleLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectValidationRule updateObjectValidationRule(
 		ObjectValidationRule objectValidationRule);
+
+	@Indexable(type = IndexableType.REINDEX)
+	public ObjectValidationRule updateObjectValidationRule(
+			String externalReferenceCode, long objectValidationRuleId,
+			boolean active, String engine, Map<Locale, String> errorLabelMap,
+			Map<Locale, String> nameMap, String outputType, String script,
+			List<ObjectValidationRuleSetting> objectValidationRuleSettings)
+		throws PortalException;
 
 	@Transactional(readOnly = true)
 	public void validate(

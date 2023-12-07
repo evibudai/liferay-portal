@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.journal.internal.upgrade.v4_0_0;
@@ -21,11 +12,28 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.util.JournalConverter;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.Portal;
+
+import java.io.StringReader;
+import java.io.StringWriter;
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import org.xml.sax.InputSource;
 
 /**
  * @author Preston Crary
@@ -73,6 +81,8 @@ public class JournalArticleDDMFieldsUpgradeProcess extends UpgradeProcess {
 						_portal.getSiteGroupId(groupId), classNameId,
 						ddmStructureKey, true);
 
+				content = _convertFieldNames(content);
+
 				DDMFormValues ddmFormValues =
 					_fieldsToDDMFormValuesConverter.convert(
 						ddmStructure,
@@ -89,6 +99,43 @@ public class JournalArticleDDMFieldsUpgradeProcess extends UpgradeProcess {
 		return new UpgradeStep[] {
 			UpgradeProcessFactory.dropColumns("JournalArticle", "content")
 		};
+	}
+
+	private String _convertFieldNames(String content) throws Exception {
+		TransformerFactory transformerFactory =
+			TransformerFactory.newInstance();
+
+		Transformer transformer = transformerFactory.newTransformer();
+
+		Document document =
+			SecureXMLFactoryProviderUtil.newDocumentBuilderFactory(
+			).newDocumentBuilder(
+			).parse(
+				new InputSource(new StringReader(content))
+			);
+
+		NodeList nodeList = document.getElementsByTagName("dynamic-element");
+
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			Node node = nodeList.item(i);
+
+			NamedNodeMap namedNodeMap = node.getAttributes();
+
+			Node nameNode = namedNodeMap.getNamedItem("name");
+
+			String textContent = nameNode.getTextContent();
+
+			nameNode.setTextContent(
+				textContent.replaceAll(StringPool.MINUS, StringPool.BLANK));
+		}
+
+		StringWriter stringWriter = new StringWriter();
+
+		transformer.transform(
+			new DOMSource(document), new StreamResult(stringWriter));
+
+		return stringWriter.getBuffer(
+		).toString();
 	}
 
 	private final ClassNameLocalService _classNameLocalService;

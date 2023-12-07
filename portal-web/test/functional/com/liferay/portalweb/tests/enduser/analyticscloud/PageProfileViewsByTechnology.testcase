@@ -64,7 +64,7 @@ definition {
 
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Navigate to the Views by Technology card") {
@@ -76,7 +76,7 @@ definition {
 
 			ACTimeFilter.setLast24Hours();
 
-			var dataSourceName = StringUtil.extractFirst("${assignedPropertyName}", " ");
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACNavigation.openItem(itemName = "Blogs AC Title - Site Name - ${dataSourceName}");
 
@@ -87,25 +87,23 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8362 | Test Summary: Page profile views by technology shows which browsers are being used"
-	@priority = "5"
+	@priority = 5
 	test ShowsWhichBrowsersBeingUsed {
-		property analytics.cloud.upstream = "false";
-
 		ACNavigation.switchTabInCard(tabName = "Browsers");
 
 		ACAssets.viewTechnologyBrowsersMetric(
@@ -116,10 +114,8 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8363 | Test Summary: Page profile views by technology shows which devices are being used"
-	@priority = "5"
+	@priority = 5
 	test ShowsWhichDevicesBeingUsed {
-		property analytics.cloud.upstream = "false";
-
 		ACAssets.viewTechnologyDeviceViewsAndPercentage(
 			actionValue = "1 Views",
 			cardTitle = "Views by Technology",

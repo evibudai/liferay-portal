@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.client.serdes.v1_0;
@@ -55,6 +46,16 @@ public class AdvancedConfigurationSerDes {
 
 		sb.append("{");
 
+		if (advancedConfiguration.getCollapse() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"collapse\": ");
+
+			sb.append(String.valueOf(advancedConfiguration.getCollapse()));
+		}
+
 		if (advancedConfiguration.getSource() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -63,6 +64,32 @@ public class AdvancedConfigurationSerDes {
 			sb.append("\"source\": ");
 
 			sb.append(String.valueOf(advancedConfiguration.getSource()));
+		}
+
+		if (advancedConfiguration.getStored_fields() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"stored_fields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < advancedConfiguration.getStored_fields().length;
+				 i++) {
+
+				sb.append("\"");
+
+				sb.append(_escape(advancedConfiguration.getStored_fields()[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < advancedConfiguration.getStored_fields().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		sb.append("}");
@@ -86,12 +113,30 @@ public class AdvancedConfigurationSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (advancedConfiguration.getCollapse() == null) {
+			map.put("collapse", null);
+		}
+		else {
+			map.put(
+				"collapse",
+				String.valueOf(advancedConfiguration.getCollapse()));
+		}
+
 		if (advancedConfiguration.getSource() == null) {
 			map.put("source", null);
 		}
 		else {
 			map.put(
 				"source", String.valueOf(advancedConfiguration.getSource()));
+		}
+
+		if (advancedConfiguration.getStored_fields() == null) {
+			map.put("stored_fields", null);
+		}
+		else {
+			map.put(
+				"stored_fields",
+				String.valueOf(advancedConfiguration.getStored_fields()));
 		}
 
 		return map;
@@ -115,10 +160,22 @@ public class AdvancedConfigurationSerDes {
 			AdvancedConfiguration advancedConfiguration,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "source")) {
+			if (Objects.equals(jsonParserFieldName, "collapse")) {
+				if (jsonParserFieldValue != null) {
+					advancedConfiguration.setCollapse(
+						CollapseSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "source")) {
 				if (jsonParserFieldValue != null) {
 					advancedConfiguration.setSource(
 						SourceSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "stored_fields")) {
+				if (jsonParserFieldValue != null) {
+					advancedConfiguration.setStored_fields(
+						toStrings((Object[])jsonParserFieldValue));
 				}
 			}
 		}

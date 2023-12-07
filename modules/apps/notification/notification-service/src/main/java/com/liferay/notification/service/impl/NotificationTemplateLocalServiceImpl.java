@@ -1,20 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.service.impl;
 
+import com.liferay.notification.constants.NotificationTemplateConstants;
 import com.liferay.notification.context.NotificationContext;
+import com.liferay.notification.internal.template.util.NotificationTemplateUtil;
 import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
@@ -32,16 +25,19 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
@@ -64,10 +60,14 @@ public class NotificationTemplateLocalServiceImpl
 			NotificationContext notificationContext)
 		throws PortalException {
 
-		_validate(notificationContext);
-
 		NotificationTemplate notificationTemplate =
 			notificationContext.getNotificationTemplate();
+
+		NotificationTemplateUtil.validateInvokerBundle(
+			"Only allowed bundles can add system notification templates",
+			notificationTemplate.isSystem());
+
+		_validate(notificationContext);
 
 		notificationTemplate.setNotificationTemplateId(
 			counterLocalService.increment());
@@ -92,16 +92,17 @@ public class NotificationTemplateLocalServiceImpl
 		notificationRecipient.setClassPK(
 			notificationTemplate.getNotificationTemplateId());
 
-		_notificationRecipientLocalService.updateNotificationRecipient(
-			notificationRecipient);
+		notificationRecipient =
+			_notificationRecipientLocalService.updateNotificationRecipient(
+				notificationRecipient);
 
 		for (NotificationRecipientSetting notificationRecipientSetting :
 				notificationContext.getNotificationRecipientSettings()) {
 
-			notificationRecipientSetting.setNotificationRecipientId(
-				notificationRecipient.getNotificationRecipientId());
 			notificationRecipientSetting.setNotificationRecipientSettingId(
 				counterLocalService.increment());
+			notificationRecipientSetting.setNotificationRecipientId(
+				notificationRecipient.getNotificationRecipientId());
 
 			_notificationRecipientSettingLocalService.
 				updateNotificationRecipientSetting(
@@ -117,6 +118,67 @@ public class NotificationTemplateLocalServiceImpl
 					notificationTemplate.getNotificationTemplateId(),
 					attachmentObjectFieldId);
 		}
+
+		return notificationTemplate;
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public NotificationTemplate addNotificationTemplate(
+			String externalReferenceCode, long userId, String type)
+		throws PortalException {
+
+		NotificationTemplate notificationTemplate =
+			notificationTemplatePersistence.create(
+				counterLocalService.increment());
+
+		notificationTemplate.setExternalReferenceCode(externalReferenceCode);
+
+		User user = _userLocalService.getUser(userId);
+
+		notificationTemplate.setUserId(userId);
+		notificationTemplate.setUserName(user.getFullName());
+		notificationTemplate.setEditorType(
+			NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT);
+		notificationTemplate.setName(externalReferenceCode);
+		notificationTemplate.setSystem(false);
+		notificationTemplate.setType(type);
+
+		notificationTemplate = notificationTemplatePersistence.update(
+			notificationTemplate);
+
+		_resourceLocalService.addResources(
+			notificationTemplate.getCompanyId(), 0, userId,
+			NotificationTemplate.class.getName(),
+			notificationTemplate.getNotificationTemplateId(), false, true,
+			true);
+
+		NotificationRecipient notificationRecipient =
+			_notificationRecipientLocalService.createNotificationRecipient(
+				counterLocalService.increment());
+
+		notificationRecipient.setUserId(userId);
+		notificationRecipient.setUserName(user.getFullName());
+		notificationRecipient.setClassNameId(
+			_portal.getClassNameId(NotificationTemplate.class));
+		notificationRecipient.setClassPK(
+			notificationTemplate.getNotificationTemplateId());
+
+		notificationRecipient =
+			_notificationRecipientLocalService.updateNotificationRecipient(
+				notificationRecipient);
+
+		_addNotificationRecipientSetting(
+			null, "from", notificationRecipient.getNotificationRecipientId(),
+			user, externalReferenceCode);
+		_addNotificationRecipientSetting(
+			LocaleUtil.getDefault(), "fromName",
+			notificationRecipient.getNotificationRecipientId(), user,
+			externalReferenceCode);
+		_addNotificationRecipientSetting(
+			LocaleUtil.getDefault(), "to",
+			notificationRecipient.getNotificationRecipientId(), user,
+			externalReferenceCode);
 
 		return notificationTemplate;
 	}
@@ -140,6 +202,10 @@ public class NotificationTemplateLocalServiceImpl
 	public NotificationTemplate deleteNotificationTemplate(
 			NotificationTemplate notificationTemplate)
 		throws PortalException {
+
+		NotificationTemplateUtil.validateInvokerBundle(
+			"Only allowed bundles can delete system notification templates",
+			notificationTemplate.isSystem());
 
 		notificationTemplate = notificationTemplatePersistence.remove(
 			notificationTemplate);
@@ -195,6 +261,16 @@ public class NotificationTemplateLocalServiceImpl
 			NotificationContext notificationContext)
 		throws PortalException {
 
+		NotificationTemplate notificationTemplate =
+			notificationContext.getNotificationTemplate();
+
+		notificationTemplate = notificationTemplatePersistence.findByPrimaryKey(
+			notificationTemplate.getNotificationTemplateId());
+
+		NotificationTemplateUtil.validateInvokerBundle(
+			"Only allowed bundles can update system notification templates",
+			notificationTemplate.isSystem());
+
 		_validate(notificationContext);
 
 		NotificationRecipient notificationRecipient =
@@ -221,9 +297,8 @@ public class NotificationTemplateLocalServiceImpl
 					notificationRecipientSetting);
 		}
 
-		NotificationTemplate notificationTemplate =
-			notificationTemplatePersistence.update(
-				notificationContext.getNotificationTemplate());
+		notificationTemplate = notificationTemplatePersistence.update(
+			notificationContext.getNotificationTemplate());
 
 		List<Long> oldAttachmentObjectFieldIds = new ArrayList<>();
 
@@ -261,6 +336,33 @@ public class NotificationTemplateLocalServiceImpl
 		}
 
 		return notificationTemplate;
+	}
+
+	private void _addNotificationRecipientSetting(
+		Locale locale, String name, long notificationRecipientId, User user,
+		String value) {
+
+		NotificationRecipientSetting notificationRecipientSetting =
+			_notificationRecipientSettingLocalService.
+				createNotificationRecipientSetting(
+					counterLocalService.increment());
+
+		notificationRecipientSetting.setUserId(user.getUserId());
+		notificationRecipientSetting.setUserName(user.getFullName());
+		notificationRecipientSetting.setNotificationRecipientId(
+			notificationRecipientId);
+		notificationRecipientSetting.setName(name);
+
+		if (locale != null) {
+			notificationRecipientSetting.setValue(
+				value, LocaleUtil.getDefault());
+		}
+		else {
+			notificationRecipientSetting.setValue(value);
+		}
+
+		_notificationRecipientSettingLocalService.
+			updateNotificationRecipientSetting(notificationRecipientSetting);
 	}
 
 	private void _validate(NotificationContext notificationContext)

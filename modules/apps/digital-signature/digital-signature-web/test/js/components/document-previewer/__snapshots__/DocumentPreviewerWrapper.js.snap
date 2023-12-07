@@ -60,7 +60,7 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
             role="presentation"
           >
             <use
-              xlink:href="#caret-top"
+              href="#caret-top"
             />
           </svg>
         </button>
@@ -75,7 +75,7 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
             role="presentation"
           >
             <use
-              xlink:href="#caret-bottom"
+              href="#caret-bottom"
             />
           </svg>
         </button>
@@ -92,7 +92,7 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
             role="presentation"
           >
             <use
-              xlink:href="#full-size"
+              href="#full-size"
             />
           </svg>
         </button>
@@ -111,8 +111,7 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
         <li
           class="page-item disabled"
         >
-          <a
-            aria-label="Go to the previous page, 0"
+          <div
             class="page-link"
           >
             <svg
@@ -120,10 +119,10 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-left"
+                href="#angle-left"
               />
             </svg>
-          </a>
+          </div>
         </li>
         <li
           class="page-item active"
@@ -131,6 +130,7 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
           <a
             aria-label="Go to page, 1"
             class="page-link"
+            tabindex="0"
           >
             1
           </a>
@@ -138,8 +138,7 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
         <li
           class="page-item disabled"
         >
-          <a
-            aria-label="Go to the next page, 2"
+          <div
             class="page-link"
           >
             <svg
@@ -147,10 +146,10 @@ exports[`DocumentPreviewerWrapper renders with a document 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-right"
+                href="#angle-right"
               />
             </svg>
-          </a>
+          </div>
         </li>
       </ul>
     </nav>
@@ -170,24 +169,43 @@ exports[`DocumentPreviewerWrapper renders with a document without preview 1`] = 
       class="preview-file-container unavailable-preview"
     >
       <div
-        class="taglib-empty-result-message"
+        class="mb-2 mt-4 c-empty-state c-empty-state-animation"
       >
         <div
-          class="text-center"
+          class="c-empty-state-image"
         >
           <div
-            class="taglib-empty-state mb-2 mt-4"
-          />
-          <h1
-            class="taglib-empty-result-message-title"
+            class="c-empty-state-aspect-ratio"
           >
-            no-preview-available
-          </h1>
-          <p
-            class="empty-message-color taglib-empty-result-message-description"
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-none-c-prefers-reduced-motion"
+              src="http://localhost:8080/o/admin-theme/images/states/empty_state.gif"
+            />
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-block-c-prefers-reduced-motion"
+              src="/o/admin-theme/images/states/empty_state_reduced_motion.gif"
+            />
+          </div>
+        </div>
+        <div
+          class="c-empty-state-title"
+        >
+          <span
+            class="text-truncate-inline"
           >
-            the-document-x-does-not-have-a-preview
-          </p>
+            <span
+              class="text-truncate"
+            >
+              no-preview-available
+            </span>
+          </span>
+        </div>
+        <div
+          class="c-empty-state-text"
+        >
+          the-document-x-does-not-have-a-preview
         </div>
       </div>
       <div
@@ -238,8 +256,7 @@ exports[`DocumentPreviewerWrapper renders with a document without preview 1`] = 
         <li
           class="page-item disabled"
         >
-          <a
-            aria-label="Go to the previous page, 0"
+          <div
             class="page-link"
           >
             <svg
@@ -247,10 +264,10 @@ exports[`DocumentPreviewerWrapper renders with a document without preview 1`] = 
               role="presentation"
             >
               <use
-                xlink:href="#angle-left"
+                href="#angle-left"
               />
             </svg>
-          </a>
+          </div>
         </li>
         <li
           class="page-item active"
@@ -258,6 +275,7 @@ exports[`DocumentPreviewerWrapper renders with a document without preview 1`] = 
           <a
             aria-label="Go to page, 1"
             class="page-link"
+            tabindex="0"
           >
             1
           </a>
@@ -265,8 +283,7 @@ exports[`DocumentPreviewerWrapper renders with a document without preview 1`] = 
         <li
           class="page-item disabled"
         >
-          <a
-            aria-label="Go to the next page, 2"
+          <div
             class="page-link"
           >
             <svg
@@ -274,10 +291,10 @@ exports[`DocumentPreviewerWrapper renders with a document without preview 1`] = 
               role="presentation"
             >
               <use
-                xlink:href="#angle-right"
+                href="#angle-right"
               />
             </svg>
-          </a>
+          </div>
         </li>
       </ul>
     </nav>
@@ -341,7 +358,7 @@ exports[`DocumentPreviewerWrapper renders with an image 1`] = `
             role="presentation"
           >
             <use
-              xlink:href="#hr"
+              href="#hr"
             />
           </svg>
         </button>
@@ -366,7 +383,7 @@ exports[`DocumentPreviewerWrapper renders with an image 1`] = `
             role="presentation"
           >
             <use
-              xlink:href="#plus"
+              href="#plus"
             />
           </svg>
         </button>
@@ -385,8 +402,7 @@ exports[`DocumentPreviewerWrapper renders with an image 1`] = `
         <li
           class="page-item disabled"
         >
-          <a
-            aria-label="Go to the previous page, 0"
+          <div
             class="page-link"
           >
             <svg
@@ -394,10 +410,10 @@ exports[`DocumentPreviewerWrapper renders with an image 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-left"
+                href="#angle-left"
               />
             </svg>
-          </a>
+          </div>
         </li>
         <li
           class="page-item active"
@@ -405,6 +421,7 @@ exports[`DocumentPreviewerWrapper renders with an image 1`] = `
           <a
             aria-label="Go to page, 1"
             class="page-link"
+            tabindex="0"
           >
             1
           </a>
@@ -412,8 +429,7 @@ exports[`DocumentPreviewerWrapper renders with an image 1`] = `
         <li
           class="page-item disabled"
         >
-          <a
-            aria-label="Go to the next page, 2"
+          <div
             class="page-link"
           >
             <svg
@@ -421,10 +437,10 @@ exports[`DocumentPreviewerWrapper renders with an image 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-right"
+                href="#angle-right"
               />
             </svg>
-          </a>
+          </div>
         </li>
       </ul>
     </nav>
@@ -444,24 +460,43 @@ exports[`DocumentPreviewerWrapper renders with empty state 1`] = `
       class="preview-file-container unavailable-preview"
     >
       <div
-        class="taglib-empty-result-message"
+        class="mb-2 mt-4 c-empty-state c-empty-state-animation"
       >
         <div
-          class="text-center"
+          class="c-empty-state-image"
         >
           <div
-            class="taglib-empty-state mb-2 mt-4"
-          />
-          <h1
-            class="taglib-empty-result-message-title"
+            class="c-empty-state-aspect-ratio"
           >
-            no-preview-available
-          </h1>
-          <p
-            class="empty-message-color taglib-empty-result-message-description"
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-none-c-prefers-reduced-motion"
+              src="http://localhost:8080/o/admin-theme/images/states/empty_state.gif"
+            />
+            <img
+              alt=""
+              class="aspect-ratio-item aspect-ratio-item-fluid d-block-c-prefers-reduced-motion"
+              src="/o/admin-theme/images/states/empty_state_reduced_motion.gif"
+            />
+          </div>
+        </div>
+        <div
+          class="c-empty-state-title"
+        >
+          <span
+            class="text-truncate-inline"
           >
-            the-envelope-does-not-have-a-document-to-preview
-          </p>
+            <span
+              class="text-truncate"
+            >
+              no-preview-available
+            </span>
+          </span>
+        </div>
+        <div
+          class="c-empty-state-text"
+        >
+          the-envelope-does-not-have-a-document-to-preview
         </div>
       </div>
       <div

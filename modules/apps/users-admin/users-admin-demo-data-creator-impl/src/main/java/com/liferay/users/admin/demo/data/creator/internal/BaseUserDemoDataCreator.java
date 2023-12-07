@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.users.admin.demo.data.creator.internal;
@@ -29,15 +20,14 @@ import com.liferay.portal.kernel.security.RandomUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.users.admin.demo.data.creator.UserDemoDataCreator;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.net.URL;
 
@@ -76,30 +66,24 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 		byte[] portraitBytes = null;
 
 		try {
-			URL url = new URL(_RANDOM_USER_API);
+			JSONObject rootJSONObject = JSONFactoryUtil.createJSONObject(
+				URLUtil.toString(new URL(_RANDOM_USER_API)));
 
-			try (InputStream inputStream = url.openStream()) {
-				String json = StringUtil.read(inputStream);
+			JSONArray jsonArray = rootJSONObject.getJSONArray("results");
 
-				JSONObject rootJSONObject = JSONFactoryUtil.createJSONObject(
-					json);
+			JSONObject userJSONObject = jsonArray.getJSONObject(0);
 
-				JSONArray jsonArray = rootJSONObject.getJSONArray("results");
+			emailAddress = _getEmailAddress(emailAddress, userJSONObject);
+			male = StringUtil.equalsIgnoreCase(
+				userJSONObject.getString("gender"), "male");
+			birthDate = _getBirthDate(birthDate, userJSONObject);
 
-				JSONObject userJSONObject = jsonArray.getJSONObject(0);
+			JSONObject pictureJSONObject = userJSONObject.getJSONObject(
+				"picture");
 
-				emailAddress = _getEmailAddress(emailAddress, userJSONObject);
-				male = StringUtil.equalsIgnoreCase(
-					userJSONObject.getString("gender"), "male");
-				birthDate = _getBirthDate(birthDate, userJSONObject);
+			String portraitURL = pictureJSONObject.getString("large");
 
-				JSONObject pictureJSONObject = userJSONObject.getJSONObject(
-					"picture");
-
-				String portraitURL = pictureJSONObject.getString("large");
-
-				portraitBytes = _getBytes(new URL(portraitURL));
-			}
+			portraitBytes = _getBytes(new URL(portraitURL));
 		}
 		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
@@ -204,9 +188,9 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 			UserConstants.USER_ID_DEFAULT, companyId, autoPassword, password1,
 			password2, autoScreenName, screenName, emailAddress, locale,
 			firstName, middleName, lastName, prefixListTypeId, suffixListTypeId,
-			male, birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-			organizationIds, roleIds, userGroupIds, sendMail,
-			new ServiceContext());
+			male, birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
+			userGroupIds, sendMail, new ServiceContext());
 	}
 
 	private Date _getBirthDate(Date birthDate, JSONObject userJSONObject) {
@@ -228,9 +212,7 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 	}
 
 	private byte[] _getBytes(URL url) throws IOException {
-		try (InputStream inputStream = url.openStream()) {
-			return FileUtil.getBytes(inputStream);
-		}
+		return URLUtil.toByteArray(url);
 	}
 
 	private String _getEmailAddress(

@@ -1,5 +1,0 @@
-${id}:
-    clayURL: css/clay.css
-    mainURL: css/main.css
-    name: ${name}
-    type: themeCSS

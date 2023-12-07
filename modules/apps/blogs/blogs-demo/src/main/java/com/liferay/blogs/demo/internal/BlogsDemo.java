@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.blogs.demo.internal;
@@ -17,6 +8,8 @@ package com.liferay.blogs.demo.internal;
 import com.liferay.blogs.demo.data.creator.BlogsEntryDemoDataCreator;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.comment.demo.data.creator.MultipleCommentDemoDataCreator;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,6 +26,8 @@ import com.liferay.users.admin.demo.data.creator.SiteAdminUserDemoDataCreator;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +41,7 @@ public class BlogsDemo extends BasePortalInstanceLifecycleListener {
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
 		BlogsEntryDemoDataCreator randomBlogsEntryDemoDataCreator =
-			_getRandomElement(_blogsEntryDemoDataCreators);
+			_getRandomElement(_serviceTrackerList.toList());
 
 		User user1 = _basicUserDemoDataCreator.create(
 			company.getCompanyId(), "nikki.prudencio@liferay.com");
@@ -82,7 +77,7 @@ public class BlogsDemo extends BasePortalInstanceLifecycleListener {
 
 		for (int i = 0; i < 10; i++) {
 			BlogsEntryDemoDataCreator blogsEntryDemoDataCreator =
-				_getRandomElement(_blogsEntryDemoDataCreators);
+				_getRandomElement(_serviceTrackerList.toList());
 
 			User user = _getRandomElement(users);
 
@@ -93,33 +88,26 @@ public class BlogsDemo extends BasePortalInstanceLifecycleListener {
 		}
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext, BlogsEntryDemoDataCreator.class);
+	}
+
 	@Deactivate
 	protected void deactivate() throws PortalException {
-		_multipleCommentDemoDataCreator.delete();
-
 		for (BlogsEntryDemoDataCreator blogsEntryDemoDataCreator :
-				_blogsEntryDemoDataCreators) {
+				_serviceTrackerList) {
 
 			blogsEntryDemoDataCreator.delete();
 		}
 
+		_serviceTrackerList.close();
+
 		_basicUserDemoDataCreator.delete();
+		_multipleCommentDemoDataCreator.delete();
 		_omniAdminUserDemoDataCreator.delete();
 		_siteAdminUserDemoDataCreator.delete();
-	}
-
-	@Reference(target = "(source=creative-commons)", unbind = "-")
-	protected void setCreativeCommonsBlogsEntryDemoDataCreator(
-		BlogsEntryDemoDataCreator blogsEntryDemoDataCreator) {
-
-		_blogsEntryDemoDataCreators.add(blogsEntryDemoDataCreator);
-	}
-
-	@Reference(target = "(source=lorem-ipsum)", unbind = "-")
-	protected void setLoremIpsumBlogsEntryDemoDataCreator(
-		BlogsEntryDemoDataCreator blogsEntryDemoDataCreator) {
-
-		_blogsEntryDemoDataCreators.add(blogsEntryDemoDataCreator);
 	}
 
 	private <T> T _getRandomElement(List<T> list) {
@@ -128,9 +116,6 @@ public class BlogsDemo extends BasePortalInstanceLifecycleListener {
 
 	@Reference
 	private BasicUserDemoDataCreator _basicUserDemoDataCreator;
-
-	private final List<BlogsEntryDemoDataCreator> _blogsEntryDemoDataCreators =
-		new ArrayList<>();
 
 	@Reference
 	private GroupLocalService _groupLocalService;
@@ -143,6 +128,8 @@ public class BlogsDemo extends BasePortalInstanceLifecycleListener {
 
 	@Reference
 	private OmniAdminUserDemoDataCreator _omniAdminUserDemoDataCreator;
+
+	private ServiceTrackerList<BlogsEntryDemoDataCreator> _serviceTrackerList;
 
 	@Reference
 	private SiteAdminUserDemoDataCreator _siteAdminUserDemoDataCreator;

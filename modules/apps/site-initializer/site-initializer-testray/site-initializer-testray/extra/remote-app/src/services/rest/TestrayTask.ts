@@ -1,30 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import TestrayError from '../../TestrayError';
+import Rest from '../../core/Rest';
+import SearchBuilder from '../../core/SearchBuilder';
 import i18n from '../../i18n';
 import yupSchema from '../../schema/yup';
 import {DISPATCH_TRIGGER_TYPE} from '../../util/enum';
-import {SearchBuilder, searchUtil} from '../../util/search';
-import {TaskStatuses} from '../../util/statuses';
+import {DispatchTriggerStatuses, TaskStatuses} from '../../util/statuses';
 import {liferayDispatchTriggerImpl} from './LiferayDispatchTrigger';
-import Rest from './Rest';
+import {testrayDispatchTriggerImpl} from './TestrayDispatchTrigger';
 import {testrayTaskCaseTypesImpl} from './TestrayTaskCaseTypes';
 import {testrayTaskUsersImpl} from './TestrayTaskUsers';
-import {APIResponse, TestrayTask} from './types';
+import {APIResponse, TestrayTask, UserAccount} from './types';
 
 type TaskForm = typeof yupSchema.task.__outputType & {
+	assignedUsers: string;
 	dispatchTriggerId: number;
 	projectId: number;
 };
@@ -38,19 +31,22 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 	constructor() {
 		super({
 			adapter: ({
+				assignedUsers,
 				dispatchTriggerId,
 				buildId: r_buildToTasks_c_buildId,
-				caseTypes: taskToTasksCaseTypes,
+				caseTypes,
 				dueStatus = TaskStatuses.OPEN,
 				name,
 			}) => ({
+				assignedUsers,
+				caseTypes,
 				dispatchTriggerId,
 				dueStatus,
 				name,
 				r_buildToTasks_c_buildId,
-				taskToTasksCaseTypes,
 			}),
-			nestedFields: 'build.project,build.routine,taskToTasksCaseTypes',
+			nestedFields:
+				'build.project,build.routine,taskToTasksCaseTypes,taskToTasksUsers,r_userToTasksUsers_userId',
 			transformData: (testrayTask) => ({
 				...testrayTask,
 				build: testrayTask.r_buildToTasks_c_build
@@ -66,6 +62,15 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 								testrayTask.r_buildToTasks_c_build
 									.r_routineToBuilds_c_routine,
 					  }
+					: undefined,
+				users: testrayTask.taskToTasksUsers
+					? testrayTask.taskToTasksUsers.map(
+							({
+								r_userToTasksUsers_user,
+							}: {
+								r_userToTasksUsers_user: UserAccount;
+							}) => r_userToTasksUsers_user
+					  )
 					: undefined,
 			}),
 			uri: 'tasks',
@@ -99,9 +104,11 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 	}
 
 	public async create(data: TaskForm): Promise<TestrayTask> {
-		const task = await super.create(data);
-
 		const caseTypeIds = data.caseTypes || [];
+
+		delete (data as any).caseTypes;
+
+		const task = await super.create(data);
 
 		if (caseTypeIds.length) {
 			await testrayTaskCaseTypesImpl.createBatch(
@@ -118,7 +125,7 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 			dispatchTaskExecutorType: DISPATCH_TRIGGER_TYPE.CREATE_TASK_SUBTASK,
 			dispatchTaskSettings: {
 				testrayBuildId: data.buildId,
-				testrayCaseTypesId: data.caseTypes,
+				testrayCaseTypeIds: caseTypeIds,
 				testrayTaskId: task.id,
 			},
 			externalReferenceCode: `T-${task.id}`,
@@ -128,20 +135,37 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 
 		const dispatchTriggerId = dispatchTrigger.liferayDispatchTrigger.id;
 
-		await Promise.allSettled([
-			super.update(task.id, {
-				...data,
-				dispatchTriggerId,
-			}),
-			liferayDispatchTriggerImpl.run(dispatchTriggerId),
-		]);
+		await super.update(task.id, {
+			...data,
+			dispatchTriggerId,
+		});
+
+		const body = {
+			dueStatus: DispatchTriggerStatuses.INPROGRESS,
+			output: '',
+		};
+
+		try {
+			await liferayDispatchTriggerImpl.run(
+				dispatchTrigger.liferayDispatchTrigger.id
+			);
+		}
+		catch (error) {
+			body.dueStatus = DispatchTriggerStatuses.FAILED;
+			body.output = (error as TestrayError)?.message;
+		}
+
+		await testrayDispatchTriggerImpl.update(
+			dispatchTrigger.testrayDispatchTrigger.id,
+			body
+		);
 
 		return {...task, dispatchTriggerId};
 	}
 
 	public getTasksByBuildId(buildId: number) {
 		return this.fetcher<APIResponse<TestrayTask>>(
-			`/tasks?filter=${searchUtil.eq('buildId', buildId)}`
+			`/tasks?filter=${SearchBuilder.eq('buildId', buildId)}`
 		);
 	}
 

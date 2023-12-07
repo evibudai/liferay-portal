@@ -15,10 +15,10 @@ definition {
 	}
 
 	@description = "Verify users can view the end of life date for a discontinued product in the product details page"
-	@priority = "3"
+	@priority = 5
 	test AssertEndOfLifeDateIsVisibleInProductDetailsPage {
-		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
-		property portal.acceptance = "false";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -38,11 +38,11 @@ definition {
 		}
 
 		task ("And given a discontinued product with an End of Life date") {
-			var endOfLifeDate = DateUtil.getFormattedCurrentDate("MM/dd/yy", "UTC");
+			var productEndOfLifeDate = DateUtil.getFormattedCurrentDate("MM/dd/yy", "UTC");
 
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
-				discontinued = "True",
+				discontinued = "true",
 				productName = "Test Simple Product",
 				productType = "Simple",
 				sku = "SKU1002");
@@ -61,13 +61,13 @@ definition {
 
 		task ("Then the product is labeled as Discontinued and the End of Life date is shown") {
 			FrontStore.assertProductDetails(
-				endOfLifeDate = "${endOfLifeDate}",
+				endOfLifeDate = ${productEndOfLifeDate},
 				productAvailability = "Discontinued");
 		}
 	}
 
 	@description = "COMMERCE-8165. The existing replacement product can be edited"
-	@priority = "4"
+	@priority = 5
 	test CanEditReplacementProduct {
 		property portal.acceptance = "true";
 
@@ -78,7 +78,6 @@ definition {
 		task ("And a simple product with a SKU") {
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
-				discontinued = "True",
 				productName = "Test Simple Product Replacement",
 				productType = "simple",
 				sku = "SKU1001");
@@ -99,30 +98,83 @@ definition {
 
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
 
-			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "Test Simple Product");
+			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "Test Simple Product Replacement");
 
 			FrontStore.assertProductDetails(
-				productName = "Test Simple Product",
-				productSKU = "SKU1002");
+				productName = "Test Simple Product Replacement",
+				productSKU = "SKU1001");
 
 			Click(
 				key_text = "Replacements",
 				locator1 = "Button#ANY");
 
 			Click(
-				key_itemName = "SKU1001",
+				key_itemName = "SKU1002",
 				locator1 = "CommerceEntry#VIEW_ITEM_FROM_LIST");
 		}
 
 		task ("Then the changes made should be visible on the SKU side panel") {
 			FrontStore.assertProductDetails(
-				productName = "Test Simple Product Replacement",
-				productSKU = "SKU1001");
+				productName = "Test Simple Product",
+				productSKU = "SKU1002");
+		}
+	}
+
+	@description = "COMMERCE-9093. As a buyer, I want to be able to view a discontinued product's information on the product card."
+	@priority = 3
+	test CanViewDiscontinuedProductInformationOnProductCard {
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site with a buyer user is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And MIN55861 is flagged as 'Discontinued'") {
+			CommerceJSONProductsAPI._patchCommerceSku(
+				discontinued = "true",
+				productSku = "MIN55861");
+		}
+
+		task ("When the buyer navigates to the Catalog Page") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("Then the Discontinued label is shown on the U-Joint's product card") {
+			AssertElementPresent(
+				key_productName = "u-joint",
+				key_status = "Discontinued",
+				locator1 = "CommerceFrontStore#PRODUCT_CARD_STATUS_LABEL");
+		}
+
+		task ("And the Discontinued label is not visible on another product card") {
+			AssertElementNotPresent(
+				key_productName = "torque converters",
+				key_status = "Discontinued",
+				locator1 = "CommerceFrontStore#PRODUCT_CARD_STATUS_LABEL");
 		}
 	}
 
 	@description = "COMMERCE-8160. Verify a product can be marked as 'discontinued' when adding a new SKU"
-	@priority = "3"
+	@priority = 5
 	test CreateNewSKUWithReplacement {
 		property portal.acceptance = "true";
 
@@ -197,7 +249,7 @@ definition {
 	}
 
 	@description = "Verify a replacement product can be removed"
-	@priority = "3"
+	@priority = 5
 	test RemoveReplacementProduct {
 		property portal.acceptance = "true";
 
@@ -244,7 +296,7 @@ definition {
 	}
 
 	@description = "Verify a replacement product can be set between different catalogs"
-	@priority = "3"
+	@priority = 5
 	test ReplacementCanBeSetBetweenDifferentCatalogs {
 		property portal.acceptance = "true";
 
@@ -297,17 +349,18 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "Test Stub"
-	@priority = "4"
+	@priority = 4
 	test ReplacementLoopIsPrevented {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-8164 ReplacementLoopIsPrevented pending implementation
 
 	}
 
 	@description = "Verify a product can be set as discontinued"
-	@priority = "3"
+	@priority = 3
 	test SetProductAsDiscontinued {
+		property portal.acceptance = "false";
+
 		task ("Given a simple product with a SKU") {
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
@@ -354,8 +407,10 @@ definition {
 	}
 
 	@description = "Verify a product can be set as a replacement for a discontinued product"
-	@priority = "3"
+	@priority = 5
 	test SetReplacementProduct {
+		property portal.acceptance = "true";
+
 		task ("Given a simple product with a SKU marked as discontinued") {
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
@@ -401,8 +456,10 @@ definition {
 	}
 
 	@description = "Verify a product SKU cannot be set as its own replacement"
-	@priority = "3"
+	@priority = 5
 	test SKUCannotBeItsOwnReplacement {
+		property portal.acceptance = "true";
+
 		task ("Given a simple product with a SKU marked as discontinued") {
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
@@ -431,7 +488,9 @@ definition {
 		}
 
 		task ("Then the error 'Please enter a valid replacement' should be shown") {
-			Alert.viewErrorMessage(errorMessage = "Please enter a valid replacement.");
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Close Error:Please enter a valid replacement.");
 		}
 	}
 

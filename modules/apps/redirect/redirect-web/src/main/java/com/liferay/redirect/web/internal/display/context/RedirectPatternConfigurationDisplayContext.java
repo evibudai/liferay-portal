@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.redirect.web.internal.display.context;
 
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -22,11 +15,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.redirect.configuration.RedirectPatternConfigurationProvider;
+import com.liferay.redirect.constants.RedirectConstants;
+import com.liferay.redirect.model.RedirectPatternEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -59,16 +53,30 @@ public class RedirectPatternConfigurationDisplayContext {
 					(ThemeDisplay)_httpServletRequest.getAttribute(
 						WebKeys.THEME_DISPLAY);
 
-				Map<Pattern, String> patternStrings =
-					_redirectPatternConfigurationProvider.getPatternStrings(
-						themeDisplay.getScopeGroupId());
+				List<RedirectPatternEntry> redirectPatternEntries =
+					_redirectPatternConfigurationProvider.
+						getRedirectPatternEntries(
+							themeDisplay.getScopeGroupId());
 
-				patternStrings.forEach(
-					(pattern, destinationURL) -> list.add(
+				redirectPatternEntries.forEach(
+					redirectPatternEntry -> list.add(
 						HashMapBuilder.<String, Object>put(
-							"destinationURL", destinationURL
+							"destinationURL",
+							redirectPatternEntry.getDestinationURL()
 						).put(
-							"pattern", pattern.toString()
+							"pattern",
+							String.valueOf(redirectPatternEntry.getPattern())
+						).put(
+							"userAgent",
+							() -> {
+								if (redirectPatternEntry.getUserAgent() ==
+										null) {
+
+									return RedirectConstants.USER_AGENT_ALL;
+								}
+
+								return redirectPatternEntry.getUserAgent();
+							}
 						).build()));
 
 				return list;
@@ -83,6 +91,27 @@ public class RedirectPatternConfigurationDisplayContext {
 				"relativeURL",
 				PropsValues.DEFAULT_GUEST_PUBLIC_LAYOUT_FRIENDLY_URL
 			).build()
+		).put(
+			"userAgents",
+			JSONUtil.putAll(
+				JSONUtil.put(
+					"label", LanguageUtil.get(_httpServletRequest, "all")
+				).put(
+					"value", "all"
+				)
+			).put(
+				JSONUtil.put(
+					"label", LanguageUtil.get(_httpServletRequest, "bot")
+				).put(
+					"value", "bot"
+				)
+			).put(
+				JSONUtil.put(
+					"label", LanguageUtil.get(_httpServletRequest, "human")
+				).put(
+					"value", "human"
+				)
+			)
 		).build();
 	}
 

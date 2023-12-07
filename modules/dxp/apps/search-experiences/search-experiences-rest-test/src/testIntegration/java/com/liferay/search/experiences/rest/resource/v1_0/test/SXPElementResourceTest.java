@@ -1,29 +1,31 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.rest.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.Inject;
+import com.liferay.search.experiences.rest.client.dto.v1_0.ElementDefinition;
 import com.liferay.search.experiences.rest.client.dto.v1_0.SXPElement;
 import com.liferay.search.experiences.rest.client.http.HttpInvoker;
 import com.liferay.search.experiences.rest.client.pagination.Page;
+import com.liferay.search.experiences.rest.client.serdes.v1_0.ElementDefinitionSerDes;
+import com.liferay.search.experiences.service.SXPElementLocalService;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import java.util.Collections;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -57,6 +59,13 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 				).put(
 					"elementDefinition", JSONFactoryUtil.createJSONObject()
 				).put(
+					"externalReferenceCode",
+					sxpElement.getExternalReferenceCode()
+				).put(
+					"fallbackDescription", sxpElement.getFallbackDescription()
+				).put(
+					"fallbackTitle", sxpElement.getFallbackTitle()
+				).put(
 					"schemaVersion", postSXPElement.getSchemaVersion()
 				).put(
 					"title_i18n", JSONUtil.put("en_US", sxpElement.getTitle())
@@ -75,10 +84,34 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 		super.testGetSXPElementsPageWithFilterDateTimeEquals();
 	}
 
+	@Override
+	@Test
+	public void testGetSXPElementsPageWithSortDateTime() throws Exception {
+	}
+
+	@Override
+	@Test
+	public void testGetSXPElementsPageWithSortString() throws Exception {
+	}
+
 	@Ignore
 	@Override
 	@Test
 	public void testGraphQLGetSXPElement() throws Exception {
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSXPElementByExternalReferenceCode()
+		throws Exception {
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSXPElementByExternalReferenceCodeNotFound()
+		throws Exception {
 	}
 
 	@Ignore
@@ -99,7 +132,17 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 			JSONUtil.put(
 				"description", description
 			).put(
+				"description_i18n",
+				Collections.singletonMap(
+					LocaleUtil.toLanguageId(LocaleUtil.US), description)
+			).put(
+				"elementDefinition", "{}"
+			).put(
 				"title", title
+			).put(
+				"title_i18n",
+				Collections.singletonMap(
+					LocaleUtil.toLanguageId(LocaleUtil.US), title)
 			).toString());
 
 		SXPElement postSXPElement = testPostSXPElement_addSXPElement(
@@ -130,8 +173,57 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 
 	@Override
 	@Test
+	public void testPostSXPElementPreview() throws Exception {
+		SXPElement randomSXPElement = randomSXPElement();
+
+		randomSXPElement.setDescription(StringPool.BLANK);
+		randomSXPElement.setDescription_i18n(
+			Collections.singletonMap(
+				"en_US", "text-match-over-multiple-fields-description"));
+		randomSXPElement.setElementDefinition(
+			ElementDefinitionSerDes.toDTO(_getElementDefinition("1")));
+		randomSXPElement.setTitle(StringPool.BLANK);
+		randomSXPElement.setTitle_i18n(
+			Collections.singletonMap(
+				"en_US", "text-match-over-multiple-fields"));
+
+		SXPElement postSXPElement = testPostSXPElementPreview_addSXPElement(
+			randomSXPElement);
+
+		randomSXPElement.setDescription(
+			_getUSLocalization(randomSXPElement.getDescription_i18n()));
+		randomSXPElement.setElementDefinition(
+			ElementDefinitionSerDes.toDTO(_getElementDefinition("2")));
+		randomSXPElement.setTitle(
+			_getUSLocalization(randomSXPElement.getTitle_i18n()));
+
+		assertEquals(randomSXPElement, postSXPElement);
+		assertValid(postSXPElement);
+	}
+
+	@Override
+	@Test
 	public void testPostSXPElementValidate() throws Exception {
 		sxpElementResource.postSXPElementValidate("{}");
+	}
+
+	protected static String getResourceAsString(
+		Class<?> clazz, String resourceName) {
+
+		try (InputStream inputStream = clazz.getResourceAsStream(
+				resourceName)) {
+
+			return StringUtil.read(inputStream);
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to load resource: " + resourceName, ioException);
+		}
+	}
+
+	@Override
+	protected String[] getAdditionalAssertFieldNames() {
+		return new String[] {"description", "elementDefinition", "title"};
 	}
 
 	@Override
@@ -140,6 +232,7 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 
 		sxpElement.setDescription_i18n(
 			Collections.singletonMap("en_US", sxpElement.getDescription()));
+		sxpElement.setElementDefinition(ElementDefinition.toDTO("{}"));
 		sxpElement.setTitle(_TITLE_PREFIX + sxpElement.getTitle());
 		sxpElement.setTitle_i18n(
 			Collections.singletonMap("en_US", sxpElement.getTitle()));
@@ -154,6 +247,14 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 
 	@Override
 	protected SXPElement testGetSXPElement_addSXPElement() throws Exception {
+		return _addSXPElement(randomSXPElement());
+	}
+
+	@Override
+	protected SXPElement
+			testGetSXPElementByExternalReferenceCode_addSXPElement()
+		throws Exception {
+
 		return _addSXPElement(randomSXPElement());
 	}
 
@@ -192,6 +293,35 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 		return _addSXPElement(sxpElement);
 	}
 
+	@Override
+	protected SXPElement testPostSXPElementPreview_addSXPElement(
+			SXPElement sxpElement)
+		throws Exception {
+
+		return sxpElementResource.postSXPElementPreview(sxpElement);
+	}
+
+	@Override
+	protected SXPElement testPutSXPElement_addSXPElement() throws Exception {
+		return _addSXPElement(randomSXPElement());
+	}
+
+	@Override
+	protected SXPElement
+			testPutSXPElementByExternalReferenceCode_addSXPElement()
+		throws Exception {
+
+		return _addSXPElement(randomSXPElement());
+	}
+
+	@Override
+	protected SXPElement
+			testPutSXPElementByExternalReferenceCode_createSXPElement()
+		throws Exception {
+
+		return _addSXPElement(randomSXPElement());
+	}
+
 	private SXPElement _addSXPElement(SXPElement sxpElement) throws Exception {
 		return sxpElementResource.postSXPElement(sxpElement);
 	}
@@ -209,6 +339,23 @@ public class SXPElementResourceTest extends BaseSXPElementResourceTestCase {
 		}
 	}
 
+	private String _getElementDefinition(String suffix) {
+		return getResourceAsString(
+			getClass(),
+			"dependencies/SXPElementResourceTest._testPostSXPElementPreview" +
+				"_elementDefinition" + suffix + ".json");
+	}
+
+	private String _getUSLocalization(Map<String, String> localizationMap) {
+		return _language.get(LocaleUtil.US, localizationMap.get("en_US"));
+	}
+
 	private static final String _TITLE_PREFIX = "SXPERT";
+
+	@Inject
+	private Language _language;
+
+	@Inject
+	private SXPElementLocalService _sxpElementLocalService;
 
 }

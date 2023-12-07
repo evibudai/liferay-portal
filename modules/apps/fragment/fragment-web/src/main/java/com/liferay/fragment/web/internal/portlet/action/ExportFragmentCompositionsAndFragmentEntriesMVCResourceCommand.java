@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.portlet.action;
@@ -19,15 +10,16 @@ import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentCompositionService;
 import com.liferay.fragment.service.FragmentEntryService;
-import com.liferay.fragment.web.internal.portlet.helper.ExportHelper;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.kernel.zip.ZipWriter;
+import com.liferay.portal.kernel.zip.ZipWriterFactory;
 
-import java.io.File;
 import java.io.FileInputStream;
 
 import java.util.ArrayList;
@@ -102,14 +94,28 @@ public class ExportFragmentCompositionsAndFragmentEntriesMVCResourceCommand
 				}
 			}
 
-			File file =
-				_exportHelper.exportFragmentCompositionsAndFragmentEntries(
-					fragmentCompositions, fragmentEntries);
+			ZipWriter zipWriter = _zipWriterFactory.getZipWriter();
+
+			for (FragmentComposition fragmentComposition :
+					fragmentCompositions) {
+
+				fragmentComposition.populateZipWriter(
+					zipWriter, StringPool.BLANK);
+			}
+
+			for (FragmentEntry fragmentEntry : fragmentEntries) {
+				if (fragmentEntry.isTypeReact()) {
+					continue;
+				}
+
+				fragmentEntry.populateZipWriter(zipWriter, StringPool.BLANK);
+			}
 
 			PortletResponseUtil.sendFile(
 				resourceRequest, resourceResponse,
 				"entries-" + Time.getTimestamp() + ".zip",
-				new FileInputStream(file), ContentTypes.APPLICATION_ZIP);
+				new FileInputStream(zipWriter.getFile()),
+				ContentTypes.APPLICATION_ZIP);
 		}
 		catch (Exception exception) {
 			throw new PortletException(exception);
@@ -119,12 +125,12 @@ public class ExportFragmentCompositionsAndFragmentEntriesMVCResourceCommand
 	}
 
 	@Reference
-	private ExportHelper _exportHelper;
-
-	@Reference
 	private FragmentCompositionService _fragmentCompositionService;
 
 	@Reference
 	private FragmentEntryService _fragmentEntryService;
+
+	@Reference
+	private ZipWriterFactory _zipWriterFactory;
 
 }

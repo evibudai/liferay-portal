@@ -1,6 +1,7 @@
 definition {
 
-	macro addAnyProductRelation {
+	@summary = "Default summary"
+	macro addAnyProductRelation(key_relation = null, key_product = null) {
 		Click(locator1 = "Button#PLUS");
 
 		Click(
@@ -11,7 +12,7 @@ definition {
 
 		Type(
 			locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS",
-			value1 = "${key_product}");
+			value1 = ${key_product});
 
 		KeyPress(
 			locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS",
@@ -19,7 +20,7 @@ definition {
 
 		Check.checkToggleSwitch(
 			locator1 = "CommerceAccelerators#SELECT_PRODUCT_RELATIONS",
-			productName = "${key_product}");
+			productName = ${key_product});
 
 		SelectFrameTop();
 
@@ -28,35 +29,8 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro addProductRelation {
-		Click(locator1 = "Button#PLUS");
-
-		Click(
-			key_selectAction = "Add Up-Sell Product",
-			locator1 = "FormViewBuilder#FIELD_ELLIPSIS_ACTION_FIELDSET");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
-
-		Type(
-			locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS",
-			value1 = "${productNameRelation}");
-
-		KeyPress(
-			locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS",
-			value1 = "\RETURN");
-
-		Check.checkToggleSwitch(
-			locator1 = "CommerceAccelerators#SELECT_PRODUCT_RELATIONS",
-			productName = "${productNameRelation}");
-
-		SelectFrameTop();
-
-		Button.clickAdd();
-
-		Alert.viewSuccessMessage();
-	}
-
-	macro assignAllRelationsToProductsEntry {
+	@summary = "Default summary"
+	macro assignAllRelationsToProductsEntry() {
 		Click(locator1 = "CommerceEntry#ADD_BUTTON");
 
 		WaitForSPARefresh();
@@ -68,13 +42,14 @@ definition {
 			value1 = "Add");
 	}
 
-	macro assignMultipleRelationToProductsEntry {
+	@summary = "Default summary"
+	macro assignMultipleRelationToProductsEntry(entriesList = null) {
 		Click(locator1 = "CommerceEntry#ADD_BUTTON");
 
 		WaitForSPARefresh();
 
-		for (var entriesNames : list "${entriesList}") {
-			CommerceItemSelector.selectEntry(entryName = "${entriesNames}");
+		for (var entriesNames : list ${entriesList}) {
+			CommerceItemSelector.selectEntry(entryName = ${entriesNames});
 		}
 
 		Click(
@@ -82,68 +57,95 @@ definition {
 			value1 = "Add");
 	}
 
-	macro assignSingleRelationToEligibility {
+	@summary = "Default summary"
+	macro assignSingleRelationToEligibility(entryName = null, title = null, key_eligibilityCardTitle = null) {
 		var searchTerm = '''"${entryName}"''';
 
 		Type(
-			key_title = "${title}",
+			key_title = ${title},
 			locator1 = "CommerceEntry#ADD_RELATION_FIELD",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
+
+		while ((IsElementNotPresent(key_entryName = ${entryName}, key_title = ${title}, locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT")) && (maxIterations = "5")) {
+			echo("The element is not present, retrying...");
+
+			Click(
+				key_eligibilityCardTitle = ${key_eligibilityCardTitle},
+				locator1 = "CommerceEntry#ELIGIBILITY_RELATION_FIELD_CLEAR_BUTTON");
+
+			Type(
+				key_title = ${title},
+				locator1 = "CommerceEntry#ADD_RELATION_FIELD",
+				value1 = ${searchTerm});
+		}
 
 		WaitForElementPresent(
-			key_entryName = "${entryName}",
-			key_title = "${title}",
+			key_entryName = ${entryName},
+			key_title = ${title},
 			locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT");
 
 		ClickNoError(
-			key_entryName = "${entryName}",
-			key_title = "${title}",
+			key_entryName = ${entryName},
+			key_title = ${title},
 			locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT");
 	}
 
-	macro assignSingleRelationToProductsEntry {
+	@summary = "Default summary"
+	macro assignSingleRelationToProductsEntry(entryName = null, title = null) {
 		var searchTerm = '''"${entryName}"''';
 
 		Type(
-			key_title = "${title}",
+			key_title = ${title},
 			locator1 = "CommerceEntry#ADD_RELATION_FIELD",
-			value1 = "${searchTerm}");
+			value1 = ${searchTerm});
 
-		if (IsElementNotPresent(key_entryName = "${entryName}", key_title = "${title}", locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT")) {
+		while ((IsElementNotPresent(key_entryName = ${entryName}, key_title = ${title}, locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT")) && (maxIterations = "5")) {
 			echo("The element is not present, retrying...");
 
 			Click(locator1 = "WorkflowMetricsProcessListView#METRICS_WORKFLOW_SEARCH_BAR_BUTTON");
 
 			Type(
-				key_title = "${title}",
+				key_title = ${title},
 				locator1 = "CommerceEntry#ADD_RELATION_FIELD",
-				value1 = "${searchTerm}");
+				value1 = ${searchTerm});
+		}
+
+		if (IsElementPresent(key_eventDescription = "No items were found.", locator1 = "CalendarViewEventDetails#EVENT_DESCRIPTION")) {
+			echo("The element is not present, refreshing the page and retrying...");
+
+			Refresh();
+
+			Type(
+				key_title = ${title},
+				locator1 = "CommerceEntry#ADD_RELATION_FIELD",
+				value1 = ${searchTerm});
 		}
 
 		WaitForElementPresent(
-			key_entryName = "${entryName}",
-			key_title = "${title}",
+			key_entryName = ${entryName},
+			key_title = ${title},
 			locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT");
 
 		ClickNoError(
-			key_entryName = "${entryName}",
-			key_title = "${title}",
+			key_entryName = ${entryName},
+			key_title = ${title},
 			locator1 = "CommerceEntry#ADD_RELATION_FIELD_SELECT");
 	}
 
-	macro productRelationSetPriority {
+	@summary = "Default summary"
+	macro productRelationSetPriority(priorityValue = null, productNameRelation = null) {
 		Click(
-			key_value = "${productNameRelation}",
+			key_value = ${productNameRelation},
 			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Edit");
 
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 		Type(
 			key_fieldLabel = "Priority",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${priorityValue}");
+			value1 = ${priorityValue});
 
 		Button.clickSubmitButton();
 	}

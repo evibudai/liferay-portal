@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.engine.adapter.search;
 
 import com.liferay.portal.kernel.search.GroupBy;
 import com.liferay.portal.kernel.search.Stats;
+import com.liferay.portal.search.collapse.Collapse;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.highlight.Highlight;
 import com.liferay.portal.search.sort.Sort;
@@ -51,6 +43,10 @@ public class SearchSearchRequest
 
 	public String getAlternateUidFieldName() {
 		return _alternateUidFieldName;
+	}
+
+	public Collapse getCollapse() {
+		return _collapse;
 	}
 
 	public Boolean getFetchSource() {
@@ -104,6 +100,18 @@ public class SearchSearchRequest
 
 	public Boolean getScoreEnabled() {
 		return _scoreEnabled;
+	}
+
+	public String getScrollId() {
+		return _scrollId;
+	}
+
+	public long getScrollKeepAliveMinutes() {
+		return _scrollKeepAliveMinutes;
+	}
+
+	public Object[] getSearchAfter() {
+		return _searchAfter;
 	}
 
 	public String[] getSelectedFieldNames() {
@@ -183,6 +191,10 @@ public class SearchSearchRequest
 		_alternateUidFieldName = alternateUidFieldName;
 	}
 
+	public void setCollapse(Collapse collapse) {
+		_collapse = collapse;
+	}
+
 	public void setFetchSource(Boolean fetchSource) {
 		_fetchSource = fetchSource;
 	}
@@ -250,6 +262,18 @@ public class SearchSearchRequest
 		_scoreEnabled = scoreEnabled;
 	}
 
+	public void setScrollId(String scrollId) {
+		_scrollId = scrollId;
+	}
+
+	public void setScrollKeepAliveMinutes(long scrollKeepAliveMinutes) {
+		_scrollKeepAliveMinutes = scrollKeepAliveMinutes;
+	}
+
+	public void setSearchAfter(Object[] searchAfter) {
+		_searchAfter = searchAfter;
+	}
+
 	public void setSelectedFieldNames(String... selectedFieldNames) {
 		_selectedFieldNames = selectedFieldNames;
 	}
@@ -289,6 +313,7 @@ public class SearchSearchRequest
 
 	private boolean _allFieldsSelected;
 	private String _alternateUidFieldName;
+	private Collapse _collapse;
 	private Boolean _fetchSource;
 	private String[] _fetchSourceExcludes;
 	private String[] _fetchSourceIncludes;
@@ -305,6 +330,9 @@ public class SearchSearchRequest
 	private boolean _luceneSyntax;
 	private String _preference;
 	private Boolean _scoreEnabled;
+	private String _scrollId;
+	private long _scrollKeepAliveMinutes;
+	private Object[] _searchAfter;
 	private String[] _selectedFieldNames;
 	private Integer _size;
 	private List<Sort> _sorts = new ArrayList<>();

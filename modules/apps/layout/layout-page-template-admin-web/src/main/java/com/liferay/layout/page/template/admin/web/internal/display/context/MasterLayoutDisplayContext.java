@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.admin.web.internal.display.context;
@@ -103,8 +94,7 @@ public class MasterLayoutDisplayContext {
 					LayoutPageTemplateEntryServiceUtil.
 						getLayoutPageTemplateEntries(
 							_themeDisplay.getScopeGroupId(), getKeywords(),
-							LayoutPageTemplateEntryTypeConstants.
-								TYPE_MASTER_LAYOUT,
+							LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 							masterLayoutsSearchContainer.getStart(),
 							masterLayoutsSearchContainer.getEnd(),
 							masterLayoutsSearchContainer.
@@ -112,8 +102,7 @@ public class MasterLayoutDisplayContext {
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageTemplateEntriesCount(
 						_themeDisplay.getScopeGroupId(), getKeywords(),
-						LayoutPageTemplateEntryTypeConstants.
-							TYPE_MASTER_LAYOUT));
+						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT));
 		}
 		else {
 			List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
@@ -133,16 +122,14 @@ public class MasterLayoutDisplayContext {
 			layoutPageTemplateEntries.addAll(
 				LayoutPageTemplateEntryServiceUtil.getLayoutPageTemplateEntries(
 					_themeDisplay.getScopeGroupId(),
-					LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
-					start, end,
-					masterLayoutsSearchContainer.getOrderByComparator()));
+					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, start,
+					end, masterLayoutsSearchContainer.getOrderByComparator()));
 
 			int layoutPageTemplateEntriesCount =
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageTemplateEntriesCount(
 						_themeDisplay.getScopeGroupId(),
-						LayoutPageTemplateEntryTypeConstants.
-							TYPE_MASTER_LAYOUT);
+						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
 
 			masterLayoutsSearchContainer.setResultsAndTotal(
 				() -> layoutPageTemplateEntries,

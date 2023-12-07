@@ -1,9 +1,12 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Fragments,Upgrades WEM";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
+	property testray.component.names = "Collection Display Fragment,Upgrades WEM";
 	property testray.main.component.name = "Upgrades WEM";
 
 	setUp {
@@ -17,7 +20,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-146171. Check the default settings of Collection Display with collection provider and None pagination after upgrade."
-	@priority = "3"
+	@priority = 3
 	test ViewDefaultSettingsOfCollectionDisplayWithNonePaginationAfterUpgrade7413 {
 		property data.archive.type = "data-archive-collection-display-with-collection-provider";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
@@ -36,7 +39,7 @@ definition {
 		task ("Then the page creator could view the default settings of Collection Display") {
 			task ("View the pagination is still None") {
 				AssertElementNotPresent(
-					key_pageNumber = "1",
+					key_pageNumber = 1,
 					locator1 = "Pagination#ANY_PAGE");
 
 				AssertElementNotPresent(
@@ -65,14 +68,14 @@ definition {
 				AssertTextEquals(
 					key_fieldLabel = "Maximum Number of Items to Display",
 					locator1 = "FormFields#NUMBER_FIELD",
-					value1 = "5");
+					value1 = 5);
 
-				var n = "1";
+				var n = 1;
 
-				for (var i : list "40,39,38,37,36") {
+				for (var i : list "9,8,7,6,5") {
 					PageEditor.viewCollectionItem(
 						assetTitle = "Web Content Title ${i}",
-						row = "${n}");
+						row = ${n});
 
 					var n = ${n} + 1;
 				}
@@ -80,8 +83,8 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade."
-	@priority = "3"
+	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade from 735."
+	@priority = 3
 	test ViewFilteredOnTagDisplayedInCollectionsAfterUpgrade735 {
 		property data.archive.type = "data-archive-collection-display";
 		property database.types = "mariadb,mysql,postgresql";
@@ -99,10 +102,10 @@ definition {
 
 		task ("Then the content displays in collection display after upgrade") {
 			AssertVisible(
-				key_colPosition = "1",
+				key_colPosition = 1,
 				key_entryTitle = "Web Content Title",
 				key_fragmentName = "Collection Display",
-				key_rowPosition = "1",
+				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 		}
 
@@ -113,12 +116,15 @@ definition {
 
 			Panel.expandPanel(panel = "Filter");
 
-			AssertVisible(locator1 = "AssetCategorization#TAGS_SELECT_BUTTON");
+			AssertVisible(
+				key_fieldLabel = "Tags",
+				key_text = "Select",
+				locator1 = "Button#ANY_WITH_LABEL");
 		}
 	}
 
-	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade."
-	@priority = "3"
+	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade from 7413."
+	@priority = 3
 	test ViewFilteredOnTagDisplayedInCollectionsAfterUpgrade7413 {
 		property data.archive.type = "data-archive-collection-display";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
@@ -136,10 +142,10 @@ definition {
 
 		task ("Then the content displays in collection display after upgrade") {
 			AssertVisible(
-				key_colPosition = "1",
+				key_colPosition = 1,
 				key_entryTitle = "Web Content Title",
 				key_fragmentName = "Collection Display",
-				key_rowPosition = "1",
+				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 		}
 
@@ -150,12 +156,15 @@ definition {
 
 			Panel.expandPanel(panel = "Filter");
 
-			AssertVisible(locator1 = "AssetCategorization#TAGS_SELECT_BUTTON");
+			AssertVisible(
+				key_fieldLabel = "Tags",
+				key_text = "Select",
+				locator1 = "Button#ANY_WITH_LABEL");
 		}
 	}
 
-	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade."
-	@priority = "3"
+	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade from 73101."
+	@priority = 3
 	test ViewFilteredOnTagDisplayedInCollectionsAfterUpgrade73101 {
 		property data.archive.type = "data-archive-collection-display";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
@@ -173,10 +182,10 @@ definition {
 
 		task ("Then the content displays in collection display after upgrade") {
 			AssertVisible(
-				key_colPosition = "1",
+				key_colPosition = 1,
 				key_entryTitle = "Web Content Title",
 				key_fragmentName = "Collection Display",
-				key_rowPosition = "1",
+				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 		}
 
@@ -187,12 +196,15 @@ definition {
 
 			Panel.expandPanel(panel = "Filter");
 
-			AssertVisible(locator1 = "AssetCategorization#TAGS_SELECT_BUTTON");
+			AssertVisible(
+				key_fieldLabel = "Tags",
+				key_text = "Select",
+				locator1 = "Button#ANY_WITH_LABEL");
 		}
 	}
 
-	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade."
-	@priority = "3"
+	@description = "This is a use case for LPS-151984. View Filter on Tag in Collections after upgrade from 74321."
+	@priority = 3
 	test ViewFilteredOnTagDisplayedInCollectionsAfterUpgrade74321 {
 		property data.archive.type = "data-archive-collection-display";
 		property database.types = "mariadb,mysql,postgresql";
@@ -210,10 +222,10 @@ definition {
 
 		task ("Then the content displays in collection display after upgrade") {
 			AssertVisible(
-				key_colPosition = "1",
+				key_colPosition = 1,
 				key_entryTitle = "Web Content Title",
 				key_fragmentName = "Collection Display",
-				key_rowPosition = "1",
+				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 		}
 
@@ -224,7 +236,10 @@ definition {
 
 			Panel.expandPanel(panel = "Filter");
 
-			AssertVisible(locator1 = "AssetCategorization#TAGS_SELECT_BUTTON");
+			AssertVisible(
+				key_fieldLabel = "Tags",
+				key_text = "Select",
+				locator1 = "Button#ANY_WITH_LABEL");
 		}
 	}
 

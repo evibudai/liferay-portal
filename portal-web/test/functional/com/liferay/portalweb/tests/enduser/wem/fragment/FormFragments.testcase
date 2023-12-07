@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,27 +14,12 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
-		}
-	}
-
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ObjectAdmin.deleteAllCustomObjectsViaAPI();
-
-			JSONUser.tearDownNonAdminUsers();
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	@description = "This is a test for LPS-162848. The page creator without view permission for custom object cannot see Form Components in page editor."
-	@priority = "4"
+	@priority = 4
 	test CannotSeeFormComponentsInPageEditorAsUserWithoutViewPermissionForCustomObject {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -175,8 +161,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162848. The page creator cannot see Form Components in page editor when no approved custom objects exist."
-	@priority = "5"
+	@priority = 5
 	test CannotSeeFormComponentsInPageEditorWhenNoApprovedCustomObjectExist {
+		property portal.acceptance = "true";
+
 		task ("Given a page creator only has a draft custom object") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Purchase Order",
@@ -286,8 +274,172 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-169924. The user without View permission for object cannot see Form Container at view and perview mode."
+	@priority = 5
+	test CannotSeeFormContainerAtViewAndPreviewModeAsUserWithoutViewPermissionForObject {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "true";
+
+		task ("Given a user doesn't have view permission for custom object") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Purchase Order",
+				objectName = "PurchaseOrder",
+				pluralLabelName = "Purchase Orders");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Region",
+				fieldName = "region",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.publish();
+
+			JSONUser.addUser(
+				userEmailAddress = "userea@liferay.com",
+				userFirstName = "Userfn",
+				userLastName = "Userln",
+				userScreenName = "usersn");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONUser.addUserToSite(
+				groupName = "Test Site Name",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONRole.addRegularRole(
+				roleKey = "Page Designer",
+				roleTitle = "Page Designer");
+
+			for (var resourceActionIndex : list "UPDATE,VIEW") {
+				Permissions.definePermissionViaJSONAPI(
+					resourceAction = ${resourceActionIndex},
+					resourceName = "com.liferay.portal.kernel.model.Layout",
+					roleTitle = "Page Designer");
+			}
+
+			JSONRole.assignRoleToUser(
+				roleTitle = "Page Designer",
+				userEmailAddress = "userea@liferay.com");
+
+			User.logoutAndLoginPG(userLoginEmailAddress = "userea@liferay.com");
+		}
+
+		task ("When the user navigates to the content page at view mode") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+		}
+
+		task ("Then the user cannot see the Form Container") {
+			AssertElementNotPresent(locator1 = "Fragment#FORM_CONTAINER");
+		}
+
+		task ("When the user navigates to the content page at preview mode") {
+			ContentPages.gotoPageEditor();
+
+			PageEditor.previewInANewTab();
+		}
+
+		task ("Then the user cannot see the Form Container") {
+			AssertElementNotPresent(locator1 = "Fragment#FORM_CONTAINER");
+
+			JSONRole.deleteRole(roleTitle = "Page Designer");
+		}
+	}
+
+	@description = "This is a test for LPS-194108. View Unique Field Value error when submitting a form."
+	@priority = 4
+	test CannotSubmitSameValueWithExistingEntryToUniqueField {
+		task ("Given a page creator has a content page with a Text Input fragment mapped to an unique field") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Purchase Order",
+				objectName = "PurchaseOrder",
+				pluralLabelName = "Purchase Orders");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Purchase Order");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				acceptUniqueValuesOnly = "true",
+				fieldLabel = "Email Address",
+				fieldType = "Text");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page creator submits a form") {
+			Type(
+				key_text = "Email Address",
+				locator1 = "TextInput#ANY",
+				value1 = "test@liferay.com");
+
+			Button.clickSubmitButton();
+
+			AssertTextPresent(value1 = "Thank you. Your information was successfully received.");
+		}
+
+		task ("When the page creator cannot submit another form with same value") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			Type(
+				key_text = "Email Address",
+				locator1 = "TextInput#ANY",
+				value1 = "test@liferay.com");
+
+			Button.clickSubmitButton();
+
+			Alert.viewErrorMessage(errorMessage = "The Email Address is already in use. Please enter a unique Email Address.");
+		}
+	}
+
 	@description = "This is a test for LPS-162848. The Form Components should be available to Fragments admin and style book by default."
-	@priority = "4"
+	@priority = 4
 	test ViewFormComponentsInFragmentsAdminAndStyleBook {
 		task ("Given a site designer doesn't have any custom object") {
 			ApplicationsMenu.gotoSite(site = "Test Site Name");
@@ -301,7 +453,7 @@ definition {
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
 
 			for (var fragmentName : list "CAPTCHA,Checkbox,Date,File Upload,Numeric Input,Select from List,Submit Button,Text Input") {
-				FragmentsAdmin.viewEntryPresent(entry = "${fragmentName}");
+				FragmentsAdmin.viewEntryPresent(entry = ${fragmentName});
 			}
 		}
 
@@ -327,23 +479,23 @@ definition {
 				id = "submit-button-text",
 				text = "Submit");
 
-			ScrollBy(value1 = "0, 500");
+			ScrollBy(value1 = "0, 1200");
 
 			AssertVisible(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_CAPTCHA_BODY");
 
 			ScrollBy(value1 = "0, 300");
 
 			AssertNotChecked.assertNotCheckedNotVisible(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "checkbox");
 
 			ScrollBy(value1 = "0, 300");
 
 			AssertVisible(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "date");
 
@@ -353,29 +505,46 @@ definition {
 
 			ScrollBy(value1 = "0, 300");
 
+			AssertVisible(locator1 = "//div[contains(@class,'multiselect-list')]//div[contains(@class,'checkbox')]");
+
+			ScrollBy(value1 = "0, 300");
+
 			AssertVisible(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "numeric-input");
 
 			ScrollBy(value1 = "0, 300");
 
 			AssertVisible(
-				index = "1",
+				key_fieldLabel = "Write your content here...",
+				locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+
+			ScrollBy(value1 = "0, 300");
+
+			AssertVisible(
+				index = 1,
 				locator1 = "Fragment#INPUT_TOGGLE",
 				type = "select-from-list");
 
 			ScrollBy(value1 = "0, 300");
 
 			AssertVisible(
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
 				type = "text-input");
+
+			ScrollBy(value1 = "0, 300");
+
+			AssertVisible(
+				index = 1,
+				locator1 = "Fragment#TEXTAREA_FIELD",
+				type = "textarea");
 		}
 	}
 
 	@description = "This is a test for LPS-162848. The page creator with view permission for custom object can see Form Components in page editor."
-	@priority = "4"
+	@priority = 4
 	test ViewFormComponentsInPageEditorAsUserWithViewPermissionForCustomObject {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -451,8 +620,123 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-151157. The fragment admin could see the supported field types in read-only mode."
-	@priority = "4"
+	@description = "This is a test for LPS-169924. The user with Add Object Entry but without View permission for object should see Form Container at view and preview mode."
+	@priority = 4
+	test ViewFormContainerAtViewAndPreviewModeAsUserWithAddObjectEntryPermissionWithoutViewPermissionForObject {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		task ("Given a user doesn't have view permission for custom object") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Purchase Order",
+				objectName = "PurchaseOrder",
+				pluralLabelName = "Purchase Orders");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Region",
+				fieldName = "region",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.publish();
+
+			JSONUser.addUser(
+				userEmailAddress = "userea@liferay.com",
+				userFirstName = "Userfn",
+				userLastName = "Userln",
+				userScreenName = "usersn");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONUser.addUserToSite(
+				groupName = "Test Site Name",
+				userEmailAddress = "userea@liferay.com");
+
+			JSONRole.addRegularRole(
+				roleKey = "Page Designer",
+				roleTitle = "Page Designer");
+
+			for (var resourceActionIndex : list "UPDATE,VIEW") {
+				Permissions.definePermissionViaJSONAPI(
+					resourceAction = ${resourceActionIndex},
+					resourceName = "com.liferay.portal.kernel.model.Layout",
+					roleTitle = "Page Designer");
+			}
+
+			var objectId = JSONObject.getObjectId(objectName = "PurchaseOrder");
+
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "ADD_OBJECT_ENTRY",
+				resourceName = "com.liferay.object#${objectId}",
+				roleTitle = "Page Designer");
+
+			JSONRole.assignRoleToUser(
+				roleTitle = "Page Designer",
+				userEmailAddress = "userea@liferay.com");
+
+			User.logoutAndLoginPG(userLoginEmailAddress = "userea@liferay.com");
+		}
+
+		task ("When the user navigates to the content page at view mode") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+		}
+
+		task ("Then the user sees the Form Container") {
+			AssertVisible(locator1 = "Fragment#FORM_CONTAINER");
+
+			AssertVisible(
+				key_text = "Region",
+				locator1 = "TextInput#ANY");
+
+			AssertVisible(locator1 = "Button#SUBMIT");
+		}
+
+		task ("When the user navigates to the content page at preview mode") {
+			ContentPages.gotoPageEditor();
+
+			PageEditor.previewInANewTab();
+		}
+
+		task ("Then the user sees the Form Container") {
+			AssertVisible(locator1 = "Fragment#FORM_CONTAINER");
+
+			AssertVisible(
+				key_text = "Region",
+				locator1 = "TextInput#ANY");
+
+			AssertVisible(locator1 = "Button#SUBMIT");
+
+			JSONRole.deleteRole(roleTitle = "Page Designer");
+		}
+	}
+
+	@description = "This is a test for LPS-151157 and LPS-175242. The fragment admin could see the supported field types in read-only mode."
+	@priority = 4
 	test ViewSupportedFieldTypesInReadOnlyMode {
 		task ("Given a fragment admin has a read-only fragment with field type") {
 			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
@@ -477,9 +761,37 @@ definition {
 		task ("Given a fragment admin has a read-only fragment without field type") {
 			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
 
-			FragmentsAdmin.importCollectionFromDependenciesFolder(collectionZipFile = "form-fragments.zip");
+			FragmentsAdminNavigator.gotoImportCollection();
 
+			WaitForPageLoad();
+
+			UploadDependencyFile.uploadArchiveFile(fileName = "form-fragments.zip");
+
+			Button.clickImport();
+
+			AssertTextEquals(
+				locator1 = "Message#WARNING_IMPORT",
+				value1 = "1 item was imported with warnings.");
+
+			AssertTextEquals.assertPartialText(
+				itemName = "Fragment Example",
+				locator1 = "Message#WARNING_IMPORT_SUBTEXT",
+				value1 = "Fragment type input must have at least one field type");
+
+			Button.clickDone();
+		}
+
+		task ("When the fragment admin accesses to the fragment set") {
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Form Fragments");
+		}
+
+		task ("Then the fragment admin sees the warning label on fragment card") {
+			LexiconCard.viewCardLabel(
+				card = "Fragment Example",
+				cardLabel = "Warnings",
+				index = 2);
+
+			AssertElementAccessible(locator1 = "//div[contains(@class,'card')][contains(.,'Fragment Example')]//span[contains(@class,'label-warning')]");
 		}
 
 		task ("When the fragment admin accesses to fragment in read-only mode") {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.kernel.service.persistence;
@@ -820,56 +811,6 @@ public interface AssetTagPersistence
 	public int countByName(String[] names);
 
 	/**
-	 * Returns the asset tag where groupId = &#63; and name = &#63; or throws a <code>NoSuchTagException</code> if it could not be found.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the matching asset tag
-	 * @throws NoSuchTagException if a matching asset tag could not be found
-	 */
-	public AssetTag findByG_N(long groupId, String name)
-		throws NoSuchTagException;
-
-	/**
-	 * Returns the asset tag where groupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the matching asset tag, or <code>null</code> if a matching asset tag could not be found
-	 */
-	public AssetTag fetchByG_N(long groupId, String name);
-
-	/**
-	 * Returns the asset tag where groupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching asset tag, or <code>null</code> if a matching asset tag could not be found
-	 */
-	public AssetTag fetchByG_N(
-		long groupId, String name, boolean useFinderCache);
-
-	/**
-	 * Removes the asset tag where groupId = &#63; and name = &#63; from the database.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the asset tag that was removed
-	 */
-	public AssetTag removeByG_N(long groupId, String name)
-		throws NoSuchTagException;
-
-	/**
-	 * Returns the number of asset tags where groupId = &#63; and name = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the number of matching asset tags
-	 */
-	public int countByG_N(long groupId, String name);
-
-	/**
 	 * Returns all the asset tags where groupId = &#63; and name LIKE &#63;.
 	 *
 	 * @param groupId the group ID
@@ -1300,16 +1241,18 @@ public interface AssetTagPersistence
 	 *
 	 * @param pk the primary key of the asset tag
 	 * @param assetEntryPK the primary key of the asset entry
+	 * @return <code>true</code> if an association between the asset tag and the asset entry was added; <code>false</code> if they were already associated
 	 */
-	public void addAssetEntry(long pk, long assetEntryPK);
+	public boolean addAssetEntry(long pk, long assetEntryPK);
 
 	/**
 	 * Adds an association between the asset tag and the asset entry. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the asset tag
 	 * @param assetEntry the asset entry
+	 * @return <code>true</code> if an association between the asset tag and the asset entry was added; <code>false</code> if they were already associated
 	 */
-	public void addAssetEntry(
+	public boolean addAssetEntry(
 		long pk, com.liferay.asset.kernel.model.AssetEntry assetEntry);
 
 	/**
@@ -1317,16 +1260,18 @@ public interface AssetTagPersistence
 	 *
 	 * @param pk the primary key of the asset tag
 	 * @param assetEntryPKs the primary keys of the asset entries
+	 * @return <code>true</code> if at least one association between the asset tag and the asset entries was added; <code>false</code> if they were all already associated
 	 */
-	public void addAssetEntries(long pk, long[] assetEntryPKs);
+	public boolean addAssetEntries(long pk, long[] assetEntryPKs);
 
 	/**
 	 * Adds an association between the asset tag and the asset entries. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 	 *
 	 * @param pk the primary key of the asset tag
 	 * @param assetEntries the asset entries
+	 * @return <code>true</code> if at least one association between the asset tag and the asset entries was added; <code>false</code> if they were all already associated
 	 */
-	public void addAssetEntries(
+	public boolean addAssetEntries(
 		long pk,
 		java.util.List<com.liferay.asset.kernel.model.AssetEntry> assetEntries);
 

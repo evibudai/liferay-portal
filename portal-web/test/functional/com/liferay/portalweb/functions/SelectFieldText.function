@@ -2,19 +2,19 @@
 @summary = "Selecting all text at '${locator1}'"
 definition {
 
-	function selectFieldText {
+	function selectFieldText(locator1) {
 		WaitForSPARefresh();
 
 		var input = "keys=CONTROL,a";
 		var mac = OSDetector.isApple();
 
-		if (contains("${mac}", "true")) {
+		if (contains(${mac}, "true")) {
 			var input = "keys=COMMAND,a";
 		}
 
-		selenium.sendKeys("${locator1}", "${input}");
+		selenium.sendKeys(${locator1}, ${input});
 
-		selenium.assertJavaScriptErrors();
+		selenium.assertJavaScriptErrors("true");
 
 		selenium.assertLiferayErrors();
 	}

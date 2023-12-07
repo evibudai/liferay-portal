@@ -14,15 +14,15 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-145228 - Verify that the user is able to preview the entry's information inside of the My Workflow Tasks"
-	@priority = "5"
+	@priority = 5
 	test CanPreviewEntryInformationOnMyWorkflowTasks {
 		property portal.acceptance = "true";
 
@@ -68,11 +68,13 @@ definition {
 
 		ObjectPortlet.assertFieldLabelName(fieldLabelName = "Custom Field");
 
-		ObjectAdmin.viewFieldValueDisabled(fieldValue = "Entry Test");
+		AssertElementPresent(
+			key_fieldValue = "Entry Test",
+			locator1 = "ObjectAdmin#VIEW_FIELD_VALUE_DISABLED");
 	}
 
 	@description = "LPS-145228 - Verify that the user is able to view the entire entry's information by clicking on View button"
-	@priority = "4"
+	@priority = 4
 	test CanViewEntryInformationThroughViewButtonMyWorkflowTasks {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 297",
@@ -118,7 +120,107 @@ definition {
 
 		ObjectPortlet.assertFieldLabelName(fieldLabelName = "Custom Field");
 
-		ObjectAdmin.viewFieldValueDisabled(fieldValue = "Entry Test");
+		AssertElementPresent(
+			key_fieldValue = "Entry Test",
+			locator1 = "ObjectAdmin#VIEW_FIELD_VALUE_DISABLED");
+	}
+
+	@description = "LPS-181663 - Verify when a user creates an object entry and saves it as a draft, the workflow related to that object definition is not triggered"
+	@priority = 4
+	test CheckWorkflowNotTriggeredForDraftEntry {
+		property custom.properties = "feature.flag.LPS-181663=true";
+
+		task ("Given a custom object definition scoped by site") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 197509",
+				objectName = "CustomObject197509",
+				panelCategoryKey = "site_administration.content",
+				pluralLabelName = "Custom Objects 197509",
+				scope = "site");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Text Field",
+				fieldName = "textField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject197509");
+		}
+
+		task ("and Given the 'Allow users to save entries as draft' configuration is activated") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 197509");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Allow Users to Save Entries as Draft",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			PortletEntry.publish();
+		}
+
+		task ("and Given a mapped form fontainer on a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Object Page",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Object Page",
+				siteName = "Guest");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Custom Object 197509");
+
+			Click.javaScriptClick(
+				index = 1,
+				key_fragmentName = "Submit Button",
+				locator1 = "Fragment#FRAGMENT_LABEL");
+
+			Select(
+				key_fieldLabel = "Submitted Entry Status",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Draft");
+
+			PageEditor.publish();
+		}
+
+		task ("and Given a workflow is set for that object definition") {
+			Workflow.openWorkflowProcessBuilderConfiguration();
+
+			Workflow.configureWorkflow(
+				workflowDefinition = "Single Approver",
+				workflowResourceValue = "Custom Object 197509");
+		}
+
+		task ("When the user adds an object entry") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Object Page",
+				siteName = "Guest");
+
+			Type.sendKeys(
+				key_text = "Text Field",
+				locator1 = "TextInput#ANY",
+				value1 = "Draft entry");
+
+			AssertClick(
+				locator1 = "Button#MAIN_CONTENT_SUBMIT",
+				value1 = "Submit");
+		}
+
+		task ("Then the status of object entry is draft") {
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Custom Objects 197509");
+
+			AssertElementPresent(
+				key_entry = "Draft entry",
+				key_status = "Draft",
+				locator1 = "ObjectPortlet#ENTRY_STATUS");
+		}
 	}
 
 }

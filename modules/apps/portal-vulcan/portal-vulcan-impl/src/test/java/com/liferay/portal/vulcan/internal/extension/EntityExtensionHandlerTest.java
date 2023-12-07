@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.vulcan.internal.extension;
@@ -18,6 +9,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.vulcan.extension.EntityExtensionHandler;
 import com.liferay.portal.vulcan.extension.ExtensionProvider;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
@@ -68,7 +60,8 @@ public class EntityExtensionHandlerTest {
 
 		Mockito.when(
 			_mockedExtensionProvider1.getExtendedProperties(
-				Mockito.anyLong(), Mockito.anyString(), Mockito.any())
+				Mockito.anyLong(), Mockito.anyLong(), Mockito.anyString(),
+				Mockito.any())
 		).thenReturn(
 			testMap1
 		);
@@ -78,26 +71,28 @@ public class EntityExtensionHandlerTest {
 
 		Mockito.when(
 			_mockedExtensionProvider2.getExtendedProperties(
-				Mockito.anyLong(), Mockito.anyString(), Mockito.any())
+				Mockito.anyLong(), Mockito.anyLong(), Mockito.anyString(),
+				Mockito.any())
 		).thenReturn(
 			testMap2
 		);
 
 		Map<String, Serializable> extendedProperties =
-			_entityExtensionHandler.getExtendedProperties(_COMPANY_ID, _OBJECT);
+			_entityExtensionHandler.getExtendedProperties(
+				_COMPANY_ID, _USER_ID, _OBJECT);
 
 		Mockito.verify(
 			_mockedExtensionProvider1
 		).getExtendedProperties(
-			Mockito.eq(_COMPANY_ID), Mockito.eq(_CLASS_NAME),
-			Mockito.eq(_OBJECT)
+			Mockito.eq(_COMPANY_ID), Mockito.eq(_USER_ID),
+			Mockito.eq(_CLASS_NAME), Mockito.eq(_OBJECT)
 		);
 
 		Mockito.verify(
 			_mockedExtensionProvider2
 		).getExtendedProperties(
-			Mockito.eq(_COMPANY_ID), Mockito.eq(_CLASS_NAME),
-			Mockito.eq(_OBJECT)
+			Mockito.eq(_COMPANY_ID), Mockito.eq(_USER_ID),
+			Mockito.eq(_CLASS_NAME), Mockito.eq(_OBJECT)
 		);
 
 		Assert.assertEquals(

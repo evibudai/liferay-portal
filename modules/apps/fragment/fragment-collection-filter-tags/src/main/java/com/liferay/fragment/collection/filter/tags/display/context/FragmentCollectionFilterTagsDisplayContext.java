@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.collection.filter.tags.display.context;
@@ -56,12 +47,6 @@ public class FragmentCollectionFilterTagsDisplayContext {
 		return defaultValuesJSONObject.getString("helpText", StringPool.BLANK);
 	}
 
-	public String getHelpTextId() {
-		return "fragment_" +
-			String.valueOf(_fragmentEntryLink.getFragmentEntryLinkId()) +
-				"_helpText";
-	}
-
 	public String getLabel() {
 		String label = GetterUtil.getString(_getFieldValue("label"));
 
@@ -72,18 +57,14 @@ public class FragmentCollectionFilterTagsDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public String getLabelId() {
-		return "fragment_" +
-			String.valueOf(_fragmentEntryLink.getFragmentEntryLinkId()) +
-				"_label";
-	}
-
 	public Map<String, Object> getProps() {
 		if (_props != null) {
 			return _props;
 		}
 
 		_props = HashMapBuilder.<String, Object>put(
+			"disabled", isDisabled()
+		).put(
 			"fragmentEntryLinkId",
 			String.valueOf(_fragmentEntryLink.getFragmentEntryLinkId())
 		).put(
@@ -102,6 +83,10 @@ public class FragmentCollectionFilterTagsDisplayContext {
 		).build();
 
 		return _props;
+	}
+
+	public boolean isDisabled() {
+		return _fragmentRendererContext.isEditMode();
 	}
 
 	public boolean isShowHelpText() {

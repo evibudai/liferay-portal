@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -71,13 +62,13 @@ CompanyPortletRatingsDefinitionDisplayContext companyPortletRatingsDefinitionDis
 </aui:fieldset>
 
 <aui:script use="aui-base">
-	var ratingsSettingsContainer = A.one(
-		'#<portlet:namespace />ratingsSettingsContainer'
+	const ratingsSettingsContainer = document.getElementById(
+		'<portlet:namespace />ratingsSettingsContainer'
 	);
 
 	var ratingsTypeChanged = false;
 
-	ratingsSettingsContainer.delegate(
+	ratingsSettingsContainer.addEventListener(
 		'change',
 		(event) => {
 			ratingsTypeChanged = true;
@@ -85,9 +76,9 @@ CompanyPortletRatingsDefinitionDisplayContext companyPortletRatingsDefinitionDis
 		'select'
 	);
 
-	var form = A.one('#<portlet:namespace />fm');
+	const form = document.getElementById('<portlet:namespace />fm');
 
-	form.on('submit', (event) => {
+	form.addEventListener('submit', (event) => {
 		if (ratingsTypeChanged) {
 			Liferay.Util.openConfirmModal({
 				message:

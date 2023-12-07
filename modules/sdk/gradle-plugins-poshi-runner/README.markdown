@@ -10,7 +10,7 @@ To use the plugin, include it in your build script:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "3.0.59"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "4.0.10"
 	}
 
 	repositories {
@@ -34,6 +34,7 @@ Property Name | Type | Default Value | Description
 `openCVVersion` | `String` | `2.4.9-0.9` | The version of OpenCV to use (Sikuli dependency).
 `poshiPropertiesFile` | `File` | `poshi.properties` | The properties file that will override and update test configurations.
 `testNames` | Set<String> | | The test names to be passed along to Poshi. The plugin will set `test.name` to `testNames` in system properties.
+`testRunType` | `String` | `sequential` | The mode in which to run tests, `parallel` or `sequential`.
 `version` | `String` | `1.0.311` | The version of [`com.liferay.poshi.runner`](https://github.com/liferay/liferay-portal/tree/master/modules/test/poshi/poshi-runner) to use.
 
 The properties of type `File` support any type that can be resolved by
@@ -71,7 +72,7 @@ To use the plugin, include it in your build script:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "3.0.59"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.poshi.runner", version: "34.0.0
 	}
 
 	repositories {
@@ -118,4 +119,3 @@ The plugin adds a series of tasks to your project:
 Name | Depends On | Type | Description
 ---- | ---------- | ---- | -----------
 `jarPoshiRunnerResources` | \- | [`Jar`](https://docs.gradle.org/6.6/dsl/org.gradle.api.tasks.bundling.Jar.html) | Creates a Poshi resource jar.
-`uploadPoshiRunnerResources` | \- | [`Upload`](https://docs.gradle.org/6.6/javadoc/org/gradle/api/tasks/Upload.html) | Uploads all Poshi resource artifacts.

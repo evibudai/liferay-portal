@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.test.portlet;
@@ -21,16 +12,20 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import java.io.IOException;
 import java.io.Writer;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
+import javax.portlet.MutablePortletParameters;
 import javax.portlet.MutableRenderParameters;
 import javax.portlet.MutableResourceParameters;
 import javax.portlet.PortletMode;
 import javax.portlet.PortletModeException;
+import javax.portlet.PortletParameters;
 import javax.portlet.PortletSecurityException;
+import javax.portlet.RenderURL;
 import javax.portlet.WindowState;
 import javax.portlet.WindowStateException;
 import javax.portlet.annotations.PortletSerializable;
@@ -38,7 +33,7 @@ import javax.portlet.annotations.PortletSerializable;
 /**
  * @author Cristina González
  */
-public class MockLiferayPortletURL implements LiferayPortletURL {
+public class MockLiferayPortletURL implements LiferayPortletURL, RenderURL {
 
 	@Override
 	public void addParameterIncludedInPath(String name) {
@@ -62,6 +57,11 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public String getCacheability() {
+		return null;
+	}
+
+	@Override
+	public String getFragmentIdentifier() {
 		return null;
 	}
 
@@ -113,7 +113,7 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public MutableRenderParameters getRenderParameters() {
-		return null;
+		return new MockMutableRenderParameters();
 	}
 
 	@Override
@@ -200,6 +200,10 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public void setEscapeXml(boolean escapeXml) {
+	}
+
+	@Override
+	public void setFragmentIdentifier(String fragment) {
 	}
 
 	@Override
@@ -336,5 +340,86 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	private Map<String, String[]> _parameters = new ConcurrentHashMap<>();
 	private String _portletId = "param";
+
+	private class MockMutableRenderParameters
+		implements MutableRenderParameters {
+
+		@Override
+		public MutablePortletParameters add(
+			PortletParameters portletParameters) {
+
+			return this;
+		}
+
+		@Override
+		public void clear() {
+		}
+
+		@Override
+		public void clearPrivate() {
+		}
+
+		@Override
+		public void clearPublic() {
+		}
+
+		@Override
+		public MutableRenderParameters clone() {
+			return new MockMutableRenderParameters();
+		}
+
+		@Override
+		public Set<String> getNames() {
+			return Collections.emptySet();
+		}
+
+		@Override
+		public String getValue(String name) {
+			return null;
+		}
+
+		@Override
+		public String[] getValues(String name) {
+			return new String[0];
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return false;
+		}
+
+		@Override
+		public boolean isPublic(String name) {
+			return false;
+		}
+
+		@Override
+		public boolean removeParameter(String name) {
+			return false;
+		}
+
+		@Override
+		public MutablePortletParameters set(
+			PortletParameters portletParameters) {
+
+			return this;
+		}
+
+		@Override
+		public String setValue(String name, String value) {
+			return null;
+		}
+
+		@Override
+		public String[] setValues(String name, String... values) {
+			return new String[0];
+		}
+
+		@Override
+		public int size() {
+			return 0;
+		}
+
+	}
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.order.content.web.internal.frontend.data.set.provider;
@@ -19,6 +10,8 @@ import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFDSNames;
 import com.liferay.commerce.order.content.web.internal.model.Address;
+import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
@@ -63,11 +56,16 @@ public class CommerceBillingAddressFDSDataProvider
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			commerceOrderId);
 
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
+				commerceOrder.getGroupId());
+
 		List<CommerceAddress> commerceAddresses =
 			_commerceAddressService.getBillingCommerceAddresses(
 				commerceOrder.getCompanyId(), AccountEntry.class.getName(),
-				commerceOrder.getCommerceAccountId(), fdsKeywords.getKeywords(),
-				fdsPagination.getStartPosition(),
+				commerceOrder.getCommerceAccountId(),
+				commerceChannel.getCommerceChannelId(),
+				fdsKeywords.getKeywords(), fdsPagination.getStartPosition(),
 				fdsPagination.getEndPosition(), sort);
 
 		for (CommerceAddress commerceAddress : commerceAddresses) {
@@ -92,9 +90,14 @@ public class CommerceBillingAddressFDSDataProvider
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			commerceOrderId);
 
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
+				commerceOrder.getGroupId());
+
 		return _commerceAddressService.getBillingCommerceAddressesCount(
 			commerceOrder.getCompanyId(), AccountEntry.class.getName(),
-			commerceOrder.getCommerceAccountId(), fdsKeywords.getKeywords());
+			commerceOrder.getCommerceAccountId(),
+			commerceChannel.getCommerceChannelId(), fdsKeywords.getKeywords());
 	}
 
 	private String _getDescriptiveCommerceAddress(
@@ -126,6 +129,9 @@ public class CommerceBillingAddressFDSDataProvider
 
 	@Reference
 	private CommerceAddressService _commerceAddressService;
+
+	@Reference
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;

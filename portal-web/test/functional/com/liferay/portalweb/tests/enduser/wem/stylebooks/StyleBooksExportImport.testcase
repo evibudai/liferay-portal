@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Style Books";
@@ -13,25 +14,25 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			for (var groupName : list "Test Site Name,New Site Name") {
-				JSONGroup.deleteGroupByName(groupName = "${groupName}");
+				JSONGroup.deleteGroupByName(groupName = ${groupName});
 			}
 		}
 	}
 
 	@description = "This is a test for LPS-134860. The user could export and import a style book."
-	@priority = "3"
+	@priority = 3
 	test ExportImportStyleBook {
 		task ("Add a style book with times as Font Family Base") {
 			StyleBooksAdmin.openStyleBooksAdmin(siteURLKey = "test-site-name");
@@ -62,7 +63,7 @@ definition {
 		}
 
 		task ("Import the style book into a new site") {
-			JSONGroup.addGroup(groupName = "New Site Name");
+			HeadlessSite.addSite(siteName = "New Site Name");
 
 			StyleBooksAdmin.openStyleBooksAdmin(siteURLKey = "new-site-name");
 

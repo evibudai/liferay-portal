@@ -23,23 +23,23 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8849 | Test Summary: Add a CSV data source with an individual whose email matches another individual that already has activities and check that the indiviual details are updated"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test AddCSVWithIndividualWhoseEmailMatchesAnotherIndividualAlreadyHasActivitiesCheckIndividualDetailsUpdated {
 		property portal.upstream = "quarantine";
 
@@ -82,7 +82,7 @@ definition {
 		}
 
 		task ("Assert Field not present") {
-			ACProperties.switchProperty(propertyName = "${propertyName}");
+			ACProperties.switchProperty(propertyName = ${propertyName});
 
 			ACNavigation.goToIndividuals();
 
@@ -124,7 +124,7 @@ definition {
 
 	@description = "Bug: LRAC-11436 | Automation ID: LRAC-11501 | Test Summary: Create a CSV data source"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test CreateCSVDataSource {
 
 		// CSV data source tests are no longer possible to run due to this ticket LRAC-11651

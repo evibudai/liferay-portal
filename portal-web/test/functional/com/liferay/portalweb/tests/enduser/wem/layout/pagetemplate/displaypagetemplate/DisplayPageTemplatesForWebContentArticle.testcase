@@ -1,9 +1,10 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Display Pages";
+	property testray.main.component.name = "Display Page Templates";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a display page template for Web Content Article and Basic Web Content") {
@@ -25,21 +26,8 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONUser.tearDownNonAdminUsers();
-
-			JSONGroup.tearDownNonDefaultGroups();
-		}
-	}
-
 	@description = "This is a test for LPS-90999. A user can access to edit the display page template at view mode."
-	@priority = "5"
+	@priority = 5
 	test AccessToEditDisplayPageTemplateAtViewMode {
 		property portal.acceptance = "true";
 
@@ -112,7 +100,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-90999. The administrator can access to edit the web content article or display page while viewing the article through its display page."
-	@priority = "5"
+	@priority = 5
 	test AccessToEditWebContentAndDisplayPageTemplateAtViewModeAsAdministrator {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
@@ -260,7 +248,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-90999. A user can access to edit the web content article at view mode."
-	@priority = "5"
+	@priority = 5
 	test AccessToEditWebContentAtViewMode {
 		property portal.acceptance = "true";
 
@@ -327,7 +315,7 @@ definition {
 	}
 
 	@description = "Display page template can be viewed through the Asset Publisher widget."
-	@priority = "5"
+	@priority = 5
 	test NavigateToDisplayPageTemplateViaAssetPublisher {
 		property portal.acceptance = "true";
 
@@ -397,7 +385,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121195. Display page template can be viewed through friendly URL."
-	@priority = "5"
+	@priority = 5
 	test NavigateToDisplayPageTemplateViaFriendlyURL {
 		property portal.acceptance = "true";
 
@@ -452,7 +440,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-86221. A user can preview a draft web content within its display page."
-	@priority = "5"
+	@priority = 5
 	test PreviewDraftWebContent {
 		property portal.acceptance = "true";
 
@@ -514,7 +502,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-86221 and LPS-112994. A user can preview a pending web content within its display page."
-	@priority = "5"
+	@priority = 5
 	test PreviewPendingWebContent {
 		property portal.acceptance = "true";
 
@@ -560,7 +548,7 @@ definition {
 				pageName = "Display Page Name",
 				pageType = "Display Page Templates");
 
-			PortletEntry.submitForPublication();
+			PortletEntry.submitForWorkflow();
 		}
 
 		task ("Preview the pending web content") {
@@ -584,7 +572,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-163800. Can preview web content with predefined values in structure in Asset Libraries through site' s display page template."
-	@priority = "3"
+	@priority = 3
 	test PreviewPredefinedValuesThroughTheDisplayPageOfSpecificSiteInAssetLibrary {
 		task ("Given a site designer has display page templates for web content") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
@@ -648,7 +636,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-86221. A user can preview a published web content within its display page."
-	@priority = "5"
+	@priority = 5
 	test PreviewPublishedWebContent {
 		property portal.acceptance = "true";
 
@@ -711,8 +699,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-130607 and LPS-163074. The site designer could preview current version of web content through display page template in site."
-	@priority = "5"
+	@priority = 5
 	test PreviewWebContentThroughTheDisplayPageOfCurrentSite {
+		property portal.acceptance = "true";
+
 		task ("Given a site designer has display page templates for web content") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
@@ -811,13 +801,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-163800. Preview web content in Asset Libraries through sites' display page templates."
-	@priority = "4"
+	@priority = 4
 	test PreviewWebContentThroughTheDisplayPageOfSpecificSiteInAssetLibrary {
 		task ("Given a site designer has display page templates for web content") {
-			var i = "1";
+			var i = 1;
 
-			while ("${i}" != "7") {
-				JSONGroup.addGroup(groupName = "Test Site Name ${i}");
+			while (${i} != 7) {
+				HeadlessSite.addSite(siteName = "Test Site Name ${i}");
 
 				var i = ${i} + 1;
 			}
@@ -884,10 +874,10 @@ definition {
 				locator1 = "TextInput#ANY");
 
 			AssertAttributeValue(
-				attribute1 = "disabled",
 				key_text = "Preview",
 				locator1 = "Button#ANY",
-				value1 = "true");
+				value1 = "disabled",
+				value2 = "true");
 		}
 
 		task ("When the site designer selects the default display page") {
@@ -957,13 +947,13 @@ definition {
 	}
 
 	@description = "This is a test for LPS-163800. Preview web content in global site through site's display page templates."
-	@priority = "3"
+	@priority = 3
 	test PreviewWebContentThroughTheDisplayPageOfSpecificSiteInGlobalSite {
 		task ("Given a site designer has display page templates for web content") {
-			var i = "1";
+			var i = 1;
 
-			while ("${i}" != "7") {
-				JSONGroup.addGroup(groupName = "Test Site Name ${i}");
+			while (${i} != 7) {
+				HeadlessSite.addSite(siteName = "Test Site Name ${i}");
 
 				var i = ${i} + 1;
 			}
@@ -1028,10 +1018,10 @@ definition {
 				locator1 = "TextInput#ANY");
 
 			AssertAttributeValue(
-				attribute1 = "disabled",
 				key_text = "Preview",
 				locator1 = "Button#ANY",
-				value1 = "true");
+				value1 = "disabled",
+				value2 = "true");
 		}
 
 		task ("When the site designer selects the default display page") {
@@ -1103,9 +1093,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-150919. Canonical URL should be valid for DPT."
-	@priority = "2"
+	@priority = 2
 	test ViewCanonicalURL {
-		property test.name.skip.portal.instance = "DisplayPageTemplatesForWebContentArticle#ViewCanonicalURL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given I select Use Localized URL as Canonical URL") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -1151,25 +1142,25 @@ definition {
 
 			var jornalURL = Navigator.getCurrentURL();
 
-			echo("${jornalURL}");
+			echo(${jornalURL});
 
 			User.logoutPG();
 
-			Navigator.openSpecificURL(url = "${jornalURL}");
+			Navigator.openSpecificURL(url = ${jornalURL});
 		}
 
 		task ("Then it should use Localized URL as Canonical URL") {
 			var canonicalText = '''<link data-senna-track="temporary" href="http://localhost:8080/web/test-site-name/w/web-content-title" rel="canonical"''';
 			var alternateText = '''<link data-senna-track="temporary" href="http://localhost:8080/zh/web/test-site-name/w/web-content-title" hreflang="zh-CN" rel="alternate"''';
 
-			AssertHTMLSourceTextPresent(value1 = "${canonicalText}");
+			AssertHTMLSourceTextPresent(value1 = ${canonicalText});
 
-			AssertHTMLSourceTextPresent(value1 = "${alternateText}");
+			AssertHTMLSourceTextPresent(value1 = ${alternateText});
 		}
 	}
 
 	@description = "This is a test for LPS-96438. Guests should be able to view display page template."
-	@priority = "5"
+	@priority = 5
 	test ViewDisplayPageTemplateAsGuest {
 		property portal.acceptance = "true";
 
@@ -1262,7 +1253,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-86190. Asset metadata should appear in page source."
-	@priority = "4"
+	@priority = 4
 	test ViewMetadataInDisplayPageTemplateSource {
 		task ("Add a Heading fragment to display page template") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
@@ -1296,7 +1287,7 @@ definition {
 
 		task ("Add a web content article with a category and tag") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${categoryId}",
+				assetCategoryIds = ${categoryId},
 				assetTagNames = "test tag",
 				content = "Webcontent Content",
 				groupName = "Test Site Name",
@@ -1327,7 +1318,7 @@ definition {
 	}
 
 	@description = "When no display page template is selected, assets should not be displayed through the default display page."
-	@priority = "4"
+	@priority = 4
 	test ViewNoDisplayPageTemplate {
 		task ("Add a Heading fragment to display page template") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
@@ -1410,7 +1401,7 @@ definition {
 	}
 
 	@description = "The selected display page template should override the default display page template."
-	@priority = "5"
+	@priority = 5
 	test ViewNonDefaultDisplayPageTemplate {
 		property portal.acceptance = "true";
 
@@ -1496,6 +1487,373 @@ definition {
 				fragmentName = "button",
 				id = "link",
 				text = "Webcontent Content");
+		}
+	}
+
+	@description = "This is a test for LPS-168698. Expired Web Content Display Pages are not accessible"
+	@priority = 4
+	test ViewNotFoundWhenAccessToAssociatedDisplayPageOfExpiredWebContent {
+		property custom.properties = "virtual.hosts.default.site.name=Guest";
+
+		task ("Given a site administrator has an associated display page for web content") {
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.publish();
+
+			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+
+			JSONWebcontent.addWebContent(
+				content = "Webcontent Content",
+				groupName = "Test Site Name",
+				title = "Webcontent Title");
+		}
+
+		task ("When expire the created web content") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			LexiconEntry.gotoEntryMenuItem(
+				menuItem = "Expire",
+				rowEntry = "Webcontent Title");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then the site administrator should see not found when access to the associated display page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/w/webcontent-title");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = 404);
+
+			ContentPages.viewFragmentText(
+				fragmentName = "paragraph",
+				id = "element-text",
+				text = "Page Not Found");
+		}
+	}
+
+	@description = "This is a test for LPS-91552. View content displayed in Asset Publisher with pagination on associated display page."
+	@priority = 5
+	test ViewPaginationContentViaAP {
+		property portal.acceptance = "true";
+
+		task ("Add 3 basic web content articles") {
+			for (var count : list "1,2,3") {
+				JSONWebcontent.addWebContent(
+					content = "WC Content ${count}",
+					groupName = "Test Site Name",
+					title = "WC Title ${count}");
+			}
+		}
+
+		task ("Add Display Page and mark it as default") {
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+			PageEditor.addWidget(portletName = "Asset Publisher");
+
+			AssetPublisherPortlet.configurePaginationPG(
+				paginationNumber = 2,
+				paginationType = "Regular");
+
+			Portlet.saveAndCloseConfig();
+
+			PageEditor.publish();
+
+			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+		}
+
+		task ("Select Display Page Name as Specific Display Page Template") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			for (var count : list "1,2,3") {
+				WebContentNavigator.gotoEditCP(webContentTitle = "WC Title ${count}");
+
+				WebContent.editDisplayPage(
+					pageName = "Display Page Name",
+					pageType = "Display Page Templates");
+
+				PortletEntry.publish();
+			}
+		}
+
+		task ("Add widget pages with Asset Publisher") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				widgetName = "Asset Publisher");
+		}
+
+		task ("View paginated web content via Asset Publisher") {
+			Navigator.gotoSitePage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			AssetPublisherPortlet.clickAssetTitle(assetTitle = "WC Title 1");
+
+			AssetPublisherPortlet.changePagination(
+				currentPageNumber = "2 of 2",
+				paginationItem = 2);
+
+			AssetPublisherPortlet.viewAssetPG(
+				assetContent = "WC Content 1",
+				assetTitle = "WC Title 1");
+		}
+	}
+
+	@description = "This is a test for LPS-146373. New prefixes for email,phone and none options can be used on Display Page Templates."
+	@priority = 3
+	test ViewPrefixesForEmailAndPhoneAndNoneOptions {
+		task ("Given a site created from Welcome site template") {
+			Site.openSitesAdmin();
+
+			Site.addSiteTemplateCP(
+				siteName = "Site Name",
+				siteTemplateName = "Welcome");
+		}
+
+		task ("When adding a web content with email and telephone") {
+			task ("Create a web content structure") {
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+				NavItem.gotoStructures();
+
+				WebContentStructures.importStructure(
+					structureName = "Contact Information",
+					uploadFileName = "Structure_Contact_Information_Fields.json");
+			}
+
+			task ("Create a Web Content from Contact Information") {
+				NavItem.gotoWebContent();
+
+				WebContentNavigator.gotoAddWithStructureCP(structureName = "Contact Information");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "John Smith",
+					webContentTextFieldLabel = "Name",
+					webContentTitle = "Web Content Title");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "john.smith@liferay.com",
+					webContentTextFieldLabel = "Email");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = 1112223333,
+					webContentTextFieldLabel = "Phone");
+
+				WebContent.addWithStructureCP(
+					fieldType = "Text",
+					webContentText = "https://www.liferay.com",
+					webContentTextFieldLabel = "Personal Web");
+
+				PortletEntry.publish();
+			}
+
+			task ("Add a display page") {
+				DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "site-name");
+
+				DisplayPageTemplatesAdmin.addDisplayPage(
+					contentType = "Web Content Article",
+					displayPageName = "Contact",
+					subType = "Contact Information");
+			}
+
+			task ("Add a Container to page") {
+				DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "site-name");
+
+				DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Contact");
+
+				PageEditor.addFragment(
+					collectionName = "Layout Elements",
+					fragmentName = "Container");
+			}
+
+			task ("Add a Heading fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Heading",
+					navTab = "Fragments");
+			}
+
+			task ("Map Email field of web content to Heading") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Heading",
+					id = "element-text");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Source",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Specific Content");
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Email");
+
+				Select(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Email");
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Email");
+			}
+
+			task ("Add an Image fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Image",
+					navTab = "Fragments",
+					targetElementName = "Heading");
+			}
+
+			task ("Map Phone field of web content to Image") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Image",
+					id = "image-square");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Source",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Specific Content");
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Phone");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Phone");
+
+				PageEditor.waitForAutoSave();
+
+				AssertSelectedLabel(
+					key_fieldLabel = "Prefix",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Phone");
+			}
+
+			task ("Add a Button fragment to Container") {
+				PageEditor.addElementToContainer(
+					collectionName = "Basic Components",
+					fragmentName = "Button",
+					height = "Tall",
+					navTab = "Fragments",
+					ratio = "9 / 8",
+					targetElementName = "Image");
+			}
+
+			task ("Map Personal Web field of web content to Button") {
+				PageEditorMapping.gotoEditableFieldMapping(
+					fragmentName = "Button",
+					id = "link");
+
+				Navigator.gotoNavTab(navTab = "Link");
+
+				Select(
+					key_fieldLabel = "Link",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Mapped URL");
+
+				PageEditor.waitForAutoSave();
+
+				Select(
+					key_fieldLabel = "Source",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "Specific Content");
+
+				PageEditorMapping.mapEditableFieldToAsset(
+					entryTitle = "Web Content Title",
+					navItem = "Web Content");
+
+				WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+				Select(
+					locator1 = "PageEditorEditableLink#FIELD",
+					value1 = "Personal Web");
+
+				PageEditor.waitForAutoSave();
+			}
+		}
+
+		task ("Then user is able to view email and telephone on display page") {
+			task ("Publish the display page and mark the it as defaultt") {
+				PageEditor.publish();
+
+				DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Contact");
+			}
+
+			task ("Navigate to display page template at view mode") {
+				WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+				WebContentNavigator.gotoEntryMenuItem(
+					entry = "Web Content Title",
+					menuItem = "View Content");
+			}
+
+			task ("View editable fields' link") {
+				AssertVisible(
+					key_append = "[normalize-space(text())='Heading Example']",
+					key_url = "mailto:john.smith@liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "/*[contains(@data-lfr-editable-id,'image')]",
+					key_url = "tel:1112223333",
+					locator1 = "Fragment#FRAGMENT_LINK");
+
+				AssertVisible(
+					key_append = "[contains(@class,'btn')]",
+					key_url = "https://www.liferay.com",
+					locator1 = "Fragment#FRAGMENT_LINK");
+			}
 		}
 	}
 

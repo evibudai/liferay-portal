@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -14,8 +8,10 @@ import ClayButton from '@clayui/button';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
-import {fetch, navigate} from 'frontend-js-web';
+import {fetch, navigate, sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
+
+import {DEFAULT_HEADERS} from '../utils/fetch/fetch_data';
 
 const VALID_EXTENSIONS = '.json';
 
@@ -76,9 +72,7 @@ const ImportSXPBlueprintModal = ({portletNamespace, redirectURL}) => {
 
 			fetch(fetchURL, {
 				body: importText,
-				headers: new Headers({
-					'Content-Type': 'application/json',
-				}),
+				headers: DEFAULT_HEADERS,
 				method: 'POST',
 			})
 				.then((response) => {
@@ -89,15 +83,49 @@ const ImportSXPBlueprintModal = ({portletNamespace, redirectURL}) => {
 				})
 				.then(({ok, responseContent}) => {
 					if (!ok) {
-						_handleFormError(
-							isElement
-								? Liferay.Language.get(
-										'unable-to-import-because-the-element-configuration-is-invalid'
-								  )
-								: Liferay.Language.get(
-										'unable-to-import-because-the-blueprint-configuration-is-invalid'
-								  )
-						);
+						if (
+							responseContent.type.includes(
+								'DuplicateSXPBlueprintExternalReferenceCodeException'
+							) ||
+							responseContent.type.includes(
+								'DuplicateSXPElementExternalReferenceCodeException'
+							)
+						) {
+							_handleFormError(
+								isElement
+									? Liferay.Language.get(
+											'unable-to-import-element-with-the-same-external-reference-code-as-an-existing-element'
+									  )
+									: Liferay.Language.get(
+											'unable-to-import-blueprint-with-the-same-external-reference-code-as-an-existing-blueprint'
+									  )
+							);
+						}
+						else if (
+							responseContent.type.includes(
+								'SXPElementTitleException'
+							)
+						) {
+							_handleFormError(
+								sub(
+									Liferay.Language.get(
+										'error.default-locale-x-title-blank'
+									),
+									Liferay.ThemeDisplay.getDefaultLanguageId()
+								)
+							);
+						}
+						else {
+							_handleFormError(
+								isElement
+									? Liferay.Language.get(
+											'unable-to-import-because-the-element-configuration-is-invalid'
+									  )
+									: Liferay.Language.get(
+											'unable-to-import-because-the-blueprint-configuration-is-invalid'
+									  )
+							);
+						}
 
 						if (process.env.NODE_ENV === 'development') {
 							console.error(responseContent.title);
@@ -137,7 +165,7 @@ const ImportSXPBlueprintModal = ({portletNamespace, redirectURL}) => {
 
 	return visible ? (
 		<ClayModal
-			className="import-sxp-blueprint-form"
+			className="sxp-import-modal-root"
 			observer={observer}
 			size="full-screen"
 		>

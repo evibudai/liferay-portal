@@ -25,9 +25,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -50,11 +50,8 @@ definition {
 	}
 
 	@description = "LPS-135888 - Verify that the user with Account role type can Approve the task"
-	@priority = "5"
+	@priority = 5
 	test AccountUserCanApproveTask {
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "MyWorkflowTasks#AccountUserCanApproveTask";
-
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
 		Account.openAccountsAdmin();
@@ -101,9 +98,7 @@ definition {
 
 		Alert.viewSuccessMessage();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -118,11 +113,11 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Transmission Cooler Line Assembly",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -140,22 +135,19 @@ definition {
 
 		Workflow.assignToMeTaskByActions(
 			workflowAssetTitle = "Order",
-			workflowAssetType = "Commerce Order",
+			workflowAssetType = "Order",
 			workflowTask = "Review");
 
 		Workflow.approveTaskByActions(
 			workflowAssetTitle = "Order",
-			workflowAssetType = "Commerce Order",
+			workflowAssetType = "Order",
 			workflowTask = "Review");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Order Management",
-			panel = "Commerce",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		AssertElementPresent(
 			key_status = "Approved",
@@ -163,15 +155,74 @@ definition {
 	}
 
 	@description = "LPS-135888 - Verify that the user with Account role can view the order details through the My Workflow Tasks page"
-	@ignore = "Test Stub"
-	@priority = "3"
+	@priority = 3
 	test AccountUserCanViewOrderDetails {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		// TODO LRQA-69109 AccountUserCanViewOrderDetails pending implementation
+		task ("Given a Minium site with a Account Administrator user") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "account@liferay.com",
+				userFirstName = "Account",
+				userLastName = "Administrator",
+				userRole = "Account Administrator",
+				userScreenName = "accountadmin",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And the admin enabled the 'Buyer Order Approval Workflow' for Minium Portal") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			Workflow.setWorkflowToMiniumChannel(workflowDefinition = "Single Approver (Version 1)");
+		}
+
+		task ("When the default Test user reviews and submits an order") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+
+			CommerceNavigator.gotoMiniCart();
+
+			Button.click(button = "Review Order");
+
+			var activeOrderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+
+			Button.click(button = "Submit");
+		}
+
+		task ("Then assert the account user can see the active order in Pending Orders page through the My Workflow Tasks page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "account@liferay.com",
+				userLoginFullName = "Account Administrator");
+
+			UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+			Navigator.gotoNavTab(navTab = "Assigned to My Roles");
+
+			Workflow.gotoAssetViaTableTitle(workflowAssetTitle = "Order ${activeOrderId}");
+
+			ClickNoError(
+				key_text = "view",
+				locator1 = "Icon#ANY_LAST");
+
+			SelectWindow(value1 = "title=Pending Orders - Minium - Liferay DXP");
+
+			AssertLocation.assertPartialLocation(value1 = "web/minium/pending-orders");
+		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddCommentToTaskAssignedToMe {
 		Navigator.openURL();
 
@@ -205,7 +256,7 @@ definition {
 		WorkflowComment.view(workflowComment = "Workflow Comment");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test AddCommentToTaskAssignedToMyRoles {
 		Navigator.openURL();
 
@@ -236,14 +287,9 @@ definition {
 		WorkflowComment.view(workflowComment = "Workflow Comment");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test AddCommentToTaskCompleted {
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Blogs");
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		Blogs.addWithWorkflow(
 			entryContent = "Blogs Entry Content",
@@ -281,8 +327,11 @@ definition {
 		WorkflowComment.view(workflowComment = "Workflow Comment");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ApproveResubmitTaskByActions {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -349,7 +398,7 @@ definition {
 	}
 
 	@description = "Verify that when there are no completed tasks Assigned to My Roles, the page is displaying -There are no completed tasks.-"
-	@priority = "2"
+	@priority = 2
 	test AssignedToMyRolesShowsMessageWhenNoCompletedTasks {
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
@@ -363,8 +412,13 @@ definition {
 	}
 
 	@description = "Verify that when there are no pending tasks Assigned to My Roles, the page is displaying -There are no pending tasks assigned to your roles.-"
-	@priority = "2"
+	@priority = 2
 	test AssignedToMyRolesShowsMessageWhenNoPendingTasks {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		SearchAdministration.executeReindex();
+
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
@@ -377,8 +431,11 @@ definition {
 	}
 
 	@description = "Verify that the user can assign a task to current user in the Assigned to My Roles tab"
-	@priority = "5"
+	@priority = 5
 	test CanAssignTaskToCurrentUser {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
@@ -406,7 +463,7 @@ definition {
 	}
 
 	@description = "Verify that the user can assign a task to another user in the Assigned to My Roles tab"
-	@priority = "5"
+	@priority = 5
 	test CanAssignTaskToOtherUser {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -441,9 +498,10 @@ definition {
 	}
 
 	@description = "LPS-135888 - Verify that the task is assigned to the user with Account role type"
-	@priority = "4"
+	@priority = 4
 	test CanAssignTaskToUserWithAccountRole {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#CanAssignTaskToUserWithAccountRole";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -491,9 +549,7 @@ definition {
 
 		Alert.viewSuccessMessage();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
 
@@ -508,11 +564,11 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Transmission Cooler Line Assembly",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -528,10 +584,7 @@ definition {
 
 		Navigator.openURL();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Order Management",
-			panel = "Commerce",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		AssertElementPresent(
 			key_status = "Pending",
@@ -547,12 +600,12 @@ definition {
 
 		Workflow.viewTaskAssignedToMyRoles(
 			workflowAssetTitle = "Order",
-			workflowAssetType = "Commerce Order",
+			workflowAssetType = "Order",
 			workflowTask = "Review");
 	}
 
 	@description = "Verify that the user can view the Assigned to My Roles page in List View"
-	@priority = "2"
+	@priority = 2
 	test CanChangeToListView {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -576,7 +629,7 @@ definition {
 	}
 
 	@description = "Verify that the Clear All option cleans the search results"
-	@priority = "3"
+	@priority = 3
 	test CanClearAllSearchResults {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -600,17 +653,8 @@ definition {
 			locator1 = "MyWorkflowTasks#ASSIGNED_TO_MY_ROLES_TABLE_ASSET_TITLE");
 	}
 
-	@description = "Verify that in Update Due Date modal, the user can expand the comment box"
-	@ignore = "Test Stub"
-	@priority = "2"
-	test CanExpandCommentBox {
-
-		// TODO LRQA-68860 CanExpandCommentBox pending implementation
-
-	}
-
 	@description = "Verify that the user can filter the results inside Assigned to Me by status"
-	@priority = "3"
+	@priority = 3
 	test CanFilterAssignedtoMeTasksByAssetStatus {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -653,7 +697,7 @@ definition {
 	}
 
 	@description = "Verify that the user can open the task details by the table"
-	@priority = "4"
+	@priority = 4
 	test CanOpenTaskDetailsByTable {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -673,7 +717,7 @@ definition {
 	}
 
 	@description = "Verify that the user can order the results inside Assigned to Me by Due Date"
-	@priority = "3"
+	@priority = 3
 	test CanOrderAssignedtoMeTasksByDueDate {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -711,17 +755,23 @@ definition {
 
 		Notifications.goToFilterValues(filterValues = "Due Date");
 
+		if (IsElementPresent(key_text = "order-list-down", locator1 = "ManagementBar#ANY_ICON")) {
+			Click(
+				key_text = "order-list-down",
+				locator1 = "ManagementBar#ANY_ICON");
+		}
+
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "2",
+			rowPosition = 2,
 			title = "Blogs Entry 1");
 
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "1",
+			rowPosition = 1,
 			title = "Blogs Entry 2");
 	}
 
 	@description = "Verify that the user can order the results inside Assigned to Me by Last Activity Date"
-	@priority = "3"
+	@priority = 3
 	test CanOrderAssignedtoMeTasksByLastActivityDate {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -750,16 +800,16 @@ definition {
 		Notifications.goToFilterValues(filterValues = "Last Activity Date");
 
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "1",
+			rowPosition = 1,
 			title = "Blogs Entry 1");
 
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "2",
+			rowPosition = 2,
 			title = "Blogs Entry 2");
 	}
 
 	@description = "Verify that the user can order the results inside Assigned to My Roles by Due Date"
-	@priority = "2"
+	@priority = 2
 	test CanOrderAssignedtoMyRolesTasksByDueDate {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -788,16 +838,16 @@ definition {
 		Notifications.goToFilterValues(filterValues = "Due Date");
 
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "1",
+			rowPosition = 1,
 			title = "Blogs Entry 2");
 
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "2",
+			rowPosition = 2,
 			title = "Blogs Entry 1");
 	}
 
 	@description = "Verify that the user can order the results inside Assigned to My Roles by Last Activity Date"
-	@priority = "3"
+	@priority = 3
 	test CanOrderAssignedtoMyRolesTasksByLastActivityDate {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -814,16 +864,16 @@ definition {
 		Notifications.goToFilterValues(filterValues = "Last Activity Date");
 
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "1",
+			rowPosition = 1,
 			title = "Blogs Entry 1");
 
 		MyWorkflowTasks.viewMyWorkflowTaskItemPosition(
-			rowPosition = "2",
+			rowPosition = 2,
 			title = "Blogs Entry 2");
 	}
 
 	@description = "Verify that the user is able to Reverse Sort Direction by clicking the icon"
-	@priority = "2"
+	@priority = 2
 	test CanReverseSortDirection {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -840,15 +890,16 @@ definition {
 		Workflow.clickRevertSortDirection();
 
 		AssertTextEquals(
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "MyWorkflowTasks#PROCESS_NAME_TABLE_ROW",
 			value1 = "Blogs Entry Title 2");
 	}
 
 	@description = "Verify that the user can search for results inside Assigned to My Roles by Asset Title"
-	@priority = "5"
+	@priority = 5
 	test CanSearchForAssetTitleOnAssignedToMyRolesTab {
-		property test.name.skip.portal.instance = "MyWorkflowTasks#CanSearchForAssetTitleOnAssignedToMyRolesTab";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -866,7 +917,7 @@ definition {
 	}
 
 	@description = "Verify that the user can search for results inside Assigned to My Roles by Asset Type"
-	@priority = "3"
+	@priority = 3
 	test CanSearchForAssetTypeOnAssignedToMyRolesTab {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -884,7 +935,7 @@ definition {
 	}
 
 	@description = "Verify that the user can search for Task on Assigned to My Roles page"
-	@priority = "2"
+	@priority = 2
 	test CanSearchForTaskOnAssignedToMyRolesTab {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -902,7 +953,7 @@ definition {
 	}
 
 	@description = "Verify that the user can search for results inside Assigned to Me by Task"
-	@priority = "3"
+	@priority = 3
 	test CanSearchTasksAssignedToMe {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -923,7 +974,7 @@ definition {
 	}
 
 	@description = "Verify that the user can search for results inside Assigned to Me by Asset Title"
-	@priority = "3"
+	@priority = 3
 	test CanSearchTasksAssignedtoMeByAssetTitle {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -941,7 +992,7 @@ definition {
 	}
 
 	@description = "Verify that the user can search for results inside Assigned to Me by Asset Type"
-	@priority = "3"
+	@priority = 3
 	test CanSearchTasksAssignedtoMeByAssetType {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -962,7 +1013,7 @@ definition {
 	}
 
 	@description = "Verify that, in the Assigned to Me table, users can hover over the Last Activity Date and the Due Date row to see the exact time of the action"
-	@priority = "3"
+	@priority = 3
 	test CanViewActivityTimeByHoveringAssignedToMeTable {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -984,11 +1035,11 @@ definition {
 
 		BridgeDemos.viewDateFormat(
 			dateFormat = "MM/dd/yyyy",
-			displayDate = "${displayDate}");
+			displayDate = ${displayDate});
 	}
 
 	@description = "Verify that, in the Assigned to My Roles table, users can hover over the Last Activity Date and the Due Date row to see the exact time of the action"
-	@priority = "3"
+	@priority = 3
 	test CanViewActivityTimeByHoveringAssignedToMyRolesTable {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1007,11 +1058,11 @@ definition {
 
 		BridgeDemos.viewDateFormat(
 			dateFormat = "MM/dd/yyyy",
-			displayDate = "${displayDate}");
+			displayDate = ${displayDate});
 	}
 
 	@description = "LPS-115305 - Verify that the asset creator can view the workflow notifications after the task is assigned to another user."
-	@priority = "3"
+	@priority = 3
 	test CanViewWorkflowNotificationsAssignedToOtherUser {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -1020,9 +1071,9 @@ definition {
 		for (var userScreenName : list "author1,author2") {
 			JSONUser.addUser(
 				userEmailAddress = "${userScreenName}ea@liferay.com",
-				userFirstName = "${userScreenName}",
-				userLastName = "${userScreenName}",
-				userScreenName = "${userScreenName}");
+				userFirstName = ${userScreenName},
+				userLastName = ${userScreenName},
+				userScreenName = ${userScreenName});
 
 			JSONUser.setFirstPassword(
 				agreeToTermsAndAnswerReminderQuery = "true",
@@ -1050,7 +1101,7 @@ definition {
 			layoutName = "Blogs Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Blogs Page",
 			widgetName = "Blogs");
@@ -1103,7 +1154,7 @@ definition {
 	}
 
 	@description = "Verify that in Update Due Date, the due date is required"
-	@priority = "3"
+	@priority = 3
 	test DueDateIsRequired {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1123,7 +1174,7 @@ definition {
 	}
 
 	@description = "Verify that in Update Due Date modal, the user can not insert a past date"
-	@priority = "3"
+	@priority = 3
 	test DueDateMustBeInFuture {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1137,13 +1188,17 @@ definition {
 			workflowAssetTitle = "Blogs Entry Title 1",
 			workflowTask = "Review");
 
-		MyWorkflowTasks.viewErrorRequestFailed();
+		AssertVisible(
+			key_alertMessage = "Your request failed to complete.",
+			locator1 = "Message#ERROR_ENTER_ANY");
 
-		MyWorkflowTasks.viewErrorValidDueDate();
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#ERROR_DISMISSIBLE",
+			value1 = "Please enter a valid due date.");
 	}
 
 	@description = "Verify that the pagination button indicates the selected page, even when there is only 1 page"
-	@priority = "2"
+	@priority = 2
 	test PaginationButtonIndicatesSelectedPage {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1170,12 +1225,12 @@ definition {
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
 
 		AssertElementPresent(
-			key_pageNumber = "1",
+			key_pageNumber = 1,
 			locator1 = "MyWorkflowTasks#COMPLETED_TABLE_PAGINATION");
 	}
 
 	@description = "Verify that pagination follows in asc/desc sequence in the Assigned to Me tab"
-	@priority = "2"
+	@priority = 2
 	test PaginationFollowsAscDescSequence {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1233,33 +1288,33 @@ definition {
 			workflowTask = "Review");
 
 		AssertTextEquals(
-			key_rowNumber = "2",
+			key_rowNumber = 2,
 			locator1 = "MyWorkflowTasks#PROCESS_NAME_TABLE_ROW",
 			value1 = "Blogs Entry Title 1");
 
 		AssertTextEquals(
-			key_rowNumber = "3",
+			key_rowNumber = 3,
 			locator1 = "MyWorkflowTasks#PROCESS_NAME_TABLE_ROW",
 			value1 = "Blogs Entry Title 2");
 
 		AssertTextEquals(
-			key_rowNumber = "4",
+			key_rowNumber = 4,
 			locator1 = "MyWorkflowTasks#PROCESS_NAME_TABLE_ROW",
 			value1 = "Blogs Entry Title 3");
 
 		AssertTextEquals(
-			key_rowNumber = "5",
+			key_rowNumber = 5,
 			locator1 = "MyWorkflowTasks#PROCESS_NAME_TABLE_ROW",
 			value1 = "Blogs Entry Title 4");
 
 		AssertTextEquals(
-			key_rowNumber = "6",
+			key_rowNumber = 6,
 			locator1 = "MyWorkflowTasks#PROCESS_NAME_TABLE_ROW",
 			value1 = "Blogs Entry Title 5");
 	}
 
 	@description = "Verify that the pagination component is displayed when the table has 5 items or more"
-	@priority = "2"
+	@priority = 2
 	test PaginationIsDisplayedWhenTableHas5Items {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1288,7 +1343,7 @@ definition {
 		AssertElementPresent(locator1 = "Pagination#FIRST_LINK");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RejectTaskByDetails {
 		Navigator.openURL();
 
@@ -1335,10 +1390,11 @@ definition {
 			entryTitle = "Blogs Entry Title");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ResubmitTaskByDetails {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "MyWorkflowTasks#ResubmitTaskByDetails";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.openURL();
 
@@ -1360,6 +1416,10 @@ definition {
 			workflowTask = "Review");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Refresh();
+
+		WaitForSPARefresh();
 
 		Workflow.rejectTaskByActions(
 			workflowAssetContent = "Blogs Entry Content",
@@ -1387,39 +1447,24 @@ definition {
 			entryTitle = "Blogs Entry Title");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test ReviewerApproveResubmitTaskByActionsUser {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
-
-		Workflow.addAssigneeToRegularRole(
-			assigneeName = "usersn",
-			assigneeType = "Users",
-			roleTitle = "Portal Content Reviewer");
-
-		Navigator.openURL();
+		JSONRole.assignRoleToUser(
+			roleTitle = "Portal Content Reviewer",
+			userEmailAddress = "userea@liferay.com");
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry",
@@ -1454,12 +1499,7 @@ definition {
 			workflowAssetType = "Blogs Entry",
 			workflowTask = "Update");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Blogs");
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
@@ -1491,10 +1531,7 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "test test");
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			panel = "Site Administration",
-			portlet = "Blogs");
+		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
@@ -1508,13 +1545,13 @@ definition {
 	}
 
 	@description = "Verify that when there are no results for the search in Assigned to My Roles tab, the page displays the message -There are no tasks assigned to your roles with the specified search criteria-"
-	@priority = "2"
+	@priority = 2
 	test ShowsMessageWhenSearchReturnsNoResults {
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
 
-		MyWorkflowTasks.searchMyWorkflowTasks(searchTerm = "12345");
+		MyWorkflowTasks.searchMyWorkflowTasks(searchTerm = 12345);
 
 		AssertTextEquals(
 			locator1 = "Message#EMPTY_INFO",
@@ -1522,7 +1559,7 @@ definition {
 	}
 
 	@description = "Verify that when the user updates the due date of a task, the time until the due date shows in the table"
-	@priority = "4"
+	@priority = 4
 	test TableShowsTimeLeft {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1568,16 +1605,13 @@ definition {
 	}
 
 	@description = "LPS-135888 - Verify that when the user delete the order, the task is not displayed under My Workflow Tasks"
-	@priority = "3"
+	@priority = 3
 	test TaskIsNotDisplayedAfterOrderIsDeleted {
-		property portal.upstream = "quarantine";
+		CommerceAccelerators.initializeNewSiteViaAccelerator(
+			siteName = "Minium135888",
+			siteTemplateName = "Minium");
 
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Accounts",
-			panel = "Control Panel",
-			portlet = "Accounts");
+		Account.openAccountsAdmin();
 
 		Account.addBusinessAccount(
 			accountDescription = "Account Description",
@@ -1595,11 +1629,9 @@ definition {
 			accountRoleTitle = "Account Administrator",
 			accountUserName = "userfn userln");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
-		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+		CommerceNavigator.gotoEntry(entryName = "Minium135888 Portal");
 
 		Select(
 			key_title = "Buyer Order Approval Workflow",
@@ -1608,11 +1640,11 @@ definition {
 
 		Button.clickSave();
 
-		ApplicationsMenu.gotoSite(site = "Minium");
+		ApplicationsMenu.gotoSite(site = "Minium135888");
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -1626,16 +1658,14 @@ definition {
 
 		Workflow.viewTaskAssignedToMyRoles(
 			workflowAssetTitle = "Order",
-			workflowAssetType = "Commerce Order",
+			workflowAssetType = "Order",
 			workflowTask = "Review");
 
-		ApplicationsMenu.gotoSite(site = "Minium");
+		ApplicationsMenu.gotoSite(site = "Minium135888");
 
 		CommerceJSONOrdersAPI._deleteAllCommerceOrders();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		IsElementPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER");
 
@@ -1646,7 +1676,7 @@ definition {
 		Workflow.viewDefaultMyWorkflowTasksCP();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test UpdateDueDateTaskByActions {
 		property portal.acceptance = "true";
 
@@ -1672,11 +1702,11 @@ definition {
 	}
 
 	@description = "Verify that when there are no results for the search in Assigned to Me, the page is displaying -There are no tasks assigned to you with the specified search criteria.-"
-	@priority = "2"
+	@priority = 2
 	test ViewMessageNoTasksAssignedToYouWithSearchCriteria {
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
-		MyWorkflowTasks.searchMyWorkflowTasks(searchTerm = "54321");
+		MyWorkflowTasks.searchMyWorkflowTasks(searchTerm = 54321);
 
 		AssertTextEquals(
 			locator1 = "Message#EMPTY_INFO",

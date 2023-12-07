@@ -5,6 +5,7 @@ buildService {
 
 dependencies {
 	compileOnly group: "com.liferay", name: "biz.aQute.bnd.annotation", version: "4.2.0.LIFERAY-PATCHED-2"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly group: "com.sun.mail", name: "jakarta.mail", version: "1.6.6"
 	compileOnly group: "commons-validator", name: "commons-validator", version: "1.7"
@@ -17,7 +18,9 @@ dependencies {
 	compileOnly project(":apps:change-tracking:change-tracking-spi")
 	compileOnly project(":apps:configuration-admin:configuration-admin-api")
 	compileOnly project(":apps:dynamic-data-mapping:dynamic-data-mapping-api")
+	compileOnly project(":apps:headless:headless-admin-user:headless-admin-user-api")
 	compileOnly project(":apps:object:object-api")
+	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":apps:portal-search:portal-search-api")
 	compileOnly project(":apps:portal-search:portal-search-spi")
 	compileOnly project(":apps:portal-workflow:portal-workflow-kaleo-runtime-api")

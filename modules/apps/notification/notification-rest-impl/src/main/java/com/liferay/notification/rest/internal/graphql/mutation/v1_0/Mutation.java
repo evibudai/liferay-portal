@@ -1,28 +1,22 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.rest.internal.graphql.mutation.v1_0;
 
+import com.liferay.notification.rest.dto.v1_0.NotificationQueueEntry;
 import com.liferay.notification.rest.dto.v1_0.NotificationTemplate;
 import com.liferay.notification.rest.resource.v1_0.NotificationQueueEntryResource;
 import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
@@ -60,6 +54,58 @@ public class Mutation {
 
 		_notificationTemplateResourceComponentServiceObjects =
 			notificationTemplateResourceComponentServiceObjects;
+	}
+
+	@GraphQLField
+	public Response createNotificationQueueEntriesPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationQueueEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationQueueEntryResource ->
+				notificationQueueEntryResource.
+					postNotificationQueueEntriesPageExportBatch(
+						search,
+						_filterBiFunction.apply(
+							notificationQueueEntryResource, filterString),
+						_sortsBiFunction.apply(
+							notificationQueueEntryResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public NotificationQueueEntry createNotificationQueueEntry(
+			@GraphQLName("notificationQueueEntry") NotificationQueueEntry
+				notificationQueueEntry)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationQueueEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationQueueEntryResource ->
+				notificationQueueEntryResource.postNotificationQueueEntry(
+					notificationQueueEntry));
+	}
+
+	@GraphQLField
+	public Response createNotificationQueueEntryBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationQueueEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationQueueEntryResource ->
+				notificationQueueEntryResource.postNotificationQueueEntryBatch(
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -106,6 +152,30 @@ public class Mutation {
 					notificationQueueEntryId));
 
 		return true;
+	}
+
+	@GraphQLField
+	public Response createNotificationTemplatesPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationTemplateResource ->
+				notificationTemplateResource.
+					postNotificationTemplatesPageExportBatch(
+						search,
+						_filterBiFunction.apply(
+							notificationTemplateResource, filterString),
+						_sortsBiFunction.apply(
+							notificationTemplateResource, sortsString),
+						callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -294,6 +364,9 @@ public class Mutation {
 		notificationQueueEntryResource.setGroupLocalService(_groupLocalService);
 		notificationQueueEntryResource.setRoleLocalService(_roleLocalService);
 
+		notificationQueueEntryResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		notificationQueueEntryResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -313,6 +386,9 @@ public class Mutation {
 		notificationTemplateResource.setGroupLocalService(_groupLocalService);
 		notificationTemplateResource.setRoleLocalService(_roleLocalService);
 
+		notificationTemplateResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		notificationTemplateResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -324,6 +400,7 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
+	private BiFunction<Object, String, Filter> _filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
@@ -331,6 +408,8 @@ public class Mutation {
 	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
+	private VulcanBatchEngineExportTaskResource
+		_vulcanBatchEngineExportTaskResource;
 	private VulcanBatchEngineImportTaskResource
 		_vulcanBatchEngineImportTaskResource;
 

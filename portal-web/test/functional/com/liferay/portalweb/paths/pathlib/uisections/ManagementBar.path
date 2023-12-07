@@ -17,7 +17,12 @@
 </tr>
 <tr>
 	<td>FILTER_AND_ORDER</td>
-	<td>//nav[contains(@class,'management-bar')]//*[*[normalize-space(text())='Filter and Order']]</td>
+	<td>//nav[contains(@class,'management-bar')]//*[self::button or self::a][.//*[normalize-space(text())='Filter and Order']]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FILTER_AND_ORDER_DISABLED</td>
+	<td>//nav[contains(@class,'management-bar')]//button[@disabled]//*[*[normalize-space(text())='Filter and Order']]</td>
 	<td></td>
 </tr>
 <tr>
@@ -56,6 +61,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ORDER_ICON_GENERIC_BUTTON</td>
+	<td>//*[contains(@class, 'lexicon-icon lexicon-icon-order')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ORDER_ICON_GENERIC_BUTTON_DISABLED</td>
+	<td>//button[@disabled]//*[contains(@class, 'lexicon-icon lexicon-icon-order')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ORDER_ICON_SPECIFIC</td>
 	<td>//nav[contains(@class,'management-bar')]//a[@title='Reverse Sort Direction']//*[contains(@class,'${key_order}')]</td>
 	<td></td>
@@ -68,6 +83,11 @@
 <tr>
 	<td>REMOVE</td>
 	<td>//nav[contains(@class,'management-bar')]//button[contains(@title,'Remove')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_FILTER_LABEL_X</td>
+	<td>//span[contains(@class,'label-item') and contains(.,'${key_filter}')]/..//button</td>
 	<td></td>
 </tr>
 <tr>
@@ -140,7 +160,7 @@
 </tr>
 <tr>
 	<td>VIEW_BUTTON</td>
-	<td>//nav[contains(@class,'management-bar')]//*[(@title="Show View Options")][*[name()='svg'][contains(@class,'icon-${key_text}')]]</td>
+	<td>//nav[contains(@class,'management-bar')]//button[contains(@aria-label,'Select View')]//*[contains(@class,'icon-${key_text}')]</td>
 	<td></td>
 </tr>
 </tbody>

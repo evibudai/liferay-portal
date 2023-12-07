@@ -1,32 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.web.internal.exportimport.data.handler;
 
 import com.liferay.client.extension.model.ClientExtensionEntryRel;
-import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -44,30 +32,6 @@ public class ClientExtensionEntryRelStagedModelDataHandler
 	};
 
 	@Override
-	public void deleteStagedModel(
-			ClientExtensionEntryRel clientExtensionEntryRel)
-		throws PortalException {
-
-		_stagedModelRepository.deleteStagedModel(clientExtensionEntryRel);
-	}
-
-	@Override
-	public void deleteStagedModel(
-			String uuid, long groupId, String className, String extraData)
-		throws PortalException {
-
-		_stagedModelRepository.deleteStagedModel(
-			uuid, groupId, className, extraData);
-	}
-
-	@Override
-	public List<ClientExtensionEntryRel> fetchStagedModelsByUuidAndCompanyId(
-		String uuid, long companyId) {
-
-		return null;
-	}
-
-	@Override
 	public String[] getClassNames() {
 		return CLASS_NAMES;
 	}
@@ -80,10 +44,6 @@ public class ClientExtensionEntryRelStagedModelDataHandler
 
 		Element element = portletDataContext.getExportDataElement(
 			clientExtensionEntryRel);
-
-		element.addAttribute(
-			"client-extension-entry-rel-class-name",
-			_portal.getClassName(clientExtensionEntryRel.getClassNameId()));
 
 		portletDataContext.addClassedModel(
 			element, ExportImportPathUtil.getModelPath(clientExtensionEntryRel),
@@ -102,11 +62,11 @@ public class ClientExtensionEntryRelStagedModelDataHandler
 			return;
 		}
 
-		Map<Long, Long> layoutClassedModelUsageids =
+		Map<Long, Long> clientExtensionEntryRelIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				ClientExtensionEntryRel.class);
 
-		layoutClassedModelUsageids.put(
+		clientExtensionEntryRelIds.put(
 			clientExtensionEntryRelId,
 			existingClientExtensionEntryRel.getClientExtensionEntryRelId());
 	}
@@ -122,9 +82,6 @@ public class ClientExtensionEntryRelStagedModelDataHandler
 
 		importedClientExtensionEntryRel.setGroupId(
 			portletDataContext.getScopeGroupId());
-		importedClientExtensionEntryRel.setCompanyId(
-			portletDataContext.getCompanyId());
-
 		importedClientExtensionEntryRel.setClassNameId(
 			_portal.getClassNameId(clientExtensionEntryRel.getClassName()));
 
@@ -132,28 +89,15 @@ public class ClientExtensionEntryRelStagedModelDataHandler
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				clientExtensionEntryRel.getClassName());
 
-		long classPK = MapUtil.getLong(
-			classPKs, clientExtensionEntryRel.getClassPK(),
-			clientExtensionEntryRel.getClassPK());
-
-		importedClientExtensionEntryRel.setClassPK(classPK);
-
-		Element element = portletDataContext.getImportDataStagedModelElement(
-			clientExtensionEntryRel);
+		importedClientExtensionEntryRel.setClassPK(
+			MapUtil.getLong(
+				classPKs, clientExtensionEntryRel.getClassPK(),
+				clientExtensionEntryRel.getClassPK()));
 
 		ClientExtensionEntryRel existingClientExtensionEntryRel =
-			_clientExtensionEntryRelLocalService.fetchClientExtensionEntryRel(
-				_portal.getClassNameId(
-					element.attributeValue(
-						"client-extension-entry-rel-class-name")),
-				classPK, importedClientExtensionEntryRel.getType());
-
-		if (existingClientExtensionEntryRel == null) {
-			existingClientExtensionEntryRel =
-				_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
-					clientExtensionEntryRel.getUuid(),
-					portletDataContext.getScopeGroupId());
-		}
+			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
+				clientExtensionEntryRel.getUuid(),
+				portletDataContext.getScopeGroupId());
 
 		if ((existingClientExtensionEntryRel == null) ||
 			!portletDataContext.isDataStrategyMirror()) {
@@ -163,8 +107,6 @@ public class ClientExtensionEntryRelStagedModelDataHandler
 					portletDataContext, importedClientExtensionEntryRel);
 		}
 		else {
-			importedClientExtensionEntryRel.setMvccVersion(
-				existingClientExtensionEntryRel.getMvccVersion());
 			importedClientExtensionEntryRel.setClientExtensionEntryRelId(
 				existingClientExtensionEntryRel.getClientExtensionEntryRelId());
 
@@ -183,10 +125,6 @@ public class ClientExtensionEntryRelStagedModelDataHandler
 
 		return _stagedModelRepository;
 	}
-
-	@Reference
-	private ClientExtensionEntryRelLocalService
-		_clientExtensionEntryRelLocalService;
 
 	@Reference
 	private Portal _portal;

@@ -182,6 +182,19 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 		</if>
 	</target>
 
+	<target depends="compile" name="build-lib-versions-with-date">
+		<java
+			classname="com.liferay.portal.tools.PublishDateBuilder"
+			classpathref="project.classpath"
+			fork="true"
+			inputstring="${project.dir}/lib/versions.xml,${project.dir}/lib/versions-ext.xml,${project.dir}/lib/versions-complete.xml"
+			newenvironment="true"
+		>
+			<jvmarg value="-Dproject.dir=${project.dir}" />
+			<jvmarg value="-Dproject.modules.dir=${project.dir}/modules" />
+		</java>
+	</target>
+
 	<target name="build-service">
 		<path id="service.builder.classpath">
 			<fileset
@@ -321,7 +334,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 			<arg value="--continue" />
 			<arg unless:true="${build.services.baseline.enabled}" value="--exclude-task" />
 			<arg unless:true="${build.services.baseline.enabled}" value="baseline" />
-			<arg value="-DbuildService.skipReadOnly=${build.services.skip.read.only}" />
+			<arg value="-Dskip.read.only=${build.services.skip.read.only}" />
 		</gradle-execute>
 	</target>
 
@@ -449,6 +462,44 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 		</antcall>
 	</target>
 
+	<target name="format-source-copyright">
+		<if>
+			<available file="${project.dir}/modules/util/copyright-formatter" />
+			<then>
+				<gradle-execute dir="${project.dir}/modules/util/copyright-formatter" task="deploy" />
+
+				<path id="copyright.formatter.classpath">
+					<fileset
+						dir="${sdk.dir}/dependencies/com.liferay.copyright.formatter/lib"
+						includes="*.jar"
+					/>
+				</path>
+
+				<if>
+					<not>
+						<isset property="source.base.dir" />
+					</not>
+					<then>
+						<property name="source.base.dir" value="${project.dir}" />
+					</then>
+				</if>
+
+				<java
+					classname="com.liferay.copyright.formatter.CopyrightFormatter"
+					classpathref="copyright.formatter.classpath"
+					fork="true"
+					newenvironment="true"
+				>
+					<jvmarg if:true="${jvm.debug}" value="${jpda.settings}" />
+					<jvmarg value="-Dfile.encoding=UTF-8" />
+					<jvmarg value="-Duser.country=US" />
+					<jvmarg value="-Duser.language=en" />
+					<arg value="source.base.dir=${source.base.dir}" />
+				</java>
+			</then>
+		</if>
+	</target>
+
 	<target name="format-source-current-branch">
 		<antcall target="format-source-files">
 			<param name="format.current.branch" value="true" />
@@ -524,6 +575,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 						<if>
 							<isset property="format.source.default.task" />
 							<then>
+								<property name="check.vulnerabilities" value="true" />
 								<property name="format.current.branch" value="true" />
 								<property name="source.formatter.message" value="Running SourceFormatter on added/modified files in the current branch (${current.branch.name}) only. Please run the following command to run SourceFormatter on all files:${line.separator}${line.separator}ant format-source-all" />
 								<property name="validate.commit.messages" value="true" />
@@ -600,12 +652,14 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 					<jvmarg value="-Dfile.encoding=UTF-8" />
 					<jvmarg value="-Dsource.formatter.check.registry.in.test.classes=${source.formatter.check.registry.in.test.classes}" />
 					<jvmarg value="-Dsource.formatter.excludes=${source.formatter.excludes}" />
+					<arg value="check.vulnerabilities=${check.vulnerabilities}" />
 					<arg value="commit.count=${source.formatter.commit.count}" />
 					<arg value="format.current.branch=${format.current.branch}" />
 					<arg value="format.latest.author=${format.latest.author}" />
 					<arg value="format.local.changes=${format.local.changes}" />
 					<arg value="git.working.branch.name=${git.working.branch.name}" />
 					<arg value="include.subrepositories=${source.formatter.include.subrepositories}" />
+					<arg value="java.parser.enabled=${java.parser.enabled}" />
 					<arg value="max.line.length=${source.formatter.max.line.length}" />
 					<arg value="processor.thread.count=${source.formatter.processor.thread.count}" />
 					<arg value="show.debug.information=${source.formatter.show.debug.information}" />
@@ -619,6 +673,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 					<arg value="source.files=${source.files}" />
 					<arg value="source.formatter.properties=${source.formatter.properties}" />
 					<arg value="source.print.errors=${source.print.errors}" />
+					<arg value="use.ci.github.access.token=${use.ci.github.access.token}" />
 					<arg value="validate.commit.messages=${validate.commit.messages}" />
 				</java>
 
@@ -746,7 +801,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 		>
 			<fileset
 				dir="${project.dir}/sql"
-				includes="portal-data-common.sql,portal-data-counter.sql,portal-tables.sql,indexes.properties,indexes.sql,sequences.sql,update-*.sql"
+				includes="portal-data-counter.sql,portal-tables.sql,indexes.properties,indexes.sql,sequences.sql,update-*.sql"
 			/>
 		</copy>
 
@@ -876,8 +931,42 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 		</for>
 	</target>
 
-	<target name="rebuild-hypersonic">
-		<ant dir="../sql" target="rebuild-hypersonic" />
+	<target name="sanitize-lang">
+		<if>
+			<available file="${project.dir}/modules/util/lang-sanitizer" />
+			<then>
+				<gradle-execute dir="${project.dir}/modules/util/lang-sanitizer" task="deploy" />
+
+				<path id="lang.sanitizer.classpath">
+					<fileset
+						dir="${sdk.dir}/dependencies/com.liferay.lang.sanitizer/lib"
+						includes="*.jar"
+					/>
+				</path>
+
+				<if>
+					<not>
+						<isset property="source.sanitizer.dir" />
+					</not>
+					<then>
+						<property name="source.sanitizer.dir" value="${project.dir}" />
+					</then>
+				</if>
+
+				<java
+					classname="com.liferay.lang.sanitizer.LangSanitizer"
+					classpathref="lang.sanitizer.classpath"
+					fork="true"
+					newenvironment="true"
+				>
+					<jvmarg if:true="${jvm.debug}" value="${jpda.settings}" />
+					<jvmarg value="-Dfile.encoding=UTF-8" />
+					<jvmarg value="-Duser.country=US" />
+					<jvmarg value="-Duser.language=en" />
+					<arg value="source.base.dir=${source.sanitizer.dir}" />
+				</java>
+			</then>
+		</if>
 	</target>
 
 	<target name="sync-plugins-git-to-svn">

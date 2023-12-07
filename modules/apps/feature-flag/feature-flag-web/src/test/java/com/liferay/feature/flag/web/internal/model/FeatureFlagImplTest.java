@@ -1,22 +1,15 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.feature.flag.web.internal.model;
 
-import com.liferay.feature.flag.web.internal.constants.FeatureFlagConstants;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.kernel.feature.flag.FeatureFlag;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagType;
+import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.CompanyWrapper;
@@ -25,6 +18,7 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.PropsImpl;
 import com.liferay.portal.util.PropsUtil;
@@ -50,10 +44,28 @@ public class FeatureFlagImplTest {
 
 	@Before
 	public void setUp() {
+		com.liferay.portal.kernel.util.PropsUtil.setProps(new PropsImpl());
+
 		_companyIdThreadLocal = ReflectionTestUtil.getFieldValue(
 			CompanyThreadLocal.class, "_companyId");
+	}
 
-		com.liferay.portal.kernel.util.PropsUtil.setProps(new PropsImpl());
+	@Test
+	public void testGetDependencyKeys() {
+		String key = "ABC-123";
+		String value = "ABC-456,XYZ-789";
+
+		withFeatureFlag(
+			featureFlag -> Assert.assertArrayEquals(
+				new String[0], featureFlag.getDependencyKeys()),
+			key);
+
+		PropsUtil.set(FeatureFlagConstants.getKey(key, "dependencies"), value);
+
+		withFeatureFlag(
+			featureFlag -> Assert.assertArrayEquals(
+				StringUtil.split(value), featureFlag.getDependencyKeys()),
+			key);
 	}
 
 	@Test
@@ -75,35 +87,6 @@ public class FeatureFlagImplTest {
 	}
 
 	@Test
-	public void testGetStatus() {
-		String betaKey = "BETA-123";
-		String devKey = "DEV-123";
-		String releaseKey = "RELEASE-123";
-
-		_setStatus(betaKey, FeatureFlagStatus.BETA);
-		_setStatus(devKey, FeatureFlagStatus.DEV);
-		_setStatus(releaseKey, FeatureFlagStatus.RELEASE);
-
-		withFeatureFlag(
-			featureFlag -> Assert.assertEquals(
-				FeatureFlagStatus.BETA, featureFlag.getFeatureFlagStatus()),
-			betaKey);
-		withFeatureFlag(
-			featureFlag -> Assert.assertEquals(
-				FeatureFlagStatus.DEV, featureFlag.getFeatureFlagStatus()),
-			devKey);
-		withFeatureFlag(
-			featureFlag -> Assert.assertEquals(
-				FeatureFlagStatus.RELEASE, featureFlag.getFeatureFlagStatus()),
-			releaseKey);
-
-		withFeatureFlag(
-			featureFlag -> Assert.assertEquals(
-				FeatureFlagStatus.DEV, featureFlag.getFeatureFlagStatus()),
-			"ABC-123");
-	}
-
-	@Test
 	public void testGetTitle() {
 		String key = "ABC-123";
 		String value = RandomTestUtil.randomString();
@@ -118,6 +101,35 @@ public class FeatureFlagImplTest {
 			featureFlag -> Assert.assertEquals(
 				value, featureFlag.getTitle(null)),
 			key);
+	}
+
+	@Test
+	public void testGetType() {
+		String betaKey = "BETA-123";
+		String devKey = "DEV-123";
+		String releaseKey = "RELEASE-123";
+
+		_setType(betaKey, FeatureFlagType.BETA);
+		_setType(devKey, FeatureFlagType.DEV);
+		_setType(releaseKey, FeatureFlagType.RELEASE);
+
+		withFeatureFlag(
+			featureFlag -> Assert.assertEquals(
+				FeatureFlagType.BETA, featureFlag.getFeatureFlagType()),
+			betaKey);
+		withFeatureFlag(
+			featureFlag -> Assert.assertEquals(
+				FeatureFlagType.DEV, featureFlag.getFeatureFlagType()),
+			devKey);
+		withFeatureFlag(
+			featureFlag -> Assert.assertEquals(
+				FeatureFlagType.RELEASE, featureFlag.getFeatureFlagType()),
+			releaseKey);
+
+		withFeatureFlag(
+			featureFlag -> Assert.assertEquals(
+				FeatureFlagType.DEV, featureFlag.getFeatureFlagType()),
+			"ABC-123");
 	}
 
 	@NewEnv.JVMArgsLine("-Dcompany-id-properties=true")
@@ -204,12 +216,12 @@ public class FeatureFlagImplTest {
 		}
 	}
 
-	private void _setStatus(
-		String featureFlagKey, FeatureFlagStatus featureFlagStatus) {
+	private void _setType(
+		String featureFlagKey, FeatureFlagType featureFlagType) {
 
 		PropsUtil.set(
-			FeatureFlagConstants.getKey(featureFlagKey, "status"),
-			featureFlagStatus.toString());
+			FeatureFlagConstants.getKey(featureFlagKey, "type"),
+			featureFlagType.toString());
 	}
 
 	private CentralizedThreadLocal<Long> _companyIdThreadLocal;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.dto.v1_0;
@@ -29,12 +20,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 
+import java.math.BigDecimal;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Generated;
+
+import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -86,17 +82,18 @@ public class ProductConfiguration implements Serializable {
 	protected Boolean allowBackOrder;
 
 	@Schema(example = "[10, 20, 30, 40]")
-	public Integer[] getAllowedOrderQuantities() {
+	@Valid
+	public BigDecimal[] getAllowedOrderQuantities() {
 		return allowedOrderQuantities;
 	}
 
-	public void setAllowedOrderQuantities(Integer[] allowedOrderQuantities) {
+	public void setAllowedOrderQuantities(BigDecimal[] allowedOrderQuantities) {
 		this.allowedOrderQuantities = allowedOrderQuantities;
 	}
 
 	@JsonIgnore
 	public void setAllowedOrderQuantities(
-		UnsafeSupplier<Integer[], Exception>
+		UnsafeSupplier<BigDecimal[], Exception>
 			allowedOrderQuantitiesUnsafeSupplier) {
 
 		try {
@@ -112,7 +109,66 @@ public class ProductConfiguration implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Integer[] allowedOrderQuantities;
+	protected BigDecimal[] allowedOrderQuantities;
+
+	@DecimalMin("0")
+	@Schema(example = "31130")
+	public Long getAvailabilityEstimateId() {
+		return availabilityEstimateId;
+	}
+
+	public void setAvailabilityEstimateId(Long availabilityEstimateId) {
+		this.availabilityEstimateId = availabilityEstimateId;
+	}
+
+	@JsonIgnore
+	public void setAvailabilityEstimateId(
+		UnsafeSupplier<Long, Exception> availabilityEstimateIdUnsafeSupplier) {
+
+		try {
+			availabilityEstimateId = availabilityEstimateIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long availabilityEstimateId;
+
+	@Schema
+	public String getAvailabilityEstimateName() {
+		return availabilityEstimateName;
+	}
+
+	public void setAvailabilityEstimateName(String availabilityEstimateName) {
+		this.availabilityEstimateName = availabilityEstimateName;
+	}
+
+	@JsonIgnore
+	public void setAvailabilityEstimateName(
+		UnsafeSupplier<String, Exception>
+			availabilityEstimateNameUnsafeSupplier) {
+
+		try {
+			availabilityEstimateName =
+				availabilityEstimateNameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String availabilityEstimateName;
 
 	@Schema(example = "true")
 	public Boolean getDisplayAvailability() {
@@ -234,18 +290,19 @@ public class ProductConfiguration implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String lowStockAction;
 
-	@Schema
-	public Integer getMaxOrderQuantity() {
+	@Schema(example = "10.1")
+	@Valid
+	public BigDecimal getMaxOrderQuantity() {
 		return maxOrderQuantity;
 	}
 
-	public void setMaxOrderQuantity(Integer maxOrderQuantity) {
+	public void setMaxOrderQuantity(BigDecimal maxOrderQuantity) {
 		this.maxOrderQuantity = maxOrderQuantity;
 	}
 
 	@JsonIgnore
 	public void setMaxOrderQuantity(
-		UnsafeSupplier<Integer, Exception> maxOrderQuantityUnsafeSupplier) {
+		UnsafeSupplier<BigDecimal, Exception> maxOrderQuantityUnsafeSupplier) {
 
 		try {
 			maxOrderQuantity = maxOrderQuantityUnsafeSupplier.get();
@@ -260,20 +317,21 @@ public class ProductConfiguration implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Integer maxOrderQuantity;
+	protected BigDecimal maxOrderQuantity;
 
-	@Schema
-	public Integer getMinOrderQuantity() {
+	@Schema(example = "10.1")
+	@Valid
+	public BigDecimal getMinOrderQuantity() {
 		return minOrderQuantity;
 	}
 
-	public void setMinOrderQuantity(Integer minOrderQuantity) {
+	public void setMinOrderQuantity(BigDecimal minOrderQuantity) {
 		this.minOrderQuantity = minOrderQuantity;
 	}
 
 	@JsonIgnore
 	public void setMinOrderQuantity(
-		UnsafeSupplier<Integer, Exception> minOrderQuantityUnsafeSupplier) {
+		UnsafeSupplier<BigDecimal, Exception> minOrderQuantityUnsafeSupplier) {
 
 		try {
 			minOrderQuantity = minOrderQuantityUnsafeSupplier.get();
@@ -288,20 +346,21 @@ public class ProductConfiguration implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Integer minOrderQuantity;
+	protected BigDecimal minOrderQuantity;
 
-	@Schema
-	public Integer getMinStockQuantity() {
+	@Schema(example = "10.1")
+	@Valid
+	public BigDecimal getMinStockQuantity() {
 		return minStockQuantity;
 	}
 
-	public void setMinStockQuantity(Integer minStockQuantity) {
+	public void setMinStockQuantity(BigDecimal minStockQuantity) {
 		this.minStockQuantity = minStockQuantity;
 	}
 
 	@JsonIgnore
 	public void setMinStockQuantity(
-		UnsafeSupplier<Integer, Exception> minStockQuantityUnsafeSupplier) {
+		UnsafeSupplier<BigDecimal, Exception> minStockQuantityUnsafeSupplier) {
 
 		try {
 			minStockQuantity = minStockQuantityUnsafeSupplier.get();
@@ -316,20 +375,21 @@ public class ProductConfiguration implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Integer minStockQuantity;
+	protected BigDecimal minStockQuantity;
 
-	@Schema
-	public Integer getMultipleOrderQuantity() {
+	@Schema(example = "10.1")
+	@Valid
+	public BigDecimal getMultipleOrderQuantity() {
 		return multipleOrderQuantity;
 	}
 
-	public void setMultipleOrderQuantity(Integer multipleOrderQuantity) {
+	public void setMultipleOrderQuantity(BigDecimal multipleOrderQuantity) {
 		this.multipleOrderQuantity = multipleOrderQuantity;
 	}
 
 	@JsonIgnore
 	public void setMultipleOrderQuantity(
-		UnsafeSupplier<Integer, Exception>
+		UnsafeSupplier<BigDecimal, Exception>
 			multipleOrderQuantityUnsafeSupplier) {
 
 		try {
@@ -345,7 +405,7 @@ public class ProductConfiguration implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Integer multipleOrderQuantity;
+	protected BigDecimal multipleOrderQuantity;
 
 	@Override
 	public boolean equals(Object object) {
@@ -403,6 +463,30 @@ public class ProductConfiguration implements Serializable {
 			}
 
 			sb.append("]");
+		}
+
+		if (availabilityEstimateId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"availabilityEstimateId\": ");
+
+			sb.append(availabilityEstimateId);
+		}
+
+		if (availabilityEstimateName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"availabilityEstimateName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(availabilityEstimateName));
+
+			sb.append("\"");
 		}
 
 		if (displayAvailability != null) {
@@ -587,5 +671,7 @@ public class ProductConfiguration implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

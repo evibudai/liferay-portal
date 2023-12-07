@@ -38,7 +38,7 @@
 
 	&-opener {
 		align-items: center;
-		color: $gray-600;
+		color: var(--mini-cart-icon-color, $gray-600);
 		display: flex;
 		height: 64px;
 		justify-content: center;
@@ -109,19 +109,6 @@
 			background-color: #fff;
 			flex: 1;
 			overflow: hidden;
-
-			.dataset-display {
-				height: 100%;
-
-				&-content-wrapper,
-				&-wrapper {
-					height: 100%;
-				}
-
-				& > form {
-					height: 100%;
-				}
-			}
 		}
 	}
 
@@ -171,7 +158,9 @@
 		width: 100%;
 	}
 
+	@import 'mini_cart_edit_item';
 	@import 'mini_cart_header';
 	@import 'mini_cart_item';
 	@import 'mini_cart_items_list';
+	@import 'mini_cart_request_quote';
 }

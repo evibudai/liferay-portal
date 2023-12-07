@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -293,79 +284,95 @@ public class RoleModelImpl extends BaseModelImpl<Role> implements RoleModel {
 	}
 
 	public Map<String, Function<Role, Object>> getAttributeGetterFunctions() {
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<Role, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<Role, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<Role, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<Role, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<Role, Object>>();
-		Map<String, BiConsumer<Role, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<Role, ?>>();
+		private static final Map<String, Function<Role, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", Role::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion", (BiConsumer<Role, Long>)Role::setMvccVersion);
-		attributeGetterFunctions.put("ctCollectionId", Role::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId", (BiConsumer<Role, Long>)Role::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", Role::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid", (BiConsumer<Role, String>)Role::setUuid);
-		attributeGetterFunctions.put("roleId", Role::getRoleId);
-		attributeSetterBiConsumers.put(
-			"roleId", (BiConsumer<Role, Long>)Role::setRoleId);
-		attributeGetterFunctions.put("companyId", Role::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<Role, Long>)Role::setCompanyId);
-		attributeGetterFunctions.put("userId", Role::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<Role, Long>)Role::setUserId);
-		attributeGetterFunctions.put("userName", Role::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName", (BiConsumer<Role, String>)Role::setUserName);
-		attributeGetterFunctions.put("createDate", Role::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate", (BiConsumer<Role, Date>)Role::setCreateDate);
-		attributeGetterFunctions.put("modifiedDate", Role::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate", (BiConsumer<Role, Date>)Role::setModifiedDate);
-		attributeGetterFunctions.put("classNameId", Role::getClassNameId);
-		attributeSetterBiConsumers.put(
-			"classNameId", (BiConsumer<Role, Long>)Role::setClassNameId);
-		attributeGetterFunctions.put("classPK", Role::getClassPK);
-		attributeSetterBiConsumers.put(
-			"classPK", (BiConsumer<Role, Long>)Role::setClassPK);
-		attributeGetterFunctions.put("name", Role::getName);
-		attributeSetterBiConsumers.put(
-			"name", (BiConsumer<Role, String>)Role::setName);
-		attributeGetterFunctions.put("title", Role::getTitle);
-		attributeSetterBiConsumers.put(
-			"title", (BiConsumer<Role, String>)Role::setTitle);
-		attributeGetterFunctions.put("description", Role::getDescription);
-		attributeSetterBiConsumers.put(
-			"description", (BiConsumer<Role, String>)Role::setDescription);
-		attributeGetterFunctions.put("type", Role::getType);
-		attributeSetterBiConsumers.put(
-			"type", (BiConsumer<Role, Integer>)Role::setType);
-		attributeGetterFunctions.put("subtype", Role::getSubtype);
-		attributeSetterBiConsumers.put(
-			"subtype", (BiConsumer<Role, String>)Role::setSubtype);
+		static {
+			Map<String, Function<Role, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<Role, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put("mvccVersion", Role::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", Role::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", Role::getUuid);
+			attributeGetterFunctions.put("roleId", Role::getRoleId);
+			attributeGetterFunctions.put("companyId", Role::getCompanyId);
+			attributeGetterFunctions.put("userId", Role::getUserId);
+			attributeGetterFunctions.put("userName", Role::getUserName);
+			attributeGetterFunctions.put("createDate", Role::getCreateDate);
+			attributeGetterFunctions.put("modifiedDate", Role::getModifiedDate);
+			attributeGetterFunctions.put("classNameId", Role::getClassNameId);
+			attributeGetterFunctions.put("classPK", Role::getClassPK);
+			attributeGetterFunctions.put("name", Role::getName);
+			attributeGetterFunctions.put("title", Role::getTitle);
+			attributeGetterFunctions.put("description", Role::getDescription);
+			attributeGetterFunctions.put("type", Role::getType);
+			attributeGetterFunctions.put("subtype", Role::getSubtype);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<Role, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<Role, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<Role, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion", (BiConsumer<Role, Long>)Role::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<Role, Long>)Role::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid", (BiConsumer<Role, String>)Role::setUuid);
+			attributeSetterBiConsumers.put(
+				"roleId", (BiConsumer<Role, Long>)Role::setRoleId);
+			attributeSetterBiConsumers.put(
+				"companyId", (BiConsumer<Role, Long>)Role::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId", (BiConsumer<Role, Long>)Role::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName", (BiConsumer<Role, String>)Role::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate", (BiConsumer<Role, Date>)Role::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate", (BiConsumer<Role, Date>)Role::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"classNameId", (BiConsumer<Role, Long>)Role::setClassNameId);
+			attributeSetterBiConsumers.put(
+				"classPK", (BiConsumer<Role, Long>)Role::setClassPK);
+			attributeSetterBiConsumers.put(
+				"name", (BiConsumer<Role, String>)Role::setName);
+			attributeSetterBiConsumers.put(
+				"title", (BiConsumer<Role, String>)Role::setTitle);
+			attributeSetterBiConsumers.put(
+				"description", (BiConsumer<Role, String>)Role::setDescription);
+			attributeSetterBiConsumers.put(
+				"type", (BiConsumer<Role, Integer>)Role::setType);
+			attributeSetterBiConsumers.put(
+				"subtype", (BiConsumer<Role, String>)Role::setSubtype);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1364,8 +1371,9 @@ public class RoleModelImpl extends BaseModelImpl<Role> implements RoleModel {
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<Role, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<Role, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

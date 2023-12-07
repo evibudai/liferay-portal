@@ -1,8 +1,11 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.component.names = "Master Page Templates,Upgrades WEM";
 	property testray.main.component.name = "Upgrades WEM";
 
@@ -17,7 +20,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-102202."
-	@priority = "5"
+	@priority = 5
 	test ViewBlankAsMasterAfterUpgrade704 {
 		property data.archive.type = "data-archive-fragments";
 		property database.types = "mariadb,mysql,postgresql";
@@ -28,21 +31,21 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Site Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		Portlet.viewTitle(portletName = "${portletName}");
+		Portlet.viewTitle(portletName = ${portletName});
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Site Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		Portlet.viewTitle(portletName = "${portletName}");
+		Portlet.viewTitle(portletName = ${portletName});
 
 		echo("Checked Portlet");
 	}
 
 	@description = "This is a use case for LPS-102202."
-	@priority = "5"
+	@priority = 5
 	test ViewBlankAsMasterAfterUpgrade713 {
 		property data.archive.type = "data-archive-fragments";
 		property database.types = "mariadb,mysql,postgresql";
@@ -53,31 +56,31 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Public Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Widget",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Global Public Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -87,7 +90,7 @@ definition {
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Global Private Private",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -97,51 +100,51 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.gotoSitePage(
 			pageName = "Test Template Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}
 	}
 
 	@description = "This is a use case for LPS-102202."
-	@priority = "5"
+	@priority = 5
 	test ViewBlankAsMasterAfterUpgrade721 {
 		property data.archive.type = "data-archive-fragments";
 		property database.types = "mariadb,mysql,postgresql";
@@ -152,31 +155,31 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Public Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Global Public Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -186,7 +189,7 @@ definition {
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Global Private Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -196,51 +199,51 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.gotoSitePage(
 			pageName = "Public Custom Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}
 	}
 
 	@description = "This is a use case for LPS-102202."
-	@priority = "5"
+	@priority = 5
 	test ViewBlankAsMasterAfterUpgrade7016 {
 		property data.archive.type = "data-archive-fragments";
 		property database.types = "mariadb,mysql,postgresql";
@@ -251,21 +254,21 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Site Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		Portlet.viewTitle(portletName = "${portletName}");
+		Portlet.viewTitle(portletName = ${portletName});
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Site Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		Portlet.viewTitle(portletName = "${portletName}");
+		Portlet.viewTitle(portletName = ${portletName});
 
 		echo("Checked Portlet");
 	}
 
 	@description = "This is a use case for LPS-102202."
-	@priority = "5"
+	@priority = 5
 	test ViewBlankAsMasterAfterUpgrade71103 {
 		property data.archive.type = "data-archive-fragments";
 		property database.types = "mariadb,mysql,postgresql";
@@ -276,31 +279,31 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Public Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Widget",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Global Public Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -310,7 +313,7 @@ definition {
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Global Private Private",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -320,51 +323,51 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.gotoSitePage(
 			pageName = "Test Template Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}
 	}
 
 	@description = "This is a use case for LPS-102202."
-	@priority = "5"
+	@priority = 5
 	test ViewBlankAsMasterAfterUpgrade72101 {
 		property data.archive.type = "data-archive-fragments";
 		property database.types = "mariadb,mysql,postgresql";
@@ -375,31 +378,31 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Public Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		AssertTextNotPresent(value1 = "The requested resource could not be found.");
 
 		Navigator.gotoSitePage(
 			pageName = "Global Public Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -409,7 +412,7 @@ definition {
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Global Private Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Wiki");
 
@@ -419,44 +422,44 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Public Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Widget Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
 		Portlet.viewTitle(portletName = "Message Boards");
 
 		Navigator.gotoSitePage(
 			pageName = "Public Custom Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}
 
 		Navigator.openPrivateSitePageURL(
 			pageName = "Private Custom Content Page",
-			siteName = "${siteName}");
+			siteName = ${siteName});
 
-		var n = "1";
+		var n = 1;
 
 		for (var text : list "Submit,Cancel") {
 			ContentPages.viewFragmentText(
 				contributed = "false",
 				fragmentName = "footer",
-				position = "${n}",
-				text = "${text}");
+				position = ${n},
+				text = ${text});
 
 			var n = ${n} + 1;
 		}

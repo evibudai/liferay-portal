@@ -1,0 +1,22 @@
+definition {
+
+	@summary = "Default summary"
+	macro assertTheDatesAndStatusOfTheCard(dates = null,status = null) {
+		WaitForPageLoad();
+
+		AssertElementPresent(
+			key_date = ${dates},
+			key_status = ${status},
+			locator1 = "CustomerPortalSite#CARD_DATE");
+	}
+
+	@summary = "Default summary"
+	macro changeTheStatusToDisplayCards(status = null) {
+		var key_status = ${status};
+
+		Click(locator1 = "CP2Subscription#SUBSCRIPTION_STATUS");
+
+		Click(locator1 = "CP2Subscription#SUBSCRIPTION_CHANGE_STATUS");
+	}
+
+}

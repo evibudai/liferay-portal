@@ -1,18 +1,38 @@
 definition {
 
-	macro addFullDescriptionUsingSource {
+	@summary = "Default summary"
+	macro addFullDescriptionUsingSource(sourceFullDescription = null) {
 		FormFields.toggleCKEditorContentStyle(optionTool = "Source");
 
 		SelectFrameTop();
 
-		CommerceEntry.addFullDescriptionViaCKEditor(entryFullDescription = "${sourceFullDescription}");
+		CommerceEntry.addFullDescriptionViaCKEditor(entryFullDescription = ${sourceFullDescription});
 
 		Click(
 			key_titleName = "Source",
 			locator1 = "FormFields#TOOLBAR_ANY_ITEM_BUTTON");
 	}
 
-	macro checkSuccessAlertAppearsAndDisappears {
+	@summary = "Default summary"
+	macro assertDownloadedFile(downloadedFileName = null) {
+		var tempDir = PropsUtil.get("output.dir.name");
+
+		var downloadedFilePath = "${tempDir}/${downloadedFileName}";
+
+		var fileExists = FileUtil.exists(${downloadedFilePath});
+
+		if (${fileExists} == "true") {
+			echo("File named ${downloadedFileName} was downloaded.");
+		}
+		else {
+			echo("Files named ${downloadedFileName}  NOT FOUND in folder ${tempDir}!");
+		}
+
+		return ${fileExists};
+	}
+
+	@summary = "Default summary"
+	macro checkSuccessAlertAppearsAndDisappears() {
 		WaitForElementPresent(locator1 = "Message#SUCCESS");
 
 		Alert.closeMessage(messageType = "SUCCESS");
@@ -21,7 +41,8 @@ definition {
 	}
 
 	@description = "Compare two dates, if the first is greater than the second it returns the string"
-	macro compareDates {
+	@summary = "Default summary"
+	macro compareDates(date2 = null, date1 = null) {
 		var javaScript = '''
 			CompareDates = {
 				compareDates: function (dateString1, dateString2) {
@@ -45,64 +66,77 @@ definition {
 			return compare;
 		''';
 
-		var compareDatesResult = selenium.getJavaScriptResult("${javaScript}", "${date1}", "${date2}");
+		var compareDatesResult = selenium.getJavaScriptResult(${javaScript}, ${date1}, ${date2});
 
-		return "${compareDatesResult}";
+		return ${compareDatesResult};
 	}
 
-	macro convertStringToKey {
-		var string = StringUtil.lowerCase("${string}");
+	@summary = "Default summary"
+	macro convertStringToKey() {
+		var string = StringUtil.lowerCase(${string});
 
-		var string = StringUtil.replace("${string}", " ", "-");
+		var string = StringUtil.replace(${string}, " ", "-");
 
-		return "${string}";
+		return ${string};
 	}
 
-	macro convertWholeNumberToDecimal {
-		Variables.assertDefined(parameterList = "${number}");
+	@summary = "Default summary"
+	macro convertWholeNumberToDecimal(number = null) {
+		Variables.assertDefined(parameterList = ${number});
 
-		var isDecimal = StringUtil.contains("${number}", ".");
+		var isDecimal = StringUtil.contains(${number}, ".");
 
-		if ("${isDecimal}" == "true") {
-			return "${number}";
+		if (${isDecimal} == "true") {
+			return ${number};
 		}
 		else {
-			var decimalNumber = StringUtil.concat("${number}", ".00");
+			var decimalNumber = StringUtil.concat(${number}, ".00");
 
-			return "${decimalNumber}";
+			return ${decimalNumber};
 		}
 	}
 
-	macro getConvertedBase64File {
-		Variables.assertDefined(parameterList = "${file}");
+	@summary = "Default summary"
+	macro expandField(accordionTitle = null) {
+		if (IsElementPresent(key_accordionTitle = ${accordionTitle}, locator1 = "CommerceEntry#ACCORDION_COLLAPSED")) {
+			Click(
+				key_accordionTitle = ${accordionTitle},
+				locator1 = "CommerceEntry#ACCORDION_COLLAPSED");
+		}
+	}
+
+	@summary = "Default summary"
+	macro getConvertedBase64File(file = null) {
+		Variables.assertDefined(parameterList = ${file});
 
 		var projectDir = PropsUtil.get("project.dir");
 		var fileDir = "modules/apps/commerce/commerce-product-test/src/testFunctional/tests/dependencies";
 
-		if ("${file}" == "Commerce_Black.jpg") {
+		if (${file} == "Commerce_Black.jpg") {
 			var fileBase64 = FileUtil.read("${projectDir}/${fileDir}/commerce_black_t_shirt_encoded_base64.txt");
 		}
 
-		return "${fileBase64}";
+		return ${fileBase64};
 	}
 
-	macro getFutureDate {
+	@summary = "Default summary"
+	macro getFutureDate(increaseYears = null, monthFormat = null, dayFormat = null, yearFormat = null, increaseDays = null, increaseMonths = null) {
 		if (isSet(monthFormat)) {
-			var dateMonth = DateUtil.getFormattedCurrentDate("${monthFormat}");
+			var dateMonth = DateUtil.getFormattedCurrentDate(${monthFormat});
 		}
 		else {
 			var dateMonth = DateUtil.getCurrentMonth();
 		}
 
 		if (isSet(dayFormat)) {
-			var dateDay = DateUtil.getFormattedCurrentDate("${dayFormat}");
+			var dateDay = DateUtil.getFormattedCurrentDate(${dayFormat});
 		}
 		else {
 			var dateDay = DateUtil.getCurrentDate();
 		}
 
 		if (isSet(yearFormat)) {
-			var dateYear = DateUtil.getFormattedCurrentDate("${yearFormat}");
+			var dateYear = DateUtil.getFormattedCurrentDate(${yearFormat});
 		}
 		else {
 			var dateYear = DateUtil.getCurrentYear();
@@ -122,30 +156,71 @@ definition {
 
 		var futureDate = "${dateMonth}/${dateDay}/${dateYear}";
 
-		return "${futureDate}";
+		return ${futureDate};
+	}
+
+	@summary = "Default summary"
+	macro getLocaleDate(date = null) {
+		Variables.assertDefined(parameterList = ${date});
+
+		var javaScript = '''
+			date = new Date(arguments[0]);
+
+			localeDate = date.toLocaleString();
+
+			return localeDate;
+		''';
+
+		var localeDate = selenium.getJavaScriptResult(${javaScript}, ${date}, "");
+
+		return ${localeDate};
+	}
+
+	@summary = "Default summary"
+	macro getLocaleDateLocalized(date = null, options = null, lang = null) {
+		Variables.assertDefined(parameterList = ${date});
+
+		var javaScript = '''
+			date = new Date(arguments[0]);
+
+			options = '${options}';
+
+			optionsJSON = JSON.parse(options);
+
+			lang = '${lang}';
+
+  			localizedDate = new Intl.DateTimeFormat(lang, optionsJSON).format(date);
+
+			return localizedDate;
+		''';
+
+		var localizedDate = selenium.getJavaScriptResult(${javaScript}, ${date}, "");
+
+		return ${localizedDate};
 	}
 
 	@description = "Create ${payload} from a list of fields passed for an API call and returns it"
-	macro getPayloadFromFieldsList {
-		Variables.assertDefined(parameterList = "${fieldsList}");
+	@summary = "Default summary"
+	macro getPayloadFromFieldsList(fieldsList = null) {
+		Variables.assertDefined(parameterList = ${fieldsList});
 
-		var count = "0";
-		var list = ListUtil.newListFromString("${fieldsList}");
+		var count = 0;
+		var list = ListUtil.newListFromString(${fieldsList});
 
-		var listSize = ListUtil.size("${list}");
+		var listSize = ListUtil.size(${list});
 		var payload = "";
-		var isLessThanSize = MathUtil.isLessThan("${count}", "${listSize}");
+		var isLessThanSize = MathUtil.isLessThan(${count}, ${listSize});
 
-		while (("${isLessThanSize}" == "true")) {
-			var field = ListUtil.get("${list}", "${count}");
+		while ((${isLessThanSize} == "true")) {
+			var field = ListUtil.get(${list}, ${count});
 
-			var isAllowedOrderQuantities = StringUtil.matches("${field}", "(.*)allowedOrderQuantities(.*)");
+			var isAllowedOrderQuantities = StringUtil.matches(${field}, "(.*)allowedOrderQuantities(.*)");
 
-			if ("${isAllowedOrderQuantities}" == "true") {
-				var field = StringUtil.replace("${field}", "-", ",");
+			if (${isAllowedOrderQuantities} == "true") {
+				var field = StringUtil.replace(${field}, "-", ",");
 			}
 
-			if ("${count}" == "0") {
+			if (${count} == 0) {
 				var comma = "";
 			}
 			else {
@@ -156,20 +231,21 @@ definition {
 				${field}''';
 			var count = ${count} + 1;
 
-			var count = StringUtil.valueOf("${count}");
+			var count = StringUtil.valueOf(${count});
 
-			var isLessThanSize = MathUtil.isLessThan("${count}", "${listSize}");
+			var isLessThanSize = MathUtil.isLessThan(${count}, ${listSize});
 		}
 
-		return "${payload}";
+		return ${payload};
 	}
 
-	macro uploadSingleFile {
-		Variables.assertDefined(parameterList = "${uploadFileName}");
+	@summary = "Default summary"
+	macro uploadSingleFile(uploadFileName = null, selectButtonName = null) {
+		Variables.assertDefined(parameterList = ${uploadFileName});
 
 		if (isSet(selectButtonName)) {
 			CommerceEntry.clickButtonWithName(
-				buttonName = "${selectButtonName}",
+				buttonName = ${selectButtonName},
 				text = "Select");
 		}
 		else {
@@ -178,9 +254,25 @@ definition {
 
 		SelectFrameTop();
 
-		CommerceItemSelector.uploadSingleFile(uploadFileName = "${uploadFileName}");
+		CommerceItemSelector.uploadSingleFile(uploadFileName = ${uploadFileName});
 
 		SelectFrameTop();
+	}
+
+	@summary = "Default summary"
+	macro uploadSingleFileWithoutFrameTop(uploadFileName = null, selectButtonName = null) {
+		Variables.assertDefined(parameterList = ${uploadFileName});
+
+		if (isSet(selectButtonName)) {
+			CommerceEntry.clickButtonWithName(
+				buttonName = ${selectButtonName},
+				text = "Select");
+		}
+		else {
+			Button.clickSelect();
+		}
+
+		CommerceItemSelector.uploadSingleFile(uploadFileName = ${uploadFileName});
 	}
 
 }

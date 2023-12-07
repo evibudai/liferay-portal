@@ -1,27 +1,28 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.video.internal.preview;
 
-import com.liferay.document.library.kernel.util.VideoProcessor;
+import com.liferay.document.library.constants.DLFileVersionPreviewConstants;
+import com.liferay.document.library.kernel.model.DLProcessorConstants;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessorHelperUtil;
+import com.liferay.document.library.kernel.processor.VideoProcessor;
 import com.liferay.document.library.preview.DLPreviewRenderer;
 import com.liferay.document.library.preview.DLPreviewRendererProvider;
+import com.liferay.document.library.preview.exception.DLFileEntryPreviewGenerationException;
+import com.liferay.document.library.preview.exception.DLPreviewGenerationInProcessException;
+import com.liferay.document.library.preview.exception.DLPreviewSizeException;
+import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
 import com.liferay.document.library.video.renderer.DLVideoRenderer;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.ContentTypes;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.RequestDispatcher;
@@ -29,7 +30,6 @@ import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Alejandro Tardín
@@ -44,7 +44,10 @@ public class DLVideoDLPreviewRendererProvider
 
 		mimeTypes.add(
 			ContentTypes.APPLICATION_VND_LIFERAY_VIDEO_EXTERNAL_SHORTCUT_HTML);
-		mimeTypes.addAll(_videoProcessor.getVideoMimeTypes());
+
+		VideoProcessor videoProcessor = (VideoProcessor)_dlProcessor;
+
+		mimeTypes.addAll(videoProcessor.getVideoMimeTypes());
 
 		return mimeTypes;
 	}
@@ -53,7 +56,21 @@ public class DLVideoDLPreviewRendererProvider
 	public DLPreviewRenderer getPreviewDLPreviewRenderer(
 		FileVersion fileVersion) {
 
+		VideoProcessor videoProcessor = (VideoProcessor)_dlProcessor;
+
+		if ((fileVersion != null) && !videoProcessor.hasVideo(fileVersion) &&
+			!Objects.equals(
+				fileVersion.getMimeType(),
+				ContentTypes.
+					APPLICATION_VND_LIFERAY_VIDEO_EXTERNAL_SHORTCUT_HTML) &&
+			!videoProcessor.isVideoSupported(fileVersion.getMimeType())) {
+
+			return null;
+		}
+
 		return (request, response) -> {
+			_checkForPreviewGenerationExceptions(fileVersion);
+
 			RequestDispatcher requestDispatcher =
 				_servletContext.getRequestDispatcher("/preview.jsp");
 
@@ -72,6 +89,43 @@ public class DLVideoDLPreviewRendererProvider
 		return null;
 	}
 
+	private void _checkForPreviewGenerationExceptions(FileVersion fileVersion)
+		throws PortalException {
+
+		if (Objects.equals(
+				fileVersion.getMimeType(),
+				ContentTypes.
+					APPLICATION_VND_LIFERAY_VIDEO_EXTERNAL_SHORTCUT_HTML)) {
+
+			return;
+		}
+
+		if (_dlFileVersionPreviewLocalService.hasDLFileVersionPreview(
+				fileVersion.getFileEntryId(), fileVersion.getFileVersionId(),
+				DLFileVersionPreviewConstants.STATUS_FAILURE)) {
+
+			throw new DLFileEntryPreviewGenerationException();
+		}
+
+		VideoProcessor videoProcessor = (VideoProcessor)_dlProcessor;
+
+		if (!videoProcessor.hasVideo(fileVersion)) {
+			if (!DLProcessorHelperUtil.isPreviewableSize(fileVersion)) {
+				throw new DLPreviewSizeException(
+					DLProcessorHelperUtil.getPreviewableProcessorMaxSize(
+						fileVersion.getGroupId()));
+			}
+
+			throw new DLPreviewGenerationInProcessException();
+		}
+	}
+
+	@Reference
+	private DLFileVersionPreviewLocalService _dlFileVersionPreviewLocalService;
+
+	@Reference(target = "(type=" + DLProcessorConstants.VIDEO_PROCESSOR + ")")
+	private DLProcessor _dlProcessor;
+
 	@Reference
 	private DLVideoRenderer _dlVideoRenderer;
 
@@ -79,8 +133,5 @@ public class DLVideoDLPreviewRendererProvider
 		target = "(osgi.web.symbolicname=com.liferay.document.library.video)"
 	)
 	private ServletContext _servletContext;
-
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private VideoProcessor _videoProcessor;
 
 }

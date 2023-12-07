@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -55,7 +46,7 @@ if (referer.equals(themeDisplay.getPathMain() + "/portal/update_reminder_query")
 			</c:if>
 
 			<aui:fieldset>
-				<aui:select autoFocus="<%= true %>" cssClass="reminder-query-question" label="question" name="reminderQueryQuestion">
+				<aui:select cssClass="reminder-query-question" label="question" name="reminderQueryQuestion">
 
 					<%
 					for (String question : user.getReminderQueryQuestions()) {
@@ -68,13 +59,13 @@ if (referer.equals(themeDisplay.getPathMain() + "/portal/update_reminder_query")
 					%>
 
 					<c:if test="<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED, PropsValues.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED) %>">
-						<aui:option label="<%= UsersAdmin.CUSTOM_QUESTION %>" />
+						<aui:option label="<%= UsersAdminUtil.CUSTOM_QUESTION %>" />
 					</c:if>
 				</aui:select>
 
 				<c:if test="<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED, PropsValues.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED) %>">
 					<div class="hide" id="customQuestionContainer">
-						<aui:input autoFocus="<%= true %>" bean="<%= user %>" cssClass="reminder-query-custom" fieldParam="reminderQueryCustomQuestion" label="" model="<%= User.class %>" name="reminderQueryQuestion" />
+						<aui:input bean="<%= user %>" cssClass="reminder-query-custom" fieldParam="reminderQueryCustomQuestion" label="" model="<%= User.class %>" name="reminderQueryQuestion" />
 					</div>
 				</c:if>
 
@@ -86,9 +77,7 @@ if (referer.equals(themeDisplay.getPathMain() + "/portal/update_reminder_query")
 				}
 				%>
 
-				<aui:input autocomplete="off" cssClass="reminder-query-answer" label="answer" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" name="reminderQueryAnswer" showRequiredLabel="<%= false %>" size="50" type='<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT, PropsValues.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT) ? "text" : "password" %>' value="<%= answer %>">
-					<aui:validator name="required" />
-				</aui:input>
+				<aui:input autocomplete="off" cssClass="reminder-query-answer" label="answer[noun]" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" name="reminderQueryAnswer" required="<%= true %>" showRequiredLabel="<%= false %>" size="50" type='<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT, PropsValues.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT) ? "text" : "password" %>' value="<%= answer %>" />
 			</aui:fieldset>
 
 			<aui:button-row>
@@ -104,7 +93,7 @@ if (referer.equals(themeDisplay.getPathMain() + "/portal/update_reminder_query")
 		var reminderQueryQuestion = document.getElementById('reminderQueryQuestion');
 
 		if (customQuestionContainer && reminderQueryQuestion) {
-			if (reminderQueryQuestion.value === '<%= UsersAdmin.CUSTOM_QUESTION %>') {
+			if (reminderQueryQuestion.value === '<%= UsersAdminUtil.CUSTOM_QUESTION %>') {
 				customQuestionContainer.classList.remove('hide');
 			}
 			else {
@@ -114,7 +103,7 @@ if (referer.equals(themeDisplay.getPathMain() + "/portal/update_reminder_query")
 			reminderQueryQuestion.addEventListener(
 				'change',
 				function(event) {
-					if (reminderQueryQuestion.value === '<%= UsersAdmin.CUSTOM_QUESTION %>') {
+					if (reminderQueryQuestion.value === '<%= UsersAdminUtil.CUSTOM_QUESTION %>') {
 						<c:if test="<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED, PropsValues.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED) %>">
 							customQuestionContainer.classList.remove('hide');
 

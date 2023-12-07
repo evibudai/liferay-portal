@@ -1,24 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.channel.internal.resource.v1_0;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.commerce.product.exception.NoSuchChannelException;
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.model.CommerceChannelRel;
+import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.service.CommerceChannelService;
+import com.liferay.headless.commerce.admin.channel.dto.v1_0.AccountAddressChannel;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.Channel;
-import com.liferay.headless.commerce.admin.channel.internal.dto.v1_0.converter.ChannelDTOConverter;
 import com.liferay.headless.commerce.admin.channel.internal.odata.entity.v1_0.ChannelEntityModel;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ChannelResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -27,7 +21,9 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
@@ -45,7 +41,8 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/channel.properties",
-	scope = ServiceScope.PROTOTYPE, service = ChannelResource.class
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = ChannelResource.class
 )
 public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
@@ -71,6 +68,18 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
 		_commerceChannelService.deleteCommerceChannel(
 			commerceChannel.getCommerceChannelId());
+	}
+
+	@NestedField(parentClass = AccountAddressChannel.class, value = "channel")
+	@Override
+	public Channel getAccountAddressChannelChannel(Long id) throws Exception {
+		CommerceChannelRel commerceChannelRel =
+			_commerceChannelRelService.getCommerceChannelRel(id);
+
+		return _channelDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				commerceChannelRel.getCommerceChannelId(),
+				contextAcceptLanguage.getPreferredLocale()));
 	}
 
 	@Override
@@ -130,26 +139,26 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 	public Channel patchChannel(Long channelId, Channel channel)
 		throws Exception {
 
-		Channel existingChannel = getChannel(channelId);
+		CommerceChannel commerceChannel =
+			_commerceChannelService.getCommerceChannel(channelId);
 
-		if (channel.getCurrencyCode() != null) {
-			existingChannel.setCurrencyCode(channel.getCurrencyCode());
-		}
-
-		if (channel.getExternalReferenceCode() != null) {
-			existingChannel.setExternalReferenceCode(
-				channel.getExternalReferenceCode());
-		}
-
-		if (channel.getName() != null) {
-			existingChannel.setName(channel.getName());
-		}
-
-		if (channel.getType() != null) {
-			existingChannel.setType(channel.getType());
-		}
-
-		return putChannel(channelId, existingChannel);
+		return _toChannel(
+			_commerceChannelService.updateCommerceChannel(
+				channelId,
+				GetterUtil.getLong(
+					channel.getAccountId(),
+					commerceChannel.getAccountEntryId()),
+				commerceChannel.getSiteGroupId(),
+				GetterUtil.getString(
+					channel.getName(), commerceChannel.getName()),
+				GetterUtil.getString(
+					channel.getType(), commerceChannel.getType()),
+				commerceChannel.getTypeSettingsUnicodeProperties(),
+				GetterUtil.getString(
+					channel.getCurrencyCode(),
+					commerceChannel.getCommerceCurrencyCode()),
+				commerceChannel.getPriceDisplayType(),
+				commerceChannel.isDiscountsTargetNetPrice()));
 	}
 
 	@Override
@@ -167,28 +176,23 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 					externalReferenceCode);
 		}
 
-		Channel existingChannel = getChannel(
-			commerceChannel.getCommerceChannelId());
-
-		if (channel.getCurrencyCode() != null) {
-			existingChannel.setCurrencyCode(channel.getCurrencyCode());
-		}
-
-		if (channel.getExternalReferenceCode() != null) {
-			existingChannel.setExternalReferenceCode(
-				channel.getExternalReferenceCode());
-		}
-
-		if (channel.getName() != null) {
-			existingChannel.setName(channel.getName());
-		}
-
-		if (channel.getType() != null) {
-			existingChannel.setType(channel.getType());
-		}
-
-		return putChannel(
-			commerceChannel.getCommerceChannelId(), existingChannel);
+		return _toChannel(
+			_commerceChannelService.updateCommerceChannel(
+				commerceChannel.getCommerceChannelId(),
+				GetterUtil.getLong(
+					channel.getAccountId(),
+					commerceChannel.getAccountEntryId()),
+				commerceChannel.getSiteGroupId(),
+				GetterUtil.getString(
+					channel.getName(), commerceChannel.getName()),
+				GetterUtil.getString(
+					channel.getType(), commerceChannel.getType()),
+				commerceChannel.getTypeSettingsUnicodeProperties(),
+				GetterUtil.getString(
+					channel.getCurrencyCode(),
+					commerceChannel.getCommerceCurrencyCode()),
+				commerceChannel.getPriceDisplayType(),
+				commerceChannel.isDiscountsTargetNetPrice()));
 	}
 
 	@Override
@@ -196,6 +200,9 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		return _toChannel(
 			_commerceChannelService.addCommerceChannel(
 				channel.getExternalReferenceCode(),
+				GetterUtil.get(
+					channel.getAccountId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
 				GetterUtil.get(channel.getSiteGroupId(), 0), channel.getName(),
 				channel.getType(), null, channel.getCurrencyCode(),
 				_serviceContextHelper.getServiceContext(contextUser)));
@@ -214,8 +221,12 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
 		return _toChannel(
 			_commerceChannelService.updateCommerceChannel(
-				channelId, channel.getSiteGroupId(), channel.getName(),
-				channel.getType(), null, channel.getCurrencyCode()));
+				channelId,
+				GetterUtil.get(
+					channel.getAccountId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				channel.getSiteGroupId(), channel.getName(), channel.getType(),
+				null, channel.getCurrencyCode(), null, false));
 	}
 
 	@Override
@@ -225,9 +236,12 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
 		return _toChannel(
 			_commerceChannelService.addOrUpdateCommerceChannel(
-				externalReferenceCode, channel.getSiteGroupId(),
-				channel.getName(), channel.getType(), null,
-				channel.getCurrencyCode(),
+				externalReferenceCode,
+				GetterUtil.getLong(
+					channel.getAccountId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				channel.getSiteGroupId(), channel.getName(), channel.getType(),
+				null, channel.getCurrencyCode(),
 				_serviceContextHelper.getServiceContext()));
 	}
 
@@ -245,8 +259,13 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
 	private static final EntityModel _entityModel = new ChannelEntityModel();
 
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.channel.internal.dto.v1_0.converter.ChannelDTOConverter)"
+	)
+	private DTOConverter<CommerceChannel, Channel> _channelDTOConverter;
+
 	@Reference
-	private ChannelDTOConverter _channelDTOConverter;
+	private CommerceChannelRelService _commerceChannelRelService;
 
 	@Reference
 	private CommerceChannelService _commerceChannelService;

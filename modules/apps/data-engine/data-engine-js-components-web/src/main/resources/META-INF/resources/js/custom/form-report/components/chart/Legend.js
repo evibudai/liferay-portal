@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -17,10 +8,20 @@ import ClayIcon from '@clayui/icon';
 import React, {useState} from 'react';
 
 import colors from '../../utils/colors';
+import {getPercentage, roundPercentage} from '../../utils/data';
 
 const MAX_LABELS = 10;
 
-const Label = ({active, color, index, label, onMouseOut, onMouseOver}) => (
+const Label = ({
+	active,
+	color,
+	entries,
+	index,
+	label,
+	onMouseOut,
+	onMouseOver,
+	totalEntries,
+}) => (
 	<li className={active ? '' : 'dim'} data-item={index}>
 		<svg height="20" width="20">
 			<circle
@@ -34,9 +35,27 @@ const Label = ({active, color, index, label, onMouseOut, onMouseOver}) => (
 			/>
 		</svg>
 
-		<p onMouseOut={onMouseOut} onMouseOver={onMouseOver} x="0em" y="1em">
+		<p
+			onBlur={onMouseOut}
+			onFocus={onMouseOver}
+			onMouseOut={onMouseOut}
+			onMouseOver={onMouseOver}
+			tabIndex={0}
+			x="0em"
+			y="1em"
+		>
 			<span dy="2em" x="2.5em">
 				{label}
+			</span>
+
+			<span className="sr-only">
+				{`: ${entries} `}
+
+				{Number(entries) === 1
+					? `${Liferay.Language.get('entry').toLowerCase()} `
+					: `${Liferay.Language.get('entries').toLowerCase()} `}
+
+				{roundPercentage(getPercentage(entries, totalEntries))}
 			</span>
 		</p>
 	</li>
@@ -82,13 +101,18 @@ const ShowAll = ({expand, expanded, labelsLength}) => {
 	);
 };
 
-export default function Legend({activeIndex, labels, onMouseOut, onMouseOver}) {
+export default function Legend({activeIndex, data, onMouseOut, onMouseOver}) {
 	const [isShowAllExpanded, setIsShowAllExpanded] = useState(false);
 
 	const handleOnMouseOver = ({currentTarget}) => {
 		const item = currentTarget.closest('li').dataset.item;
 		onMouseOver(parseInt(item, 10));
 	};
+
+	const labels = data.map(({label}) => label);
+	const totalEntries = data
+		.map(({count}) => count)
+		.reduce((countAll, count) => countAll + count);
 
 	return (
 		<div className="legend-container well well-lg">
@@ -106,11 +130,13 @@ export default function Legend({activeIndex, labels, onMouseOut, onMouseOver}) {
 									activeIndex === index
 								}
 								color={colors(index)}
+								entries={data[index].count}
 								index={index}
 								key={`item-${index}`}
 								label={label}
 								onMouseOut={onMouseOut}
 								onMouseOver={handleOnMouseOver}
+								totalEntries={totalEntries}
 							/>
 						))}
 

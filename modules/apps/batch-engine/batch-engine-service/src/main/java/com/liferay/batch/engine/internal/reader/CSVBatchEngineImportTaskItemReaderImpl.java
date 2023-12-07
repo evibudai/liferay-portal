@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.reader;
 
 import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.CSVUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,11 +36,21 @@ public class CSVBatchEngineImportTaskItemReaderImpl
 			Map<String, Serializable> parameters)
 		throws IOException {
 
+		_delimiter = (String)parameters.getOrDefault("delimiter", delimiter);
+
+		_enclosingCharacter = (String)parameters.getOrDefault(
+			"enclosingCharacter", StringPool.QUOTE);
+
 		_csvParser = CSVParser.parse(
 			new UnsyncBufferedReader(new InputStreamReader(inputStream)),
-			_getCSVFormat(
-				(String)parameters.getOrDefault("delimiter", delimiter),
-				(String)parameters.getOrDefault("enclosingCharacter", null)));
+			CSVFormat.Builder.create(
+			).setDelimiter(
+				_delimiter
+			).setIgnoreEmptyLines(
+				true
+			).setQuote(
+				_enclosingCharacter.charAt(0)
+			).build());
 
 		_iterator = _csvParser.iterator();
 
@@ -90,27 +91,11 @@ public class CSVBatchEngineImportTaskItemReaderImpl
 						fieldName);
 
 			fieldNameValueMapHandler.handle(
-				fieldName, fieldNameValueMap, values.get(i));
+				fieldName, fieldNameValueMap,
+				CSVUtil.decode(_enclosingCharacter, _delimiter, values.get(i)));
 		}
 
 		return fieldNameValueMap;
-	}
-
-	private CSVFormat _getCSVFormat(
-		String delimiter, String enclosingCharacter) {
-
-		CSVFormat.Builder builder = CSVFormat.Builder.create(
-		).setDelimiter(
-			delimiter
-		).setIgnoreEmptyLines(
-			true
-		);
-
-		if (Validator.isNotNull(enclosingCharacter)) {
-			builder.setQuote(enclosingCharacter.charAt(0));
-		}
-
-		return builder.build();
 	}
 
 	private String[] _getFieldNames(
@@ -134,6 +119,8 @@ public class CSVBatchEngineImportTaskItemReaderImpl
 	}
 
 	private final CSVParser _csvParser;
+	private final String _delimiter;
+	private final String _enclosingCharacter;
 	private final String[] _fieldNames;
 	private final Iterator<CSVRecord> _iterator;
 

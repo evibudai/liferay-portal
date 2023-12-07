@@ -1,16 +1,9 @@
 <#assign
 	globalGroupModel = dataFactory.newGlobalGroupModel()
 	guestGroupModel = dataFactory.newGuestGroupModel()
-
-	commerceCurrencyModel = dataFactory.newCommerceCurrencyModel()
-	countryModel = dataFactory.newCountryModel()
 />
 
-${dataFactory.toInsertSQL(commerceCurrencyModel)}
-
-${dataFactory.toInsertSQL(countryModel)}
-
-<#include "default_user.ftl">
+<#include "guest_user.ftl">
 
 <#include "commerce_groups.ftl">
 
@@ -48,7 +41,7 @@ ${dataFactory.toInsertSQL(countryModel)}
 	<@insertDLFolder
 		_ddmStructureId=dataFactory.defaultDLDDMStructureId
 		_dlFolderDepth=1
-		_groupId=groupId
+		_groupModel=groupModel
 		_parentDLFolderId=0
 	/>
 
@@ -66,7 +59,7 @@ ${dataFactory.toInsertSQL(countryModel)}
 
 	<@insertGroup _groupModel=groupModel />
 
-	${csvFileWriter.write("repository", groupId + ", " + groupModel.name + "\n")}
+	${csvFileWriter.write("repository", virtualHostModel.hostname + "," + groupModel.friendlyURL + "," + groupId + ", " + groupModel.name + "\n")}
 </#list>
 
 <#assign defaultSiteHomePageContentLayoutModels = dataFactory.newContentPageLayoutModels(guestGroupModel.groupId, "welcome") />

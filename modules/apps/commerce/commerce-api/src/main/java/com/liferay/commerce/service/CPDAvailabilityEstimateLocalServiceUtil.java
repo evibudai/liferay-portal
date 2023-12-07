@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.service;
@@ -118,17 +109,6 @@ public class CPDAvailabilityEstimateLocalServiceUtil {
 
 		return getService().deleteCPDAvailabilityEstimate(
 			CPDAvailabilityEstimateId);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public static void deleteCPDAvailabilityEstimateByCPDefinitionId(
-		long cpDefinitionId) {
-
-		getService().deleteCPDAvailabilityEstimateByCPDefinitionId(
-			cpDefinitionId);
 	}
 
 	public static void deleteCPDAvailabilityEstimateByCProductId(
@@ -244,17 +224,6 @@ public class CPDAvailabilityEstimateLocalServiceUtil {
 
 		return getService().fetchCPDAvailabilityEstimate(
 			CPDAvailabilityEstimateId);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public static CPDAvailabilityEstimate
-		fetchCPDAvailabilityEstimateByCPDefinitionId(long cpDefinitionId) {
-
-		return getService().fetchCPDAvailabilityEstimateByCPDefinitionId(
-			cpDefinitionId);
 	}
 
 	public static CPDAvailabilityEstimate
@@ -393,35 +362,23 @@ public class CPDAvailabilityEstimateLocalServiceUtil {
 			cpdAvailabilityEstimate);
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public static CPDAvailabilityEstimate updateCPDAvailabilityEstimate(
-			long cpdAvailabilityEstimateId, long cpDefinitionId,
-			long commerceAvailabilityEstimateId,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().updateCPDAvailabilityEstimate(
-			cpdAvailabilityEstimateId, cpDefinitionId,
-			commerceAvailabilityEstimateId, serviceContext);
-	}
-
 	public static CPDAvailabilityEstimate
 			updateCPDAvailabilityEstimateByCProductId(
-				long cpdAvailabilityEstimateId, long cProductId,
-				long commerceAvailabilityEstimateId,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+				long userId, long cpdAvailabilityEstimateId, long cProductId,
+				long commerceAvailabilityEstimateId)
 		throws PortalException {
 
 		return getService().updateCPDAvailabilityEstimateByCProductId(
-			cpdAvailabilityEstimateId, cProductId,
-			commerceAvailabilityEstimateId, serviceContext);
+			userId, cpdAvailabilityEstimateId, cProductId,
+			commerceAvailabilityEstimateId);
 	}
 
 	public static CPDAvailabilityEstimateLocalService getService() {
 		return _service;
+	}
+
+	public static void setService(CPDAvailabilityEstimateLocalService service) {
+		_service = service;
 	}
 
 	private static volatile CPDAvailabilityEstimateLocalService _service;

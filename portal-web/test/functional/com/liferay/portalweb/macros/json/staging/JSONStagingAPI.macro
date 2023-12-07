@@ -1,36 +1,40 @@
 definition {
 
-	macro _enableLocalStaging {
+	@summary = "Default summary"
+	macro _enableLocalStaging(branchingPublic = null, branchingPrivate = null, groupId = null, unCheckedContent = null) {
 		Variables.assertDefined(parameterList = "${groupId},${branchingPublic},${branchingPrivate}");
 
 		var portalURL = JSONCompany.getPortalURL();
-		var attributes = JSONStagingSetter.setAttributes(unCheckedContent = "${unCheckedContent}");
+		var attributes = JSONStagingSetter.setAttributes(unCheckedContent = ${unCheckedContent});
 
-		var serviceContext = JSONServiceContextUtil.setServiceContext(attributes = "${attributes}");
+		var serviceContext = JSONServiceContextUtil.setServiceContext(attributes = ${attributes});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/staging/enable-local-staging \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d branchingPublic=${branchingPublic} \
 				-d branchingPrivate=${branchingPrivate} \
 				-d serviceContext=${serviceContext}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _enableRemoteStaging {
+	@summary = "Default summary"
+	macro _enableRemoteStaging(remoteGroupId = null, branchingPublic = null, branchingPrivate = null, groupId = null, remotePort = null) {
 		Variables.assertDefined(parameterList = "${groupId},${remoteGroupId}");
 
 		var portalURL = JSONCompany.getPortalURL();
 		var attributes = JSONStagingSetter.setAttributes();
 
-		var serviceContext = JSONServiceContextUtil.setServiceContext(attributes = "${attributes}");
+		var serviceContext = JSONServiceContextUtil.setServiceContext(attributes = ${attributes});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/staging/enable-remote-staging \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupId=${groupId} \
 				-d branchingPublic=${branchingPublic} \
 				-d branchingPrivate=${branchingPrivate} \
@@ -42,7 +46,7 @@ definition {
 				-d serviceContext=${serviceContext}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

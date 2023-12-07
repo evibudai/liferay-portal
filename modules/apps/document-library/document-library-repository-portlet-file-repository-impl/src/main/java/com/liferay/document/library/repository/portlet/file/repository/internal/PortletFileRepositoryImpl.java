@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.repository.portlet.file.repository.internal;
@@ -21,8 +12,10 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLTrashLocalService;
 import com.liferay.document.library.kernel.util.DLAppHelperThreadLocal;
 import com.liferay.petra.function.UnsafeSupplier;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -47,7 +40,7 @@ import com.liferay.portal.kernel.systemevent.SystemEventHierarchyEntryThreadLoca
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
@@ -231,9 +224,20 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 						_log.debug(noSuchFolderException);
 					}
 
-					return localRepository.addFolder(
-						userId, parentFolderId, folderName, StringPool.BLANK,
-						serviceContext);
+					Folder folder = localRepository.getFolder(parentFolderId);
+
+					Group group = _groupLocalService.getGroup(
+						folder.getGroupId());
+
+					try (SafeCloseable safeCloseable =
+							CTCollectionThreadLocal.
+								setCTCollectionIdWithSafeCloseable(
+									group.getCtCollectionId())) {
+
+						return localRepository.addFolder(
+							null, userId, parentFolderId, folderName,
+							StringPool.BLANK, serviceContext);
+					}
 				}
 			});
 	}
@@ -266,7 +270,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 		Group group = _groupLocalService.getGroup(groupId);
 
-		User user = _userLocalService.getDefaultUser(group.getCompanyId());
+		User user = _userLocalService.getGuestUser(group.getCompanyId());
 
 		long classNameId = _portal.getClassNameId(
 			PortletRepository.class.getName());
@@ -274,12 +278,17 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		UnicodeProperties typeSettingsUnicodeProperties =
 			new UnicodeProperties();
 
-		return _run(
-			() -> _repositoryLocalService.addRepository(
-				user.getUserId(), groupId, classNameId,
-				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, portletId,
-				StringPool.BLANK, portletId, typeSettingsUnicodeProperties,
-				true, serviceContext));
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					group.getCtCollectionId())) {
+
+			return _run(
+				() -> _repositoryLocalService.addRepository(
+					user.getUserId(), groupId, classNameId,
+					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, portletId,
+					StringPool.BLANK, portletId, typeSettingsUnicodeProperties,
+					true, serviceContext));
+		}
 	}
 
 	@Override
@@ -557,7 +566,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 	@Override
 	public FileEntry getPortletFileEntryByExternalReferenceCode(
-			long groupId, String externalReferenceCode)
+			String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		LocalRepository localRepository =
@@ -599,7 +608,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			fileName = _trashHelper.getOriginalTitle(fileEntry.getTitle());
 		}
 
-		sb.append(URLCodec.encodeURL(_html.unescape(fileName)));
+		sb.append(URLCodec.encodeURL(HtmlUtil.unescape(fileName)));
 
 		sb.append(StringPool.SLASH);
 		sb.append(URLCodec.encodeURL(fileEntry.getUuid()));
@@ -809,9 +818,6 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
-
-	@Reference
-	private Html _html;
 
 	@Reference(
 		target = "(class.name=com.liferay.portal.repository.liferayrepository.LiferayRepository)"

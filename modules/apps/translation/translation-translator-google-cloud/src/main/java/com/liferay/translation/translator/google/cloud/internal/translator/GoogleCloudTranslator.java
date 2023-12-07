@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.translator.google.cloud.internal.translator;
@@ -20,12 +11,14 @@ import com.google.cloud.translate.Translate;
 import com.google.cloud.translate.TranslateOptions;
 import com.google.cloud.translate.Translation;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.translation.exception.TranslatorException;
 import com.liferay.translation.translator.Translator;
@@ -42,14 +35,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
+ * @author Roberto Díaz
  */
 @Component(
 	configurationPid = "com.liferay.translation.translator.google.cloud.internal.configuration.GoogleCloudTranslatorConfiguration",
@@ -59,14 +51,13 @@ public class GoogleCloudTranslator implements Translator {
 
 	@Override
 	public boolean isEnabled(long companyId) throws ConfigurationException {
-		GoogleCloudTranslatorConfiguration
-			googleCloudTranslatorCompanyConfiguration =
-				_configurationProvider.getCompanyConfiguration(
-					GoogleCloudTranslatorConfiguration.class, companyId);
+		GoogleCloudTranslatorConfiguration googleCloudTranslatorConfiguration =
+			_configurationProvider.getCompanyConfiguration(
+				GoogleCloudTranslatorConfiguration.class, companyId);
 
-		if (googleCloudTranslatorCompanyConfiguration.enabled() &&
+		if (googleCloudTranslatorConfiguration.enabled() &&
 			!Validator.isBlank(
-				googleCloudTranslatorCompanyConfiguration.
+				googleCloudTranslatorConfiguration.
 					serviceAccountPrivateKey())) {
 
 			return true;
@@ -79,7 +70,12 @@ public class GoogleCloudTranslator implements Translator {
 	public TranslatorPacket translate(TranslatorPacket translatorPacket)
 		throws PortalException {
 
-		if (!isEnabled(translatorPacket.getCompanyId())) {
+		GoogleCloudTranslatorConfiguration googleCloudTranslatorConfiguration =
+			_configurationProvider.getCompanyConfiguration(
+				GoogleCloudTranslatorConfiguration.class,
+				translatorPacket.getCompanyId());
+
+		if (!googleCloudTranslatorConfiguration.enabled()) {
 			return translatorPacket;
 		}
 
@@ -88,10 +84,11 @@ public class GoogleCloudTranslator implements Translator {
 		String targetLanguageCode = _getLanguageCode(
 			translatorPacket.getTargetLanguageId());
 
-		Translate translate = _getTranslate(translatorPacket.getCompanyId());
+		Translate translate = _getTranslate(googleCloudTranslatorConfiguration);
 
-		Set<String> supportedLanguageCodes = _getSupportedLanguageCodes(
-			translate.listSupportedLanguages());
+		Set<String> supportedLanguageCodes = SetUtil.fromCollection(
+			TransformUtil.transform(
+				translate.listSupportedLanguages(), Language::getCode));
 
 		if (!supportedLanguageCodes.contains(sourceLanguageCode) ||
 			!supportedLanguageCodes.contains(targetLanguageCode)) {
@@ -130,6 +127,11 @@ public class GoogleCloudTranslator implements Translator {
 			}
 
 			@Override
+			public Map<String, Boolean> getHTMLMap() {
+				return translatorPacket.getHTMLMap();
+			}
+
+			@Override
 			public String getSourceLanguageId() {
 				return translatorPacket.getSourceLanguageId();
 			}
@@ -148,29 +150,13 @@ public class GoogleCloudTranslator implements Translator {
 		return list.get(0);
 	}
 
-	private Set<String> _getSupportedLanguageCodes(
-		List<Language> supportedLanguages) {
-
-		Stream<Language> stream = supportedLanguages.stream();
-
-		return stream.map(
-			Language::getCode
-		).collect(
-			Collectors.toSet()
-		);
-	}
-
-	private Translate _getTranslate(long companyId)
+	private Translate _getTranslate(
+			GoogleCloudTranslatorConfiguration
+				googleCloudTranslatorConfiguration)
 		throws ConfigurationException {
 
-		GoogleCloudTranslatorConfiguration
-			googleCloudTranslatorCompanyConfiguration =
-				_configurationProvider.getCompanyConfiguration(
-					GoogleCloudTranslatorConfiguration.class, companyId);
-
 		String serviceAccountPrivateKey =
-			googleCloudTranslatorCompanyConfiguration.
-				serviceAccountPrivateKey();
+			googleCloudTranslatorConfiguration.serviceAccountPrivateKey();
 
 		ServiceAccountCredentials serviceAccountCredentials = null;
 

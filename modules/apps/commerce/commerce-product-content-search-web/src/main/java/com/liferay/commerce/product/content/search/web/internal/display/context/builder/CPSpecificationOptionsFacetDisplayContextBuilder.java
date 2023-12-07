@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.content.search.web.internal.display.context.builder;
@@ -44,10 +35,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
@@ -80,15 +67,7 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 	}
 
 	public void parameterValues(String... parameterValues) {
-		_selectedCPSpecificationOptionIds = Stream.of(
-			Objects.requireNonNull(parameterValues)
-		).map(
-			GetterUtil::getLong
-		).filter(
-			cpSpecificationOptionId -> cpSpecificationOptionId > 0
-		).collect(
-			Collectors.toList()
-		);
+		_parameterValues = parameterValues;
 	}
 
 	public void portal(Portal portal) {
@@ -143,11 +122,9 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 
 		_facet = facet;
 
-		Optional<String[]> parameterValuesOptional =
+		parameterValues(
 			portletSharedSearchResponse.getParameterValues(
-				facet.getFieldName(), renderRequest);
-
-		parameterValuesOptional.ifPresent(this::parameterValues);
+				facet.getFieldName(), renderRequest));
 
 		return _buildCPSpecificationOptionsSearchFacetDisplayContext();
 	}
@@ -159,20 +136,21 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 		_portletSharedSearchResponse = _portletSharedSearchRequest.search(
 			_renderRequest);
 
-		List<Facet> filledFacets = new ArrayList<>();
-
 		Facet facet = _portletSharedSearchResponse.getFacet(
 			CPField.SPECIFICATION_NAMES);
 
+		if (facet == null) {
+			return Collections.emptyList();
+		}
+
+		List<Facet> filledFacets = new ArrayList<>();
+
 		FacetCollector facetCollector = facet.getFacetCollector();
 
-		Optional<PortletPreferences> portletPreferencesOptional =
+		PortletPreferences portletPreferences =
 			_portletSharedSearchResponse.getPortletPreferences(_renderRequest);
 
-		if (portletPreferencesOptional.isPresent()) {
-			PortletPreferences portletPreferences =
-				portletPreferencesOptional.get();
-
+		if (portletPreferences != null) {
 			_displayStyle = portletPreferences.getValue(
 				"displayStyle", _displayStyle);
 			_frequencyThreshold = GetterUtil.getInteger(
@@ -194,11 +172,17 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 					themeDisplay.getCompanyId(), termCollector.getTerm());
 
 			if (cpSpecificationOption.isFacetable()) {
-				filledFacets.add(
+				Facet cpSpecificationOptionFacet =
 					_portletSharedSearchResponse.getFacet(
 						CPSpecificationOptionFacetsUtil.getIndexFieldName(
 							termCollector.getTerm(),
-							themeDisplay.getLanguageId())));
+							themeDisplay.getLanguageId()));
+
+				if (cpSpecificationOptionFacet == null) {
+					continue;
+				}
+
+				filledFacets.add(cpSpecificationOptionFacet);
 			}
 		}
 
@@ -336,11 +320,15 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 	}
 
 	private String _getFirstParameterValueString() {
-		if (_selectedCPSpecificationOptionIds.isEmpty()) {
-			return StringPool.BLANK;
+		if (_parameterValues != null) {
+			for (String parameterValue : _parameterValues) {
+				if (GetterUtil.getLong(parameterValue) > 0) {
+					return parameterValue;
+				}
+			}
 		}
 
-		return String.valueOf(_selectedCPSpecificationOptionIds.get(0));
+		return StringPool.BLANK;
 	}
 
 	private String _getPaginationStartParameterName(
@@ -383,17 +371,10 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 		CPSpecificationOption cpSpecificationOption = _getCPSpecificationOption(
 			fieldName);
 
-		Optional<String[]> parameterValuesOptional =
+		return ArrayUtil.contains(
 			_portletSharedSearchResponse.getParameterValues(
-				cpSpecificationOption.getKey(), _renderRequest);
-
-		if (parameterValuesOptional.isPresent()) {
-			String[] parameterValues = parameterValuesOptional.get();
-
-			return ArrayUtil.contains(parameterValues, fieldValue);
-		}
-
-		return false;
+				cpSpecificationOption.getKey(), _renderRequest),
+			fieldValue);
 	}
 
 	private CPSpecificationOptionLocalService
@@ -405,12 +386,11 @@ public class CPSpecificationOptionsFacetDisplayContextBuilder
 	private Locale _locale;
 	private int _maxTerms = 10;
 	private String _paginationStartParameterName;
+	private String[] _parameterValues;
 	private Portal _portal;
 	private PortletSharedSearchRequest _portletSharedSearchRequest;
 	private PortletSharedSearchResponse _portletSharedSearchResponse;
 	private RenderRequest _renderRequest;
-	private List<Long> _selectedCPSpecificationOptionIds =
-		Collections.emptyList();
 	private List<Tuple> _tuples;
 
 }

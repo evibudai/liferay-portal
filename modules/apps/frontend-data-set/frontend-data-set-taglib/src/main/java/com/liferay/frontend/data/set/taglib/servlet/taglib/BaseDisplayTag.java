@@ -1,26 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.data.set.taglib.servlet.taglib;
 
 import com.liferay.frontend.data.set.model.FDSPaginationEntry;
-import com.liferay.frontend.data.set.taglib.internal.js.loader.modules.extender.npm.NPMResolverProvider;
 import com.liferay.frontend.data.set.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.frontend.data.set.taglib.internal.util.ServicesProvider;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
-import com.liferay.frontend.js.module.launcher.JSModuleResolver;
+import com.liferay.frontend.taglib.react.servlet.taglib.util.ServicesProvider;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -93,6 +81,10 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		return _additionalProps;
 	}
 
+	public Map<String, Object> getEmptyState() {
+		return _emptyState;
+	}
+
 	public String getId() {
 		return _id;
 	}
@@ -135,8 +127,16 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		return _selectedItems;
 	}
 
+	public boolean getUniformActionsDisplay() {
+		return _uniformActionsDisplay;
+	}
+
 	public void setAdditionalProps(Map<String, Object> additionalProps) {
 		_additionalProps = additionalProps;
+	}
+
+	public void setEmptyState(Map<String, Object> emptyState) {
+		_emptyState = emptyState;
 	}
 
 	public void setId(String id) {
@@ -181,8 +181,13 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		_selectedItems = selectedItems;
 	}
 
+	public void setUniformActionsDisplay(boolean uniformActionsDisplay) {
+		_uniformActionsDisplay = uniformActionsDisplay;
+	}
+
 	protected void cleanUp() {
 		_additionalProps = null;
+		_emptyState = null;
 		_fdsPaginationEntries = null;
 		_id = null;
 		_itemsPerPage = 0;
@@ -193,6 +198,7 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		_propsTransformerServletContext = null;
 		_randomNamespace = null;
 		_selectedItems = null;
+		_uniformActionsDisplay = false;
 	}
 
 	protected void doClearTag() {
@@ -226,6 +232,8 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		).put(
 			"customViews", _getCustomViews()
 		).put(
+			"emptyState", _emptyState
+		).put(
 			"namespace", getNamespace()
 		).put(
 			"pagination",
@@ -238,6 +246,8 @@ public class BaseDisplayTag extends AttributesTagSupport {
 			).build()
 		).put(
 			"selectedItems", _selectedItems
+		).put(
+			"uniformActionsDisplay", getUniformActionsDisplay()
 		).build();
 	}
 
@@ -249,40 +259,24 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		jspWriter.write("table-id\"><span aria-hidden=\"true\" class=\"");
 		jspWriter.write("loading-animation my-7\"></span>");
 
-		NPMResolver npmResolver = NPMResolverProvider.getNPMResolver();
-
-		String moduleName = npmResolver.resolveModuleName(
-			"@liferay/frontend-data-set-web/FrontendDataSet");
-
 		String propsTransformer = null;
 
 		if (Validator.isNotNull(_propsTransformer)) {
-			String resolvedPackageName = null;
-
-			try {
-				resolvedPackageName = NPMResolvedPackageNameUtil.get(
+			if (_propsTransformer.contains(" from ")) {
+				propsTransformer = _propsTransformer;
+			}
+			else {
+				String resolvedPackageName = NPMResolvedPackageNameUtil.get(
 					getPropsTransformerServletContext());
+
+				propsTransformer =
+					resolvedPackageName + "/" + _propsTransformer;
 			}
-			catch (UnsupportedOperationException
-						unsupportedOperationException) {
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(unsupportedOperationException);
-				}
-
-				JSModuleResolver jsModuleResolver =
-					ServicesProvider.getJSModuleResolver();
-
-				resolvedPackageName = jsModuleResolver.resolveModule(
-					getPropsTransformerServletContext(), null);
-			}
-
-			propsTransformer = resolvedPackageName + "/" + _propsTransformer;
 		}
 
 		ComponentDescriptor componentDescriptor = new ComponentDescriptor(
-			moduleName, getId(), new LinkedHashSet<>(), false,
-			propsTransformer);
+			"{FrontendDataSet} from frontend-data-set-web", getId(),
+			new LinkedHashSet<>(), false, propsTransformer);
 
 		ReactRenderer reactRenderer = ServicesProvider.getReactRenderer();
 
@@ -313,6 +307,7 @@ public class BaseDisplayTag extends AttributesTagSupport {
 	private static final Log _log = LogFactoryUtil.getLog(BaseDisplayTag.class);
 
 	private Map<String, Object> _additionalProps;
+	private Map<String, Object> _emptyState;
 	private List<FDSPaginationEntry> _fdsPaginationEntries;
 	private String _id;
 	private int _itemsPerPage;
@@ -323,5 +318,6 @@ public class BaseDisplayTag extends AttributesTagSupport {
 	private ServletContext _propsTransformerServletContext;
 	private String _randomNamespace;
 	private List<Object> _selectedItems;
+	private boolean _uniformActionsDisplay;
 
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.service.impl;
@@ -63,7 +54,7 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
@@ -82,7 +73,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.workflow.WorkflowEngineManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.search.document.Document;
@@ -96,6 +86,7 @@ import com.liferay.portal.search.sort.FieldSort;
 import com.liferay.portal.search.sort.SortFieldBuilder;
 import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
+import com.liferay.portal.util.PortalInstances;
 import com.liferay.users.admin.kernel.file.uploads.UserFileUploadsSettings;
 
 import java.io.Serializable;
@@ -107,12 +98,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -173,9 +162,8 @@ public class AccountEntryLocalServiceImpl
 
 		_validateName(name);
 
-		accountEntry.setName(name);
-
 		accountEntry.setDescription(description);
+		accountEntry.setName(name);
 
 		AccountEntryEmailAddressValidator accountEntryEmailAddressValidator =
 			_accountEntryEmailAddressValidatorFactory.create(
@@ -194,7 +182,7 @@ public class AccountEntryLocalServiceImpl
 		accountEntry.setRestrictMembership(true);
 		accountEntry.setTaxIdNumber(taxIdNumber);
 
-		_validateType(type);
+		_validateType(user.getCompanyId(), type);
 
 		accountEntry.setType(type);
 		accountEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
@@ -314,7 +302,7 @@ public class AccountEntryLocalServiceImpl
 
 	@Override
 	public void deleteAccountEntriesByCompanyId(long companyId) {
-		if (!CompanyThreadLocal.isDeleteInProcess()) {
+		if (!PortalInstances.isCurrentCompanyInDeletionProcess()) {
 			throw new UnsupportedOperationException(
 				"Deleting account entries by company must be called when " +
 					"deleting a company");
@@ -336,16 +324,22 @@ public class AccountEntryLocalServiceImpl
 
 		accountEntry = super.deleteAccountEntry(accountEntry);
 
-		// Group
-
-		_groupLocalService.deleteGroup(accountEntry.getAccountEntryGroup());
-
 		// Resources
 
 		_resourceLocalService.deleteResource(
 			accountEntry.getCompanyId(), AccountEntry.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL,
 			accountEntry.getAccountEntryId());
+
+		// Addresses
+
+		_addressLocalService.deleteAddresses(
+			accountEntry.getCompanyId(), AccountEntry.class.getName(),
+			accountEntry.getAccountEntryId());
+
+		// Group
+
+		_groupLocalService.deleteGroup(accountEntry.getAccountEntryGroup());
 
 		// Asset
 
@@ -376,6 +370,12 @@ public class AccountEntryLocalServiceImpl
 	public AccountEntry fetchPersonAccountEntry(long userId) {
 		return accountEntryPersistence.fetchByU_T_First(
 			userId, AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON, null);
+	}
+
+	@Override
+	public AccountEntry fetchSupplierAccountEntry(long userId) {
+		return accountEntryPersistence.fetchByU_T_First(
+			userId, AccountConstants.ACCOUNT_ENTRY_TYPE_SUPPLIER, null);
 	}
 
 	@Override
@@ -455,19 +455,19 @@ public class AccountEntryLocalServiceImpl
 	public AccountEntry getGuestAccountEntry(long companyId)
 		throws PortalException {
 
-		User defaultUser = _userLocalService.getDefaultUser(companyId);
+		User guestUser = _userLocalService.getGuestUser(companyId);
 
 		AccountEntryImpl accountEntryImpl = new AccountEntryImpl();
 
 		accountEntryImpl.setAccountEntryId(
 			AccountConstants.ACCOUNT_ENTRY_ID_GUEST);
-		accountEntryImpl.setCompanyId(defaultUser.getCompanyId());
-		accountEntryImpl.setUserId(defaultUser.getUserId());
-		accountEntryImpl.setUserName(defaultUser.getFullName());
+		accountEntryImpl.setCompanyId(guestUser.getCompanyId());
+		accountEntryImpl.setUserId(guestUser.getUserId());
+		accountEntryImpl.setUserName(guestUser.getFullName());
 		accountEntryImpl.setParentAccountEntryId(
 			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT);
-		accountEntryImpl.setEmailAddress(defaultUser.getEmailAddress());
-		accountEntryImpl.setName(defaultUser.getFullName());
+		accountEntryImpl.setEmailAddress(guestUser.getEmailAddress());
+		accountEntryImpl.setName(guestUser.getFullName());
 		accountEntryImpl.setType(AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST);
 		accountEntryImpl.setStatus(WorkflowConstants.STATUS_APPROVED);
 
@@ -886,31 +886,23 @@ public class AccountEntryLocalServiceImpl
 	}
 
 	private Long[] _getOrganizationIds(long userId) {
-		List<Organization> organizations =
-			_organizationLocalService.getUserOrganizations(userId);
+		Set<Long> organizationIds = new HashSet<>();
 
-		ListIterator<Organization> listIterator = organizations.listIterator();
+		for (Organization organization :
+				_organizationLocalService.getUserOrganizations(userId)) {
 
-		while (listIterator.hasNext()) {
-			Organization organization = listIterator.next();
+			organizationIds.add(organization.getOrganizationId());
 
 			for (Organization curOrganization :
 					_organizationLocalService.getOrganizations(
 						organization.getCompanyId(),
 						organization.getTreePath() + "%")) {
 
-				listIterator.add(curOrganization);
+				organizationIds.add(curOrganization.getOrganizationId());
 			}
 		}
 
-		Stream<Organization> stream = organizations.stream();
-
-		return stream.map(
-			Organization::getOrganizationId
-		).distinct(
-		).toArray(
-			Long[]::new
-		);
+		return organizationIds.toArray(new Long[0]);
 	}
 
 	private GroupByStep _getOrganizationsAccountEntriesGroupByStep(
@@ -1053,7 +1045,6 @@ public class AccountEntryLocalServiceImpl
 					AccountEntry.class.getName(), 0, 0);
 
 		if (WorkflowThreadLocal.isEnabled() &&
-			WorkflowEngineManagerUtil.isDeployed() &&
 			(workflowDefinitionLinkSupplier.get() != null)) {
 
 			return true;
@@ -1237,13 +1228,18 @@ public class AccountEntryLocalServiceImpl
 		}
 	}
 
-	private void _validateType(String type) throws PortalException {
-		if (!ArrayUtil.contains(AccountConstants.ACCOUNT_ENTRY_TYPES, type)) {
+	private void _validateType(long companyId, String type)
+		throws PortalException {
+
+		if (!ArrayUtil.contains(
+				AccountConstants.getAccountEntryTypes(companyId), type)) {
+
 			throw new AccountEntryTypeException(
 				StringBundler.concat(
 					"Type \"", type, "\" is not among allowed types: ",
 					StringUtil.merge(
-						AccountConstants.ACCOUNT_ENTRY_TYPES, ", ")));
+						AccountConstants.getAccountEntryTypes(companyId),
+						", ")));
 		}
 	}
 
@@ -1253,6 +1249,9 @@ public class AccountEntryLocalServiceImpl
 	@Reference
 	private AccountEntryEmailAddressValidatorFactory
 		_accountEntryEmailAddressValidatorFactory;
+
+	@Reference
+	private AddressLocalService _addressLocalService;
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;

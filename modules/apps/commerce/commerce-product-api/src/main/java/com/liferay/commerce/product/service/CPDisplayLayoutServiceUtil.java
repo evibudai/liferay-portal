@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.service;
@@ -37,11 +28,12 @@ public class CPDisplayLayoutServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.product.service.impl.CPDisplayLayoutServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static CPDisplayLayout addCPDisplayLayout(
-			long groupId, Class<?> clazz, long classPK, String layoutUuid)
+			long groupId, Class<?> clazz, long classPK,
+			String layoutPageTemplateEntryUuid, String layoutUuid)
 		throws PortalException {
 
 		return getService().addCPDisplayLayout(
-			groupId, clazz, classPK, layoutUuid);
+			groupId, clazz, classPK, layoutPageTemplateEntryUuid, layoutUuid);
 	}
 
 	public static void deleteCPDisplayLayout(long cpDisplayLayoutId)
@@ -67,24 +59,31 @@ public class CPDisplayLayoutServiceUtil {
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
 		<CPDisplayLayout> searchCPDisplayLayout(
-				long companyId, long groupId, String className, String keywords,
-				int start, int end, com.liferay.portal.kernel.search.Sort sort)
+				long companyId, long groupId, String className, Integer type,
+				String keywords, int start, int end,
+				com.liferay.portal.kernel.search.Sort sort)
 			throws PortalException {
 
 		return getService().searchCPDisplayLayout(
-			companyId, groupId, className, keywords, start, end, sort);
+			companyId, groupId, className, type, keywords, start, end, sort);
 	}
 
 	public static CPDisplayLayout updateCPDisplayLayout(
-			long cpDisplayLayoutId, long classPK, String layoutUuid)
+			long cpDisplayLayoutId, long classPK,
+			String layoutPageTemplateEntryUuid, String layoutUuid)
 		throws PortalException {
 
 		return getService().updateCPDisplayLayout(
-			cpDisplayLayoutId, classPK, layoutUuid);
+			cpDisplayLayoutId, classPK, layoutPageTemplateEntryUuid,
+			layoutUuid);
 	}
 
 	public static CPDisplayLayoutService getService() {
 		return _service;
+	}
+
+	public static void setService(CPDisplayLayoutService service) {
+		_service = service;
 	}
 
 	private static volatile CPDisplayLayoutService _service;

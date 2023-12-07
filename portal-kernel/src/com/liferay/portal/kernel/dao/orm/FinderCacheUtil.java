@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.dao.orm;
 
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.util.ProxyFactory;
 
 /**
  * @author Brian Wing Shun Chan
@@ -23,52 +15,82 @@ import com.liferay.portal.kernel.util.ServiceProxyFactory;
 public class FinderCacheUtil {
 
 	public static void clearCache() {
-		_finderCache.clearCache();
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.clearCache();
 	}
 
 	public static void clearCache(Class<?> clazz) {
-		_finderCache.clearCache(clazz);
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.clearCache(clazz);
 	}
 
 	public static void clearDSLQueryCache(String tableName) {
-		_finderCache.clearDSLQueryCache(tableName);
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.clearDSLQueryCache(tableName);
 	}
 
 	public static void clearLocalCache() {
-		_finderCache.clearLocalCache();
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.clearLocalCache();
 	}
 
 	public static FinderCache getFinderCache() {
-		return _finderCache;
+		FinderCache finderCache = _finderCacheSnapshot.get();
+
+		if (finderCache == null) {
+			return DummyFinderCacheHolder._dummyFinderCache;
+		}
+
+		return finderCache;
 	}
 
 	public static Object getResult(
 		FinderPath finderPath, Object[] args,
 		BasePersistence<?> basePersistence) {
 
-		return _finderCache.getResult(finderPath, args, basePersistence);
+		FinderCache finderCache = getFinderCache();
+
+		return finderCache.getResult(finderPath, args, basePersistence);
 	}
 
 	public static void invalidate() {
-		_finderCache.invalidate();
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.invalidate();
 	}
 
 	public static void putResult(
 		FinderPath finderPath, Object[] args, Object result) {
 
-		_finderCache.putResult(finderPath, args, result);
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.putResult(finderPath, args, result);
 	}
 
 	public static void removeCache(String className) {
-		_finderCache.removeCache(className);
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.removeCache(className);
 	}
 
 	public static void removeResult(FinderPath finderPath, Object[] args) {
-		_finderCache.removeResult(finderPath, args);
+		FinderCache finderCache = getFinderCache();
+
+		finderCache.removeResult(finderPath, args);
 	}
 
-	private static volatile FinderCache _finderCache =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			FinderCache.class, FinderCacheUtil.class, "_finderCache", false);
+	private static final Snapshot<FinderCache> _finderCacheSnapshot =
+		new Snapshot<>(FinderCacheUtil.class, FinderCache.class);
+
+	private static class DummyFinderCacheHolder {
+
+		private static final FinderCache _dummyFinderCache =
+			ProxyFactory.newDummyInstance(FinderCache.class);
+
+	}
 
 }

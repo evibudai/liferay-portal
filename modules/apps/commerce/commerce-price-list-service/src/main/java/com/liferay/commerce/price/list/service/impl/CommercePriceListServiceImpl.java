@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.price.list.service.impl;
@@ -20,6 +11,7 @@ import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.base.CommercePriceListServiceBaseImpl;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -37,7 +29,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -238,14 +229,7 @@ public class CommercePriceListServiceImpl
 			OrderByComparator<CommercePriceList> orderByComparator)
 		throws PortalException {
 
-		List<CommerceCatalog> commerceCatalogs = _commerceCatalogService.search(
-			companyId, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		long[] groupIds = stream.mapToLong(
-			CommerceCatalog::getGroupId
-		).toArray();
+		long[] groupIds = _getGroupIds(companyId);
 
 		if (status == WorkflowConstants.STATUS_ANY) {
 			return commercePriceListPersistence.filterFindByG_C_NotS(
@@ -263,14 +247,7 @@ public class CommercePriceListServiceImpl
 			OrderByComparator<CommercePriceList> orderByComparator)
 		throws PortalException {
 
-		List<CommerceCatalog> commerceCatalogs = _commerceCatalogService.search(
-			companyId, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		long[] groupIds = stream.mapToLong(
-			CommerceCatalog::getGroupId
-		).toArray();
+		long[] groupIds = _getGroupIds(companyId);
 
 		if (status == WorkflowConstants.STATUS_ANY) {
 			return commercePriceListPersistence.filterFindByG_C_T_NotS(
@@ -286,14 +263,7 @@ public class CommercePriceListServiceImpl
 	public int getCommercePriceListsCount(long companyId, int status)
 		throws PortalException {
 
-		List<CommerceCatalog> commerceCatalogs = _commerceCatalogService.search(
-			companyId, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		long[] groupIds = stream.mapToLong(
-			CommerceCatalog::getGroupId
-		).toArray();
+		long[] groupIds = _getGroupIds(companyId);
 
 		if (status == WorkflowConstants.STATUS_ANY) {
 			return commercePriceListPersistence.filterCountByG_C_NotS(
@@ -328,17 +298,9 @@ public class CommercePriceListServiceImpl
 			Sort sort)
 		throws PortalException {
 
-		List<CommerceCatalog> commerceCatalogs = _commerceCatalogService.search(
-			companyId, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		long[] groupIds = stream.mapToLong(
-			CommerceCatalog::getGroupId
-		).toArray();
-
 		return commercePriceListLocalService.searchCommercePriceLists(
-			companyId, groupIds, keywords, status, start, end, sort);
+			companyId, _getGroupIds(companyId), keywords, status, start, end,
+			sort);
 	}
 
 	@Override
@@ -346,17 +308,8 @@ public class CommercePriceListServiceImpl
 			long companyId, String keywords, int status)
 		throws PortalException {
 
-		List<CommerceCatalog> commerceCatalogs = _commerceCatalogService.search(
-			companyId, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		long[] groupIds = stream.mapToLong(
-			CommerceCatalog::getGroupId
-		).toArray();
-
 		return commercePriceListLocalService.searchCommercePriceListsCount(
-			companyId, groupIds, keywords, status);
+			companyId, _getGroupIds(companyId), keywords, status);
 	}
 
 	@Override
@@ -440,6 +393,13 @@ public class CommercePriceListServiceImpl
 
 		portletResourcePermission.check(
 			getPermissionChecker(), groupId, actionId);
+	}
+
+	private long[] _getGroupIds(long companyId) throws PortalException {
+		return TransformUtil.transformToLongArray(
+			_commerceCatalogService.search(
+				companyId, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null),
+			CommerceCatalog::getGroupId);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

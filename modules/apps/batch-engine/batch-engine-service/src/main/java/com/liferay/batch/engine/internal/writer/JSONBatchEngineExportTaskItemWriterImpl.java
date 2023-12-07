@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.engine.internal.writer;
@@ -22,7 +13,6 @@ import java.io.OutputStream;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Ivica Cardic
@@ -31,14 +21,13 @@ public class JSONBatchEngineExportTaskItemWriterImpl
 	implements BatchEngineExportTaskItemWriter {
 
 	public JSONBatchEngineExportTaskItemWriterImpl(
-			Set<String> allFieldNames, List<String> includeFieldNames,
-			OutputStream outputStream)
+			List<String> includeFieldNames, OutputStream outputStream)
 		throws IOException {
 
 		_outputStream = outputStream;
 
 		ObjectWriter objectWriter = ObjectWriterFactory.getObjectWriter(
-			allFieldNames, includeFieldNames);
+			includeFieldNames);
 
 		_sequenceWriter = objectWriter.writeValuesAsArray(_outputStream);
 	}

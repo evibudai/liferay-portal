@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -17,11 +8,13 @@ import ClayButton from '@clayui/button';
 import {ClayInput} from '@clayui/form';
 import {useEffect, useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
-import {useOutletContext, useParams} from 'react-router-dom';
+import {useNavigate, useOutletContext, useParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import {withPagePermission} from '~/hoc/withPagePermission';
 
 import Form from '../../components/Form';
 import Container from '../../components/Layout/Container';
+import SearchBuilder from '../../core/SearchBuilder';
 import {useHeader} from '../../hooks';
 import {useFetch} from '../../hooks/useFetch';
 import useFormActions from '../../hooks/useFormActions';
@@ -38,7 +31,6 @@ import {
 	testrayTaskImpl,
 	testrayTaskUsersImpl,
 } from '../../services/rest';
-import {searchUtil} from '../../util/search';
 import {TaskStatuses} from '../../util/statuses';
 import {UserListView} from '../Manage/User';
 import useTestFlowAssign from './TestflowFormAssignUserActions';
@@ -61,8 +53,9 @@ type OutletContext = {
 
 const TestflowForm = () => {
 	const {
-		form: {onClose, onError, onSave, onSubmit},
+		form: {onClose, onError, onSubmit, onSuccess},
 	} = useFormActions();
+
 	const [modalType, setModalType] = useState<TestflowAssigUserType>(
 		'select-users'
 	);
@@ -72,23 +65,42 @@ const TestflowForm = () => {
 	});
 	const {buildId, taskId} = useParams();
 	const {actions} = useTestFlowAssign({setUserIds});
+	const navigate = useNavigate();
 
 	const outletContext = useOutletContext<OutletContext>();
 
-	const {
-		data: {testrayTaskCaseTypes = [], testrayTaskUser, testrayTask},
-		mutate: {mutateTask},
-		revalidate: {revalidateTaskUser},
-	} = outletContext ?? {data: {}, mutate: {}, revalidate: {}};
+	const {setHeading} = useHeader({timeout: 210});
 
-	const {data} = useFetch('/casetypes?pageSize=100&fields=id,name');
+	const [isCheckedAll, setCheckedAll] = useState<boolean>(false);
+
+	const {
+		data: {
+			testrayTaskCaseTypes = [],
+			testrayTaskUser = undefined,
+			testrayTask = undefined,
+		} = {},
+		mutate: {mutateTask = () => null} = {mutateTask: undefined},
+		revalidate: {revalidateTaskUser = () => null} = {
+			revalidateTaskUser: undefined,
+		},
+	} = outletContext;
+
+	const {data} = useFetch('/casetypes', {
+		params: {
+			fields: 'id,name',
+			pageSize: 100,
+		},
+	});
+	const caseTypes = useMemo(() => data?.items || [], [
+		data?.items,
+	]) as TestrayCaseType[];
 
 	const taskCaseTypeIds = testrayTaskCaseTypes.map(
 		({caseType}) => caseType?.id
 	);
 
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		setValue,
@@ -102,22 +114,8 @@ const TestflowForm = () => {
 			name: testrayTask?.name,
 			userIds: [],
 		},
-
 		resolver: yupResolver(yupSchema.task),
 	});
-
-	useHeader({
-		useHeading: [
-			{
-				category: i18n.translate('task'),
-				title: i18n.translate('testflow'),
-			},
-		],
-	});
-
-	const caseTypes = useMemo(() => data?.items || [], [
-		data?.items,
-	]) as TestrayCaseType[];
 
 	const onOpenModal = (option: 'select-users' | 'select-user-groups') => {
 		setModalType(option);
@@ -168,7 +166,9 @@ const TestflowForm = () => {
 				revalidateTaskUser();
 			}
 
-			onSave();
+			onSuccess();
+
+			navigate(`/testflow/${response.id}`);
 		}
 		catch (error) {
 			onError(error);
@@ -193,6 +193,18 @@ const TestflowForm = () => {
 	};
 
 	useEffect(() => {
+		setHeading(
+			[
+				{
+					category: i18n.translate('task'),
+					title: i18n.translate('testflow'),
+				},
+			],
+			true
+		);
+	}, [setHeading]);
+
+	useEffect(() => {
 		if (testrayTaskUser) {
 			setUserIds(testrayTaskUser.map(({user}) => user?.id as number));
 		}
@@ -201,6 +213,23 @@ const TestflowForm = () => {
 	useEffect(() => {
 		setValue('userIds', userIds);
 	}, [setValue, userIds]);
+
+	useEffect(() => {
+		if (caseTypesWatch.length && caseTypesWatch.length < caseTypes.length) {
+			setCheckedAll(false);
+		}
+	}, [caseTypes.length, caseTypesWatch.length]);
+
+	const onSelectAll = () => {
+		if (isCheckedAll) {
+			setValue('caseTypes', []);
+		}
+		else {
+			caseTypes.forEach((caseType, index) => {
+				setValue(`caseTypes.${index}`, caseType.id);
+			});
+		}
+	};
 
 	return (
 		<Container>
@@ -218,6 +247,19 @@ const TestflowForm = () => {
 				<label className="mb-2 required">
 					{i18n.translate('case-type')}
 				</label>
+
+				<div className="col-4 my-3">
+					{!taskId && (
+						<Form.Checkbox
+							checked={isCheckedAll}
+							label={i18n.translate('select-all')}
+							onChange={() => {
+								setCheckedAll((isCheckedAll) => !isCheckedAll);
+								onSelectAll();
+							}}
+						/>
+					)}
+				</div>
 
 				<div className="d-flex flex-wrap">
 					{caseTypes.map((caseType, index: number) => (
@@ -271,7 +313,7 @@ const TestflowForm = () => {
 						managementToolbarProps: {
 							visible: false,
 						},
-						variables: {filter: searchUtil.in('id', userIds)},
+						variables: {filter: SearchBuilder.in('id', userIds)},
 					}}
 				/>
 			)}
@@ -281,6 +323,7 @@ const TestflowForm = () => {
 			<Form.Footer
 				onClose={() => onClose()}
 				onSubmit={handleSubmit(_onSubmit)}
+				primaryButtonProps={{loading: isSubmitting}}
 			/>
 
 			<TestflowAssignUserModal modal={modal} type={modalType} />
@@ -288,4 +331,8 @@ const TestflowForm = () => {
 	);
 };
 
-export default TestflowForm;
+export default withPagePermission(TestflowForm, {
+	createPath:
+		'/project/:projectId/routines/:routinesId/build/:buildId/testflow/create',
+	restImpl: testrayTaskImpl,
+});

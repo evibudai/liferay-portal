@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
 import moment from 'moment/min/moment-with-locales';
-import React, {useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 
 import {removeEmptyValues} from '../../utils/data';
 import Color from '../color/Color';
@@ -22,6 +13,15 @@ import {SidebarContext} from '../sidebar/SidebarContext';
 
 export default function List({data, field, summary, totalEntries, type}) {
 	const {portletNamespace, toggleSidebar} = useContext(SidebarContext);
+
+	useEffect(() => {
+		const firstLi = document.querySelector(
+			`#${portletNamespace}_entry_slidebar_0`
+		);
+		if (firstLi) {
+			firstLi.focus();
+		}
+	});
 
 	const formatDate = (field, isDateTime) => {
 		const locale = themeDisplay.getLanguageId().split('_', 1).join('');
@@ -55,12 +55,24 @@ export default function List({data, field, summary, totalEntries, type}) {
 		<div className="field-list">
 			<ul className="entries-list">
 				{Array.isArray(data) &&
-					data.map((field, index) => (
-						<li key={index}>{checkType(field, type)}</li>
+					data.map((value, index) => (
+						<li
+							id={`${portletNamespace}_entry_${
+								field ? field.name : 'slidebar'
+							}_${index}`}
+							index={index}
+							key={index}
+							tabIndex={0}
+						>
+							{checkType(value, type)}
+						</li>
 					))}
 
 				{data.length === 5 && totalEntries > 5 ? (
-					<li id={`${portletNamespace}-see-more`} key="see-more">
+					<li
+						id={`${portletNamespace}${field.name}-see-more`}
+						key="see-more"
+					>
 						<ClayButton
 							displayType="link"
 							onClick={() =>

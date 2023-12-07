@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.organizations.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
@@ -43,19 +35,14 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.comparator.OrganizationNameComparator;
 import com.liferay.portal.search.test.util.AssertUtils;
-import com.liferay.portal.search.test.util.SearchStreamUtil;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.users.admin.kernel.util.UsersAdmin;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -163,10 +150,6 @@ public class OrganizationLocalServiceWhenSearchingOrganizationsTreeTest {
 			"IndexerRegistryUtil must be resolved for " +
 				"OrganizationLocalServiceImpl.searchOrganizations",
 			indexerRegistry);
-		Assert.assertNotNull(
-			"UsersAdminUtil must be resolved for " +
-				"OrganizationLocalServiceImpl.searchOrganizations",
-			usersAdmin);
 
 		return organizationLocalService.searchOrganizations(
 			_user.getCompanyId(),
@@ -176,35 +159,16 @@ public class OrganizationLocalServiceWhenSearchingOrganizationsTreeTest {
 	}
 
 	protected String toString(Organization organization) {
-		Map<String, Function<Organization, Object>> map = new LinkedHashMap<>(
-			organization.getAttributeGetterFunctions());
+		Map<String, Object> modelAttributes = organization.getModelAttributes();
 
-		map.remove("createDate");
-		map.remove("modifiedDate");
+		modelAttributes.remove("createDate");
+		modelAttributes.remove("modifiedDate");
 
-		Stream<Map.Entry<String, Function<Organization, Object>>> stream =
-			SearchStreamUtil.stream(map.entrySet());
-
-		return String.valueOf(
-			stream.collect(
-				Collectors.toMap(
-					Map.Entry::getKey,
-					entry -> {
-						Function<Organization, Object> function =
-							entry.getValue();
-
-						return String.valueOf(function.apply(organization));
-					})));
+		return String.valueOf(modelAttributes);
 	}
 
 	protected List<String> toStringList(List<Organization> organizations) {
-		Stream<Organization> stream = organizations.stream();
-
-		return stream.map(
-			this::toString
-		).collect(
-			Collectors.toList()
-		);
+		return TransformUtil.transform(organizations, this::toString);
 	}
 
 	@Inject(
@@ -220,9 +184,6 @@ public class OrganizationLocalServiceWhenSearchingOrganizationsTreeTest {
 
 	@Inject
 	protected UserLocalService userLocalService;
-
-	@Inject
-	protected UsersAdmin usersAdmin;
 
 	private void _assertSearch(boolean includeSuborganizations)
 		throws Exception {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.elements;
@@ -85,12 +76,15 @@ public class PoshiElementAttribute
 			return sb.toString();
 		}
 
-		sb.append(" = \"");
+		sb.append(" = ");
+
 		value = value.replace("\"", "\\\"");
 
-		sb.append(value);
+		if (parentPoshiElement.isQuotedContent(value)) {
+			value = "\"" + value + "\"";
+		}
 
-		sb.append("\"");
+		sb.append(value);
 
 		return sb.toString();
 	}
@@ -101,7 +95,25 @@ public class PoshiElementAttribute
 			return;
 		}
 
-		PoshiNode.super.validatePoshiScript();
+		String originalPoshiScript = getPoshiScript();
+
+		originalPoshiScript = originalPoshiScript.replaceAll("\\s+", "");
+
+		String generatedPoshiScript = toPoshiScript();
+
+		generatedPoshiScript = generatedPoshiScript.replaceAll("\\s+", "");
+
+		if (!originalPoshiScript.equals(generatedPoshiScript)) {
+			originalPoshiScript = originalPoshiScript.replaceFirst("\"", "");
+
+			originalPoshiScript = originalPoshiScript.substring(
+				0, originalPoshiScript.length() - 1);
+
+			if (!originalPoshiScript.equals(generatedPoshiScript)) {
+				throw new PoshiScriptParserException(
+					PoshiScriptParserException.TRANSLATION_LOSS_MESSAGE, this);
+			}
+		}
 	}
 
 	private String _poshiScript;

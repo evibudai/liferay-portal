@@ -1,6 +1,7 @@
 @component-name = "portal-content-dashboard"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Dashboard";
@@ -10,7 +11,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		Navigator.openURL();
 
@@ -18,24 +19,24 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
 
-		for (var vocabulary : list "Audience,Stage") {
-			JSONCategory.tearDownCategories(
-				groupName = "Global",
-				vocabularyName = "${vocabulary}");
+			for (var vocabulary : list "Audience,Stage") {
+				JSONCategory.tearDownCategories(
+					groupName = "Global",
+					vocabularyName = ${vocabulary});
+			}
 		}
 	}
 
 	@description = "LPS-120676 When there are filters already applied and the user clicks in a bar, the new filters corresponding to the categories in that bar are applied, they are shown as filter labels in the management tool bar and the list of contents is filtered by them"
-	@priority = "3"
+	@priority = 3
 	test AuditGraphApplySecondFilter {
 		task ("Add a second category to Audience vocabulary") {
 			var audienceId2 = JSONCategory.addCategory(
@@ -89,7 +90,7 @@ definition {
 	}
 
 	@description = "When a user clicks on one of the colored bars of the audit graph, the filters corresponding to the categories in that bar are applied, they are shown as filter labels in the management tool bar and the list of contents is filtered by them"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphClickOnBar {
 		property portal.acceptance = "true";
 
@@ -127,16 +128,16 @@ definition {
 		task ("Click on first bar and assert elements") {
 			ContentDashboard.clickOnFirstBar();
 
-			AssertTextPresent(
+			AssertTextEquals(
 				locator1 = "ContentDashboard#BAR_SELECTED_MESSAGE",
 				value1 = "Press escape to remove the bar's category filters.");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				categoryName = "Audience 1",
 				locator1 = "ContentDashboard#FILTER_CATEGORY_NAME",
 				value1 = "Category: Audience 1");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				categoryName = "Stage 1",
 				locator1 = "ContentDashboard#FILTER_CATEGORY_NAME",
 				value1 = "Category: Stage 1");
@@ -158,7 +159,7 @@ definition {
 	}
 
 	@description = "When a user clicks on one of the colored bars of the audit graph, the filters corresponding to the categories in that bar are applied, they are shown as filter labels in the management tool bar and the list of contents is filtered by them"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphClickOnBarDeleteOneFilter {
 		property portal.acceptance = "true";
 
@@ -196,16 +197,16 @@ definition {
 		task ("Click on first bar and assert elements") {
 			ContentDashboard.clickOnFirstBar();
 
-			AssertTextPresent(
+			AssertTextEquals(
 				locator1 = "ContentDashboard#BAR_SELECTED_MESSAGE",
 				value1 = "Press escape to remove the bar's category filters.");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				categoryName = "Audience 1",
 				locator1 = "ContentDashboard#FILTER_CATEGORY_NAME",
 				value1 = "Category: Audience 1");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				categoryName = "Stage 1",
 				locator1 = "ContentDashboard#FILTER_CATEGORY_NAME",
 				value1 = "Category: Stage 1");
@@ -214,7 +215,7 @@ definition {
 		task ("Let only one filter active and assert elements") {
 			ContentDashboard.deleteSecondCategoryFilter();
 
-			AssertTextPresent(
+			AssertTextEquals(
 				categoryName = "Audience 1",
 				locator1 = "ContentDashboard#FILTER_CATEGORY_NAME",
 				value1 = "Category: Audience 1");
@@ -228,11 +229,11 @@ definition {
 	}
 
 	@description = "LPS-120676 When a user clicks on a gray bar of the audit graph, the filter corresponding to the category in that bar is applied, it is shown as a filter label in the management tool bar and the list of contents is filtered by it"
-	@priority = "3"
+	@priority = 3
 	test AuditGraphFilterByGrayBar {
 		task ("Create a web content with Category1") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${audienceId1}",
+				assetCategoryIds = ${audienceId1},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "Web Content Title 1");
@@ -240,7 +241,7 @@ definition {
 
 		task ("Create a web content with Category2") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${stageId1}",
+				assetCategoryIds = ${stageId1},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "Web Content Title 2");
@@ -273,7 +274,7 @@ definition {
 	}
 
 	@description = "When the user clicks on the Flip axes button, the vocabularies will be exchanged, the vocabulary represented in the X (the first in the list in the "In use" box) is sent to the Y, and the other way around"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphFlipAxes {
 		property portal.acceptance = "true";
 
@@ -290,22 +291,20 @@ definition {
 		}
 
 		task ("Check axes flip behavior") {
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
-				xAxisCtegoryName = "Stage 1");
+				xAxisCategoryName = "Audience 1");
 
 			ContentDashboard.flipGraphAxes();
 
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
-				xAxisCtegoryName = "Audience 1");
+				xAxisCategoryName = "Stage 1");
 		}
 	}
 
 	@description = "When there are not web content associated to the categories, the Flip axes button will be disabled"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphFlipAxesDisabled {
 		property portal.acceptance = "true";
 
@@ -319,7 +318,7 @@ definition {
 	}
 
 	@description = "When there are not contents with Audience's categories, the X axis will show just one bar per each one of Stage's categories representing the total number of contents labeled with those categories"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphNoContentsForAudience {
 		property portal.acceptance = "true";
 
@@ -332,7 +331,7 @@ definition {
 
 		task ("Add a Web Content using stage category via JSONWS") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${stageId1}",
+				assetCategoryIds = ${stageId1},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "WC Title");
@@ -343,12 +342,11 @@ definition {
 		}
 
 		task ("Check graph without filters applied") {
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
 				xAxisCategoryName = "Stage 1");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				auditGraphTitle = "Content per Stage",
 				locator1 = "ContentDashboard#AUDIT_GRAPH_TITLE",
 				value1 = "Content per Stage");
@@ -357,12 +355,11 @@ definition {
 		task ("Prioritize stage vocabulary") {
 			ContentDashboard.setVocabularyInUseTopPosition(key_vocabularyName = "Stage");
 
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
 				xAxisCategoryName = "Stage 1");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				auditGraphTitle = "Content per Stage",
 				locator1 = "ContentDashboard#AUDIT_GRAPH_TITLE",
 				value1 = "Content per Stage");
@@ -370,13 +367,13 @@ definition {
 	}
 
 	@description = "When one or more web contents have not an assigned category in the Vocab1 or in the Vocab2, but they have at least one assigned category in one of them, these contents are represented by a "No [VocabularyName] Category" label in the X axis (assets with no category in the Vocab2), or a "No [VocabularyName] Category" checkbox above the chart (assets with no category in the Vocab1)"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphNoContentsForEachCategory {
 		property portal.acceptance = "true";
 
 		task ("Add a first Web Content using audience category via JSONWS") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${audienceId1}",
+				assetCategoryIds = ${audienceId1},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "WC Title");
@@ -384,7 +381,7 @@ definition {
 
 		task ("Add a second Web Content using stage category via JSONWS") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${stageId1}",
+				assetCategoryIds = ${stageId1},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "WC Title 2");
@@ -395,12 +392,12 @@ definition {
 		}
 
 		task ("Check gray bar when category hasn't an asset associated") {
-			AssertTextPresent(
+			AssertTextEquals(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
 				value1 = "No Audience",
 				xAxisCategoryName = "No Audience");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				auditGraphCheckboxName = "No Stage Specified",
 				locator1 = "ContentDashboard#AUDIT_GRAPH_CATEGORY_CHECKBOX",
 				value1 = "No Stage Specified");
@@ -408,20 +405,13 @@ definition {
 	}
 
 	@description = "When there are not contents with Stage's categories, the X axis will show just one bar per each one of Audience's categories representing the total number of contents labeled with those categories"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphNoContentsForStage {
 		property portal.acceptance = "true";
 
-		task ("Delete Stage category") {
-			JSONCategory.deleteCategory(
-				categoryName = "Stage 1",
-				groupName = "Global",
-				vocabularyName = "Stage");
-		}
-
 		task ("Add a Web Content using audience category via JSONWS") {
 			JSONWebcontent.addWebContent(
-				assetCategoryIds = "${audienceId1}",
+				assetCategoryIds = ${audienceId1},
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "WC Title");
@@ -432,12 +422,11 @@ definition {
 		}
 
 		task ("Check graph without filters applied") {
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
 				xAxisCategoryName = "Audience 1");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				auditGraphTitle = "Content per Audience",
 				locator1 = "ContentDashboard#AUDIT_GRAPH_TITLE",
 				value1 = "Content per Audience");
@@ -446,12 +435,11 @@ definition {
 		task ("Prioritize stage vocabulary") {
 			ContentDashboard.setVocabularyInUseTopPosition(key_vocabularyName = "Stage");
 
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
 				xAxisCategoryName = "Audience 1");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				auditGraphTitle = "Content per Audience",
 				locator1 = "ContentDashboard#AUDIT_GRAPH_TITLE",
 				value1 = "Content per Audience");
@@ -459,7 +447,7 @@ definition {
 	}
 
 	@description = "Validate if the filters are saved after swapping vocabularies"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphSaveFiltersAfterSwapping {
 		property portal.acceptance = "true";
 
@@ -484,14 +472,14 @@ definition {
 		}
 
 		task ("Assert that filter is still aplied") {
-			AssertTextPresent(
+			AssertTextEquals(
 				locator1 = "ContentDashboard#FILTER_TEXT",
 				value1 = "Author: Test Test");
 		}
 	}
 
 	@description = "When an asset has S1 and S2 (Stage) assigned categories, but no "Audience" (Vocab2) categories, it will be represented in two different bars in the No Audience Category"
-	@priority = "5"
+	@priority = 5
 	test AuditGraphTwoBarsForNoSpecifiedCategory {
 		property portal.acceptance = "true";
 
@@ -548,7 +536,7 @@ definition {
 	}
 
 	@description = "When the user unchecks all of the checkboxes of the content audit graph, all bars in the graph disappear and a message is shown: No Stage Categories selected. Select any stage category from the checkboxes in the legend above."
-	@priority = "5"
+	@priority = 5
 	test AuditGraphUncheckCheckbox {
 		property portal.acceptance = "true";
 
@@ -569,16 +557,14 @@ definition {
 				checkboxName = "Stage 1",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 
-			AssertTextPresent(
+			AssertTextEquals(
 				locator1 = "ContentDashboard#NO_CATEGORIES_SELECTED_TEXT",
-				value1 = "There are no categories selected");
+				value1 = "There are no categories selected.");
 		}
 	}
 
-	@description = "LPS-128990 Given the graphs configuration panel
-	When the user selects a global vocabulary and a site vocabulary
-	Then the vocabularies appear as selected and they will be shown in the Audit graph"
-	@priority = "5"
+	@description = "LPS-128990 Given the graph's configuration panel When the user selects a global vocabulary + a site vocabulary Then the vocabularies appear as selected and they will be shown in the Audit graph"
+	@priority = 5
 	test AuditVocabulariesFromGlobalAndSite {
 		property portal.acceptance = "true";
 
@@ -619,24 +605,20 @@ definition {
 		}
 
 		task ("Assert the site vocabularies in the graph") {
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
-				xAxisCtegoryName = "Stage 2");
+				xAxisCategoryName = "Stage 2");
 
 			ContentDashboard.flipGraphAxes();
 
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
-				xAxisCtegoryName = "Category 1");
+				xAxisCategoryName = "Category 1");
 		}
 	}
 
-	@description = "LPS-128990 Given the graphs configuration panel
-	When the user selects two vocabularies from the same site
-	Then the vocabularies appear as selected and they will be shown in the Audit graph"
-	@priority = "5"
+	@description = "LPS-128990 Given the graph's configuration panel When the user selects two vocabularies from the same site Then the vocabularies appear as selected and they will be shown in the Audit graph"
+	@priority = 5
 	test AuditVocabulariesFromSameSite {
 		property portal.acceptance = "true";
 
@@ -679,24 +661,20 @@ definition {
 		}
 
 		task ("Assert the site vocabularies in the graph") {
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
-				xAxisCtegoryName = "Category 1");
+				xAxisCategoryName = "Category 1");
 
 			ContentDashboard.flipGraphAxes();
 
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
-				xAxisCtegoryName = "Category 2");
+				xAxisCategoryName = "Category 2");
 		}
 	}
 
-	@description = "LPS-119966 Given a blog with at least one category in one of the vocabularies featured in the graph
-	When the user views the content dashboard
-	Then the document is counted as an asset in the graph"
-	@priority = "4"
+	@description = "LPS-132509 Given a blog with at least one category in one of the vocabularies featured in the graph When the user views the content dashboard Then the document is counted as an asset in the graph"
+	@priority = 4
 	test BlogWithOneCategory {
 		property portal.acceptance = "true";
 
@@ -735,19 +713,18 @@ definition {
 		}
 
 		task ("Move vocabularies between In Use and Available") {
-			ContentDashboard.moveVocabularyDisplayConfiguration(vocabularyName = "Audience,Vocabulary Name 1,Stage,Vocabulary Name 2");
+			ContentDashboard.moveVocabularyDisplayConfiguration(vocabularyName = "Audience,Vocabulary 1,Stage,Vocabulary 2");
 		}
 
 		task ("Assert the blog is counted as an asset") {
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "Blogs Entry Title",
 				xAxisCategoryName = "Category1");
 		}
 	}
 
 	@description = "LPS-133797 When the user selects the option Available, the modal lists all the existing Global Vocabularies"
-	@priority = "5"
+	@priority = 5
 	test CheckAvailableVocabulariesDisplayed {
 		property portal.acceptance = "true";
 
@@ -783,7 +760,7 @@ definition {
 	}
 
 	@description = "LPS-134606 When there's a vocabulary in the "In use" box is in the second position of the list and user clicks on Save, the graph will feature that vocabulary in the checkbox legend above"
-	@priority = "5"
+	@priority = 5
 	test CheckSecondPositionVocabularyCheckbox {
 		property portal.acceptance = "true";
 
@@ -802,22 +779,20 @@ definition {
 		task ("Check which vocabulary is displayed in x-axis") {
 			ContentDashboard.setVocabularyInUseSecondPosition(key_vocabularyName = "Stage");
 
-			AssertTextPresent(
-				auditGraphCheckboxName = "Stage 1",
-				locator1 = "ContentDashboard#AUDIT_GRAPH_CATEGORY_CHECKBOX",
-				value1 = "WC Title");
+			AssertElementPresent(
+				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
+				xAxisCategoryName = "Audience 1");
 
 			ContentDashboard.setVocabularyInUseSecondPosition(key_vocabularyName = "Audience");
 
-			AssertTextPresent(
-				auditGraphCheckboxName = "Audience 1",
-				locator1 = "ContentDashboard#AUDIT_GRAPH_CATEGORY_CHECKBOX",
-				value1 = "WC Title");
+			AssertElementPresent(
+				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
+				xAxisCategoryName = "Stage 1");
 		}
 	}
 
 	@description = "LPS-134606 When there's a vocabulary in the "In use" box is in the top position of the list and user clicks on Save, the graph will feature that vocabulary in the X axis"
-	@priority = "5"
+	@priority = 5
 	test CheckTopPositionVocabularyXAxis {
 		property portal.acceptance = "true";
 
@@ -836,22 +811,20 @@ definition {
 		task ("Check which vocabulary is displayed in x-axis") {
 			ContentDashboard.setVocabularyInUseTopPosition(key_vocabularyName = "Stage");
 
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
 				xAxisCategoryName = "Stage 1");
 
 			ContentDashboard.setVocabularyInUseTopPosition(key_vocabularyName = "Audience");
 
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "WC Title",
 				xAxisCategoryName = "Audience 1");
 		}
 	}
 
 	@description = "LPS-119966 Given a document with no categories in any of the vocabularies featured in the graph then the document is NOT counted as an asset in the graph"
-	@priority = "4"
+	@priority = 4
 	test DocumentWithNoCategories {
 		property portal.acceptance = "true";
 
@@ -867,20 +840,20 @@ definition {
 		}
 
 		task ("Assert the are no info in the Audit Graph") {
-			AssertTextPresent(
+			AssertTextEquals(
 				locator1 = "ContentDashboard#EMPTY_AUDIT_GRAPH_TEXT",
 				value1 = "There is no data.");
 		}
 	}
 
 	@description = "LPS-119966 Given a document with at least one category in one of the vocabularies featured in the graph then the document is counted as an asset in the graph"
-	@priority = "4"
+	@priority = 4
 	test DocumentWithOneCategory {
 		property portal.acceptance = "true";
 
 		task ("Create a new Document") {
 			JSONDocument.addFile(
-				assetCategoryIds = "${audienceId1}",
+				assetCategoryIds = ${audienceId1},
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "DM Document Title",
 				groupName = "Test Site Name");
@@ -891,15 +864,14 @@ definition {
 		}
 
 		task ("Assert the document is counted as an asset") {
-			AssertTextPresent(
+			AssertElementPresent(
 				locator1 = "ContentDashboard#X_AXIS_VOCABULARY_NAME",
-				value1 = "DM Document Title",
 				xAxisCategoryName = "Audience 1");
 		}
 	}
 
 	@description = "LPS-133797 When clicks on the left or right arrows within Configuration and selects one or more vocabularies, the vocabularies go from Available to In use and vice versa"
-	@priority = "3"
+	@priority = 3
 	@uitest
 	test MoveVocabulariesAcrossConfiguration {
 		task ("Navigate Content Dashboard > Audic Graph configuration") {
@@ -950,7 +922,7 @@ definition {
 	}
 
 	@description = "LPS-134606 When the user has removed all vocabularies from the In Use box and clicks on Save , a warning message will show: Select at least one vocabulary to show on the chart "
-	@priority = "3"
+	@priority = 3
 	test ShowWarningMessageNoVocabulariesInUse {
 		task ("Add a Web Content using categories via JSONWS") {
 			JSONWebcontent.addWebContent(

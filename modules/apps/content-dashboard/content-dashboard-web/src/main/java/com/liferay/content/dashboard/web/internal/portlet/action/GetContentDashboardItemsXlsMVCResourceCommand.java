@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.web.internal.portlet.action;
@@ -20,6 +11,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.ContentDashboardItemVersion;
+import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryRegistry;
 import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardSearchContextBuilder;
@@ -44,7 +36,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.configuration.DefaultSearchResultPermissionFilterConfiguration;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -65,10 +56,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -139,20 +127,24 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 		WorkbookBuilder workbookBuilder) {
 
 		workbookBuilder.cell(
+			String.valueOf(contentDashboardItem.getId())
+		).cell(
 			contentDashboardItem.getTitle(locale)
 		).cell(
 			contentDashboardItem.getUserName()
 		).cell(
 			contentDashboardItem.getTypeLabel(locale)
 		).cell(
-			Optional.ofNullable(
-				contentDashboardItem.getContentDashboardItemSubtype()
-			).map(
-				contentDashboardItemSubtype ->
-					contentDashboardItemSubtype.getLabel(locale)
-			).orElse(
-				StringPool.BLANK
-			)
+			() -> {
+				ContentDashboardItemSubtype<?> contentDashboardItemSubtype =
+					contentDashboardItem.getContentDashboardItemSubtype();
+
+				if (contentDashboardItemSubtype == null) {
+					return StringPool.BLANK;
+				}
+
+				return contentDashboardItemSubtype.getLabel(locale);
+			}
 		).cell(
 			contentDashboardItem.getScopeName(locale)
 		).cell(
@@ -180,6 +172,16 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 		).cell(
 			_toString(contentDashboardItem.getModifiedDate())
 		).cell(
+			() -> {
+				Date reviewDate = contentDashboardItem.getReviewDate();
+
+				if (reviewDate != null) {
+					return _toString(reviewDate);
+				}
+
+				return StringPool.DASH;
+			}
+		).cell(
 			contentDashboardItem.getDescription(locale)
 		);
 
@@ -199,20 +201,16 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 			_toString(contentDashboardItem.getCreateDate())
 		);
 
-		List<Locale> locales = contentDashboardItem.getAvailableLocales();
-
-		Stream<Locale> stream = locales.stream();
-
 		workbookBuilder.cell(
-			stream.map(
-				LocaleUtil::toLanguageId
-			).collect(
-				Collectors.joining(StringPool.COMMA)
-			));
+			StringUtil.merge(
+				contentDashboardItem.getAvailableLocales(),
+				LocaleUtil::toLanguageId, StringPool.COMMA));
 	}
 
 	private void _addWorkbookHeaders(WorkbookBuilder workbookBuilder) {
 		workbookBuilder.localizedCell(
+			"id"
+		).localizedCell(
 			"title"
 		).localizedCell(
 			"author"
@@ -230,6 +228,8 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 			"tags"
 		).localizedCell(
 			"modified-date"
+		).localizedCell(
+			"review-date"
 		).localizedCell(
 			"description"
 		).localizedCell(
@@ -397,9 +397,6 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private Props _props;
 
 	@Reference
 	private Searcher _searcher;

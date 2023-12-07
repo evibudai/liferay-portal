@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.builder.internal.helper;
@@ -33,9 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,23 +70,25 @@ public class DDMExpressionFunctionMetadataHelper {
 		for (Map.Entry<String, DDMExpressionFunction> entry :
 				customDDMExpressionFunctions.entrySet()) {
 
+			Method method = null;
+
 			DDMExpressionFunction ddmExpressionFunction = entry.getValue();
 
 			Class<?> clazz = ddmExpressionFunction.getClass();
 
-			Stream<Method> stream = Arrays.stream(clazz.getMethods());
+			for (Method curMethod : clazz.getMethods()) {
+				if (Objects.equals(curMethod.getName(), "apply") &&
+					Objects.equals(curMethod.getReturnType(), Boolean.class)) {
 
-			Optional<Method> optional = stream.filter(
-				method ->
-					Objects.equals(method.getName(), "apply") &&
-					Objects.equals(method.getReturnType(), Boolean.class)
-			).findFirst();
+					method = curMethod;
 
-			if (!optional.isPresent()) {
-				continue;
+					break;
+				}
 			}
 
-			Method method = optional.get();
+			if (method == null) {
+				continue;
+			}
 
 			int parameterCount = method.getParameterCount();
 

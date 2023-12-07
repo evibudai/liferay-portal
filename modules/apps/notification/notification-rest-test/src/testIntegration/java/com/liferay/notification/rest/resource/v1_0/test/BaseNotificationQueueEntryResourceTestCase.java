@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.rest.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.notification.rest.client.pagination.Pagination;
 import com.liferay.notification.rest.client.resource.v1_0.NotificationQueueEntryResource;
 import com.liferay.notification.rest.client.serdes.v1_0.NotificationQueueEntrySerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -245,13 +235,23 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 		assertContains(
 			notificationQueueEntry2,
 			(List<NotificationQueueEntry>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page, testGetNotificationQueueEntriesPage_getExpectedActions());
 
 		notificationQueueEntryResource.deleteNotificationQueueEntry(
 			notificationQueueEntry1.getId());
 
 		notificationQueueEntryResource.deleteNotificationQueueEntry(
 			notificationQueueEntry2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetNotificationQueueEntriesPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -290,41 +290,39 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 	public void testGetNotificationQueueEntriesPageWithFilterDoubleEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetNotificationQueueEntriesPageWithFilter(
+			"eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetNotificationQueueEntriesPageWithFilterStringContains()
+		throws Exception {
 
-		NotificationQueueEntry notificationQueueEntry1 =
-			testGetNotificationQueueEntriesPage_addNotificationQueueEntry(
-				randomNotificationQueueEntry());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		NotificationQueueEntry notificationQueueEntry2 =
-			testGetNotificationQueueEntriesPage_addNotificationQueueEntry(
-				randomNotificationQueueEntry());
-
-		for (EntityField entityField : entityFields) {
-			Page<NotificationQueueEntry> page =
-				notificationQueueEntryResource.getNotificationQueueEntriesPage(
-					null,
-					getFilterString(entityField, "eq", notificationQueueEntry1),
-					Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(notificationQueueEntry1),
-				(List<NotificationQueueEntry>)page.getItems());
-		}
+		testGetNotificationQueueEntriesPageWithFilter(
+			"contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetNotificationQueueEntriesPageWithFilterStringEquals()
 		throws Exception {
 
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetNotificationQueueEntriesPageWithFilter(
+			"eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetNotificationQueueEntriesPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetNotificationQueueEntriesPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetNotificationQueueEntriesPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -343,7 +341,8 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 			Page<NotificationQueueEntry> page =
 				notificationQueueEntryResource.getNotificationQueueEntriesPage(
 					null,
-					getFilterString(entityField, "eq", notificationQueueEntry1),
+					getFilterString(
+						entityField, operator, notificationQueueEntry1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -356,11 +355,12 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 	public void testGetNotificationQueueEntriesPageWithPagination()
 		throws Exception {
 
-		Page<NotificationQueueEntry> totalPage =
+		Page<NotificationQueueEntry> notificationQueueEntryPage =
 			notificationQueueEntryResource.getNotificationQueueEntriesPage(
 				null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			notificationQueueEntryPage.getTotalCount());
 
 		NotificationQueueEntry notificationQueueEntry1 =
 			testGetNotificationQueueEntriesPage_addNotificationQueueEntry(
@@ -400,7 +400,7 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 
 		Page<NotificationQueueEntry> page3 =
 			notificationQueueEntryResource.getNotificationQueueEntriesPage(
-				null, null, Pagination.of(1, totalCount + 3), null);
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 		assertContains(
 			notificationQueueEntry1,
@@ -538,23 +538,33 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 			testGetNotificationQueueEntriesPage_addNotificationQueueEntry(
 				notificationQueueEntry2);
 
+		Page<NotificationQueueEntry> page =
+			notificationQueueEntryResource.getNotificationQueueEntriesPage(
+				null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<NotificationQueueEntry> ascPage =
 				notificationQueueEntryResource.getNotificationQueueEntriesPage(
-					null, null, Pagination.of(1, 2),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(notificationQueueEntry1, notificationQueueEntry2),
+			assertContains(
+				notificationQueueEntry1,
+				(List<NotificationQueueEntry>)ascPage.getItems());
+			assertContains(
+				notificationQueueEntry2,
 				(List<NotificationQueueEntry>)ascPage.getItems());
 
 			Page<NotificationQueueEntry> descPage =
 				notificationQueueEntryResource.getNotificationQueueEntriesPage(
-					null, null, Pagination.of(1, 2),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(notificationQueueEntry2, notificationQueueEntry1),
+			assertContains(
+				notificationQueueEntry2,
+				(List<NotificationQueueEntry>)descPage.getItems());
+			assertContains(
+				notificationQueueEntry1,
 				(List<NotificationQueueEntry>)descPage.getItems());
 		}
 	}
@@ -619,6 +629,28 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 		throws Exception {
 
 		return testGraphQLNotificationQueueEntry_addNotificationQueueEntry();
+	}
+
+	@Test
+	public void testPostNotificationQueueEntry() throws Exception {
+		NotificationQueueEntry randomNotificationQueueEntry =
+			randomNotificationQueueEntry();
+
+		NotificationQueueEntry postNotificationQueueEntry =
+			testPostNotificationQueueEntry_addNotificationQueueEntry(
+				randomNotificationQueueEntry);
+
+		assertEquals(randomNotificationQueueEntry, postNotificationQueueEntry);
+		assertValid(postNotificationQueueEntry);
+	}
+
+	protected NotificationQueueEntry
+			testPostNotificationQueueEntry_addNotificationQueueEntry(
+				NotificationQueueEntry notificationQueueEntry)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -928,8 +960,8 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("priority", additionalAssertFieldName)) {
-				if (notificationQueueEntry.getPriority() == null) {
+			if (Objects.equals("recipients", additionalAssertFieldName)) {
+				if (notificationQueueEntry.getRecipients() == null) {
 					valid = false;
 				}
 
@@ -1003,6 +1035,13 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 	}
 
 	protected void assertValid(Page<NotificationQueueEntry> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<NotificationQueueEntry> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<NotificationQueueEntry> notificationQueueEntries =
@@ -1018,6 +1057,25 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1133,10 +1191,10 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("priority", additionalAssertFieldName)) {
+			if (Objects.equals("recipients", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
-						notificationQueueEntry1.getPriority(),
-						notificationQueueEntry2.getPriority())) {
+						notificationQueueEntry1.getRecipients(),
+						notificationQueueEntry2.getRecipients())) {
 
 					return false;
 				}
@@ -1260,14 +1318,16 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1284,6 +1344,10 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1293,18 +1357,18 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1327,17 +1391,93 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 		}
 
 		if (entityFieldName.equals("body")) {
-			sb.append("'");
-			sb.append(String.valueOf(notificationQueueEntry.getBody()));
-			sb.append("'");
+			Object object = notificationQueueEntry.getBody();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("fromName")) {
-			sb.append("'");
-			sb.append(String.valueOf(notificationQueueEntry.getFromName()));
-			sb.append("'");
+			Object object = notificationQueueEntry.getFromName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1347,17 +1487,53 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("priority")) {
-			sb.append(String.valueOf(notificationQueueEntry.getPriority()));
-
-			return sb.toString();
+		if (entityFieldName.equals("recipients")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("recipientsSummary")) {
-			sb.append("'");
-			sb.append(
-				String.valueOf(notificationQueueEntry.getRecipientsSummary()));
-			sb.append("'");
+			Object object = notificationQueueEntry.getRecipientsSummary();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1403,33 +1579,185 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 		}
 
 		if (entityFieldName.equals("subject")) {
-			sb.append("'");
-			sb.append(String.valueOf(notificationQueueEntry.getSubject()));
-			sb.append("'");
+			Object object = notificationQueueEntry.getSubject();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("triggerBy")) {
-			sb.append("'");
-			sb.append(String.valueOf(notificationQueueEntry.getTriggerBy()));
-			sb.append("'");
+			Object object = notificationQueueEntry.getTriggerBy();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("type")) {
-			sb.append("'");
-			sb.append(String.valueOf(notificationQueueEntry.getType()));
-			sb.append("'");
+			Object object = notificationQueueEntry.getType();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("typeLabel")) {
-			sb.append("'");
-			sb.append(String.valueOf(notificationQueueEntry.getTypeLabel()));
-			sb.append("'");
+			Object object = notificationQueueEntry.getTypeLabel();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1484,7 +1812,6 @@ public abstract class BaseNotificationQueueEntryResourceTestCase {
 				fromName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
-				priority = RandomTestUtil.randomDouble();
 				recipientsSummary = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				sentDate = RandomTestUtil.nextDate();

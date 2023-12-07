@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.address.web.internal.portlet.action;
@@ -21,6 +12,7 @@ import com.liferay.portal.kernel.exception.RegionNameException;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -31,6 +23,8 @@ import com.liferay.portal.kernel.util.Portal;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,7 +50,12 @@ public class EditCommerceRegionMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				_updateCommerceRegion(actionRequest);
+				Region region = _updateCommerceRegion(actionRequest);
+
+				String redirect = _getSaveAndContinueRedirect(
+					actionRequest, region);
+
+				sendRedirect(actionRequest, actionResponse, redirect);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
 				_deleteRegions(actionRequest);
@@ -114,6 +113,29 @@ public class EditCommerceRegionMVCActionCommand extends BaseMVCActionCommand {
 		for (long deleteRegionId : deleteRegionIds) {
 			_regionService.deleteRegion(deleteRegionId);
 		}
+	}
+
+	private String _getSaveAndContinueRedirect(
+			ActionRequest actionRequest, Region region)
+		throws Exception {
+
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				actionRequest, CommercePortletKeys.COMMERCE_COUNTRY,
+				PortletRequest.RENDER_PHASE)
+		).setParameter(
+			"countryId", ParamUtil.getLong(actionRequest, "countryId")
+		).buildPortletURL();
+
+		if (region != null) {
+			portletURL.setParameter(
+				"mvcRenderCommandName",
+				"/commerce_country/edit_commerce_region");
+			portletURL.setParameter(
+				"regionId", String.valueOf(region.getRegionId()));
+		}
+
+		return portletURL.toString();
 	}
 
 	private Region _updateCommerceRegion(ActionRequest actionRequest)

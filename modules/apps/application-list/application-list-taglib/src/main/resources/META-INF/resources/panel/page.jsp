@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -68,9 +59,15 @@ PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(panelAppRegist
 								</c:if>
 							</c:if>
 
-							<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
+							<clay:icon
+								cssClass="collapse-icon-closed"
+								symbol="angle-right"
+							/>
 
-							<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
+							<clay:icon
+								cssClass="collapse-icon-open"
+								symbol="angle-down"
+							/>
 						</a>
 
 						<div class="collapse <%= active ? "show" : StringPool.BLANK %>" id="<%= id %>">
@@ -183,16 +180,14 @@ PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(panelAppRegist
 	</li>
 
 	<%
-	for (PanelApp panelApp : panelAppRegistry.getPanelApps(panelCategory.getKey())) {
+	for (PanelApp panelApp : panelAppRegistry.getPanelApps(panelCategory.getKey(), permissionChecker, themeDisplay.getScopeGroup())) {
 	%>
 
-		<c:if test="<%= panelApp.isShow(permissionChecker, themeDisplay.getScopeGroup()) %>">
-			<li class="list-group" role="none">
-				<div class="list-group-heading panel-app-root panel-header <%= Objects.equals(themeDisplay.getPpid(), panelApp.getPortletId()) ? "active" : StringPool.BLANK %>">
-					<%@ include file="/panel/panel_app.jspf" %>
-				</div>
-			</li>
-		</c:if>
+		<li class="list-group" role="none">
+			<div class="list-group-heading panel-app-root panel-header <%= PanelAppUtil.isActive(request, panelApp) ? "active" : StringPool.BLANK %>">
+				<%@ include file="/panel/panel_app.jspf" %>
+			</div>
+		</li>
 
 	<%
 	}

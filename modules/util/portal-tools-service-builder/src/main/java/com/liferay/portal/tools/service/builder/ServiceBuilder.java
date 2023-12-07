@@ -1,31 +1,23 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools.service.builder;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.petra.xml.Dom4jUtil;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.db.IndexMetadataFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.cache.CacheField;
 import com.liferay.portal.kernel.plugin.Version;
@@ -96,10 +88,13 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -118,7 +113,6 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -127,7 +121,9 @@ import org.dom4j.DocumentType;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.XPath;
+import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
+import org.dom4j.io.XMLWriter;
 
 /**
  * @author Brian Wing Shun Chan
@@ -394,11 +390,11 @@ public class ServiceBuilder {
 				while (enumeration.hasMoreElements()) {
 					URL url = enumeration.nextElement();
 
-					InputStream inputStream = url.openStream();
-
-					_readResourceActionModels(
-						implDirName, resourcesDirName, inputStream,
-						resourceActionModels);
+					try (InputStream inputStream = url.openStream()) {
+						_readResourceActionModels(
+							implDirName, resourcesDirName, inputStream,
+							resourceActionModels);
+					}
 				}
 			}
 			else {
@@ -603,8 +599,6 @@ public class ServiceBuilder {
 			_badAliasNames = _readLines(_tplBadAliasNames);
 			_badColumnNames = _readLines(_tplBadColumnNames);
 			_badTableNames = _readLines(_tplBadTableNames);
-
-			_commercialPlugin = _isCommercialPlugin(Paths.get("."));
 
 			SAXReader saxReader = _getSAXReader();
 
@@ -2483,7 +2477,7 @@ public class ServiceBuilder {
 											entityColumn.getType());
 									}
 
-									if (Objects.equals("CLOB", sqlType)) {
+									if (Objects.equals(sqlType, "CLOB")) {
 										return "Clob";
 									}
 
@@ -2687,6 +2681,13 @@ public class ServiceBuilder {
 					content = StringUtil.replace(
 						content, "PortalException", "NoSuchModelException");
 				}
+
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+					"yyyy");
+
+				content = content.replaceFirst(
+					Pattern.quote("{$year}"),
+					simpleDateFormat.format(new Date()));
 
 				content = StringUtil.replace(content, "\r\n", "\n");
 
@@ -4778,6 +4779,20 @@ public class ServiceBuilder {
 	}
 
 	private String _formatXml(String xml) throws Exception {
+		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
+			new UnsyncByteArrayOutputStream();
+
+		OutputFormat outputFormat = new OutputFormat(StringPool.TAB, true);
+
+		outputFormat.setOmitEncoding(true);
+		outputFormat.setPadText(true);
+		outputFormat.setTrimText(true);
+
+		XMLWriter xmlWriter = new XMLWriter(
+			unsyncByteArrayOutputStream, outputFormat);
+
+		SAXReader saxReader = _getSAXReader();
+
 		String doctype = null;
 
 		int x = xml.indexOf("<!DOCTYPE");
@@ -4791,7 +4806,16 @@ public class ServiceBuilder {
 		}
 
 		xml = StringUtil.replace(xml, '\r', "");
-		xml = Dom4jUtil.toString(xml);
+
+		xmlWriter.write(saxReader.read(new XMLSafeReader(xml)));
+
+		xml = StringUtil.trimTrailing(
+			unsyncByteArrayOutputStream.toString(StringPool.UTF8));
+
+		while (xml.contains(" \n")) {
+			xml = StringUtil.replace(xml, " \n", "\n");
+		}
+
 		xml = StringUtil.replace(xml, "\"/>", "\" />");
 
 		if (Validator.isNotNull(doctype)) {
@@ -5254,23 +5278,28 @@ public class ServiceBuilder {
 				sb.append("LONG");
 			}
 			else if (type.equals("BigDecimal")) {
-				Map<String, String> hints = ModelHintsUtil.getHints(
-					_apiPackagePath + ".model." + entity.getName(),
-					entityColumn.getModelHintsName());
-
-				String precision = "30";
-				String scale = "16";
-
-				if (hints != null) {
-					precision = hints.getOrDefault("precision", precision);
-					scale = hints.getOrDefault("scale", scale);
+				if (isVersionGTE_7_4_0()) {
+					sb.append("BIGDECIMAL");
 				}
+				else {
+					Map<String, String> hints = ModelHintsUtil.getHints(
+						_apiPackagePath + ".model." + entity.getName(),
+						entityColumn.getModelHintsName());
 
-				sb.append("DECIMAL(");
-				sb.append(precision);
-				sb.append(", ");
-				sb.append(scale);
-				sb.append(")");
+					String precision = "30";
+					String scale = "16";
+
+					if (hints != null) {
+						precision = hints.getOrDefault("precision", precision);
+						scale = hints.getOrDefault("scale", scale);
+					}
+
+					sb.append("DECIMAL(");
+					sb.append(precision);
+					sb.append(", ");
+					sb.append(scale);
+					sb.append(")");
+				}
 			}
 			else if (type.equals("Blob")) {
 				sb.append("BLOB");
@@ -5854,32 +5883,40 @@ public class ServiceBuilder {
 			return false;
 		}
 
-		boolean hasCompanyId = Stream.of(
-			columnElements.toArray(new Element[0])
-		).map(
-			columnElement -> columnElement.attributeValue("name")
-		).anyMatch(
-			columnName -> columnName.equals("companyId")
-		);
+		boolean hasCompanyId = false;
+
+		for (Element columnElement : columnElements) {
+			String columnName = columnElement.attributeValue("name");
+
+			if (columnName.equals("companyId")) {
+				hasCompanyId = true;
+
+				break;
+			}
+		}
 
 		if (!hasCompanyId) {
 			return false;
 		}
 
-		String[] finderColumnNames = Stream.of(
-			finderColumnElements.toArray(new Element[0])
-		).map(
-			finderColumnElement -> finderColumnElement.attributeValue("name")
-		).filter(
-			finderColumnName ->
-				finderColumnName.endsWith("Id") ||
-				finderColumnName.endsWith("PK")
-		).toArray(
-			String[]::new
-		);
+		List<String> finderColumnNames = TransformUtil.transform(
+			finderColumnElements,
+			finderColumnElement -> {
+				String finderColumnName = finderColumnElement.attributeValue(
+					"name");
 
-		if ((finderColumnNames.length == 1) &&
-			finderColumnNames[0].equals("classNameId")) {
+				if ((finderColumnName == null) ||
+					(!finderColumnName.endsWith("Id") &&
+					 !finderColumnName.endsWith("PK"))) {
+
+					return null;
+				}
+
+				return finderColumnName;
+			});
+
+		if ((finderColumnNames.size() == 1) &&
+			Objects.equals(finderColumnNames.get(0), "classNameId")) {
 
 			return true;
 		}
@@ -5892,52 +5929,6 @@ public class ServiceBuilder {
 			if (javaMethod.isPublic() && isCustomMethod(javaMethod)) {
 				return true;
 			}
-		}
-
-		return false;
-	}
-
-	private boolean _isCommercialPlugin(Path pluginPath) throws IOException {
-		if (pluginPath == null) {
-			return false;
-		}
-
-		Path absolutePath = pluginPath.toAbsolutePath();
-
-		absolutePath = absolutePath.normalize();
-
-		String absoluteFileName = _normalize(absolutePath.toString());
-
-		if (absoluteFileName.contains("/modules/dxp/apps/") ||
-			absoluteFileName.contains("/modules/private/apps/")) {
-
-			return true;
-		}
-
-		File dir = absolutePath.toFile();
-
-		while (dir != null) {
-			File file = new File(dir, "gradle.properties");
-
-			if (file.exists()) {
-				Properties properties = new Properties();
-
-				properties.load(new FileInputStream(file));
-
-				if (properties.containsKey("project.path.prefix")) {
-					String s = properties.getProperty("project.path.prefix");
-
-					if (s.startsWith(":dxp:apps") ||
-						s.startsWith(":private:apps")) {
-
-						return true;
-					}
-
-					return false;
-				}
-			}
-
-			dir = dir.getParentFile();
 		}
 
 		return false;
@@ -6403,15 +6394,15 @@ public class ServiceBuilder {
 			boolean colJsonEnabled = GetterUtil.getBoolean(
 				columnElement.attributeValue("json-enabled"), jsonEnabled);
 
-			String changeTrackingResolutionType = "STRICT";
+			String changeTrackingResolutionType = "strict";
 
 			if (primary) {
-				changeTrackingResolutionType = "PK";
+				changeTrackingResolutionType = "pk";
 			}
 			else if (columnName.equals("modifiedDate") &&
 					 columnType.equals("Date")) {
 
-				changeTrackingResolutionType = "IGNORE";
+				changeTrackingResolutionType = "ignore";
 			}
 
 			changeTrackingResolutionType = StringUtil.toUpperCase(
@@ -6920,7 +6911,7 @@ public class ServiceBuilder {
 
 			EntityColumn pkEntityColumn = pkEntityColumns.get(0);
 
-			if (!Objects.equals("long", pkEntityColumn.getType())) {
+			if (!Objects.equals(pkEntityColumn.getType(), "long")) {
 				throw new ServiceBuilderException(
 					"Primary key must be of type long to enable change " +
 						"tracking for " + entityName);
@@ -7063,6 +7054,11 @@ public class ServiceBuilder {
 		Element newLocalizedEntityElement = DocumentHelper.createElement(
 			"entity");
 
+		if (entity.isChangeTrackingEnabled()) {
+			newLocalizedEntityElement.addAttribute(
+				"change-tracking-enabled", "true");
+		}
+
 		if (Validator.isNotNull(entity.getDataSource())) {
 			newLocalizedEntityElement.addAttribute(
 				"data-source", entity.getDataSource());
@@ -7189,6 +7185,10 @@ public class ServiceBuilder {
 				"column");
 
 			newLocalizedColumnElement.addAttribute("name", columnName);
+			newLocalizedColumnElement.addAttribute(
+				"change-tracking-resolution-type",
+				localizedColumnElement.attributeValue(
+					"change-tracking-resolution-type"));
 			newLocalizedColumnElement.addAttribute("db-name", columnDBName);
 			newLocalizedColumnElement.addAttribute("type", "String");
 		}
@@ -7376,7 +7376,7 @@ public class ServiceBuilder {
 
 		EntityColumn pkEntityColumn = pkEntityColumns.get(0);
 
-		if (!Objects.equals("long", pkEntityColumn.getType())) {
+		if (!Objects.equals(pkEntityColumn.getType(), "long")) {
 			throw new IllegalArgumentException(
 				"Must have long primary key to create versioned entity");
 		}
@@ -7969,14 +7969,23 @@ public class ServiceBuilder {
 			File file, String content, Set<String> modifiedFileNames)
 		throws Exception {
 
-		String header = null;
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy");
 
-		if (_commercialPlugin) {
-			header = _read("copyright-commercial.txt");
+		String year = simpleDateFormat.format(new Date());
+
+		if (file.exists()) {
+			String oldContent = _read(file);
+
+			int x = oldContent.indexOf("/**\n * SPDX-FileCopyrightText: (c) ");
+
+			if (x != -1) {
+				year = oldContent.substring(x + 35, x + 39);
+			}
 		}
-		else {
-			header = _read("copyright.txt");
-		}
+
+		String header = _read("copyright.txt");
+
+		header = header.replaceFirst(Pattern.quote("{$year}"), year);
 
 		content = header + "\n\n" + content;
 
@@ -8074,7 +8083,6 @@ public class ServiceBuilder {
 	private long _buildNumber;
 	private boolean _buildNumberIncrement;
 	private boolean _changeTrackingEnabled;
-	private boolean _commercialPlugin;
 	private Properties _compatProperties;
 	private String _currentTplName;
 	private int _databaseNameMaxLength = 30;

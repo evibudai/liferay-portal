@@ -26,7 +26,6 @@ components:
                 listTypeEntries:
                     items:
                         $ref: "#/components/schemas/ListTypeEntry"
-                    readOnly: true
                     type: array
                 name:
                     type: string
@@ -34,6 +33,8 @@ components:
                     additionalProperties:
                         type: string
                     type: object
+                system:
+                    type: boolean
             type: object
         ListTypeEntry:
             properties:
@@ -51,6 +52,8 @@ components:
                 dateModified:
                     format: date
                     readOnly: true
+                    type: string
+                externalReferenceCode:
                     type: string
                 id:
                     format: int64
@@ -70,7 +73,7 @@ info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
         'om.liferay.headless.admin.list.type.client', and version '1.0.0'.. A Java client JAR is available for use with
-        the group ID 'com.liferay', artifact ID 'com.liferay.headless.admin.list.type.client', and version '1.0.11'."
+        the group ID 'com.liferay', artifact ID 'com.liferay.headless.admin.list.type.client', and version '1.0.23'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -142,6 +145,126 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ListTypeDefinition"
             tags: ["ListTypeDefinition"]
+    "/list-type-definitions/by-external-reference-code/{externalReferenceCode}":
+        get:
+            operationId: getListTypeDefinitionByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ListTypeDefinition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ListTypeDefinition"
+            tags: ["ListTypeDefinition"]
+        put:
+            operationId: putListTypeDefinitionByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ListTypeDefinition"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ListTypeDefinition"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ListTypeDefinition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ListTypeDefinition"
+            tags: ["ListTypeDefinition"]
+    "/list-type-definitions/by-external-reference-code/{externalReferenceCode}/list-type-entries":
+        get:
+            operationId: getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ListTypeEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ListTypeEntry"
+                                type: array
+            tags: ["ListTypeEntry"]
+        post:
+            operationId: postListTypeDefinitionByExternalReferenceCodeListTypeEntry
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ListTypeEntry"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ListTypeEntry"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ListTypeEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ListTypeEntry"
+            tags: ["ListTypeEntry"]
     "/list-type-definitions/{listTypeDefinitionId}":
         delete:
             operationId: deleteListTypeDefinition

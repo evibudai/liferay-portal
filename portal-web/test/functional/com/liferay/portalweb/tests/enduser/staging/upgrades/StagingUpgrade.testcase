@@ -1,9 +1,12 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property ci.retries.disabled = "true";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testray.main.component.name = "Upgrades Staging";
 
 	setUp {
@@ -13,7 +16,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-101370. Assert no documents need to be published after upgrading."
-	@priority = "3"
+	@priority = 3
 	test AssertNoDocumentsNeedToBePublishedAfterUpgrade621021 {
 		property data.archive.type = "data-archive-local-staging-with-documents";
 		property database.types = "db2,mysql,oracle,postgresql";
@@ -34,352 +37,8 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-138634. Relaunch export process for default site."
-	@priority = "5"
-	test DefaultSiteCanBeExportedAfterUpgrade71103 {
-		property data.archive.type = "data-archive-default-site-export";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.1.10.3";
-
-		task ("Navigate to Export portlet") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-		}
-
-		task ("Relaunch export process") {
-			LAR.relaunchCurrentAndPreviousProcess(larFileName = "Public Pages");
-		}
-	}
-
-	@description = "This is a test for LPS-138634. Relaunch export process for default site."
-	@priority = "5"
-	test DefaultSiteCanBeExportedAfterUpgrade72101 {
-		property data.archive.type = "data-archive-default-site-export";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.2.10.1";
-
-		task ("Navigate to Export portlet") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-		}
-
-		task ("Relaunch export process") {
-			LAR.relaunchCurrentAndPreviousProcess(larFileName = "Public Pages");
-		}
-	}
-
-	@description = "This is a test for LPS-138634. Relaunch export process for default site."
-	@priority = "5"
-	test DefaultSiteCanBeExportedAfterUpgrade73101 {
-		property data.archive.type = "data-archive-default-site-export";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.3.10.1";
-
-		task ("Navigate to Export portlet") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-		}
-
-		task ("Relaunch export process") {
-			LAR.relaunchCurrentAndPreviousProcess(larFileName = "Public Pages");
-		}
-	}
-
-	@description = "This is a test for LPS-138634. Relaunch export process for default site. Blocked by LRQA-73610."
-	@priority = "5"
-	test DefaultSiteCanBeExportedAfterUpgrade701016 {
-		property data.archive.type = "data-archive-default-site-export";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.0.10.16";
-
-		task ("Navigate to Export portlet") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-		}
-
-		task ("Relaunch export process") {
-			LAR.relaunchCurrentAndPreviousProcess(larFileName = "Public Pages");
-		}
-	}
-
-	@description = "This is a test for LPS-138634. Modify contents of export template after upgrading."
-	@priority = "5"
-	test ExportTemplateCanBeEditedAfterUpgrade71103 {
-		property data.archive.type = "data-archive-edit-export-template";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.1.10.3";
-
-		task ("Add Blog and Web Content entry") {
-			JSONBlog.addEntry(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Guest",
-				title = "Web Content Title");
-		}
-
-		task ("Modify export template by enabling Blogs and disabling Web Content") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-
-			LexiconEntry.gotoHeaderMenuItem(menuItem = "Export Templates");
-
-			AssertClick(
-				key_columnName = "title",
-				key_tableEntry = "Export Template Name",
-				locator1 = "LexiconTable#TABLE_ENTRY_COLUMN_LINK",
-				value1 = "Export Template Name");
-
-			LAR.configureExportOptions(
-				checkContentNameList = "Blogs",
-				uncheckContentNameList = "Web Content");
-
-			LAR.saveExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name");
-		}
-
-		task ("Import content into a new site using the modified export template") {
-			LAR.exportExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name",
-				larFileName = "Export.Template");
-
-			var larFileName = LAR.getLarFileName();
-
-			LAR.downloadLar();
-
-			JSONGroup.addGroup(groupName = "Site Name");
-
-			LAR.importSiteCP(
-				larFileName = "${larFileName}",
-				siteName = "site-name");
-		}
-
-		task ("Verify that after the import process, Blog entry is visible and Web Content isn't") {
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-			BlogsNavigator.gotoEntryCP(entryTitle = "Blogs Entry Title");
-
-			BlogsEntry.viewEntryCP(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-			WebContent.viewNotPresentCP(webContentTitle = "Web Content Title");
-		}
-	}
-
-	@description = "This is a test for LPS-138634. Modify contents of export template after upgrading."
-	@priority = "5"
-	test ExportTemplateCanBeEditedAfterUpgrade72101 {
-		property data.archive.type = "data-archive-edit-export-template";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.2.10.1";
-
-		task ("Add Blog and Web Content entry") {
-			JSONBlog.addEntry(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Guest",
-				title = "Web Content Title");
-		}
-
-		task ("Modify export template by enabling Blogs and disabling Web Content") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-
-			LexiconEntry.gotoHeaderMenuItem(menuItem = "Export Templates");
-
-			AssertClick(
-				key_columnName = "title",
-				key_tableEntry = "Export Template Name",
-				locator1 = "LexiconTable#TABLE_ENTRY_COLUMN_LINK",
-				value1 = "Export Template Name");
-
-			LAR.configureExportOptions(
-				checkContentNameList = "Blogs",
-				uncheckContentNameList = "Web Content");
-
-			LAR.saveExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name");
-		}
-
-		task ("Import content into a new site using the modified export template") {
-			LAR.exportExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name",
-				larFileName = "Export.Template");
-
-			var larFileName = LAR.getLarFileName();
-
-			LAR.downloadLar();
-
-			JSONGroup.addGroup(groupName = "Site Name");
-
-			LAR.importSiteCP(
-				larFileName = "${larFileName}",
-				siteName = "site-name");
-		}
-
-		task ("Verify that after the import process, Blog entry is visible and Web Content isn't") {
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-			BlogsNavigator.gotoEntryCP(entryTitle = "Blogs Entry Title");
-
-			BlogsEntry.viewEntryCP(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-			WebContent.viewNotPresentCP(webContentTitle = "Web Content Title");
-		}
-	}
-
-	@description = "This is a test for LPS-138634. Modify contents of export template after upgrading."
-	@priority = "5"
-	test ExportTemplateCanBeEditedAfterUpgrade73101 {
-		property data.archive.type = "data-archive-edit-export-template";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.3.10.1";
-
-		task ("Add Blog and Web Content entry") {
-			JSONBlog.addEntry(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Guest",
-				title = "Web Content Title");
-		}
-
-		task ("Modify export template by enabling Blogs and disabling Web Content") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-
-			LexiconEntry.gotoHeaderMenuItem(menuItem = "Export Templates");
-
-			AssertClick(
-				key_columnName = "title",
-				key_tableEntry = "Export Template Name",
-				locator1 = "LexiconTable#TABLE_ENTRY_COLUMN_LINK",
-				value1 = "Export Template Name");
-
-			LAR.configureExportOptions(
-				checkContentNameList = "Blogs",
-				uncheckContentNameList = "Web Content");
-
-			LAR.saveExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name");
-		}
-
-		task ("Import content into a new site using the modified export template") {
-			LAR.exportExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name",
-				larFileName = "Export.Template");
-
-			var larFileName = LAR.getLarFileName();
-
-			LAR.downloadLar();
-
-			JSONGroup.addGroup(groupName = "Site Name");
-
-			LAR.importSiteCP(
-				larFileName = "${larFileName}",
-				siteName = "site-name");
-		}
-
-		task ("Verify that after the import process, Blog entry is visible and Web Content isn't") {
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-			BlogsNavigator.gotoEntryCP(entryTitle = "Blogs Entry Title");
-
-			BlogsEntry.viewEntryCP(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-			WebContent.viewNotPresentCP(webContentTitle = "Web Content Title");
-		}
-	}
-
-	@description = "This is a test for LPS-138634. Modify contents of export template after upgrading."
-	@priority = "5"
-	test ExportTemplateCanBeEditedAfterUpgrade701016 {
-		property data.archive.type = "data-archive-edit-export-template";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.0.10.16";
-
-		task ("Add Blog and Web Content entry") {
-			JSONBlog.addEntry(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Guest",
-				title = "Web Content Title");
-		}
-
-		task ("Modify export template by enabling Blogs and disabling Web Content") {
-			LAR.openExportAdmin(siteScopeName = "guest");
-
-			LexiconEntry.gotoHeaderMenuItem(menuItem = "Export Templates");
-
-			AssertClick(
-				key_columnName = "title",
-				key_tableEntry = "Export Template Name",
-				locator1 = "LexiconTable#TABLE_ENTRY_COLUMN_LINK",
-				value1 = "Export Template Name");
-
-			LAR.configureExportOptions(
-				checkContentNameList = "Blogs",
-				uncheckContentNameList = "Web Content");
-
-			LAR.saveExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name");
-		}
-
-		task ("Import content into a new site using the modified export template") {
-			LAR.exportExportTemplateCP(
-				exportTemplateDescription = "Export Template Description",
-				exportTemplateName = "Export Template Name",
-				larFileName = "Export.Template");
-
-			var larFileName = LAR.getLarFileName();
-
-			LAR.downloadLar();
-
-			JSONGroup.addGroup(groupName = "Site Name");
-
-			LAR.importSiteCP(
-				larFileName = "${larFileName}",
-				siteName = "site-name");
-		}
-
-		task ("Verify that after the import process, Blog entry is visible and Web Content isn't") {
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-			BlogsNavigator.gotoEntryCP(entryTitle = "Blogs Entry Title");
-
-			BlogsEntry.viewEntryCP(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
-
-			WebContent.viewNotPresentCP(webContentTitle = "Web Content Title");
-		}
-	}
-
 	@description = "This is a use case for LPS-98651."
-	@priority = "4"
+	@priority = 4
 	test PublishArticleCreatedByDeletedUserAfterUpgrade704 {
 		property data.archive.type = "data-archive-staging-with-deleted-user";
 		property database.types = "mariadb,mysql,postgresql";
@@ -407,7 +66,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-98651."
-	@priority = "4"
+	@priority = 3
 	test PublishArticleCreatedByDeletedUserAfterUpgrade70106 {
 		property data.archive.type = "data-archive-staging-with-deleted-user";
 		property portal.version = "7.0.10.6";
@@ -434,7 +93,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-98651."
-	@priority = "4"
+	@priority = 3
 	test PublishArticleCreatedByDeletedUserAfterUpgrade621021 {
 		property data.archive.type = "data-archive-staging-with-deleted-user";
 		property database.types = "db2,mysql,oracle,postgresql";
@@ -462,7 +121,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132493."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningAfterUpgrade71103 {
 		property data.archive.type = "data-archive-local-staging-with-page-versioning";
 		property portal.version = "7.1.10.3";
@@ -494,7 +153,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132493."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningAfterUpgrade72101 {
 		property data.archive.type = "data-archive-local-staging-with-page-versioning";
 		property portal.version = "7.2.10.1";
@@ -526,7 +185,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132493."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningAfterUpgrade73101 {
 		property data.archive.type = "data-archive-local-staging-with-page-versioning";
 		property portal.version = "7.3.10.1";
@@ -558,7 +217,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132493."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningAfterUpgrade701016 {
 		property data.archive.type = "data-archive-local-staging-with-page-versioning";
 		property portal.version = "7.0.10.16";
@@ -590,9 +249,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132491."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningViaRemoteStagingAfterUpgrade71103 {
-		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property data.archive.type = "data-archive-remote-staging-with-page-versioning";
 		property portal.version = "7.1.10.3";
 
@@ -616,9 +275,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132491."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningViaRemoteStagingAfterUpgrade72101 {
-		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property data.archive.type = "data-archive-remote-staging-with-page-versioning";
 		property portal.version = "7.2.10.1";
 
@@ -642,9 +301,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132491."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningViaRemoteStagingAfterUpgrade73101 {
-		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property data.archive.type = "data-archive-remote-staging-with-page-versioning";
 		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property portal.version = "7.3.10.1";
@@ -669,9 +328,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-132491."
-	@priority = "5"
+	@priority = 3
 	test PublishPageVersioningViaRemoteStagingAfterUpgrade701016 {
-		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
+		property custom.properties = "auth.verifier.TunnelAuthVerifier.hosts.allowed=${line.separator}tunneling.servlet.shared.secret=1234567890123456";
 		property data.archive.type = "data-archive-remote-staging-with-page-versioning";
 		property portal.version = "7.0.10.16";
 
@@ -694,272 +353,8 @@ definition {
 		Staging.viewPortletDefaultMessageInRemoteLive();
 	}
 
-	@description = "This is a use case for LPS-138633. User can edit the name and the status of a template after upgrade."
-	@priority = "5"
-	test TemplateNameAndStatusCanBeEditedAfterUpgrade71103 {
-		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.1.10.3";
-
-		task ("Change the new site template's name then verify it") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.editCP(siteTemplateName = "Site Template Name");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewCP(siteTemplateName = "Site Template Name Edit");
-		}
-
-		task ("Change the new site's status to active then verify it") {
-			SiteTemplates.activateCP(siteTemplateName = "Site Template Name Edit");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewTemplateStatusCP(
-				siteTemplateActiveEdit = "Yes",
-				siteTemplateName = "Site Template Name Edit");
-		}
-	}
-
-	@description = "This is a use case for LPS-138633. User can edit the name and the status of a template after upgrade."
-	@priority = "5"
-	test TemplateNameAndStatusCanBeEditedAfterUpgrade72101 {
-		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.2.10.1";
-
-		task ("Change the new site template's name then verify it") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.editCP(siteTemplateName = "Site Template Name");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewCP(siteTemplateName = "Site Template Name Edit");
-		}
-
-		task ("Change the new site's status to active then verify it") {
-			SiteTemplates.activateCP(siteTemplateName = "Site Template Name Edit");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewTemplateStatusCP(
-				siteTemplateActiveEdit = "Yes",
-				siteTemplateName = "Site Template Name Edit");
-		}
-	}
-
-	@description = "This is a use case for LPS-138633. User can edit the name and the status of a template after upgrade."
-	@priority = "5"
-	test TemplateNameAndStatusCanBeEditedAfterUpgrade73101 {
-		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.3.10.1";
-
-		task ("Change the new site template's name then verify it") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.editCP(siteTemplateName = "Site Template Name");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewCP(siteTemplateName = "Site Template Name Edit");
-		}
-
-		task ("Change the new site's status to active then verify it") {
-			SiteTemplates.activateCP(siteTemplateName = "Site Template Name Edit");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewTemplateStatusCP(
-				siteTemplateActiveEdit = "Yes",
-				siteTemplateName = "Site Template Name Edit");
-		}
-	}
-
-	@description = "This is a use case for LPS-138633. User can edit the name and the status of a template after upgrade."
-	@priority = "5"
-	test TemplateNameAndStatusCanBeEditedAfterUpgrade701016 {
-		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.0.10.16";
-
-		task ("Change the new site template's name then verify it") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.editCP(siteTemplateName = "Site Template Name");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewCP(siteTemplateName = "Site Template Name Edit");
-		}
-
-		task ("Change the new site's status to active then verify it") {
-			SiteTemplates.activateCP(siteTemplateName = "Site Template Name Edit");
-
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.viewTemplateStatusCP(
-				siteTemplateActiveEdit = "Yes",
-				siteTemplateName = "Site Template Name Edit");
-		}
-	}
-
-	@description = "Disabling propagation of the template should work after an upgrade. User can disable propagation and prevent any changes on template from reaching the site created from it."
-	@priority = "5"
-	test TemplatePropagationShouldWorkAfterUpgrade71103 {
-		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.1.10.3";
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Portlet.viewPG(portletName = "Asset Publisher");
-		}
-
-		task ("Disable propagation on the created template") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.disablePropagation(siteTemplateName = "Site Template Name");
-		}
-
-		task ("Delete the AP widget from the created template") {
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
-				pageName = "Home",
-				siteName = "Liferay DXP",
-				siteTemplateName = "Site Template Name");
-
-			Portlet.deletePG(key_portletName = "Asset Publisher");
-		}
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Portlet.viewPG(portletName = "Asset Publisher");
-		}
-	}
-
-	@description = "Disabling propagation of the template should work after an upgrade. User can disable propagation and prevent any changes on template from reaching the site created from it."
-	@priority = "5"
-	test TemplatePropagationShouldWorkAfterUpgrade72101 {
-		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.2.10.1";
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Portlet.viewPG(portletName = "Asset Publisher");
-		}
-
-		task ("Disable propagation on the created template") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.disablePropagation(siteTemplateName = "Site Template Name");
-		}
-
-		task ("Delete the AP widget from the created template") {
-			SiteTemplatesNavigator.gotoSiteTemplatesPage(
-				pageName = "Home",
-				siteName = "Liferay DXP",
-				siteTemplateName = "Site Template Name");
-
-			Portlet.deletePG(key_portletName = "Asset Publisher");
-		}
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Portlet.viewPG(portletName = "Asset Publisher");
-		}
-	}
-
-	@description = "Disabling propagation of the template should work after an upgrade. User can disable propagation and prevent any changes on template from reaching the site created from it."
-	@priority = "5"
-	test TemplatePropagationShouldWorkAfterUpgrade73101 {
-		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.3.10.1";
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Alert.viewInfoMessageSpecific(infoMessage = "There are no results.");
-		}
-
-		task ("Disable propagation on the created template") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.disablePropagation(siteTemplateName = "Site Template Name");
-		}
-
-		task ("Delete the AP widget from the created template") {
-			SiteTemplates.openSiteTemplateInEditMode(siteTemplateName = "Site Template Name");
-
-			PageEditor.removeFragment(fragmentName = "Asset Publisher");
-		}
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Alert.viewInfoMessageSpecific(infoMessage = "There are no results.");
-		}
-	}
-
-	@description = "Disabling propagation of the template should work after an upgrade. User can disable propagation and prevent any changes on template from reaching the site created from it."
-	@priority = "5"
-	test TemplatePropagationShouldWorkAfterUpgrade701016 {
-		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "7.0.10.16";
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Portlet.viewPG(portletName = "Asset Publisher");
-		}
-
-		task ("Disable propagation on the created template") {
-			SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-			SiteTemplates.disablePropagation(siteTemplateName = "Site Template Name");
-		}
-
-		task ("Delete the AP widget from the created template") {
-			SiteTemplates.openSiteTemplateInEditMode(
-				siteTemplateName = "Site Template Name",
-				widgetPage = "true");
-
-			Portlet.deletePG(key_portletName = "Asset Publisher");
-		}
-
-		task ("Verify that the AP Widget is still present on the Site Name page") {
-			Navigator.openSiteURL(siteName = "Site Name");
-
-			Refresh();
-
-			Portlet.viewPG(portletName = "Asset Publisher");
-		}
-	}
-
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade704 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property database.types = "mariadb,mysql,postgresql";
@@ -969,11 +364,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Message Boards,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade713 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property database.types = "mariadb,mysql,postgresql";
@@ -983,11 +378,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Knowledge Base,Message Boards,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade721 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property database.types = "mariadb,mysql,postgresql";
@@ -997,11 +392,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Knowledge Base,Message Boards,Segments,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade730 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property database.types = "mariadb,mysql,postgresql";
@@ -1011,11 +406,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Knowledge Base,Message Boards,Segments,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade70106 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property portal.version = "7.0.10.6";
@@ -1024,11 +419,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Message Boards,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade71103 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property portal.version = "7.1.10.3";
@@ -1037,11 +432,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Knowledge Base,Message Boards,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade72101 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property portal.version = "7.2.10.1";
@@ -1050,11 +445,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Knowledge Base,Message Boards,Segments,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade73101 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property portal.version = "7.3.10.1";
@@ -1063,11 +458,11 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Calendar,Dynamic Data Lists,Forms,Knowledge Base,Message Boards,Segments,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
 	}
 
 	@description = "This is a use case for LPS-87237 and LPS-126769."
-	@priority = "5"
+	@priority = 3
 	test ViewStagingDefaultSettingAfterUpgrade621021 {
 		property data.archive.type = "data-archive-staging-with-default-setting";
 		property database.types = "db2,mysql,oracle,postgresql,sybase";
@@ -1077,7 +472,103 @@ definition {
 
 		Staging.viewUncheckContentNameList(uncheckContentNameList = "Blogs,Dynamic Data Lists,Message Boards,Templates,Wiki");
 
-		Upgrade.viewStagingConfiguration();
+		ValidateStagingUpgrade.viewStagingConfiguration();
+	}
+
+	@description = "This is a use case for LPS-190736. TC7-2: Verify that the user is notified when choosing ALL or Date Range in the Publish Process screen when local staging is enabled after upgrading from 7.3.10.1."
+	@priority = 3
+	test ViewWarningMessageAfterUpgrade73101 {
+		property data.archive.type = "data-archive-local-staging-with-page-versioning";
+		property portal.version = "7.3.10.1";
+
+		task ("Given: Navigate to the Advanced Publish Process screen") {
+			Navigator.gotoStagedSitePage(
+				pageName = "Staging Test Page",
+				siteName = "Site Name");
+
+			Staging.gotoPublishToLive();
+		}
+
+		task ("When: Click on ALL in the Content section and click on 'Refresh Counts' button") {
+			Staging.configurePublishToLive(contentDateRange = "All");
+		}
+
+		task ("Then: The warning message should still display") {
+			AssertVisible(
+				key_warningMessage = "Publishing all content or using a wide date range will take some time.",
+				locator1 = "StagingPublishToLive#WARNING_SPECIFIC");
+		}
+
+		task ("When: Click on Date Range in the Content section and click on 'Refresh Counts' button") {
+			Click(locator1 = "Radio#CHOOSE_CONTENT_DATE_RANGE_CHANGE");
+
+			ClickNoError(locator1 = "Link#REFRESH_COUNTS");
+		}
+
+		task ("Then: The warning message should still display") {
+			AssertVisible(
+				key_warningMessage = "Publishing all content or using a wide date range will take some time.",
+				locator1 = "StagingPublishToLive#WARNING_SPECIFIC");
+		}
+
+		task ("When: Click on Last in the Content section") {
+			Click.clickNoMouseOverNoWaitForVisible(locator1 = "StagingPublishToLive#CONTENT_LAST");
+		}
+
+		task ("Then: The warning message should not display") {
+			AssertElementNotPresent(
+				key_warningMessage = "Publishing all content or using a wide date range will take some time.",
+				locator1 = "StagingPublishToLive#WARNING_SPECIFIC");
+		}
+	}
+
+	@description = "This is a use case for LPS-190736. TC7-1: Verify that the user is notified when choosing ALL or Date Range in the Publish Process screen when local staging is enabled after upgrading from 7.3.10.1."
+	@priority = 3
+	test ViewWarningMessageWhenPublishFromStagingAdminAfterUpgrade73101 {
+		property data.archive.type = "data-archive-staging-with-default-setting";
+		property portal.version = "7.3.10.1";
+
+		task ("Given: Navigate to the Advanced Publish Process screen") {
+			Staging.openStagingAdmin(siteURLKey = "site-name-staging");
+
+			Staging.addCustomPublication();
+
+			AssertElementNotPresent(
+				key_warningMessage = "Publishing all content or using a wide date range will take some time.",
+				locator1 = "StagingPublishToLive#WARNING_SPECIFIC");
+		}
+
+		task ("When: Click on ALL in the Content section and click on 'Refresh Counts' button") {
+			Staging.configurePublishToLive(contentDateRange = "All");
+		}
+
+		task ("Then: The warning message should still display") {
+			AssertVisible(
+				key_warningMessage = "Publishing all content or using a wide date range will take some time.",
+				locator1 = "StagingPublishToLive#WARNING_SPECIFIC");
+		}
+
+		task ("When: Click on Date Range in the Content section and click on 'Refresh Counts' button") {
+			Click(locator1 = "Radio#CHOOSE_CONTENT_DATE_RANGE_CHANGE");
+
+			ClickNoError(locator1 = "Link#REFRESH_COUNTS");
+		}
+
+		task ("Then: The warning message should still display") {
+			AssertVisible(
+				key_warningMessage = "Publishing all content or using a wide date range will take some time.",
+				locator1 = "StagingPublishToLive#WARNING_SPECIFIC");
+		}
+
+		task ("When: Click on Last in the Content section") {
+			Click.clickNoMouseOverNoWaitForVisible(locator1 = "StagingPublishToLive#CONTENT_LAST");
+		}
+
+		task ("Then: The warning message should not display") {
+			AssertElementNotPresent(
+				key_warningMessage = "Publishing all content or using a wide date range will take some time.",
+				locator1 = "StagingPublishToLive#WARNING_SPECIFIC");
+		}
 	}
 
 }

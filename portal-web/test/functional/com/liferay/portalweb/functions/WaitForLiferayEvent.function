@@ -1,7 +1,7 @@
 @default = "waitForLiferayEvent"
 definition {
 
-	function initializeLiferayEventLog {
+	function initializeLiferayEventLog() {
 		var javascript = '''
 			if (typeof Liferay != "undefined") {
 				const TRACKED_EVENTS = [
@@ -77,10 +77,10 @@ definition {
 			}
 		''';
 
-		selenium.runScript("${javascript}");
+		ExecuteJavaScript(value1 = ${javascript});
 	}
 
-	function waitForLiferayEvent {
+	function waitForLiferayEvent(attributeValue, eventName, attributeName) {
 		var javascript = '''
 			try {
 				var eventValue = LFR_JS_EVENTS_LOG.getLastEvent("${eventName}").${attributeName};
@@ -93,9 +93,9 @@ definition {
 		''';
 		var message = '''Event "${eventName}" with attribute "${attributeName}" and value "${attributeValue}" not fired.''';
 
-		selenium.waitForJavaScriptNoError("${javascript}", "${message}", "");
+		selenium.waitForJavaScriptNoError(${javascript}, ${message}, "");
 
-		selenium.verifyJavaScript("${javascript}", "${message}", "");
+		selenium.verifyJavaScript(${javascript}, ${message}, "");
 	}
 
 }

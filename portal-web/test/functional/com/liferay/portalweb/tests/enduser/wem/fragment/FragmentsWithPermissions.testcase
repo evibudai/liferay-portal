@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -14,7 +15,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a new user") {
@@ -45,9 +46,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -56,7 +57,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136411. The page builder only with Update - Limited and Advanced Options cannot define custom css of fragment."
-	@priority = "4"
+	@priority = 4
 	test CannotDefineCustomCSSOfFragmentAsUserWithUpdateLimitedAndAdvancedOptionsPermissions {
 		task ("Given a page builder has a content page") {
 			JSONRole.addSiteRole(
@@ -77,7 +78,7 @@ definition {
 		task ("When the page builder has the Update - Limited and Advanced Options permissions in Page section") {
 			for (var resourceActionIndex : list "UPDATE_LAYOUT_LIMITED,UPDATE_LAYOUT_ADVANCED_OPTIONS") {
 				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
+					resourceAction = ${resourceActionIndex},
 					resourceName = "com.liferay.portal.kernel.model.Layout",
 					roleTitle = "Page Builder",
 					roleType = "site");
@@ -129,8 +130,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147787. The designer has full access permissions when given Update permission in Page section."
-	@priority = "5"
+	@priority = 5
 	test EditContentPageAsUserWithUpdatePermission {
+		property portal.acceptance = "true";
+
 		task ("Given a page designer has a content page") {
 			JSONRole.addSiteRole(
 				roleKey = "Page Designer",
@@ -184,7 +187,7 @@ definition {
 			task ("Access to the Styles panel of Container") {
 				PageEditor.editLayoutContainer(
 					backgroundColor = "Success",
-					borderWidth = "5",
+					borderWidth = 5,
 					panel = "Styles");
 
 				PageEditor.viewContainerStyle(
@@ -211,7 +214,7 @@ definition {
 					panel = "Advanced");
 
 				AssertVisible(
-					key_position = "1",
+					key_position = 1,
 					key_type = "section",
 					locator1 = "PageEditor#CONTAINER_CONTAINER_TYPE");
 			}
@@ -223,8 +226,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147787. The page builder has limited access permissions when given Update - Limited permission in Page section."
-	@priority = "5"
+	@priority = 5
 	test EditFragmentStylesAsUserWithUpdateLimitedPermission {
+		property portal.acceptance = "true";
+
 		task ("Given a page builder has a content page") {
 			JSONRole.addSiteRole(
 				roleKey = "Page Builder",
@@ -270,7 +275,7 @@ definition {
 				for (var fieldLabel : list "Width,Height,Min Width,Max Width,Min Height,Max Height") {
 					AssertVisible(
 						key_borderBottom = "Frame",
-						key_fieldLabel = "${fieldLabel}",
+						key_fieldLabel = ${fieldLabel},
 						locator1 = "TextInput#BORDER_BOTTOM_INPUT_FIELD");
 				}
 
@@ -287,7 +292,7 @@ definition {
 			task ("Access to the Styles panel of Container") {
 				PageEditor.editLayoutContainer(
 					backgroundColor = "Success",
-					borderWidth = "5",
+					borderWidth = 5,
 					panel = "Styles");
 
 				PageEditor.viewContainerStyle(
@@ -319,7 +324,7 @@ definition {
 				for (var fieldLabel : list "Width,Height,Min Width,Max Width,Min Height,Max Height") {
 					AssertElementNotPresent(
 						key_borderBottom = "Frame",
-						key_fieldLabel = "${fieldLabel}",
+						key_fieldLabel = ${fieldLabel},
 						locator1 = "TextInput#BORDER_BOTTOM_INPUT_FIELD");
 				}
 
@@ -337,7 +342,7 @@ definition {
 				PageEditor.gotoStyle(fragmentName = "Heading");
 
 				PageEditor.configureFragment(
-					opacity = "50",
+					opacity = 50,
 					textColor = "Success");
 
 				PageEditor.viewFragmentStyle(
@@ -364,8 +369,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147787 and LPS-136411. The marketer has Basic permissions and view Advanced tab when given Update - Basic and Update - Advanced options permission in Page Section. The marketer only with Update - Basic and Advanced Options cannot define custom css of fragment."
-	@priority = "5"
+	@priority = 5
 	test EditPageLayoutAsUserWithUpdateBasicAndAdvancedPermissions {
+		property portal.acceptance = "true";
+
 		task ("Given a marketer has a content page") {
 			JSONRole.addSiteRole(
 				roleKey = "Marketer",
@@ -385,7 +392,7 @@ definition {
 		task ("When the marketer has the Update - Basic and Update - Advanced permissions in Page section") {
 			for (var resourceActionIndex : list "UPDATE_LAYOUT_BASIC,UPDATE_LAYOUT_ADVANCED_OPTIONS") {
 				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
+					resourceAction = ${resourceActionIndex},
 					resourceName = "com.liferay.portal.kernel.model.Layout",
 					roleTitle = "Marketer",
 					roleType = "site");
@@ -413,7 +420,7 @@ definition {
 				for (var fieldLabel : list "Width,Height,Min Width,Max Width,Min Height,Max Height") {
 					AssertVisible(
 						key_borderBottom = "Frame",
-						key_fieldLabel = "${fieldLabel}",
+						key_fieldLabel = ${fieldLabel},
 						locator1 = "TextInput#BORDER_BOTTOM_INPUT_FIELD");
 				}
 
@@ -429,17 +436,17 @@ definition {
 
 			task ("Access to the Styles panel of Container") {
 				PageEditor.editLayoutContainer(
-					marginBottom = "4",
-					paddingTop = "4",
+					marginBottom = 4,
+					paddingTop = 4,
 					panel = "Styles");
 
 				PageEditor.viewContainerStyle(
-					marginBottom = "4",
-					paddingTop = "4");
+					marginBottom = 4,
+					paddingTop = 4);
 
 				for (var fieldSetLabel : list "Text,Background,Borders,Effects") {
 					AssertElementNotPresent(
-						key_fieldSetLabel = "${fieldSetLabel}",
+						key_fieldSetLabel = ${fieldSetLabel},
 						locator1 = "PageEditor#ITEM_CONFIGURATION_FIELDSET_LABEL");
 				}
 			}
@@ -474,7 +481,7 @@ definition {
 				for (var fieldLabel : list "Width,Height,Min Width,Max Width,Min Height,Max Height") {
 					AssertElementNotPresent(
 						key_borderBottom = "Frame",
-						key_fieldLabel = "${fieldLabel}",
+						key_fieldLabel = ${fieldLabel},
 						locator1 = "TextInput#BORDER_BOTTOM_INPUT_FIELD");
 				}
 
@@ -513,7 +520,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147787. The site designer has full access permissions when given Update permission in Page section and other permissions."
-	@priority = "3"
+	@priority = 3
 	test ViewFullAccessAsUserWithUpdateAndOtherPermissions {
 		task ("Given a site designer has a content page") {
 			JSONRole.addRegularRole(
@@ -548,7 +555,7 @@ definition {
 
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
+				resourceName = 90,
 				roleTitle = "Site Designer");
 
 			Permissions.definePermissionViaJSONAPI(
@@ -565,7 +572,7 @@ definition {
 
 				ApplicationsMenu.gotoSite(site = "Test Site Name");
 
-				ControlMenu.viewHeaderTitle(headerTitle = "Test Page Name *");
+				ControlMenu.viewHeaderDraftTitle(headerTitle = "Test Page Name");
 
 				ContentPages.gotoPageEditor();
 
@@ -588,7 +595,7 @@ definition {
 			task ("Access to the Styles panel of Container") {
 				PageEditor.editLayoutContainer(
 					backgroundColor = "Success",
-					borderWidth = "5",
+					borderWidth = 5,
 					panel = "Styles");
 
 				PageEditor.viewContainerStyle(
@@ -615,21 +622,21 @@ definition {
 					panel = "Advanced");
 
 				AssertVisible(
-					key_position = "1",
+					key_position = 1,
 					key_type = "section",
 					locator1 = "PageEditor#CONTAINER_CONTAINER_TYPE");
 			}
 
 			task ("Delete the new roles") {
 				for (var roleTitle : list "Site Designer,Page Designer") {
-					JSONRole.deleteRole(roleTitle = "${roleTitle}");
+					JSONRole.deleteRole(roleTitle = ${roleTitle});
 				}
 			}
 		}
 	}
 
 	@description = "This is a test for LPS-147787. The user don't have full access permissions when not given Update permission in Page section."
-	@priority = "4"
+	@priority = 4
 	test ViewLimitedAccessAsUserWithoutUpdatePermission {
 		task ("Given a page builder has a content page") {
 			JSONRole.addSiteRole(
@@ -651,8 +658,8 @@ definition {
 			Role.openRolesAdmin();
 
 			RoleNavigator.gotoDefineRolePermissions(
-				permissionNavigationKey = "SITE_ADMIN_PAGES_SITE_PAGES",
-				portlet = "Pages",
+				permissionNavHeader = "Site Builder",
+				permissionNavItem = "Pages",
 				roleTitle = "Page Builder",
 				roleType = "Site");
 
@@ -690,7 +697,7 @@ definition {
 				for (var fieldLabel : list "Width,Height,Min Width,Max Width,Min Height,Max Height") {
 					AssertVisible(
 						key_borderBottom = "Frame",
-						key_fieldLabel = "${fieldLabel}",
+						key_fieldLabel = ${fieldLabel},
 						locator1 = "TextInput#BORDER_BOTTOM_INPUT_FIELD");
 				}
 
@@ -707,7 +714,7 @@ definition {
 			task ("Access to the Styles panel of Container") {
 				PageEditor.editLayoutContainer(
 					backgroundColor = "Success",
-					borderWidth = "5",
+					borderWidth = 5,
 					panel = "Styles");
 
 				PageEditor.viewContainerStyle(
@@ -746,7 +753,7 @@ definition {
 				for (var fieldLabel : list "Width,Height,Min Width,Max Width,Min Height,Max Height") {
 					AssertElementNotPresent(
 						key_borderBottom = "Frame",
-						key_fieldLabel = "${fieldLabel}",
+						key_fieldLabel = ${fieldLabel},
 						locator1 = "TextInput#BORDER_BOTTOM_INPUT_FIELD");
 				}
 
@@ -764,7 +771,7 @@ definition {
 				PageEditor.gotoStyle(fragmentName = "Heading");
 
 				PageEditor.configureFragment(
-					opacity = "50",
+					opacity = 50,
 					textColor = "Success");
 
 				PageEditor.viewFragmentStyle(

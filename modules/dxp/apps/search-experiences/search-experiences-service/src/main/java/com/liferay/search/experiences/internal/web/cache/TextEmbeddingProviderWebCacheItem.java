@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.internal.web.cache;
@@ -18,13 +9,10 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.webcache.WebCacheItem;
 import com.liferay.portal.kernel.webcache.WebCachePoolUtil;
 import com.liferay.search.experiences.blueprint.exception.InvalidWebCacheItemException;
-import com.liferay.search.experiences.configuration.SemanticSearchConfiguration;
-import com.liferay.search.experiences.ml.text.embedding.TextEmbeddingRetriever;
+import com.liferay.search.experiences.ml.embedding.text.TextEmbeddingRetriever;
 
 import java.beans.ExceptionListener;
 
@@ -34,24 +22,17 @@ import java.beans.ExceptionListener;
 public class TextEmbeddingProviderWebCacheItem implements WebCacheItem {
 
 	public static Double[] get(
-		ExceptionListener exceptionListener,
-		TextEmbeddingRetriever textEmbeddingRetriever,
-		SemanticSearchConfiguration semanticSearchConfiguration, String text) {
-
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-163688")) ||
-			!semanticSearchConfiguration.textEmbeddingsEnabled()) {
-
-			return new Double[0];
-		}
+		ExceptionListener exceptionListener, String providerName,
+		long refreshTime, String text,
+		TextEmbeddingRetriever textEmbeddingRetriever) {
 
 		try {
 			return (Double[])WebCachePoolUtil.get(
 				StringBundler.concat(
 					TextEmbeddingProviderWebCacheItem.class.getName(),
-					StringPool.POUND, semanticSearchConfiguration.model(),
-					StringPool.POUND, text),
+					StringPool.POUND, providerName, StringPool.POUND, text),
 				new TextEmbeddingProviderWebCacheItem(
-					textEmbeddingRetriever, semanticSearchConfiguration, text));
+					providerName, refreshTime, text, textEmbeddingRetriever));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -65,18 +46,20 @@ public class TextEmbeddingProviderWebCacheItem implements WebCacheItem {
 	}
 
 	public TextEmbeddingProviderWebCacheItem(
-		TextEmbeddingRetriever textEmbeddingRetriever,
-		SemanticSearchConfiguration semanticSearchConfiguration, String text) {
+		String providerName, long refreshTime, String text,
+		TextEmbeddingRetriever textEmbeddingRetriever) {
 
-		_textEmbeddingRetriever = textEmbeddingRetriever;
-		_semanticSearchConfiguration = semanticSearchConfiguration;
+		_providerName = providerName;
+		_refreshTime = refreshTime;
 		_text = text;
+		_textEmbeddingRetriever = textEmbeddingRetriever;
 	}
 
 	@Override
 	public Double[] convert(String key) {
 		try {
-			return _textEmbeddingRetriever.getTextEmbedding(_text);
+			return _textEmbeddingRetriever.getTextEmbedding(
+				_providerName, _text);
 		}
 		catch (Exception exception) {
 			throw new InvalidWebCacheItemException(exception);
@@ -85,17 +68,14 @@ public class TextEmbeddingProviderWebCacheItem implements WebCacheItem {
 
 	@Override
 	public long getRefreshTime() {
-		if (_semanticSearchConfiguration.textEmbeddingsEnabled()) {
-			return _semanticSearchConfiguration.cacheTimeout();
-		}
-
-		return 0;
+		return _refreshTime;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		TextEmbeddingProviderWebCacheItem.class);
 
-	private final SemanticSearchConfiguration _semanticSearchConfiguration;
+	private final String _providerName;
+	private final long _refreshTime;
 	private final String _text;
 	private final TextEmbeddingRetriever _textEmbeddingRetriever;
 

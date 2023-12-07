@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -85,15 +76,22 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 
 <c:if test="<%= (total > delta) || (total > PropsValues.SEARCH_CONTAINER_PAGE_DELTA_VALUES[0]) %>">
 	<div class="pagination-bar" data-qa-id="paginator" id="<%= namespace + id %>">
+
+		<%
+		String ariaPagination = namespace + id + "_ariaPagination";
+		String ariaPaginationPicker = namespace + id + "_ariaPaginationPicker";
+		String ariaPaginationResults = namespace + id + "_ariaPaginationResults";
+		%>
+
 		<c:if test="<%= deltaConfigurable %>">
-			<div class="dropdown pagination-items-per-page">
-				<a class="dropdown-toggle page-link" data-toggle="liferay-dropdown" href="javascript:void(0);">
+			<div class="dropdown pagination-items-per-page" id="<%= ariaPagination %>">
+				<button aria-describedby="<%= ariaPaginationResults %>" aria-expanded="false" aria-controls="<%= ariaPaginationPicker %>" aria-haspopup="listbox" class="dropdown-toggle page-link" data-attribute="<%= delta %>" data-toggle="liferay-dropdown" role="combobox">
 					<liferay-ui:message arguments="<%= delta %>" key="x-entries" /><span class="sr-only"><%= StringPool.NBSP %><liferay-ui:message key="per-page" /></span>
 
 					<aui:icon image="caret-double-l" markupView="lexicon" />
-				</a>
+				</button>
 
-				<ul class="dropdown-menu dropdown-menu-top">
+				<ul class="dropdown-menu dropdown-menu-top" id="<%= ariaPaginationPicker %>" role="listbox" tabindex="-1">
 
 					<%
 					for (int curDelta : PropsValues.SEARCH_CONTAINER_PAGE_DELTA_VALUES) {
@@ -104,8 +102,8 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 						String curDeltaURL = HttpComponentsUtil.setParameter(url + urlAnchor, namespace + deltaParam, curDelta);
 					%>
 
-						<li>
-							<a class="dropdown-item" href="<%= HtmlUtil.escapeHREF(curDeltaURL) %>" onClick="<%= forcePost ? _getOnClick(namespace, deltaParam, curDelta) : "" %>">
+						<li role="option">
+							<a class="dropdown-item <%= (delta == curDelta) ? "active" : "" %>" href="<%= HtmlUtil.escapeHREF(curDeltaURL) %>" id="<%= String.valueOf(curDelta) %>" onClick="<%= forcePost ? _getOnClick(namespace, deltaParam, curDelta) : "" %>">
 								<%= String.valueOf(curDelta) %><span class="sr-only"><%= StringPool.NBSP %><liferay-ui:message key="entries-per-page" /></span>
 							</a>
 						</li>
@@ -116,9 +114,84 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 
 				</ul>
 			</div>
+
+			<script data-senna-track="temporary" type="text/javascript">
+				(function() {
+					var dropdown = document.getElementById("<%= ariaPagination %>");
+
+					var button = dropdown.querySelector('.dropdown-toggle');
+					var list = dropdown.querySelector('.dropdown-menu');
+
+					var options = list.querySelectorAll('.dropdown-item');
+					var selectedItemValue = button.dataset.attribute;
+
+					function onButtonKeyDown(event) {
+						if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
+							event.preventDefault();
+
+							button.setAttribute('aria-expanded', 'true');
+							list.classList.add('show');
+
+							var selectedOption = list.querySelector('.active');
+
+							if (selectedOption) {
+								selectedOption.focus();
+							}
+						}
+					}
+
+					button.addEventListener('keydown', onButtonKeyDown );
+
+					function onLeaveDropdown() {
+						button.setAttribute('aria-expanded', 'false');
+						list.classList.remove('show');
+					}
+
+					function handleKeyEvents(event) {
+						var currentIndex = Array.from(options).indexOf(document.activeElement);
+
+						if (event.key === 'ArrowDown') {
+							event.preventDefault();
+
+							if (currentIndex < options.length - 1) {
+								options[currentIndex + 1].focus();
+							}
+						}
+						else if (event.key === 'ArrowUp') {
+							event.preventDefault();
+
+							if (currentIndex > 0) {
+								options[currentIndex - 1].focus();
+							}
+						}
+						else if (event.key === 'Escape') {
+							button.focus();
+							onLeaveDropdown();
+						}
+					}
+
+					list.addEventListener('keydown', handleKeyEvents);
+
+					function dropdownFocusOut(event) {
+						if (!dropdown.contains(event.relatedTarget)) {
+							onLeaveDropdown();
+						}
+					}
+
+					document.addEventListener('focusout', dropdownFocusOut );
+
+					var destroyDropDownPagination = function () {
+						button.removeEventListener('keydown', onButtonKeyDown);
+						document.removeEventListener('focusout', dropdownFocusOut );
+						list.removeEventListener('keydown', handleKeyEvents);
+					};
+
+					Liferay.once('beforeScreenFlip', destroyDropDownPagination);
+				})();
+			</script>
 		</c:if>
 
-		<p class="pagination-results">
+		<p aria-hidden="true" class="pagination-results" data-aria-hidden="true" id="<%= ariaPaginationResults %>">
 			<liferay-ui:message arguments="<%= new Object[] {numberFormat.format(start + 1), numberFormat.format(end), numberFormat.format(total)} %>" key="showing-x-to-x-of-x-entries" />
 		</p>
 
@@ -126,19 +199,26 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 			<li class="page-item <%= (cur > 1) ? StringPool.BLANK : "disabled" %>">
 				<c:choose>
 					<c:when test="<%= cur > 1 %>">
-						<a class="page-link" href="<%= _getHREF(formName, namespace + curParam, cur - 1, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, cur -1) : "" %>">
+						<a class="lfr-portal-tooltip page-link" href="<%= _getHREF(formName, namespace + curParam, cur - 1, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, cur -1) : "" %>" title="<%= LanguageUtil.get(request, "previous-page") %>">
 					</c:when>
 					<c:otherwise>
-						<a class="page-link">
+						<div class="page-link">
 					</c:otherwise>
 				</c:choose>
 
 					<liferay-ui:icon
 						icon='<%= PortalUtil.isRightToLeft(request) ? "angle-right" : "angle-left" %>'
 						markupView="lexicon"
-						message="previous-page"
 					/>
-				</a>
+
+				<c:choose>
+					<c:when test="<%= cur > 1 %>">
+						</a>
+					</c:when>
+					<c:otherwise>
+						</div>
+					</c:otherwise>
+				</c:choose>
 			</li>
 
 			<c:choose>
@@ -151,7 +231,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 						<li class="page-item <%= (i == cur) ? "active" : StringPool.BLANK %>">
 							<c:choose>
 								<c:when test="<%= i == cur %>">
-									<a aria-current="page" class="page-link">
+									<a aria-current="page" class="page-link" tabindex="0">
 								</c:when>
 								<c:otherwise>
 									<a class="page-link" href="<%= _getHREF(formName, namespace + curParam, i, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, i) : "" %>">
@@ -168,7 +248,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 				</c:when>
 				<c:when test="<%= cur == 1 %>">
 					<li class="active page-item">
-						<a aria-current="page" class="page-link"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span>1</a>
+						<a aria-current="page" class="page-link" tabindex="0"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span>1</a>
 					</li>
 					<li class="page-item">
 						<a class="page-link" href="<%= _getHREF(formName, namespace + curParam, 2, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, 2) : "" %>"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span>2</a>
@@ -177,11 +257,11 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 						<a class="page-link" href="<%= _getHREF(formName, namespace + curParam, 3, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, 3) : "" %>"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span>3</a>
 					</li>
 					<li class="dropdown page-item">
-						<a class="dropdown-toggle page-link page-link" data-toggle="liferay-dropdown" href="javascript:void(0);">
+						<button aria-haspopup="true" class="dropdown-toggle page-link page-link" data-toggle="liferay-dropdown">
 							<span aria-hidden="true">...</span>
 
 							<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
-						</a>
+						</button>
 
 						<div class="dropdown-menu dropdown-menu-top-center">
 							<ul class="inline-scroller link-list">
@@ -213,11 +293,11 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 						<a class="page-link" href="<%= _getHREF(formName, namespace + curParam, 1, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, 1) : "" %>"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span>1</a>
 					</li>
 					<li class="dropdown page-item">
-						<a class="dropdown-toggle page-link" data-toggle="liferay-dropdown" href="javascript:void(0);">
+						<button aria-haspopup="true" class="dropdown-toggle page-link" data-toggle="liferay-dropdown">
 							<span aria-hidden="true">...</span>
 
 							<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
-						</a>
+						</button>
 
 						<div class="dropdown-menu dropdown-menu-top-center">
 							<ul class="inline-scroller link-list" data-max-index="<%= pages - 2 %>">
@@ -244,7 +324,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 						<a class="page-link" href="<%= _getHREF(formName, namespace + curParam, pages - 1, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, pages - 1) : "" %>"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span><%= pages - 1 %></a>
 					</li>
 					<li class="active page-item">
-						<a aria-current="page" class="page-link"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span><%= pages %></a>
+						<a aria-current="page" class="page-link" tabindex="0"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span><%= pages %></a>
 					</li>
 				</c:when>
 				<c:otherwise>
@@ -254,11 +334,11 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 
 					<c:if test="<%= (cur - 3) > 1 %>">
 						<li class="dropdown page-item">
-							<a class="dropdown-toggle page-link" data-toggle="liferay-dropdown" href="javascript:void(0);">
+							<button aria-haspopup="true" class="dropdown-toggle page-link" data-toggle="liferay-dropdown">
 								<span aria-hidden="true">...</span>
 
 								<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
-							</a>
+							</button>
 
 							<div class="dropdown-menu dropdown-menu-top-center">
 								<ul class="inline-scroller link-list" data-max-index="<%= cur - 1 %>">
@@ -289,7 +369,7 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 					</c:if>
 
 					<li class="active page-item">
-						<a aria-current="page" class="page-link"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span><%= cur %></a>
+						<a aria-current="page" class="page-link" tabindex="0"><span class="sr-only"><liferay-ui:message key="page" /><%= StringPool.NBSP %></span><%= cur %></a>
 					</li>
 
 					<c:if test="<%= (cur + 1) < pages %>">
@@ -300,11 +380,11 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 
 					<c:if test="<%= (cur + 3) < pages %>">
 						<li class="dropdown page-item">
-							<a class="dropdown-toggle page-link" data-toggle="liferay-dropdown" href="javascript:void(0);">
+							<button aria-haspopup="true" class="dropdown-toggle page-link" data-toggle="liferay-dropdown">
 								<span aria-hidden="true">...</span>
 
 								<span class="sr-only"><liferay-ui:message key="intermediate-pages" />&nbsp;<liferay-ui:message key="use-tab-to-navigate" /></span>
-							</a>
+							</button>
 
 							<div class="dropdown-menu dropdown-menu-top-center">
 								<ul class="inline-scroller link-list" data-current-index="<%= cur + 2 %>">
@@ -339,19 +419,26 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 			<li class="page-item <%= (cur < pages) ? StringPool.BLANK : "disabled" %>">
 				<c:choose>
 					<c:when test="<%= cur < pages %>">
-						<a class="page-link" href="<%= _getHREF(formName, namespace + curParam, cur + 1, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, cur + 1) : "" %>">
+						<a class="lfr-portal-tooltip page-link" href="<%= _getHREF(formName, namespace + curParam, cur + 1, jsCall, url, urlAnchor) %>" onclick="<%= forcePost ? _getOnClick(namespace, curParam, cur + 1) : "" %>" title="<%= LanguageUtil.get(request, "next-page") %>">
 					</c:when>
 					<c:otherwise>
-						<a class="page-link">
+						<div class="page-link">
 					</c:otherwise>
 				</c:choose>
 
 					<liferay-ui:icon
 						icon='<%= PortalUtil.isRightToLeft(request) ? "angle-left" : "angle-right" %>'
 						markupView="lexicon"
-						message="next-page"
 					/>
-				</a>
+
+				<c:choose>
+					<c:when test="<%= cur < pages %>">
+						</a>
+					</c:when>
+					<c:otherwise>
+						</div>
+					</c:otherwise>
+				</c:choose>
 			</li>
 		</ul>
 	</div>

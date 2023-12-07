@@ -14,15 +14,15 @@ definition {
 	tearDown {
 		ObjectAdmin.deleteAllCustomObjectsViaAPI();
 
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-135386 - Verify if the user can display the entries on a table format"
-	@priority = "5"
+	@priority = 5
 	test CanDisplayEntriesOnTableFormat {
 		property portal.acceptance = "true";
 
@@ -76,13 +76,17 @@ definition {
 
 		VisualizeObjectDisplayPage.openDisplayPage(displayPageName = "Blank Display Page");
 
-		VisualizeObjectCollectionDisplay.assertTableEntriesPresent(entries = "Test Text 1");
+		AssertElementPresent(
+			key_entries = "Test Text 1",
+			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
 
-		VisualizeObjectCollectionDisplay.assertTableEntriesPresent(entries = "Test Text 2");
+		AssertElementPresent(
+			key_entries = "Test Text 2",
+			locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_TABLE");
 	}
 
 	@description = "LPS-133865 - Verify if the fields from an Object are displayed to be mapped on a fragment"
-	@priority = "5"
+	@priority = 5
 	test FieldsFromObjectDisplayedToBeMapped {
 		property portal.acceptance = "true";
 
@@ -114,10 +118,8 @@ definition {
 			pageTemplateName = "Blank Display Page");
 
 		PageEditor.addFragment(
-			collectionName = "Content Display",
-			fragmentName = "Collection Display");
-
-		VisualizeObjectCollectionDisplay.addFieldForCollectionDisplay(fragmentName = "Heading");
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
 
 		VisualizeObjectCollectionDisplay.openHeading();
 
@@ -131,7 +133,7 @@ definition {
 	}
 
 	@description = "LPS-133865 - Verify if the Object is displayed to be selected as Collection Provider on the Collection Display fragment"
-	@priority = "5"
+	@priority = 5
 	test ObjectDisplayedToCollectionProdiver {
 		property portal.acceptance = "true";
 
@@ -152,11 +154,13 @@ definition {
 
 		VisualizeObjectCollectionDisplay.openObjectCollectionProvider();
 
-		VisualizeObjectCollectionDisplay.viewObjectCollectionProvider(labelName = "Custom Objects 301");
+		AssertElementPresent(
+			key_labelName = "Custom Objects 301",
+			locator1 = "VisualizeObjectCollectionDisplay#VIEW_OBJECT_COLLECTION_DISPLAY");
 	}
 
 	@description = "LPS-133865 - Verify if the Object entries are rendered inside the Collection Display fragment"
-	@priority = "5"
+	@priority = 5
 	test ObjectEntriesAreRendered {
 		property portal.acceptance = "true";
 
@@ -168,22 +172,19 @@ definition {
 		ObjectAdmin.addObjectFieldViaAPI(
 			fieldBusinessType = "Text",
 			fieldLabelName = "Text",
-			fieldName = "text",
+			fieldName = "customObjectField",
 			fieldType = "String",
 			isRequired = "false",
 			objectName = "CustomObject302");
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject302");
 
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject302",
-			value = "Test Text 1");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "text",
-			objectName = "CustomObject302",
-			value = "Test Text 2");
+		for (var entryName : list "A,B") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customObjectField",
+				objectName = "CustomObject302",
+				value = "Entry ${entryName}");
+		}
 
 		VisualizeObjectDisplayPage.createObjectPageTemplate(
 			contentType = "Custom Object 302",
@@ -197,15 +198,14 @@ definition {
 			fragmentName = "Collection Display",
 			infoListProviderName = "Custom Objects 302");
 
-		PageEditor.gotoTab(tabName = "Fragments and Widgets");
+		Refresh();
 
-		VisualizeObjectCollectionDisplay.addFieldForCollectionDisplay(fragmentName = "Heading");
+		PageEditor.addFragmentToCollectionDisplay(
+			collectionName = "Basic Components",
+			entryTitle = "",
+			fragmentName = "Heading");
 
 		VisualizeObjectCollectionDisplay.openHeading();
-
-		VisualizeObjectCollectionDisplay.addFieldInsideCollectionDisplay(
-			fragmentName = "Heading",
-			label = "Expand Collection Display");
 
 		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Text");
 
@@ -213,9 +213,11 @@ definition {
 
 		VisualizeObjectDisplayPage.openDisplayPage(displayPageName = "Blank Display Page");
 
-		VisualizeObjectCollectionDisplay.viewEntriesFragment(entries = "Test Text 1");
-
-		VisualizeObjectCollectionDisplay.viewEntriesFragment(entries = "Test Text 2");
+		for (var entryName : list "A,B") {
+			AssertElementPresent(
+				key_entries = "Entry ${entryName}",
+				locator1 = "VisualizeObjectCollectionDisplay#ENTRIES_FRAGMENT");
+		}
 	}
 
 }

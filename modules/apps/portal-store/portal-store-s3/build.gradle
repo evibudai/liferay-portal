@@ -62,8 +62,7 @@ dependencies {
 	compileInclude group: "com.ibm.cos", name: "ibm-cos-java-sdk-core", version: "2.9.0"
 	compileInclude group: "com.ibm.cos", name: "ibm-cos-java-sdk-kms", version: "2.9.0"
 	compileInclude group: "com.ibm.cos", name: "ibm-cos-java-sdk-s3", version: "2.9.0"
-	compileInclude group: "commons-codec", name: "commons-codec", version: "1.15"
-	compileInclude group: "commons-logging", name: "commons-logging", version: "1.2"
+	compileInclude group: "com.liferay", name: "org.apache.commons.logging", version: "1.2.LIFERAY-PATCHED-2"
 	compileInclude group: "software.amazon.ion", name: "ion-java", version: "1.1.0"
 
 	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-annotations", version: "2.13.4"
@@ -72,13 +71,15 @@ dependencies {
 	compileOnly group: "com.liferay", name: "biz.aQute.bnd.annotation", version: "4.2.0.LIFERAY-PATCHED-2"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
+	compileOnly group: "commons-codec", name: "commons-codec", version: "1.15"
 	compileOnly group: "joda-time", name: "joda-time", version: "2.12.1"
 	compileOnly group: "org.apache.httpcomponents", name: "httpclient", version: "4.5.13"
 	compileOnly group: "org.apache.httpcomponents", name: "httpcore", version: "4.4.14"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component", version: "1.4.0"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
+	compileOnly project(":apps:static:osgi:osgi-util")
 	compileOnly project(":apps:static:portal-configuration:portal-configuration-metatype-api")
-	compileOnly project(":apps:static:portal:portal-profile-api")
+	compileOnly project(":core:petra:petra-function")
 	compileOnly project(":core:petra:petra-io")
 	compileOnly project(":core:petra:petra-string")
 }

@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.portlet.render;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.frontend.esm.FrontendESMUtil;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
@@ -27,7 +19,9 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -230,12 +224,17 @@ public class PortletRenderUtil {
 						continue;
 					}
 
-					boolean module = false;
+					String prefix = null;
 
-					if (portletResource.startsWith("module:")) {
-						module = true;
+					for (String specialPrefix : _specialPrefixes) {
+						if (portletResource.startsWith(specialPrefix)) {
+							portletResource = portletResource.substring(
+								specialPrefix.length());
 
-						portletResource = portletResource.substring(7);
+							prefix = specialPrefix;
+
+							break;
+						}
 					}
 
 					boolean absolute = HttpComponentsUtil.hasProtocol(
@@ -245,8 +244,8 @@ public class PortletRenderUtil {
 						portletResource = contextPath + portletResource;
 					}
 
-					if (module) {
-						portletResource = "module:" + portletResource;
+					if (Validator.isNotNull(prefix)) {
+						portletResource = prefix + portletResource;
 					}
 
 					if (visitedURLs.contains(portletResource)) {
@@ -255,7 +254,7 @@ public class PortletRenderUtil {
 
 					visitedURLs.add(portletResource);
 
-					if (absolute || module) {
+					if (absolute || Validator.isNotNull(prefix)) {
 						urls.add(portletResource);
 					}
 					else {
@@ -368,12 +367,17 @@ public class PortletRenderUtil {
 					portletResourceAccessor.get(portlet);
 
 				for (String portletResource : portletResources) {
-					boolean module = false;
+					String prefix = null;
 
-					if (portletResource.startsWith("module:")) {
-						module = true;
+					for (String specialProtocol : _specialPrefixes) {
+						if (portletResource.startsWith(specialProtocol)) {
+							portletResource = portletResource.substring(
+								specialProtocol.length());
 
-						portletResource = portletResource.substring(7);
+							prefix = specialProtocol;
+
+							break;
+						}
 					}
 
 					if (!HttpComponentsUtil.hasProtocol(portletResource)) {
@@ -388,8 +392,8 @@ public class PortletRenderUtil {
 						portletResource = cdnBaseURL.concat(portletResource);
 					}
 
-					if (module) {
-						portletResource = "module:" + portletResource;
+					if (Validator.isNotNull(prefix)) {
+						portletResource = prefix + portletResource;
 					}
 
 					if (visitedURLs.contains(portletResource)) {
@@ -467,6 +471,14 @@ public class PortletRenderUtil {
 		PrintWriter printWriter, String cssPath,
 		Map<String, String> attributes) {
 
+		for (String specialProtocol : _specialPrefixes) {
+			if (cssPath.startsWith(specialProtocol)) {
+				cssPath = cssPath.substring(specialProtocol.length());
+
+				break;
+			}
+		}
+
 		printWriter.print("<link href=\"");
 		printWriter.print(HtmlUtil.escape(cssPath));
 		printWriter.println("\" rel=\"stylesheet\" type=\"text/css\"");
@@ -491,12 +503,22 @@ public class PortletRenderUtil {
 		String type = "text/javascript";
 
 		if (javaScriptPath.startsWith("module:")) {
-			javaScriptPath = javaScriptPath.substring(7);
-
 			type = FrontendESMUtil.getScriptType();
 		}
 
-		printWriter.print("<script src=\"");
+		for (String specialProtocol : _specialPrefixes) {
+			if (javaScriptPath.startsWith(specialProtocol)) {
+				javaScriptPath = javaScriptPath.substring(
+					specialProtocol.length());
+
+				break;
+			}
+		}
+
+		printWriter.print("<script");
+		printWriter.print(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(null));
+		printWriter.print(" src=\"");
 		printWriter.print(HtmlUtil.escapeAttribute(javaScriptPath));
 		printWriter.print("\" type=\"");
 		printWriter.print(type);
@@ -616,6 +638,9 @@ public class PortletRenderUtil {
 			}
 
 		};
+
+	private static final Set<String> _specialPrefixes = SetUtil.fromArray(
+		"module:", "nocombo:");
 
 	private enum URLType {
 

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.model;
@@ -65,6 +56,7 @@ public class CPAttachmentFileEntryWrapper
 		attributes.put("cdnURL", getCDNURL());
 		attributes.put("displayDate", getDisplayDate());
 		attributes.put("expirationDate", getExpirationDate());
+		attributes.put("galleryEnabled", isGalleryEnabled());
 		attributes.put("title", getTitle());
 		attributes.put("json", getJson());
 		attributes.put("priority", getPriority());
@@ -188,6 +180,12 @@ public class CPAttachmentFileEntryWrapper
 
 		if (expirationDate != null) {
 			setExpirationDate(expirationDate);
+		}
+
+		Boolean galleryEnabled = (Boolean)attributes.get("galleryEnabled");
+
+		if (galleryEnabled != null) {
+			setGalleryEnabled(galleryEnabled);
 		}
 
 		String title = (String)attributes.get("title");
@@ -395,6 +393,16 @@ public class CPAttachmentFileEntryWrapper
 	@Override
 	public long getFileEntryId() {
 		return model.getFileEntryId();
+	}
+
+	/**
+	 * Returns the gallery enabled of this cp attachment file entry.
+	 *
+	 * @return the gallery enabled of this cp attachment file entry
+	 */
+	@Override
+	public boolean getGalleryEnabled() {
+		return model.getGalleryEnabled();
 	}
 
 	/**
@@ -694,6 +702,16 @@ public class CPAttachmentFileEntryWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this cp attachment file entry is gallery enabled.
+	 *
+	 * @return <code>true</code> if this cp attachment file entry is gallery enabled; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isGalleryEnabled() {
+		return model.isGalleryEnabled();
+	}
+
+	/**
 	 * Returns <code>true</code> if this cp attachment file entry is inactive.
 	 *
 	 * @return <code>true</code> if this cp attachment file entry is inactive; <code>false</code> otherwise
@@ -876,6 +894,16 @@ public class CPAttachmentFileEntryWrapper
 	@Override
 	public void setFileEntryId(long fileEntryId) {
 		model.setFileEntryId(fileEntryId);
+	}
+
+	/**
+	 * Sets whether this cp attachment file entry is gallery enabled.
+	 *
+	 * @param galleryEnabled the gallery enabled of this cp attachment file entry
+	 */
+	@Override
+	public void setGalleryEnabled(boolean galleryEnabled) {
+		model.setGalleryEnabled(galleryEnabled);
 	}
 
 	/**

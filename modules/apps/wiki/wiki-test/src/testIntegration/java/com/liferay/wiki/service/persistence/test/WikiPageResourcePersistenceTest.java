@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.service.persistence.test;
@@ -125,6 +116,8 @@ public class WikiPageResourcePersistenceTest {
 
 		newWikiPageResource.setMvccVersion(RandomTestUtil.nextLong());
 
+		newWikiPageResource.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newWikiPageResource.setUuid(RandomTestUtil.randomString());
 
 		newWikiPageResource.setGroupId(RandomTestUtil.nextLong());
@@ -143,6 +136,9 @@ public class WikiPageResourcePersistenceTest {
 		Assert.assertEquals(
 			existingWikiPageResource.getMvccVersion(),
 			newWikiPageResource.getMvccVersion());
+		Assert.assertEquals(
+			existingWikiPageResource.getCtCollectionId(),
+			newWikiPageResource.getCtCollectionId());
 		Assert.assertEquals(
 			existingWikiPageResource.getUuid(), newWikiPageResource.getUuid());
 		Assert.assertEquals(
@@ -223,9 +219,9 @@ public class WikiPageResourcePersistenceTest {
 
 	protected OrderByComparator<WikiPageResource> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"WikiPageResource", "mvccVersion", true, "uuid", true,
-			"resourcePrimKey", true, "groupId", true, "companyId", true,
-			"nodeId", true, "title", true);
+			"WikiPageResource", "mvccVersion", true, "ctCollectionId", true,
+			"uuid", true, "resourcePrimKey", true, "groupId", true, "companyId",
+			true, "nodeId", true, "title", true);
 	}
 
 	@Test
@@ -522,6 +518,8 @@ public class WikiPageResourcePersistenceTest {
 		WikiPageResource wikiPageResource = _persistence.create(pk);
 
 		wikiPageResource.setMvccVersion(RandomTestUtil.nextLong());
+
+		wikiPageResource.setCtCollectionId(RandomTestUtil.nextLong());
 
 		wikiPageResource.setUuid(RandomTestUtil.randomString());
 

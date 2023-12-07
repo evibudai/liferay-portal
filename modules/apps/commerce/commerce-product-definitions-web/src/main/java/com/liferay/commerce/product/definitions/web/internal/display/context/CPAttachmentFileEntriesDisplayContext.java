@@ -1,28 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.display.context;
 
 import com.liferay.commerce.product.configuration.AttachmentsConfiguration;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
-import com.liferay.commerce.product.ddm.DDMHelper;
 import com.liferay.commerce.product.definitions.web.internal.security.permission.resource.CommerceCatalogPermission;
 import com.liferay.commerce.product.display.context.BaseCPDefinitionsDisplayContext;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
+import com.liferay.commerce.product.option.CommerceOptionType;
+import com.liferay.commerce.product.option.CommerceOptionTypeRegistry;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
@@ -51,11 +43,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Marco Leo
@@ -67,19 +57,20 @@ public class CPAttachmentFileEntriesDisplayContext
 	public CPAttachmentFileEntriesDisplayContext(
 		ActionHelper actionHelper,
 		AttachmentsConfiguration attachmentsConfiguration,
+		CommerceOptionTypeRegistry commerceOptionTypeRegistry,
 		CPAttachmentFileEntryService cpAttachmentFileEntryService,
 		CPDefinitionOptionRelService cpDefinitionOptionRelService,
-		CPInstanceHelper cpInstanceHelper, DDMHelper ddmHelper,
+		CPInstanceHelper cpInstanceHelper,
 		DLMimeTypeDisplayContext dlMimeTypeDisplayContext,
 		HttpServletRequest httpServletRequest, ItemSelector itemSelector) {
 
 		super(actionHelper, httpServletRequest);
 
 		_attachmentsConfiguration = attachmentsConfiguration;
+		_commerceOptionTypeRegistry = commerceOptionTypeRegistry;
 		_cpAttachmentFileEntryService = cpAttachmentFileEntryService;
 		_cpDefinitionOptionRelService = cpDefinitionOptionRelService;
 		_cpInstanceHelper = cpInstanceHelper;
-		_ddmHelper = ddmHelper;
 		_dlMimeTypeDisplayContext = dlMimeTypeDisplayContext;
 		_itemSelector = itemSelector;
 	}
@@ -272,10 +263,12 @@ public class CPAttachmentFileEntriesDisplayContext
 			cpAttachmentFileEntry.getJson());
 	}
 
-	public String renderOptions(
-			PageContext pageContext, RenderRequest renderRequest,
-			RenderResponse renderResponse)
-		throws PortalException {
+	public void renderOptions(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws Exception {
+
+		long cpDefinitionId = getCPDefinitionId();
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			getCPAttachmentFileEntry();
@@ -286,11 +279,21 @@ public class CPAttachmentFileEntriesDisplayContext
 			json = cpAttachmentFileEntry.getJson();
 		}
 
-		return _ddmHelper.renderCPAttachmentFileEntryOptions(
-			getCPDefinitionId(), json, pageContext, renderRequest,
-			renderResponse,
-			_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
-				getCPDefinitionId(), true, false));
+		List<CPDefinitionOptionRel> cpDefinitionOptionRels =
+			_cpDefinitionOptionRelService.getCPDefinitionOptionRels(
+				cpDefinitionId, true);
+
+		for (CPDefinitionOptionRel cpDefinitionOptionRel :
+				cpDefinitionOptionRels) {
+
+			CommerceOptionType commerceOptionType =
+				_commerceOptionTypeRegistry.getCommerceOptionType(
+					cpDefinitionOptionRel.getCommerceOptionTypeKey());
+
+			commerceOptionType.render(
+				cpDefinitionOptionRel, 0, false, json, httpServletRequest,
+				httpServletResponse);
+		}
 	}
 
 	private String _getTypeLabel(int type) {
@@ -305,11 +308,11 @@ public class CPAttachmentFileEntriesDisplayContext
 	}
 
 	private final AttachmentsConfiguration _attachmentsConfiguration;
+	private final CommerceOptionTypeRegistry _commerceOptionTypeRegistry;
 	private CPAttachmentFileEntry _cpAttachmentFileEntry;
 	private final CPAttachmentFileEntryService _cpAttachmentFileEntryService;
 	private final CPDefinitionOptionRelService _cpDefinitionOptionRelService;
 	private final CPInstanceHelper _cpInstanceHelper;
-	private final DDMHelper _ddmHelper;
 	private final DLMimeTypeDisplayContext _dlMimeTypeDisplayContext;
 	private final ItemSelector _itemSelector;
 

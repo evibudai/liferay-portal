@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.admin.web.internal.portlet.action.test;
@@ -18,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
+import com.liferay.layout.importer.LayoutsImportStrategy;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.importer.LayoutsImporterResultEntry;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -58,10 +50,9 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.io.File;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -104,18 +95,17 @@ public class ExportImportDisplayPagesTest {
 			_infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemFormVariationsProvider.class, className);
 
-		Collection<InfoItemFormVariation> infoItemFormVariations =
+		List<InfoItemFormVariation> infoItemFormVariations = new ArrayList<>(
 			infoItemFormVariationsProvider.getInfoItemFormVariations(
-				_serviceContext1.getScopeGroupId());
+				_serviceContext1.getScopeGroupId()));
 
-		Assert.assertTrue(!infoItemFormVariations.isEmpty());
+		Assert.assertFalse(infoItemFormVariations.isEmpty());
 
-		Stream<InfoItemFormVariation> stream = infoItemFormVariations.stream();
+		infoItemFormVariations.sort(
+			Comparator.comparing(InfoItemFormVariation::getKey));
 
-		InfoItemFormVariation infoItemFormVariation = stream.sorted(
-			Comparator.comparing(InfoItemFormVariation::getKey)
-		).findFirst(
-		).get();
+		InfoItemFormVariation infoItemFormVariation =
+			infoItemFormVariations.get(0);
 
 		long classTypeId = GetterUtil.getLong(infoItemFormVariation.getKey());
 
@@ -124,7 +114,7 @@ public class ExportImportDisplayPagesTest {
 				_serviceContext1.getUserId(),
 				_serviceContext1.getScopeGroupId(), 0, classNameId, classTypeId,
 				"Display Page Template One",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0,
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext1);
 
 		Layout layout1 = _layoutLocalService.fetchLayout(
@@ -169,7 +159,7 @@ public class ExportImportDisplayPagesTest {
 		try {
 			layoutsImporterResultEntries = _layoutsImporter.importFile(
 				TestPropsValues.getUserId(), _group2.getGroupId(), 0, file,
-				false);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();

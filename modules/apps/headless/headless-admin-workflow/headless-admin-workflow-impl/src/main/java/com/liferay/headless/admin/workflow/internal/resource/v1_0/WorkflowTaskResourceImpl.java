@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.workflow.internal.resource.v1_0;
@@ -46,10 +37,10 @@ import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
 import com.liferay.portal.kernel.workflow.WorkflowTaskAssignee;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
-import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.kernel.workflow.search.WorkflowModelSearchResult;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
 
 import java.io.Serializable;
 
@@ -574,15 +565,37 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 
 		return new WorkflowTask() {
 			{
-				if (workflowTask.getAssigneeUserId() > 0) {
-					assigneePerson = CreatorUtil.toCreator(
-						_portal,
-						_userLocalService.fetchUser(
-							workflowTask.getAssigneeUserId()));
-					assigneeRoles = _getRoles(
-						workflowTask.getWorkflowTaskAssignees());
-				}
-
+				actions = HashMapBuilder.<String, Map<String, String>>put(
+					"assignToMe",
+					addAction(
+						ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
+						"postWorkflowTaskAssignToMe",
+						_kaleoTaskInstanceTokenModelResourcePermission)
+				).put(
+					"assignToRole",
+					addAction(
+						ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
+						"postWorkflowTaskAssignToRole",
+						_kaleoTaskInstanceTokenModelResourcePermission)
+				).put(
+					"assignToUser",
+					addAction(
+						ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
+						"postWorkflowTaskAssignToUser",
+						_kaleoTaskInstanceTokenModelResourcePermission)
+				).put(
+					"changeTransition",
+					addAction(
+						ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
+						"postWorkflowTaskChangeTransition",
+						_kaleoTaskInstanceTokenModelResourcePermission)
+				).put(
+					"updateDueDate",
+					addAction(
+						ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
+						"patchWorkflowTaskUpdateDueDate",
+						_kaleoTaskInstanceTokenModelResourcePermission)
+				).build();
 				completed = workflowTask.isCompleted();
 				dateCompletion = workflowTask.getCompletionDate();
 				dateCreated = workflowTask.getCreateDate();
@@ -605,41 +618,35 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 					workflowTask.getWorkflowDefinitionVersion());
 				workflowInstanceId = workflowTask.getWorkflowInstanceId();
 
-				setActions(
-					HashMapBuilder.<String, Map<String, String>>put(
-						"assignToMe",
-						addAction(
-							ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
-							"postWorkflowTaskAssignToMe",
-							_workflowTaskModelResourcePermission)
-					).put(
-						"assignToRole",
-						addAction(
-							ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
-							"postWorkflowTaskAssignToRole",
-							_workflowTaskModelResourcePermission)
-					).put(
-						"assignToUser",
-						addAction(
-							ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
-							"postWorkflowTaskAssignToUser",
-							_workflowTaskModelResourcePermission)
-					).put(
-						"changeTransition",
-						addAction(
-							ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
-							"postWorkflowTaskChangeTransition",
-							_workflowTaskModelResourcePermission)
-					).put(
-						"updateDueDate",
-						addAction(
-							ActionKeys.UPDATE, workflowTask.getWorkflowTaskId(),
-							"patchWorkflowTaskUpdateDueDate",
-							_workflowTaskModelResourcePermission)
-					).build());
+				setAssigneePerson(
+					() -> {
+						if (workflowTask.getAssigneeUserId() <= 0) {
+							return null;
+						}
+
+						return CreatorUtil.toCreator(
+							_portal,
+							_userLocalService.fetchUser(
+								workflowTask.getAssigneeUserId()));
+					});
+				setAssigneeRoles(
+					() -> {
+						if (workflowTask.getAssigneeUserId() <= 0) {
+							return null;
+						}
+
+						return _getRoles(
+							workflowTask.getWorkflowTaskAssignees());
+					});
 			}
 		};
 	}
+
+	@Reference(
+		target = "(model.class.name=com.liferay.portal.workflow.kaleo.model.KaleoTaskInstanceToken)"
+	)
+	private ModelResourcePermission<?>
+		_kaleoTaskInstanceTokenModelResourcePermission;
 
 	@Reference
 	private Language _language;
@@ -661,10 +668,5 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 
 	@Reference
 	private WorkflowTaskManager _workflowTaskManager;
-
-	@Reference(
-		target = "(model.class.name=com.liferay.portal.kernel.workflow.WorkflowTask)"
-	)
-	private ModelResourcePermission<?> _workflowTaskModelResourcePermission;
 
 }

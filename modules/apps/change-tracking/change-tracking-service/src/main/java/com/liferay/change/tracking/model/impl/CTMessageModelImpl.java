@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.change.tracking.model.impl;
@@ -201,52 +192,69 @@ public class CTMessageModelImpl
 	public Map<String, Function<CTMessage, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CTMessage, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CTMessage, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CTMessage, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CTMessage, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<CTMessage, Object>>();
-		Map<String, BiConsumer<CTMessage, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<CTMessage, ?>>();
+		private static final Map<String, Function<CTMessage, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put("mvccVersion", CTMessage::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CTMessage, Long>)CTMessage::setMvccVersion);
-		attributeGetterFunctions.put("ctMessageId", CTMessage::getCtMessageId);
-		attributeSetterBiConsumers.put(
-			"ctMessageId",
-			(BiConsumer<CTMessage, Long>)CTMessage::setCtMessageId);
-		attributeGetterFunctions.put("companyId", CTMessage::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId", (BiConsumer<CTMessage, Long>)CTMessage::setCompanyId);
-		attributeGetterFunctions.put(
-			"ctCollectionId", CTMessage::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<CTMessage, Long>)CTMessage::setCtCollectionId);
-		attributeGetterFunctions.put(
-			"messageContent", CTMessage::getMessageContent);
-		attributeSetterBiConsumers.put(
-			"messageContent",
-			(BiConsumer<CTMessage, String>)CTMessage::setMessageContent);
+		static {
+			Map<String, Function<CTMessage, Object>> attributeGetterFunctions =
+				new LinkedHashMap<String, Function<CTMessage, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CTMessage::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctMessageId", CTMessage::getCtMessageId);
+			attributeGetterFunctions.put("companyId", CTMessage::getCompanyId);
+			attributeGetterFunctions.put(
+				"ctCollectionId", CTMessage::getCtCollectionId);
+			attributeGetterFunctions.put(
+				"messageContent", CTMessage::getMessageContent);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<CTMessage, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CTMessage, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<CTMessage, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CTMessage, Long>)CTMessage::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctMessageId",
+				(BiConsumer<CTMessage, Long>)CTMessage::setCtMessageId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CTMessage, Long>)CTMessage::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<CTMessage, Long>)CTMessage::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"messageContent",
+				(BiConsumer<CTMessage, String>)CTMessage::setMessageContent);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -574,8 +582,9 @@ public class CTMessageModelImpl
 	private String _messageContent;
 
 	public <T> T getColumnValue(String columnName) {
-		Function<CTMessage, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<CTMessage, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

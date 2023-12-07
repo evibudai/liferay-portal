@@ -1,20 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.scripting;
 
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.Map;
 import java.util.Set;
@@ -27,13 +18,17 @@ import java.util.Set;
 public class ScriptingUtil {
 
 	public static void clearCache(String language) throws ScriptingException {
-		_scripting.clearCache(language);
+		Scripting scripting = _scriptingSnapshot.get();
+
+		scripting.clearCache(language);
 	}
 
 	public static ScriptingExecutor createScriptingExecutor(
 		String language, boolean executeInSeparateThread) {
 
-		return _scripting.createScriptingExecutor(
+		Scripting scripting = _scriptingSnapshot.get();
+
+		return scripting.createScriptingExecutor(
 			language, executeInSeparateThread);
 	}
 
@@ -42,16 +37,19 @@ public class ScriptingUtil {
 			Set<String> outputNames, String language, String script)
 		throws ScriptingException {
 
-		return _scripting.eval(
+		Scripting scripting = _scriptingSnapshot.get();
+
+		return scripting.eval(
 			allowedClasses, inputObjects, outputNames, language, script);
 	}
 
 	public static Set<String> getSupportedLanguages() {
-		return _scripting.getSupportedLanguages();
+		Scripting scripting = _scriptingSnapshot.get();
+
+		return scripting.getSupportedLanguages();
 	}
 
-	private static volatile Scripting _scripting =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			Scripting.class, ScriptingUtil.class, "_scripting", false);
+	private static final Snapshot<Scripting> _scriptingSnapshot =
+		new Snapshot<>(ScriptingUtil.class, Scripting.class);
 
 }

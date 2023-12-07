@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.test.util.highlight;
@@ -31,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,10 +37,9 @@ public abstract class BaseHighlighterTestCase extends BaseIndexingTestCase {
 
 		addDocuments(
 			value -> DocumentCreationHelpers.singleText(fieldName, value),
-			Arrays.asList(
-				"alpha", "alpha beta", "alpha beta alpha",
-				"alpha beta gamma alpha eta theta alpha zeta eta alpha iota",
-				"alpha beta gamma delta epsilon zeta eta theta iota alpha"));
+			"alpha", "alpha beta", "alpha beta alpha",
+			"alpha beta gamma alpha eta theta alpha zeta eta alpha iota",
+			"alpha beta gamma delta epsilon zeta eta theta iota alpha");
 
 		Query query = queries.string(fieldName.concat(":alpha"));
 
@@ -84,14 +73,15 @@ public abstract class BaseHighlighterTestCase extends BaseIndexingTestCase {
 
 		assertSearch(
 			indexingTestHelper -> {
+				List<String> actualValues = new ArrayList<>();
+
 				SearchSearchRequest searchSearchRequest =
 					new SearchSearchRequest();
 
+				searchSearchRequest.setHighlight(highlight);
 				searchSearchRequest.setIndexNames("_all");
 				searchSearchRequest.setQuery(query);
 				searchSearchRequest.setSize(30);
-
-				searchSearchRequest.setHighlight(highlight);
 
 				SearchEngineAdapter searchEngineAdapter =
 					getSearchEngineAdapter();
@@ -101,17 +91,9 @@ public abstract class BaseHighlighterTestCase extends BaseIndexingTestCase {
 
 				SearchHits searchHits = searchSearchResponse.getSearchHits();
 
-				List<SearchHit> searchHitsList = searchHits.getSearchHits();
-
-				List<String> actualValues = new ArrayList<>();
-
-				Stream<SearchHit> stream = searchHitsList.stream();
-
-				stream.map(
-					searchHit -> getFragments(fieldName, searchHit)
-				).forEach(
-					actualValues::addAll
-				);
+				for (SearchHit searchHit : searchHits.getSearchHits()) {
+					actualValues.addAll(getFragments(fieldName, searchHit));
+				}
 
 				Collections.sort(actualValues);
 

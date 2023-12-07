@@ -13,8 +13,8 @@ definition {
 			User.firstLoginPG();
 		}
 
-		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+		task ("Add a site via headless API") {
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Import test fragments from dependencies folder") {
@@ -42,9 +42,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -55,7 +55,7 @@ definition {
 	}
 
 	@description = "This case ensures that the user is notified when someone comments on their content page fragment."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanViewComment {
 		JSONLayout.addPublicLayout(
@@ -89,7 +89,7 @@ definition {
 
 		Notifications.viewBadgeCount(
 			activePanel = "Notifications",
-			notificationCount = "1");
+			notificationCount = 1);
 
 		Notifications.gotoNotifications();
 
@@ -106,7 +106,7 @@ definition {
 	}
 
 	@description = "This case ensures that a user is notified when a reply is added to their comment."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanViewCommentReply {
 		JSONLayout.addPublicLayout(
@@ -144,7 +144,7 @@ definition {
 
 		Notifications.viewBadgeCount(
 			activePanel = "Notifications",
-			notificationCount = "1");
+			notificationCount = 1);
 
 		Notifications.gotoNotifications();
 
@@ -161,7 +161,7 @@ definition {
 	}
 
 	@description = "This case ensures a user who is mentioned in a comment will receive notifications."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanViewMentionFromComment {
 		User.logoutAndLoginPG(
@@ -197,7 +197,7 @@ definition {
 
 		Notifications.viewBadgeCount(
 			activePanel = "Notifications",
-			notificationCount = "1");
+			notificationCount = 1);
 
 		Notifications.gotoNotifications();
 
@@ -216,7 +216,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-101493. It ensures that a user who replies to a comment will receive further reply notifications."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test WillReceiveNotificationsFromMultipleUsers {
 		JSONLayout.addPublicLayout(
@@ -266,7 +266,7 @@ definition {
 
 		Notifications.viewBadgeCount(
 			activePanel = "Notifications",
-			notificationCount = "1");
+			notificationCount = 1);
 
 		Notifications.gotoNotifications();
 

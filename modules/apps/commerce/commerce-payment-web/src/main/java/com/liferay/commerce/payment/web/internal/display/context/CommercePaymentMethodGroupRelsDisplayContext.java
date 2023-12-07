@@ -1,19 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.payment.web.internal.display.context;
 
+import com.liferay.commerce.payment.integration.CommercePaymentIntegration;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegrationRegistry;
 import com.liferay.commerce.payment.method.CommercePaymentMethod;
 import com.liferay.commerce.payment.method.CommercePaymentMethodRegistry;
 import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
@@ -21,6 +14,7 @@ import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelService
 import com.liferay.commerce.payment.web.internal.display.context.helper.CommercePaymentMethodRequestHelper;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -39,12 +33,15 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 		CommercePaymentMethodGroupRelService
 			commercePaymentMethodGroupRelService,
 		CommercePaymentMethodRegistry commercePaymentMethodRegistry,
+		CommercePaymentIntegrationRegistry commercePaymentIntegrationRegistry,
 		CountryService countryService, HttpServletRequest httpServletRequest) {
 
 		_commerceChannelLocalService = commerceChannelLocalService;
 		_commercePaymentMethodGroupRelService =
 			commercePaymentMethodGroupRelService;
 		_commercePaymentMethodRegistry = commercePaymentMethodRegistry;
+		_commercePaymentIntegrationRegistry =
+			commercePaymentIntegrationRegistry;
 		_countryService = countryService;
 
 		commercePaymentMethodRequestHelper =
@@ -70,12 +67,16 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 			_commercePaymentMethodRegistry.getCommercePaymentMethod(
 				getCommercePaymentMethodEngineKey());
 
+		if (commercePaymentMethod == null) {
+			return StringPool.BLANK;
+		}
+
 		return commercePaymentMethod.getDescription(locale);
 	}
 
 	public String getCommercePaymentMethodEngineKey() {
 		if (_commercePaymentMethodGroupRel != null) {
-			return _commercePaymentMethodGroupRel.getEngineKey();
+			return _commercePaymentMethodGroupRel.getPaymentIntegrationKey();
 		}
 
 		return ParamUtil.getString(
@@ -84,9 +85,21 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 	}
 
 	public String getCommercePaymentMethodEngineName(Locale locale) {
+		String commercePaymentMethodEngineKey =
+			getCommercePaymentMethodEngineKey();
+
 		CommercePaymentMethod commercePaymentMethod =
 			_commercePaymentMethodRegistry.getCommercePaymentMethod(
-				getCommercePaymentMethodEngineKey());
+				commercePaymentMethodEngineKey);
+
+		if (commercePaymentMethod == null) {
+			CommercePaymentIntegration commercePaymentIntegration =
+				_commercePaymentIntegrationRegistry.
+					getCommercePaymentIntegration(
+						commercePaymentMethodEngineKey);
+
+			return commercePaymentIntegration.getPaymentIntegrationName();
+		}
 
 		return commercePaymentMethod.getName(locale);
 	}
@@ -129,6 +142,8 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 		commercePaymentMethodRequestHelper;
 
 	private final CommerceChannelLocalService _commerceChannelLocalService;
+	private final CommercePaymentIntegrationRegistry
+		_commercePaymentIntegrationRegistry;
 	private CommercePaymentMethodGroupRel _commercePaymentMethodGroupRel;
 	private final CommercePaymentMethodGroupRelService
 		_commercePaymentMethodGroupRelService;

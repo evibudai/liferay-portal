@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.data.engine.rest.resource.exception;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 
 import java.util.Locale;
 import java.util.Set;
@@ -24,7 +16,7 @@ import java.util.regex.Pattern;
 /**
  * @author Leonardo Barros
  */
-public class DataDefinitionValidationException extends RuntimeException {
+public class DataDefinitionValidationException extends PortalException {
 
 	public DataDefinitionValidationException() {
 	}
@@ -58,6 +50,28 @@ public class DataDefinitionValidationException extends RuntimeException {
 		}
 
 		private final Set<String> _duplicatedFieldNames;
+
+	}
+
+	public static class MustNotDuplicateFieldReference
+		extends DataDefinitionValidationException {
+
+		public MustNotDuplicateFieldReference(
+			Set<String> duplicatedFieldReferences) {
+
+			super(
+				String.format(
+					"Field references %s were defined more than once",
+					duplicatedFieldReferences));
+
+			_duplicatedFieldReferences = duplicatedFieldReferences;
+		}
+
+		public Set<String> getDuplicatedFieldReferences() {
+			return _duplicatedFieldReferences;
+		}
+
+		private final Set<String> _duplicatedFieldReferences;
 
 	}
 

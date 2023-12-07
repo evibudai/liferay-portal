@@ -100,6 +100,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>COLLECTION_ITEM_CONTENT</td>
+	<td>//div[contains(@class,'lfr-layout-structure-item-collection')]//*[normalize-space(text())='${key_text}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>COLLECTION_ITEM_CONTENT_IN_BORDERED_LIST</td>
 	<td>//div[@aria-label='${key_fragmentName}']//div[contains(@class,'page-editor__collection')]//ul[contains(@class,'list-group')]/li[contains(@class,'list-group-item')][${key_position}]${key_entryContent}</td>
 	<td></td>
@@ -161,7 +166,7 @@
 </tr>
 <tr>
 	<td>COLLECTION_ITEM_PAGINATION_NEXT_BUTTON_NUMERIC</td>
-	<td>//a[contains(@class, 'page-link') and contains(@aria-label,'next')]</td>
+	<td>//div[contains(@class, 'page-link')]//*[name()='svg'][contains(@class,'right')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -171,7 +176,7 @@
 </tr>
 <tr>
 	<td>COLLECTION_ITEM_PAGINATION_PREVIOUS_BUTTON_NUMERIC</td>
-	<td>//a[contains(@class, 'page-link') and contains(@aria-label,'previous')]</td>
+	<td>//div[contains(@class, 'page-link')]//*[name()='svg'][contains(@class,'left')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -204,6 +209,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>COLLECTION_FILTER_HELP_TEXT</td>
+	<td>xpath=(//div[@aria-label='Collection Filter'])[${index}]//p[contains(@id,'HelpText')][normalize-space(text())='${helpText}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLLECTION_FILTER_LABEL</td>
+	<td>xpath=(//div[@aria-label='Collection Filter'])[${index}]//label[normalize-space(text())='${label}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>COLLECTION_FILTER_SEARCH_FIELD</td>
 	<td>xpath=(//input[contains(@id,'keywordsInput')])[${index}]</td>
 	<td></td>
@@ -216,6 +231,11 @@
 <tr>
 	<td>COLLECTION_FILTER_SOURCE_LABEL_VISIBLE</td>
 	<td>//div[.//button[contains(@class,'dropdown-toggle')]]//label[normalize-space(text())='${sourceLabel}'][not(contains(@class,'sr-only'))]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLLECTION_FILTER_TAGS_SELECTOR</td>
+	<td>xpath=(//input[contains(@id,'MultiSelect')])[${index}]</td>
 	<td></td>
 </tr>
 
@@ -266,7 +286,7 @@
 </tr>
 <tr>
 	<td>EDIT_MODE_SELECTOR</td>
-	<td>//button[contains(@class,'edit-mode-selector')]</td>
+	<td>//button[contains(@aria-label,'Page Edition Mode')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -287,6 +307,11 @@
 <tr>
 	<td>VIEWPORT</td>
 	<td>//div[contains(@class,'layout-viewport')][contains(@class,'${key_deviceType}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VIEWPORT_LOADING_ANIMATION</td>
+	<td>//div[contains(@class,'layout-viewport')]//span[contains(@class,'loading-animation')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -350,7 +375,7 @@
 </tr>
 <tr>
 	<td>EXPERIENCE_ACTIVE_LABEL_VIEW_CONTROL_MENU</td>
-	<td>//*[contains(@class, 'align-items-center')]//*[contains(text(),'${key_experienceName}')]/parent::span//span[contains(text(),'Active')]</td>
+	<td>//div[contains(@class,'dropdown-menu')]//li//*[contains(text(),'${key_experienceName}')]/parent::div//following-sibling::div//span[normalize-space(text())='Active']</td>
 	<td></td>
 </tr>
 <tr>
@@ -405,7 +430,7 @@
 </tr>
 <tr>
 	<td>EXPERIENCE_INACTIVE_LABEL_VIEW_CONTROL_MENU</td>
-	<td>//*[contains(@class, 'align-items-center')]//*[contains(text(),'${key_experienceName}')]/parent::span//span[contains(text(),'Inactive')]</td>
+	<td>//div[contains(@class,'dropdown-menu')]//li//*[contains(text(),'${key_experienceName}')]/parent::div//following-sibling::div//span[normalize-space(text())='Inactive']</td>
 	<td></td>
 </tr>
 <tr>
@@ -498,12 +523,12 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_COLLECTION_PANEL_COLLAPSED</td>
-	<td>//*[contains(@class,'sheet-subtitle collapsed')][normalize-space()='${key_collectionName}']</td>
+	<td>//*[contains(@class,'panel-header-link collapse-icon') and contains(@class,'collapsed')][normalize-space()='${key_collectionName}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_COLLECTION_PANEL_EXPANDED</td>
-	<td>//*[contains(@class,'collapse-icon sheet-subtitle')][normalize-space()='${key_collectionName}']</td>
+	<td>//*[contains(@class,'mb-3') and contains(@class,'panel-header') and contains(@class,'panel-header-link')][normalize-space()='${key_collectionName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -685,32 +710,32 @@
 </tr>
 <tr>
 	<td>FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT</td>
-	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::div/ul/li[contains(@class,'page-editor__fragments-widgets__tab-list-item')][normalize-space()='${key_fragmentName}']</td>
+	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::ul/li[contains(@class,'page-editor__fragments-widgets__tab-list-item')][normalize-space()='${key_fragmentName}']//div[@draggable='true']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL</td>
-	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::div/ul/li[contains(@class,'page-editor__fragments-widgets__tab-list-item')][normalize-space()='${key_fragmentName}']//button[@aria-label='${ariaLabel}']</td>
+	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::ul/li[contains(@class,'page-editor__fragments-widgets__tab-list-item')][normalize-space()='${key_fragmentName}']//button[@aria-label='${ariaLabel}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM</td>
-	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::div/ul/li[contains(@class,'page-editor__fragments-widgets__tab-card-item')][normalize-space()='${key_fragmentName}']</td>
+	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::ul/li[contains(@class,'page-editor__fragments-widgets__tab-card-item')][normalize-space()='${key_fragmentName}']//div[@draggable='true']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM_BUTTON_WITH_ARIA_LABEL</td>
-	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::div/ul/li[contains(@class,'page-editor__fragments-widgets__tab-card-item')][normalize-space()='${key_fragmentName}']//button[@aria-label='${ariaLabel}']</td>
+	<td>//button[normalize-space()='${key_collectionName}']/following-sibling::ul/li[contains(@class,'page-editor__fragments-widgets__tab-card-item')][normalize-space()='${key_fragmentName}']//button[@aria-label='${ariaLabel}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENTS_AND_WIDGETS_TAB_WIDGET</td>
-	<td>xpath=(//li[contains(@class,'page-editor__fragments-widgets__tab-list-item')][normalize-space()='${key_portletName}'])[${key_indexItem}]</td>
+	<td>xpath=(//li[contains(@class,'page-editor__fragments-widgets__tab-list-item')][normalize-space()='${key_portletName}']//div[@draggable='true'])[${key_indexItem}]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENTS_AND_WIDGETS_TAB_WIDGET_CARD_ITEM</td>
-	<td>//li[contains(@class,'page-editor__fragments-widgets__tab-card-item')][normalize-space()='${key_portletName}']</td>
+	<td>//li[contains(@class,'page-editor__fragments-widgets__tab-card-item')][normalize-space()='${key_portletName}']//div[@draggable='true']</td>
 	<td></td>
 </tr>
 <tr>
@@ -872,11 +897,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>DRAFT_SAVING_MESSAGE</td>
-	<td>//div[contains(@class,'management-bar')]//span[contains(@class,'text-info')][normalize-space(text())='Saving']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>DEVICE_TYPE</td>
 	<td>//button[contains(@class,'btn')][@aria-label='${key_deviceType}']</td>
 	<td></td>
@@ -898,7 +918,7 @@
 </tr>
 <tr>
 	<td>PREVIEW_WITH_CUSTOM_OBJECT_ITEM</td>
-	<td>//dd[contains(@data-value,'${key_objectLabel}')]</td>
+	<td>//dd[contains(@data-value,'${key_entryValue}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -916,7 +936,7 @@
 
 <tr>
 	<td>PAGE_CONTENTS_CONTENT_FILTER_TOGGLE</td>
-	<td>//div[contains(@class,'page-contents__content-filter')]//button[contains(@class,'dropdown-toggle')]</td>
+	<td>//div[contains(@class,'page-contents__content-filter')]//button[contains(@class,'form-control-select')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -950,6 +970,39 @@
 <tr>
 	<td>MORE_LINK</td>
 	<td>//*[contains(@class,'page-editor__sidebar__panel-header') and contains(.,'Page Design Options')]//a[*[name()='svg'][contains(@class,'lexicon-icon-cog')]]</td>
+	<td></td>
+</tr>
+
+<!--PAGE_RULES-->
+
+<tr>
+	<td>PAGE_RULE_BUILDER_ACTION_ITEM</td>
+	<td>xpath=(//div[contains(@class,'rule-builder-item--action')][@aria-label='Incomplete Action']//button[@role='combobox'])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_RULE_BUILDER_CONDITION_ITEM</td>
+	<td>xpath=(//div[contains(@class,'rule-builder-item--condition')][@aria-label='Incomplete Condition']//button[@role='combobox'])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_RULE_BUILDER_EXISTING_ACTION_ITEM</td>
+	<td>xpath=(//div[contains(@class,'rule-builder-item--action')]//button[@role='combobox'])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_RULE_BUILDER_EXISTING_CONDITION_ITEM</td>
+	<td>xpath=(//div[contains(@class,'rule-builder-item--condition')]//button[@role='combobox'])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_RULE_LIST_ITEM</td>
+	<td>//div[@aria-label='Page Rules Panel']//li[.//*[normalize-space(text())='${key_ruleName}']][normalize-space()='${key_rule}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_RULE_LIST_ITEM_ELLIPSIS</td>
+	<td>//div[@aria-label='Page Rules Panel']//li[.//*[normalize-space(text())='${key_ruleName}']]//button[contains(@class,'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 
@@ -992,7 +1045,7 @@
 </tr>
 <tr>
 	<td>IMAGE_RESOLUTION_LABEL</td>
-	<td>//p[contains(@class,'text-secondary')]/b[contains(.,'${key_resolutionLabel}')]</td>
+	<td>//p[contains(@class,'text-secondary')]/strong[contains(.,'${key_resolutionLabel}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -1022,12 +1075,12 @@
 </tr>
 <tr>
 	<td>TEXT_ALIGN_ICON</td>
-	<td>//div[contains(@class,'page-editor__collapse')][button[normalize-space()='Text']]//button[*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]]</td>
+	<td>//button[contains(@class,'collapse-icon-middle')][span[normalize-space()='Text']]//..//button[*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ACTIVE_TEXT_ALIGN_ICON</td>
-	<td>//div[contains(@class,'page-editor__collapse')][button[normalize-space()='Text']]//button[@aria-pressed='true'][*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]]</td>
+	<td>//button[contains(@class,'collapse-icon-middle')][span[normalize-space()='Text']]//..//button[@aria-pressed='true'][*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]]</td>
 	<td></td>
 </tr>
 </tbody>

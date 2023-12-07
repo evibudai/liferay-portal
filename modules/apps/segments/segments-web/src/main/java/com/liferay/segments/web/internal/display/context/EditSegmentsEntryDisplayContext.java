@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.display.context;
 
 import com.liferay.item.selector.ItemSelector;
-import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -31,10 +21,10 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -42,13 +32,8 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.odata.filter.FilterParser;
-import com.liferay.portal.odata.filter.FilterParserProvider;
-import com.liferay.portal.odata.filter.expression.BinaryExpression;
-import com.liferay.portal.odata.filter.expression.Expression;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
@@ -56,9 +41,7 @@ import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributorRegi
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryService;
-import com.liferay.segments.web.internal.odata.ExpressionVisitorImpl;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
 
 import java.util.HashMap;
 import java.util.List;
@@ -78,7 +61,7 @@ import javax.servlet.http.HttpServletRequest;
 public class EditSegmentsEntryDisplayContext {
 
 	public EditSegmentsEntryDisplayContext(
-		FilterParserProvider filterParserProvider,
+		CompanyLocalService companyLocalService,
 		GroupLocalService groupLocalService,
 		HttpServletRequest httpServletRequest, ItemSelector itemSelector,
 		RenderRequest renderRequest, RenderResponse renderResponse,
@@ -87,7 +70,7 @@ public class EditSegmentsEntryDisplayContext {
 		SegmentsEntryProviderRegistry segmentsEntryProviderRegistry,
 		SegmentsEntryService segmentsEntryService) {
 
-		_filterParserProvider = filterParserProvider;
+		_companyLocalService = companyLocalService;
 		_groupLocalService = groupLocalService;
 		_httpServletRequest = httpServletRequest;
 		_itemSelector = itemSelector;
@@ -99,7 +82,7 @@ public class EditSegmentsEntryDisplayContext {
 		_segmentsEntryProviderRegistry = segmentsEntryProviderRegistry;
 		_segmentsEntryService = segmentsEntryService;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_locale = _themeDisplay.getLocale();
@@ -114,6 +97,17 @@ public class EditSegmentsEntryDisplayContext {
 			_httpServletRequest, "backURL", getRedirect());
 
 		return _backURL;
+	}
+
+	public String getBackURLTitle() {
+		String backURLTitle = ParamUtil.getString(
+			_httpServletRequest, "backURLTitle");
+
+		if (Validator.isNotNull(backURLTitle)) {
+			return backURLTitle;
+		}
+
+		return LanguageUtil.get(_httpServletRequest, "segments");
 	}
 
 	public Map<String, Object> getData() throws Exception {
@@ -184,27 +178,6 @@ public class EditSegmentsEntryDisplayContext {
 		return _segmentsEntryKey;
 	}
 
-	public String getSiteItemSelectorURL() {
-		if (getSegmentsEntryId() != 0) {
-			return null;
-		}
-
-		SiteItemSelectorCriterion siteItemSelectorCriterion =
-			new SiteItemSelectorCriterion();
-
-		siteItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new URLItemSelectorReturnType());
-
-		return PortletURLBuilder.create(
-			_itemSelector.getItemSelectorURL(
-				RequestBackedPortletURLFactoryUtil.create(_renderRequest),
-				_renderResponse.getNamespace() + "sitesSelectItem",
-				siteItemSelectorCriterion)
-		).setParameter(
-			"displayStyle", "list"
-		).buildString();
-	}
-
 	public String getTitle(Locale locale) throws PortalException {
 		if (_title != null) {
 			return _title;
@@ -272,20 +245,19 @@ public class EditSegmentsEntryDisplayContext {
 		for (SegmentsCriteriaContributor segmentsCriteriaContributor :
 				segmentsCriteriaContributors) {
 
-			Criteria.Criterion criterion =
-				segmentsCriteriaContributor.getCriterion(_getCriteria());
+			JSONObject jsonObject =
+				segmentsCriteriaContributor.getCriteriaJSONObject(
+					_getCriteria());
 
 			contributorsJSONArray.put(
 				JSONUtil.put(
-					"conjunctionId", _getCriterionConjunction(criterion)
+					"conjunctionId", jsonObject.get("conjunctionName")
 				).put(
 					"conjunctionInputId",
 					_renderResponse.getNamespace() + "criterionConjunction" +
 						segmentsCriteriaContributor.getKey()
 				).put(
-					"initialQuery",
-					_getInitialQueryJSONObject(
-						criterion, segmentsCriteriaContributor)
+					"initialQuery", jsonObject.get("query")
 				).put(
 					"inputId",
 					_renderResponse.getNamespace() + "criterionFilter" +
@@ -308,22 +280,6 @@ public class EditSegmentsEntryDisplayContext {
 		}
 
 		return segmentsEntry.getCriteriaObj();
-	}
-
-	private String _getCriterionConjunction(Criteria.Criterion criterion) {
-		if (criterion == null) {
-			return StringPool.BLANK;
-		}
-
-		return criterion.getConjunction();
-	}
-
-	private String _getCriterionFilterString(Criteria.Criterion criterion) {
-		if (criterion == null) {
-			return StringPool.BLANK;
-		}
-
-		return criterion.getFilterString();
 	}
 
 	private String _getDefaultLanguageId() throws Exception {
@@ -358,41 +314,6 @@ public class EditSegmentsEntryDisplayContext {
 		return BeanParamUtil.getLong(
 			_getSegmentsEntry(), _httpServletRequest, "groupId",
 			_themeDisplay.getScopeGroupId());
-	}
-
-	private JSONObject _getInitialQueryJSONObject(
-			Criteria.Criterion criterion,
-			SegmentsCriteriaContributor segmentsCriteriaContributor)
-		throws Exception {
-
-		String criterionFilterString = _getCriterionFilterString(criterion);
-
-		if (Validator.isNull(criterionFilterString)) {
-			return null;
-		}
-
-		FilterParser filterParser = _filterParserProvider.provide(
-			segmentsCriteriaContributor.getEntityModel());
-
-		Expression expression = filterParser.parse(criterionFilterString);
-
-		JSONObject jsonObject = (JSONObject)expression.accept(
-			new ExpressionVisitorImpl(
-				1, segmentsCriteriaContributor.getEntityModel()));
-
-		if (Validator.isNull(jsonObject.getString("groupId"))) {
-			jsonObject = JSONUtil.put(
-				"conjunctionName",
-				StringUtil.toLowerCase(
-					String.valueOf(BinaryExpression.Operation.AND))
-			).put(
-				"groupId", "group_0"
-			).put(
-				"items", JSONUtil.putAll(jsonObject)
-			);
-		}
-
-		return jsonObject;
 	}
 
 	private JSONObject _getInitialSegmentsNameJSONObject() throws Exception {
@@ -488,8 +409,6 @@ public class EditSegmentsEntryDisplayContext {
 			"segmentsConfigurationURL", _getSegmentsCompanyConfigurationURL()
 		).put(
 			"showInEditMode", _isShowInEditMode()
-		).put(
-			"siteItemSelectorURL", getSiteItemSelectorURL()
 		).build();
 	}
 
@@ -513,10 +432,17 @@ public class EditSegmentsEntryDisplayContext {
 	}
 
 	private SegmentsEntry _getSegmentsEntry() throws PortalException {
+		if (_segmentsEntry != null) {
+			return _segmentsEntry;
+		}
+
 		long segmentsEntryId = getSegmentsEntryId();
 
 		if (segmentsEntryId > 0) {
-			return _segmentsEntryService.getSegmentsEntry(segmentsEntryId);
+			_segmentsEntry = _segmentsEntryService.getSegmentsEntry(
+				segmentsEntryId);
+
+			return _segmentsEntry;
 		}
 
 		return null;
@@ -603,8 +529,8 @@ public class EditSegmentsEntryDisplayContext {
 		EditSegmentsEntryDisplayContext.class);
 
 	private String _backURL;
+	private final CompanyLocalService _companyLocalService;
 	private Map<String, Object> _data;
-	private final FilterParserProvider _filterParserProvider;
 	private Long _groupId;
 	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;
@@ -616,6 +542,7 @@ public class EditSegmentsEntryDisplayContext {
 	private final SegmentsConfigurationProvider _segmentsConfigurationProvider;
 	private final SegmentsCriteriaContributorRegistry
 		_segmentsCriteriaContributorRegistry;
+	private SegmentsEntry _segmentsEntry;
 	private Long _segmentsEntryId;
 	private String _segmentsEntryKey;
 	private final SegmentsEntryProviderRegistry _segmentsEntryProviderRegistry;

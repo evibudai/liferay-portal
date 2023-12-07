@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portlet.configuration.web.internal.portlet;
@@ -50,15 +41,19 @@ import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.settings.ArchivedSettings;
+import com.liferay.portal.kernel.settings.ArchivedSettingsFactory;
+import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.PortletInstanceSettingsLocator;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.settings.SettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -73,6 +68,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.configuration.kernel.util.PortletConfigurationUtil;
 import com.liferay.portlet.configuration.web.internal.constants.PortletConfigurationPortletKeys;
@@ -163,7 +159,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 		for (String curName : names) {
 			ArchivedSettings archivedSettings =
-				SettingsFactoryUtil.getPortletInstanceArchivedSettings(
+				_archivedSettingsFactory.getPortletInstanceArchivedSettings(
 					themeDisplay.getSiteGroupId(), portlet.getRootPortletId(),
 					curName);
 
@@ -441,7 +437,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Settings portletInstanceSettings = SettingsFactoryUtil.getSettings(
+		Settings portletInstanceSettings = FallbackKeysSettingsUtil.getSettings(
 			new PortletInstanceSettingsLocator(
 				themeDisplay.getLayout(), portlet.getPortletId()));
 
@@ -451,7 +447,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		String name = ParamUtil.getString(actionRequest, "name");
 
 		ArchivedSettings archivedSettings =
-			SettingsFactoryUtil.getPortletInstanceArchivedSettings(
+			_archivedSettingsFactory.getPortletInstanceArchivedSettings(
 				themeDisplay.getSiteGroupId(), portlet.getRootPortletId(),
 				name);
 
@@ -507,13 +503,15 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		String name = ParamUtil.getString(actionRequest, "name");
 
 		ArchivedSettings archivedSettings =
-			SettingsFactoryUtil.getPortletInstanceArchivedSettings(
+			_archivedSettingsFactory.getPortletInstanceArchivedSettings(
 				themeDisplay.getSiteGroupId(), portlet.getRootPortletId(),
 				name);
 
-		Settings portletInstanceSettings = SettingsFactoryUtil.getSettings(
-			new PortletInstanceSettingsLocator(
-				themeDisplay.getLayout(), portlet.getPortletId()));
+		SettingsLocator settingsLocator = new PortletInstanceSettingsLocator(
+			themeDisplay.getLayout(), portlet.getPortletId());
+
+		Settings portletInstanceSettings = FallbackKeysSettingsUtil.getSettings(
+			settingsLocator);
 
 		ModifiableSettings portletInstanceModifiableSettings =
 			portletInstanceSettings.getModifiableSettings();
@@ -611,6 +609,11 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 			portletPreferences.store();
 		}
+
+		_updateLayoutStatus(
+			themeDisplay.getLayout(),
+			ServiceContextFactory.getInstance(actionRequest),
+			themeDisplay.getUserId());
 	}
 
 	@Activate
@@ -680,6 +683,10 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 					renderRequest.setAttribute(
 						PortletConfigurationWebKeys.MODULE_NAME, moduleName);
+
+					renderRequest.setAttribute(
+						PortletConfigurationWebKeys.SETTINGS_FACTORY,
+						_archivedSettingsFactory);
 				}
 			}
 
@@ -758,7 +765,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		String portletResource = ParamUtil.getString(
 			request, "portletResource");
 
-		_portletPermission.check(
+		PortletPermissionUtil.check(
 			themeDisplay.getPermissionChecker(), resourceGroupId,
 			PortletConfigurationLayoutUtil.getLayout(themeDisplay),
 			portletResource, ActionKeys.PERMISSIONS);
@@ -1021,6 +1028,17 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			"lfrIgoogleShowAddAppLink", String.valueOf(iGoogleShowAddAppLink));
 	}
 
+	private void _updateLayoutStatus(
+			Layout layout, ServiceContext serviceContext, long userId)
+		throws Exception {
+
+		if (layout.isDraftLayout()) {
+			_layoutLocalService.updateStatus(
+				userId, layout.getPlid(), WorkflowConstants.STATUS_DRAFT,
+				serviceContext);
+		}
+	}
+
 	private void _updateNetvibes(
 			ActionRequest actionRequest, PortletPreferences portletPreferences)
 		throws Exception {
@@ -1092,6 +1110,9 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		PortletConfigurationPortlet.class);
 
 	@Reference
+	private ArchivedSettingsFactory _archivedSettingsFactory;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
@@ -1108,9 +1129,6 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 	@Reference
 	private PortletLocalService _portletLocalService;
-
-	@Reference
-	private PortletPermission _portletPermission;
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;

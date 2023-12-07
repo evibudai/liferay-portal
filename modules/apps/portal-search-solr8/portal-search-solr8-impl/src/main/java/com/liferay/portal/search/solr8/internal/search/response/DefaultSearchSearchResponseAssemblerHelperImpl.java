@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.solr8.internal.search.response;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Document;
@@ -45,6 +37,7 @@ import com.liferay.portal.search.hits.SearchHitsBuilder;
 import com.liferay.portal.search.hits.SearchHitsBuilderFactory;
 import com.liferay.portal.search.legacy.document.DocumentBuilderFactory;
 import com.liferay.portal.search.legacy.stats.StatsResultsTranslator;
+import com.liferay.portal.search.searcher.SearchTimeValue;
 import com.liferay.portal.search.solr8.internal.facet.SolrFacetFieldCollector;
 import com.liferay.portal.search.solr8.internal.facet.SolrFacetQueryCollector;
 import com.liferay.portal.search.solr8.internal.stats.StatsTranslator;
@@ -57,8 +50,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.solr.client.solrj.response.FieldStatsInfo;
 import org.apache.solr.client.solrj.response.Group;
@@ -97,6 +89,8 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 		processSearchHits(
 			queryResponse, queryResponse.getResults(),
 			searchSearchRequest.getQuery71(), hits, searchSearchResponse);
+
+		_setSearchTimeValue(queryResponse, searchSearchResponse);
 	}
 
 	protected void addSnippets(
@@ -217,7 +211,6 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 
 		searchSearchResponse.setCount(hits.getLength());
 		searchSearchResponse.setHits(hits);
-
 		searchSearchResponse.setSearchHits(toSearchHits(documents));
 	}
 
@@ -291,14 +284,8 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 		SearchHitsBuilder searchHitsBuilder =
 			_searchHitsBuilderFactory.getSearchHitsBuilder();
 
-		Stream<Document> stream = documents.stream();
-
 		return searchHitsBuilder.addSearchHits(
-			stream.map(
-				this::toSearchHit
-			).collect(
-				Collectors.toList()
-			)
+			TransformUtil.transform(documents, this::toSearchHit)
 		).totalHits(
 			documents.size()
 		).build();
@@ -390,6 +377,21 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 		if (statsResponseMap != null) {
 			updateStatsResults(hits, statsResponseMap, searchSearchRequest);
 		}
+	}
+
+	private void _setSearchTimeValue(
+		QueryResponse queryResponse,
+		SearchSearchResponse searchSearchResponse) {
+
+		SearchTimeValue.Builder builder = SearchTimeValue.Builder.newBuilder();
+
+		builder.duration(
+			queryResponse.getQTime()
+		).timeUnit(
+			TimeUnit.MILLISECONDS
+		);
+
+		searchSearchResponse.setSearchTimeValue(builder.build());
 	}
 
 	private static final String[] _EXCLUDED_FIELDS = {"_root_", "_version_"};

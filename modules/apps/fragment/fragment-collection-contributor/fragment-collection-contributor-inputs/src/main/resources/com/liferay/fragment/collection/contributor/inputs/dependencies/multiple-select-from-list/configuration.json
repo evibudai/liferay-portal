@@ -1,0 +1,31 @@
+{
+	"fieldSets": [
+		{
+			"fields": [
+				{
+					"dataType": "int",
+					"defaultValue": "5",
+					"description": "this-field-does-not-apply-if-the-show-all-options-toggle-is-active",
+					"label": "number-of-options",
+					"name": "numberOfOptions",
+					"type": "text",
+					"typeOptions": {
+						"validation": {
+							"min": 1,
+							"type": "number"
+						}
+					}
+				},
+				{
+					"defaultValue": false,
+					"label": "show-all-options",
+					"name": "showAllOptions",
+					"type": "checkbox",
+					"typeOptions": {
+						"displayType": "toggle"
+					}
+				}
+			]
+		}
+	]
+}

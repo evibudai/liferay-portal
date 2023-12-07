@@ -1,8 +1,9 @@
 definition {
 
-	macro setDescriptionMap {
+	@summary = "Default summary"
+	macro setDescriptionMap(description = null) {
 		if (isSet(description)) {
-			var descriptionEncoded = URLUtil.encodeUTF8("${description}");
+			var descriptionEncoded = URLUtil.encodeUTF8(${description});
 
 			var descriptionMap = '''{"en_US":"${descriptionEncoded}"}''';
 		}
@@ -10,28 +11,31 @@ definition {
 			var descriptionMap = "{}";
 		}
 
-		return "${descriptionMap}";
+		return ${descriptionMap};
 	}
 
-	macro setName {
-		Variables.assertDefined(parameterList = "${name}");
+	@summary = "Default summary"
+	macro setName() {
+		Variables.assertDefined(parameterList = ${name});
 
-		var name = URLUtil.encodeUTF8("${name}");
+		var name = URLUtil.encodeUTF8(${name});
 
-		return "${name}";
+		return ${name};
 	}
 
-	macro setRoleId {
-		Variables.assertDefined(parameterList = "${name}");
+	@summary = "Default summary"
+	macro setRoleId(name = null) {
+		Variables.assertDefined(parameterList = ${name});
 
-		var roleId = JSONRoleAPI._getRoleIdByName(name = "${name}");
+		var roleId = JSONRoleAPI._getRoleIdByName(name = ${name});
 
-		return "${roleId}";
+		return ${roleId};
 	}
 
-	macro setTitleMap {
+	@summary = "Default summary"
+	macro setTitleMap(title = null) {
 		if (isSet(title)) {
-			var titleMap = URLUtil.encodeUTF8("${title}");
+			var titleMap = URLUtil.encodeUTF8(${title});
 
 			var titleMap = '''{"en_US":"${titleMap}"}''';
 		}
@@ -39,40 +43,42 @@ definition {
 			var titleMap = "{}";
 		}
 
-		return "${titleMap}";
+		return ${titleMap};
 	}
 
-	macro setType {
-		Variables.assertDefined(parameterList = "${roleType}");
+	@summary = "Default summary"
+	macro setType(roleType = null) {
+		Variables.assertDefined(parameterList = ${roleType});
 
-		if ("${roleType}" == "regular") {
-			var type = "1";
+		if (${roleType} == "regular") {
+			var type = 1;
 		}
-		else if ("${roleType}" == "site") {
-			var type = "2";
+		else if (${roleType} == "site") {
+			var type = 2;
 		}
-		else if ("${roleType}" == "organization") {
-			var type = "3";
+		else if (${roleType} == "organization") {
+			var type = 3;
 		}
-		else if ("${roleType}" == "Depot") {
-			var type = "5";
+		else if (${roleType} == "Depot") {
+			var type = 5;
 		}
-		else if ("${roleType}" == "account") {
-			var type = "6";
+		else if (${roleType} == "account") {
+			var type = 6;
 		}
 		else {
 			fail("Invalid 'roleType', '${roleType}' must be 'regular/site/organization/account'.");
 		}
 
-		return "${type}";
+		return ${type};
 	}
 
-	macro setUserId {
-		Variables.assertDefined(parameterList = "${userEmailAddress}");
+	@summary = "Default summary"
+	macro setUserId(userEmailAddress = null) {
+		Variables.assertDefined(parameterList = ${userEmailAddress});
 
-		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "${userEmailAddress}");
+		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = ${userEmailAddress});
 
-		return "${userId}";
+		return ${userId};
 	}
 
 }

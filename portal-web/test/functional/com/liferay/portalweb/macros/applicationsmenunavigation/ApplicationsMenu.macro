@@ -1,20 +1,22 @@
 definition {
 
-	macro assertMenuButtonIsNotPresent {
+	@summary = "Default summary"
+	macro assertMenuButtonIsNotPresent() {
 		AssertElementNotPresent(locator1 = "ApplicationsMenu#TOGGLE");
 	}
 
-	@summary = "Navigate to Applications Menu > ${site}"
-	macro gotoLocalizedSite {
+	@summary = "Default summary"
+	macro gotoLocalizedSite(site = null) {
 		ApplicationsMenuHelper.openApplicationsMenu();
 
 		Click(
-			key_site = "${site}",
+			key_site = ${site},
 			locator1 = "ApplicationsMenu#SITE_LINK");
 	}
 
-	macro gotoPanel {
-		var key_panel = "${panel}";
+	@summary = "Default summary"
+	macro gotoPanel(panel = null) {
+		var key_panel = ${panel};
 
 		Click(locator1 = "ApplicationsMenu#PANEL");
 
@@ -23,28 +25,39 @@ definition {
 		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
-	@summary = "Navigate to Applications Menu > ${panel} > ${category} > ${portlet}"
-	macro gotoPortlet {
+	@summary = "Default summary"
+	macro gotoPortlet(portlet = null, panel = null, category = null) {
 		ApplicationsMenuHelper.openApplicationsMenu();
 
-		ApplicationsMenu.gotoPanel(panel = "${panel}");
+		ApplicationsMenu.gotoPanel(panel = ${panel});
 
 		ApplicationsMenuHelper.gotoPortlet(
-			category = "${category}",
-			portlet = "${portlet}");
+			category = ${category},
+			portlet = ${portlet});
 	}
 
-	@summary = "Navigate to Applications Menu > ${site}"
-	macro gotoSite {
+	@summary = "Default summary"
+	macro gotoSite(site = null) {
 		ApplicationsMenuHelper.openApplicationsMenu();
 
-		Click(
-			key_site = "${site}",
-			locator1 = "ApplicationsMenu#SITE_LINK");
+		if (IsElementPresent(locator1 = "ApplicationsMenu#VIEW_ALL_LINK")) {
+			Click(locator1 = "ApplicationsMenu#VIEW_ALL_LINK");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			Navigator.gotoNavItem(navItem = "All Sites");
+
+			SiteSelector.selectSite(site = ${site});
+		}
+		else {
+			Click(
+				key_site = ${site},
+				locator1 = "ApplicationsMenu#SITE_LINK");
+		}
 	}
 
-	@summary = "Navigate to Applications Menu > Sites > Sites Modal > ${site}"
-	macro gotoSiteViaViewAll {
+	@summary = "Default summary"
+	macro gotoSiteViaViewAll(depotName = null, site = null) {
 		ApplicationsMenuHelper.openApplicationsMenu();
 
 		ApplicationsMenuHelper.openWorkspace();
@@ -54,18 +67,18 @@ definition {
 		if (isSet(depotName)) {
 			Navigator.gotoNavItem(navItem = "Asset Libraries");
 
-			LexiconCard.clickCard(card = "${depotName}");
+			LexiconCard.clickCard(card = ${depotName});
 		}
 		else {
 			Navigator.gotoNavItem(navItem = "All Sites");
 
-			SiteSelector.selectSite(site = "${site}");
+			SiteSelector.selectSite(site = ${site});
 
 			ProductMenuHelper.openProductMenu();
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME",
-				value1 = "${site}");
+				value1 = ${site});
 		}
 	}
 

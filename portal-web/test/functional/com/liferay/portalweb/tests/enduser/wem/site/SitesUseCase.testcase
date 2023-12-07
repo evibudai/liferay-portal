@@ -1,9 +1,10 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Administration";
+	property testray.main.component.name = "Sites Administration";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -11,34 +12,12 @@ definition {
 		User.firstLoginPG();
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONUser.tearDownNonAdminUsers();
-
-			Site.tearDownCP();
-
-			Organization.tearDownCP();
-
-			Team.tearDownCP();
-
-			PagesAdmin.tearDownCP();
-
-			UserGroup.tearDownCP();
-		}
-	}
-
 	@description = "Export and import work in organization and add child site from imported site template."
-	@priority = "5"
+	@priority = 5
 	test AddChildSiteFromImportedSiteTemplate {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property test.name.skip.portal.instance = "SitesUseCase#AddChildSiteFromImportedSiteTemplate";
 		property testray.component.names = "Training";
 
 		task ("Add an organization") {
@@ -101,7 +80,7 @@ definition {
 
 			for (var pageName : list "Courses,Student Boards,Materials") {
 				SiteTemplates.addSitePageViaSiteTemplateCP(
-					pageName = "${pageName}",
+					pageName = ${pageName},
 					siteTemplateName = "Digital Class Room");
 			}
 		}
@@ -126,35 +105,29 @@ definition {
 		}
 
 		task ("Add a site with private membership type") {
-			Site.openSitesAdmin();
-
-			Site.addBlankCP(
+			HeadlessSite.addSite(
 				membershipType = "Private",
 				parentSiteName = "College of Agricultural Science",
-				siteName = "Moon Rocks 101",
-				siteType = "Blank");
+				siteName = "Moon Rocks 101");
 		}
 
 		task ("Select Digital Class Room site template as private page page type") {
-			Navigator.gotoBack();
+			Site.openSiteSettingsAdmin(siteURLKey = "moon-rocks-101");
 
 			Site.selectPageType(
 				selectPrivatePages = "true",
 				siteTemplate = "Digital Class Room");
 		}
 
-		Site.openSitesAdmin();
-
 		task ("Add another site with private membership type") {
-			Site.addBlankCP(
+			HeadlessSite.addSite(
 				membershipType = "Private",
 				parentSiteName = "College of Agricultural Science",
-				siteName = "Moon Rocks 202",
-				siteType = "Blank");
+				siteName = "Moon Rocks 202");
 		}
 
 		task ("Select Digital Class Room site template as private page page type and also enable Private Pages Propagation") {
-			Navigator.gotoBack();
+			Site.openSiteSettingsAdmin(siteURLKey = "moon-rocks-202");
 
 			Site.selectPageType(
 				checkPrivatePagesPropagation = "true",
@@ -167,7 +140,7 @@ definition {
 
 			for (var pageName : list "Courses,Student Boards,Materials") {
 				Navigator.gotoPrivateSitePage(
-					pageName = "${pageName}",
+					pageName = ${pageName},
 					siteName = "Moon Rocks 101");
 			}
 		}
@@ -177,19 +150,20 @@ definition {
 
 			for (var pageName : list "Courses,Student Boards,Materials") {
 				Navigator.gotoPrivateSitePage(
-					pageName = "${pageName}",
+					pageName = ${pageName},
 					siteName = "Moon Rocks 202");
 			}
 		}
 	}
 
 	@description = "Add 2 organization sites and deactivate organization site using new created user."
-	@priority = "5"
+	@priority = 5
 	test AddOrganizationSitesAndDeactivate {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "SitesUseCase#AddOrganizationSitesAndDeactivate";
-		property testray.component.names = "Site Administration,Training,Users and Organizations";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+		property testray.component.names = "Sites Administration,Training,Users and Organizations";
 
 		task ("Enable Show Inactive Request Message in system settings") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -337,14 +311,10 @@ definition {
 	}
 
 	@description = "Assert user can't assign user group with regular role with assign members."
-	@priority = "3"
+	@priority = 3
 	test OnlySiteOwnersCanAssignSiteRolesToUserGroups {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property testray.component.names = "Site Administration,User Groups";
-
-		task ("Get site name") {
-			var siteName = TestCase.getSiteName(siteName = "${siteName}");
-		}
+		property testray.component.names = "Sites Administration,User Groups";
 
 		task ("Add a site role") {
 			JSONRole.addSiteRole(
@@ -353,15 +323,13 @@ definition {
 		}
 
 		task ("Add a user group") {
-			UserGroup.openUserGroupsAdmin();
-
-			UserGroup.addCP(userGroupName = "UG UserGroup Name");
+			JSONUserGroup.addUserGroup(userGroupName = "UG UserGroup Name");
 		}
 
 		task ("Assign the user group to default site") {
-			Site.openSiteMembershipsAdmin(siteURLKey = "guest");
-
-			Site.assignUserGroupAsMemberCP(userGroupName = "UG UserGroup Name");
+			JSONGroup.assignUserGroupToGroup(
+				groupName = "Guest",
+				userGroupName = "UG UserGroup Name");
 		}
 
 		task ("Add a regular role") {
@@ -371,22 +339,10 @@ definition {
 		}
 
 		task ("Add assign member permission to the regular role") {
-			for (var resourceActionIndex : list "ASSIGN_MEMBERS,ASSIGN_USER_ROLES,VIEW_MEMBERS,VIEW_SITE_ADMINISTRATION") {
-				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
-					resourceName = "com.liferay.portal.kernel.model.Group",
-					roleTitle = "Roles Regrole Name");
-			}
-
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
-				roleTitle = "Roles Regrole Name");
-
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "ASSIGN_MEMBERS",
-				resourceName = "com.liferay.portal.kernel.model.Role",
-				roleTitle = "Roles Regrole Name");
+			Permissions.definePermissionsViaJSONAPI(
+				resourceNameActionList = "com.liferay.portal.kernel.model.Group,ASSIGN_MEMBERS,ASSIGN_USER_ROLES,VIEW_MEMBERS,VIEW_SITE_ADMINISTRATION:90,VIEW_CONTROL_PANEL:com.liferay.portal.kernel.model.Role,ASSIGN_MEMBERS",
+				roleTitle = "Roles Regrole Name",
+				roleType = "regular");
 		}
 
 		task ("Add a user") {
@@ -403,11 +359,9 @@ definition {
 		}
 
 		task ("Assign current site to the user") {
-			User.openUsersAdmin();
-
-			User.editUserSiteCP(
-				siteName = "${siteName}",
-				userScreenName = "usersn");
+			JSONUser.addUserToSite(
+				groupName = "Guest",
+				userEmailAddress = "userea@liferay.com");
 		}
 
 		task ("Assign regular role to the user") {
@@ -417,6 +371,10 @@ definition {
 		}
 
 		task ("Log in as the user") {
+			Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "userea@liferay.com",
 				userLoginFullName = "userfn userln");
@@ -446,16 +404,16 @@ definition {
 	}
 
 	@description = "Private virtual hosts redirects to private page."
-	@priority = "4"
+	@priority = 4
 	test PrivateVirtualHostUrlDoesNotRedirectUserToLoginPage {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property osgi.module.configuration.file.names = "com.liferay.login.web.internal.configuration.AuthLoginConfiguration.config";
 		property osgi.module.configurations = "promptEnabled=\"true\"";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property testray.component.names = "Site Administration";
+		property testray.component.names = "Sites Administration";
 
 		task ("Get site name") {
-			var siteName = TestCase.getSiteName(siteName = "${siteName}");
+			var siteName = TestCase.getSiteName(siteName = ${siteName});
 		}
 
 		task ("Add virtual host to private page in default site") {
@@ -502,10 +460,14 @@ definition {
 		}
 
 		task ("Assign the created user to default site") {
+			Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 			User.openUsersAdmin();
 
 			User.editUserSiteCP(
-				siteName = "${siteName}",
+				siteName = ${siteName},
 				userScreenName = "usersn");
 		}
 
@@ -524,13 +486,15 @@ definition {
 	}
 
 	@description = "Assert user can't assign user group with regular role with assign members."
-	@priority = "3"
+	@priority = 3
 	test ReturnWrongLayoutForSignedInUserWithVirtualHostsConfigured {
-		property custom.properties = "layout.default.template.id=2_columns_iii${line.separator}layout.user.private.layouts.enabled=false${line.separator}layout.user.private.layouts.auto.create=false${line.separator}layout.user.private.layouts.power.user.required=true${line.separator}layout.user.public.layouts.enabled=false${line.separator}layout.user.public.layouts.auto.create=false${line.separator}layout.user.public.layouts.power.user.required=true";
+		property custom.properties = "layout.default.template.id=2_columns_iii${line.separator}layout.user.private.layouts.auto.create=false${line.separator}layout.user.private.layouts.enabled=false${line.separator}layout.user.private.layouts.power.user.required=true${line.separator}layout.user.public.layouts.auto.create=false${line.separator}layout.user.public.layouts.enabled=false${line.separator}layout.user.public.layouts.power.user.required=true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property test.smtp.server.enabled = "true";
 
 		task ("Add a site and a public page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -574,10 +538,7 @@ definition {
 		}
 
 		task ("Add a user and set require password reset") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin(baseURL = "http://www.baker.com:8080");
 
 			User.addCP(
 				userEmailAddress = "user1@liferay.com",
@@ -614,7 +575,7 @@ definition {
 		task ("Fill New Verification Code and reset password") {
 			Type(
 				locator1 = "SignInCreateAccount#EMAIL_VERIFICATION_CODE_FIELD",
-				value1 = "${emailVerification}");
+				value1 = ${emailVerification});
 
 			Button.clickVerifyButton();
 
@@ -644,17 +605,14 @@ definition {
 		}
 
 		task ("Edit Email Verification Notification in instance settings") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
+			PortalSettings.openInstanceSettingsAdmin(baseURL = "http://www.able.com:8080");
 
 			SystemSettings.gotoConfiguration(
 				configurationCategory = "Email",
 				configurationName = "Email Verification Notification",
 				configurationScope = "Virtual Instance Scope");
 
-			Type.typeCKEditor(
+			Type.typeEditor(
 				locator1 = "CKEditor#BODY_FIELD",
 				value1 = "[$EMAIL_VERIFICATION_URL$]");
 
@@ -686,7 +644,7 @@ definition {
 		}
 
 		task ("Open Email Address Verification URL and verify it") {
-			Navigator.openSpecificURL(url = "${emailAddressVerificationURL}");
+			Navigator.openSpecificURL(url = ${emailAddressVerificationURL});
 
 			Button.clickVerifyButton();
 		}
@@ -701,29 +659,21 @@ definition {
 	}
 
 	@description = "This test is based on LPS-14245 and it is designed to have the User test if the LayoutImporter checks when the Page Names are different but the Friendly URL is the same. The User will assert no errors display when a User is assigned to a User Group with the same Friendly URL. The User will also assert that they can enter a Friendly URL through the Site Manager with adding a slash."
-	@priority = "3"
+	@priority = 3
 	test SiteFriendlyURLLayoutImporter {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property testray.component.names = "Site Administration";
+		property testray.component.names = "Sites Administration";
 
 		var portalURL = PropsUtil.get("portal.url");
 
 		task ("Add a user group") {
-			UserGroup.openUserGroupsAdmin();
-
-			UserGroup.addCP(userGroupName = "User Group Name");
+			JSONUserGroup.addUserGroup(userGroupName = "User Group Name");
 		}
 
-		UserGroup.openUserGroupsAdmin();
-
 		task ("Add a public page in user group") {
-			UserGroup.gotoAddPageCP(userGroupName = "User Group Name");
-
-			ProductMenu.gotoPortlet(
-				category = "Site Builder",
-				portlet = "Pages");
-
-			PagesAdmin.addPage(pageName = "site Page Name");
+			JSONUserGroup.addLayout(
+				layoutName = "Site Page Name",
+				userGroupName = "User Group Name");
 		}
 
 		task ("Add a user ") {
@@ -740,11 +690,9 @@ definition {
 		}
 
 		task ("Assign user to user group") {
-			UserGroup.openUserGroupsAdmin();
-
-			UserGroup.assignMemberCP(
-				userGroupName = "User Group Name",
-				userScreenName = "usersn");
+			JSONUser.addUserToUserGroup(
+				userEmailAddress = "userea@liferay.com",
+				userGroupName = "User Group Name");
 		}
 
 		task ("Log in as created user") {
@@ -791,11 +739,12 @@ definition {
 	}
 
 	@description = "In one community site and one edited site with page template, can deactivate Community site."
-	@priority = "3"
+	@priority = 3
 	test SitesDeactivated {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "SitesUsecase#SitesDeactivated";
-		property testray.component.names = "Site Administration";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+		property testray.component.names = "Sites Administration";
 
 		task ("Enable Show Inactive Request Message in system settings") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -813,7 +762,7 @@ definition {
 		task ("Add a site template and a site basing on it") {
 			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
-			JSONGroup.addGroup(groupName = "Site1 Name");
+			HeadlessSite.addSite(siteName = "Site1 Name");
 
 			Site.openSiteSettingsAdmin(siteURLKey = "site1-name");
 
@@ -823,7 +772,7 @@ definition {
 		}
 
 		task ("Add another site and edit site name") {
-			JSONGroup.addGroup(groupName = "Site2 Name");
+			HeadlessSite.addSite(siteName = "Site2 Name");
 
 			Site.openSiteSettingsAdmin(siteURLKey = "site2-name");
 
@@ -846,6 +795,10 @@ definition {
 		}
 
 		task ("Assign site to the user") {
+			Site.openSiteSettingsAdmin(siteURLKey = "site1-name");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 			User.openUsersAdmin();
 
 			User.editUserSiteCP(
@@ -896,35 +849,42 @@ definition {
 	}
 
 	@description = "Manage demo site virtual URL, friendly URL and logo, add JS to page, export and import page with child pages."
-	@priority = "4"
+	@priority = 4
 	test SitesDemoSiteManagement {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property osgi.module.configuration.file.names = "com.liferay.login.web.internal.configuration.AuthLoginConfiguration.config";
 		property osgi.module.configurations = "promptEnabled=\"true\"";
 		property portal.release = "true";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property test.name.skip.portal.instance = "SitesUsecase#SitesDemoSiteManagement";
-		property testray.component.names = "Site Administration,Site Pages Administration";
+		property testray.component.names = "Sites Administration,Page Administration";
 
 		var portalURL = PropsUtil.get("portal.url");
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(
-				groupDescription = "This is the site description test",
-				groupName = "World Cup - Russia 2018");
+			var groupId = HeadlessSite.addSite(siteName = "World Cup - Russia 2018");
+
+			Site.openSiteSettingsAdmin(siteURLKey = "world-cup-russia-2018");
+
+			Click(
+				key_itemName = "Site Configuration",
+				locator1 = "ListGroupItem#ITEM_TEXT");
+
+			PortletEntry.inputDescription(description = "This is the site description test");
+
+			PortletEntry.save();
 		}
 
 		task ("Add tags to the new site") {
-			Site.openSiteSettingsAdmin(siteURLKey = "world-cup-russia-2018");
-
-			ProductMenu.gotoPortlet(
-				category = "Configuration",
-				portlet = "Site Settings");
-
-			Tag.addViaSiteCP(tagNameList = "World Cup,Russia,2018");
+			for (var tagName : list "World Cup,Russia,2018") {
+				JSONAssettag.addTag(
+					groupId = ${groupId},
+					tagName = ${tagName});
+			}
 		}
 
 		task ("Add virtual host for public page and private page") {
+			Navigator.gotoBack();
+
 			Site.addVirtualHostsURLCP(
 				privatePageVirtualHostURL = "www.baker.com",
 				privateVirtualHosts = "true",
@@ -941,16 +901,16 @@ definition {
 		task ("Add 2 public pages to the new site") {
 			for (var publicPageName : list "Home,Arenas") {
 				JSONLayout.addPublicLayout(
-					groupName = "World Cup - Russia 2018",
-					layoutName = "${publicPageName}");
+					groupId = ${groupId},
+					layoutName = ${publicPageName});
 			}
 		}
 
 		task ("Add 4 pages to the child page Arenas") {
 			for (var childPageName : list "Arena Baltika,Zenit Arena,Kazan Arena") {
 				JSONLayout.addPublicLayout(
-					groupName = "World Cup - Russia 2018",
-					layoutName = "${childPageName}",
+					groupId = ${groupId},
+					layoutName = ${childPageName},
 					parentLayoutName = "Arenas");
 			}
 		}
@@ -958,8 +918,8 @@ definition {
 		task ("Add 2 private pages to the new site") {
 			for (var privatePageName : list "Accomodations,Maps") {
 				JSONLayout.addPrivateLayout(
-					groupName = "World Cup - Russia 2018",
-					layoutName = "${privatePageName}");
+					groupId = ${groupId},
+					layoutName = ${privatePageName});
 			}
 		}
 
@@ -980,7 +940,7 @@ definition {
 		}
 
 		task ("View alert in Arenas page") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018/Arenas");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018/Arenas");
 
 			AssertConfirm(value1 = "Welcome to Russia.");
 		}
@@ -990,7 +950,7 @@ definition {
 		}
 
 		task ("View alert in Arenas page") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018/Arenas");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018/Arenas");
 
 			AssertConfirm(value1 = "Welcome to Russia.");
 		}
@@ -1002,7 +962,7 @@ definition {
 		}
 
 		task ("View logo is changed") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018");
 
 			Page.viewCustomLogoPG();
 		}
@@ -1010,7 +970,7 @@ definition {
 		task ("View 4 pages under the child page Arenas") {
 			for (var childPageName : list "Arena Baltika,Zenit Arena,Kazan Arena") {
 				Page.viewChildPageDropdown(
-					childPageName = "${childPageName}",
+					childPageName = ${childPageName},
 					javaScriptPage = "Welcome to Russia.",
 					pageName = "Arenas",
 					viewChildPageDropdown = "PAGE_2");
@@ -1018,7 +978,7 @@ definition {
 		}
 
 		task ("Add blank js to Arenaspage") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018");
 
 			ProductMenu.gotoPortlet(
 				category = "Site Builder",
@@ -1043,19 +1003,16 @@ definition {
 		}
 
 		task ("Assign created site to the user") {
-			User.openUsersAdmin();
-
-			User.editUserSiteCP(
-				siteName = "World Cup - Russia 2018",
-				userScreenName = "usersn");
+			JSONUser.addUserToSite(
+				groupId = ${groupId},
+				userEmailAddress = "userea@liferay.com");
 		}
 
 		task ("Assign site administrator to the user") {
-			User.openUsersAdmin();
-
-			User.assignSiteRoleCP(
-				siteRoleName = "Site Administrator",
-				userScreenName = "usersn");
+			JSONRole.assignSiteRoleToUser(
+				groupId = ${groupId},
+				roleTitle = "Site Administrator",
+				userEmailAddress = "userea@liferay.com");
 		}
 
 		task ("Log out and assert log out") {
@@ -1109,10 +1066,16 @@ definition {
 		}
 
 		task ("Add a site and import the site lar file") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			var groupId = HeadlessSite.addSite(siteName = "Site Name");
+
+			for (var layoutUtilityPageName : list "404 Error,500 Error") {
+				JSONLayoututilitypage.deleteLayoutUtilityPage(
+					groupId = ${groupId},
+					layoutUtilityPageName = ${layoutUtilityPageName});
+			}
 
 			LAR.importSiteCP(
-				larFileName = "${larFileName}",
+				larFileName = ${larFileName},
 				siteName = "Site Name");
 		}
 
@@ -1123,7 +1086,7 @@ definition {
 					siteName = "Site Name");
 
 				Page.viewChildPageDropdown(
-					childPageName = "${childPageName}",
+					childPageName = ${childPageName},
 					pageName = "Arenas",
 					viewChildPageDropdown = "PAGE_2");
 			}
@@ -1131,10 +1094,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-102711. The changes of site scope configuration in Instance Settings should be applied to the site."
-	@priority = "4"
+	@priority = 4
 	test ViewChangesOfSiteScopeConfigurationDefinedInInstanceSettings {
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Navigate to Site Settings admin in new site") {
@@ -1186,12 +1149,12 @@ definition {
 	}
 
 	@description = "This ensures that the custom site logo can be viewed in cards and list views."
-	@priority = "4"
+	@priority = 4
 	test ViewSiteLogo {
 		property portal.upstream = "true";
 
 		task ("Add a new site and a public page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -1199,9 +1162,9 @@ definition {
 		}
 
 		task ("Add a child site to the new site and a public page in it ") {
-			JSONGroup.addChildGroup(
-				groupName = "Child SiteName",
-				parentGroupName = "Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Site Name",
+				siteName = "Child SiteName");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Child SiteName",

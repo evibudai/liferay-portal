@@ -1,0 +1,350 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.commerce.payment.internal.gateway;
+
+import com.liferay.commerce.payment.audit.CommercePaymentEntryAuditType;
+import com.liferay.commerce.payment.audit.CommercePaymentEntryAuditTypeRegistry;
+import com.liferay.commerce.payment.configuration.CommercePaymentEntryAuditConfiguration;
+import com.liferay.commerce.payment.constants.CommercePaymentEntryAuditConstants;
+import com.liferay.commerce.payment.gateway.CommercePaymentGateway;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegration;
+import com.liferay.commerce.payment.model.CommercePaymentEntry;
+import com.liferay.commerce.payment.service.CommercePaymentEntryAuditLocalService;
+import com.liferay.commerce.payment.service.CommercePaymentEntryLocalService;
+import com.liferay.commerce.payment.util.CommercePaymentHelper;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Portal;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+/**
+ * @author Luca Pellizzon
+ */
+@Component(service = CommercePaymentGateway.class)
+public class CommercePaymentGatewayImpl implements CommercePaymentGateway {
+
+	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
+	public CommercePaymentEntry authorize(
+			HttpServletRequest httpServletRequest,
+			CommercePaymentEntry commercePaymentEntry)
+		throws PortalException {
+
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry authorizedCommercePaymentEntry =
+			commercePaymentIntegration.authorize(
+				httpServletRequest, commercePaymentEntry);
+
+		User currentUser = _portal.getUser(httpServletRequest);
+
+		PermissionThreadLocal.setPermissionChecker(
+			_defaultPermissionCheckerFactory.create(currentUser));
+
+		commercePaymentEntry =
+			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				authorizedCommercePaymentEntry.getErrorMessages(),
+				authorizedCommercePaymentEntry.getPaymentStatus(),
+				authorizedCommercePaymentEntry.getRedirectURL(),
+				authorizedCommercePaymentEntry.getTransactionCode());
+
+		CommercePaymentEntryAuditConfiguration
+			commercePaymentEntryAuditConfiguration =
+				_getCommercePaymentEntryAuditConfiguration(
+					commercePaymentEntry.getCompanyId());
+
+		if (commercePaymentEntryAuditConfiguration.enabled()) {
+			CommercePaymentEntryAuditType commercePaymentEntryAuditType =
+				_commercePaymentEntryAuditTypeRegistry.
+					getCommercePaymentEntryAuditType(
+						CommercePaymentEntryAuditConstants.
+							TYPE_AUTHORIZE_PAYMENT);
+
+			_commercePaymentEntryAuditLocalService.addCommercePaymentEntryAudit(
+				currentUser.getUserId(),
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				commercePaymentEntry.getAmount(),
+				commercePaymentEntry.getCurrencyCode(),
+				commercePaymentEntryAuditType.getType(),
+				commercePaymentEntryAuditType.getLog(
+					HashMapBuilder.<String, Object>put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_NAME_ID,
+						commercePaymentEntry.getClassNameId()
+					).put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_PK,
+						String.valueOf(commercePaymentEntry.getClassPK())
+					).build()),
+				_createServiceContext(currentUser));
+		}
+
+		return commercePaymentEntry;
+	}
+
+	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
+	public CommercePaymentEntry cancel(
+			HttpServletRequest httpServletRequest,
+			CommercePaymentEntry commercePaymentEntry)
+		throws PortalException {
+
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry cancelledCommercePaymentEntry =
+			commercePaymentIntegration.cancel(
+				httpServletRequest, commercePaymentEntry);
+
+		User currentUser = _portal.getUser(httpServletRequest);
+
+		PermissionThreadLocal.setPermissionChecker(
+			_defaultPermissionCheckerFactory.create(currentUser));
+
+		commercePaymentEntry =
+			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				cancelledCommercePaymentEntry.getErrorMessages(),
+				cancelledCommercePaymentEntry.getPaymentStatus(),
+				cancelledCommercePaymentEntry.getRedirectURL(),
+				cancelledCommercePaymentEntry.getTransactionCode());
+
+		CommercePaymentEntryAuditConfiguration
+			commercePaymentEntryAuditConfiguration =
+				_getCommercePaymentEntryAuditConfiguration(
+					commercePaymentEntry.getCompanyId());
+
+		if (commercePaymentEntryAuditConfiguration.enabled()) {
+			CommercePaymentEntryAuditType commercePaymentEntryAuditType =
+				_commercePaymentEntryAuditTypeRegistry.
+					getCommercePaymentEntryAuditType(
+						CommercePaymentEntryAuditConstants.TYPE_CANCEL_PAYMENT);
+
+			_commercePaymentEntryAuditLocalService.addCommercePaymentEntryAudit(
+				currentUser.getUserId(),
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				commercePaymentEntry.getAmount(),
+				commercePaymentEntry.getCurrencyCode(),
+				commercePaymentEntryAuditType.getType(),
+				commercePaymentEntryAuditType.getLog(
+					HashMapBuilder.<String, Object>put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_NAME_ID,
+						commercePaymentEntry.getClassNameId()
+					).put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_PK,
+						String.valueOf(commercePaymentEntry.getClassPK())
+					).build()),
+				_createServiceContext(currentUser));
+		}
+
+		return commercePaymentEntry;
+	}
+
+	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
+	public CommercePaymentEntry capture(
+			HttpServletRequest httpServletRequest,
+			CommercePaymentEntry commercePaymentEntry)
+		throws PortalException {
+
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry capturedCommercePaymentEntry =
+			commercePaymentIntegration.capture(
+				httpServletRequest, commercePaymentEntry);
+
+		User currentUser = _portal.getUser(httpServletRequest);
+
+		PermissionThreadLocal.setPermissionChecker(
+			_defaultPermissionCheckerFactory.create(currentUser));
+
+		commercePaymentEntry =
+			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				capturedCommercePaymentEntry.getErrorMessages(),
+				capturedCommercePaymentEntry.getPaymentStatus(),
+				capturedCommercePaymentEntry.getRedirectURL(),
+				capturedCommercePaymentEntry.getTransactionCode());
+
+		CommercePaymentEntryAuditConfiguration
+			commercePaymentEntryAuditConfiguration =
+				_getCommercePaymentEntryAuditConfiguration(
+					commercePaymentEntry.getCompanyId());
+
+		if (commercePaymentEntryAuditConfiguration.enabled()) {
+			CommercePaymentEntryAuditType commercePaymentEntryAuditType =
+				_commercePaymentEntryAuditTypeRegistry.
+					getCommercePaymentEntryAuditType(
+						CommercePaymentEntryAuditConstants.
+							TYPE_CAPTURE_PAYMENT);
+
+			_commercePaymentEntryAuditLocalService.addCommercePaymentEntryAudit(
+				currentUser.getUserId(),
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				commercePaymentEntry.getAmount(),
+				commercePaymentEntry.getCurrencyCode(),
+				commercePaymentEntryAuditType.getType(),
+				commercePaymentEntryAuditType.getLog(
+					HashMapBuilder.<String, Object>put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_NAME_ID,
+						commercePaymentEntry.getClassNameId()
+					).put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_PK,
+						String.valueOf(commercePaymentEntry.getClassPK())
+					).build()),
+				_createServiceContext(currentUser));
+		}
+
+		return commercePaymentEntry;
+	}
+
+	@Override
+	@Transactional(
+		propagation = Propagation.REQUIRED, readOnly = false,
+		rollbackFor = Exception.class
+	)
+	public CommercePaymentEntry refund(
+			HttpServletRequest httpServletRequest,
+			CommercePaymentEntry commercePaymentEntry)
+		throws PortalException {
+
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		CommercePaymentEntry refundedCommercePaymentEntry =
+			commercePaymentIntegration.refund(
+				httpServletRequest, commercePaymentEntry);
+
+		User currentUser = _portal.getUser(httpServletRequest);
+
+		PermissionThreadLocal.setPermissionChecker(
+			_defaultPermissionCheckerFactory.create(currentUser));
+
+		commercePaymentEntry =
+			_commercePaymentEntryLocalService.updateCommercePaymentEntry(
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				refundedCommercePaymentEntry.getErrorMessages(),
+				refundedCommercePaymentEntry.getPaymentStatus(),
+				refundedCommercePaymentEntry.getRedirectURL(),
+				refundedCommercePaymentEntry.getTransactionCode());
+
+		CommercePaymentEntryAuditConfiguration
+			commercePaymentEntryAuditConfiguration =
+				_getCommercePaymentEntryAuditConfiguration(
+					commercePaymentEntry.getCompanyId());
+
+		if (commercePaymentEntryAuditConfiguration.enabled()) {
+			CommercePaymentEntryAuditType commercePaymentEntryAuditType =
+				_commercePaymentEntryAuditTypeRegistry.
+					getCommercePaymentEntryAuditType(
+						CommercePaymentEntryAuditConstants.TYPE_REFUND_PAYMENT);
+
+			_commercePaymentEntryAuditLocalService.addCommercePaymentEntryAudit(
+				currentUser.getUserId(),
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				commercePaymentEntry.getAmount(),
+				commercePaymentEntry.getCurrencyCode(),
+				commercePaymentEntryAuditType.getType(),
+				commercePaymentEntryAuditType.getLog(
+					HashMapBuilder.<String, Object>put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_NAME_ID,
+						commercePaymentEntry.getClassNameId()
+					).put(
+						CommercePaymentEntryAuditConstants.FIELD_CLASS_PK,
+						String.valueOf(commercePaymentEntry.getClassPK())
+					).build()),
+				_createServiceContext(currentUser));
+		}
+
+		return commercePaymentEntry;
+	}
+
+	@Override
+	public CommercePaymentEntry setUpPayment(
+			HttpServletRequest httpServletRequest,
+			CommercePaymentEntry commercePaymentEntry)
+		throws PortalException {
+
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentHelper.getCommercePaymentIntegration(
+				commercePaymentEntry.getCommerceChannelId(),
+				commercePaymentEntry.getPaymentIntegrationKey());
+
+		return commercePaymentIntegration.setUpPayment(
+			httpServletRequest, commercePaymentEntry);
+	}
+
+	private ServiceContext _createServiceContext(User user) {
+		return new ServiceContext() {
+			{
+				setCompanyId(user.getCompanyId());
+				setUserId(user.getUserId());
+			}
+		};
+	}
+
+	private CommercePaymentEntryAuditConfiguration
+			_getCommercePaymentEntryAuditConfiguration(long companyId)
+		throws ConfigurationException {
+
+		return _configurationProvider.getCompanyConfiguration(
+			CommercePaymentEntryAuditConfiguration.class, companyId);
+	}
+
+	@Reference
+	private CommercePaymentEntryAuditLocalService
+		_commercePaymentEntryAuditLocalService;
+
+	@Reference
+	private CommercePaymentEntryAuditTypeRegistry
+		_commercePaymentEntryAuditTypeRegistry;
+
+	@Reference
+	private CommercePaymentEntryLocalService _commercePaymentEntryLocalService;
+
+	@Reference
+	private CommercePaymentHelper _commercePaymentHelper;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private PermissionCheckerFactory _defaultPermissionCheckerFactory;
+
+	@Reference
+	private Portal _portal;
+
+}

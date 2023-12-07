@@ -1,4 +1,4 @@
-@component-name = "portal-user-management-and-portal-configuration"
+@component-name = "portal-portal-configuration"
 definition {
 
 	property portal.release = "true";
@@ -12,9 +12,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -24,10 +24,11 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanAddAndDeletePortalInstance {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "VirtualInstances#CanAddAndDeletePortalInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "System",
@@ -45,15 +46,13 @@ definition {
 	}
 
 	@description = "This automates LPS-157752. It asserts that email settings can be configured in a Virtual Instance."
-	@priority = "4"
+	@priority = 4
 	test CanConfigureEmailSettingsInVirtualInstance {
-		property test.name.skip.portal.instance = "VirtualInstances#CanConfigureEmailSettingsInVirtualInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a new Virtual Instance is created") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.addCP(
 				mailDomain = "www.able.com",
@@ -75,7 +74,7 @@ definition {
 
 			FormFields.editText(
 				fieldName = "pop3Port",
-				fieldValue = "995");
+				fieldValue = 995);
 
 			PortletEntry.save();
 		}
@@ -83,18 +82,86 @@ definition {
 		task ("Then the new configuration should now be displayed") {
 			FormFields.viewTextValue(
 				fieldName = "pop3Port",
-				fieldValue = "995");
+				fieldValue = 995);
 		}
 	}
 
-	@priority = "4"
-	test PermissionCheckPortalInstances {
-		property test.name.skip.portal.instance = "VirtualInstances#PermissionCheckPortalInstances";
+	@description = "This is a use case for LPS-161481. Verify a non-omniadmin user can create a user in a user-limited virtual instance"
+	@priority = 3
+	test NonAdminUserCanCreateUserInUserLimitedVirtualInstance {
+		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		task ("Given a user limited virtual instance") {
+			PortalInstances.openVirtualInstancesAdmin();
+
+			PortalInstances.addCP(
+				mailDomain = "www.able.com",
+				maxUserNumber = 4,
+				maxUsers = "true",
+				virtualHost = "www.able.com",
+				webId = "www.able.com");
+
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com");
+		}
+
+		task ("And given a user exists in that instance with permission to create other users") {
+			JSONRole.addRegularRole(
+				roleTitle = "Test Role",
+				specificURL = "http://www.able.com:8080");
+
+			Permissions.definePermissionsViaJSONAPI(
+				resourceNameActionList = "com_liferay_users_admin_web_portlet_UsersAdminPortlet,ACCESS_IN_CONTROL_PANEL,VIEW:com.liferay.portal.kernel.model.User,DELETE,UPDATE,VIEW:90,VIEW_CONTROL_PANEL,ADD_USER",
+				roleTitle = "Test Role",
+				roleType = "regular",
+				specificURL = "http://www.able.com:8080");
+
+			JSONUser.addUser(
+				creatorEmailAddress = "test@www.able.com",
+				creatorPassword = "test",
+				portalInstanceName = "www.able.com",
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "userea@www.able.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
+
+			User.openUsersAdmin(baseURL = "http://www.able.com:8080");
+
+			User.assignRegularRoleCP(
+				roleTitle = "Test Role",
+				userScreenName = "usersn");
+
+			User.editPassword(newPassword = "test");
+		}
+
+		task ("Then that user can create another user in the instance without error") {
+			User.logoutPG();
+
+			SignIn._signIn(
+				userEmailAddress = "userea@www.able.com",
+				virtualHostsURL = "http://www.able.com:8080");
+
+			User.openUsersAdmin(baseURL = "http://www.able.com:8080");
+
+			User.addCP(
+				userEmailAddress = "newuser@liferay.com",
+				userFirstName = "new",
+				userLastName = "user",
+				userScreenName = "newuser");
+		}
+	}
+
+	@priority = 4
+	test PermissionCheckPortalInstances {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.addCP(
 			mailDomain = "www.able.com",
@@ -128,14 +195,14 @@ definition {
 
 		var documentURL = selenium.getLocation();
 
-		var otherInstanceAccessAttempt = StringUtil.replace("${documentURL}", "able", "baker");
+		var otherInstanceAccessAttempt = StringUtil.replace(${documentURL}, "able", "baker");
 
 		User.firstLoginPG(
 			password = "test",
 			userEmailAddress = "test@www.baker.com",
 			virtualHostsURL = "http://www.baker.com:8080");
 
-		Navigator.openSpecificURL(url = "${otherInstanceAccessAttempt}");
+		Navigator.openSpecificURL(url = ${otherInstanceAccessAttempt});
 
 		Alert.viewRequestFailedToComplete();
 
@@ -144,9 +211,10 @@ definition {
 			value1 = "You do not have the required permissions.");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewDeactivatedPortalInstance {
-		property test.name.skip.portal.instance = "VirtualInstances#ViewDeactivatedPortalInstance";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -162,10 +230,7 @@ definition {
 
 		SystemSettings.saveConfiguration();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.addCP(
 			mailDomain = "www.able.com",
@@ -245,10 +310,7 @@ definition {
 
 		User.loginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.deactivatePortalInstance(virtualHost = "www.able.com");
 
@@ -258,11 +320,12 @@ definition {
 	}
 
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test ViewVirtualHostPrivateSitePage {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com,www.baker.com,www.charlie.com";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property test.name.skip.portal.instance = "VirtualInstances#ViewVirtualHostPrivateSitePage";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Instance Configuration",
@@ -275,13 +338,13 @@ definition {
 
 		Site.addVirtualHostsURLCP(
 			publicPageVirtualHostURL = "www.baker.com",
-			publicVirtualHosts = "${publicPageVirtualHostURL}");
+			publicVirtualHosts = ${publicPageVirtualHostURL});
 
 		Site.openSiteSettingsAdmin(siteURLKey = "guest");
 
 		Site.addVirtualHostsURLCP(
 			privatePageVirtualHostURL = "www.charlie.com",
-			privateVirtualHosts = "${privatePageVirtualHostURL}");
+			privateVirtualHosts = ${privatePageVirtualHostURL});
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
@@ -314,9 +377,10 @@ definition {
 			userEmailAddress = "test@liferay.com");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewVirtualInstanceInheritsSystemSettings {
-		property test.name.skip.portal.instance = "VirtualInstances#ViewVirtualInstanceInheritsSystemSettings";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Users",
@@ -337,12 +401,7 @@ definition {
 
 		PortalSettings.editConfigurationUsersPersonalMenuShowInControlMenu(toggleSwitchLabel = "Show in Control Menu");
 
-		Navigator.openURL();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.addCP(
 			mailDomain = "www.able.com",

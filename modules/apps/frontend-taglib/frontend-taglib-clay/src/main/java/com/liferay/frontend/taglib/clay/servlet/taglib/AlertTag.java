@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.frontend.taglib.clay.servlet.taglib;
@@ -59,6 +50,10 @@ public class AlertTag extends BaseContainerTag {
 		return _message;
 	}
 
+	public String getSymbol() {
+		return _symbol;
+	}
+
 	public String getTitle() {
 		return _title;
 	}
@@ -87,6 +82,10 @@ public class AlertTag extends BaseContainerTag {
 		_message = message;
 	}
 
+	public void setSymbol(String symbol) {
+		_symbol = symbol;
+	}
+
 	public void setTitle(String title) {
 		_title = title;
 	}
@@ -104,6 +103,7 @@ public class AlertTag extends BaseContainerTag {
 		_dismissible = false;
 		_displayType = "info";
 		_message = null;
+		_symbol = null;
 		_title = null;
 		_variant = null;
 	}
@@ -179,7 +179,12 @@ public class AlertTag extends BaseContainerTag {
 
 		IconTag iconTag = new IconTag();
 
-		iconTag.setSymbol(_getIcon(_displayType));
+		if (Validator.isNotNull(_symbol)) {
+			iconTag.setSymbol(_symbol);
+		}
+		else {
+			iconTag.setSymbol(_getIcon(_displayType));
+		}
 
 		iconTag.doTag(pageContext);
 
@@ -224,9 +229,11 @@ public class AlertTag extends BaseContainerTag {
 		else if (displayType.equals("warning")) {
 			return "warning-full";
 		}
-		else {
-			return "info-circle";
+		else if (displayType.equals("secondary")) {
+			return "password-policies";
 		}
+
+		return "info-circle";
 	}
 
 	private String _getTitle(String title, String displayType) {
@@ -249,6 +256,7 @@ public class AlertTag extends BaseContainerTag {
 	private boolean _dismissible;
 	private String _displayType = "info";
 	private String _message;
+	private String _symbol;
 	private String _title;
 	private String _variant;
 

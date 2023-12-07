@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {Align} from '@clayui/drop-down';
@@ -40,7 +31,7 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 		: Liferay.ThemeDisplay.getUserName();
 
 	return (
-		<div className="cursor-pointer testray-sidebar-footer">
+		<div className="tr-sidebar__content__footer">
 			<div className="d-flex justify-content-end">
 				<Tooltip
 					position="right"
@@ -48,9 +39,12 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 				>
 					<div onClick={onClick}>
 						<ForwardIcon
-							className={classNames('forward-icon ', {
-								'forward-icon-expanded': expanded,
-							})}
+							className={classNames(
+								'tr-sidebar__content__footer__forwardicon',
+								{
+									'tr-sidebar__content__footer__forwardicon--expand': expanded,
+								}
+							)}
 						/>
 					</div>
 				</Tooltip>
@@ -68,13 +62,16 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 							}
 						>
 							<div
-								className={classNames('testray-sidebar-item', {
-									'testray-sidebar-item-expand': expanded,
-									'testray-sidebar-item-normal': !expanded,
-								})}
+								className={classNames(
+									'tr-sidebar__content__list__item',
+									{
+										'tr-sidebar__content__list__item--expand': expanded,
+										'tr-sidebar__content__list__item--normal': !expanded,
+									}
+								)}
 							>
 								<TestrayIcons
-									className="testray-icon"
+									className="tr-sidebar__content__list__item__icon"
 									fill="#8b8db2"
 									size={30}
 									symbol="cog"
@@ -82,9 +79,9 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 
 								<span
 									className={classNames(
-										'ml-1 testray-sidebar-text',
+										'tr-sidebar__content__list__item__text',
 										{
-											'testray-sidebar-text-expanded': expanded,
+											'tr-sidebar__content__list__item__text--expanded': expanded,
 										}
 									)}
 								>
@@ -96,7 +93,7 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 				}
 			/>
 
-			<div className="divider divider-full" />
+			<div className="tr-sidebar__content__divider" />
 
 			<DropDown
 				items={[
@@ -123,9 +120,16 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 							position="right"
 							title={expanded ? undefined : loggedUserName}
 						>
-							<div className="testray-avatar-dropdown testray-sidebar-item">
+							<div className="tr-sidebar__content__list__item">
 								<Avatar
+									className={classNames(
+										'tr-sidebar__content__footer__avatar',
+										{
+											'tr-sidebar__content__footer__avatar--expanded': expanded,
+										}
+									)}
 									displayName
+									displayTooltip={false}
 									expanded={expanded}
 									name={loggedUserName}
 									url={myUserAccount?.image}

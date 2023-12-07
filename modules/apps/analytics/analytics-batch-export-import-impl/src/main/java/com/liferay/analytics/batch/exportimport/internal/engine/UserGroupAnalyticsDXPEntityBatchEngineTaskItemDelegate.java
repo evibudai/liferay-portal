@@ -1,34 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.batch.exportimport.internal.engine;
 
+import com.liferay.analytics.batch.exportimport.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.DXPEntity;
-import com.liferay.analytics.dxp.entity.rest.dto.v1_0.converter.DXPEntityDTOConverter;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.UserGroup;
-import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.model.UserGroupTable;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.vulcan.util.SearchUtil;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 
 import java.io.Serializable;
 
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -50,35 +45,46 @@ public class UserGroupAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
-		com.liferay.portal.vulcan.pagination.Pagination vulcanPagination =
-			com.liferay.portal.vulcan.pagination.Pagination.of(
-				pagination.getPage(), pagination.getPageSize());
-
-		com.liferay.portal.vulcan.pagination.Page<DXPEntity> page =
-			SearchUtil.search(
-				null, booleanQuery -> booleanQuery.getPreBooleanFilter(),
-				filter, UserGroup.class.getName(), null, vulcanPagination,
-				queryConfig -> queryConfig.setSelectedFieldNames(
-					Field.ENTRY_CLASS_PK),
-				searchContext -> {
-					searchContext.setCompanyId(contextCompany.getCompanyId());
-					searchContext.setUserId(0);
-					searchContext.setVulcanCheckPermissions(false);
-				},
-				null,
-				document -> _dxpEntityDTOConverter.toDTO(
-					_userGroupLocalService.getUserGroup(
-						GetterUtil.getLong(
-							document.get(Field.ENTRY_CLASS_PK)))));
-
 		return Page.of(
-			page.getItems(),
+			TransformUtil.transform(
+				_userGroupLocalService.<List<UserGroup>>dslQuery(
+					_createSelectDSLQuery(
+						contextCompany.getCompanyId(), pagination, parameters)),
+				userGroup -> _dxpEntityDTOConverter.toDTO(userGroup)),
 			Pagination.of(pagination.getPage(), pagination.getPageSize()),
-			page.getTotalCount());
+			_userGroupLocalService.dslQuery(
+				_createCountDSLQuery(
+					contextCompany.getCompanyId(), parameters)));
 	}
 
-	@Reference
-	private DXPEntityDTOConverter _dxpEntityDTOConverter;
+	private DSLQuery _createCountDSLQuery(
+		long companyId, Map<String, Serializable> parameters) {
+
+		return DSLQueryFactoryUtil.count(
+		).from(
+			UserGroupTable.INSTANCE
+		).where(
+			buildPredicate(UserGroupTable.INSTANCE, companyId, parameters)
+		);
+	}
+
+	private DSLQuery _createSelectDSLQuery(
+		long companyId, Pagination pagination,
+		Map<String, Serializable> parameters) {
+
+		return DSLQueryFactoryUtil.select(
+		).from(
+			UserGroupTable.INSTANCE
+		).where(
+			buildPredicate(UserGroupTable.INSTANCE, companyId, parameters)
+		).limit(
+			(pagination.getPage() - 1) * pagination.getPageSize(),
+			pagination.getPage() * pagination.getPageSize()
+		);
+	}
+
+	@Reference(target = DTOConverterConstants.DXP_ENTITY_DTO_CONVERTER)
+	private DTOConverter<BaseModel<?>, DXPEntity> _dxpEntityDTOConverter;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;

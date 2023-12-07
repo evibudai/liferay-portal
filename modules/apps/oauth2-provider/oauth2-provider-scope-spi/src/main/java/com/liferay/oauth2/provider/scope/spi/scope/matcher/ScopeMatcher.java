@@ -1,22 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.oauth2.provider.scope.spi.scope.matcher;
 
+import com.liferay.petra.function.transform.TransformUtil;
+
 import java.util.Collection;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -59,13 +50,15 @@ public interface ScopeMatcher {
 	 * @review
 	 */
 	public default Collection<String> filter(Collection<String> names) {
-		Stream<String> stream = names.stream();
+		return TransformUtil.transform(
+			names,
+			name -> {
+				if (!match(name)) {
+					return null;
+				}
 
-		return stream.filter(
-			this::match
-		).collect(
-			Collectors.toList()
-		);
+				return name;
+			});
 	}
 
 	/**

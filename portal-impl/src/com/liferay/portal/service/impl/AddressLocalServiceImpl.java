@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -112,7 +103,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		address = addressPersistence.update(address);
 
 		if (Validator.isNotNull(phoneNumber)) {
-			_addAddressPhone(addressId, phoneNumber);
+			_addAddressPhone(addressId, address.getCompanyId(), phoneNumber);
 		}
 
 		return address;
@@ -120,19 +111,22 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 
 	@Override
 	public Address copyAddress(
-			long addressId, String className, long classPK,
+			long sourceAddressId, String className, long classPK,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		Address address = addressPersistence.findByPrimaryKey(addressId);
+		Address sourceAddress = addressPersistence.findByPrimaryKey(
+			sourceAddressId);
 
 		return addressLocalService.addAddress(
 			null, serviceContext.getUserId(), className, classPK,
-			address.getName(), address.getDescription(), address.getStreet1(),
-			address.getStreet2(), address.getStreet3(), address.getCity(),
-			address.getZip(), address.getRegionId(), address.getCountryId(),
-			address.getListTypeId(), address.isMailing(), address.isPrimary(),
-			address.getPhoneNumber(), serviceContext);
+			sourceAddress.getName(), sourceAddress.getDescription(),
+			sourceAddress.getStreet1(), sourceAddress.getStreet2(),
+			sourceAddress.getStreet3(), sourceAddress.getCity(),
+			sourceAddress.getZip(), sourceAddress.getRegionId(),
+			sourceAddress.getCountryId(), sourceAddress.getListTypeId(),
+			sourceAddress.isMailing(), sourceAddress.isPrimary(),
+			sourceAddress.getPhoneNumber(), serviceContext);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -301,7 +295,8 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 				address.getCompanyId(), Address.class.getName(), addressId);
 
 			if (ListUtil.isEmpty(phones)) {
-				_addAddressPhone(addressId, phoneNumber);
+				_addAddressPhone(
+					addressId, address.getCompanyId(), phoneNumber);
 			}
 			else {
 				Phone phone = phones.get(0);
@@ -340,7 +335,6 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 			).put(
 				"zip", keywords
 			).build());
-
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 
@@ -492,11 +486,12 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		validate(addressId, companyId, classNameId, classPK, mailing, primary);
 	}
 
-	private void _addAddressPhone(long addressId, String phoneNumber)
+	private void _addAddressPhone(
+			long addressId, long companyId, String phoneNumber)
 		throws PortalException {
 
 		ListType listType = _listTypeLocalService.getListType(
-			"phone-number", ListTypeConstants.ADDRESS_PHONE);
+			companyId, "phone-number", ListTypeConstants.ADDRESS_PHONE);
 
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();

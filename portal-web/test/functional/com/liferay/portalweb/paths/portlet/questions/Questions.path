@@ -16,6 +16,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>COMMENT_BODY</td>
+	<td>//div[contains(@class,'questions')]//div[contains(@class,'questions-article-body')]//p[contains(.,'${key_commentBodyContent}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ASK_QUESTION_BUTTON</td>
 	<td>//*[contains(@class,'btn btn-primary') and contains(text(),'Ask Question')]</td>
 	<td></td>
@@ -57,12 +62,17 @@
 </tr>
 <tr>
 	<td>EDIT_ANSWER</td>
-	<td>//button[contains(@class,'btn btn-secondary') and contains(.,'Edit')]</td>
+	<td>//a[@class='text-reset' and contains(text(),'Edit')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EDIT_COMMENT</td>
+	<td>//div[contains(@class,'questions-reply')]//a[normalize-space()='Edit']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>EMPTY_STATE_MESSAGE</td>
-	<td>//div[contains(@class,'questions-container')]//div[contains(@class,'empty')]//span[contains(text(),'${key_emptyInfo}')]</td>
+	<td>//div[contains(@class,'questions')]//div[contains(@class,'empty')]//span[contains(text(),'${key_emptyInfo}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -73,6 +83,11 @@
 <tr>
 	<td>MODAL_ITEM_BUTTON</td>
 	<td>//div[contains(@class,'modal-item')]//button[contains(@type,'button') and contains(.,'${key_text}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DROPDOWN_ITEM_BUTTON</td>
+	<td>//*[contains(@class,'dropdown')]//*[contains(@class,'dropdown') and contains(.,'${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -98,6 +113,11 @@
 <tr>
 	<td>QUESTIONS_CATEGORY_LABEL_ITEM</td>
 	<td>//span[contains(@class,'label-item') and contains(.,'${key_categoryItem}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>QUESTIONS_CATEGORY_LABEL_BADGE</td>
+	<td>//span[contains(@class,'label-badge') and contains(.,'${key_categoryItem}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -127,7 +147,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_BREADCRUMB_HOME_DROPDOWN_TOGGLE</td>
-	<td>//li[contains(@class,'breadcrumb-item')][1]//div[contains(@class,'dropdown')]//*[name()='svg'][contains(@class,'caret-bottom')]</td>
+	<td>//li[contains(@class,'breadcrumb-item')]//div[contains(@class,'dropdown')]//*[name()='svg'][contains(@class,'caret-bottom')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -152,7 +172,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_ELLIPSIS_ICON</td>
-	<td>//div[contains(@class,'question-row') and contains(.,'${key_questionTitle}')]//li//button[*[name()='svg'][contains(@class,'icon-ellipsis-v')]]</td>
+	<td>//div[contains(@class,'question') and contains(.,'${key_questionTitle}')]//li//button[*[name()='svg'][contains(@class,'icon-ellipsis-v')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -212,7 +232,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_LIST_VOTED_COUNT</td>
-	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-caret-${key_text}')]]//span[contains(.,'${key_count}')]</td>
+	<td>//*[*[name()='svg'][contains(@class,'lexicon-icon-caret-${key_text}')]][contains(.,'${key_count}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -237,12 +257,12 @@
 </tr>
 <tr>
 	<td>SUBSCRIBED_TAG</td>
-	<td>//a[contains(@data-restore-title,'${key_subcribedTag}')]//button[contains(@title,'Subscribed')]</td>
+	<td>//a[contains(@title,'${key_subscribedTag}')]//button[contains(@title,'Subscribed')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>QUESTIONS_SELECT_FILTER</td>
-	<td>//select[contains(@id,'questionsFilter')]</td>
+	<td>//div[contains(@class,'dropdown-menu')]//span[@class='custom-control-label'][normalize-space()='${key_option}']</td>
 	<td></td>
 </tr>
 <tr>

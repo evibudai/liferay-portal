@@ -1,9 +1,10 @@
 definition {
 
-	macro assertAdminPermissions {
-		PublicationsNavigator._gotoPublicationEllipsisItem(
+	@summary = "Default summary"
+	macro assertAdminPermissions(publicationName = null) {
+		PublicationsNavigator.gotoPublicationEllipsisItem(
 			menuItem = "Edit",
-			publicationName = "${publicationName}");
+			publicationName = ${publicationName});
 
 		Type(
 			locator1 = "Publications#PUBLICATION_NAME",
@@ -13,9 +14,10 @@ definition {
 
 		AssertElementPresent(
 			key_publicationName = "New ${publicationName}",
-			locator1 = "Publications#PUBLISHED_PUBLICATION_NAME");
+			locator1 = "Publications#PUBLICATION_NAME_VIEW");
 
 		Publications.inviteUsers(
+			gotoReviewChanges = "true",
 			publicationName = "New ${publicationName}",
 			userInvite = "userea2@liferay.com");
 
@@ -25,19 +27,16 @@ definition {
 
 		PublicationsChanges.assertPublicationsCommentsCRUDPermissions();
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "New ${publicationName}");
-
-		Publications.publishPublication(publicationName = "New ${publicationName}");
-
-		Publications.viewPublicationPublished(publicationName = "New ${publicationName}");
 	}
 
-	macro assertEditorPermissions {
+	@summary = "Default summary"
+	macro assertEditorPermissions(publicationName = null) {
 		Click(
-			key_publicationName = "${publicationName}",
-			locator1 = "Publications#LIST_PUBLICATION_ELLIPSIS");
+			key_publicationName = ${publicationName},
+			locator1 = "Publications#PUBLICATION_ELLIPSIS");
 
 		AssertElementNotPresent(
 			key_menuItem = "Publish",
@@ -59,7 +58,7 @@ definition {
 
 		AssertElementPresent(
 			key_publicationName = "New ${publicationName}",
-			locator1 = "Publications#PUBLISHED_PUBLICATION_NAME");
+			locator1 = "Publications#PUBLICATION_NAME_VIEW");
 
 		PublicationsNavigator.gotoReviewChanges(
 			gotoPublicationsAdmin = "true",
@@ -68,7 +67,8 @@ definition {
 		PublicationsChanges.assertPublicationsCommentsCRUDPermissions();
 	}
 
-	macro assertNoPermissionToCreatePublication {
+	@summary = "Default summary"
+	macro assertNoPermissionToCreatePublication() {
 		Click(locator1 = "Publications#PUBLICATIONS_INDICATOR_BUTTON");
 
 		AssertElementNotPresent(
@@ -83,23 +83,22 @@ definition {
 		AssertElementNotPresent(locator1 = "Button#PLUS");
 	}
 
-	macro assertNoPermissionToPublishPublication {
+	@summary = "Default summary"
+	macro assertNoPermissionToPublishPublication(publicationName = null) {
 		ApplicationsMenu.gotoPortlet(
 			category = "Publications",
 			panel = "Applications",
 			portlet = "Publications");
 
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
 		Click(
-			key_publicationName = "${publicationName}",
-			locator1 = "Publications#LIST_PUBLICATION_ELLIPSIS");
+			key_publicationName = ${publicationName},
+			locator1 = "Publications#PUBLICATION_ELLIPSIS");
 
 		AssertElementNotPresent(
 			key_menuItem = "Publish",
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 
-		Publications.selectPublication(publicationName = "${publicationName}");
+		Publications.selectPublication(publicationName = ${publicationName});
 
 		Click(locator1 = "Publications#PUBLICATIONS_INDICATOR_BUTTON");
 
@@ -108,10 +107,11 @@ definition {
 			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
-	macro assertPublisherPermissions {
-		PublicationsNavigator._gotoPublicationEllipsisItem(
+	@summary = "Default summary"
+	macro assertPublisherPermissions(publicationName = null) {
+		PublicationsNavigator.gotoPublicationEllipsisItem(
 			menuItem = "Edit",
-			publicationName = "${publicationName}");
+			publicationName = ${publicationName});
 
 		Type(
 			locator1 = "Publications#PUBLICATION_NAME",
@@ -121,54 +121,36 @@ definition {
 
 		AssertElementPresent(
 			key_publicationName = "New ${publicationName}",
-			locator1 = "Publications#PUBLISHED_PUBLICATION_NAME");
+			locator1 = "Publications#PUBLICATION_NAME_VIEW");
 
 		PublicationsNavigator.gotoReviewChanges(
 			gotoPublicationsAdmin = "true",
-			publicationName = "${publicationName}");
+			publicationName = ${publicationName});
 
 		PublicationsChanges.assertPublicationsCommentsCRUDPermissions();
 
-		PublicationsNavigator.gotoPublish(
+		Publications.publishPublication(
 			gotoPublicationsAdmin = "true",
 			publicationName = "New ${publicationName}");
-
-		Publications.publishPublication(publicationName = "New ${publicationName}");
-
-		Publications.viewPublicationPublished(publicationName = "New ${publicationName}");
 	}
 
-	macro assertViewerPermissions {
-		Click(
-			key_publicationName = "${publicationName}",
-			locator1 = "Publications#LIST_PUBLICATION_ELLIPSIS");
+	@summary = "Default summary"
+	macro assertViewerPermissions(publicationName = null) {
+		AssertElementPresent(locator1 = "Publications#REVIEW_CHANGES_BUTTON");
 
-		AssertElementNotPresent(
-			key_menuItem = "Publish",
-			locator1 = "MenuItem#ANY_MENU_ITEM");
-
-		AssertElementNotPresent(
-			key_menuItem = "Edit",
-			locator1 = "MenuItem#ANY_MENU_ITEM");
-
-		AssertElementNotPresent(
-			key_menuItem = "Invite Users",
-			locator1 = "MenuItem#ANY_MENU_ITEM");
-
-		PublicationsNavigator.gotoReviewChanges(
-			gotoPublicationsAdmin = "true",
-			publicationName = "${publicationName}");
+		Click(locator1 = "Publications#REVIEW_CHANGES_BUTTON");
 
 		PublicationsChanges.assertPublicationsCommentsCRUDPermissions();
 	}
 
-	macro viewPublicationRoleHelpText {
-		var key_publicationRole = "${publicationRole}";
-		var key_publicationRoleHelpText = "${publicationRoleHelpText}";
+	@summary = "Default summary"
+	macro viewPublicationRoleHelpText(publicationRoleHelpText = null, publicationRole = null) {
+		var key_publicationRole = ${publicationRole};
+		var key_publicationRoleHelpText = ${publicationRoleHelpText};
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Publications#PUBLICATION_ROLE_BUTTON_HELP_TEXT",
-			value1 = "${publicationRoleHelpText}");
+			value1 = ${publicationRoleHelpText});
 	}
 
 }

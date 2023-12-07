@@ -265,6 +265,14 @@ paths:
                                     $ref: "#/components/schemas/CommerceChannel"
                                 type: array
             tags: ["CommerceChannel"]
+    "/configuration/wizard-mode":
+        post:
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["AnalyticsDXPEntityBatchExporter"]
     "/contacts/account-groups":
         get:
             operationId: getContactAccountGroupsPage

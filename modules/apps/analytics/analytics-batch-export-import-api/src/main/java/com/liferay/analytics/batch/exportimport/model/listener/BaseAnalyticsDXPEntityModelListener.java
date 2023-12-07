@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.batch.exportimport.model.listener;
@@ -18,19 +9,19 @@ import com.liferay.analytics.message.storage.service.AnalyticsAssociationLocalSe
 import com.liferay.analytics.message.storage.service.AnalyticsDeleteMessageLocalService;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationRegistry;
+import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ShardedModel;
-import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.CompanyService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -59,6 +50,10 @@ public abstract class BaseAnalyticsDXPEntityModelListener
 
 	@Override
 	public void onAfterRemove(T model) throws ModelListenerException {
+		if (!analyticsConfigurationRegistry.isActive() || !isTracked(model)) {
+			return;
+		}
+
 		ShardedModel shardedModel = (ShardedModel)model;
 
 		analyticsAssociationLocalService.deleteAnalyticsAssociations(
@@ -78,9 +73,7 @@ public abstract class BaseAnalyticsDXPEntityModelListener
 
 	@Override
 	public void onBeforeRemove(T model) throws ModelListenerException {
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LRAC-10632")) ||
-			!isTracked(model)) {
-
+		if (!analyticsConfigurationRegistry.isActive() || !isTracked(model)) {
 			return;
 		}
 
@@ -92,7 +85,7 @@ public abstract class BaseAnalyticsDXPEntityModelListener
 			analyticsDeleteMessageLocalService.addAnalyticsDeleteMessage(
 				companyId, new Date(), model.getModelClassName(),
 				(long)model.getPrimaryKeyObj(),
-				userLocalService.getDefaultUserId(companyId));
+				userLocalService.getGuestUserId(companyId));
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -191,9 +184,7 @@ public abstract class BaseAnalyticsDXPEntityModelListener
 		String associationClassName, Object associationClassPK,
 		Object classPK) {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LRAC-10632")) ||
-			!analyticsConfigurationRegistry.isActive()) {
-
+		if (!analyticsConfigurationRegistry.isActive()) {
 			return;
 		}
 
@@ -208,11 +199,23 @@ public abstract class BaseAnalyticsDXPEntityModelListener
 
 			long companyId = shardedModel.getCompanyId();
 
+			if (StringUtil.equals(User.class.getName(), associationClassName)) {
+				User user = userLocalService.fetchUserByScreenName(
+					companyId,
+					AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN);
+
+				if ((user != null) &&
+					(user.getUserId() == (long)associationClassPK)) {
+
+					return;
+				}
+			}
+
 			Class<?> modelClass = getModelClass();
 
 			analyticsAssociationLocalService.addAnalyticsAssociation(
 				companyId, new Date(),
-				userLocalService.getDefaultUserId(companyId),
+				userLocalService.getGuestUserId(companyId),
 				associationClassName, (long)associationClassPK,
 				modelClass.getName(), (long)classPK);
 		}

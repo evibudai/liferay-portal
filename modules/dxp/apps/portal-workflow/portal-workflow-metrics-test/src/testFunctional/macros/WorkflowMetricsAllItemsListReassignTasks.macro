@@ -1,7 +1,8 @@
 definition {
 
-	macro selectReassignTasksCardFilterValueAssignee {
-		var key_workflowAssignee = "${workflowAssignee}";
+	@summary = "Default summary"
+	macro selectReassignTasksCardFilterValueAssignee(workflowAssignee = null) {
+		var key_workflowAssignee = ${workflowAssignee};
 
 		Click(locator1 = "WorkflowMetricsAllItemsListReassignTasks#METRICS_REASSIGN_TASKS_CARD_FILTER_ASSIGNEE");
 
@@ -10,8 +11,9 @@ definition {
 		Click(locator1 = "WorkflowMetricsAllItemsListReassignTasks#METRICS_REASSIGN_TASKS_CARD_FILTER_ASSIGNEE");
 	}
 
-	macro selectReassignTasksCardFilterValueProcessStep {
-		var key_workflowStep = "${workflowStep}";
+	@summary = "Default summary"
+	macro selectReassignTasksCardFilterValueProcessStep(workflowStep = null) {
+		var key_workflowStep = ${workflowStep};
 
 		Click(locator1 = "WorkflowMetricsAllItemsListReassignTasks#METRICS_REASSIGN_TASKS_CARD_FILTER_PROCESS_STEP");
 

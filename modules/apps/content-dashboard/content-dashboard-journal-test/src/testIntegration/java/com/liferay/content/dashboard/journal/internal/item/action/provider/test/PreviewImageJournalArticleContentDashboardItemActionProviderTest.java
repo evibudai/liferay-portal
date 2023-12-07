@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.content.dashboard.journal.internal.item.action.provider.test;
@@ -41,6 +32,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.File;
 
@@ -66,7 +58,9 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -108,15 +102,15 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 					RandomTestUtil.randomLocaleStringMap(),
 					RandomTestUtil.randomLocaleStringMap(),
 					RandomTestUtil.randomLocaleStringMap(), content,
-					ddmStructure.getStructureKey(),
-					ddmTemplate.getTemplateKey(), null,
-					displayDateCalendar.get(Calendar.MONTH),
+					ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(),
+					null, displayDateCalendar.get(Calendar.MONTH),
 					displayDateCalendar.get(Calendar.DAY_OF_MONTH),
 					displayDateCalendar.get(Calendar.YEAR),
 					displayDateCalendar.get(Calendar.HOUR_OF_DAY),
 					displayDateCalendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0,
-					true, 0, 0, 0, 0, 0, true, true, true, null,
-					_getSmallImage(), null, null,
+					true, 0, 0, 0, 0, 0, true, true, true,
+					JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER, 0,
+					null, _getSmallImage(), null, null,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId()));
 
@@ -180,15 +174,15 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 					RandomTestUtil.randomLocaleStringMap(),
 					RandomTestUtil.randomLocaleStringMap(),
 					RandomTestUtil.randomLocaleStringMap(), content,
-					ddmStructure.getStructureKey(),
-					ddmTemplate.getTemplateKey(), null,
-					displayDateCalendar.get(Calendar.MONTH),
+					ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(),
+					null, displayDateCalendar.get(Calendar.MONTH),
 					displayDateCalendar.get(Calendar.DAY_OF_MONTH),
 					displayDateCalendar.get(Calendar.YEAR),
 					displayDateCalendar.get(Calendar.HOUR_OF_DAY),
 					displayDateCalendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0,
-					true, 0, 0, 0, 0, 0, true, true, true, null,
-					_getSmallImage(), null, null,
+					true, 0, 0, 0, 0, 0, true, true, true, 0,
+					JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER,
+					null, _getSmallImage(), null, null,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId()));
 
@@ -225,13 +219,15 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), content,
-			ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(), null,
+			ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(), null,
 			displayDateCalendar.get(Calendar.MONTH),
 			displayDateCalendar.get(Calendar.DAY_OF_MONTH),
 			displayDateCalendar.get(Calendar.YEAR),
 			displayDateCalendar.get(Calendar.HOUR_OF_DAY),
 			displayDateCalendar.get(Calendar.MINUTE), 0, 0, 0, 0, 0, true, 0, 0,
-			0, 0, 0, true, true, true, null, _getSmallImage(), null, null,
+			0, 0, 0, true, true, true, 0,
+			JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER, null,
+			_getSmallImage(), null, null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		Assert.assertFalse(
@@ -280,6 +276,8 @@ public class PreviewImageJournalArticleContentDashboardItemActionProviderTest {
 
 		themeDisplay.setRequest(mockHttpServletRequest);
 
+		themeDisplay.setScopeGroupId(_group.getGroupId());
+		themeDisplay.setSiteGroupId(_group.getGroupId());
 		themeDisplay.setURLCurrent("http://localhost:8080/currentURL");
 
 		return themeDisplay;

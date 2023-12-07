@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.catalog.dto.v1_0;
@@ -28,6 +19,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
+
+import java.math.BigDecimal;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -61,6 +54,36 @@ public class ProductOptionValue implements Serializable {
 	public static ProductOptionValue unsafeToDTO(String json) {
 		return ObjectMapperUtil.unsafeReadValue(ProductOptionValue.class, json);
 	}
+
+	@DecimalMin("0")
+	@Schema(example = "10")
+	@Valid
+	public BigDecimal getDeltaPrice() {
+		return deltaPrice;
+	}
+
+	public void setDeltaPrice(BigDecimal deltaPrice) {
+		this.deltaPrice = deltaPrice;
+	}
+
+	@JsonIgnore
+	public void setDeltaPrice(
+		UnsafeSupplier<BigDecimal, Exception> deltaPriceUnsafeSupplier) {
+
+		try {
+			deltaPrice = deltaPriceUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected BigDecimal deltaPrice;
 
 	@DecimalMin("0")
 	@Schema(example = "30130")
@@ -146,6 +169,34 @@ public class ProductOptionValue implements Serializable {
 	@NotNull
 	protected Map<String, String> name;
 
+	@Schema(example = "true")
+	public Boolean getPreselected() {
+		return preselected;
+	}
+
+	public void setPreselected(Boolean preselected) {
+		this.preselected = preselected;
+	}
+
+	@JsonIgnore
+	public void setPreselected(
+		UnsafeSupplier<Boolean, Exception> preselectedUnsafeSupplier) {
+
+		try {
+			preselected = preselectedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean preselected;
+
 	@Schema(example = "1.2")
 	public Double getPriority() {
 		return priority;
@@ -174,6 +225,91 @@ public class ProductOptionValue implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double priority;
 
+	@DecimalMin("0")
+	@Schema(example = "10")
+	@Valid
+	public BigDecimal getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(BigDecimal quantity) {
+		this.quantity = quantity;
+	}
+
+	@JsonIgnore
+	public void setQuantity(
+		UnsafeSupplier<BigDecimal, Exception> quantityUnsafeSupplier) {
+
+		try {
+			quantity = quantityUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected BigDecimal quantity;
+
+	@DecimalMin("0")
+	@Schema(example = "30129")
+	public Long getSkuId() {
+		return skuId;
+	}
+
+	public void setSkuId(Long skuId) {
+		this.skuId = skuId;
+	}
+
+	@JsonIgnore
+	public void setSkuId(UnsafeSupplier<Long, Exception> skuIdUnsafeSupplier) {
+		try {
+			skuId = skuIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long skuId;
+
+	@Schema(example = "pl")
+	public String getUnitOfMeasureKey() {
+		return unitOfMeasureKey;
+	}
+
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		this.unitOfMeasureKey = unitOfMeasureKey;
+	}
+
+	@JsonIgnore
+	public void setUnitOfMeasureKey(
+		UnsafeSupplier<String, Exception> unitOfMeasureKeyUnsafeSupplier) {
+
+		try {
+			unitOfMeasureKey = unitOfMeasureKeyUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String unitOfMeasureKey;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -200,6 +336,16 @@ public class ProductOptionValue implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		if (deltaPrice != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"deltaPrice\": ");
+
+			sb.append(deltaPrice);
+		}
 
 		if (id != null) {
 			if (sb.length() > 1) {
@@ -235,6 +381,16 @@ public class ProductOptionValue implements Serializable {
 			sb.append(_toJSON(name));
 		}
 
+		if (preselected != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"preselected\": ");
+
+			sb.append(preselected);
+		}
+
 		if (priority != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -243,6 +399,40 @@ public class ProductOptionValue implements Serializable {
 			sb.append("\"priority\": ");
 
 			sb.append(priority);
+		}
+
+		if (quantity != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"quantity\": ");
+
+			sb.append(quantity);
+		}
+
+		if (skuId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuId\": ");
+
+			sb.append(skuId);
+		}
+
+		if (unitOfMeasureKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"unitOfMeasureKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(unitOfMeasureKey));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -339,5 +529,7 @@ public class ProductOptionValue implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

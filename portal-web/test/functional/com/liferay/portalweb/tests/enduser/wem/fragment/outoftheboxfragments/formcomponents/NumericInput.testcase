@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Fragments";
@@ -13,7 +14,7 @@ definition {
 		}
 
 		task ("Add a new site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a company Object with a Long Integer, Integer, Precision Decimal and Decimal fields") {
@@ -58,21 +59,8 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			ObjectAdmin.deleteObjectViaAPI(objectName = "PurchaseOrder");
-		}
-	}
-
 	@description = "This is a test for LPS-155169. The page creator could configure the Numeric Input framgent."
-	@priority = "4"
+	@priority = 4
 	test ConfigureNumericInput {
 		task ("Given a page creator has a Form Container mapped to an entity with Integer field") {
 			task ("Add a Form Container framgment to content page") {
@@ -100,11 +88,11 @@ definition {
 				for (var index : list "4,3,2") {
 					PageEditor.removeFragment(
 						fragmentName = "Numeric Input",
-						index = "${index}");
+						index = ${index});
 				}
 
 				for (var fragmentName : list "Numeric Input,Submit Button") {
-					PageEditor.removeFragment(fragmentName = "${fragmentName}");
+					PageEditor.removeFragment(fragmentName = ${fragmentName});
 				}
 			}
 		}
@@ -184,7 +172,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-155169. The user could submit successfully when a Form Container has Numeric Input fragments"
-	@priority = "4"
+	@priority = 4
 	test SubmitFormWithNumericInput {
 		task ("Given a user has a content page with Numeric Input fragments inside Form Container") {
 			task ("Add a Form Container framgment to content page") {
@@ -226,7 +214,7 @@ definition {
 			Type(
 				key_text = "Ticket Number",
 				locator1 = "TextInput#ANY",
-				value1 = "100");
+				value1 = 100);
 
 			Type(
 				key_text = "Price",
@@ -267,7 +255,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-155169. The Numeric Input only allow numbers and some special characters."
-	@priority = "5"
+	@priority = 5
 	test ViewAllowedCharacters {
 		property portal.acceptance = "true";
 
@@ -364,7 +352,7 @@ definition {
 				AssertTextEquals(
 					key_text = "Tax",
 					locator1 = "TextInput#ANY",
-					value1 = "1212");
+					value1 = 1212);
 			}
 
 			task ("Type 1.2? in Numeric Input") {
@@ -392,13 +380,13 @@ definition {
 				AssertTextEquals(
 					key_text = "Tax",
 					locator1 = "TextInput#ANY",
-					value1 = "14");
+					value1 = 14);
 			}
 		}
 	}
 
 	@description = "This is a test for LPS-151402. The user could see error message when submit a form with value exceeding the maximum or minimum value of field."
-	@priority = "4"
+	@priority = 4
 	test ViewErrorMessageWhenSubmitFormWithValueExceedingTheMaxOrMinValueOfField {
 		task ("Given a user has a content page where a Numeric Input and Submit Button fragments are inside a Form Container") {
 			task ("Add a Form Container framgment to content page") {
@@ -431,17 +419,17 @@ definition {
 			Type(
 				key_text = "Ticket Number",
 				locator1 = "TextInput#ANY",
-				value1 = "10000000000");
+				value1 = 10000000000);
 
 			Button.clickSubmitButton();
 		}
 
 		task ("Then the user should see an error message") {
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
 				key_text = "Ticket Number",
 				locator1 = "TextInput#ANY",
-				value1 = "Value must be less than or equal to 2147483647.");
+				value1 = "validationMessage",
+				value2 = "Value must be less than or equal to 2147483647.");
 		}
 
 		task ("When the user submits form with value exceeding the minimum value of Numeric Input") {
@@ -459,15 +447,15 @@ definition {
 
 		task ("Then the user should see an error message") {
 			AssertAttributeValue(
-				attribute1 = "validationMessage",
 				key_text = "Ticket Number",
 				locator1 = "TextInput#ANY",
-				value1 = "Value must be greater than or equal to -2147483648.");
+				value1 = "validationMessage",
+				value2 = "Value must be greater than or equal to -2147483648.");
 		}
 	}
 
 	@description = "This is a test for LPS-155169. The Numeric Input could be mapped to Long Integer, Integer, Precision Decimal and Decimal fields."
-	@priority = "5"
+	@priority = 5
 	test ViewMappableFields {
 		property portal.acceptance = "true";
 
@@ -497,11 +485,11 @@ definition {
 				for (var index : list "4,3,2") {
 					PageEditor.removeFragment(
 						fragmentName = "Numeric Input",
-						index = "${index}");
+						index = ${index});
 				}
 
 				for (var fragmentName : list "Numeric Input,Submit Button") {
-					PageEditor.removeFragment(fragmentName = "${fragmentName}");
+					PageEditor.removeFragment(fragmentName = ${fragmentName});
 				}
 			}
 
@@ -520,9 +508,56 @@ definition {
 			for (var fieldName : list "Amount,Ticket Number,Price,Tax") {
 				AssertElementPresent(
 					key_fieldLabel = "Field",
-					key_value = "${fieldName}",
+					key_value = ${fieldName},
 					locator1 = "Select#GENERIC_SELECT_VALUE");
 			}
+		}
+	}
+
+	@description = "This is a test for LPS-182728. The user should see the field error below the Numeric Input fragment."
+	@priority = 3
+	test ViewNumericInputFieldErrorMessageWhenPartialValidationFailure {
+		task ("Given a user has a content page where a mapped Numeric Input fragment has a partial validation") {
+			JSONObject.addObjectValidation(
+				errorMessage = "Please enter a valid ticket number.",
+				fieldName = "ticketNumber",
+				labelName = "Numeric Validation",
+				objectName = "PurchaseOrder",
+				outputValidationType = "partialValidation",
+				script = "ticketNumber > 1000",
+				validationType = "ddm");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+
+			PageEditor.publish();
+		}
+
+		task ("When the user submits form with invalid value") {
+			Type(
+				key_text = "Ticket Number",
+				locator1 = "TextInput#ANY",
+				value1 = 150);
+
+			Button.clickSubmitButton();
+		}
+
+		task ("Then the user should see a field error message below Numeric Input") {
+			Alert.viewFieldErrorMessage(
+				errorMessage = "Please enter a valid ticket number.",
+				fieldLabel = "Ticket Number");
 		}
 	}
 

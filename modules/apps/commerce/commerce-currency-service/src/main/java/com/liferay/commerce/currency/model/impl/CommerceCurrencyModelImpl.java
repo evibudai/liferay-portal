@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.currency.model.impl;
@@ -121,7 +112,7 @@ public class CommerceCurrencyModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceCurrency (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,commerceCurrencyId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,code_ VARCHAR(75) null,name STRING null,symbol VARCHAR(75) null,rate DECIMAL(30, 16) null,formatPattern STRING null,maxFractionDigits INTEGER,minFractionDigits INTEGER,roundingMode VARCHAR(75) null,primary_ BOOLEAN,priority DOUBLE,active_ BOOLEAN,lastPublishDate DATE null)";
+		"create table CommerceCurrency (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,commerceCurrencyId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,code_ VARCHAR(75) null,name STRING null,symbol VARCHAR(75) null,rate BIGDECIMAL null,formatPattern STRING null,maxFractionDigits INTEGER,minFractionDigits INTEGER,roundingMode VARCHAR(75) null,primary_ BOOLEAN,priority DOUBLE,active_ BOOLEAN,lastPublishDate DATE null)";
 
 	public static final String TABLE_SQL_DROP = "drop table CommerceCurrency";
 
@@ -264,136 +255,162 @@ public class CommerceCurrencyModelImpl
 	public Map<String, Function<CommerceCurrency, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<CommerceCurrency, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<CommerceCurrency, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<CommerceCurrency, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<CommerceCurrency, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<CommerceCurrency, Object>>();
-		Map<String, BiConsumer<CommerceCurrency, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<CommerceCurrency, ?>>();
+		private static final Map<String, Function<CommerceCurrency, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", CommerceCurrency::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<CommerceCurrency, Long>)
-				CommerceCurrency::setMvccVersion);
-		attributeGetterFunctions.put("uuid", CommerceCurrency::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<CommerceCurrency, String>)CommerceCurrency::setUuid);
-		attributeGetterFunctions.put(
-			"commerceCurrencyId", CommerceCurrency::getCommerceCurrencyId);
-		attributeSetterBiConsumers.put(
-			"commerceCurrencyId",
-			(BiConsumer<CommerceCurrency, Long>)
-				CommerceCurrency::setCommerceCurrencyId);
-		attributeGetterFunctions.put(
-			"companyId", CommerceCurrency::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<CommerceCurrency, Long>)CommerceCurrency::setCompanyId);
-		attributeGetterFunctions.put("userId", CommerceCurrency::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<CommerceCurrency, Long>)CommerceCurrency::setUserId);
-		attributeGetterFunctions.put("userName", CommerceCurrency::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<CommerceCurrency, String>)
-				CommerceCurrency::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", CommerceCurrency::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<CommerceCurrency, Date>)
-				CommerceCurrency::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", CommerceCurrency::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<CommerceCurrency, Date>)
-				CommerceCurrency::setModifiedDate);
-		attributeGetterFunctions.put("code", CommerceCurrency::getCode);
-		attributeSetterBiConsumers.put(
-			"code",
-			(BiConsumer<CommerceCurrency, String>)CommerceCurrency::setCode);
-		attributeGetterFunctions.put("name", CommerceCurrency::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<CommerceCurrency, String>)CommerceCurrency::setName);
-		attributeGetterFunctions.put("symbol", CommerceCurrency::getSymbol);
-		attributeSetterBiConsumers.put(
-			"symbol",
-			(BiConsumer<CommerceCurrency, String>)CommerceCurrency::setSymbol);
-		attributeGetterFunctions.put("rate", CommerceCurrency::getRate);
-		attributeSetterBiConsumers.put(
-			"rate",
-			(BiConsumer<CommerceCurrency, BigDecimal>)
-				CommerceCurrency::setRate);
-		attributeGetterFunctions.put(
-			"formatPattern", CommerceCurrency::getFormatPattern);
-		attributeSetterBiConsumers.put(
-			"formatPattern",
-			(BiConsumer<CommerceCurrency, String>)
-				CommerceCurrency::setFormatPattern);
-		attributeGetterFunctions.put(
-			"maxFractionDigits", CommerceCurrency::getMaxFractionDigits);
-		attributeSetterBiConsumers.put(
-			"maxFractionDigits",
-			(BiConsumer<CommerceCurrency, Integer>)
-				CommerceCurrency::setMaxFractionDigits);
-		attributeGetterFunctions.put(
-			"minFractionDigits", CommerceCurrency::getMinFractionDigits);
-		attributeSetterBiConsumers.put(
-			"minFractionDigits",
-			(BiConsumer<CommerceCurrency, Integer>)
-				CommerceCurrency::setMinFractionDigits);
-		attributeGetterFunctions.put(
-			"roundingMode", CommerceCurrency::getRoundingMode);
-		attributeSetterBiConsumers.put(
-			"roundingMode",
-			(BiConsumer<CommerceCurrency, String>)
-				CommerceCurrency::setRoundingMode);
-		attributeGetterFunctions.put("primary", CommerceCurrency::getPrimary);
-		attributeSetterBiConsumers.put(
-			"primary",
-			(BiConsumer<CommerceCurrency, Boolean>)
-				CommerceCurrency::setPrimary);
-		attributeGetterFunctions.put("priority", CommerceCurrency::getPriority);
-		attributeSetterBiConsumers.put(
-			"priority",
-			(BiConsumer<CommerceCurrency, Double>)
-				CommerceCurrency::setPriority);
-		attributeGetterFunctions.put("active", CommerceCurrency::getActive);
-		attributeSetterBiConsumers.put(
-			"active",
-			(BiConsumer<CommerceCurrency, Boolean>)CommerceCurrency::setActive);
-		attributeGetterFunctions.put(
-			"lastPublishDate", CommerceCurrency::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<CommerceCurrency, Date>)
-				CommerceCurrency::setLastPublishDate);
+		static {
+			Map<String, Function<CommerceCurrency, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<CommerceCurrency, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", CommerceCurrency::getMvccVersion);
+			attributeGetterFunctions.put("uuid", CommerceCurrency::getUuid);
+			attributeGetterFunctions.put(
+				"commerceCurrencyId", CommerceCurrency::getCommerceCurrencyId);
+			attributeGetterFunctions.put(
+				"companyId", CommerceCurrency::getCompanyId);
+			attributeGetterFunctions.put("userId", CommerceCurrency::getUserId);
+			attributeGetterFunctions.put(
+				"userName", CommerceCurrency::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", CommerceCurrency::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", CommerceCurrency::getModifiedDate);
+			attributeGetterFunctions.put("code", CommerceCurrency::getCode);
+			attributeGetterFunctions.put("name", CommerceCurrency::getName);
+			attributeGetterFunctions.put("symbol", CommerceCurrency::getSymbol);
+			attributeGetterFunctions.put("rate", CommerceCurrency::getRate);
+			attributeGetterFunctions.put(
+				"formatPattern", CommerceCurrency::getFormatPattern);
+			attributeGetterFunctions.put(
+				"maxFractionDigits", CommerceCurrency::getMaxFractionDigits);
+			attributeGetterFunctions.put(
+				"minFractionDigits", CommerceCurrency::getMinFractionDigits);
+			attributeGetterFunctions.put(
+				"roundingMode", CommerceCurrency::getRoundingMode);
+			attributeGetterFunctions.put(
+				"primary", CommerceCurrency::getPrimary);
+			attributeGetterFunctions.put(
+				"priority", CommerceCurrency::getPriority);
+			attributeGetterFunctions.put("active", CommerceCurrency::getActive);
+			attributeGetterFunctions.put(
+				"lastPublishDate", CommerceCurrency::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<CommerceCurrency, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<CommerceCurrency, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<CommerceCurrency, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<CommerceCurrency, Long>)
+					CommerceCurrency::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<CommerceCurrency, String>)
+					CommerceCurrency::setUuid);
+			attributeSetterBiConsumers.put(
+				"commerceCurrencyId",
+				(BiConsumer<CommerceCurrency, Long>)
+					CommerceCurrency::setCommerceCurrencyId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<CommerceCurrency, Long>)
+					CommerceCurrency::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<CommerceCurrency, Long>)
+					CommerceCurrency::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<CommerceCurrency, String>)
+					CommerceCurrency::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<CommerceCurrency, Date>)
+					CommerceCurrency::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<CommerceCurrency, Date>)
+					CommerceCurrency::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"code",
+				(BiConsumer<CommerceCurrency, String>)
+					CommerceCurrency::setCode);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<CommerceCurrency, String>)
+					CommerceCurrency::setName);
+			attributeSetterBiConsumers.put(
+				"symbol",
+				(BiConsumer<CommerceCurrency, String>)
+					CommerceCurrency::setSymbol);
+			attributeSetterBiConsumers.put(
+				"rate",
+				(BiConsumer<CommerceCurrency, BigDecimal>)
+					CommerceCurrency::setRate);
+			attributeSetterBiConsumers.put(
+				"formatPattern",
+				(BiConsumer<CommerceCurrency, String>)
+					CommerceCurrency::setFormatPattern);
+			attributeSetterBiConsumers.put(
+				"maxFractionDigits",
+				(BiConsumer<CommerceCurrency, Integer>)
+					CommerceCurrency::setMaxFractionDigits);
+			attributeSetterBiConsumers.put(
+				"minFractionDigits",
+				(BiConsumer<CommerceCurrency, Integer>)
+					CommerceCurrency::setMinFractionDigits);
+			attributeSetterBiConsumers.put(
+				"roundingMode",
+				(BiConsumer<CommerceCurrency, String>)
+					CommerceCurrency::setRoundingMode);
+			attributeSetterBiConsumers.put(
+				"primary",
+				(BiConsumer<CommerceCurrency, Boolean>)
+					CommerceCurrency::setPrimary);
+			attributeSetterBiConsumers.put(
+				"priority",
+				(BiConsumer<CommerceCurrency, Double>)
+					CommerceCurrency::setPriority);
+			attributeSetterBiConsumers.put(
+				"active",
+				(BiConsumer<CommerceCurrency, Boolean>)
+					CommerceCurrency::setActive);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<CommerceCurrency, Date>)
+					CommerceCurrency::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1490,7 +1507,8 @@ public class CommerceCurrencyModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<CommerceCurrency, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.web.internal.portlet.action;
@@ -18,17 +9,21 @@ import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.exception.NoSuchEntryException;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryService;
-import com.liferay.portal.aop.AopService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.transaction.Transactional;
-import com.liferay.portal.kernel.util.Base64;
+import com.liferay.portal.kernel.upload.UploadPortletRequest;
+import com.liferay.portal.kernel.upload.UploadRequest;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+
+import java.io.File;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -44,14 +39,13 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + FragmentPortletKeys.FRAGMENT,
 		"mvc.command.name=/fragment/edit_fragment_entry"
 	},
-	service = AopService.class
+	service = MVCActionCommand.class
 )
 public class EditFragmentEntryMVCActionCommand
-	extends BaseMVCActionCommand implements AopService, MVCActionCommand {
+	extends BaseTransactionalMVCActionCommand {
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
-	protected void doProcessAction(
+	protected void doTransactionalCommand(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -83,13 +77,13 @@ public class EditFragmentEntryMVCActionCommand
 			}
 		}
 
+		UploadPortletRequest uploadPortletRequest =
+			_portal.getUploadPortletRequest(actionRequest);
+
 		String name = ParamUtil.getString(actionRequest, "name");
-		String css = new String(
-			Base64.decode(ParamUtil.getString(actionRequest, "cssContent")));
-		String html = new String(
-			Base64.decode(ParamUtil.getString(actionRequest, "htmlContent")));
-		String js = new String(
-			Base64.decode(ParamUtil.getString(actionRequest, "jsContent")));
+		String css = _read("cssContent", uploadPortletRequest);
+		String html = _read("htmlContent", uploadPortletRequest);
+		String js = _read("jsContent", uploadPortletRequest);
 		String configuration = ParamUtil.getString(
 			actionRequest, "configurationContent");
 		int status = ParamUtil.getInteger(actionRequest, "status");
@@ -116,10 +110,6 @@ public class EditFragmentEntryMVCActionCommand
 
 			draftFragmentEntry.setTypeOptions(typeOptionsJSONObject.toString());
 		}
-		else {
-			draftFragmentEntry.setCacheable(
-				ParamUtil.getBoolean(actionRequest, "cacheable"));
-		}
 
 		draftFragmentEntry.setStatus(status);
 
@@ -136,10 +126,25 @@ public class EditFragmentEntryMVCActionCommand
 			actionRequest, actionResponse, jsonObject);
 	}
 
+	private String _read(String fileName, UploadRequest uploadRequest)
+		throws Exception {
+
+		File file = uploadRequest.getFile(fileName);
+
+		if (file != null) {
+			return FileUtil.read(file);
+		}
+
+		return StringPool.BLANK;
+	}
+
 	@Reference
 	private FragmentEntryService _fragmentEntryService;
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Portal _portal;
 
 }

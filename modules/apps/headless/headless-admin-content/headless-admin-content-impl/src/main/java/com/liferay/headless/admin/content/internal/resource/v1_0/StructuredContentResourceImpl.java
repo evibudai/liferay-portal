@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.content.internal.resource.v1_0;
@@ -27,7 +18,7 @@ import com.liferay.headless.admin.content.internal.dto.v1_0.extension.ExtensionS
 import com.liferay.headless.admin.content.internal.dto.v1_0.util.VersionUtil;
 import com.liferay.headless.admin.content.internal.odata.entity.v1_0.StructuredContentEntityModel;
 import com.liferay.headless.admin.content.resource.v1_0.StructuredContentResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.ContentField;
 import com.liferay.headless.delivery.dto.v1_0.StructuredContent;
 import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
@@ -80,16 +71,14 @@ import com.liferay.portal.vulcan.util.LocalDateTimeUtil;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.io.Serializable;
-
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.ws.rs.BadRequestException;
@@ -177,7 +166,6 @@ public class StructuredContentResourceImpl
 				}
 
 				searchContext.setCompanyId(contextCompany.getCompanyId());
-
 				searchContext.setGroupIds(new long[] {siteId});
 
 				SearchRequestBuilder searchRequestBuilder =
@@ -250,13 +238,9 @@ public class StructuredContentResourceImpl
 
 		return Page.of(
 			transform(
-				_journalArticleService.search(
-					journalArticle.getCompanyId(), journalArticle.getGroupId(),
-					Collections.singletonList(journalArticle.getFolderId()),
-					journalArticle.getClassNameId(),
-					journalArticle.getArticleId(), null, null, null, null,
-					(String)null, null, null, null, null,
-					WorkflowConstants.STATUS_APPROVED, true, QueryUtil.ALL_POS,
+				_journalArticleService.getArticlesByArticleId(
+					journalArticle.getGroupId(), journalArticle.getArticleId(),
+					WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS, null),
 				this::_toExtensionStructuredContent));
 	}
@@ -295,21 +279,28 @@ public class StructuredContentResourceImpl
 			structuredContent.getContentFields(), ddmStructure);
 
 		LocalDateTime localDateTime = LocalDateTimeUtil.toLocalDateTime(
-			structuredContent.getDatePublished());
+			structuredContent.getDatePublished(), null,
+			ZoneId.of(contextUser.getTimeZoneId()));
 
-		ServiceContext serviceContext =
-			ServiceContextRequestUtil.createServiceContext(
-				structuredContent.getTaxonomyCategoryIds(),
-				structuredContent.getKeywords(),
-				_getExpandoBridgeAttributes(structuredContent), siteId,
-				contextHttpServletRequest,
-				structuredContent.getViewableByAsString());
+		ServiceContext serviceContext = ServiceContextBuilder.create(
+			siteId, contextHttpServletRequest,
+			structuredContent.getViewableByAsString()
+		).assetCategoryIds(
+			structuredContent.getTaxonomyCategoryIds()
+		).assetTagNames(
+			structuredContent.getKeywords()
+		).expandoBridgeAttributes(
+			CustomFieldsUtil.toMap(
+				JournalArticle.class.getName(), contextCompany.getCompanyId(),
+				structuredContent.getCustomFields(),
+				contextAcceptLanguage.getPreferredLocale())
+		).build();
 
-		Optional.ofNullable(
-			structuredContent.getPriority()
-		).ifPresent(
-			serviceContext::setAssetPriority
-		);
+		Double priority = structuredContent.getPriority();
+
+		if (priority != null) {
+			serviceContext.setAssetPriority(priority);
+		}
 
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
@@ -327,13 +318,12 @@ public class StructuredContentResourceImpl
 						_getRootDDMFormFields(ddmStructure)),
 					_jsonDDMFormValuesSerializer, _ddmFormValuesValidator,
 					ddmStructure, _journalConverter),
-				ddmStructure.getStructureKey(),
-				_getDDMTemplateKey(ddmStructure), null,
-				localDateTime.getMonthValue() - 1,
+				ddmStructure.getStructureId(), _getDDMTemplateKey(ddmStructure),
+				null, localDateTime.getMonthValue() - 1,
 				localDateTime.getDayOfMonth(), localDateTime.getYear(),
 				localDateTime.getHour(), localDateTime.getMinute(), 0, 0, 0, 0,
-				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
-				null, serviceContext));
+				0, true, 0, 0, 0, 0, 0, true, true, false, 0, 0, null, null,
+				null, null, serviceContext));
 	}
 
 	private String _getDDMTemplateKey(DDMStructure ddmStructure) {
@@ -346,15 +336,6 @@ public class StructuredContentResourceImpl
 		DDMTemplate ddmTemplate = ddmTemplates.get(0);
 
 		return ddmTemplate.getTemplateKey();
-	}
-
-	private Map<String, Serializable> _getExpandoBridgeAttributes(
-		StructuredContent structuredContent) {
-
-		return CustomFieldsUtil.toMap(
-			JournalArticle.class.getName(), contextCompany.getCompanyId(),
-			structuredContent.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
 	}
 
 	private List<DDMFormField> _getRootDDMFormFields(

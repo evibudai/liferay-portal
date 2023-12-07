@@ -46,6 +46,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>EDIT_VARIANT_BUTTON</td>
+	<td>//p[contains(.,'${key_variantName}')]/../..//button[contains(@class,'btn-outline-secondary') and *[name()='svg'][contains(@class,'lexicon-icon-pencil')]]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ELEMENT_ID_INPUT</td>
 	<td>//input[@id='clickableElement']</td>
 	<td></td>
@@ -68,6 +73,11 @@
 <tr>
 	<td>IMAGE_SUCCESS</td>
 	<td>//img[contains(@src,'/o/segments-experiment-web/images/success.gif')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>IMPROVEMENT_NUMBER</td>
+	<td>//button[@data-title='${key_variantName}']//ancestor::tr//td[text()]</td>
 	<td></td>
 </tr>
 <tr>
@@ -111,11 +121,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>TAB</td>
-	<td>//*[contains(@class,'sidebar-body')]//*[@role="tablist"]//button[contains(text(),'${tabValue}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>TARGET_ELEMENT</td>
 	<td>//div[contains(@class,"lfr-segments-experiment-click-goal-target-overlay-selected") and contains(@data-target-selector, "${key_idElement}")]</td>
 	<td></td>
@@ -137,7 +142,7 @@
 </tr>
 <tr>
 	<td>VARIANT_DROPDOWN</td>
-	<td>xpath=(//div[@class='autofit-col']//*[contains(@class, 'dropdown-toggle btn-monospaced btn btn-outline-borderless btn-outline-secondary')])[${key_index}]</td>
+	<td>xpath=((//*[contains(@class,'sheet-subtitle')][normalize-space()='Variants']//following-sibling::div//button[contains(@class,'dropdown-toggle')]))[${key_index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -156,6 +161,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>VIEW_DATA_ANALYTICS_CLOUD_BUTTON</td>
+	<td>//*[contains(@class,'link-secondary') and text()='View Data in Analytics Cloud']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>VIEW_INFO_ITEMS</td>
 	<td>xpath=(//label[contains(@class,'form-group-autofit')])[${key_index}]//*[contains(text(),'${key_value}')]</td>
 	<td></td>
@@ -163,11 +173,6 @@
 <tr>
 	<td>VIEW_ESTIMATED_TIME</td>
 	<td>//div[contains(@class,'d-flex')]//label[contains(text(),'${key_name}')]/parent::div/following-sibling::p//span[contains(text(),'${key_value}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>VIEW_TEST_STATUS_ANALYTICS_CLOUD</td>
-	<td>//h3[contains(.,'t') and contains(text(),'${status}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -183,6 +188,16 @@
 <tr>
 	<td>X_BUTTON_TARGET_ID_ELEMENT</td>
 	<td>//button[contains(@class, 'lfr-segments-experiment-click-goal-target-delete')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLISH_VARIANT</td>
+	<td>//button[@data-title='${key_variantName}']/../../following-sibling::td[2]//button[@data-title='Publish']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CLOSED_ADMIN_PANEL</td>
+	<td>//div[contains(@id,'segmentsExperimentPanelId') and not(contains(@class,'open-admin-panel'))]</td>
 	<td></td>
 </tr>
 </tbody>

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useResource} from '@clayui/data-provider';
@@ -23,7 +14,7 @@ import {
 import {fetch} from 'frontend-js-web';
 import React, {useEffect, useMemo} from 'react';
 
-import Select from '../Select/Select.es';
+import Select from '../Select/Select';
 
 const dataTypes = {
 	double: ['double', 'bigdecimal'],
@@ -62,10 +53,15 @@ const ObjectField = ({
 			({
 				businessType,
 				listTypeDefinitionExternalReferenceCode,
+				localized,
 				relationshipType,
 				system,
 				type,
 			}) => {
+				if (businessType === 'AutoIncrement') {
+					return false;
+				}
+
 				if (
 					!listTypeDefinitionExternalReferenceCode &&
 					(focusedFieldType === 'radio' ||
@@ -83,6 +79,9 @@ const ObjectField = ({
 						focusedFieldType === 'text') &&
 					normalizedDataType.includes(type.toLowerCase())
 				) {
+					return false;
+				}
+				else if (localized) {
 					return false;
 				}
 				else if (
@@ -181,12 +180,14 @@ const ObjectDefinitionObjectField = ({
 	}, [objectDefinitionId, previousObjectDefinitionId, refetch]);
 
 	const options =
-		resource?.objectFields?.map(({label, name}) => {
-			return {
-				label: label[themeDisplay.getDefaultLanguageId()] ?? name,
-				value: name,
-			};
-		}) || [];
+		resource?.objectFields
+			?.filter(({localized}) => !localized)
+			.map(({label, name}) => {
+				return {
+					label: label[themeDisplay.getDefaultLanguageId()] ?? name,
+					value: name,
+				};
+			}) || [];
 
 	return (
 		<Select

@@ -1,7 +1,8 @@
 definition {
 
-	macro activateScheduleTrigger {
-		LexiconEntry.gotoEntry(rowEntry = "${trigger}");
+	@summary = "Activate a Job Scheduler Trigger"
+	macro activateScheduleTrigger(cronExpression = null, trigger = null) {
+		LexiconEntry.gotoEntry(rowEntry = ${trigger});
 
 		Navigator.gotoNavTab(navTab = "Job Scheduler Trigger");
 
@@ -10,7 +11,7 @@ definition {
 		Type(
 			key_text = "Cron Expression",
 			locator1 = "TextInput#ANY",
-			value1 = "${cronExpression}");
+			value1 = ${cronExpression});
 
 		Button.clickSave();
 
@@ -19,19 +20,20 @@ definition {
 		Button.clickCancel();
 	}
 
-	macro addScheduleTrigger {
+	@summary = "Add a Job Scheduler Trigger"
+	macro addScheduleTrigger(triggerName = null, triggerProperties = null, taskExecutorType = null) {
 		Click(locator1 = "Button#NEW");
 
-		MenuItem.click(menuItem = "${taskExecutorType}");
+		MenuItem.click(menuItem = ${taskExecutorType});
 
 		Type(
 			locator1 = "TextInput#NAME",
-			value1 = "${triggerName}");
+			value1 = ${triggerName});
 
 		if (isSet(triggerProperties)) {
 			Type.typeAceEditor(
 				locator1 = "TextArea#ACE_EDITOR",
-				value1 = "${triggerProperties}");
+				value1 = ${triggerProperties});
 		}
 
 		Button.clickSave();
@@ -39,11 +41,12 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro deleteJobItem {
-		Variables.assertDefined(parameterList = "${jobItemName}");
+	@summary = "Delete a Job Scheduler item"
+	macro deleteJobItem(jobItemName = null) {
+		Variables.assertDefined(parameterList = ${jobItemName});
 
 		Click(
-			key_name = "${jobItemName}",
+			key_name = ${jobItemName},
 			locator1 = "JobScheduler#JOB_ITEM_KEBAB_MENU");
 
 		ClickNoError(
@@ -55,21 +58,36 @@ definition {
 		Alert.viewSuccessMessage();
 
 		AssertElementNotPresent(
-			key_name = "${jobItemName}",
+			key_name = ${jobItemName},
 			locator1 = "JobScheduler#JOB_ITEM_NAME");
 	}
 
-	macro openJobSchedulerAdmin {
+	@summary = "Edit a Job Scheduler Item"
+	macro editJobItem(jobItemName = null) {
+		Variables.assertDefined(parameterList = ${jobItemName});
+
+		Click(
+			key_name = ${jobItemName},
+			locator1 = "JobScheduler#JOB_ITEM_KEBAB_MENU");
+
+		ClickNoError(
+			key_option = "Edit",
+			locator1 = "JobScheduler#KEBAB_MENU_OPTION");
+	}
+
+	@summary = "Open the Job Scheduler Admin page"
+	macro openJobSchedulerAdmin(baseURL = null) {
 		Navigator.openWithAppendToBaseURL(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_dispatch_web_internal_portlet_DispatchPortlet");
 	}
 
-	macro setJobSchedulerTrigger {
+	@summary = "Set a Job scheduler Trigger"
+	macro setJobSchedulerTrigger(key_name = null, selectFieldValue = null, selectFieldLabel = null) {
 		Variables.assertDefined(parameterList = "${key_name},${selectFieldLabel},${selectFieldValue}");
 
 		Click(
-			key_name = "${key_name}",
+			key_name = ${key_name},
 			locator1 = "JobScheduler#JOB_ITEM_NAME");
 
 		Click(
@@ -77,8 +95,8 @@ definition {
 			locator1 = "NavTab#TAB_LINK");
 
 		SelectField.select(
-			selectFieldLabel = "${selectFieldLabel}",
-			selectFieldValue = "${selectFieldValue}");
+			selectFieldLabel = ${selectFieldLabel},
+			selectFieldValue = ${selectFieldValue});
 
 		Button.clickSave();
 

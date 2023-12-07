@@ -15,16 +15,16 @@ definition {
 			layoutName = "Documents and Media Page");
 
 		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
+			column = 1,
 			groupName = "Guest",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -38,7 +38,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanAddDocumentInFolder {
 		property custom.properties = "dl.actions.visible=true";
@@ -62,7 +62,7 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "Document_1.doc");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddImageInFolder {
 		property custom.properties = "dl.actions.visible=true";
@@ -90,7 +90,7 @@ definition {
 	}
 
 	@description = "We only need one test to cover performing actions in a subfolder. The rest of the subfolder cases will be covered at the folder level."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddImageInSubFolder {
 		property custom.properties = "dl.actions.visible=true";
@@ -124,7 +124,7 @@ definition {
 			dmDocumentTitle = "DM Image Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddMultipleSubFolders {
 		property custom.properties = "dl.actions.visible=true";
@@ -156,7 +156,112 @@ definition {
 		DMFolder.viewEntryPresent(dmFolderName = "DM SubFolder2 Name");
 	}
 
-	@priority = "5"
+	@description = "This test ensures that Users can copy multiple folders with documents at the same time."
+	@priority = 5
+	test CanBulkCopyFoldersWithFiles {
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		for (var entryCount : list "1,2,3") {
+			JSONFolder.addFolder(
+				dmFolderDescription = "DM Folder Description",
+				dmFolderName = "DM Folder Name ${entryCount}",
+				groupName = "Guest");
+		}
+
+		for (var entryCount : list "1,2,3") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "DM Document Title",
+				folderName = "DM Folder Name ${entryCount}",
+				groupName = "Guest",
+				mimeType = "application/msword",
+				sourceFileName = "Document_1.doc");
+		}
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMFolder.deleteCP(dmFolderName = "Provided by Liferay");
+
+		PortletEntry.selectAll();
+
+		DMNavigator.gotoItemViaManagementBar(
+			item = "dropdownMenu",
+			menuItem = "Copy To");
+
+		DMFolder.copy(
+			bulkCopy = "true",
+			homeFolder = "true",
+			siteName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		for (var entryCount : list "1,2,3") {
+			DMNavigator.gotoFolder(dmFolderName = "DM Folder Name ${entryCount}");
+
+			LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+		}
+	}
+
+	@priority = 3
+	test CanChangeRatingTypeForFolder {
+		var responseFromFolder = DocumentFolderAPI.addDocumentFolder(
+			groupName = "Guest",
+			name = "DM Folder Name");
+
+		Ratings.configureRatingType(
+			applications = "document",
+			portlet = "Ratings",
+			ratingType = "Like",
+			siteURLKey = "guest");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
+
+		DMDocument.expandInfo();
+
+		Ratings.rateLike();
+
+		Ratings.viewRateLike(ratingLikeCount = 1);
+	}
+
+	@description = "This test ensures that a folder can be copied to the global site folder."
+	@priority = 5
+	test CanCopyFolderToGlobalSite {
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Guest");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			folderName = "DM Folder Name",
+			groupName = "Guest",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMFolder.copy(
+			dmFolderName = "DM Folder Name",
+			homeFolder = "true",
+			siteName = "Global");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Folder Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "global");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
+
+		LexiconEntry.viewEntryName(rowEntry = "DM Document Title");
+	}
+
+	@priority = 5
 	@refactordone
 	test CanDeleteDocumentInFolder {
 		property custom.properties = "dl.actions.visible=true";
@@ -183,7 +288,7 @@ definition {
 		DMDocument.deletePG(dmDocumentTitle = "DM Document Title");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanDeleteFolderWithDocument {
 		property custom.properties = "dl.actions.visible=true";
@@ -211,11 +316,27 @@ definition {
 		DMFolder.deletePG(dmFolderName = "DM Folder Name");
 	}
 
-	@priority = "5"
+	@priority = 3
+	test CanDeleteRatingForFolder {
+		var responseFromFolder = DocumentFolderAPI.addDocumentFolder(
+			groupName = "Guest",
+			name = "DM Folder Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
+
+		DMDocument.expandInfo();
+
+		Ratings.rateStar(ratingStarCount = 5);
+
+		Ratings.revokeStarsRating();
+	}
+
+	@priority = 4
 	@refactordone
 	test CanDeleteSubFolderInSite {
 		property custom.properties = "dl.actions.visible=true";
-		property portal.acceptance = "true";
 
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
@@ -239,7 +360,7 @@ definition {
 		DMFolder.deletePG(dmFolderName = "DM SubFolder Name");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditFolder {
 		property portal.acceptance = "true";
@@ -260,7 +381,32 @@ definition {
 		DMFolder.viewCP(dmFolderName = "DM Folder Name Name");
 	}
 
-	@priority = "5"
+	@priority = 3
+	test CanEditRatingForFolder {
+		var responseFromFolder = DocumentFolderAPI.addDocumentFolder(
+			groupName = "Guest",
+			name = "DM Folder Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
+
+		DMDocument.expandInfo();
+
+		Ratings.rateStar(ratingStarCount = 5);
+
+		Ratings.viewRateStar(
+			averageRatingStarCount = "5.0",
+			ratingStarCount = 5);
+
+		Ratings.rateStar(ratingStarCount = 3);
+
+		Ratings.viewRateStar(
+			averageRatingStarCount = "3.0",
+			ratingStarCount = 3);
+	}
+
+	@priority = 5
 	@refactordone
 	test CanEditSubFolder {
 		property custom.properties = "dl.actions.visible=true";
@@ -290,7 +436,7 @@ definition {
 	}
 
 	@description = "This case ensures that a document can be viewed after being moved into a folder."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanMoveDocumentToFolder {
 		property portal.acceptance = "true";
@@ -326,7 +472,7 @@ definition {
 			locationFieldName = "true");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanMoveDocumentWithSlashesInTitle {
 		property custom.properties = "dl.actions.visible=true";
@@ -356,7 +502,7 @@ definition {
 		DMDocument.viewPG(dmDocumentTitle = "/D/M/Document Title");
 	}
 
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanMoveFolderToFolder {
 		property portal.acceptance = "true";
@@ -380,7 +526,7 @@ definition {
 	}
 
 	@description = "This ensures that a folder can be moved to another folder via drag and drop."
-	@priority = "4"
+	@priority = 4
 	test CanMoveFolderToFolderViaDragAndDrop {
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description1",
@@ -414,7 +560,7 @@ definition {
 	}
 
 	@description = "This case covers LPS-127681. It ensures that a subfolder cannot be moved to parent folder when they are using same name."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanMoveFolderToParentWithSameName {
 		JSONFolder.addFolder(
@@ -439,12 +585,12 @@ definition {
 			moveSubfolder = "true");
 	}
 
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanMoveFolderToRecycleBin {
 		property portal.acceptance = "true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
@@ -456,6 +602,53 @@ definition {
 		DMFolder.moveToRecycleBinCP(
 			assetType = "Documents Folder",
 			dmFolderName = "DM Folder Name");
+	}
+
+	@description = "This test ensures that an error is displayed when copying a duplicated folder."
+	@priority = 4
+	test CannotCopyDuplicatedDocument {
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Guest");
+
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMFolder.copy(
+			copyDuplicatedDocument = "true",
+			dmFolderName = "DM Folder Name",
+			homeFolder = "true",
+			siteName = "Site Name");
+	}
+
+	@priority = 3
+	test ViewRatingForFolderAfterPostByAPI {
+		var responseFromFolder = DocumentFolderAPI.addDocumentFolder(
+			groupName = "Guest",
+			name = "DM Folder Name");
+
+		var documentFolderId = JSONPathUtil.getIdValue(response = ${responseFromFolder});
+
+		var response = DocumentFolderAPI.postRatingWithFolderID(
+			folderId = ${documentFolderId},
+			ratingValue = 1);
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
+
+		DMDocument.expandInfo();
+
+		Ratings.viewRateStar(
+			averageRatingStarCount = "5.0",
+			ratingStarCount = 5);
 	}
 
 }

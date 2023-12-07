@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.account.admin.web.internal.portlet.action;
 
 import com.liferay.account.admin.web.internal.constants.AccountWebKeys;
 import com.liferay.account.admin.web.internal.display.AccountEntryDisplayFactoryUtil;
+import com.liferay.account.admin.web.internal.display.AddressDisplay;
 import com.liferay.account.constants.AccountPortletKeys;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -52,6 +44,13 @@ public class EditAccountEntryAddressMVCRenderCommand
 			AccountWebKeys.ACCOUNT_ENTRY_DISPLAY,
 			AccountEntryDisplayFactoryUtil.create(
 				accountEntryId, renderRequest));
+
+		long accountEntryAddressId = ParamUtil.getLong(
+			renderRequest, "accountEntryAddressId");
+
+		renderRequest.setAttribute(
+			AccountWebKeys.ADDRESS_DISPLAY,
+			AddressDisplay.of(accountEntryAddressId));
 
 		return "/account_entries_admin/edit_account_entry_address.jsp";
 	}

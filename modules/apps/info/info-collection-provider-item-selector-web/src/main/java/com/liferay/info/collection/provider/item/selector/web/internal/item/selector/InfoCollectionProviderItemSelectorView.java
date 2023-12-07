@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.info.collection.provider.item.selector.web.internal.item.selector;
@@ -23,15 +14,16 @@ import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletURL;
 
@@ -68,10 +60,7 @@ public class InfoCollectionProviderItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, getClass());
-
-		return _language.get(resourceBundle, "collection-providers");
+		return _language.get(locale, "collection-providers");
 	}
 
 	@Override
@@ -82,31 +71,46 @@ public class InfoCollectionProviderItemSelectorView
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
 
+		HttpServletRequest httpServletRequest =
+			(HttpServletRequest)servletRequest;
+
 		_itemSelectorViewDescriptorRenderer.renderHTML(
 			servletRequest, servletResponse,
 			infoCollectionProviderItemSelectorCriterion, portletURL,
 			itemSelectedEventName, search,
 			new InfoCollectionProviderItemSelectorViewDescriptor(
-				(HttpServletRequest)servletRequest, portletURL,
+				httpServletRequest, portletURL,
 				_getInfoCollectionProviders(
+					httpServletRequest,
 					infoCollectionProviderItemSelectorCriterion),
 				_infoItemServiceRegistry));
 	}
 
 	private List<InfoCollectionProvider<?>> _getInfoCollectionProviders(
+		HttpServletRequest httpServletRequest,
 		InfoCollectionProviderItemSelectorCriterion
 			infoCollectionProviderItemSelectorCriterion) {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (infoCollectionProviderItemSelectorCriterion.getType() ==
 				InfoCollectionProviderItemSelectorCriterion.Type.
 					SUPPORTED_INFO_FRAMEWORK_COLLECTIONS) {
 
 			return Collections.unmodifiableList(
-				ListUtil.filter(
-					_infoItemServiceRegistry.getAllInfoItemServices(
-						(Class<InfoCollectionProvider<?>>)
-							(Class<?>)InfoCollectionProvider.class),
-					InfoCollectionProvider::isAvailable));
+				ListUtil.sort(
+					ListUtil.filter(
+						_infoItemServiceRegistry.getAllInfoItemServices(
+							(Class<InfoCollectionProvider<?>>)
+								(Class<?>)InfoCollectionProvider.class),
+						InfoCollectionProvider::isAvailable),
+					Comparator.comparing(
+						infoCollectionProvider ->
+							infoCollectionProvider.getLabel(
+								themeDisplay.getLocale()),
+						String.CASE_INSENSITIVE_ORDER)));
 		}
 
 		String itemType =
@@ -120,12 +124,17 @@ public class InfoCollectionProviderItemSelectorView
 		}
 
 		return Collections.unmodifiableList(
-			ListUtil.filter(
-				_infoItemServiceRegistry.getAllInfoItemServices(
-					(Class<InfoCollectionProvider<?>>)
-						(Class<?>)InfoCollectionProvider.class,
-					itemType),
-				InfoCollectionProvider::isAvailable));
+			ListUtil.sort(
+				ListUtil.filter(
+					_infoItemServiceRegistry.getAllInfoItemServices(
+						(Class<InfoCollectionProvider<?>>)
+							(Class<?>)InfoCollectionProvider.class,
+						itemType),
+					InfoCollectionProvider::isAvailable),
+				Comparator.comparing(
+					infoCollectionProvider -> infoCollectionProvider.getLabel(
+						themeDisplay.getLocale()),
+					String.CASE_INSENSITIVE_ORDER)));
 	}
 
 	private static final List<ItemSelectorReturnType>

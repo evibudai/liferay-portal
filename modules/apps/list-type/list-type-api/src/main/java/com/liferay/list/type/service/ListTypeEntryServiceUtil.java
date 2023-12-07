@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.list.type.service;
@@ -40,12 +31,12 @@ public class ListTypeEntryServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.list.type.service.impl.ListTypeEntryServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static ListTypeEntry addListTypeEntry(
-			long listTypeDefinitionId, String key,
+			String externalReferenceCode, long listTypeDefinitionId, String key,
 			Map<java.util.Locale, String> nameMap)
 		throws PortalException {
 
 		return getService().addListTypeEntry(
-			listTypeDefinitionId, key, nameMap);
+			externalReferenceCode, listTypeDefinitionId, key, nameMap);
 	}
 
 	public static ListTypeEntry deleteListTypeEntry(long listTypeEntryId)
@@ -74,6 +65,15 @@ public class ListTypeEntryServiceUtil {
 		return getService().getListTypeEntry(listTypeEntryId);
 	}
 
+	public static ListTypeEntry getListTypeEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId,
+			long listTypeDefinitionId)
+		throws PortalException {
+
+		return getService().getListTypeEntryByExternalReferenceCode(
+			externalReferenceCode, companyId, listTypeDefinitionId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -84,14 +84,20 @@ public class ListTypeEntryServiceUtil {
 	}
 
 	public static ListTypeEntry updateListTypeEntry(
-			long listTypeEntryId, Map<java.util.Locale, String> nameMap)
+			String externalReferenceCode, long listTypeEntryId,
+			Map<java.util.Locale, String> nameMap)
 		throws PortalException {
 
-		return getService().updateListTypeEntry(listTypeEntryId, nameMap);
+		return getService().updateListTypeEntry(
+			externalReferenceCode, listTypeEntryId, nameMap);
 	}
 
 	public static ListTypeEntryService getService() {
 		return _service;
+	}
+
+	public static void setService(ListTypeEntryService service) {
+		_service = service;
 	}
 
 	private static volatile ListTypeEntryService _service;

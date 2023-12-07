@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.internal.importer.structure.util;
@@ -37,10 +28,12 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -70,6 +63,10 @@ public class CollectionLayoutStructureItemImporter
 			collectionStyledLayoutStructureItem =
 				(CollectionStyledLayoutStructureItem)
 					layoutStructure.addCollectionStyledLayoutStructureItem(
+						_getCollectionItemId(
+							layoutStructureItemImporterContext, pageElement),
+						layoutStructureItemImporterContext.getItemId(
+							pageElement),
 						layoutStructureItemImporterContext.getParentItemId(),
 						layoutStructureItemImporterContext.getPosition());
 
@@ -155,9 +152,7 @@ public class CollectionLayoutStructureItemImporter
 
 		collectionStyledLayoutStructureItem.setPaginationType(
 			_toPaginationType((String)definitionMap.get("paginationType")));
-
 		collectionStyledLayoutStructureItem.setShowAllItems(showAllItems);
-
 		collectionStyledLayoutStructureItem.setTemplateKey(
 			(String)definitionMap.get("templateKey"));
 
@@ -248,6 +243,19 @@ public class CollectionLayoutStructureItemImporter
 		}
 
 		return null;
+	}
+
+	private String _getCollectionItemId(
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext,
+		PageElement pageElement) {
+
+		PageElement[] pageElements = pageElement.getPageElements();
+
+		if (ArrayUtil.isEmpty(pageElements)) {
+			return PortalUUIDUtil.generate();
+		}
+
+		return layoutStructureItemImporterContext.getItemId(pageElements[0]);
 	}
 
 	private JSONObject _getCollectionJSONObject(

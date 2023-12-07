@@ -2,7 +2,7 @@
 definition {
 
 	property portal.release = "false";
-	property portal.upstream = "true";
+	property portal.upstream = "quarentine";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Raylife D2C";
 
@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,11 +34,11 @@ definition {
 	}
 
 	@description = "LPS-147344 - Verify if Previous button in the 'Does your business operate year round?' subsection goes back to 'What year did you start your business?' subsection (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test CanBackPageWithPreviousButtonPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -59,7 +62,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -73,11 +76,11 @@ definition {
 	}
 
 	@description = "LPS-147340 - Verify that the Continue button is only enabled when the field 'What is your estimated annual gross revenue for the next 12 months?' and filled in (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test CanClickTheOptionsInAnnualGrossPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -101,7 +104,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -111,7 +114,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.partTimeEmployees",
-			value = "200");
+			value = 200);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -127,11 +130,11 @@ definition {
 	}
 
 	@description = "LPS-147343 - Verify that the Continue button is only enabled when the field 'What do you anticipate your annual payroll will be for all employees over the next 12 months?' and filled in (Smartphone"
-	@priority = "5"
+	@priority = 5
 	test CanClickTheOptionsInAnnualPayrollEmployeesPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -155,7 +158,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -165,7 +168,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.partTimeEmployees",
-			value = "200");
+			value = 200);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -193,11 +196,11 @@ definition {
 	}
 
 	@description = "LPS-147341 - Verify that the Continue button is only enabled when the field 'What do you anticipate your annual payroll will be for all owner(s) over the next 12 months?' and filled in (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test CanClickTheOptionsInAnnualPayrollPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -221,7 +224,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -231,7 +234,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.partTimeEmployees",
-			value = "200");
+			value = 200);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -253,11 +256,11 @@ definition {
 	}
 
 	@description = "LPS-147338 - Verify that when the user clicks on any option on the 'Does your business operate year round?' page they go directly to the next page. (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test CanClickTheOptionsInBusinessOperatePhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -281,7 +284,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -297,11 +300,11 @@ definition {
 	}
 
 	@description = "LPS-147339 -  Verify that the Continue button is only enabled when the field 'How many full or part time employees do you have?' and filled in (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test CanClickTheOptionsInTimeEmployeesPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -325,7 +328,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		Click(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -337,7 +340,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.partTimeEmployees",
-			value = "200");
+			value = 200);
 
 		AssertElementPresent(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -345,11 +348,11 @@ definition {
 	}
 
 	@description = "LPS-147346 - Verify if previous to the Business page and back to the Employees page, all information is present (Tablet)"
-	@priority = "5"
+	@priority = 5
 	test CanViewAllInformationBackPageTablet {
 		SetWindowSize(value1 = "800,1024");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -373,11 +376,11 @@ definition {
 	}
 
 	@description = "LPS-147345 - Verify if Continue Button is only enabled when all required fields have been filled in Employees (Tablet)"
-	@priority = "5"
+	@priority = 5
 	test CanViewContinueButtonActivatedTablet {
 		SetWindowSize(value1 = "800,1024");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -399,11 +402,11 @@ definition {
 	}
 
 	@description = "LPS-147334 - Verify that the Continue button is only enabled when the field 'Federal Employer Identification Number (FEIN)?' and filled in (in case previous question was answered as yes) (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test ContinueButtonActivatedInEmployerIdentificationPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -431,11 +434,11 @@ definition {
 	}
 
 	@description = "LPS-147336 - Verify that the Continue button is only enabled when the field 'What year did you start your business?' and filled in (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test ContinueButtonActivatedInStartYourBusinessPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -461,7 +464,7 @@ definition {
 
 		RaylifeEmployees.typeEmployeesInfoFields(
 			label = "employees.startBusinessAtYear",
-			value = "2000");
+			value = 2000);
 
 		AssertElementPresent(locator1 = "Raylife#BUTTON_CONTINUE");
 
@@ -469,11 +472,11 @@ definition {
 	}
 
 	@description = "LPS-147333 - Verify that when the user clicks on the 'No' option on the 'Does your company have a Federal Employer Identification Number (FEIN)?' page, the 'Continue' button is enabled (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test ContinueButtonEnabledWhenNoOptionIsSelectedPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -497,11 +500,11 @@ definition {
 	}
 
 	@description = "LPS-147321 - Verify that when the user clicks on the 'Yes' option on the 'Does your company have a Federal Employer Identification Number (FEIN)?' page, the 'Employer Identification' field appears (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test FieldAppearsWhenClickYesOnOptionPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 
@@ -523,11 +526,11 @@ definition {
 	}
 
 	@description = "LPS-147332 - Verify that when the user clicks on the 'No' option on the 'Does your company have a Federal Employer Identification Number (FEIN)?' page, the 'Employer Identification' field does not appear (Smartphone)"
-	@priority = "5"
+	@priority = 5
 	test FieldDoesNotAppearWhenTheNoOptionIsClickedPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.startFlow();
 

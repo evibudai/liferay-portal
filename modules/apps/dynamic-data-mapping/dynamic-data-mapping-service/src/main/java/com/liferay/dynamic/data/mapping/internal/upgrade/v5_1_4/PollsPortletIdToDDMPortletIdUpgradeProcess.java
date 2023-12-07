@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.upgrade.v5_1_4;
@@ -40,23 +31,10 @@ public class PollsPortletIdToDDMPortletIdUpgradeProcess
 				_PORTLET_ID_POLLS, "' OR name = '", _PORTLET_ID_POLLS_DISPLAY,
 				"'"));
 
+		removeDuplicatePortletPreferences();
+
 		super.doUpgrade();
 
-		_upgradePortletPreferenceValue();
-	}
-
-	@Override
-	protected String[][] getRenamePortletIdsArray() {
-		return new String[][] {
-			{_PORTLET_ID_POLLS, DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN},
-			{
-				_PORTLET_ID_POLLS_DISPLAY,
-				DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM
-			}
-		};
-	}
-
-	private void _upgradePortletPreferenceValue() throws Exception {
 		try (PreparedStatement selectPreparedStatement =
 				connection.prepareStatement(
 					StringBundler.concat(
@@ -79,6 +57,43 @@ public class PollsPortletIdToDDMPortletIdUpgradeProcess
 			}
 
 			updatePreparedStatement.executeBatch();
+		}
+	}
+
+	@Override
+	protected String[][] getRenamePortletIdsArray() {
+		return new String[][] {
+			{_PORTLET_ID_POLLS, DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN},
+			{
+				_PORTLET_ID_POLLS_DISPLAY,
+				DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM
+			}
+		};
+	}
+
+	protected void removeDuplicatePortletPreferences() throws Exception {
+		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
+				StringBundler.concat(
+					"select ownerId, ownerType, plid from PortletPreferences ",
+					"where portletId = '", _PORTLET_ID_POLLS, "'"));
+			ResultSet resultSet = preparedStatement1.executeQuery();
+			PreparedStatement preparedStatement2 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"delete from PortletPreferences where ownerId = ? and " +
+						"ownerType = ? and plid = ? and portletId = ?")) {
+
+			while (resultSet.next()) {
+				preparedStatement2.setLong(1, resultSet.getLong(1));
+				preparedStatement2.setInt(2, resultSet.getInt(2));
+				preparedStatement2.setLong(3, resultSet.getLong(3));
+				preparedStatement2.setString(
+					4, DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN);
+
+				preparedStatement2.addBatch();
+			}
+
+			preparedStatement2.executeBatch();
 		}
 	}
 

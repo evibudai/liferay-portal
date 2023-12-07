@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -61,7 +52,9 @@ if (stageableGroup.isLayout()) {
 						%>
 
 						<c:if test="<%= !stageableGroup.hasStagingGroup() %>">
-							<th></th>
+							<th>
+								<span class="sr-only"><liferay-ui:message key="item-actions" /></span>
+							</th>
 						</c:if>
 					</tr>
 				</thead>
@@ -70,7 +63,7 @@ if (stageableGroup.isLayout()) {
 
 					<%
 					for (AssetEntry assetEntry : assetEntryResult.getAssetEntries()) {
-						AssetRendererFactory<?> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassNameId(assetEntry.getClassNameId());
+						AssetRendererFactory<?> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(assetEntry.getClassName());
 
 						if (assetRendererFactory == null) {
 							continue;
@@ -163,17 +156,17 @@ if (stageableGroup.isLayout()) {
 										String value = null;
 
 										if (Objects.equals(metadataField, "create-date")) {
-											value = dateFormatDate.format(assetEntry.getCreateDate());
+											value = dateFormat.format(assetEntry.getCreateDate());
 										}
 										else if (Objects.equals(metadataField, "modified-date")) {
-											value = dateFormatDate.format(assetEntry.getModifiedDate());
+											value = dateFormat.format(assetEntry.getModifiedDate());
 										}
 										else if (Objects.equals(metadataField, "publish-date")) {
 											if (assetEntry.getPublishDate() == null) {
 												value = StringPool.BLANK;
 											}
 											else {
-												value = dateFormatDate.format(assetEntry.getPublishDate());
+												value = dateFormat.format(assetEntry.getPublishDate());
 											}
 										}
 										else if (Objects.equals(metadataField, "expiration-date")) {
@@ -181,7 +174,7 @@ if (stageableGroup.isLayout()) {
 												value = StringPool.BLANK;
 											}
 											else {
-												value = dateFormatDate.format(assetEntry.getExpirationDate());
+												value = dateFormat.format(assetEntry.getExpirationDate());
 											}
 										}
 										else if (Objects.equals(metadataField, "priority")) {

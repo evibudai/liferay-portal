@@ -1,6 +1,7 @@
 @component-name = "portal-gradle-tools"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Gradle Tools";
@@ -10,17 +11,18 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "Verify a module can be deployed after adding a hotfix qualifier to its build version"
-	@priority = "3"
+	@priority = 3
 	test HotfixQualifierSmoke {
-		property test.name.skip.portal.instance = "GradleTools#HotfixQualifierSmoke";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a hotfix qualifier is added to a module's build version") {
 			var hotfixQualifier = ".hotfix-0-8000";
@@ -31,18 +33,16 @@ definition {
 			for (var file : list "bnd.bnd,package.json") {
 				var fileContent = FileUtil.read("${projectDir}/${moduleBaseDir}/${file}");
 
-				var bundleVersion = RegexUtil.replace("${fileContent}", "[Vv]ersion\"?: \"?(.*[0-9])", "1");
+				var bundleVersion = RegexUtil.replace(${fileContent}, "[Vv]ersion\"?: \"?(.*[0-9])", 1);
 
-				var fileContent = StringUtil.replace("${fileContent}", "${bundleVersion}", "${bundleVersion}${hotfixQualifier}");
+				var fileContent = StringUtil.replace(${fileContent}, ${bundleVersion}, "${bundleVersion}${hotfixQualifier}");
 
-				FileUtil.write("${projectDir}/${moduleBaseDir}/${file}", "${fileContent}");
+				FileUtil.write("${projectDir}/${moduleBaseDir}/${file}", ${fileContent});
 			}
 		}
 
 		task ("Then the module can be deployed successfully") {
-			AntCommand(
-				locator1 = "build-test.xml",
-				value1 = "deploy-osgi-module-to-specific-bundle -Dmodule.base.dir=${moduleBaseDir} -DliferayHome=${liferayHome}");
+			AntCommands.runCommand("build-test.xml", "deploy-osgi-module-to-specific-bundle -DliferayHome=${liferayHome} -Dmodule.base.dir=${moduleBaseDir}");
 
 			WaitForConsoleTextPresent(value1 = "STARTED com.liferay.account.admin.web_${bundleVersion}${hotfixQualifier}");
 		}

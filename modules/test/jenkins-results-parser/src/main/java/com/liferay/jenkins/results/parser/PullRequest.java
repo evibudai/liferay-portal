@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser;
@@ -87,6 +78,27 @@ public class PullRequest {
 
 			return new Comment(responseJSONObject);
 		}
+		catch (GitHubSecondaryRateLimitRuntimeException
+					gitHubSecondaryRateLimitRuntimeException) {
+
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("Unable to post comment in GitHub pull request\n");
+			sb.append("URL: ");
+			sb.append(getURL());
+			sb.append("\nMessage:\n");
+			sb.append(body);
+			sb.append("\n");
+
+			NotificationUtil.sendSlackNotification(
+				sb.toString(), "#ci-notifications", ":liferay-ci:",
+				"Secondary Rate Limit exceeded", "Liferay CI");
+
+			throw new GitHubSecondaryRateLimitRuntimeException(
+				gitHubSecondaryRateLimitRuntimeException.getGitHubApiUrl(),
+				gitHubSecondaryRateLimitRuntimeException.getRetryAfterSeconds(),
+				sb.toString(), gitHubSecondaryRateLimitRuntimeException);
+		}
 		catch (IOException ioException) {
 			throw new RuntimeException(
 				"Unable to post comment in GitHub pull request " + getURL(),
@@ -157,6 +169,41 @@ public class PullRequest {
 		}
 
 		_jsonObject.put("state", "closed");
+	}
+
+	public String forward(
+		String commentBody, String consoleURL, String forwardReceiverUsername,
+		String forwardBranchName, String forwardSenderUsername,
+		File gitRepositoryDir) {
+
+		GitWorkingDirectory gitWorkingDirectory =
+			GitWorkingDirectoryFactory.newGitWorkingDirectory(
+				getUpstreamRemoteGitBranchName(),
+				gitRepositoryDir.getAbsolutePath(), getGitRepositoryName());
+
+		LocalGitBranch forwardLocalGitBranch =
+			gitWorkingDirectory.getRebasedLocalGitBranch(
+				forwardBranchName, getSenderBranchName(), getSenderRemoteURL(),
+				getSenderSHA(), getUpstreamRemoteGitBranchName(),
+				getUpstreamBranchSHA());
+
+		RemoteGitBranch forwardRemoteGitBranch =
+			gitWorkingDirectory.pushToRemoteGitRepository(
+				true, forwardLocalGitBranch, forwardLocalGitBranch.getName(),
+				GitUtil.getUserRemoteURL(
+					getGitRepositoryName(), forwardSenderUsername));
+
+		if (forwardRemoteGitBranch == null) {
+			throw new RuntimeException("Unable to push branch to GitHub");
+		}
+
+		return gitWorkingDirectory.createPullRequest(
+			commentBody, forwardBranchName, forwardReceiverUsername,
+			forwardSenderUsername, getTitle());
+	}
+
+	public String getBody() {
+		return _jsonObject.optString("body");
 	}
 
 	public String getCIMergeSHA() {
@@ -264,8 +311,8 @@ public class PullRequest {
 
 			String state = jsonObject.getString("state");
 
-			if (!Objects.equals("failure", state) &&
-				!Objects.equals("success", state)) {
+			if (!Objects.equals(state, "failure") &&
+				!Objects.equals(state, "success")) {
 
 				continue;
 			}
@@ -429,7 +476,7 @@ public class PullRequest {
 			String testSuiteName = matcher.group("testSuiteName");
 
 			if (testSuiteNames.contains(testSuiteName) ||
-				!Objects.equals("success", jsonObject.getString("state"))) {
+				!Objects.equals(jsonObject.getString("state"), "success")) {
 
 				continue;
 			}
@@ -552,8 +599,8 @@ public class PullRequest {
 	}
 
 	public String getURL() {
-		return JenkinsResultsParserUtil.getGitHubApiUrl(
-			_gitHubRemoteGitRepositoryName, _ownerUsername, "pulls/" + _number);
+		return getURL(
+			getReceiverUsername(), getGitRepositoryName(), getNumber());
 	}
 
 	public boolean hasLabel(String labelName) {
@@ -993,6 +1040,11 @@ public class PullRequest {
 		refresh();
 	}
 
+	protected String getGitHubApiUrl() {
+		return JenkinsResultsParserUtil.getGitHubApiUrl(
+			_gitHubRemoteGitRepositoryName, _ownerUsername, "pulls/" + _number);
+	}
+
 	protected String getIssueURL() {
 		return _jsonObject.getString("issue_url");
 	}
@@ -1107,7 +1159,7 @@ public class PullRequest {
 	private void _refreshJSONObject() {
 		try {
 			_jsonObject = JenkinsResultsParserUtil.toJSONObject(
-				getURL(), false);
+				getGitHubApiUrl(), false);
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);

@@ -1,38 +1,42 @@
 definition {
 
-	macro activateApp {
-		LexiconEntry.openEntryMenu(rowEntry = "${appName}");
+	@summary = "Default summary"
+	macro activateApp(appName = null) {
+		LexiconEntry.openEntryMenu(rowEntry = ${appName});
 
 		MenuItem.clickNoError(menuItem = "Activate");
 	}
 
-	macro deactivateApp {
-		LexiconEntry.openEntryMenu(rowEntry = "${appName}");
+	@summary = "Default summary"
+	macro deactivateApp(appName = null) {
+		LexiconEntry.openEntryMenu(rowEntry = ${appName});
 
 		MenuItem.clickNoError(menuItem = "Deactivate");
 
 		AssertConfirm(value1 = "Are you sure you want to deactivate this?");
 	}
 
-	macro filtersApp {
-		var key_filterName = "${filterName}";
+	@summary = "Default summary"
+	macro filtersApp(filterName = null, filterBy = null) {
+		var key_filterName = ${filterName};
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MARKETPLACE_STORE_PORTLET_IFRAME");
 
 		WaitForElementPresent(
-			key_filterName = "${filterName}",
+			key_filterName = ${filterName},
 			locator1 = "AppManager#APP_FILTER_LABEL");
 
 		if (isSet(filterBy)) {
 			Select(
 				locator1 = "AppManager#APP_FILTER_SELECT_DROP_DOWN_LIST",
-				value1 = "${filterBy}");
+				value1 = ${filterBy});
 		}
 
 		Click(locator1 = "AppManager#SEARCH_BUTTON");
 	}
 
-	macro loginMarketplaceStore {
+	@summary = "Default summary"
+	macro loginMarketplaceStore() {
 		AssertElementPresent(
 			locator1 = "AppManager#MARKETPLACE_DESCRIPTION",
 			value1 = "Liferay Marketplace is an integral part of the Liferay platform experience for all users. Enterprise subscribers also have exclusive access to Liferay Subscription Apps through the Liferay Marketplace. Log in with your Liferay account to browse hundreds of apps to help you build your business or technical solution.");
@@ -50,14 +54,14 @@ definition {
 		Type(
 			key_text = "Email Address",
 			locator1 = "AppManager#LOGIN_INPUT_FIELD",
-			value1 = "${marketplaceClientId}");
+			value1 = ${marketplaceClientId});
 
 		var marketplaceClientSecret = PropsUtil.get("marketplace.email.password.6");
 
 		Type(
 			key_text = "Password",
 			locator1 = "AppManager#LOGIN_INPUT_FIELD",
-			value1 = "${marketplaceClientSecret}");
+			value1 = ${marketplaceClientSecret});
 
 		AssertClick(
 			locator1 = "AppManager#APP_SUBMIT",
@@ -74,60 +78,71 @@ definition {
 		AssertElementPresent(locator1 = "AppManager#APP_RESULT_BOX");
 	}
 
-	macro purchaseApp {
-		var key_searchName = "${searchName}";
+	@summary = "Navigate to the App Manager admin page via url navigation"
+	macro openAppManagerAdmin(baseURL = null) {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = ${baseURL},
+			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_marketplace_app_manager_web_portlet_MarketplaceAppManagerPortlet");
+	}
+
+	@summary = "Default summary"
+	macro purchaseApp(searchName = null, type = null) {
+		var key_searchName = ${searchName};
 
 		AssertElementPresent(
-			key_searchName = "${searchName}",
+			key_searchName = ${searchName},
 			locator1 = "AppManager#APP_TITLE_TYPE");
 
 		AssertClick(
-			key_searchName = "${searchName}",
+			key_searchName = ${searchName},
 			locator1 = "AppManager#APP_TITLE_TYPE",
-			value1 = "${searchName}");
+			value1 = ${searchName});
 
 		AssertClick(
-			key_type = "${type}",
+			key_type = ${type},
 			locator1 = "AppManager#APP_PURCHASE",
-			value1 = "${type}");
+			value1 = ${type});
 
 		WaitForPageLoad();
 
-		Click(locator1 = "AppManager#APP_PURCHASE_USER_SELECT");
+		Click.clickNoMouseOverNoWaitForVisible(locator1 = "AppManager#APP_PURCHASE_USER_SELECT");
 
-		Click(locator1 = "AppManager#APP_PURCHASE_AGREE_CHECKBOX");
+		Click.clickNoMouseOverNoWaitForVisible(locator1 = "AppManager#APP_PURCHASE_AGREE_CHECKBOX");
 
-		Click(locator1 = "AppManager#APP_SUBMIT");
+		Click.clickNoMouseOverNoWaitForVisible(locator1 = "AppManager#APP_SUBMIT");
 
 		WaitForPageLoad();
 
 		AssertElementPresent(locator1 = "AppManager#APP_PURCHASE_INFO");
 	}
 
-	macro searchApp {
+	@summary = "Default summary"
+	macro searchApp(searchName = null) {
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MARKETPLACE_STORE_PORTLET_IFRAME");
 
 		Type(
 			locator1 = "AppManager#APP_RESULT_BOX",
-			value1 = "${searchName}");
+			value1 = ${searchName});
 
 		Click(locator1 = "AppManager#SEARCH_BUTTON");
 
 		AssertElementPresent(
-			key_searchName = "${searchName}",
+			key_searchName = ${searchName},
 			locator1 = "AppManager#APP_TITLE_TYPE");
 	}
 
-	macro uninstallApp {
-		LexiconEntry.openEntryMenu(rowEntry = "${appName}");
+	@summary = "Default summary"
+	macro uninstallApp(appName = null) {
+		LexiconEntry.openEntryMenu(rowEntry = ${appName});
 
 		MenuItem.clickNoError(menuItem = "Uninstall");
 
 		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 	}
 
-	macro uploadApp {
-		var key_appName = "${appName}";
+	@summary = "Default summary"
+	macro uploadApp(warFileName = null, appName = null) {
+		var key_appName = ${appName};
 
 		Click(locator1 = "Portlet#OPTIONS_ICON");
 
@@ -137,7 +152,7 @@ definition {
 
 		AssertElementPresent(locator1 = "TextInput#FILE");
 
-		UploadDependencyFile.uploadArchiveFile(fileName = "${warFileName}");
+		UploadDependencyFile.uploadArchiveFile(fileName = ${warFileName});
 
 		Button.clickInstall();
 
@@ -158,30 +173,32 @@ definition {
 		AssertConsoleTextNotPresent(value1 = "HotDeployException: Error registering portlets for ${appName}");
 	}
 
-	macro viewApp {
-		var key_appName = "${appName}";
+	@summary = "Default summary"
+	macro viewApp(searchTerm = null, appName = null, appStatus = null) {
+		var key_appName = ${appName};
 
 		if (isSet(searchTerm)) {
-			Search.searchCP(searchTerm = "${searchTerm}");
+			Search.searchCP(searchTerm = ${searchTerm});
 		}
 		else {
-			Search.searchCP(searchTerm = "${appName}");
+			Search.searchCP(searchTerm = ${appName});
 		}
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "AppManager#APP_NAME",
-			value1 = "${appName}");
+			value1 = ${appName});
 
 		if (isSet(appStatus)) {
-			var key_appStatus = "${appStatus}";
+			var key_appStatus = ${appStatus};
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "AppManager#APP_STATUS",
-				value1 = "${appStatus}");
+				value1 = ${appStatus});
 		}
 	}
 
-	macro viewLogoutMarketplace {
+	@summary = "Default summary"
+	macro viewLogoutMarketplace() {
 		AssertElementPresent(
 			locator1 = "AppManager#USER_SIGN_IN",
 			value1 = "Sign In");

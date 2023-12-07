@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -24,6 +15,7 @@ PortletURL editImageURL = (PortletURL)request.getAttribute("liferay-item-selecto
 String emptyResultsMessage = GetterUtil.getString(request.getAttribute("liferay-item-selector:repository-entry-browser:emptyResultsMessage"));
 ItemSelectorReturnType existingFileEntryReturnType = (ItemSelectorReturnType)request.getAttribute("liferay-item-selector:repository-entry-browser:existingFileEntryReturnType");
 List<String> extensions = (List)request.getAttribute("liferay-item-selector:repository-entry-browser:extensions");
+long folderId = ParamUtil.getLong(request, "folderId", GetterUtil.getLong(request.getAttribute("liferay-item-selector:repository-entry-browser:folderId")));
 String itemSelectedEventName = GetterUtil.getString(request.getAttribute("liferay-item-selector:repository-entry-browser:itemSelectedEventName"));
 ItemSelectorReturnTypeResolver<?, FileEntry> itemSelectorReturnTypeResolver = (ItemSelectorReturnTypeResolver<?, FileEntry>)request.getAttribute("liferay-item-selector:repository-entry-browser:itemSelectorReturnTypeResolver");
 long maxFileSize = GetterUtil.getLong(request.getAttribute("liferay-item-selector:repository-entry-browser:maxFileSize"));
@@ -77,6 +69,8 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 	filterDropdownItems="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	filterLabelItems="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getFilterLabelItems() %>"
 	itemsTotal="<%= repositoryEntriesCount %>"
+	orderDropdownItems="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getOrderByDropdownItems() %>"
+	propsTransformer="repository_entry_browser/js/ItemSelectorRepositoryEntryBrowserManagementToolbarPropsTransformer"
 	searchActionURL="<%= String.valueOf(itemSelectorRepositoryEntryManagementToolbarDisplayContext.getSearchURL()) %>"
 	searchFormMethod="POST"
 	searchFormName="searchFm"
@@ -98,10 +92,6 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 	</c:if>
 
 	<div class="message-container"></div>
-
-	<%
-	long folderId = ParamUtil.getLong(request, "folderId");
-	%>
 
 	<c:if test="<%= showBreadcrumb && !showSearchInfo %>">
 
@@ -162,6 +152,12 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 				).build()
 			%>'
 			module="repository_entry_browser/js/ItemSelectorRepositoryEntryBrowser"
+		/>
+	</div>
+
+	<div>
+		<react:component
+			module="repository_entry_browser/js/ItemSelectorRepositoryEntryBrowserConfigureAIModal"
 		/>
 	</div>
 
@@ -448,7 +444,11 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 												<div class="aspect-ratio card-item-first">
 													<c:choose>
 														<c:when test="<%= Validator.isNull(thumbnailSrc) %>">
-															<aui:icon cssClass="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon" image="documents-and-media" markupView="lexicon" />
+															<span class="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">
+																<clay:icon
+																	symbol="documents-and-media"
+																/>
+															</span>
 														</c:when>
 														<c:otherwise>
 															<img alt="" class="aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="<%= thumbnailSrc %>" />
@@ -618,9 +618,30 @@ SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSele
 		</liferay-ui:search-container>
 
 		<c:if test="<%= !showSearchInfo && (uploadURL != null) %>">
-			<liferay-ui:drop-here-info
-				message="drop-files-here"
-			/>
+			<div class="drop-here-info">
+				<div class="drop-here-indicator">
+					<div class="drop-icons">
+						<clay:icon
+							cssClass="drop-icon"
+							symbol="picture"
+						/>
+
+						<clay:icon
+							cssClass="drop-icon"
+							symbol="picture"
+						/>
+
+						<clay:icon
+							cssClass="drop-icon"
+							symbol="picture"
+						/>
+					</div>
+
+					<div class="drop-text">
+						<liferay-ui:message key="drop-files-here" />
+					</div>
+				</div>
+			</div>
 		</c:if>
 	</c:if>
 

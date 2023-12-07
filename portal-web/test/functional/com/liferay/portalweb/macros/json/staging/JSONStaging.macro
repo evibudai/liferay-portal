@@ -1,32 +1,32 @@
 definition {
 
-	@summary = "Assign user to staging site"
-	macro assignUserToStagingGroup {
+	@summary = "Default summary"
+	macro assignUserToStagingGroup(site = null, userEmailAddress = null, groupKey = null) {
 		Variables.assertDefined(parameterList = "${groupKey},${userEmailAddress}");
 
 		var groupId = JSONStagingSetter.setGroupId(
-			groupKey = "${groupKey}",
-			site = "${site}");
-		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "${userEmailAddress}");
+			groupKey = ${groupKey},
+			site = ${site});
+		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = ${userEmailAddress});
 
 		JSONGroupAPI._assignUserToGroup(
-			groupId = "${groupId}",
-			userId = "${userId}");
+			groupId = ${groupId},
+			userId = ${userId});
 	}
 
-	@summary = "Activate local staging with or without page versioning with all content or unchecked content"
-	macro enableLocalStaging {
-		Variables.assertDefined(parameterList = "${groupName}");
+	@summary = "Default summary"
+	macro enableLocalStaging(groupName = null, grandParentGroupName = null, unCheckedContent = null, parentGroupName = null) {
+		Variables.assertDefined(parameterList = ${groupName});
 
 		if (!(isSet(site))) {
 			var site = "true";
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			grandParentGroupName = "${grandParentGroupName}",
-			groupName = "${groupName}",
-			parentGroupName = "${parentGroupName}",
-			site = "${site}");
+			grandParentGroupName = ${grandParentGroupName},
+			groupName = ${groupName},
+			parentGroupName = ${parentGroupName},
+			site = ${site});
 
 		if (!(isSet(branchingPrivate))) {
 			var branchingPrivate = "false";
@@ -37,28 +37,28 @@ definition {
 		}
 
 		JSONStagingAPI._enableLocalStaging(
-			branchingPrivate = "${branchingPrivate}",
-			branchingPublic = "${branchingPublic}",
-			groupId = "${groupId}",
-			unCheckedContent = "${unCheckedContent}");
+			branchingPrivate = ${branchingPrivate},
+			branchingPublic = ${branchingPublic},
+			groupId = ${groupId},
+			unCheckedContent = ${unCheckedContent});
 
 		var groupId = JSONGroupAPI._getGroupIdByNameNoError(
-			grandParentGroupName = "${grandParentGroupName}",
+			grandParentGroupName = ${grandParentGroupName},
 			groupName = "${groupName} (Staging)",
-			parentGroupName = "${parentGroupName}",
+			parentGroupName = ${parentGroupName},
 			site = "false");
 
-		while (("${groupId}" == "")) {
+		while (("" == "")) {
 			var groupId = JSONGroupAPI._getGroupIdByNameNoError(
-				grandParentGroupName = "${grandParentGroupName}",
+				grandParentGroupName = ${grandParentGroupName},
 				groupName = "${groupName} (Staging)",
-				parentGroupName = "${parentGroupName}",
+				parentGroupName = ${parentGroupName},
 				site = "false");
 		}
 	}
 
-	@summary = "Activate remote staging with or without page versioning with all content"
-	macro enableRemoteStaging {
+	@summary = "Default summary"
+	macro enableRemoteStaging(groupName = null, remoteGroupId = null, grandParentGroupName = null, remotePort = null, parentGroupName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${remoteGroupId}");
 
 		if (!(isSet(site))) {
@@ -66,10 +66,10 @@ definition {
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			grandParentGroupName = "${grandParentGroupName}",
-			groupName = "${groupName}",
-			parentGroupName = "${parentGroupName}",
-			site = "${site}");
+			grandParentGroupName = ${grandParentGroupName},
+			groupName = ${groupName},
+			parentGroupName = ${parentGroupName},
+			site = ${site});
 
 		if (!(isSet(branchingPrivate))) {
 			var branchingPrivate = "false";
@@ -80,11 +80,11 @@ definition {
 		}
 
 		JSONStagingAPI._enableRemoteStaging(
-			branchingPrivate = "${branchingPrivate}",
-			branchingPublic = "${branchingPublic}",
-			groupId = "${groupId}",
-			remoteGroupId = "${remoteGroupId}",
-			remotePort = "${remotePort}");
+			branchingPrivate = ${branchingPrivate},
+			branchingPublic = ${branchingPublic},
+			groupId = ${groupId},
+			remoteGroupId = ${remoteGroupId},
+			remotePort = ${remotePort});
 	}
 
 }

@@ -1,10 +1,11 @@
 @component-name = "portal-util-misc"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "IFrame Portlet";
-	property testray.main.component.name = "IFrame Portlet";
+	property testray.component.names = "Widget Pages";
+	property testray.main.component.name = "Widget Pages";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -14,7 +15,7 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add a widget page") {
@@ -32,9 +33,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -43,7 +44,7 @@ definition {
 	}
 
 	@description = "View IFrame widget is shown on the page."
-	@priority = "3"
+	@priority = 3
 	test ViewIFrameWidget {
 		task ("View IFrame widget is shown") {
 			Navigator.gotoSitePage(

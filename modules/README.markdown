@@ -49,10 +49,7 @@ The logic that chooses the default deploy directory is as follows:
 	1. If the project directory contains a `.lfrbuild-static` marker file, the
 	module is deployed to `${liferay home}/osgi/static`.
 
-	1. If the module symbolic name starts with `com.liferay.portal.`, the module
-	is deployed to `${liferay home}/osgi/portal`.
-
-	1. Otherwise, the module is deployed to `${liferay home}/osgi/modules`.
+	1. Otherwise, the module is deployed to `${liferay home}/osgi/portal`.
 - For themes:
 
 	1. If the `required-for-startup` property in the
@@ -90,7 +87,6 @@ File Name | Description
 
 File Name | Description
 --------- | -----------
-`.lfrbuild-lowest-major-version` | Declares the lowest major version of the released artifact to use in the semantic versioning check.
 `.lfrbuild-portal-deprecated` | Marks the module as deprecated and skip deployment during the `ant all` execution. `-test` modules never have this file.
 `.lfrbuild-portal-pre` | Builds the module during the `ant compile` execution in the `tmp/lib-pre` directory before building `portal-kernel`, `portal-impl`, etc.
 `.lfrbuild-portal-private` | Deploys the module during the `ant all` execution in a private branch. `-test` modules never have this file.

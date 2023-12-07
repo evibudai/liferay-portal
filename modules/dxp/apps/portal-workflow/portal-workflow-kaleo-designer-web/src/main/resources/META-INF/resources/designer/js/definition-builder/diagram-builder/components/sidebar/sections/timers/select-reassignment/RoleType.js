@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import React from 'react';
@@ -20,6 +14,7 @@ const RoleType = (props) => {
 			reassignments: {
 				assignmentType: ['roleType'],
 				autoCreate: values.map(({autoCreate}) => autoCreate),
+				roleKey: values.map(({roleKey}) => roleKey),
 				roleName: values.map(({roleName}) => roleName),
 				roleType: values.map(({roleType}) => roleType),
 			},
@@ -30,7 +25,7 @@ const RoleType = (props) => {
 		<SidebarPanel panelTitle={Liferay.Language.get('selected-role')}>
 			<BaseRoleType
 				buttonName={Liferay.Language.get('new-section')}
-				inputLabel={Liferay.Language.get('role')}
+				inputLabel={Liferay.Language.get('role-type')}
 				{...props}
 				updateSelectedItem={updateRoleType}
 			/>

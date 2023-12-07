@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.dto.v1_0;
@@ -85,6 +76,34 @@ public class ProductOptionValue implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
+	@Schema
+	public String getInfoMessage() {
+		return infoMessage;
+	}
+
+	public void setInfoMessage(String infoMessage) {
+		this.infoMessage = infoMessage;
+	}
+
+	@JsonIgnore
+	public void setInfoMessage(
+		UnsafeSupplier<String, Exception> infoMessageUnsafeSupplier) {
+
+		try {
+			infoMessage = infoMessageUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String infoMessage;
+
 	@Schema(example = "black")
 	public String getKey() {
 		return key;
@@ -137,6 +156,90 @@ public class ProductOptionValue implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
+	@Schema(example = "true")
+	public Boolean getPreselected() {
+		return preselected;
+	}
+
+	public void setPreselected(Boolean preselected) {
+		this.preselected = preselected;
+	}
+
+	@JsonIgnore
+	public void setPreselected(
+		UnsafeSupplier<Boolean, Exception> preselectedUnsafeSupplier) {
+
+		try {
+			preselected = preselectedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean preselected;
+
+	@Schema
+	public String getPrice() {
+		return price;
+	}
+
+	public void setPrice(String price) {
+		this.price = price;
+	}
+
+	@JsonIgnore
+	public void setPrice(
+		UnsafeSupplier<String, Exception> priceUnsafeSupplier) {
+
+		try {
+			price = priceUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String price;
+
+	@Schema(example = "static")
+	public String getPriceType() {
+		return priceType;
+	}
+
+	public void setPriceType(String priceType) {
+		this.priceType = priceType;
+	}
+
+	@JsonIgnore
+	public void setPriceType(
+		UnsafeSupplier<String, Exception> priceTypeUnsafeSupplier) {
+
+		try {
+			priceType = priceTypeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String priceType;
+
 	@Schema(example = "1.2")
 	public Double getPriority() {
 		return priority;
@@ -164,6 +267,230 @@ public class ProductOptionValue implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double priority;
+
+	@DecimalMin("0")
+	@Schema(example = "30130")
+	public Long getProductOptionId() {
+		return productOptionId;
+	}
+
+	public void setProductOptionId(Long productOptionId) {
+		this.productOptionId = productOptionId;
+	}
+
+	@JsonIgnore
+	public void setProductOptionId(
+		UnsafeSupplier<Long, Exception> productOptionIdUnsafeSupplier) {
+
+		try {
+			productOptionId = productOptionIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long productOptionId;
+
+	@Schema
+	public String getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(String quantity) {
+		this.quantity = quantity;
+	}
+
+	@JsonIgnore
+	public void setQuantity(
+		UnsafeSupplier<String, Exception> quantityUnsafeSupplier) {
+
+		try {
+			quantity = quantityUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String quantity;
+
+	@Schema
+	public String getRelativePriceFormatted() {
+		return relativePriceFormatted;
+	}
+
+	public void setRelativePriceFormatted(String relativePriceFormatted) {
+		this.relativePriceFormatted = relativePriceFormatted;
+	}
+
+	@JsonIgnore
+	public void setRelativePriceFormatted(
+		UnsafeSupplier<String, Exception>
+			relativePriceFormattedUnsafeSupplier) {
+
+		try {
+			relativePriceFormatted = relativePriceFormattedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String relativePriceFormatted;
+
+	@Schema(example = "true")
+	public Boolean getSelectable() {
+		return selectable;
+	}
+
+	public void setSelectable(Boolean selectable) {
+		this.selectable = selectable;
+	}
+
+	@JsonIgnore
+	public void setSelectable(
+		UnsafeSupplier<Boolean, Exception> selectableUnsafeSupplier) {
+
+		try {
+			selectable = selectableUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean selectable;
+
+	@Schema(example = "30130")
+	public Long getSkuId() {
+		return skuId;
+	}
+
+	public void setSkuId(Long skuId) {
+		this.skuId = skuId;
+	}
+
+	@JsonIgnore
+	public void setSkuId(UnsafeSupplier<Long, Exception> skuIdUnsafeSupplier) {
+		try {
+			skuId = skuIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long skuId;
+
+	@Schema
+	public String getTotalPrice() {
+		return totalPrice;
+	}
+
+	public void setTotalPrice(String totalPrice) {
+		this.totalPrice = totalPrice;
+	}
+
+	@JsonIgnore
+	public void setTotalPrice(
+		UnsafeSupplier<String, Exception> totalPriceUnsafeSupplier) {
+
+		try {
+			totalPrice = totalPriceUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String totalPrice;
+
+	@Schema
+	public String getUnitOfMeasureKey() {
+		return unitOfMeasureKey;
+	}
+
+	public void setUnitOfMeasureKey(String unitOfMeasureKey) {
+		this.unitOfMeasureKey = unitOfMeasureKey;
+	}
+
+	@JsonIgnore
+	public void setUnitOfMeasureKey(
+		UnsafeSupplier<String, Exception> unitOfMeasureKeyUnsafeSupplier) {
+
+		try {
+			unitOfMeasureKey = unitOfMeasureKeyUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String unitOfMeasureKey;
+
+	@Schema(example = "true")
+	public Boolean getVisible() {
+		return visible;
+	}
+
+	public void setVisible(Boolean visible) {
+		this.visible = visible;
+	}
+
+	@JsonIgnore
+	public void setVisible(
+		UnsafeSupplier<Boolean, Exception> visibleUnsafeSupplier) {
+
+		try {
+			visible = visibleUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean visible;
 
 	@Override
 	public boolean equals(Object object) {
@@ -202,6 +529,20 @@ public class ProductOptionValue implements Serializable {
 			sb.append(id);
 		}
 
+		if (infoMessage != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"infoMessage\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(infoMessage));
+
+			sb.append("\"");
+		}
+
 		if (key != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -230,6 +571,44 @@ public class ProductOptionValue implements Serializable {
 			sb.append("\"");
 		}
 
+		if (preselected != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"preselected\": ");
+
+			sb.append(preselected);
+		}
+
+		if (price != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"price\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(price));
+
+			sb.append("\"");
+		}
+
+		if (priceType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(priceType));
+
+			sb.append("\"");
+		}
+
 		if (priority != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -238,6 +617,102 @@ public class ProductOptionValue implements Serializable {
 			sb.append("\"priority\": ");
 
 			sb.append(priority);
+		}
+
+		if (productOptionId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"productOptionId\": ");
+
+			sb.append(productOptionId);
+		}
+
+		if (quantity != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"quantity\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(quantity));
+
+			sb.append("\"");
+		}
+
+		if (relativePriceFormatted != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"relativePriceFormatted\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(relativePriceFormatted));
+
+			sb.append("\"");
+		}
+
+		if (selectable != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"selectable\": ");
+
+			sb.append(selectable);
+		}
+
+		if (skuId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuId\": ");
+
+			sb.append(skuId);
+		}
+
+		if (totalPrice != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"totalPrice\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(totalPrice));
+
+			sb.append("\"");
+		}
+
+		if (unitOfMeasureKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"unitOfMeasureKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(unitOfMeasureKey));
+
+			sb.append("\"");
+		}
+
+		if (visible != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"visible\": ");
+
+			sb.append(visible);
 		}
 
 		sb.append("}");
@@ -334,5 +809,7 @@ public class ProductOptionValue implements Serializable {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
 	};
+
+	private Map<String, Serializable> _extendedProperties;
 
 }

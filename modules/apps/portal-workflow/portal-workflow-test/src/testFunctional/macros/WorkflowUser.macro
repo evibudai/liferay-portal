@@ -1,6 +1,7 @@
 definition {
 
-	macro disableCaptchaToCreateNewUserAndSendPassword {
+	@summary = "Default summary"
+	macro disableCaptchaToCreateNewUserAndSendPassword() {
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -14,7 +15,7 @@ definition {
 		for (var settingFieldName : list "Create Account CAPTCHA Enabled,Send Password CAPTCHA Enabled") {
 			SystemSettings.configureSystemSetting(
 				enableSetting = "false",
-				settingFieldName = "${settingFieldName}");
+				settingFieldName = ${settingFieldName});
 		}
 
 		Refresh();

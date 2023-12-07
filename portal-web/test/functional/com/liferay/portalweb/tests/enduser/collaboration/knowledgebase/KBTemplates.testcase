@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +29,7 @@ definition {
 	}
 
 	@e2etest
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddArticleWithTemplate {
 		property portal.acceptance = "true";
@@ -54,11 +54,12 @@ definition {
 	}
 
 	@e2etest
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanAddTemplate {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "KBTemplates#CanAddTemplate";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -75,10 +76,8 @@ definition {
 
 	@description = "This test ensures that the template can be added by center new button."
 	@e2etest
-	@priority = "5"
+	@priority = 4
 	test CanAddTemplateThroughCenterNewButton {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.openPageTreePanel(section = "Templates");
@@ -96,9 +95,9 @@ definition {
 	}
 
 	@description = "This test ensures that users can delete the kb template from the center pane."
-	@priority = "5"
+	@priority = 5
 	test CanDeleteTemplateEntryViaCenterPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
+		property portal.acceptance = "true";
 
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content",
@@ -118,9 +117,9 @@ definition {
 	}
 
 	@description = "This test ensures that users can delete the kb template from the navigation pane."
-	@priority = "5"
+	@priority = 5
 	test CanDeleteTemplateEntryViaNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
+		property portal.acceptance = "true";
 
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content",
@@ -142,10 +141,8 @@ definition {
 	}
 
 	@description = "This test ensures that users can edit the kb template from the navigation pane."
-	@priority = "5"
+	@priority = 4
 	test CanEditTemplateEntryViaNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content",
 			kbTemplateTitle = "Knowledge Base Template Title");
@@ -169,10 +166,8 @@ definition {
 	}
 
 	@description = "This test ensures that users can edit the kb template permissions from the center pane."
-	@priority = "5"
+	@priority = 4
 	test CanEditTemplatePermissionsViaCenterPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content",
 			kbTemplateTitle = "Knowledge Base Template Title");
@@ -206,10 +201,8 @@ definition {
 	}
 
 	@description = "This test ensures that users can edit the kb template permissions from the navigation pane."
-	@priority = "5"
+	@priority = 4
 	test CanEditTemplatePermissionsViaNavigationPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content",
 			kbTemplateTitle = "Knowledge Base Template Title");
@@ -243,10 +236,8 @@ definition {
 	}
 
 	@description = "This test ensures that users can edit the kb template from the center pane."
-	@priority = "5"
+	@priority = 4
 	test CanEditTemplateViaCenterPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content",
 			kbTemplateTitle = "Knowledge Base Template Title");
@@ -268,10 +259,40 @@ definition {
 		KBTemplate.viewTemplatesThroughPageTreePanel(kbTemplatesList = "Knowledge Base Template Title Edit");
 	}
 
+	@description = "This test checks checks that the correct actions appear in the management toolbar for a KB template and that it is editable."
+	@priority = 4
+	test CanEditTemplateViaToolbar {
+		property custom.properties = "feature.flag.LPS-166643=true";
+
+		JSONKnowledgeBase.addkBTemplate(
+			kbTemplateContent = "Knowledge Base Template Content",
+			kbTemplateTitle = "Knowledge Base Template Title");
+
+		KBAdmin.openKBTemplates(siteURLKey = "guest");
+
+		KBTemplate.viewActionsDetailsToolbar(
+			kbTemplateTitle = "Knowledge Base Template Title",
+			moreActions = "true");
+
+		KBAdmin.openKBTemplates(siteURLKey = "guest");
+
+		KBTemplate.editTemplate(
+			editActionToolbar = "true",
+			kbTemplateContentEdit = "Knowledge Base Template Content Edit",
+			kbTemplateTitle = "Knowledge Base Template Title",
+			kbTemplateTitleEdit = "Knowledge Base Template Title Edit");
+
+		KBAdmin.openKBTemplates(siteURLKey = "guest");
+
+		KBTemplate.previewTemplate(
+			kbTemplateContent = "Knowledge Base Template Content Edit",
+			kbTemplateTitle = "Knowledge Base Template Title Edit");
+	}
+
 	@description = "This test ensures that users can preview the kb template from the center pane."
-	@priority = "5"
+	@priority = 4
 	test CanPreviewTemplateViaCenterPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
+		property portal.acceptance = "true";
 
 		KBTemplate.addCP(
 			embedImage = "true",
@@ -292,10 +313,8 @@ definition {
 	}
 
 	@description = "This test ensures that the empty message can be displayed in the pane."
-	@priority = "3"
+	@priority = 3
 	test CanViewEmptyMessage {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.openPageTreePanel(section = "Templates");
@@ -304,10 +323,8 @@ definition {
 	}
 
 	@description = "This test ensures that the article templates list can be displayed in the pane."
-	@priority = "3"
+	@priority = 3
 	test CanViewTemplatesInPane {
-		property custom.properties = "feature.flag.LPS-156421=true";
-
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content1",
 			kbTemplateTitle = "Knowledge Base Template Title1");
@@ -327,8 +344,24 @@ definition {
 		KBTemplate.viewTemplatesThroughPageTreePanel(kbTemplatesList = "Knowledge Base Template Title1,Knowledge Base Template Title2");
 	}
 
+	@description = "This test checks that the checkbox, Filter & Order button, Order By button, and the search bar options appear in KB templates management toolbar."
+	@priority = 5
+	test CorrectActionsAppearInToolbar {
+		KBAdmin.openKBTemplates(siteURLKey = "guest");
+
+		KBTemplate.viewNoTemplates(disabledActionToolbar = "true");
+
+		JSONKnowledgeBase.addkBTemplate(
+			kbTemplateContent = "Knowledge Base Template Content",
+			kbTemplateTitle = "Knowledge Base Template Title");
+
+		KBAdmin.openKBTemplates(siteURLKey = "guest");
+
+		KBTemplate.viewActiveActionsManagementToolbar();
+	}
+
 	@description = "This test covers LPS-120917. It checks that XSS cannot be executed from the KB template name."
-	@priority = "3"
+	@priority = 3
 	test TemplateNameDoesNotExecuteXSS {
 		JSONKnowledgeBase.addkBTemplate(
 			kbTemplateContent = "Knowledge Base Template Content",

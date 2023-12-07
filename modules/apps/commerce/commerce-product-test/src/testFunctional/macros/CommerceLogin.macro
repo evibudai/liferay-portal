@@ -1,35 +1,38 @@
 definition {
 
-	macro createAccount {
+	@summary = "Default summary"
+	macro createAccount(userLastName = null, userScreenName = null, userEmailAddress = null, newPassword = null, userFirstName = null) {
 		Type(
 			locator1 = "TextInput#FIRST_NAME",
-			value1 = "${userFirstName}");
+			value1 = ${userFirstName});
 
 		Type(
 			locator1 = "TextInput#LAST_NAME",
-			value1 = "${userLastName}");
+			value1 = ${userLastName});
 
 		Type(
 			locator1 = "TextInput#SCREEN_NAME",
-			value1 = "${userScreenName}");
+			value1 = ${userScreenName});
 
 		Type(
 			locator1 = "TextInput#EMAIL_ADDRESS",
-			value1 = "${userEmailAddress}");
+			value1 = ${userEmailAddress});
 
 		Type(
 			locator1 = "TextInput#PASSWORD",
-			value1 = "${newPassword}");
+			value1 = ${newPassword});
 
 		Type(
-			locator1 = "TextInput#ENTER_AGAIN",
-			value1 = "${newPassword}");
+			key_text = "Reenter",
+			locator1 = "TextInput#ANY",
+			value1 = ${newPassword});
 
 		Button.clickSave();
 	}
 
-	macro editPasswordCP {
-		UserNavigator.gotoUser(userScreenName = "${userScreenName}");
+	@summary = "Default summary"
+	macro editPasswordCP(userScreenName = null, requirePasswordReset = null) {
+		UserNavigator.gotoUser(userScreenName = ${userScreenName});
 
 		if (!(isSet(newPassword))) {
 			var newPassword = "password";
@@ -39,13 +42,13 @@ definition {
 
 		Type(
 			locator1 = "UsersAndOrganizationsEditUser#PASSWORD_NEW_PASSWORD_FIELD",
-			value1 = "${newPassword}");
+			value1 = ${newPassword});
 
 		Type(
 			locator1 = "UsersAndOrganizationsEditUser#PASSWORD_ENTER_AGAIN_FIELD",
-			value1 = "${newPassword}");
+			value1 = ${newPassword});
 
-		if ("${requirePasswordReset}" == "true") {
+		if (${requirePasswordReset} == "true") {
 			Check(
 				checkboxName = "Require Password Reset",
 				locator1 = "Checkbox#ANY_CHECKBOX");
@@ -54,49 +57,50 @@ definition {
 		PortletEntry.save();
 	}
 
-	macro loginPG {
-		if ("${samlEnabled}" != "true") {
-			User._clickSignInLink(localization = "${localization}");
+	@summary = "Default summary"
+	macro loginPG(localization = null, password = null, authenticationMethod = null, userScreenName = null, userEmailAddress = null, rememberMeChecked = null, newPassword = null, samlEnabled = null) {
+		if (${samlEnabled} != "true") {
+			User._clickSignInLink(localization = ${localization});
 		}
 
-		if (isSet(authenticationMethod) && ("${authenticationMethod}" == "By Screen Name")) {
+		if (isSet(authenticationMethod) && (${authenticationMethod} == "By Screen Name")) {
 			Type(
 				locator1 = "TextInput#SCREEN_NAME",
-				value1 = "${userScreenName}");
+				value1 = ${userScreenName});
 		}
 		else {
 			Type(
 				locator1 = "TextInput#EMAIL_ADDRESS",
-				value1 = "${userEmailAddress}");
+				value1 = ${userEmailAddress});
 		}
 
 		Type(
 			locator1 = "TextInput#PASSWORD",
-			value1 = "${password}");
+			value1 = ${password});
 
-		if (isSet(rememberMeChecked) && ("${rememberMeChecked}" == "true")) {
+		if (isSet(rememberMeChecked) && (${rememberMeChecked} == "true")) {
 			Check(locator1 = "Checkbox#REMEMBER_ME");
 		}
 
-		User._clickSignInButton(localization = "${localization}");
+		User._clickSignInButton(localization = ${localization});
 
 		if (IsElementPresent(locator1 = "Message#ERROR_FORM_FIELD_REQUIRED")) {
 			echo("Sign in failed due to empty required field. Retrying...");
 
-			if (isSet(authenticationMethod) && ("${authenticationMethod}" == "By Screen Name")) {
+			if (isSet(authenticationMethod) && (${authenticationMethod} == "By Screen Name")) {
 				Type(
 					locator1 = "TextInput#SCREEN_NAME",
-					value1 = "${userScreenName}");
+					value1 = ${userScreenName});
 			}
 			else {
 				Type(
 					locator1 = "TextInput#EMAIL_ADDRESS",
-					value1 = "${userEmailAddress}");
+					value1 = ${userEmailAddress});
 			}
 
 			Type(
 				locator1 = "TextInput#PASSWORD",
-				value1 = "${password}");
+				value1 = ${password});
 
 			Click.mouseDownMouseUp(
 				key_text = "Sign In",
@@ -107,32 +111,34 @@ definition {
 
 		User.acceptEndUserLicenseAgreement();
 
-		User.resetPassword(newPassword = "${newPassword}");
+		User.resetPassword(newPassword = ${newPassword});
 
 		User.answerPasswordReminder();
 	}
 
-	macro miniumLogin {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro miniumLogin(password = null, userEmailAddress = null, urlAppend = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var specificURL = "${baseURL}/${urlAppend}";
 
-		Navigator.openSpecificURL(url = "${specificURL}");
+		Navigator.openSpecificURL(url = ${specificURL});
 
 		CommerceLogin.loginPG(
-			password = "${password}",
+			password = ${password},
 			samlEnabled = "true",
 			specificURL = "${baseURL}/${urlAppend}",
-			userEmailAddress = "${userEmailAddress}");
+			userEmailAddress = ${userEmailAddress});
 
 		WaitForPageLoad();
 	}
 
-	macro miniumLogoutPG {
+	@summary = "Default summary"
+	macro miniumLogoutPG() {
 		ScrollBy(value1 = "0, -1000");
 
 		Click(locator1 = "CommerceAccelerators#MINIUM_SIDEBAR_USER_AVATAR");
@@ -142,26 +148,28 @@ definition {
 			locator1 = "CommerceAccelerators#MINIUM_SIDEBAR_MENU_ITEM");
 	}
 
-	macro speedwellLogin {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro speedwellLogin(password = null, userEmailAddress = null, urlAppend = null) {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 		}
 
 		var specificURL = "${baseURL}/${urlAppend}";
 
-		Navigator.openSpecificURL(url = "${specificURL}");
+		Navigator.openSpecificURL(url = ${specificURL});
 
 		CommerceNavigator.gotoSpeedwellAccountDropdownItem(dropdownItem = "Sign In");
 
 		CommerceLogin.loginPG(
-			password = "${password}",
+			password = ${password},
 			samlEnabled = "true",
-			userEmailAddress = "${userEmailAddress}");
+			userEmailAddress = ${userEmailAddress});
 	}
 
-	macro speedwellLogout {
+	@summary = "Default summary"
+	macro speedwellLogout() {
 		Click(locator1 = "CommerceAccelerators#SPEEDWELL_ACCOUNT_DROPDOWN");
 
 		Click(

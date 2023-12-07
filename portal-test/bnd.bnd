@@ -1,6 +1,6 @@
 Bundle-Name: ${manifest.bundle.name}
 Bundle-SymbolicName: ${manifest.bundle.symbolic.name}
-Bundle-Version: 14.2.3
+Bundle-Version: 23.2.1
 Export-Package:\
 	com.liferay.portal.kernel.dao.db.test,\
 	com.liferay.portal.kernel.test,\
@@ -16,8 +16,6 @@ Export-Package:\
 	com.liferay.portal.test.randomizerbumpers,\
 	com.liferay.portal.test.rule,\
 	com.liferay.portlet.asset.service.persistence.test,\
-	com.liferay.portlet.dynamicdatamapping.util.test,\
-	com.liferay.portlet.expando.util.test,\
 	com.liferay.portlet.passwordpoliciesadmin.util.test,\
 	com.liferay.portlet.test,\
 	com.liferay.portletmvc4spring.test.mock.web.portlet,\
@@ -33,6 +31,7 @@ Export-Package:\
 Import-Package: *;resolution:=optional
 Include-Resource:\
 	classes,\
+	OSGI-INF/configurator=configurator,\
 	@${project.dir}/../lib/development/aspectj-rt.jar,\
 	@${project.dir}/../lib/development/commons-collections4.jar,\
 	@${project.dir}/../lib/development/commons-lang3.jar,\
@@ -47,5 +46,8 @@ Include-Resource:\
 	@${project.dir}/../lib/development/sling-commons-osgi.jar,\
 	@${project.dir}/../lib/development/sling-testing-osgi-mock-core.jar,\
 	@${project.dir}/../lib/development/spring-test.jar
+Require-Capability:\
+	osgi.extender;\
+		filter := "(&(osgi.extender=osgi.configurator)(version>=1.0)(!(version>=2.0)))"
 -include ../common.bnd
 -removeheaders: Service-Component

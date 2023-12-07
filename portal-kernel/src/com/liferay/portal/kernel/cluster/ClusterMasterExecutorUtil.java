@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.cluster;
 
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.MethodHandler;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 import java.util.concurrent.Future;
 
@@ -28,33 +19,47 @@ public class ClusterMasterExecutorUtil {
 		ClusterMasterTokenTransitionListener
 			clusterMasterTokenTransitionListener) {
 
-		_clusterMasterExecutor.addClusterMasterTokenTransitionListener(
+		ClusterMasterExecutor clusterMasterExecutor =
+			_clusterMasterExecutorSnapshot.get();
+
+		clusterMasterExecutor.addClusterMasterTokenTransitionListener(
 			clusterMasterTokenTransitionListener);
 	}
 
 	public static <T> Future<T> executeOnMaster(MethodHandler methodHandler) {
-		return _clusterMasterExecutor.executeOnMaster(methodHandler);
+		ClusterMasterExecutor clusterMasterExecutor =
+			_clusterMasterExecutorSnapshot.get();
+
+		return clusterMasterExecutor.executeOnMaster(methodHandler);
 	}
 
 	public static boolean isEnabled() {
-		return _clusterMasterExecutor.isEnabled();
+		ClusterMasterExecutor clusterMasterExecutor =
+			_clusterMasterExecutorSnapshot.get();
+
+		return clusterMasterExecutor.isEnabled();
 	}
 
 	public static boolean isMaster() {
-		return _clusterMasterExecutor.isMaster();
+		ClusterMasterExecutor clusterMasterExecutor =
+			_clusterMasterExecutorSnapshot.get();
+
+		return clusterMasterExecutor.isMaster();
 	}
 
 	public static void removeClusterMasterTokenTransitionListener(
 		ClusterMasterTokenTransitionListener
 			clusterMasterTokenTransitionListener) {
 
-		_clusterMasterExecutor.removeClusterMasterTokenTransitionListener(
+		ClusterMasterExecutor clusterMasterExecutor =
+			_clusterMasterExecutorSnapshot.get();
+
+		clusterMasterExecutor.removeClusterMasterTokenTransitionListener(
 			clusterMasterTokenTransitionListener);
 	}
 
-	private static volatile ClusterMasterExecutor _clusterMasterExecutor =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			ClusterMasterExecutor.class, ClusterMasterExecutorUtil.class,
-			"_clusterMasterExecutor", false);
+	private static final Snapshot<ClusterMasterExecutor>
+		_clusterMasterExecutorSnapshot = new Snapshot<>(
+			ClusterMasterExecutorUtil.class, ClusterMasterExecutor.class);
 
 }

@@ -1,34 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.categories.admin.web.internal.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBuilder;
+import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,10 +30,8 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetCategoryUtil {
 
 	public static List<BreadcrumbEntry> getAssetCategoriesBreadcrumbEntries(
-			AssetVocabulary vocabulary, AssetCategory category,
-			HttpServletRequest httpServletRequest,
-			RenderResponse renderResponse)
-		throws PortalException {
+		AssetVocabulary vocabulary, AssetCategory category,
+		HttpServletRequest httpServletRequest, RenderResponse renderResponse) {
 
 		if (category == null) {
 			return Collections.emptyList();
@@ -52,62 +41,68 @@ public class AssetCategoryUtil {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		List<BreadcrumbEntry> breadcrumbEntries = new ArrayList<>();
+		return BreadcrumbEntryListBuilder.add(
+			breadcrumbEntry -> {
+				breadcrumbEntry.setTitle(
+					vocabulary.getTitle(themeDisplay.getLocale()));
+				breadcrumbEntry.setURL(
+					PortletURLBuilder.createRenderURL(
+						renderResponse
+					).setMVCPath(
+						"/view.jsp"
+					).setNavigation(
+						() -> {
+							String navigation = ParamUtil.getString(
+								httpServletRequest, "navigation");
 
-		BreadcrumbEntry vocabularyBreadcrumbEntry = new BreadcrumbEntry();
+							if (Validator.isNotNull(navigation)) {
+								return navigation;
+							}
 
-		vocabularyBreadcrumbEntry.setTitle(
-			vocabulary.getTitle(themeDisplay.getLocale()));
-
-		PortletURL portletURL = PortletURLBuilder.createRenderURL(
-			renderResponse
-		).setMVCPath(
-			"/view.jsp"
-		).setNavigation(
-			() -> {
-				String navigation = ParamUtil.getString(
-					httpServletRequest, "navigation");
-
-				if (Validator.isNotNull(navigation)) {
-					return navigation;
-				}
-
-				return null;
+							return null;
+						}
+					).setParameter(
+						"vocabularyId", vocabulary.getVocabularyId()
+					).buildString());
 			}
-		).setParameter(
-			"vocabularyId", vocabulary.getVocabularyId()
-		).buildPortletURL();
+		).addAll(
+			() -> {
+				List<AssetCategory> ancestorsCategories =
+					category.getAncestors();
 
-		vocabularyBreadcrumbEntry.setURL(portletURL.toString());
+				Collections.reverse(ancestorsCategories);
 
-		breadcrumbEntries.add(vocabularyBreadcrumbEntry);
+				return TransformUtil.transform(
+					ancestorsCategories,
+					curCategory -> BreadcrumbEntryBuilder.setTitle(
+						curCategory.getTitle(themeDisplay.getLocale())
+					).setURL(
+						PortletURLBuilder.createRenderURL(
+							renderResponse
+						).setMVCPath(
+							"/view.jsp"
+						).setNavigation(
+							() -> {
+								String navigation = ParamUtil.getString(
+									httpServletRequest, "navigation");
 
-		List<AssetCategory> ancestorsCategories = category.getAncestors();
+								if (Validator.isNotNull(navigation)) {
+									return navigation;
+								}
 
-		Collections.reverse(ancestorsCategories);
-
-		for (AssetCategory curCategory : ancestorsCategories) {
-			BreadcrumbEntry categoryBreadcrumbEntry = new BreadcrumbEntry();
-
-			categoryBreadcrumbEntry.setTitle(
-				curCategory.getTitle(themeDisplay.getLocale()));
-
-			portletURL.setParameter(
-				"categoryId", String.valueOf(curCategory.getCategoryId()));
-
-			categoryBreadcrumbEntry.setURL(portletURL.toString());
-
-			breadcrumbEntries.add(categoryBreadcrumbEntry);
-		}
-
-		BreadcrumbEntry categoryBreadcrumbEntry = new BreadcrumbEntry();
-
-		categoryBreadcrumbEntry.setTitle(
-			category.getTitle(themeDisplay.getLocale()));
-
-		breadcrumbEntries.add(categoryBreadcrumbEntry);
-
-		return breadcrumbEntries;
+								return null;
+							}
+						).setParameter(
+							"categoryId", curCategory.getCategoryId()
+						).setParameter(
+							"vocabularyId", vocabulary.getVocabularyId()
+						).buildString()
+					).build());
+			}
+		).add(
+			breadcrumbEntry -> breadcrumbEntry.setTitle(
+				category.getTitle(themeDisplay.getLocale()))
+		).build();
 	}
 
 }

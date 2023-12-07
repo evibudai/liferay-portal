@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.internal.form.renderer.test;
@@ -34,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -453,23 +443,20 @@ public class DDMFormTemplateContextFactoryTest {
 			Arrays.toString(actualValidations), expectedValidationsMap.size(),
 			actualValidations.length);
 
-		Stream.of(
-			actualValidations
-		).map(
-			HashMap.class::cast
-		).forEach(
-			actualValidation -> {
-				Assert.assertTrue(actualValidation.containsKey("label"));
-				Assert.assertTrue(actualValidation.containsKey("name"));
-				Assert.assertTrue(
-					actualValidation.containsKey("parameterMessage"));
-				Assert.assertTrue(actualValidation.containsKey("template"));
+		for (Object actualValidation : actualValidations) {
+			HashMap<String, Object> actualValidationMap =
+				(HashMap<String, Object>)actualValidation;
 
-				Assert.assertEquals(
-					expectedValidationsMap.remove(actualValidation.get("name")),
-					actualValidation.get("template"));
-			}
-		);
+			Assert.assertTrue(actualValidationMap.containsKey("label"));
+			Assert.assertTrue(actualValidationMap.containsKey("name"));
+			Assert.assertTrue(
+				actualValidationMap.containsKey("parameterMessage"));
+			Assert.assertTrue(actualValidationMap.containsKey("template"));
+
+			Assert.assertEquals(
+				expectedValidationsMap.remove(actualValidationMap.get("name")),
+				actualValidationMap.get("template"));
+		}
 
 		Assert.assertEquals(
 			expectedValidationsMap.toString(), 0,

@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -17,7 +11,6 @@ import React, {useContext} from 'react';
 
 import {ChartDispatchContext} from '../../context/ChartStateContext';
 import {StoreDispatchContext} from '../../context/StoreContext';
-import CountriesDetail from './CountriesDetail';
 import KeywordsDetail from './KeywordsDetail';
 import ReferralDetail from './ReferralDetail';
 import SocialDetail from './SocialDetail';
@@ -107,6 +100,7 @@ export default function Detail({
 				<>
 					<div className="c-pt-3 c-px-3 d-flex" ref={refProp}>
 						<ClayButton
+							aria-label={Liferay.Language.get('back')}
 							displayType="unstyled"
 							onClick={() => {
 								onCurrentPageChange({view: 'main'});
@@ -129,25 +123,7 @@ export default function Detail({
 
 					{(currentPage.view === TRAFFIC_CHANNELS.ORGANIC ||
 						currentPage.view === TRAFFIC_CHANNELS.PAID) &&
-						!!currentPageMocked.data.countrySearch.length &&
-						(Liferay.FeatureFlags['LPS-149256'] ? (
-							<CountriesDetail
-								currentPage={currentPageMocked}
-								handleDetailPeriodChange={
-									handleDetailPeriodChange
-								}
-								timeSpanOptions={timeSpanOptions}
-								trafficShareDataProvider={
-									trafficShareDataProvider
-								}
-								trafficSourcesDataProvider={
-									trafficSourcesDataProvider
-								}
-								trafficVolumeDataProvider={
-									trafficVolumeDataProvider
-								}
-							/>
-						) : (
+						!!currentPageMocked.data.countrySearch.length && (
 							<KeywordsDetail
 								currentPage={currentPage}
 								trafficShareDataProvider={
@@ -157,7 +133,7 @@ export default function Detail({
 									trafficVolumeDataProvider
 								}
 							/>
-						))}
+						)}
 
 					{currentPage.view === TRAFFIC_CHANNELS.REFERRAL && (
 						<ReferralDetail

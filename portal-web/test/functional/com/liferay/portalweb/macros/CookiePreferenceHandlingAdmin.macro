@@ -1,7 +1,40 @@
 definition {
 
+	@description = "Disable Cookie Preference handling on instance level"
+	@summary = "Default summary"
+	macro disablePreferenceHandling(explicitMode = null) {
+		CookieNavigator.gotoInstanceSettings(portlet = "Preference Handling");
+
+		FormFields.disableCheckbox(fieldName = "Enabled");
+
+		if (${explicitMode} == "enable") {
+			FormFields.enableCheckbox(fieldName = "Explicit Cookie Consent Mode");
+		}
+		else if (${explicitMode} == "disable") {
+			FormFields.disableCheckbox(fieldName = "Explicit Cookie Consent Mode");
+		}
+
+		CookiePreferenceHandlingAdmin.saveConfiguration();
+	}
+
+	@description = "Disable Cookie Preference handling with Explicit cookie setting Disabled on site level"
+	@summary = "Default summary"
+	macro disablePreferenceHandlingWithOutCookieConsentInSiteSettings(baseURL = null, siteURLKey = null) {
+		CookieNavigator.gotoSiteSettings(
+			baseURL = ${baseURL},
+			portlet = "Preference Handling",
+			siteURLKey = ${siteURLKey});
+
+		FormFields.disableCheckbox(fieldName = "Enabled");
+
+		FormFields.disableCheckbox(fieldName = "Explicit Cookie Consent Mode");
+
+		CookiePreferenceHandlingAdmin.saveConfiguration();
+	}
+
 	@description = "Enable Cookie Preference handling"
-	macro enablePreferenceHandling {
+	@summary = "Default summary"
+	macro enablePreferenceHandling() {
 		CookieNavigator.gotoInstanceSettings(portlet = "Preference Handling");
 
 		FormFields.enableCheckbox(fieldName = "Enabled");
@@ -10,7 +43,8 @@ definition {
 	}
 
 	@description = "Enable Cookie Preference handling on instance level"
-	macro enablePreferenceHandlingInInstanceSettings {
+	@summary = "Default summary"
+	macro enablePreferenceHandlingInInstanceSettings() {
 		CookieNavigator.gotoInstanceSettings(portlet = "Preference Handling");
 
 		FormFields.enableCheckbox(fieldName = "Enabled");
@@ -19,7 +53,8 @@ definition {
 	}
 
 	@description = "Enable Cookie Preference handling with Explicit cookie setting Enabled"
-	macro enablePreferenceHandlingWithCookieConsent {
+	@summary = "Default summary"
+	macro enablePreferenceHandlingWithCookieConsent() {
 		CookieNavigator.gotoInstanceSettings(portlet = "Preference Handling");
 
 		FormFields.enableCheckbox(fieldName = "Enabled");
@@ -30,11 +65,12 @@ definition {
 	}
 
 	@description = "Enable Cookie Preference handling with Explicit cookie setting Enabled on site level"
-	macro enablePreferenceHandlingWithCookieConsentInSiteSettings {
+	@summary = "Default summary"
+	macro enablePreferenceHandlingWithCookieConsentInSiteSettings(baseURL = null, siteURLKey = null) {
 		CookieNavigator.gotoSiteSettings(
-			baseURL = "${baseURL}",
+			baseURL = ${baseURL},
 			portlet = "Preference Handling",
-			siteURLKey = "${siteURLKey}");
+			siteURLKey = ${siteURLKey});
 
 		FormFields.enableCheckbox(fieldName = "Enabled");
 
@@ -44,7 +80,8 @@ definition {
 	}
 
 	@description = "Disable Cookie Preference handling with Explicit cookie setting Disabled"
-	macro enablePreferenceHandlingWithoutCookieConsent {
+	@summary = "Default summary"
+	macro enablePreferenceHandlingWithoutCookieConsent() {
 		CookieNavigator.gotoInstanceSettings(portlet = "Preference Handling");
 
 		FormFields.enableCheckbox(fieldName = "Enabled");
@@ -54,7 +91,35 @@ definition {
 		CookiePreferenceHandlingAdmin.saveConfiguration();
 	}
 
-	macro saveConfiguration {
+	@description = "Enable Cookie Preference handling with Explicit cookie setting disabled on instance level"
+	@summary = "Default summary"
+	macro enablePreferenceHandlingWithOutCookieConsentInInstanceSettings() {
+		CookieNavigator.gotoInstanceSettings(portlet = "Preference Handling");
+
+		FormFields.enableCheckbox(fieldName = "Enabled");
+
+		FormFields.disableCheckbox(fieldName = "Explicit Cookie Consent Mode");
+
+		CookiePreferenceHandlingAdmin.saveConfiguration();
+	}
+
+	@description = "Enable Cookie Preference handling with Explicit cookie setting Disabled on site level"
+	@summary = "Default summary"
+	macro enablePreferenceHandlingWithOutCookieConsentInSiteSettings(baseURL = null, siteURLKey = null) {
+		CookieNavigator.gotoSiteSettings(
+			baseURL = ${baseURL},
+			portlet = "Preference Handling",
+			siteURLKey = ${siteURLKey});
+
+		FormFields.enableCheckbox(fieldName = "Enabled");
+
+		FormFields.disableCheckbox(fieldName = "Explicit Cookie Consent Mode");
+
+		CookiePreferenceHandlingAdmin.saveConfiguration();
+	}
+
+	@summary = "Default summary"
+	macro saveConfiguration() {
 		if (IsElementPresent(locator1 = "Button#UPDATE")) {
 			AssertClick.assertTextClickNoMouseOver(
 				locator1 = "Button#UPDATE",

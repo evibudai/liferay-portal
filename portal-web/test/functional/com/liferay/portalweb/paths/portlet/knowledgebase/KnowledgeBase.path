@@ -11,8 +11,18 @@
 
 <tbody>
 <tr>
-	<td>ARTICLE_PREVIEW_VERSION_NUMBER</td>
-	<td>//span[contains(@class,'workflow-version')]/span[contains(@class,'workflow-value')]</td>
+	<td>ARTICLE_DESCRIPTION</td>
+	<td>//div[contains(@id,'knowledge_base')]//div[contains(@class,'description')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ARTICLE_DESCRIPTION_HEADER</td>
+	<td>//div[contains(@class,'subtitle') and contains(.,'Description')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ARTICLE_VERSION_NUMBER</td>
+	<td>//span[contains(@class,'label-info')]/span</td>
 	<td></td>
 </tr>
 <tr>
@@ -80,6 +90,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ARTICLE_TABLE_EXPIRATION_STATUS</td>
+	<td>//a[contains(.,'${key_kbArticleTitle}')]/parent::h2/following-sibling::span[@class='text-default']//span[contains(@class,'label-warning')]/span</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ARTICLE_TABLE_EXPIRATION_TIME</td>
+	<td>//*[name()='svg'][contains(@class,'lexicon-icon-question-circle-full')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ARTICLE_TABLE_KB_GENERIC</td>
 	<td>//tr[1]/td[3]</td>
 	<td></td>
@@ -105,6 +125,11 @@
 <tr>
 	<td>DESCRIPTIVE_VIEW_ARTICLE_TITLE</td>
 	<td>//h2/a[contains(.,'${key_kbArticleTitle}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DESCRIPTIVE_VIEW_ARTICLE_TITLE_SPECIFIC</td>
+	<td>xpath=(//*[@data-qa-id='rowItemContent']//h2/a)[${indexNumber}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -291,6 +316,16 @@
 	<td>//div[contains(@id,'knowledge_base_web') and contains(@id,'newParent')]//label[contains(@class,'control-label') and contains(.,'Priority')]</td>
 	<td></td>
 </tr>
+<tr>
+	<td>MOVE_MODAL_SEARCH_BAR</td>
+	<td>//div[contains(@class,'container-fluid')]//div[contains(@class,'input-group-sm')]//input[@placeholder='Search for']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MOVE_MODAL_SEARCH_RESULT</td>
+	<td>//ul[contains(@class,'list-group')]//div[contains(@class,'autofit-col')]//span[contains(.,'${key_itemName}')]</td>
+	<td></td>
+</tr>
 
 <!--PAGE_TREE-->
 
@@ -311,7 +346,17 @@
 </tr>
 <tr>
 	<td>PAGE_TREE_ITEM_HIGHLIGHT</td>
-	<td>//li[contains(@class,'treeview-item')]//div[contains(@class,'knowledge-base-navigation-item-active')]//div[normalize-space(text())='${key_itemName}']</td>
+	<td>//li[contains(@class,'treeview-item')]//div[contains(@class,'knowledge-base-navigation-item-active')]//span[normalize-space(text())='${key_itemName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_ITEM_HIGHLIGHT_1</td>
+	<td>//a[contains(@class,'link-secondary')]//span/b[text()='${key_itemName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_ITEM_HIGHLIGHT_2</td>
+	<td>xpath=(//a[contains(@class,'link-secondary')]//span/b[text()='${key_itemName}'])[2]</td>
 	<td></td>
 </tr>
 <tr>
@@ -321,7 +366,7 @@
 </tr>
 <tr>
 	<td>PAGE_TREE_ITEM_NAME</td>
-	<td>//li[contains(@class,'treeview-item')]//div[contains(@class,'component-text')][normalize-space(text())='${key_itemName}']</td>
+	<td>//li[contains(@class,'treeview-item')]//span[contains(@class,'component-text')][normalize-space(text())='${key_itemName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -347,6 +392,32 @@
 <tr>
 	<td>PAGE_TREE_TEMPLATES</td>
 	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-page-template')]]</td>
+	<td></td>
+</tr>
+
+<!--SEARCH-->
+
+<tr>
+	<td>SEARCH_WIDGET_BAR</td>
+	<td>//input[contains(@data-qa-id,'searchInput') and contains(@name,'knowledge_base')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_WIDGET_ARTICLE_TITLE</td>
+	<td>//tbody/tr/td[contains(@class,'lfr-title-column')]/a[contains(.,'${key_kbArticleTitle}')]</td>
+	<td></td>
+</tr>
+
+<!--SIDE_BAR-->
+
+<tr>
+	<td>HOME_FOLDER</td>
+	<td>//div[contains(@class,'autofit-col-expand')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_FIELD</td>
+	<td>//div[contains(@class,'sidebar')]//input[@placeholder='Search for']</td>
 	<td></td>
 </tr>
 </tbody>

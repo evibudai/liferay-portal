@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.list.web.internal.display.context;
@@ -33,8 +24,10 @@ import com.liferay.asset.list.model.AssetListEntrySegmentsEntryRel;
 import com.liferay.asset.list.service.AssetListEntryAssetEntryRelLocalServiceUtil;
 import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.asset.list.service.AssetListEntrySegmentsEntryRelLocalServiceUtil;
+import com.liferay.asset.list.util.comparator.ClassNameModelResourceComparator;
 import com.liferay.asset.list.web.internal.constants.AssetListWebKeys;
-import com.liferay.asset.list.web.internal.util.comparator.ClassNameModelResourceComparator;
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
+import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.asset.util.comparator.AssetRendererFactoryTypeNameComparator;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
@@ -45,9 +38,13 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.AssetEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.GroupItemSelectorReturnType;
+import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.asset.criterion.AssetEntryItemSelectorCriterion;
 import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
+import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -63,15 +60,12 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CollatorUtil;
@@ -89,6 +83,9 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.constants.SegmentsEntryConstants;
+import com.liferay.segments.constants.SegmentsPortletKeys;
+import com.liferay.segments.item.selector.SegmentsEntryItemSelectorReturnType;
+import com.liferay.segments.item.selector.criterion.SegmentsEntryItemSelectorCriterion;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryLocalServiceUtil;
 import com.liferay.segments.service.SegmentsEntryServiceUtil;
@@ -109,8 +106,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -415,20 +410,20 @@ public class EditAssetListDisplayContext {
 					continue;
 				}
 
-				List<String> items = new ArrayList<>();
+				StringBundler sb = new StringBundler(keywords.length * 2);
 
 				for (String keyword : keywords) {
 					if (keyword.contains(" ")) {
 						keyword = StringUtil.quote(keyword, CharPool.QUOTE);
 					}
 
-					items.add(keyword);
+					sb.append(keyword);
+					sb.append(StringPool.SPACE);
 				}
 
-				Stream<String> stream = items.stream();
+				sb.setIndex(sb.index() - 1);
 
-				queryValues = stream.collect(
-					Collectors.joining(StringPool.SPACE));
+				queryValues = sb.toString();
 
 				ruleJSONObject.put("selectedItems", queryValues);
 			}
@@ -490,19 +485,8 @@ public class EditAssetListDisplayContext {
 		}
 
 		List<Long> availableClassNameIds = ListUtil.fromArray(
-			AssetRendererFactoryRegistryUtil.getClassNameIds(
+			AssetRendererFactoryRegistryUtil.getIndexableClassNameIds(
 				_themeDisplay.getCompanyId(), true));
-
-		ListUtil.distinct(availableClassNameIds);
-
-		availableClassNameIds = ListUtil.filter(
-			availableClassNameIds,
-			availableClassNameId -> {
-				Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-					PortalUtil.getClassName(availableClassNameId));
-
-				return indexer != null;
-			});
 
 		availableClassNameIds = ListUtil.sort(
 			availableClassNameIds,
@@ -531,21 +515,25 @@ public class EditAssetListDisplayContext {
 			return _availableSegmentsEntries;
 		}
 
-		long[] selectedSegmentsEntryIds = getSelectedSegmentsEntryIds();
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
 
-		List<SegmentsEntry> segmentsEntries =
+		Group group = _themeDisplay.getScopeGroup();
+
+		if (!stagingGroupHelper.isStagedPortlet(
+				_themeDisplay.getScopeGroupId(),
+				SegmentsPortletKeys.SEGMENTS)) {
+
+			group = stagingGroupHelper.getStagedPortletGroup(
+				_themeDisplay.getScopeGroup(), SegmentsPortletKeys.SEGMENTS);
+		}
+
+		_availableSegmentsEntries = ListUtil.filter(
 			SegmentsEntryServiceUtil.getSegmentsEntries(
-				_themeDisplay.getScopeGroupId(), true, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
-
-		Stream<SegmentsEntry> segmentsEntryStream = segmentsEntries.stream();
-
-		_availableSegmentsEntries = segmentsEntryStream.filter(
+				group.getGroupId(), true),
 			segmentsEntry -> !ArrayUtil.contains(
-				selectedSegmentsEntryIds, segmentsEntry.getSegmentsEntryId())
-		).collect(
-			Collectors.toList()
-		);
+				getSelectedSegmentsEntryIds(),
+				segmentsEntry.getSegmentsEntryId()));
 
 		return _availableSegmentsEntries;
 	}
@@ -574,21 +562,24 @@ public class EditAssetListDisplayContext {
 		return _backURL;
 	}
 
-	public String getCategorySelectorURL() throws Exception {
+	public String getCategorySelectorURL() {
+		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+			RequestBackedPortletURLFactoryUtil.create(_portletRequest);
+
+		InfoItemItemSelectorCriterion itemSelectorCriterion =
+			new InfoItemItemSelectorCriterion();
+
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoItemItemSelectorReturnType());
+		itemSelectorCriterion.setItemType(AssetCategory.class.getName());
+		itemSelectorCriterion.setMultiSelection(true);
+
 		return PortletURLBuilder.create(
-			PortletProviderUtil.getPortletURL(
-				_httpServletRequest, AssetCategory.class.getName(),
-				PortletProvider.Action.BROWSE)
-		).setParameter(
-			"eventName", _portletResponse.getNamespace() + "selectCategory"
-		).setParameter(
-			"selectedCategories", "{selectedCategories}"
-		).setParameter(
-			"singleSelect", "{singleSelect}"
-		).setParameter(
-			"vocabularyIds", "{vocabularyIds}"
-		).setWindowState(
-			LiferayWindowState.POP_UP
+			_itemSelector.getItemSelectorURL(
+				requestBackedPortletURLFactory, _themeDisplay.getScopeGroup(),
+				_themeDisplay.getScopeGroupId(),
+				_portletResponse.getNamespace() + "selectCategory",
+				itemSelectorCriterion)
 		).buildString();
 	}
 
@@ -709,7 +700,7 @@ public class EditAssetListDisplayContext {
 			}
 		).put(
 			"isSegmentationEnabled",
-			_isSegmentationEnabled(_themeDisplay.getCompanyId())
+			isSegmentationEnabled(_themeDisplay.getCompanyId())
 		).put(
 			"openSelectSegmentsEntryDialogMethod",
 			() -> {
@@ -937,13 +928,8 @@ public class EditAssetListDisplayContext {
 	}
 
 	public long[] getSelectedGroupIds() throws PortalException {
-		List<Group> selectedGroups = getSelectedGroups();
-
-		Stream<Group> stream = selectedGroups.stream();
-
-		return stream.mapToLong(
-			Group::getGroupId
-		).toArray();
+		return TransformUtil.transformToLongArray(
+			getSelectedGroups(), Group::getGroupId);
 	}
 
 	public List<Group> getSelectedGroups() throws PortalException {
@@ -971,14 +957,9 @@ public class EditAssetListDisplayContext {
 			return null;
 		}
 
-		Stream<AssetListEntrySegmentsEntryRel>
-			assetListEntrySegmentsEntryRelsStream =
-				assetListEntrySegmentsEntryRels.stream();
-
-		_selectedSegmentsEntryIds =
-			assetListEntrySegmentsEntryRelsStream.mapToLong(
-				AssetListEntrySegmentsEntryRel::getSegmentsEntryId
-			).toArray();
+		_selectedSegmentsEntryIds = TransformUtil.transformToLongArray(
+			assetListEntrySegmentsEntryRels,
+			AssetListEntrySegmentsEntryRel::getSegmentsEntryId);
 
 		return _selectedSegmentsEntryIds;
 	}
@@ -987,41 +968,56 @@ public class EditAssetListDisplayContext {
 		return _portletResponse.getNamespace() + "_selectSite";
 	}
 
-	public String getSelectSegmentsEntryURL() throws Exception {
+	public String getSelectSegmentsEntryURL() {
 		if (_selectSegmentsEntryURL != null) {
 			return _selectSegmentsEntryURL;
 		}
 
-		_selectSegmentsEntryURL = PortletURLBuilder.create(
-			PortletProviderUtil.getPortletURL(
-				_httpServletRequest, SegmentsEntry.class.getName(),
-				PortletProvider.Action.BROWSE)
-		).setParameter(
-			"eventName", _portletResponse.getNamespace() + "selectEntity"
-		).setParameter(
-			"selectedSegmentsEntryIds",
-			StringUtil.merge(getSelectedSegmentsEntryIds())
-		).setWindowState(
-			LiferayWindowState.POP_UP
-		).buildString();
+		SegmentsEntryItemSelectorCriterion segmentsEntryItemSelectorCriterion =
+			new SegmentsEntryItemSelectorCriterion();
+
+		segmentsEntryItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			Collections.singletonList(
+				new SegmentsEntryItemSelectorReturnType()));
+
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
+
+		Group group = _themeDisplay.getScopeGroup();
+
+		if (!stagingGroupHelper.isStagedPortlet(
+				_themeDisplay.getScopeGroupId(),
+				SegmentsPortletKeys.SEGMENTS)) {
+
+			group = stagingGroupHelper.getStagedPortletGroup(
+				_themeDisplay.getScopeGroup(), SegmentsPortletKeys.SEGMENTS);
+		}
+
+		segmentsEntryItemSelectorCriterion.setGroupId(group.getGroupId());
+
+		_selectSegmentsEntryURL = String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(_portletRequest),
+				_portletResponse.getNamespace() + "selectEntity",
+				segmentsEntryItemSelectorCriterion));
 
 		return _selectSegmentsEntryURL;
 	}
 
 	public String getTagSelectorURL() throws Exception {
-		return PortletURLBuilder.create(
-			PortletProviderUtil.getPortletURL(
-				_httpServletRequest, AssetTag.class.getName(),
-				PortletProvider.Action.BROWSE)
-		).setParameter(
-			"eventName", _portletResponse.getNamespace() + "selectTag"
-		).setParameter(
-			"groupIds", StringUtil.merge(getSelectedGroupIds())
-		).setParameter(
-			"selectedTagNames", "{selectedTagNames}"
-		).setWindowState(
-			LiferayWindowState.POP_UP
-		).buildString();
+		AssetTagsItemSelectorCriterion assetTagsItemSelectorCriterion =
+			new AssetTagsItemSelectorCriterion();
+
+		assetTagsItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new AssetTagsItemSelectorReturnType());
+		assetTagsItemSelectorCriterion.setGroupIds(getSelectedGroupIds());
+		assetTagsItemSelectorCriterion.setMultiSelection(true);
+
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(_httpServletRequest),
+				_portletResponse.getNamespace() + "selectTag",
+				assetTagsItemSelectorCriterion));
 	}
 
 	public UnicodeProperties getUnicodeProperties() {
@@ -1119,6 +1115,20 @@ public class EditAssetListDisplayContext {
 		return false;
 	}
 
+	public boolean isSegmentationEnabled(long companyId) {
+		try {
+			return _segmentsConfigurationProvider.isSegmentationEnabled(
+				companyId);
+		}
+		catch (ConfigurationException configurationException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(configurationException);
+			}
+
+			return false;
+		}
+	}
+
 	public boolean isSubtypeFieldsFilterEnabled() {
 		if (_subtypeFieldsFilterEnabled != null) {
 			return _subtypeFieldsFilterEnabled;
@@ -1208,61 +1218,70 @@ public class EditAssetListDisplayContext {
 		assetEntryItemSelectorCriterion.setTypeSelection(
 			assetRendererFactory.getClassName());
 
-		return _itemSelector.getItemSelectorURL(
-			RequestBackedPortletURLFactoryUtil.create(_portletRequest),
-			_portletResponse.getNamespace() + "selectAsset",
-			assetEntryItemSelectorCriterion);
+		return PortletURLBuilder.create(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(_portletRequest),
+				_portletResponse.getNamespace() + "selectAsset",
+				assetEntryItemSelectorCriterion)
+		).buildPortletURL();
 	}
 
 	private JSONArray _getAssetListEntrySegmentsEntryRelJSONArray() {
 		List<AssetListEntrySegmentsEntryRel> assetListEntrySegmentsEntryRels =
-			getAssetListEntrySegmentsEntryRels();
+			new ArrayList<>(getAssetListEntrySegmentsEntryRels());
 
-		Stream<AssetListEntrySegmentsEntryRel> stream =
-			assetListEntrySegmentsEntryRels.stream();
+		Collections.sort(
+			assetListEntrySegmentsEntryRels,
+			Comparator.comparingInt(
+				AssetListEntrySegmentsEntryRel::getPriority));
 
 		LiferayPortletResponse liferayPortletResponse =
 			PortalUtil.getLiferayPortletResponse(_portletResponse);
 
-		return JSONUtil.putAll(
-			stream.sorted(
-				Comparator.comparingInt(
-					AssetListEntrySegmentsEntryRel::getPriority)
-			).map(
-				assetListEntrySegmentsEntryRel -> JSONUtil.put(
-					"active",
-					getSegmentsEntryId() ==
-						assetListEntrySegmentsEntryRel.getSegmentsEntryId()
-				).put(
-					"assetListEntrySegmentsEntryRelId",
-					assetListEntrySegmentsEntryRel.
-						getAssetListEntrySegmentsEntryRelId()
-				).put(
-					"deleteAssetListEntryVariationURL",
-					_getDeleteAssetListEntryVariationURL(
-						liferayPortletResponse, assetListEntrySegmentsEntryRel)
-				).put(
-					"editAssetListEntryURL",
-					PortletURLBuilder.createRenderURL(
-						liferayPortletResponse
-					).setMVCPath(
-						"/edit_asset_list_entry.jsp"
-					).setBackURL(
-						getBackURL()
-					).setParameter(
-						"assetListEntryId",
-						assetListEntrySegmentsEntryRel.getAssetListEntryId()
-					).setParameter(
-						"segmentsEntryId",
-						assetListEntrySegmentsEntryRel.getSegmentsEntryId()
-					).buildString()
-				).put(
-					"name",
-					getSegmentsEntryName(
-						assetListEntrySegmentsEntryRel.getSegmentsEntryId(),
-						_themeDisplay.getLocale())
-				)
-			).toArray());
+		return JSONUtil.toJSONArray(
+			assetListEntrySegmentsEntryRels,
+			assetListEntrySegmentsEntryRel -> JSONUtil.put(
+				"active",
+				getSegmentsEntryId() ==
+					assetListEntrySegmentsEntryRel.getSegmentsEntryId()
+			).put(
+				"assetListEntrySegmentsEntryRelId",
+				assetListEntrySegmentsEntryRel.
+					getAssetListEntrySegmentsEntryRelId()
+			).put(
+				"deleteAssetListEntryVariationURL",
+				_getDeleteAssetListEntryVariationURL(
+					liferayPortletResponse, assetListEntrySegmentsEntryRel)
+			).put(
+				"editAssetListEntryURL",
+				PortletURLBuilder.createRenderURL(
+					liferayPortletResponse
+				).setMVCPath(
+					"/edit_asset_list_entry.jsp"
+				).setBackURL(
+					getBackURL()
+				).setParameter(
+					"assetListEntryId",
+					assetListEntrySegmentsEntryRel.getAssetListEntryId()
+				).setParameter(
+					"backURLTitle",
+					() -> {
+						PortletDisplay portletDisplay =
+							_themeDisplay.getPortletDisplay();
+
+						return portletDisplay.getPortletDisplayName();
+					}
+				).setParameter(
+					"segmentsEntryId",
+					assetListEntrySegmentsEntryRel.getSegmentsEntryId()
+				).buildString()
+			).put(
+				"name",
+				getSegmentsEntryName(
+					assetListEntrySegmentsEntryRel.getSegmentsEntryId(),
+					_themeDisplay.getLocale())
+			),
+			_log);
 	}
 
 	private Long[] _getClassTypeIds(
@@ -1358,20 +1377,6 @@ public class EditAssetListDisplayContext {
 		}
 
 		return typeSettings;
-	}
-
-	private boolean _isSegmentationEnabled(long companyId) {
-		try {
-			return _segmentsConfigurationProvider.isSegmentationEnabled(
-				companyId);
-		}
-		catch (ConfigurationException configurationException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(configurationException);
-			}
-
-			return false;
-		}
 	}
 
 	private void _setDDMStructure() throws Exception {

@@ -1,21 +1,14 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.model.impl;
 
 import com.liferay.knowledge.base.constants.KBFolderConstants;
+import com.liferay.knowledge.base.exception.NoSuchFolderException;
 import com.liferay.knowledge.base.model.KBFolder;
+import com.liferay.knowledge.base.model.KBFolderModel;
 import com.liferay.knowledge.base.service.KBArticleServiceUtil;
 import com.liferay.knowledge.base.service.KBFolderLocalServiceUtil;
 import com.liferay.knowledge.base.service.KBFolderServiceUtil;
@@ -27,6 +20,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 
 /**
  * @author Brian Wing Shun Chan
@@ -35,23 +29,12 @@ public class KBFolderImpl extends KBFolderBaseImpl {
 
 	@Override
 	public List<Long> getAncestorKBFolderIds() throws PortalException {
-		List<Long> ancestorFolderIds = new ArrayList<>();
+		return _getAncestors(KBFolderModel::getKbFolderId);
+	}
 
-		ancestorFolderIds.add(getKbFolderId());
-
-		KBFolder kbFolder = this;
-
-		while (!kbFolder.isRoot()) {
-			kbFolder = kbFolder.getParentKBFolder();
-
-			if (kbFolder == null) {
-				break;
-			}
-
-			ancestorFolderIds.add(kbFolder.getKbFolderId());
-		}
-
-		return ancestorFolderIds;
+	@Override
+	public List<KBFolder> getAncestorKBFolders() throws PortalException {
+		return _getAncestors(Function.identity());
 	}
 
 	@Override
@@ -114,6 +97,31 @@ public class KBFolderImpl extends KBFolderBaseImpl {
 		}
 
 		return false;
+	}
+
+	private <T> List<T> _getAncestors(Function<KBFolder, T> function)
+		throws PortalException {
+
+		List<T> ancestors = new ArrayList<>();
+
+		KBFolder kbFolder = this;
+
+		while (!kbFolder.isRoot()) {
+			try {
+				kbFolder = kbFolder.getParentKBFolder();
+
+				ancestors.add(function.apply(kbFolder));
+			}
+			catch (NoSuchFolderException noSuchFolderException) {
+				if (kbFolder.isInTrash()) {
+					break;
+				}
+
+				throw noSuchFolderException;
+			}
+		}
+
+		return ancestors;
 	}
 
 	private long _classNameId;

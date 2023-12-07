@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import classNames from 'classnames';
@@ -20,7 +11,9 @@ import {BaseWrapper} from '../Base';
 type InputSelectProps = {
 	className?: string;
 	defaultOption?: boolean;
+	disabled?: boolean;
 	errors?: any;
+	forceSelectOption?: boolean;
 	id?: string;
 	label?: string;
 	name: string;
@@ -33,6 +26,7 @@ type InputSelectProps = {
 
 const InputSelect: React.FC<InputSelectProps> = ({
 	className,
+	disabled = false,
 	registerOptions,
 	defaultOption = true,
 	errors = {},
@@ -42,11 +36,13 @@ const InputSelect: React.FC<InputSelectProps> = ({
 	register = () => {},
 	id = name,
 	options,
+	forceSelectOption = false,
 	required = false,
 	...otherProps
 }) => {
 	return (
 		<BaseWrapper
+			disabled={disabled}
 			error={errors[name]?.message}
 			label={label}
 			required={required}
@@ -54,6 +50,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
 			<select
 				className={classNames('form-control rounded-xs', className)}
 				defaultValue={defaultValue}
+				disabled={disabled}
 				id={id}
 				name={name}
 				{...otherProps}
@@ -64,7 +61,11 @@ const InputSelect: React.FC<InputSelectProps> = ({
 				{options.map(({label, value}, index) => (
 					<option
 						key={index}
-						selected={value === defaultValue}
+						selected={
+							forceSelectOption
+								? value === defaultValue
+								: undefined
+						}
 						value={value}
 					>
 						{label}

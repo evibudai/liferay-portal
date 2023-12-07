@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model.impl;
@@ -79,7 +70,7 @@ public class CommerceOrderCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(153);
+		StringBundler sb = new StringBundler(155);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -147,6 +138,8 @@ public class CommerceOrderCacheModel
 		sb.append(purchaseOrderNumber);
 		sb.append(", requestedDeliveryDate=");
 		sb.append(requestedDeliveryDate);
+		sb.append(", shippable=");
+		sb.append(shippable);
 		sb.append(", shippingAmount=");
 		sb.append(shippingAmount);
 		sb.append(", shippingDiscountAmount=");
@@ -392,6 +385,7 @@ public class CommerceOrderCacheModel
 				new Date(requestedDeliveryDate));
 		}
 
+		commerceOrderImpl.setShippable(shippable);
 		commerceOrderImpl.setShippingAmount(shippingAmount);
 		commerceOrderImpl.setShippingDiscountAmount(shippingDiscountAmount);
 		commerceOrderImpl.setShippingDiscountPercentageLevel1(
@@ -546,6 +540,8 @@ public class CommerceOrderCacheModel
 		printedNote = objectInput.readUTF();
 		purchaseOrderNumber = objectInput.readUTF();
 		requestedDeliveryDate = objectInput.readLong();
+
+		shippable = objectInput.readBoolean();
 		shippingAmount = (BigDecimal)objectInput.readObject();
 		shippingDiscountAmount = (BigDecimal)objectInput.readObject();
 		shippingDiscountPercentageLevel1 = (BigDecimal)objectInput.readObject();
@@ -730,6 +726,8 @@ public class CommerceOrderCacheModel
 		}
 
 		objectOutput.writeLong(requestedDeliveryDate);
+
+		objectOutput.writeBoolean(shippable);
 		objectOutput.writeObject(shippingAmount);
 		objectOutput.writeObject(shippingDiscountAmount);
 		objectOutput.writeObject(shippingDiscountPercentageLevel1);
@@ -830,6 +828,7 @@ public class CommerceOrderCacheModel
 	public String printedNote;
 	public String purchaseOrderNumber;
 	public long requestedDeliveryDate;
+	public boolean shippable;
 	public BigDecimal shippingAmount;
 	public BigDecimal shippingDiscountAmount;
 	public BigDecimal shippingDiscountPercentageLevel1;

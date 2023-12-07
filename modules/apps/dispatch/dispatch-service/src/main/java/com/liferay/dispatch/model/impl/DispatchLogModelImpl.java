@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dispatch.model.impl;
@@ -226,82 +217,106 @@ public class DispatchLogModelImpl
 	public Map<String, Function<DispatchLog, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<DispatchLog, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<DispatchLog, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<DispatchLog, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<DispatchLog, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<DispatchLog, Object>>();
-		Map<String, BiConsumer<DispatchLog, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<DispatchLog, ?>>();
+		private static final Map<String, Function<DispatchLog, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", DispatchLog::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<DispatchLog, Long>)DispatchLog::setMvccVersion);
-		attributeGetterFunctions.put(
-			"dispatchLogId", DispatchLog::getDispatchLogId);
-		attributeSetterBiConsumers.put(
-			"dispatchLogId",
-			(BiConsumer<DispatchLog, Long>)DispatchLog::setDispatchLogId);
-		attributeGetterFunctions.put("companyId", DispatchLog::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<DispatchLog, Long>)DispatchLog::setCompanyId);
-		attributeGetterFunctions.put("userId", DispatchLog::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<DispatchLog, Long>)DispatchLog::setUserId);
-		attributeGetterFunctions.put("userName", DispatchLog::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<DispatchLog, String>)DispatchLog::setUserName);
-		attributeGetterFunctions.put("createDate", DispatchLog::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<DispatchLog, Date>)DispatchLog::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", DispatchLog::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<DispatchLog, Date>)DispatchLog::setModifiedDate);
-		attributeGetterFunctions.put(
-			"dispatchTriggerId", DispatchLog::getDispatchTriggerId);
-		attributeSetterBiConsumers.put(
-			"dispatchTriggerId",
-			(BiConsumer<DispatchLog, Long>)DispatchLog::setDispatchTriggerId);
-		attributeGetterFunctions.put("endDate", DispatchLog::getEndDate);
-		attributeSetterBiConsumers.put(
-			"endDate", (BiConsumer<DispatchLog, Date>)DispatchLog::setEndDate);
-		attributeGetterFunctions.put("error", DispatchLog::getError);
-		attributeSetterBiConsumers.put(
-			"error", (BiConsumer<DispatchLog, String>)DispatchLog::setError);
-		attributeGetterFunctions.put("output", DispatchLog::getOutput);
-		attributeSetterBiConsumers.put(
-			"output", (BiConsumer<DispatchLog, String>)DispatchLog::setOutput);
-		attributeGetterFunctions.put("startDate", DispatchLog::getStartDate);
-		attributeSetterBiConsumers.put(
-			"startDate",
-			(BiConsumer<DispatchLog, Date>)DispatchLog::setStartDate);
-		attributeGetterFunctions.put("status", DispatchLog::getStatus);
-		attributeSetterBiConsumers.put(
-			"status", (BiConsumer<DispatchLog, Integer>)DispatchLog::setStatus);
+		static {
+			Map<String, Function<DispatchLog, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap<String, Function<DispatchLog, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", DispatchLog::getMvccVersion);
+			attributeGetterFunctions.put(
+				"dispatchLogId", DispatchLog::getDispatchLogId);
+			attributeGetterFunctions.put(
+				"companyId", DispatchLog::getCompanyId);
+			attributeGetterFunctions.put("userId", DispatchLog::getUserId);
+			attributeGetterFunctions.put("userName", DispatchLog::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", DispatchLog::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", DispatchLog::getModifiedDate);
+			attributeGetterFunctions.put(
+				"dispatchTriggerId", DispatchLog::getDispatchTriggerId);
+			attributeGetterFunctions.put("endDate", DispatchLog::getEndDate);
+			attributeGetterFunctions.put("error", DispatchLog::getError);
+			attributeGetterFunctions.put("output", DispatchLog::getOutput);
+			attributeGetterFunctions.put(
+				"startDate", DispatchLog::getStartDate);
+			attributeGetterFunctions.put("status", DispatchLog::getStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<DispatchLog, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<DispatchLog, ?>> attributeSetterBiConsumers =
+				new LinkedHashMap<String, BiConsumer<DispatchLog, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<DispatchLog, Long>)DispatchLog::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"dispatchLogId",
+				(BiConsumer<DispatchLog, Long>)DispatchLog::setDispatchLogId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<DispatchLog, Long>)DispatchLog::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<DispatchLog, Long>)DispatchLog::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<DispatchLog, String>)DispatchLog::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<DispatchLog, Date>)DispatchLog::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<DispatchLog, Date>)DispatchLog::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"dispatchTriggerId",
+				(BiConsumer<DispatchLog, Long>)
+					DispatchLog::setDispatchTriggerId);
+			attributeSetterBiConsumers.put(
+				"endDate",
+				(BiConsumer<DispatchLog, Date>)DispatchLog::setEndDate);
+			attributeSetterBiConsumers.put(
+				"error",
+				(BiConsumer<DispatchLog, String>)DispatchLog::setError);
+			attributeSetterBiConsumers.put(
+				"output",
+				(BiConsumer<DispatchLog, String>)DispatchLog::setOutput);
+			attributeSetterBiConsumers.put(
+				"startDate",
+				(BiConsumer<DispatchLog, Date>)DispatchLog::setStartDate);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<DispatchLog, Integer>)DispatchLog::setStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -879,8 +894,9 @@ public class DispatchLogModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<DispatchLog, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<DispatchLog, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

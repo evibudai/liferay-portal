@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.shipment.resource.v1_0.test;
@@ -29,6 +20,7 @@ import com.liferay.headless.commerce.admin.shipment.client.pagination.Pagination
 import com.liferay.headless.commerce.admin.shipment.client.resource.v1_0.ShipmentResource;
 import com.liferay.headless.commerce.admin.shipment.client.serdes.v1_0.ShipmentSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -225,11 +215,20 @@ public abstract class BaseShipmentResourceTestCase {
 
 		assertContains(shipment1, (List<Shipment>)page.getItems());
 		assertContains(shipment2, (List<Shipment>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetShipmentsPage_getExpectedActions());
 
 		shipmentResource.deleteShipment(shipment1.getId());
 
 		shipmentResource.deleteShipment(shipment2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetShipmentsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -260,33 +259,33 @@ public abstract class BaseShipmentResourceTestCase {
 
 	@Test
 	public void testGetShipmentsPageWithFilterDoubleEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.DOUBLE);
+		testGetShipmentsPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
 
-		if (entityFields.isEmpty()) {
-			return;
-		}
+	@Test
+	public void testGetShipmentsPageWithFilterStringContains()
+		throws Exception {
 
-		Shipment shipment1 = testGetShipmentsPage_addShipment(randomShipment());
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Shipment shipment2 = testGetShipmentsPage_addShipment(randomShipment());
-
-		for (EntityField entityField : entityFields) {
-			Page<Shipment> page = shipmentResource.getShipmentsPage(
-				null, getFilterString(entityField, "eq", shipment1),
-				Pagination.of(1, 2), null);
-
-			assertEquals(
-				Collections.singletonList(shipment1),
-				(List<Shipment>)page.getItems());
-		}
+		testGetShipmentsPageWithFilter("contains", EntityField.Type.STRING);
 	}
 
 	@Test
 	public void testGetShipmentsPageWithFilterStringEquals() throws Exception {
-		List<EntityField> entityFields = getEntityFields(
-			EntityField.Type.STRING);
+		testGetShipmentsPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetShipmentsPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetShipmentsPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetShipmentsPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
 
 		if (entityFields.isEmpty()) {
 			return;
@@ -299,7 +298,7 @@ public abstract class BaseShipmentResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<Shipment> page = shipmentResource.getShipmentsPage(
-				null, getFilterString(entityField, "eq", shipment1),
+				null, getFilterString(entityField, operator, shipment1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -310,10 +309,10 @@ public abstract class BaseShipmentResourceTestCase {
 
 	@Test
 	public void testGetShipmentsPageWithPagination() throws Exception {
-		Page<Shipment> totalPage = shipmentResource.getShipmentsPage(
+		Page<Shipment> shipmentPage = shipmentResource.getShipmentsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(shipmentPage.getTotalCount());
 
 		Shipment shipment1 = testGetShipmentsPage_addShipment(randomShipment());
 
@@ -339,7 +338,7 @@ public abstract class BaseShipmentResourceTestCase {
 		Assert.assertEquals(shipments2.toString(), 1, shipments2.size());
 
 		Page<Shipment> page3 = shipmentResource.getShipmentsPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 		assertContains(shipment1, (List<Shipment>)page3.getItems());
 		assertContains(shipment2, (List<Shipment>)page3.getItems());
@@ -451,22 +450,23 @@ public abstract class BaseShipmentResourceTestCase {
 
 		shipment2 = testGetShipmentsPage_addShipment(shipment2);
 
+		Page<Shipment> page = shipmentResource.getShipmentsPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<Shipment> ascPage = shipmentResource.getShipmentsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(shipment1, shipment2),
-				(List<Shipment>)ascPage.getItems());
+			assertContains(shipment1, (List<Shipment>)ascPage.getItems());
+			assertContains(shipment2, (List<Shipment>)ascPage.getItems());
 
 			Page<Shipment> descPage = shipmentResource.getShipmentsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(shipment2, shipment1),
-				(List<Shipment>)descPage.getItems());
+			assertContains(shipment2, (List<Shipment>)descPage.getItems());
+			assertContains(shipment1, (List<Shipment>)descPage.getItems());
 		}
 	}
 
@@ -1251,6 +1251,12 @@ public abstract class BaseShipmentResourceTestCase {
 	}
 
 	protected void assertValid(Page<Shipment> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<Shipment> page, Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<Shipment> shipments = page.getItems();
@@ -1265,6 +1271,25 @@ public abstract class BaseShipmentResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1587,14 +1612,16 @@ public abstract class BaseShipmentResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1611,6 +1638,10 @@ public abstract class BaseShipmentResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1620,18 +1651,18 @@ public abstract class BaseShipmentResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -1658,9 +1689,47 @@ public abstract class BaseShipmentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("carrier")) {
-			sb.append("'");
-			sb.append(String.valueOf(shipment.getCarrier()));
-			sb.append("'");
+			Object object = shipment.getCarrier();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1733,9 +1802,47 @@ public abstract class BaseShipmentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("externalReferenceCode")) {
-			sb.append("'");
-			sb.append(String.valueOf(shipment.getExternalReferenceCode()));
-			sb.append("'");
+			Object object = shipment.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1833,9 +1940,47 @@ public abstract class BaseShipmentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("shippingOptionName")) {
-			sb.append("'");
-			sb.append(String.valueOf(shipment.getShippingOptionName()));
-			sb.append("'");
+			Object object = shipment.getShippingOptionName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1846,25 +1991,139 @@ public abstract class BaseShipmentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("trackingNumber")) {
-			sb.append("'");
-			sb.append(String.valueOf(shipment.getTrackingNumber()));
-			sb.append("'");
+			Object object = shipment.getTrackingNumber();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("trackingURL")) {
-			sb.append("'");
-			sb.append(String.valueOf(shipment.getTrackingURL()));
-			sb.append("'");
+			Object object = shipment.getTrackingURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
 
 		if (entityFieldName.equals("userName")) {
-			sb.append("'");
-			sb.append(String.valueOf(shipment.getUserName()));
-			sb.append("'");
+			Object object = shipment.getUserName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

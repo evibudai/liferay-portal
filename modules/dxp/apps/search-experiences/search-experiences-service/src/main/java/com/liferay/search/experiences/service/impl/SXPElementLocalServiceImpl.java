@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.service.impl;
@@ -26,8 +17,9 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.search.experiences.exception.DuplicateSXPElementExternalReferenceCodeException;
 import com.liferay.search.experiences.exception.SXPElementTitleException;
 import com.liferay.search.experiences.model.SXPElement;
 import com.liferay.search.experiences.service.base.SXPElementLocalServiceBaseImpl;
@@ -55,15 +47,18 @@ public class SXPElementLocalServiceImpl extends SXPElementLocalServiceBaseImpl {
 	public SXPElement addSXPElement(
 			String externalReferenceCode, long userId,
 			Map<Locale, String> descriptionMap, String elementDefinitionJSON,
-			boolean readOnly, String schemaVersion,
-			Map<Locale, String> titleMap, int type,
+			String fallbackDescription, String fallbackTitle, boolean readOnly,
+			String schemaVersion, Map<Locale, String> titleMap, int type,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
+		if (Validator.isNull(fallbackDescription)) {
+			fallbackDescription = descriptionMap.get(LocaleUtil.getDefault());
+		}
 
-		_validateExternalReferenceCode(
-			user.getCompanyId(), externalReferenceCode);
+		if (Validator.isNull(fallbackTitle)) {
+			fallbackTitle = titleMap.get(LocaleUtil.getDefault());
+		}
 
 		_validate(titleMap, type, serviceContext);
 
@@ -71,11 +66,17 @@ public class SXPElementLocalServiceImpl extends SXPElementLocalServiceBaseImpl {
 			counterLocalService.increment(SXPElement.class.getName()));
 
 		sxpElement.setExternalReferenceCode(externalReferenceCode);
+
+		User user = _userLocalService.getUser(userId);
+
 		sxpElement.setCompanyId(user.getCompanyId());
 		sxpElement.setUserId(user.getUserId());
 		sxpElement.setUserName(user.getFullName());
+
 		sxpElement.setDescriptionMap(descriptionMap);
 		sxpElement.setElementDefinitionJSON(elementDefinitionJSON);
+		sxpElement.setFallbackDescription(fallbackDescription);
+		sxpElement.setFallbackTitle(fallbackTitle);
 		sxpElement.setHidden(false);
 		sxpElement.setReadOnly(readOnly);
 		sxpElement.setSchemaVersion(schemaVersion);
@@ -155,15 +156,17 @@ public class SXPElementLocalServiceImpl extends SXPElementLocalServiceBaseImpl {
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public SXPElement updateSXPElement(
-			long userId, long sxpElementId, Map<Locale, String> descriptionMap,
-			String elementDefinitionJSON, boolean hidden, String schemaVersion,
-			Map<Locale, String> titleMap, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long sxpElementId,
+			Map<Locale, String> descriptionMap, String elementDefinitionJSON,
+			boolean hidden, String schemaVersion, Map<Locale, String> titleMap,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		SXPElement sxpElement = getSXPElement(sxpElementId);
 
 		_validate(titleMap, sxpElement.getType(), serviceContext);
 
+		sxpElement.setExternalReferenceCode(externalReferenceCode);
 		sxpElement.setDescriptionMap(descriptionMap);
 		sxpElement.setElementDefinitionJSON(elementDefinitionJSON);
 		sxpElement.setHidden(hidden);
@@ -182,24 +185,12 @@ public class SXPElementLocalServiceImpl extends SXPElementLocalServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws SXPElementTitleException {
 
-		if (!GetterUtil.getBoolean(
+		if (GetterUtil.getBoolean(
 				serviceContext.getAttribute(
 					SXPElementLocalServiceImpl.class.getName() + "#_validate"),
 				true)) {
 
 			_sxpElementValidator.validate(titleMap, type);
-		}
-	}
-
-	private void _validateExternalReferenceCode(
-			long companyId, String externalReferenceCode)
-		throws PortalException {
-
-		SXPElement sxpElement = fetchSXPElementByExternalReferenceCode(
-			externalReferenceCode, companyId);
-
-		if (sxpElement != null) {
-			throw new DuplicateSXPElementExternalReferenceCodeException();
 		}
 	}
 

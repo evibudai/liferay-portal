@@ -1,11 +1,12 @@
 definition {
 
-	macro _addAccountEntry {
+	@summary = "Default summary"
+	macro _addAccountEntry(creatorPassword = null, accountEntryDescription = null, accountEntryStatus = null, accountEntryName = null, creatorEmailAddress = null, accountEntryType = null) {
 		Variables.assertDefined(parameterList = "${accountEntryName},${accountEntryType},${accountEntryStatus}");
 
 		var companyId = JSONCompany.getCompanyId();
 		var portalURL = JSONCompany.getPortalURL();
-		var userId = JSONUserSetter.setUserId(userEmailAddress = "${creatorEmailAddress}");
+		var userId = JSONUserSetter.setUserId(userEmailAddress = ${creatorEmailAddress});
 
 		var curl = '''
 			${portalURL}/api/jsonws/account.accountentry/add-account-entry \
@@ -22,10 +23,11 @@ definition {
 				-d status=${accountEntryStatus}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _addAccountEntryOrganization {
+	@summary = "Default summary"
+	macro _addAccountEntryOrganization(organizationId = null, accountEntryId = null) {
 		Variables.assertDefined(parameterList = "${accountEntryId},${organizationId}");
 
 		if (!(isSet(creatorEmailAddress))) {
@@ -43,14 +45,14 @@ definition {
 			${portalURL}/api/jsonws/account.accountentryorganizationrel/add-account-entry-organization-rel \
 				-u ${creatorEmailAddress}:${creatorPassword} \
 				-d accountEntryId=${accountEntryId} \
-				-d organizationId=${organizationId} 
+				-d organizationId=${organizationId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Delete all account entries"
-	macro _deleteAllAccountEntries {
+	@summary = "Default summary"
+	macro _deleteAllAccountEntries() {
 		if (!(isSet(creatorEmailAddress))) {
 			var creatorEmailAddress = "test@liferay.com";
 		}
@@ -62,8 +64,8 @@ definition {
 		var portalURL = JSONCompany.getPortalURL();
 		var accountEntryIds = JSONAccountEntryAPI._getAccountEntryIds();
 
-		if ("${accountEntryIds}" != "") {
-			for (var accountEntryId : list "${accountEntryIds}") {
+		if (${accountEntryIds} != "") {
+			for (var accountEntryId : list ${accountEntryIds}) {
 				echo("Deleting Account Entry with ID: ${accountEntryId}");
 
 				var curl = '''
@@ -72,7 +74,7 @@ definition {
 						-d accountEntryIds=${accountEntryIds}
 				''';
 
-				JSONCurlUtil.post("${curl}");
+				JSONCurlUtil.post(${curl});
 			}
 		}
 		else {
@@ -80,9 +82,9 @@ definition {
 		}
 	}
 
-	@summary = "Get the 'accountEntryId' from '${accountEntryName}'"
-	macro _getAccountEntryId {
-		Variables.assertDefined(parameterList = "${accountEntryName}");
+	@summary = "Default summary"
+	macro _getAccountEntryId(accountEntryName = null) {
+		Variables.assertDefined(parameterList = ${accountEntryName});
 
 		if (!(isSet(creatorEmailAddress))) {
 			var creatorEmailAddress = "test@liferay.com";
@@ -92,9 +94,9 @@ definition {
 			var creatorPassword = "test";
 		}
 
-		var companyId = JSONCompany.getCompanyId();
+		var companyId = JSONCompany.getCompanyIdNoSelenium();
 		var portalURL = JSONCompany.getPortalURL();
-		var userId = JSONUserSetter.setUserId(userEmailAddress = "${creatorEmailAddress}");
+		var userId = JSONUserSetter.setUserId(userEmailAddress = ${creatorEmailAddress});
 		var curl = '''
 			${portalURL}/api/jsonws/account.accountentry/get-account-entries \
 				-u ${creatorEmailAddress}:${creatorPassword} \
@@ -105,22 +107,22 @@ definition {
 				-d -orderByComparator=
 		''';
 
-		var accountEntryId = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${accountEntryName}')]['accountEntryId']");
+		var accountEntryId = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${accountEntryName}')]['accountEntryId']");
 
 		echo("curl: ${curl}");
 
 		echo("accountEntryId: ${accountEntryId}");
 
-		if ("${accountEntryId}" == "") {
+		if (${accountEntryId} == "") {
 			fail("FAIL. Cannot find account entry.");
 		}
 		else {
-			return "${accountEntryId}";
+			return ${accountEntryId};
 		}
 	}
 
-	@summary = "Get the Ids of all account entries"
-	macro _getAccountEntryIds {
+	@summary = "Default summary"
+	macro _getAccountEntryIds() {
 		if (!(isSet(creatorEmailAddress))) {
 			var creatorEmailAddress = "test@liferay.com";
 		}
@@ -142,25 +144,26 @@ definition {
 				-d -orderByComparator=
 		''';
 
-		var accountEntryIds = JSONCurlUtil.post("${curl}", "$..['accountEntryId']");
+		var accountEntryIds = JSONCurlUtil.post(${curl}, "$..['accountEntryId']");
 
-		return "${accountEntryIds}";
+		return ${accountEntryIds};
 	}
 
-	macro _setAccountExternalReferenceCode {
+	@summary = "Default summary"
+	macro _setAccountExternalReferenceCode(accountEntryName = null, externalReferenceCode = null) {
 		Variables.assertDefined(parameterList = "${accountEntryName},${externalReferenceCode}");
 
 		var portalURL = JSONCompany.getPortalURL();
-		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
 
 		var curl = '''
 			${portalURL}/api/jsonws/account.accountentry/update-external-reference-code \
 				-u test@liferay.com:test \
-  				-d accountEntryId=${accountEntryId} \
-  				-d externalReferenceCode=${externalReferenceCode}
+				-d accountEntryId=${accountEntryId} \
+				-d externalReferenceCode=${externalReferenceCode}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

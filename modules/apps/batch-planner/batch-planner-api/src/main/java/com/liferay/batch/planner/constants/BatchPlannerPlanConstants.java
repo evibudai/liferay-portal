@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.batch.planner.constants;
@@ -31,6 +22,8 @@ public class BatchPlannerPlanConstants {
 
 	public static final String EXTERNAL_TYPE_JSONL = "JSONL";
 
+	public static final String EXTERNAL_TYPE_JSONT = "JSONT";
+
 	public static final String EXTERNAL_TYPE_TXT = "TXT";
 
 	public static final String EXTERNAL_TYPE_XLS = "XLS";
@@ -41,8 +34,8 @@ public class BatchPlannerPlanConstants {
 
 	public static final String[] EXTERNAL_TYPES = {
 		EXTERNAL_TYPE_CSV, EXTERNAL_TYPE_JSON, EXTERNAL_TYPE_JSONL,
-		EXTERNAL_TYPE_TXT, EXTERNAL_TYPE_XLS, EXTERNAL_TYPE_XLSX,
-		EXTERNAL_TYPE_XML
+		EXTERNAL_TYPE_JSONT, EXTERNAL_TYPE_TXT, EXTERNAL_TYPE_XLS,
+		EXTERNAL_TYPE_XLSX, EXTERNAL_TYPE_XML
 	};
 
 	public static final String LABEL_COMPLETED = "completed";
@@ -141,6 +134,8 @@ public class BatchPlannerPlanConstants {
 		EXTERNAL_TYPE_JSON, ContentTypes.APPLICATION_JSON
 	).put(
 		EXTERNAL_TYPE_JSONL, "application/x-ndjson"
+	).put(
+		EXTERNAL_TYPE_JSONT, ContentTypes.APPLICATION_JSON
 	).put(
 		EXTERNAL_TYPE_TXT, ContentTypes.TEXT_PLAIN
 	).put(

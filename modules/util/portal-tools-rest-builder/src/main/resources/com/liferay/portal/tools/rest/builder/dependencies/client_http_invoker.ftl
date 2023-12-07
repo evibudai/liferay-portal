@@ -71,6 +71,7 @@ public class HttpInvoker {
 		httpResponse.setBinaryContent(binaryContent);
 		httpResponse.setContent(new String(binaryContent));
 
+		httpResponse.setContentType(httpURLConnection.getHeaderField("Content-Type"));
 		httpResponse.setMessage(httpURLConnection.getResponseMessage());
 		httpResponse.setStatusCode(httpURLConnection.getResponseCode());
 
@@ -158,6 +159,10 @@ public class HttpInvoker {
 			return _content;
 		}
 
+		public String getContentType() {
+			return _contentType;
+		}
+
 		public String getMessage() {
 			return _message;
 		}
@@ -174,6 +179,10 @@ public class HttpInvoker {
 			_content = content;
 		}
 
+		public void setContentType(String contentType) {
+			_contentType = contentType;
+		}
+
 		public void setMessage(String message) {
 			_message = message;
 		}
@@ -184,6 +193,7 @@ public class HttpInvoker {
 
 		private byte[] _binaryContent;
 		private String _content;
+		private String _contentType;
 		private String _message;
 		private int _statusCode;
 
@@ -232,7 +242,7 @@ public class HttpInvoker {
 			File file = (File)value;
 
 			printWriter.append(" filename=\"");
-			printWriter.append(file.getName());
+			printWriter.append(_filter(file.getName()));
 			printWriter.append("\"\r\nContent-Type: ");
 			printWriter.append(URLConnection.guessContentTypeFromName(file.getName()));
 			printWriter.append("\r\n\r\n");
@@ -257,6 +267,14 @@ public class HttpInvoker {
 		}
 
 		printWriter.append("\r\n");
+	}
+
+	private String _filter(String fileName) {
+		fileName = fileName.replaceAll("\"", "");
+		fileName = fileName.replaceAll("\n", "");
+		fileName = fileName.replaceAll("\r", "");
+
+		return fileName;
 	}
 
 	private String _getQueryString() throws IOException {

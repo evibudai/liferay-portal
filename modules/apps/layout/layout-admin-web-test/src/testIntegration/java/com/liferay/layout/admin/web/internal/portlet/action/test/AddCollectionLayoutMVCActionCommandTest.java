@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.admin.web.internal.portlet.action.test;
@@ -95,13 +86,13 @@ public class AddCollectionLayoutMVCActionCommandTest {
 
 		_company = _companyLocalService.getCompany(_group.getCompanyId());
 
-		_themeDisplay = _getThemeDisplay();
+		_themeDisplay = _getThemeDisplay(_company, _group);
 
 		_serviceContext = _getServiceContext(_group, _themeDisplay);
 
 		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 
-		_assetListEntry = _addAssetListEntry(_serviceContext);
+		_assetListEntry = _addAssetListEntry(_group, _serviceContext);
 	}
 
 	@After
@@ -137,12 +128,13 @@ public class AddCollectionLayoutMVCActionCommandTest {
 			layout, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
 	}
 
-	private AssetListEntry _addAssetListEntry(ServiceContext serviceContext)
+	private AssetListEntry _addAssetListEntry(
+			Group group, ServiceContext serviceContext)
 		throws Exception {
 
 		return _assetListEntryLocalService.addManualAssetListEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
-			"Collection Title", new long[0], serviceContext);
+			TestPropsValues.getUserId(), group.getGroupId(), "Collection Title",
+			new long[0], serviceContext);
 	}
 
 	private MockHttpServletRequest _getMockHttpServletRequest(
@@ -213,26 +205,28 @@ public class AddCollectionLayoutMVCActionCommandTest {
 		return serviceContext;
 	}
 
-	private ThemeDisplay _getThemeDisplay() throws Exception {
+	private ThemeDisplay _getThemeDisplay(Company company, Group group)
+		throws Exception {
+
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
-		themeDisplay.setCompany(_company);
-		themeDisplay.setLayout(LayoutTestUtil.addTypePortletLayout(_group));
+		themeDisplay.setCompany(company);
+		themeDisplay.setLayout(LayoutTestUtil.addTypePortletLayout(group));
 
 		LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
-			_group.getGroupId(), false);
+			group.getGroupId(), false);
 
 		themeDisplay.setLayoutSet(layoutSet);
 		themeDisplay.setLookAndFeel(
 			_themeLocalService.getTheme(
-				_company.getCompanyId(), layoutSet.getThemeId()),
+				company.getCompanyId(), layoutSet.getThemeId()),
 			null);
 
 		themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
 		themeDisplay.setRealUser(TestPropsValues.getUser());
-		themeDisplay.setScopeGroupId(_group.getGroupId());
-		themeDisplay.setSiteGroupId(_group.getGroupId());
+		themeDisplay.setScopeGroupId(group.getGroupId());
+		themeDisplay.setSiteGroupId(group.getGroupId());
 		themeDisplay.setUser(TestPropsValues.getUser());
 
 		return themeDisplay;

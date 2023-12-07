@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.service.impl;
@@ -38,6 +29,7 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.model.Website;
@@ -47,9 +39,6 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyUtil;
-import com.liferay.portal.kernel.security.membershippolicy.RoleMembershipPolicyUtil;
-import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
-import com.liferay.portal.kernel.security.membershippolicy.UserGroupMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -60,11 +49,9 @@ import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
-import com.liferay.portal.kernel.service.permission.PasswordPolicyPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.TeamPermissionUtil;
-import com.liferay.portal.kernel.service.permission.UserGroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserGroupRolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
 import com.liferay.portal.kernel.service.persistence.CompanyPersistence;
@@ -83,10 +70,15 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.comparator.UserIdComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
+import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyUtil;
+import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
+import com.liferay.portal.security.membershippolicy.UserGroupMembershipPolicyUtil;
 import com.liferay.portal.service.base.UserServiceBaseImpl;
+import com.liferay.portal.service.permission.PasswordPolicyPermissionUtil;
+import com.liferay.portal.service.permission.UserGroupPermissionUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.admin.util.OmniadminUtil;
-import com.liferay.users.admin.kernel.util.UsersAdminUtil;
+import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -776,8 +768,9 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
+			userGroupIds, sendEmail, serviceContext);
 
 		checkMembership(
 			new long[] {user.getUserId()}, groupIds, organizationIds, roleIds,
@@ -986,8 +979,9 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 			creatorUserId, companyId, autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, locale, firstName,
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
+			userGroupIds, sendEmail, serviceContext);
 
 		checkMembership(
 			new long[] {user.getUserId()}, groupIds, organizationIds, roleIds,
@@ -2446,8 +2440,34 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 			throw new RequiredUserException();
 		}
 
-		UserPermissionUtil.check(
-			getPermissionChecker(), userId, ActionKeys.DELETE);
+		if ((status == WorkflowConstants.STATUS_APPROVED) &&
+			!UserPermissionUtil.contains(
+				getPermissionChecker(), userId, ActionKeys.ACTIVATE) &&
+			!UserPermissionUtil.contains(
+				getPermissionChecker(), userId, ActionKeys.DELETE)) {
+
+			throw new PrincipalException.MustHavePermission(
+				getPermissionChecker(), User.class.getName(), userId,
+				ActionKeys.ACTIVATE, ActionKeys.DELETE);
+		}
+
+		if ((status == WorkflowConstants.STATUS_INACTIVE) &&
+			!UserPermissionUtil.contains(
+				getPermissionChecker(), userId, ActionKeys.DEACTIVATE) &&
+			!UserPermissionUtil.contains(
+				getPermissionChecker(), userId, ActionKeys.DELETE)) {
+
+			throw new PrincipalException.MustHavePermission(
+				getPermissionChecker(), User.class.getName(), userId,
+				ActionKeys.DEACTIVATE, ActionKeys.DELETE);
+		}
+
+		if ((status != WorkflowConstants.STATUS_APPROVED) &&
+			(status != WorkflowConstants.STATUS_INACTIVE)) {
+
+			UserPermissionUtil.check(
+				getPermissionChecker(), userId, ActionKeys.DELETE);
+		}
 
 		return userLocalService.updateStatus(userId, status, serviceContext);
 	}
@@ -3362,9 +3382,9 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 		boolean anonymousUser = ParamUtil.getBoolean(
 			serviceContext, "anonymousUser");
 
-		long defaultUserId = userLocalService.getDefaultUserId(companyId);
+		long guestUserId = userLocalService.getGuestUserId(companyId);
 
-		if (((creatorUserId != 0) && (creatorUserId != defaultUserId)) ||
+		if (((creatorUserId != 0) && (creatorUserId != guestUserId)) ||
 			(!company.isStrangers() && !anonymousUser)) {
 
 			PermissionChecker permissionChecker = getPermissionChecker();
@@ -3381,7 +3401,7 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 			}
 		}
 
-		if (((creatorUserId == 0) || (creatorUserId == defaultUserId)) &&
+		if (((creatorUserId == 0) || (creatorUserId == guestUserId)) &&
 			!company.isStrangersWithMx() &&
 			company.hasCompanyMx(emailAddress)) {
 

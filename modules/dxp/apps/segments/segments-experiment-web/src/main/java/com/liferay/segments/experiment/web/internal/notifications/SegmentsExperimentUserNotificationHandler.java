@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.experiment.web.internal.notifications;
@@ -38,7 +29,6 @@ import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.service.SegmentsExperimentLocalService;
 
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
@@ -66,14 +56,8 @@ public class SegmentsExperimentUserNotificationHandler
 			ServiceContext serviceContext)
 		throws Exception {
 
-		JSONObject jsonObject = _jsonFactory.createJSONObject(
-			userNotificationEvent.getPayload());
-
-		long segmentsExperimentId = jsonObject.getLong("classPK");
-
-		SegmentsExperiment segmentsExperiment =
-			_segmentsExperimentLocalService.fetchSegmentsExperiment(
-				segmentsExperimentId);
+		SegmentsExperiment segmentsExperiment = _getSegmentsExperiment(
+			userNotificationEvent);
 
 		if (segmentsExperiment == null) {
 			_userNotificationEventLocalService.deleteUserNotificationEvent(
@@ -82,22 +66,11 @@ public class SegmentsExperimentUserNotificationHandler
 			return null;
 		}
 
-		Optional<SegmentsExperimentConstants.Status> statusOptional =
-			SegmentsExperimentConstants.Status.parse(
-				segmentsExperiment.getStatus());
+		String title = _getTitle(segmentsExperiment, serviceContext);
 
-		if (!statusOptional.isPresent()) {
+		if (title == null) {
 			return null;
 		}
-
-		SegmentsExperimentConstants.Status status = statusOptional.get();
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", serviceContext.getLocale(), getClass());
-
-		String title = ResourceBundleUtil.getString(
-			resourceBundle, "ab-test-has-changed-status-to-x",
-			status.getLabel());
 
 		return StringUtil.replace(
 			getBodyTemplate(), new String[] {"[$BODY$]", "[$TITLE$]"},
@@ -140,6 +113,25 @@ public class SegmentsExperimentUserNotificationHandler
 		return _getLayoutURL(layout, segmentsExperimentKey, serviceContext);
 	}
 
+	@Override
+	protected String getTitle(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		SegmentsExperiment segmentsExperiment = _getSegmentsExperiment(
+			userNotificationEvent);
+
+		if (segmentsExperiment == null) {
+			_userNotificationEventLocalService.deleteUserNotificationEvent(
+				userNotificationEvent.getUserNotificationEventId());
+
+			return null;
+		}
+
+		return _getTitle(segmentsExperiment, serviceContext);
+	}
+
 	private String _getLayoutURL(
 		Layout layout, String segmentsExperimentKey,
 		ServiceContext serviceContext) {
@@ -166,6 +158,38 @@ public class SegmentsExperimentUserNotificationHandler
 
 			return StringPool.BLANK;
 		}
+	}
+
+	private SegmentsExperiment _getSegmentsExperiment(
+			UserNotificationEvent userNotificationEvent)
+		throws Exception {
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject(
+			userNotificationEvent.getPayload());
+
+		return _segmentsExperimentLocalService.fetchSegmentsExperiment(
+			jsonObject.getLong("classPK"));
+	}
+
+	private String _getTitle(
+			SegmentsExperiment segmentsExperiment,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		SegmentsExperimentConstants.Status status =
+			SegmentsExperimentConstants.Status.parse(
+				segmentsExperiment.getStatus());
+
+		if (status == null) {
+			return null;
+		}
+
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			"content.Language", serviceContext.getLocale(), getClass());
+
+		return ResourceBundleUtil.getString(
+			resourceBundle, "ab-test-has-changed-status-to-x",
+			status.getLabel());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

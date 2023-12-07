@@ -1,39 +1,41 @@
 definition {
 
-	macro addAccountManager {
+	@summary = "Default summary"
+	macro addAccountManager(orgName = null, accountName = null, userLastName = null, userScreenName = null, userEmailAddress = null, orgRoleTitle = null, userFirstName = null) {
 		JSONUser.addUser(
-			userEmailAddress = "${userEmailAddress}",
-			userFirstName = "${userFirstName}",
-			userLastName = "${userLastName}",
-			userScreenName = "${userScreenName}");
+			userEmailAddress = ${userEmailAddress},
+			userFirstName = ${userFirstName},
+			userLastName = ${userLastName},
+			userScreenName = ${userScreenName});
 
 		JSONUser.setFirstPassword(
 			agreeToTermsAndAnswerReminderQuery = "true",
 			requireReset = "false",
-			userEmailAddress = "${userEmailAddress}");
+			userEmailAddress = ${userEmailAddress});
 
-		JSONOrganization.addOrganization(organizationName = "${orgName}");
+		JSONOrganization.addOrganization(organizationName = ${orgName});
 
 		JSONOrganization.assignUserToOrganization(
-			organizationName = "${orgName}",
-			userEmailAddress = "${userEmailAddress}");
+			organizationName = ${orgName},
+			userEmailAddress = ${userEmailAddress});
 
 		User.openUsersAdmin();
 
 		User.assignOrgRoleCP(
-			roleTitle = "${orgRoleTitle}",
-			userScreenName = "${userScreenName}");
+			roleTitle = ${orgRoleTitle},
+			userScreenName = ${userScreenName});
 
 		Account.openAccountsAdmin();
 
-		LexiconEntry.gotoEntry(rowEntry = "${accountName}");
+		LexiconEntry.gotoEntry(rowEntry = ${accountName});
 
 		Account.assignOrganizations(
-			accountName = "${accountName}",
-			assigneeName = "${orgName}");
+			accountName = ${accountName},
+			assigneeName = ${orgName});
 	}
 
-	macro addBlockedEmailDomain {
+	@summary = "Default summary"
+	macro addBlockedEmailDomain(settingValues = null) {
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Accounts",
 			configurationName = "Email Domains",
@@ -41,12 +43,13 @@ definition {
 
 		SystemSettings.editTextAreaSettingMultiLines(
 			settingName = "Blocked Email Domains",
-			settingValues = "${settingValues}");
+			settingValues = ${settingValues});
 
 		SystemSettings.saveConfiguration();
 	}
 
-	macro disableAccountEmailDomain {
+	@summary = "Default summary"
+	macro disableAccountEmailDomain() {
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Accounts",
 			configurationName = "Email Domains",
@@ -59,7 +62,8 @@ definition {
 		PortletEntry.update();
 	}
 
-	macro enableAccountEmailDomain {
+	@summary = "Default summary"
+	macro enableAccountEmailDomain() {
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Accounts",
 			configurationName = "Email Domains",

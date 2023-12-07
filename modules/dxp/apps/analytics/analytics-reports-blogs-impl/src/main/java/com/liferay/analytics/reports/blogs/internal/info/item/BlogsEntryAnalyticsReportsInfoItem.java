@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.analytics.reports.blogs.internal.info.item;
 
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItem;
-import com.liferay.analytics.reports.layout.display.page.info.item.LayoutDisplayPageObjectProviderAnalyticsReportsInfoItem;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemFieldValues;
@@ -29,12 +19,10 @@ import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,24 +36,24 @@ public class BlogsEntryAnalyticsReportsInfoItem
 
 	@Override
 	public String getAuthorName(BlogsEntry blogsEntry) {
-		return Optional.ofNullable(
-			_userLocalService.fetchUser(blogsEntry.getUserId())
-		).map(
-			User::getFullName
-		).orElse(
-			StringPool.BLANK
-		);
+		User user = _userLocalService.fetchUser(blogsEntry.getUserId());
+
+		if (user == null) {
+			return StringPool.BLANK;
+		}
+
+		return user.getFullName();
 	}
 
 	@Override
 	public long getAuthorUserId(BlogsEntry blogsEntry) {
-		return Optional.ofNullable(
-			_userLocalService.fetchUser(blogsEntry.getUserId())
-		).map(
-			User::getUserId
-		).orElse(
-			0L
-		);
+		User user = _userLocalService.fetchUser(blogsEntry.getUserId());
+
+		if (user == null) {
+			return 0L;
+		}
+
+		return user.getUserId();
 	}
 
 	@Override
@@ -142,16 +130,15 @@ public class BlogsEntryAnalyticsReportsInfoItem
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
-	@Reference
-	private LayoutDisplayPageObjectProviderAnalyticsReportsInfoItem
+	@Reference(
+		target = "(model.class.name=com.liferay.layout.display.page.LayoutDisplayPageObjectProvider)"
+	)
+	private AnalyticsReportsInfoItem<LayoutDisplayPageObjectProvider>
 		_layoutDisplayPageObjectProviderAnalyticsReportsInfoItem;
 
 	@Reference
 	private LayoutDisplayPageProviderRegistry
 		_layoutDisplayPageProviderRegistry;
-
-	@Reference
-	private Portal _portal;
 
 	@Reference
 	private UserLocalService _userLocalService;

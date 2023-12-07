@@ -1,9 +1,10 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Administration";
+	property testray.main.component.name = "Sites Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,14 +14,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -35,15 +36,15 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-124620. Assert no pop up when viewing membership request detail."
-	@priority = "4"
+	@priority = 4
 	test AddXSSRequestMembershipComment {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property testray.component.names = "Site Administration,XSS";
+		property testray.component.names = "Sites Administration,XSS";
 
 		task ("Add a site") {
-			JSONGroup.addGroup(
-				groupName = "Site Name",
-				membershipType = "Restricted");
+			HeadlessSite.addSite(
+				membershipType = "Restricted",
+				siteName = "Site Name");
 		}
 
 		task ("Add a My Sites widget to Liferay Home page and add view permission to it") {
@@ -132,7 +133,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-135079. View no pop up when select user card with XSS name in memberships."
-	@priority = "4"
+	@priority = 4
 	test SelectUserWithXSSNameInMemberships {
 		var firstName = '''"><script>alert(1)</script>''';
 		var lastName = '''"><script>alert(2)</script>''';
@@ -142,8 +143,8 @@ definition {
 
 			User.addCP(
 				userEmailAddress = "userea@liferay.com",
-				userFirstName = "${firstName}",
-				userLastName = "${lastName}",
+				userFirstName = ${firstName},
+				userLastName = ${lastName},
 				userScreenName = "usersn");
 		}
 
@@ -151,8 +152,8 @@ definition {
 			Site.openSiteMembershipsAdmin(siteURLKey = "test-site-name");
 
 			Site.assignUserAsMemberCP(
-				userFirstName = "${firstName}",
-				userLastName = "${lastName}",
+				userFirstName = ${firstName},
+				userLastName = ${lastName},
 				userScreenName = "usersn");
 		}
 

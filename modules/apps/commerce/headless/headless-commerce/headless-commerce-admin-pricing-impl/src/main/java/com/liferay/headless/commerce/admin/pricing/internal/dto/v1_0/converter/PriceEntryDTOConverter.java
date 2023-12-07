@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.admin.pricing.internal.dto.v1_0.converter;
@@ -17,6 +8,7 @@ package com.liferay.headless.commerce.admin.pricing.internal.dto.v1_0.converter;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.PriceEntry;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -30,7 +22,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.commerce.price.list.model.CommercePriceEntry",
-	service = {DTOConverter.class, PriceEntryDTOConverter.class}
+	service = DTOConverter.class
 )
 public class PriceEntryDTOConverter
 	implements DTOConverter<CommercePriceEntry, PriceEntry> {
@@ -48,7 +40,9 @@ public class PriceEntryDTOConverter
 			_commercePriceEntryService.getCommercePriceEntry(
 				(Long)dtoConverterContext.getId());
 
-		CPInstance cpInstance = commercePriceEntry.getCPInstance();
+		CPInstance cpInstance = _cpInstanceLocalService.fetchCProductInstance(
+			commercePriceEntry.getCProductId(),
+			commercePriceEntry.getCPInstanceUuid());
 
 		ExpandoBridge expandoBridge = commercePriceEntry.getExpandoBridge();
 
@@ -62,15 +56,39 @@ public class PriceEntryDTOConverter
 				price = commercePriceEntry.getPrice();
 				priceListId = commercePriceEntry.getCommercePriceListId();
 				promoPrice = commercePriceEntry.getPromoPrice();
-				sku = cpInstance.getSku();
-				skuExternalReferenceCode =
-					cpInstance.getExternalReferenceCode();
-				skuId = cpInstance.getCPInstanceId();
+
+				setSku(
+					() -> {
+						if (cpInstance == null) {
+							return null;
+						}
+
+						return cpInstance.getSku();
+					});
+				setSkuExternalReferenceCode(
+					() -> {
+						if (cpInstance == null) {
+							return null;
+						}
+
+						return cpInstance.getExternalReferenceCode();
+					});
+				setSkuId(
+					() -> {
+						if (cpInstance == null) {
+							return null;
+						}
+
+						return cpInstance.getCPInstanceId();
+					});
 			}
 		};
 	}
 
 	@Reference
 	private CommercePriceEntryService _commercePriceEntryService;
+
+	@Reference
+	private CPInstanceLocalService _cpInstanceLocalService;
 
 }

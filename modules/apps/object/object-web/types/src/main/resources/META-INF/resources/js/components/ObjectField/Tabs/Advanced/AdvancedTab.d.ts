@@ -1,25 +1,35 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-/// <reference types="react" />
-
+import {SidebarCategory} from '@liferay/object-js-components-web';
+import {ElementType} from 'react';
+import {ObjectFieldErrors} from '../../ObjectFieldFormBase';
 interface AdvancedTabProps {
+	containerWrapper: ElementType;
+	creationLanguageId: Liferay.Language.Locale;
+	errors: ObjectFieldErrors;
+	isDefaultStorageType: boolean;
+	learnResources: ObjectWebLearnResources;
+	modelBuilder?: boolean;
+	onSubmit?: () => void;
+	readOnlySidebarElements: SidebarCategory[];
 	setValues: (value: Partial<ObjectField>) => void;
+	sidebarElements: SidebarCategory[];
 	values: Partial<ObjectField>;
 }
 export declare function AdvancedTab({
+	containerWrapper: ContainerWrapper,
+	creationLanguageId,
+	errors,
+	isDefaultStorageType,
+	learnResources,
+	modelBuilder,
+	onSubmit,
+	readOnlySidebarElements,
 	setValues,
+	sidebarElements,
 	values,
 }: AdvancedTabProps): JSX.Element;
 export {};

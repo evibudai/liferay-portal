@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.search.test;
@@ -28,6 +19,8 @@ import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchEngine;
+import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
@@ -123,10 +116,17 @@ public class DLFileEntryFileNameSearchWhenTitleDifferentThanFileNameTest {
 		_createFileEntryFileNameTitle(_group, "document(1).jpg", "Title 2");
 		_createFileEntryFileNameTitle(_group, "document(2).jpg", "Title 3");
 
-		assertSearch(
-			"document", Arrays.asList("Title 1", "Title 2", "Title 3"));
-		assertSearch(
-			"document(1)", Arrays.asList("Title 1", "Title 2", "Title 3"));
+		if (_isSearchEngine("Elasticsearch")) {
+			assertSearch(
+				"document", Arrays.asList("Title 1", "Title 2", "Title 3"));
+			assertSearch(
+				"document(1)", Arrays.asList("Title 1", "Title 2", "Title 3"));
+		}
+		else if (_isSearchEngine("Solr")) {
+			assertSearch(
+				"document", Arrays.asList("Title 1", "Title 2", "Title 3"));
+			assertSearch("document(1)", Arrays.asList("Title 1", "Title 2"));
+		}
 	}
 
 	@Test
@@ -180,9 +180,16 @@ public class DLFileEntryFileNameSearchWhenTitleDifferentThanFileNameTest {
 		_createFileEntryFileNameTitle(_group, "MyFile (1).txt", "Title (1)");
 		_createFileEntryFileNameTitle(_group, "MYFILE (2).txt", "Title (2)");
 
-		assertSearch(
-			"myfile", Arrays.asList("Title", "Title (1)", "Title (2)"));
-		assertSearch("my", Arrays.asList("Title", "Title (1)", "Title (2)"));
+		if (_isSearchEngine("Elasticsearch")) {
+			assertSearch(
+				"myfile", Arrays.asList("Title", "Title (1)", "Title (2)"));
+			assertSearch(
+				"my", Arrays.asList("Title", "Title (1)", "Title (2)"));
+		}
+		else if (_isSearchEngine("Solr")) {
+			assertSearch("myfile", Arrays.asList("Title"));
+			assertSearch("my", Arrays.asList("Title"));
+		}
 	}
 
 	@Test
@@ -196,10 +203,16 @@ public class DLFileEntryFileNameSearchWhenTitleDifferentThanFileNameTest {
 		assertSearch("Document_1", Arrays.asList("Title One", "Title One(1)"));
 		assertSearch("asd.jpg", Collections.emptyList());
 		assertSearch(
-			"Document_1.jpg",
-			Arrays.asList("Title One", "Title One(1)", "Title Two"));
-		assertSearch(
 			"\"Document_1.jpg\"", Collections.singletonList("Title One"));
+
+		if (_isSearchEngine("Elasticsearch")) {
+			assertSearch(
+				"Document_1.jpg",
+				Arrays.asList("Title One", "Title One(1)", "Title Two"));
+		}
+		else if (_isSearchEngine("Solr")) {
+			assertSearch("Document_1.jpg", Arrays.asList("Title One"));
+		}
 	}
 
 	@Test
@@ -299,6 +312,9 @@ public class DLFileEntryFileNameSearchWhenTitleDifferentThanFileNameTest {
 	@Inject
 	protected static IndexerRegistry indexerRegistry;
 
+	@Inject
+	protected static SearchEngineHelper searchEngineHelper;
+
 	private void _createFileEntryFileNameTitle(
 			Group group, String fileName, String title)
 		throws Exception {
@@ -312,6 +328,14 @@ public class DLFileEntryFileNameSearchWhenTitleDifferentThanFileNameTest {
 					setUserId(getAdminUserId(group));
 				}
 			});
+	}
+
+	private boolean _isSearchEngine(String engine) {
+		SearchEngine searchEngine = searchEngineHelper.getSearchEngine();
+
+		String vendor = searchEngine.getVendor();
+
+		return vendor.equals(engine);
 	}
 
 	@DeleteAfterTestRun

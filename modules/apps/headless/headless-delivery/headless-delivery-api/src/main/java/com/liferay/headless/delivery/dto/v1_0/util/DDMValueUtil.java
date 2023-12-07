@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.dto.v1_0.util;
@@ -57,11 +48,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.BadRequestException;
 
@@ -235,14 +222,12 @@ public class DDMValueUtil {
 					).toString(),
 					preferredLocale);
 			}
-			else {
-				return _toLocalizedValue(
-					contentFieldValue, localizedContentFieldValues,
-					(localizedContentFieldValue, locale) ->
-						GetterUtil.getString(
-							localizedContentFieldValue.getData()),
-					preferredLocale);
-			}
+
+			return _toLocalizedValue(
+				contentFieldValue, localizedContentFieldValues,
+				(localizedContentFieldValue, locale) -> GetterUtil.getString(
+					localizedContentFieldValue.getData()),
+				preferredLocale);
 		}
 
 		return new UnlocalizedValue(
@@ -453,23 +438,22 @@ public class DDMValueUtil {
 			preferredLocale,
 			localizedValueBiFunction.apply(contentFieldValue, preferredLocale));
 
-		Optional.ofNullable(
-			localizedContentFieldValues
-		).orElse(
-			Collections.emptyMap()
-		).forEach(
-			(languageId, localizedContentFieldValue) -> {
-				Locale locale = LocaleUtil.fromLanguageId(
-					languageId, true, false);
+		if (localizedContentFieldValues == null) {
+			localizedContentFieldValues = Collections.emptyMap();
+		}
 
-				if (locale != null) {
-					localizedValue.addString(
-						locale,
-						localizedValueBiFunction.apply(
-							localizedContentFieldValue, locale));
-				}
+		for (Map.Entry<String, ContentFieldValue> entry :
+				localizedContentFieldValues.entrySet()) {
+
+			Locale locale = LocaleUtil.fromLanguageId(
+				entry.getKey(), true, false);
+
+			if (locale != null) {
+				localizedValue.addString(
+					locale,
+					localizedValueBiFunction.apply(entry.getValue(), locale));
 			}
-		);
+		}
 
 		return localizedValue;
 	}
@@ -477,38 +461,30 @@ public class DDMValueUtil {
 	private static List<String> _transformValuesToKeys(
 		DDMFormField ddmFormField, Locale locale, List<String> values) {
 
-		Stream<String> stream = values.stream();
+		List<String> keys = new ArrayList<>();
 
-		return stream.map(
-			value -> {
-				DDMFormFieldOptions ddmFormFieldOptions =
-					ddmFormField.getDDMFormFieldOptions();
+		DDMFormFieldOptions ddmFormFieldOptions =
+			ddmFormField.getDDMFormFieldOptions();
 
-				Map<String, LocalizedValue> options =
-					ddmFormFieldOptions.getOptions();
+		Map<String, LocalizedValue> options = ddmFormFieldOptions.getOptions();
 
-				Set<Map.Entry<String, LocalizedValue>> set = options.entrySet();
+		for (String value : values) {
+			String key = StringPool.BLANK;
 
-				Stream<Map.Entry<String, LocalizedValue>> setStream =
-					set.stream();
+			for (Map.Entry<String, LocalizedValue> entry : options.entrySet()) {
+				LocalizedValue localizedValue = entry.getValue();
 
-				return setStream.filter(
-					entry -> {
-						LocalizedValue localizedValue = entry.getValue();
+				if (Objects.equals(localizedValue.getString(locale), value)) {
+					key = entry.getKey();
 
-						return Objects.equals(
-							localizedValue.getString(locale), value);
-					}
-				).map(
-					Map.Entry::getKey
-				).findFirst(
-				).orElse(
-					""
-				);
+					break;
+				}
 			}
-		).collect(
-			Collectors.toList()
-		);
+
+			keys.add(key);
+		}
+
+		return keys;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(DDMValueUtil.class);

@@ -1,114 +1,124 @@
 definition {
 
-	macro assertInfoItemByIDEntry {
+	@summary = "Default summary"
+	macro assertInfoItemByIDEntry(currentStep = null,processStatus = null,createdBy = null,assetTitle = null,currentAssignee = null,assetType = null) {
 		Click(locator1 = "WorkflowAllItems#WORKFLOW_INSTANCE_ID");
 
 		SelectFrame(locator1 = "WorkflowDefinition#DIALOG_BOX_BODY");
 
 		AssertElementPresent(
-			key_itemName = "${processStatus}",
+			key_itemName = ${processStatus},
 			key_rowName = "Process Status",
 			locator1 = "WorkflowMetricsAllItemsList#ASSERT_ALL_ITEMS_LIST_BY_DETAILS");
 
 		AssertElementPresent(
-			key_itemName = "${createdBy}",
+			key_itemName = ${createdBy},
 			key_rowName = "Created By",
 			locator1 = "WorkflowMetricsAllItemsList#ASSERT_ALL_ITEMS_LIST_BY_DETAILS");
 
 		AssertElementPresent(
-			key_itemName = "${assetType}",
+			key_itemName = ${assetType},
 			key_rowName = "Asset Type",
 			locator1 = "WorkflowMetricsAllItemsList#ASSERT_ALL_ITEMS_LIST_BY_DETAILS");
 
 		AssertElementPresent(
-			key_itemName = "${assetTitle}",
+			key_itemName = ${assetTitle},
 			key_rowName = "Asset Title",
 			locator1 = "WorkflowMetricsAllItemsList#ASSERT_ALL_ITEMS_LIST_BY_DETAILS");
 
 		AssertElementPresent(
-			key_itemName = "${currentStep}",
+			key_itemName = ${currentStep},
 			key_rowName = "Current Step",
 			locator1 = "WorkflowMetricsAllItemsList#ASSERT_ALL_ITEMS_LIST_BY_DETAILS");
 
 		AssertElementPresent(
-			key_itemName = "${currentAssignee}",
+			key_itemName = ${currentAssignee},
 			key_rowName = "Current Assignee",
 			locator1 = "WorkflowMetricsAllItemsList#ASSERT_ALL_ITEMS_LIST_BY_DETAILS");
 	}
 
-	macro assertProcessStepTooltipMessage {
+	@summary = "Default summary"
+	macro assertProcessStepTooltipMessage(workflowInstanceName = null) {
 		MouseOver(
-			key_workflowInstanceName = "${workflowInstanceName}",
+			key_workflowInstanceName = ${workflowInstanceName},
 			locator1 = "WorkflowAllItems#WORKFLOW_INSTANCE_NAME");
 
 		AssertElementPresent(
-			key_tooltip = "${workflowInstanceName}",
+			key_tooltip = ${workflowInstanceName},
 			locator1 = "WorkflowAllItems#TOOLTIP_MESSAGE");
 	}
 
-	macro goToTrackWorkflowlink {
+	@summary = "Default summary"
+	macro goToTrackWorkflowlink() {
 		Click(locator1 = "WorkflowMetricsAllItemsList#TRACK_WORKFLOW_LINK");
 	}
 
-	macro orderByCreationDateAsc {
+	@summary = "Default summary"
+	macro orderByCreationDateAsc() {
 		Click(locator1 = "WorkflowAllItems#WORKFLOW_ALL_ITEMS_CREATION_DATE");
 
 		Click(locator1 = "WorkflowAllItems#WORKFLOW_ALL_ITEMS_CREATION_DATE");
 	}
 
-	macro selectAndChangeNodeLabel {
+	@summary = "Default summary"
+	macro selectAndChangeNodeLabel(newNodeLabel = null,nodeType = null,nodeLabel = null) {
 		Click(
-			key_nodeLabel = "${nodeLabel}",
-			key_nodeType = "${nodeType}",
+			key_nodeLabel = ${nodeLabel},
+			key_nodeType = ${nodeType},
 			locator1 = "ProcessBuilderKaleoDesignerReact#DIAGRAM_NODE_LABEL_SPECIFIC");
 
 		ProcessBuilderKaleoDesignerReact.editNodeInformationField(
 			infoOption = "Label",
-			infoValue = "${newNodeLabel}");
+			infoValue = ${newNodeLabel});
 
 		if (isSet(update)) {
 			Button.click(button = "Update");
 		}
 	}
 
-	macro selectAndChangeNodeName {
+	@summary = "Default summary"
+	macro selectAndChangeNodeName(nodeName = null,nodeType = null,nodeLabel = null) {
 		Click(
-			key_nodeLabel = "${nodeLabel}",
-			key_nodeType = "${nodeType}",
+			key_nodeLabel = ${nodeLabel},
+			key_nodeType = ${nodeType},
 			locator1 = "ProcessBuilderKaleoDesignerReact#DIAGRAM_NODE_LABEL_SPECIFIC");
 
 		ProcessBuilderKaleoDesignerReact.editNodeInformationField(
 			infoOption = "Label",
-			infoValue = "${nodeName}");
+			infoValue = ${nodeName});
 
 		if (isSet(update)) {
 			Button.click(button = "Update");
 		}
 	}
 
-	macro selectSingleApproverWorkflow {
+	@summary = "Default summary"
+	macro selectSingleApproverWorkflow(key_workflowDefinitionTitle = null,menuItem = null) {
 		Click(
-			key_workflowDefinitionTitle = "${key_workflowDefinitionTitle}",
+			key_workflowDefinitionTitle = ${key_workflowDefinitionTitle},
 			locator1 = "WorkflowDefinition#DEFINITION_TABLE_SPECIFIC_DEFINITION_ELLIPSIS");
 
-		MenuItem.clickNoError(menuItem = "${menuItem}");
+		MenuItem.clickNoError(menuItem = ${menuItem});
 	}
 
-	macro viewDetailsModal {
+	@summary = "Default summary"
+	macro viewDetailsModal() {
 		Click(locator1 = "WorkflowAllItems#WORKFLOW_INSTANCE_ID");
 
 		AssertElementPresent(locator1 = "WorkflowDefinition#DIALOG_BOX_BODY");
 	}
 
-	macro viewNodesDisplayed {
-		for (var nodesTrackWorkflow : list "${nodesTrackWorkflow}") {
+	@summary = "Default summary"
+	macro viewNodesDisplayed() {
+		for (var nodesTrackWorkflow : list ${nodesTrackWorkflow}) {
 			AssertTextEquals(
 				locator1 = "WorkflowMetricsAllItemsList#NODES_MODAL_TRACK_WORKFLOW",
-				value1 = "${nodesTrackWorkflow}");
+				value1 = ${nodesTrackWorkflow});
 		}
 	}
 
-	macro viewTrackWorkflowLink {
+	@summary = "Default summary"
+	macro viewTrackWorkflowLink() {
 		AssertElementPresent(locator1 = "WorkflowMetricsAllItemsList#TRACK_WORKFLOW_LINK");
 	}
 

@@ -16,9 +16,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,7 +31,7 @@ definition {
 	}
 
 	@description = "This ensures that a web content folder can be deleted in a depot."
-	@priority = "4"
+	@priority = 4
 	@refactordone
 	test CanDeleteFolder {
 		JSONWebcontent.addFolder(
@@ -47,7 +47,7 @@ definition {
 	}
 
 	@description = "This test deletes multiple web content in a depot."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanDeleteMultipleWebContent {
 		for (var i : list "1,2,3") {
@@ -64,13 +64,13 @@ definition {
 
 		ClickNoError(locator1 = "Icon#DELETE");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No web content was found.");
 	}
 
 	@description = "This test deletes template and structure in a depot."
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanDeleteTemplateAndStructure {
 		DepotNavigator.openDepotWebContentStructuresAdmin(depotName = "Test Depot Name");
@@ -97,7 +97,7 @@ definition {
 
 		WebContentTemplates.deleteCP(templateName = "WC Template Name");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no templates.");
 
@@ -105,14 +105,14 @@ definition {
 
 		WebContentStructures.deleteCP(structureName = "WC Structure Name");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no structures.");
 	}
 
 	@description = "This ensures that a web content folder can be edited in a depot."
 	@e2e
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanEditFolder {
 		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
@@ -135,10 +135,13 @@ definition {
 			value1 = "WC Folder Name Edit");
 	}
 
-	@description = "This test edits template and structure in a depot."
-	@priority = "5"
+	@description = "This test edits template and structure in a depot. Skip the instance for performance improvement."
+	@priority = 5
 	@refactordone
 	test CanEditTemplateAndStructure {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		DepotNavigator.openDepotWebContentStructuresAdmin(depotName = "Test Depot Name");
 
 		WebContentStructures.addCP(
@@ -188,7 +191,7 @@ definition {
 
 	@description = "This ensures that a web content can be edited in a depot."
 	@e2e
-	@priority = "5"
+	@priority = 5
 	@refactordone
 	test CanEditWebContent {
 		property portal.acceptance = "true";
@@ -225,7 +228,7 @@ definition {
 	}
 
 	@description = "This ensures that a web content can be expired in a depot."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanExpireWebContent {
 		JSONDepot.addDepot(
@@ -253,7 +256,7 @@ definition {
 	}
 
 	@description = "This ensures that web content can be moved to a folder in a depot."
-	@priority = "3"
+	@priority = 3
 	@refactordone
 	test CanMoveWebContentToFolder {
 		JSONWebcontent.addWebContent(
@@ -281,7 +284,7 @@ definition {
 	}
 
 	@description = "This ensures that web content with structure can be restored to a depot."
-	@priority = "5"
+	@priority = 4
 	@refactordone
 	test CanRestoreWebContentWithStructure {
 		JSONDepot.addDepot(

@@ -256,29 +256,14 @@
 		width: 100%;
 	}
 
+	.button-holder {
+		position: fixed;
+	}
+
 	.button-holder,
 	.sheet {
 		margin-top: 20px;
 	}
-}
-
-.portal-popup,
-.info-bar-container {
-	background: #fff;
-}
-
-.info-bar-container .management-bar-header-right {
-	float: right;
-	margin-right: 0;
-	position: relative;
-
-	> a {
-		padding: 0;
-	}
-}
-
-.info-bar-container .info-bar-default .btn-secondary.sidenav-transition {
-	pointer-events: none;
 }
 
 .dialog-with-footer {
@@ -286,11 +271,6 @@
 		height: calc(100vh - 148px);
 		overflow: auto;
 	}
-}
-
-.info-bar-item {
-	margin-top: -3px;
-	position: absolute;
 }
 
 .info-content {
@@ -331,10 +311,6 @@
 	min-height: 325px;
 	min-width: 500px;
 	overflow-y: hidden !important;
-}
-
-.portal-popup .basecelleditor {
-	top: 200px !important;
 }
 
 .property-builder-disabled {
@@ -484,16 +460,4 @@
 
 #workflowTasksPanelContainer {
 	border-width: 0;
-}
-
-@media only screen and (min-height: 600px) and (max-height: 800px) {
-	.portal-popup .basecelleditor {
-		top: 60px !important;
-	}
-}
-
-@media only screen and (max-height: 599px) {
-	.portal-popup .basecelleditor {
-		top: 35px !important;
-	}
 }

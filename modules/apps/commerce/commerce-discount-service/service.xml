@@ -58,7 +58,7 @@
 		</finder>
 		<finder name="C_C" return-type="Collection">
 			<finder-column name="companyId" />
-			<finder-column name="couponCode" />
+			<finder-column case-sensitive="false" name="couponCode" />
 		</finder>
 		<finder name="LtD_S" return-type="Collection">
 			<finder-column comparator="&lt;" name="displayDate" />
@@ -70,7 +70,7 @@
 		</finder>
 		<finder name="C_C_A" return-type="CommerceDiscount">
 			<finder-column name="companyId" />
-			<finder-column name="couponCode" />
+			<finder-column case-sensitive="false" name="couponCode" />
 			<finder-column name="active" />
 		</finder>
 		<finder name="C_L_A_S" return-type="Collection">
@@ -217,6 +217,7 @@
 		<column name="commerceDiscountId" type="long" />
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
+		<column name="typeSettings" type="String" />
 
 		<!-- Order -->
 
@@ -324,9 +325,13 @@
 		<exception>CommerceDiscountLimitationType</exception>
 		<exception>CommerceDiscountMaxPriceValue</exception>
 		<exception>CommerceDiscountRuleType</exception>
+		<exception>CommerceDiscountRuleTypeSettings</exception>
 		<exception>CommerceDiscountTarget</exception>
 		<exception>CommerceDiscountTitle</exception>
 		<exception>CommerceDiscountValidator</exception>
 		<exception>DuplicateCommerceDiscount</exception>
+		<exception>DuplicateCommerceDiscountAccountRel</exception>
+		<exception>DuplicateCommerceDiscountCommerceAccountGroupRel</exception>
+		<exception>DuplicateCommerceDiscountOrderTypeRel</exception>
 	</exceptions>
 </service-builder>

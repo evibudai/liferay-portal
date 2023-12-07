@@ -16,7 +16,7 @@ definition {
 
 	@description = "COMMERCE-6368. In Addresses tab, I want to be able to add addresses to the account(Billing, Shipping, Billing and Shipping)"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AddAddressToAccount {
 		property portal.acceptance = "false";
 
@@ -69,7 +69,7 @@ definition {
 
 	@description = "COMMERCE-6337. In Info tab, I want to be able to add an organization to the account"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AddOrganizationToAccount {
 		property portal.acceptance = "false";
 
@@ -106,7 +106,7 @@ definition {
 
 	@description = "COMMERCE-6347. In Info tab, I want to be unable to add an organization that is already added to the account"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AssertOrganizationThatIsPartOfTheAccountCannotBeAddedAgain {
 		property portal.acceptance = "false";
 
@@ -157,16 +157,221 @@ definition {
 
 	@description = "COMMERCE-6357. In Members tab, I want to be unable to add a user that is already a member of the account"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AssertUserThatIsPartOfTheAccountCannotBeAddedAgain {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6357 AssertUserThatIsPartOfTheAccountCannotBeAddedAgain pending implementation
 
 	}
 
+	@description = "COMMERCE-10841. Verify that using the impersonate feature the context is saved on Minium"
+	@priority = 3
+	test CanAssertImpersonatingOnMiniumMaintainsContext {
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium Site is created") {
+			var siteName = TestCase.getSiteName(siteName = ${siteName});
+
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a user is created with the Administrator role") {
+			JSONUser.addUser(
+				userEmailAddress = "administrator@liferay.com",
+				userFirstName = "Administrator",
+				userLastName = "Administrator",
+				userScreenName = "Administrator");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "administrator@liferay.com");
+
+			JSONRole.assignRoleToUser(
+				roleTitle = "Administrator",
+				userEmailAddress = "administrator@liferay.com");
+		}
+
+		task ("And the user Administrator logs on Minium") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "administrator@liferay.com");
+		}
+
+		task ("Then the user present on the minium sidebar is Administrator Administrator") {
+			AssertElementPresent(
+				key_userName = "Administrator Administrator",
+				locator1 = "CommerceAccelerators#MINIUM_SIDEBAR_USER_NAME");
+		}
+
+		task ("But if the admin user Test Test login and reach Minium") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "test@liferay.com");
+		}
+
+		task ("Then the user present on the minium sidebar is Test Test") {
+			AssertElementPresent(
+				key_userName = "Test Test",
+				locator1 = "CommerceAccelerators#MINIUM_SIDEBAR_USER_NAME");
+		}
+
+		task ("When the user Test Test goes into User and Organizations") {
+			User.openUsersAdmin();
+		}
+
+		task ("And impersonates the user Administrator") {
+			User.impersonateCP(userName = "Administrator");
+
+			SelectWindow(value1 = "title=Home - ${siteName}");
+		}
+
+		task ("And navigates on Minium") {
+			ScrollWebElementIntoView(
+				key_dropdownItem = "My Sites",
+				locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM");
+
+			Click(
+				key_dropdownItem = "My Sites",
+				locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			Navigator.gotoNavItem(navItem = "All Sites");
+
+			SiteSelector.selectSite(site = "Minium");
+		}
+
+		task ("Then the user present on the minium sidebar is Administrator Administrator") {
+			AssertElementPresent(
+				key_userName = "Administrator Administrator",
+				locator1 = "CommerceAccelerators#MINIUM_SIDEBAR_USER_NAME");
+
+			Close.closeWindow(locator1 = "title=Users and Organizations - ${siteName}");
+		}
+	}
+
+	@description = "This is a test case for COMMERCE-10840. The all types of accounts can be created via API"
+	@priority = 3
+	test CanCreateAllTypesOfAccountsViaAPI {
+		property custom.properties = "feature.flag.COMMERCE-10890=true";
+		property portal.acceptance = "false";
+
+		task ("When a 'Guest' type of account is post and passed via API") {
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Guest Account",
+				accountType = "Guest",
+				externalReferenceCode = "Guest Account ERC");
+		}
+
+		task ("Then a 'Guest' type of account is created under Accounts panel") {
+			Account.openAccountsAdmin();
+
+			while ((IsElementNotPresent(key_assetTitle = "Guest", locator1 = "AssetLists#ASSET_TYPE_ROW")) && (maxIterations = "3")) {
+				Account.openAccountsAdmin();
+			}
+
+			LexiconTable.viewTableEntryInfo(
+				index = 5,
+				tableEntry = "Guest",
+				tableEntryInfo = "Guest");
+		}
+
+		task ("When a 'Business' of account is post and passed via API") {
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Business Account",
+				accountType = "Business",
+				externalReferenceCode = "Business Account ERC");
+		}
+
+		task ("Then a 'Business' type of account is created under Accounts panel") {
+			Account.openAccountsAdmin();
+
+			while ((IsElementNotPresent(key_assetTitle = "Business", locator1 = "AssetLists#ASSET_TYPE_ROW")) && (maxIterations = "3")) {
+				Account.openAccountsAdmin();
+			}
+
+			LexiconTable.viewTableEntryInfo(
+				index = 5,
+				tableEntry = "Business",
+				tableEntryInfo = "Business");
+		}
+
+		task ("When a 'Person' type of account is post and passed via API") {
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Person Account",
+				accountType = "Person",
+				externalReferenceCode = "Person Account ERC");
+		}
+
+		task ("Then a 'Person' type of account is created under Accounts panel") {
+			Account.openAccountsAdmin();
+
+			while ((IsElementNotPresent(key_assetTitle = "Person", locator1 = "AssetLists#ASSET_TYPE_ROW")) && (maxIterations = "3")) {
+				Account.openAccountsAdmin();
+			}
+
+			LexiconTable.viewTableEntryInfo(
+				index = 5,
+				tableEntry = "Person",
+				tableEntryInfo = "Person");
+		}
+
+		task ("When a 'Supplier' type of account is post and passed via API") {
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Supplier Account",
+				accountType = "Supplier",
+				externalReferenceCode = "Supplier Account ERC");
+		}
+
+		task ("Then a 'Supplier' type of account is created under Accounts panel") {
+			Account.openAccountsAdmin();
+
+			while ((IsElementNotPresent(key_assetTitle = "Supplier", locator1 = "AssetLists#ASSET_TYPE_ROW")) && (maxIterations = "3")) {
+				Account.openAccountsAdmin();
+			}
+
+			LexiconTable.viewTableEntryInfo(
+				index = 5,
+				tableEntry = "Supplier",
+				tableEntryInfo = "Supplier");
+		}
+	}
+
+	@description = "This is a test case for COMMERCE-11475. An account of type business is created via API when account type is not specified"
+	@priority = 3
+	test CanCreateBusinessAccountWhenAccountTypeIsNotSpecified {
+		property portal.acceptance = "false";
+
+		task ("When an account is created via API without specifying the type") {
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Test Account",
+				accountType = "");
+		}
+
+		task ("Then a 'Business' type of account is created under Accounts panel") {
+			Account.openAccountsAdmin();
+
+			while ((IsElementNotPresent(key_assetTitle = "Business", locator1 = "AssetLists#ASSET_TYPE_ROW")) && (maxIterations = "3")) {
+				Account.openAccountsAdmin();
+			}
+
+			LexiconTable.viewTableEntryInfo(
+				index = 5,
+				tableEntry = "Business",
+				tableEntryInfo = "Business");
+		}
+	}
+
 	@description = "COMMERCE-9427 CanSortAccountEntriesUsingReverseSortDirectionButton"
-	@priority = "3"
+	@priority = 3
 	test CanSortAccountEntriesUsingReverseSortDirectionButton {
 		property portal.acceptance = "false";
 
@@ -192,7 +397,7 @@ definition {
 				locator1 = "CommerceAccelerators#ACCOUNT_MANAGEMENT_REVERSE_SORT_DIRECTION_BUTTON_ICON");
 
 			AssertTextEquals(
-				key_rowNumber = "1",
+				key_rowNumber = 1,
 				locator1 = "WorkflowMetricsProcessListView#METRICS_OVERDUE_ITEMS_TABLE_ROW",
 				value1 = "Commerce Account 1");
 		}
@@ -209,7 +414,7 @@ definition {
 
 		task ("Then it can be verified that on the Account Management Entry List Commerce Account 2 is listed on the first line") {
 			AssertTextEquals(
-				key_rowNumber = "1",
+				key_rowNumber = 1,
 				locator1 = "WorkflowMetricsProcessListView#METRICS_OVERDUE_ITEMS_TABLE_ROW",
 				value1 = "Commerce Account 2");
 		}
@@ -217,7 +422,7 @@ definition {
 
 	@description = "COMMERCE-6378. In Account Details page, I want to be able to edit account by clicking 'Edit Account'(Account Image, Account Name, VAT Number, Email, Default Billing/Shipping address) and I want to be able to see changes I made in Account details page"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test EditAccountDetails {
 		property portal.acceptance = "false";
 
@@ -261,7 +466,7 @@ definition {
 		Type(
 			key_fieldLabel = "VAT Number",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "12345");
+			value1 = 12345);
 
 		Type(
 			key_fieldLabel = "Email",
@@ -307,7 +512,7 @@ definition {
 			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
 
 		AssertElementPresent(
-			key_filterOption = "12345",
+			key_filterOption = 12345,
 			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
 
 		AssertElementPresent(
@@ -321,13 +526,13 @@ definition {
 			locator1 = "CommerceAccelerators#ACCOUNT_MANAGEMENT_ADDRESSES");
 
 		AssertElementNotPresent(
-			key_imageId = "0",
+			key_imageId = 0,
 			locator1 = "CommerceAccelerators#ACCOUNT_MANAGEMENT_AVATAR_BY_ID");
 	}
 
 	@description = "COMMERCE-6372. In Addresses tab, I want to be able to edit an address added to the account"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test EditAddressInAccount {
 		property portal.acceptance = "false";
 
@@ -383,7 +588,7 @@ definition {
 
 	@description = "COMMERCE-6373. In Addresses tab, I want to be able to remove addresses from the account"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test RemoveAddressFromAccount {
 		property portal.acceptance = "false";
 
@@ -428,7 +633,7 @@ definition {
 
 	@description = "COMMERCE-6351. In Info tab, I want to be able to remove an organization from the account by clicking 'Delete'"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test RemoveOrganizationFromAccount {
 		property portal.acceptance = "false";
 
@@ -473,7 +678,7 @@ definition {
 
 	@description = "COMMERCE-6361. In Members tab, I want to be able to remove users from the account"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test RemoveUserFromAccount {
 		property portal.acceptance = "false";
 
@@ -516,9 +721,8 @@ definition {
 
 	@description = "COMMERCE-6376. In Addresses tab, I want to be able to search for an address using the search bar"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test SearchAnAccountAddress {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6376 SearchAnAccountAddress pending implementation
 
@@ -526,9 +730,8 @@ definition {
 
 	@description = "COMMERCE-6365. In Members tab, I want to be able to search for an account member using the search bar"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test SearchAnAccountMember {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6365 SearchAnAccountMember pending implementation
 
@@ -536,9 +739,8 @@ definition {
 
 	@description = "COMMERCE-6352. In Info tab, I want to be able to search for an organization in the account using the search bar"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test SearchAnAccountOrganization {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6352 SearchAnAccountOrganization pending implementation
 

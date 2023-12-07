@@ -1,9 +1,10 @@
 definition {
 
-	macro configureDisplaySettings {
+	@summary = "Default summary"
+	macro configureDisplaySettings(uncheckSetting = null) {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		for (var settingName : list "${uncheckSetting}") {
+		for (var settingName : list ${uncheckSetting}) {
 			Uncheck(locator1 = "Checkbox#${settingName}");
 		}
 
@@ -14,7 +15,8 @@ definition {
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro configureEmailCP {
+	@summary = "Default summary"
+	macro configureEmailCP(bodyContent = null) {
 		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
@@ -28,7 +30,7 @@ definition {
 
 			Type(
 				locator1 = "CKEditor#BODY",
-				value1 = "${bodyContent}");
+				value1 = ${bodyContent});
 
 			SelectFrame(value1 = "relative=top");
 
@@ -38,8 +40,9 @@ definition {
 		}
 	}
 
-	macro subscribeToNodeCP {
-		var key_wikiNodeName = "${wikiNodeName}";
+	@summary = "Default summary"
+	macro subscribeToNodeCP(wikiNodeName = null) {
+		var key_wikiNodeName = ${wikiNodeName};
 
 		Click.waitForMenuToggleJSClick(locator1 = "Wiki#NODE_TABLE_ACTIONS_DROPDOWN");
 
@@ -54,7 +57,8 @@ definition {
 		MenuItem.viewPresent(menuItem = "Unsubscribe");
 	}
 
-	macro tearDownCP {
+	@summary = "Default summary"
+	macro tearDownCP() {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -72,29 +76,32 @@ definition {
 		MenuItem.viewPresent(menuItem = "Subscribe");
 	}
 
-	macro viewConfigurationTabs {
+	@summary = "Default summary"
+	macro viewConfigurationTabs() {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		for (var isPresent : list "${isPresent}") {
+		for (var isPresent : list ${isPresent}) {
 			AssertElementPresent(locator1 = "Configuration#${isPresent}");
 		}
 
-		for (var isNotPresent : list "${isNotPresent}") {
+		for (var isNotPresent : list ${isNotPresent}) {
 			AssertElementNotPresent(locator1 = "Configuration#${isNotPresent}");
 		}
 
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro viewDisplaySettings {
+	@summary = "Default summary"
+	macro viewDisplaySettings(uncheckedSetting = null) {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		for (var settingName : list "${uncheckedSetting}") {
+		for (var settingName : list ${uncheckedSetting}) {
 			AssertNotChecked(locator1 = "Checkbox#${settingName}");
 		}
 	}
 
-	macro viewEmailCP {
+	@summary = "Default summary"
+	macro viewEmailCP(bodyContent = null) {
 		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
@@ -108,13 +115,14 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CKEditor#BODY",
-				value1 = "${bodyContent}");
+				value1 = ${bodyContent});
 
 			SelectFrame(value1 = "relative=top");
 		}
 	}
 
-	macro viewNoPermissionCP {
+	@summary = "Default summary"
+	macro viewNoPermissionCP() {
 		SiteAdmin.viewPortletTitle(portletTitle = "Wiki");
 
 		AssertElementNotPresent(locator1 = "Button#ADD_WIKI");

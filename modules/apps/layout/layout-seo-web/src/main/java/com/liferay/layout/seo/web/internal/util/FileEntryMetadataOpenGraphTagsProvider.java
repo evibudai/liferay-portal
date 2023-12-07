@@ -1,30 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.seo.web.internal.util;
 
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
+import com.liferay.document.library.kernel.processor.RawMetadataProcessor;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
-import com.liferay.document.library.kernel.util.RawMetadataProcessor;
+import com.liferay.dynamic.data.mapping.model.DDMField;
+import com.liferay.dynamic.data.mapping.model.DDMFieldAttribute;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
-import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
-import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.dynamic.data.mapping.util.comparator.StructureStructureKeyComparator;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
@@ -35,8 +26,6 @@ import com.liferay.portal.kernel.util.Portal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Adolfo Pérez
@@ -44,14 +33,15 @@ import java.util.Optional;
 public class FileEntryMetadataOpenGraphTagsProvider {
 
 	public FileEntryMetadataOpenGraphTagsProvider(
+		DDMFieldLocalService ddmFieldLocalService,
 		DDMStructureLocalService ddmStructureLocalService,
 		DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService,
-		Portal portal, StorageEngine storageEngine) {
+		Portal portal) {
 
+		_ddmFieldLocalService = ddmFieldLocalService;
 		_ddmStructureLocalService = ddmStructureLocalService;
 		_dlFileEntryMetadataLocalService = dlFileEntryMetadataLocalService;
 		_portal = portal;
-		_storageEngine = storageEngine;
 	}
 
 	public Iterable<KeyValuePair> getFileEntryMetadataOpenGraphTagKeyValuePairs(
@@ -82,54 +72,53 @@ public class FileEntryMetadataOpenGraphTagsProvider {
 				continue;
 			}
 
-			DDMFormValues ddmFormValues = _storageEngine.getDDMFormValues(
-				fileEntryMetadata.getDDMStorageId());
+			String tiffImageLength = _getDDMFormFieldsValueValue(
+				fileEntryMetadata.getDDMStorageId(), "TIFF_IMAGE_LENGTH");
 
-			if (ddmFormValues == null) {
-				continue;
+			if (tiffImageLength != null) {
+				keyValuePairs.add(
+					new KeyValuePair("og:image:height", tiffImageLength));
 			}
 
-			Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
-				ddmFormValues.getDDMFormFieldValuesMap();
+			String tiffImageWidth = _getDDMFormFieldsValueValue(
+				fileEntryMetadata.getDDMStorageId(), "TIFF_IMAGE_WIDTH");
 
-			Optional<String> tiffImageLengthOptional =
-				_getDDMFormFieldsValueValue(
-					ddmFormFieldValuesMap.get("TIFF_IMAGE_LENGTH"));
-
-			tiffImageLengthOptional.ifPresent(
-				tiffImageLength -> keyValuePairs.add(
-					new KeyValuePair("og:image:height", tiffImageLength)));
-
-			Optional<String> tiffImageWidthOptional =
-				_getDDMFormFieldsValueValue(
-					ddmFormFieldValuesMap.get("TIFF_IMAGE_WIDTH"));
-
-			tiffImageWidthOptional.ifPresent(
-				tiffImageWidth -> keyValuePairs.add(
-					new KeyValuePair("og:image:width", tiffImageWidth)));
+			if (tiffImageWidth != null) {
+				keyValuePairs.add(
+					new KeyValuePair("og:image:width", tiffImageWidth));
+			}
 		}
 
 		return keyValuePairs;
 	}
 
-	private Optional<String> _getDDMFormFieldsValueValue(
-		List<DDMFormFieldValue> ddmFormFieldValues) {
+	private String _getDDMFormFieldsValueValue(
+		long ddmStorageId, String fieldName) {
 
-		if (ListUtil.isEmpty(ddmFormFieldValues)) {
-			return Optional.empty();
+		List<DDMField> ddmFields = _ddmFieldLocalService.getDDMFields(
+			ddmStorageId, fieldName);
+
+		if (ListUtil.isEmpty(ddmFields)) {
+			return null;
 		}
 
-		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
+		DDMField ddmField = ddmFields.get(0);
 
-		Value value = ddmFormFieldValue.getValue();
+		DDMFieldAttribute ddmFieldAttribute =
+			_ddmFieldLocalService.fetchDDMFieldAttribute(
+				ddmField.getFieldId(), StringPool.BLANK, StringPool.BLANK);
 
-		return Optional.ofNullable(value.getString(value.getDefaultLocale()));
+		if (ddmFieldAttribute == null) {
+			return null;
+		}
+
+		return ddmFieldAttribute.getAttributeValue();
 	}
 
+	private final DDMFieldLocalService _ddmFieldLocalService;
 	private final DDMStructureLocalService _ddmStructureLocalService;
 	private final DLFileEntryMetadataLocalService
 		_dlFileEntryMetadataLocalService;
 	private final Portal _portal;
-	private final StorageEngine _storageEngine;
 
 }

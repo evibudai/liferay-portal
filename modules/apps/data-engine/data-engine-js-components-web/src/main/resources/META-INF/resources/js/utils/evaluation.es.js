@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {debounce} from 'frontend-js-web';
@@ -47,6 +38,16 @@ export function mergeFieldOptions(field, newField) {
 
 	return newValue;
 }
+
+const sanitizePagesCaptchaHTML = (pages) => {
+	const visitor = new PagesVisitor(pages);
+
+	visitor.mapFields((field) => {
+		if (field.fieldName === '_CAPTCHA_') {
+			delete field.html;
+		}
+	});
+};
 
 export function mergePages(
 	defaultLanguageId,
@@ -141,10 +142,14 @@ const doEvaluate = debounce((fieldName, evaluatorContext, callback) => {
 		controller = new AbortController();
 	}
 
+	sanitizePagesCaptchaHTML(pages);
+
 	makeFetch({
 		body: convertToFormData({
 			languageId: editingLanguageId,
 			p_auth: Liferay.authToken,
+			p_l_id: themeDisplay.getPlid(),
+			p_v_l_s_g_id: themeDisplay.getSiteGroupId(),
 			portletNamespace,
 			serializedFormContext: JSON.stringify({
 				...evaluatorContext,
@@ -160,6 +165,10 @@ const doEvaluate = debounce((fieldName, evaluatorContext, callback) => {
 		url: EVALUATOR_URL,
 	})
 		.then((newPages) => {
+			if (newPages.statusCode) {
+				callback(newPages);
+			}
+
 			const mergedPages = mergePages(
 				defaultLanguageId,
 				editingLanguageId,
@@ -172,7 +181,7 @@ const doEvaluate = debounce((fieldName, evaluatorContext, callback) => {
 			callback(null, mergedPages);
 		})
 		.catch((error) => callback(error));
-}, 600);
+}, 200);
 
 export function evaluate(fieldName, evaluatorContext) {
 	return new Promise((resolve, reject) => {

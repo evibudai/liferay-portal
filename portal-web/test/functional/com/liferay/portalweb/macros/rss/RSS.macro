@@ -1,55 +1,59 @@
 definition {
 
-	macro gotoFeed {
+	@summary = "Default summary"
+	macro gotoFeed(rssURL = null) {
 		Click(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "RSS");
 
-		SelectWindow.selectPopUp(locator1 = "null");
+		SelectWindow.selectPopUp(value1 = "null");
 
 		WaitForPageLoad();
 
 		AssertLocation.assertPartialLocation(value1 = "${rssURL}/rss");
 	}
 
-	macro viewFeed {
-		RSS.gotoFeed(rssURL = "${rssURL}");
+	@summary = "Default summary"
+	macro viewFeed(feedSubtitle = null, feedTitle = null, entryTitle = null, entryContent = null, rssURL = null) {
+		RSS.gotoFeed(rssURL = ${rssURL});
 
 		RSS.viewFeedTitle(
-			feedSubtitle = "${feedSubtitle}",
-			feedTitle = "${feedTitle}");
+			feedSubtitle = ${feedSubtitle},
+			feedTitle = ${feedTitle});
 
 		RSS.viewFeedEntry(
-			entryContent = "${entryContent}",
-			entryTitle = "${entryTitle}");
+			entryContent = ${entryContent},
+			entryTitle = ${entryTitle});
 
 		Close.closeWindow(locator1 = "null");
 	}
 
-	macro viewFeedEntry {
-		for (var entryTitle : list "${entryTitle}") {
+	@summary = "Default summary"
+	macro viewFeedEntry() {
+		for (var entryTitle : list ${entryTitle}) {
 			AssertTextEquals(
-				key_entryTitle = "${entryTitle}",
+				key_entryTitle = ${entryTitle},
 				locator1 = "RSS#ENTRY_TITLE",
-				value1 = "${entryTitle}");
+				value1 = ${entryTitle});
 		}
 
-		for (var entryContent : list "${entryContent}") {
+		for (var entryContent : list ${entryContent}) {
 			AssertTextEquals(
-				key_entryContent = "${entryContent}",
+				key_entryContent = ${entryContent},
 				locator1 = "RSS#ENTRY_CONTENT",
-				value1 = "${entryContent}");
+				value1 = ${entryContent});
 		}
 	}
 
-	macro viewFeedTitle {
+	@summary = "Default summary"
+	macro viewFeedTitle(feedSubtitle = null, feedTitle = null) {
 		AssertTextEquals(
 			locator1 = "RSS#FEED_TITLE",
-			value1 = "${feedTitle}");
+			value1 = ${feedTitle});
 
 		AssertTextEquals(
 			locator1 = "RSS#FEED_SUBTITLE",
-			value1 = "${feedSubtitle}");
+			value1 = ${feedSubtitle});
 	}
 
 }

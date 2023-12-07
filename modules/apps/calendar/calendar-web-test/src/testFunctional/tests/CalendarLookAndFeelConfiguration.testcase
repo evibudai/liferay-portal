@@ -1,7 +1,7 @@
 @component-name = "portal-calendar"
 definition {
 
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Calendar";
@@ -10,44 +10,39 @@ definition {
 	var portletName = "Calendar";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page");
 
-		PagesAdmin.addPage(
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			layoutTemplate = "1 Column");
 
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "Calendar Page",
-			sitePageType = "Widget Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Calendar Page",
+			widgetName = "Calendar");
 
-		Navigator.gotoPage(pageName = "Calendar Page");
-
-		Portlet.addPG(
-			pageName = "Calendar Page",
-			portletName = "Calendar");
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/calendar-page");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Calendar Page");
 
-			if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_GENERIC")) {
-				CalendarEvent.tearDown();
-			}
-
-			Calendar.tearDown();
+			JSONCalendar.tearDown();
 
 			CalendarConfiguration.tearDown();
 
@@ -56,7 +51,7 @@ definition {
 	}
 
 	@description = "LRQA-71889 - Verify that the user can apply configuration of Application Decorators in the calendar widget"
-	@priority = "3"
+	@priority = 3
 	test ApplyConfigurationDecorators {
 		CalendarLookAndFeelConfiguration.viewPortletNameDefault(portletTitle = "Calendar");
 
@@ -98,7 +93,7 @@ definition {
 	}
 
 	@description = "LRQA-71889 - Verify that the user can modify Text Styles in the look and feel configuration page"
-	@priority = "3"
+	@priority = 3
 	test ApplyModifiedTextStyles {
 		CalendarLookAndFeelConfiguration.gotoLookAndFeelConfiguration();
 
@@ -130,7 +125,7 @@ definition {
 	}
 
 	@description = "LRQA-71889 - Verify that the user can modify background in the Background Style tab"
-	@priority = "2"
+	@priority = 2
 	test CanModifyBackground {
 		CalendarLookAndFeelConfiguration.gotoLookAndFeelConfiguration();
 
@@ -150,19 +145,17 @@ definition {
 	}
 
 	@description = "LRQA-71889 - Verify that the user can modify border width, border style and border color in the border style tab"
-	@priority = "2"
+	@priority = 2
 	test CanModifyBorder {
-		property portal.upstream = "quarantine";
-
 		CalendarLookAndFeelConfiguration.gotoLookAndFeelConfiguration();
 
 		CalendarLookAndFeelConfiguration.selectTab(tabName = "Border Styles");
 
 		CalendarLookAndFeelConfiguration.fillBorderWidthColumn(
-			fieldTextBottom = "40",
-			fieldTextLeft = "60",
-			fieldTextRight = "60",
-			fieldTextTop = "40",
+			fieldTextBottom = 40,
+			fieldTextLeft = 60,
+			fieldTextRight = 60,
+			fieldTextTop = 40,
 			optionBottom = "px",
 			optionLeft = "px",
 			optionRight = "px",
@@ -236,27 +229,27 @@ definition {
 	}
 
 	@description = "LRQA-71889 - Verify that the user can modify margin and padding in the calendar widget"
-	@priority = "2"
+	@priority = 2
 	test CanModifyMarginAndPadding {
 		CalendarLookAndFeelConfiguration.gotoLookAndFeelConfiguration();
 
 		CalendarLookAndFeelConfiguration.selectTab(tabName = "Margin and Padding");
 
 		CalendarLookAndFeelConfiguration.fillPaddingColumn(
-			fieldTextBottom = "35",
-			fieldTextLeft = "15",
-			fieldTextRight = "15",
-			fieldTextTop = "50",
+			fieldTextBottom = 35,
+			fieldTextLeft = 15,
+			fieldTextRight = 15,
+			fieldTextTop = 50,
 			optionBottom = "px",
 			optionLeft = "px",
 			optionRight = "px",
 			optionTop = "px");
 
 		CalendarLookAndFeelConfiguration.fillMarginColumn(
-			fieldTextBottom = "20",
-			fieldTextLeft = "60",
-			fieldTextRight = "25",
-			fieldTextTop = "50",
+			fieldTextBottom = 20,
+			fieldTextLeft = 60,
+			fieldTextRight = 25,
+			fieldTextTop = 50,
 			optionBottom = "px",
 			optionLeft = "px",
 			optionRight = "px",
@@ -303,7 +296,7 @@ definition {
 
 	@description = "LRQA-71889 - Verify that the user can set Advanced Styling on calendar"
 	@ignore = "Test Stub"
-	@priority = "2"
+	@priority = 2
 	test CanSetAdvancedStyling {
 
 		// TODO LRQA-71968 CanSetAdvancedStyling pending implementation

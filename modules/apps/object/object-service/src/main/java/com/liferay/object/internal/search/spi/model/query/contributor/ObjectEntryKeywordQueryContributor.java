@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.search.spi.model.query.contributor;
@@ -18,9 +9,9 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectView;
-import com.liferay.object.model.ObjectViewColumn;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -55,8 +46,6 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Marco Leo
@@ -118,33 +107,26 @@ public class ObjectEntryKeywordQueryContributor
 			if (defaultObjectView != null) {
 				addObjectEntryTitle.set(false);
 
-				List<ObjectViewColumn> objectViewColumns =
-					defaultObjectView.getObjectViewColumns();
-
-				Stream<ObjectViewColumn> stream = objectViewColumns.stream();
-
-				objectFields = stream.peek(
+				objectFields = TransformUtil.transform(
+					defaultObjectView.getObjectViewColumns(),
 					objectViewColumn -> {
-						if (Objects.equals(
-								objectViewColumn.getObjectFieldName(), "id")) {
+						String objectFieldName =
+							objectViewColumn.getObjectFieldName();
 
+						if (Objects.equals(objectFieldName, "id")) {
 							addObjectEntryTitle.set(true);
 						}
-					}
-				).map(
-					objectViewColumn ->
-						_objectFieldLocalService.fetchObjectField(
+
+						return _objectFieldLocalService.fetchObjectField(
 							defaultObjectView.getObjectDefinitionId(),
-							objectViewColumn.getObjectFieldName())
-				).collect(
-					Collectors.toList()
-				);
+							objectFieldName);
+					});
 			}
 		}
 
 		if (objectFields == null) {
 			objectFields = _objectFieldLocalService.getObjectFields(
-				objectDefinitionId);
+				objectDefinitionId, false);
 		}
 
 		for (String token : _tokenizeKeywords(keywords)) {
@@ -513,12 +495,11 @@ public class ObjectEntryKeywordQueryContributor
 					quoteStart, keywords.indexOf(CharPool.QUOTE, quoteStart + 1)
 				};
 			}
-			else {
-				return new int[] {
-					rangeStart,
-					keywords.indexOf(CharPool.CLOSE_BRACKET, rangeStart + 1)
-				};
-			}
+
+			return new int[] {
+				rangeStart,
+				keywords.indexOf(CharPool.CLOSE_BRACKET, rangeStart + 1)
+			};
 		}
 
 		protected String[] split(String keywords) {

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.asset.publisher.web.internal.configuration;
@@ -30,10 +21,9 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 public interface AssetPublisherWebConfiguration {
 
 	/**
-	 * Set the cron expression to schedule when CheckAssetEntryMessageListener
-	 * will run to check for new assets. Users will be notified via email of
-	 * new assets. If it is empty or invalid, {@link #checkInterval()} is used
-	 * instead.
+	 * Set the cron expression to schedule when to check for new assets.
+	 * Users will be notified via email of new assets. If it is empty or
+	 * invalid, {@link #checkInterval()} is used instead.
 	 *
 	 * @return cron expression to schedule when to check for new assets.
 	 */
@@ -44,10 +34,9 @@ public interface AssetPublisherWebConfiguration {
 	public String checkCronExpression();
 
 	/**
-	 * Set the interval in hours on how often CheckAssetEntryMessageListener
-	 * will run to check for new assets. Users will be notified via email of
-	 * new assets. This field is ignored if {@link #checkCronExpression()} is
-	 * set to a valid value.
+	 * Set the interval in hours on how often to check for new assets.
+	 * Users will be notified via email of new assets. This field is ignored if
+	 * {@link #checkCronExpression()} is set to a valid value.
 	 *
 	 * @return interval in hours on how often to check for new assets.
 	 */

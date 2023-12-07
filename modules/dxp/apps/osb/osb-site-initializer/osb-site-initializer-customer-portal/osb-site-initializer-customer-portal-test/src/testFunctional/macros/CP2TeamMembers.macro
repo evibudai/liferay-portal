@@ -1,6 +1,7 @@
 definition {
 
-	macro activePartnersRole {
+	@summary = "Default summary"
+	macro activePartnersRole() {
 		ApplicationsMenu.gotoPortlet(
 			category = "Object",
 			panel = "Control Panel",
@@ -15,54 +16,75 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro addFieldsTeamMembersExtra {
+	@summary = "Default summary"
+	macro addFieldsTeamMembersExtra(firstName = null,lastName = null,rowRole = null,rowEmail = null,positionNumber = null) {
+		if (!(isSet(position))) {
+			var position = 0;
+		}
+
 		Type(
-			key_fieldNumber = "${position}",
+			key_fieldNumber = ${position},
+			locator1 = "CP2TeamMembers#FIRST_NAME_FIELD",
+			value1 = ${firstName});
+
+		Type(
+			key_fieldNumber = ${position},
+			locator1 = "CP2TeamMembers#LAST_NAME_FIELD",
+			value1 = ${lastName});
+
+		Type(
+			key_fieldNumber = ${position},
 			locator1 = "CP2TeamMembers#EMAIL_FIELD",
-			value1 = "${rowEmail}");
+			value1 = ${rowEmail});
 
 		Select(
-			key_rowNumber = "${positionNumber}",
+			key_rowNumber = ${positionNumber},
 			locator1 = "CP2TeamMembers#ROLE_SELECT",
-			value1 = "${rowRole}");
+			value1 = ${rowRole});
 
 		if (isSet(addMembers)) {
 			Click(locator1 = "CP2TeamMembers#ADD_MORE_MEMBERS");
 		}
 	}
 
-	macro assertInvitedUserIsNotVisible {
+	@summary = "Default summary"
+	macro assertInvitedUserIsNotVisible(name = null,status = null) {
 		AssertNotVisible(
-			key_name = "${name}",
-			key_status = "${status}",
+			key_name = ${name},
+			key_status = ${status},
 			locator1 = "CP2TeamMembers#TEAM_MEMBERS_TABLE");
 	}
 
-	macro assertThatFunctionIsDisabled {
+	@summary = "Default summary"
+	macro assertThatFunctionIsDisabled(role = null,positionNumber = null) {
 		AssertElementPresent(
-			key_index = "${positionNumber}",
+			key_index = ${positionNumber},
 			locator1 = "CP2TeamMembers#ROLE_DISABLED",
-			role = "${role}");
+			role = ${role});
 	}
 
-	macro assertThatUserGuestIsVisible {
-		var key_email = "${email}";
+	@summary = "Default summary"
+	macro assertThatUserGuestIsVisible(email = null) {
+		var key_email = ${email};
 
 		AssertElementPresent(locator1 = "CP2TeamMembers#ACCOUNT_USER_NAME");
 	}
 
-	macro assertTheInvitedUser {
+	@summary = "Default summary"
+	macro assertTheInvitedUser(name = null,status = null) {
 		AssertVisible(
-			key_name = "${name}",
-			key_status = "${status}",
+			key_name = ${name},
+			key_status = ${status},
 			locator1 = "CP2TeamMembers#TEAM_MEMBERS_TABLE");
 	}
 
-	macro clickTeamMembersSendInvitation {
+	@summary = "Default summary"
+	macro clickTeamMembersSendInvitation() {
 		Click(locator1 = "CP2TeamMembers#SEND_INVITATIONS_BUTTON");
 	}
 
-	macro deleteMemberInvitedViaAccounts {
+	@summary = "Default summary"
+	macro deleteMemberInvitedViaAccounts() {
 		Account.openAccountsAdmin();
 
 		CustomerPortal.accountTableProject(title = "Test Account 01");
@@ -78,24 +100,27 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro searchCP {
+	@summary = "Default summary"
+	macro searchCP(search = null) {
 		Type(
 			locator1 = "CP2TeamMembers#SEARCH_TM",
-			value1 = "${search}");
+			value1 = ${search});
 	}
 
-	macro tableChangeRole {
+	@summary = "Default summary"
+	macro tableChangeRole(roleDefault = null,changeRole = null) {
 		Click(
-			key_text = "${roleDefault}",
+			key_text = ${roleDefault},
 			locator1 = "CP2TeamMembers#TABLE_ROLE_FIELD");
 
 		Click(
-			key_text = "${changeRole}",
+			key_text = ${changeRole},
 			locator1 = "CP2TeamMembers#ROLE_CHANGE");
 	}
 
-	macro teamMembersFlow {
-		CustomerPortal.enterOnProject(title = "${testAccount}");
+	@summary = "Default summary"
+	macro teamMembersFlow(testAccount = null) {
+		CustomerPortal.enterOnProject(title = ${testAccount});
 
 		CustomerPortal.clickOnStartProjectSetup();
 
@@ -104,33 +129,36 @@ definition {
 		CP2NavigationMenu.goToTeamMembers();
 	}
 
-	macro viewSupportSeatsAvailable {
+	@summary = "Default summary"
+	macro viewSupportSeatsAvailable(available = null) {
 		AssertElementPresent(
-			key_number = "${available}",
+			key_number = ${available},
 			locator1 = "CP2TeamMembers#SUPPORT_SEATS");
 	}
 
-	macro viewTableValue {
+	@summary = "Default summary"
+	macro viewTableValue(role = null,name = null,email = null,status = null) {
 		AssertElementPresent(
 			locator1 = "CP2TeamMembers#TABLE",
-			value = "${name}");
+			value = ${name});
 
 		AssertElementPresent(
 			locator1 = "CP2TeamMembers#TABLE",
-			value = "${email}");
+			value = ${email});
 
 		AssertElementPresent(locator1 = "CP2TeamMembers#ICON_CHECK");
 
 		AssertElementPresent(
 			locator1 = "CP2TeamMembers#TABLE",
-			value = "${role}");
+			value = ${role});
 
 		AssertElementPresent(
-			key_status = "${status}",
+			key_status = ${status},
 			locator1 = "CustomerPortalSite#STATUS_CARD");
 	}
 
-	macro viewTeamMembersPage {
+	@summary = "Default summary"
+	macro viewTeamMembersPage() {
 		AssertElementPresent(locator1 = "CustomerPortalSite#TEAM_MEMBERS_MAIN_PAGE");
 	}
 

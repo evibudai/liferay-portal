@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.dto.v1_0.mapper;
@@ -34,14 +25,12 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Jürgen Kappler
  */
-@Component(service = LayoutStructureItemMapper.class)
+@Component(
+	property = "class.name=com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem",
+	service = LayoutStructureItemMapper.class
+)
 public class FragmentLayoutStructureItemMapper
 	extends BaseStyledLayoutStructureItemMapper {
-
-	@Override
-	public String getClassName() {
-		return FragmentStyledLayoutStructureItem.class.getName();
-	}
 
 	@Override
 	public PageElement getPageElement(
@@ -91,6 +80,7 @@ public class FragmentLayoutStructureItemMapper
 									saveMappingConfiguration),
 								getFragmentViewPorts(itemConfigJSONObject),
 								saveInlineContent, saveMappingConfiguration);
+					id = layoutStructureItem.getItemId();
 					type = Type.FRAGMENT;
 				}
 			};
@@ -105,6 +95,7 @@ public class FragmentLayoutStructureItemMapper
 						toPageWidgetInstanceDefinition(
 							fragmentEntryLink,
 							fragmentStyledLayoutStructureItem,
+							itemConfigJSONObject.getString("name", null),
 							toFragmentStyle(
 								itemConfigJSONObject.getJSONObject("styles"),
 								saveMappingConfiguration),
@@ -112,6 +103,7 @@ public class FragmentLayoutStructureItemMapper
 								itemConfigJSONObject.getJSONObject("style")),
 							PortletIdCodec.encode(portletId, instanceId),
 							_widgetInstanceMapper);
+				id = layoutStructureItem.getItemId();
 				type = Type.WIDGET;
 			}
 		};

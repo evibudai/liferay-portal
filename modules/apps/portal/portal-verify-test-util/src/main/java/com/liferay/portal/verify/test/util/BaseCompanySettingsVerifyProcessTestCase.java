@@ -1,34 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.verify.test.util;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
+import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsException;
-import com.liferay.portal.kernel.settings.SettingsFactory;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.verify.VerifyException;
-import com.liferay.portal.verify.VerifyProcess;
 
 import javax.portlet.PortletPreferences;
 
@@ -40,7 +26,6 @@ import org.junit.BeforeClass;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 
 /**
  * @author Michael C. Han
@@ -110,7 +95,7 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 
 	protected Settings getSettings(long companyId) {
 		try {
-			return settingsFactory.getSettings(
+			return FallbackKeysSettingsUtil.getSettings(
 				new CompanyServiceSettingsLocator(companyId, getSettingsId()));
 		}
 		catch (SettingsException settingsException) {
@@ -120,35 +105,6 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 
 	protected abstract String getSettingsId();
 
-	@Override
-	protected VerifyProcess getVerifyProcess() {
-		try {
-			ServiceReference<?>[] serviceReferences =
-				_bundleContext.getServiceReferences(
-					VerifyProcess.class.getName(),
-					StringBundler.concat(
-						"(&(objectClass=", VerifyProcess.class.getName(),
-						")(verify.process.name=", getVerifyProcessName(),
-						"))"));
-
-			if (ArrayUtil.isEmpty(serviceReferences)) {
-				throw new IllegalStateException("Unable to get verify process");
-			}
-
-			return (VerifyProcess)_bundleContext.getService(
-				serviceReferences[0]);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			throw new IllegalStateException("Unable to get verify process");
-		}
-	}
-
-	protected abstract String getVerifyProcessName();
-
 	protected abstract void populateLegacyProperties(
 		UnicodeProperties unicodeProperties);
 
@@ -157,12 +113,6 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 
 	@Inject
 	protected PrefsProps prefsProps;
-
-	@Inject
-	protected SettingsFactory settingsFactory;
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseCompanySettingsVerifyProcessTestCase.class);
 
 	private static BundleContext _bundleContext;
 

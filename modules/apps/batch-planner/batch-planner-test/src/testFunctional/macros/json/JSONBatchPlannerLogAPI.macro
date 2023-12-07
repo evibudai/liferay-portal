@@ -1,7 +1,8 @@
 definition {
 
-	macro _deleteBatchPlannerLogs {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _deleteBatchPlannerLogs() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
 			var baseURL = PropsUtil.get("portal.url");
@@ -9,17 +10,17 @@ definition {
 
 		var batchPlannerLogIds = JSONBatchPlannerLogAPI._getBatchPlannerLogIds();
 
-		if ("${batchPlannerLogIds}" != "") {
-			for (var batchPlannerLogId : list "${batchPlannerLogIds}") {
+		if (${batchPlannerLogIds} != "") {
+			for (var batchPlannerLogId : list ${batchPlannerLogIds}) {
 				echo("Deleting Batch Planner Log with ID: ${batchPlannerLogId}");
 
 				var curl = '''
 					${baseURL}/api/jsonws/batchplanner.batchplannerlog/delete-batch-planner-log \
 						-u test@liferay.com:test \
-                        -d batchPlannerLogId=${batchPlannerLogId}
+						-d batchPlannerLogId=${batchPlannerLogId}
 				''';
 
-				JSONCurlUtil.post("${curl}");
+				JSONCurlUtil.post(${curl});
 			}
 		}
 		else {
@@ -27,8 +28,9 @@ definition {
 		}
 	}
 
-	macro _getBatchPlannerLogIds {
-		var baseURL = "${baseURL}";
+	@summary = "Default summary"
+	macro _getBatchPlannerLogIds() {
+		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
 			var baseURL = PropsUtil.get("portal.url");
@@ -37,19 +39,19 @@ definition {
 		var companyId = JSONCompany.getCompanyId();
 
 		var curl = '''
-			  ${baseURL}/api/jsonws/batchplanner.batchplannerlog/get-company-batch-planner-logs \
-              -u test@liferay.com:test \
-              -d companyId=${companyId} \
-              -d start=0 \
-              -d end=100 \
-              -d -orderByComparator=
+			${baseURL}/api/jsonws/batchplanner.batchplannerlog/get-company-batch-planner-logs \
+				-u test@liferay.com:test \
+				-d companyId=${companyId} \
+				-d start=0 \
+				-d end=100 \
+				-d -orderByComparator=
 		''';
 
-		var batchPlannerLogIds = JSONCurlUtil.post("${curl}", "$..['batchPlannerLogId']");
+		var batchPlannerLogIds = JSONCurlUtil.post(${curl}, "$..['batchPlannerLogId']");
 
 		echo("batchPlannerLogIds: ${batchPlannerLogIds}");
 
-		return "${batchPlannerLogIds}";
+		return ${batchPlannerLogIds};
 	}
 
 }

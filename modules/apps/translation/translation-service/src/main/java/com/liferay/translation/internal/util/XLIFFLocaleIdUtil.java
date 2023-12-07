@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.translation.internal.util;
@@ -19,7 +10,6 @@ import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import net.sf.okapi.common.LocaleId;
@@ -37,20 +27,20 @@ public class XLIFFLocaleIdUtil {
 		return _getLocaleId(document, "trgLang", "target-language");
 	}
 
-	private static <T> Optional<T> _getAttributeValueOptional(
+	private static <T> T _getAttributeValue(
 		Element element, String attributeName, Function<String, T> function) {
 
 		if (element == null) {
-			return Optional.empty();
+			return null;
 		}
 
 		Attribute attribute = element.attribute(attributeName);
 
 		if (attribute == null) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(function.apply(attribute.getValue()));
+		return function.apply(attribute.getValue());
 	}
 
 	private static LocaleId _getLocaleId(
@@ -59,16 +49,22 @@ public class XLIFFLocaleIdUtil {
 
 		Element rootElement = document.getRootElement();
 
-		return _getAttributeValueOptional(
-			rootElement, attributeName, LocaleId::fromString
-		).orElseGet(
-			() -> _getAttributeValueOptional(
-				rootElement.element("file"), alternateAttributeName,
-				LocaleId::fromString
-			).orElse(
-				_defaultLocaleId
-			)
-		);
+		LocaleId localeId = _getAttributeValue(
+			rootElement, attributeName, LocaleId::fromString);
+
+		if (localeId != null) {
+			return localeId;
+		}
+
+		localeId = _getAttributeValue(
+			rootElement.element("file"), alternateAttributeName,
+			LocaleId::fromString);
+
+		if (localeId != null) {
+			return localeId;
+		}
+
+		return _defaultLocaleId;
 	}
 
 	private static final LocaleId _defaultLocaleId = LocaleId.fromString(

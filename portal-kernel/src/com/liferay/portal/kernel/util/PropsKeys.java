@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.util;
@@ -151,11 +142,11 @@ public interface PropsKeys {
 	public static final String ASSET_BROWSER_SEARCH_WITH_DATABASE =
 		"asset.browser.search.with.database";
 
-	public static final String ASSET_CATEGORIES_SEARCH_HIERARCHICAL =
-		"asset.categories.search.hierarchical";
-
 	public static final String ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES =
 		"asset.categories.selector.max.entries";
+
+	public static final String ASSET_ENTRY_INCREMENT_VIEW_COUNTER_ENABLED =
+		"asset.entry.increment.view.counter.enabled";
 
 	public static final String ASSET_FILTER_SEARCH_LIMIT =
 		"asset.filter.search.limit";
@@ -379,9 +370,6 @@ public interface PropsKeys {
 
 	public static final String CDN_HOST_HTTPS = "cdn.host.https";
 
-	public static final String CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE =
-		"change.tracking.sql.transformer.cache.size";
-
 	public static final String CLUSTER_LINK_AUTODETECT_ADDRESS =
 		"cluster.link.autodetect.address";
 
@@ -452,9 +440,6 @@ public interface PropsKeys {
 
 	public static final String COMPANY_LOGIN_PREPOPULATE_DOMAIN =
 		"company.login.prepopulate.domain";
-
-	public static final String COMPANY_SECURITY_AUTH_REQUIRES_HTTPS =
-		"company.security.auth.requires.https";
 
 	public static final String COMPANY_SECURITY_AUTH_TYPE =
 		"company.security.auth.type";
@@ -559,6 +544,9 @@ public interface PropsKeys {
 
 	public static final String DATABASE_INDEXES_UPDATE_ON_STARTUP =
 		"database.indexes.update.on.startup";
+
+	public static final String DATABASE_MAX_PARAMETERS =
+		"database.max.parameters";
 
 	public static final String DATABASE_MYSQL_ENGINE = "database.mysql.engine";
 
@@ -687,9 +675,6 @@ public interface PropsKeys {
 	public static final String DISCUSSION_COMMENTS_ALLOWED_CONTENT =
 		"discussion.comments.allowed.content";
 
-	public static final String DISCUSSION_COMMENTS_ALWAYS_EDITABLE_BY_OWNER =
-		"discussion.comments.always.editable.by.owner";
-
 	public static final String DISCUSSION_COMMENTS_DELTA_VALUE =
 		"discussion.comments.delta.value";
 
@@ -698,8 +683,6 @@ public interface PropsKeys {
 
 	public static final String DISCUSSION_MAX_COMMENTS =
 		"discussion.max.comments";
-
-	public static final String DISCUSSION_SUBSCRIBE = "discussion.subscribe";
 
 	public static final String DL_ACTIONS_VISIBLE = "dl.actions.visible";
 
@@ -850,9 +833,6 @@ public interface PropsKeys {
 
 	public static final String DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH =
 		"dl.file.entry.preview.video.width";
-
-	public static final String DL_FILE_ENTRY_PROCESSORS =
-		"dl.file.entry.processors";
 
 	public static final String
 		DL_FILE_ENTRY_RAW_METADATA_PROCESSOR_EXCLUDED_MIME_TYPES =
@@ -1042,6 +1022,9 @@ public interface PropsKeys {
 
 	public static final String GZIP_COMPRESSION_LEVEL =
 		"gzip.compression.level";
+
+	public static final String HEALTH_CHECK_DATA_SOURCE_ENABLED =
+		"health.check.data.source.enabled";
 
 	public static final String HIBERNATE_CONFIGS = "hibernate.configs";
 
@@ -1381,6 +1364,9 @@ public interface PropsKeys {
 	public static final String LAYOUT_URL_FRIENDLIABLE =
 		"layout.url.friendliable";
 
+	public static final String LAYOUT_USER_ACCESS_VIA_PLID_ENABLED =
+		"layout.user.access.via.plid.enabled";
+
 	public static final String LAYOUT_USER_PRIVATE_LAYOUTS_AUTO_CREATE =
 		"layout.user.private.layouts.auto.create";
 
@@ -1591,9 +1577,6 @@ public interface PropsKeys {
 	public static final String MESSAGE_BOARDS_EXPIRE_BAN_INTERVAL =
 		"message.boards.expire.ban.interval";
 
-	public static final String MESSAGE_BOARDS_EXPIRE_BAN_JOB_INTERVAL =
-		"message.boards.expire.ban.job.interval";
-
 	public static final String MESSAGE_BOARDS_FLAGS_ENABLED =
 		"message.boards.flags.enabled";
 
@@ -1767,14 +1750,19 @@ public interface PropsKeys {
 	public static final String NETVIBES_SERVLET_MAPPING =
 		"netvibes.servlet.mapping";
 
-	public static final String NOTIFICATION_EMAIL_TEMPLATE_RESTRICTED =
-		"notification.email.template.restricted";
+	public static final String NOTIFICATION_EMAIL_TEMPLATE_ENABLED =
+		"notification.email.template.enabled";
 
 	public static final String NOTIFICATIONS_MAX_EVENTS =
 		"notifications.max.events";
 
-	public static final String OBJECT_ENTRY_SCRIPT_VARIABLES_VERSION =
-		"object.entry.script.variables.version";
+	public static final String OBJECT_ENCRYPTION_ALGORITHM =
+		"object.encryption.algorithm";
+
+	public static final String OBJECT_ENCRYPTION_ENABLED =
+		"object.encryption.enabled";
+
+	public static final String OBJECT_ENCRYPTION_KEY = "object.encryption.key";
 
 	public static final String OBJECT_NESTED_FIELDS_MAX_QUERY_DEPTH =
 		"object.nested.fields.max.query.depth";
@@ -2350,12 +2338,6 @@ public interface PropsKeys {
 
 	public static final String SESSION_TIMEOUT = "session.timeout";
 
-	public static final String SESSION_TIMEOUT_AUTO_EXTEND =
-		"session.timeout.auto.extend";
-
-	public static final String SESSION_TIMEOUT_AUTO_EXTEND_OFFSET =
-		"session.timeout.auto.extend.offset";
-
 	public static final String SESSION_TIMEOUT_REDIRECT_ON_EXPIRE =
 		"session.timeout.redirect.on.expire";
 
@@ -2549,33 +2531,6 @@ public interface PropsKeys {
 		"spring.infrastructure.configs";
 
 	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_COUNTRY_COUNTRY_ID =
-			"sql.data.com.liferay.portal.kernel.model.Country.country.id";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_COMPANY_ADDRESS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.company.address";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_COMPANY_EMAIL_ADDRESS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.company.email.address";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_CONTACT_EMAIL_ADDRESS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.contact.email.address";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_ORGANIZATION_STATUS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.organization.status";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_REGION_REGION_ID =
-			"sql.data.com.liferay.portal.kernel.model.Region.region.id";
-
-	public static final String SQL_DATA_MAX_PARAMETERS =
-		"sql.data.max.parameters";
-
-	public static final String
 		STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CHECK_INTERVAL =
 			"staging.draft.export.import.configuration.check.interval";
 
@@ -2628,12 +2583,6 @@ public interface PropsKeys {
 		"template.engine.service.locator.restrict";
 
 	public static final String TERMS_OF_USE_REQUIRED = "terms.of.use.required";
-
-	public static final String TEXT_EXTRACTION_FORK_PROCESS_ENABLED =
-		"text.extraction.fork.process.enabled";
-
-	public static final String TEXT_EXTRACTION_FORK_PROCESS_MIME_TYPES =
-		"text.extraction.fork.process.mime.types";
 
 	public static final String THEME_CSS_FAST_LOAD = "theme.css.fast.load";
 
@@ -2717,7 +2666,7 @@ public interface PropsKeys {
 		"upgrade.concurrent.fetch.size";
 
 	public static final String UPGRADE_CONCURRENT_PROCESS_FUTURE_LIST_MAX_SIZE =
-		"upgrade.concurrent.process.list.max.size";
+		"upgrade.concurrent.process.future.list.max.size";
 
 	public static final String UPGRADE_DATABASE_AUTO_RUN =
 		"upgrade.database.auto.run";
@@ -2728,8 +2677,10 @@ public interface PropsKeys {
 	public static final String UPGRADE_LOG_CONTEXT_ENABLED =
 		"upgrade.log.context.enabled";
 
-	public static final String UPGRADE_LOG_CONTEXT_NAME =
-		"upgrade.log.context.name";
+	public static final String UPGRADE_REPORT_DIR = "upgrade.report.dir";
+
+	public static final String UPGRADE_REPORT_DL_STORAGE_SIZE_TIMEOUT =
+		"upgrade.report.dl.storage.size.timeout";
 
 	public static final String UPGRADE_REPORT_ENABLED =
 		"upgrade.report.enabled";

@@ -1,41 +1,43 @@
 definition {
 
-	@summary = "Get a fileEntryTypeId from dlFileEntryType"
-	macro _getFileEntryTypeId {
+	@summary = "Default summary"
+	macro _getFileEntryTypeId(fileEntryTypeName = null, groupId = null) {
 		Variables.assertDefined(parameterList = "${fileEntryTypeName},${groupId}");
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileentrytype/get-file-entry-types \
-			  -u test@liferay.com:test \
-			  -d groupIds=[${groupId}]
+				-u ${userLoginInfo} \
+				-d groupIds=[${groupId}]
 		''';
 
-		var fileEntryTypeId = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${fileEntryTypeName}')]['fileEntryTypeId']");
+		var fileEntryTypeId = JSONCurlUtil.post(${curl}, "$.[?(@['nameCurrentValue'] == '${fileEntryTypeName}')]['fileEntryTypeId']");
 
-		if ("${fileEntryTypeId}" == "") {
+		if (${fileEntryTypeId} == "") {
 			echo("The ${fileEntryTypeName} doesn't exist.");
 		}
 
-		return "${fileEntryTypeId}";
+		return ${fileEntryTypeId};
 	}
 
-	@summary = "Get fileEntryTypeId of dlFileEntryTypes in specific group."
-	macro _getFileEntryTypeIds {
-		Variables.assertDefined(parameterList = "${groupId}");
+	@summary = "Default summary"
+	macro _getFileEntryTypeIds(groupId = null) {
+		Variables.assertDefined(parameterList = ${groupId});
 
 		var portalURL = JSONCompany.getPortalURL();
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileentrytype/get-file-entry-types \
-			  -u test@liferay.com:test \
-			  -d groupIds=[${groupId}]
+				-u ${userLoginInfo} \
+				-d groupIds=[${groupId}]
 		''';
 
-		var fileEntryTypeIds = JSONCurlUtil.post("${curl}", "$..fileEntryTypeId");
+		var fileEntryTypeIds = JSONCurlUtil.post(${curl}, "$..fileEntryTypeId");
 
-		return "${fileEntryTypeIds}";
+		return ${fileEntryTypeIds};
 	}
 
 }

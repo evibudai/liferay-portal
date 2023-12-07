@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.model;
@@ -56,6 +47,7 @@ public class ObjectEntryWrapper
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("objectDefinitionId", getObjectDefinitionId());
+		attributes.put("rootObjectEntryId", getRootObjectEntryId());
 		attributes.put("lastPublishDate", getLastPublishDate());
 		attributes.put("status", getStatus());
 		attributes.put("statusByUserId", getStatusByUserId());
@@ -132,6 +124,12 @@ public class ObjectEntryWrapper
 
 		if (objectDefinitionId != null) {
 			setObjectDefinitionId(objectDefinitionId);
+		}
+
+		Long rootObjectEntryId = (Long)attributes.get("rootObjectEntryId");
+
+		if (rootObjectEntryId != null) {
+			setRootObjectEntryId(rootObjectEntryId);
 		}
 
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
@@ -280,6 +278,16 @@ public class ObjectEntryWrapper
 	@Override
 	public long getPrimaryKey() {
 		return model.getPrimaryKey();
+	}
+
+	/**
+	 * Returns the root object entry ID of this object entry.
+	 *
+	 * @return the root object entry ID of this object entry
+	 */
+	@Override
+	public long getRootObjectEntryId() {
+		return model.getRootObjectEntryId();
 	}
 
 	/**
@@ -567,6 +575,16 @@ public class ObjectEntryWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the root object entry ID of this object entry.
+	 *
+	 * @param rootObjectEntryId the root object entry ID of this object entry
+	 */
+	@Override
+	public void setRootObjectEntryId(long rootObjectEntryId) {
+		model.setRootObjectEntryId(rootObjectEntryId);
 	}
 
 	/**

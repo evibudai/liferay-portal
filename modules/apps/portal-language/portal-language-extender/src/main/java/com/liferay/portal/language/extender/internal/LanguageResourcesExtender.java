@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.language.extender.internal;
@@ -36,6 +27,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleWiring;
@@ -107,7 +99,7 @@ public class LanguageResourcesExtender
 		_bundleContext = bundleContext;
 
 		_bundleTracker = new BundleTracker<>(
-			bundleContext, ~Bundle.INSTALLED & ~Bundle.UNINSTALLED, this);
+			bundleContext, Bundle.ACTIVE, this);
 
 		_bundleTracker.open();
 	}
@@ -139,7 +131,7 @@ public class LanguageResourcesExtender
 		}
 
 		Enumeration<URL> enumeration = bundle.findEntries(
-			path, name.concat("_*.properties"), false);
+			path, name.concat("*.properties"), false);
 
 		if (enumeration == null) {
 			return;
@@ -150,19 +142,42 @@ public class LanguageResourcesExtender
 
 			String urlPath = url.getPath();
 
-			String languageId = urlPath.substring(
-				path.length() + name.length() + 2,
-				urlPath.length() - ".properties".length());
+			String languageId = StringPool.BLANK;
+
+			index = urlPath.indexOf(StringPool.UNDERLINE, path.length());
+
+			if (index > -1) {
+				languageId = urlPath.substring(
+					index + 1, urlPath.length() - ".properties".length());
+			}
 
 			Locale locale = LocaleUtil.fromLanguageId(languageId, false);
 
-			ResourceBundle resourceBundle = ResourceBundle.getBundle(
-				baseName, locale, bundleWiring.getClassLoader(),
-				UTF8Control.INSTANCE);
-
 			ServiceRegistration<?> serviceRegistration =
 				_bundleContext.registerService(
-					ResourceBundle.class, resourceBundle,
+					ResourceBundle.class,
+					new ServiceFactory<ResourceBundle>() {
+
+						@Override
+						public ResourceBundle getService(
+							Bundle bundle,
+							ServiceRegistration<ResourceBundle>
+								serviceRegistration) {
+
+							return ResourceBundle.getBundle(
+								baseName, locale, bundleWiring.getClassLoader(),
+								UTF8Control.INSTANCE);
+						}
+
+						@Override
+						public void ungetService(
+							Bundle bundle,
+							ServiceRegistration<ResourceBundle>
+								serviceRegistration,
+							ResourceBundle resourceBundle) {
+						}
+
+					},
 					HashMapDictionaryBuilder.<String, Object>put(
 						Constants.SERVICE_RANKING, serviceRanking
 					).put(

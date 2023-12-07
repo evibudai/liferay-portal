@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
@@ -54,6 +45,11 @@ public class TestClassGroupFactory {
 				(JUnitBatchTestClassGroup)batchTestClassGroup);
 		}
 
+		if (batchTestClassGroup instanceof PlaywrightBatchTestClassGroup) {
+			return new PlaywrightAxisTestClassGroup(
+				(PlaywrightBatchTestClassGroup)batchTestClassGroup);
+		}
+
 		if (batchTestClassGroup instanceof PluginsGulpBatchTestClassGroup) {
 			return new PluginsGulpAxisTestClassGroup(
 				(PluginsGulpBatchTestClassGroup)batchTestClassGroup);
@@ -75,6 +71,11 @@ public class TestClassGroupFactory {
 
 		if (batchTestClassGroup instanceof JUnitBatchTestClassGroup) {
 			return new JUnitAxisTestClassGroup(
+				jsonObject, segmentTestClassGroup);
+		}
+
+		if (batchTestClassGroup instanceof PlaywrightBatchTestClassGroup) {
+			return new PlaywrightAxisTestClassGroup(
 				jsonObject, segmentTestClassGroup);
 		}
 
@@ -252,9 +253,6 @@ public class TestClassGroupFactory {
 			}
 			else if (batchName.startsWith("integration-") ||
 					 batchName.startsWith("junit-test-") ||
-					 batchName.startsWith(
-						 "modules-integration-project-templates-") ||
-					 batchName.startsWith("modules-unit-project-templates-") ||
 					 batchName.startsWith("unit-")) {
 
 				if (jsonObject != null) {
@@ -298,6 +296,21 @@ public class TestClassGroupFactory {
 						batchName, portalTestClassJob);
 				}
 			}
+			else if (batchName.startsWith(
+						"modules-integration-project-templates-") ||
+					 batchName.startsWith("modules-unit-project-templates-")) {
+
+				if (jsonObject != null) {
+					batchTestClassGroup =
+						new ProjectTemplatesJUnitBatchTestClassGroup(
+							jsonObject, portalTestClassJob);
+				}
+				else {
+					batchTestClassGroup =
+						new ProjectTemplatesJUnitBatchTestClassGroup(
+							batchName, portalTestClassJob);
+				}
+			}
 			else if ((batchName.startsWith("modules-integration-") &&
 					  !batchName.startsWith(
 						  "modules-integration-project-templates-")) ||
@@ -323,6 +336,16 @@ public class TestClassGroupFactory {
 				}
 				else {
 					batchTestClassGroup = new SemVerModulesBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+			}
+			else if (batchName.startsWith("playwright-js-")) {
+				if (jsonObject != null) {
+					batchTestClassGroup = new PlaywrightBatchTestClassGroup(
+						jsonObject, portalTestClassJob);
+				}
+				else {
+					batchTestClassGroup = new PlaywrightBatchTestClassGroup(
 						batchName, portalTestClassJob);
 				}
 			}

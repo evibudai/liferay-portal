@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.extension.v1_0.test;
@@ -18,12 +9,15 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.field.builder.BooleanObjectFieldBuilder;
+import com.liferay.object.field.builder.DateObjectFieldBuilder;
+import com.liferay.object.field.builder.DecimalObjectFieldBuilder;
+import com.liferay.object.field.builder.PrecisionDecimalObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -36,6 +30,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.extension.ExtensionProvider;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
@@ -44,7 +39,6 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
@@ -72,22 +66,70 @@ public class ObjectEntryExtensionProviderTest {
 			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
 				TestPropsValues.getCompanyId(), User.class.getName());
 
-		_addCustomObjectField(
-			objectDefinition.getObjectDefinitionId(),
-			ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN,
-			ObjectFieldConstants.DB_TYPE_BOOLEAN, "boolean", false);
-		_addCustomObjectField(
-			objectDefinition.getObjectDefinitionId(),
-			ObjectFieldConstants.BUSINESS_TYPE_DATE,
-			ObjectFieldConstants.DB_TYPE_DATE, "date", true);
-		_addCustomObjectField(
-			objectDefinition.getObjectDefinitionId(),
-			ObjectFieldConstants.BUSINESS_TYPE_DECIMAL,
-			ObjectFieldConstants.DB_TYPE_DOUBLE, "decimal", false);
-		_addCustomObjectField(
-			objectDefinition.getObjectDefinitionId(),
-			ObjectFieldConstants.BUSINESS_TYPE_PRECISION_DECIMAL,
-			ObjectFieldConstants.DB_TYPE_BIG_DECIMAL, "precisionDecimal", true);
+		ObjectFieldUtil.addCustomObjectField(
+			new BooleanObjectFieldBuilder(
+			).userId(
+				TestPropsValues.getUserId()
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).indexed(
+				RandomTestUtil.randomBoolean()
+			).indexedAsKeyword(
+				RandomTestUtil.randomBoolean()
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"boolean"
+			).build());
+		ObjectFieldUtil.addCustomObjectField(
+			new DateObjectFieldBuilder(
+			).userId(
+				TestPropsValues.getUserId()
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).indexed(
+				RandomTestUtil.randomBoolean()
+			).indexedAsKeyword(
+				RandomTestUtil.randomBoolean()
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"date"
+			).required(
+				true
+			).build());
+		ObjectFieldUtil.addCustomObjectField(
+			new DecimalObjectFieldBuilder(
+			).userId(
+				TestPropsValues.getUserId()
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).indexed(
+				RandomTestUtil.randomBoolean()
+			).indexedAsKeyword(
+				RandomTestUtil.randomBoolean()
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"decimal"
+			).build());
+		ObjectFieldUtil.addCustomObjectField(
+			new PrecisionDecimalObjectFieldBuilder(
+			).userId(
+				TestPropsValues.getUserId()
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).indexed(
+				RandomTestUtil.randomBoolean()
+			).indexedAsKeyword(
+				RandomTestUtil.randomBoolean()
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"precisionDecimal"
+			).required(
+				true
+			).build());
 
 		_user = UserTestUtil.addUser();
 	}
@@ -120,11 +162,11 @@ public class ObjectEntryExtensionProviderTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), false,
+				TestPropsValues.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"A" + RandomTestUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY,
+				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
@@ -183,19 +225,6 @@ public class ObjectEntryExtensionProviderTest {
 			).build());
 	}
 
-	private static void _addCustomObjectField(
-			long objectDefinitionId, String businessType, String dbType,
-			String name, boolean required)
-		throws Exception {
-
-		_objectFieldLocalService.addCustomObjectField(
-			null, TestPropsValues.getUserId(), 0, objectDefinitionId,
-			businessType, dbType, null, RandomTestUtil.randomBoolean(),
-			RandomTestUtil.randomBoolean(), null,
-			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			name, required, false, Collections.emptyList());
-	}
-
 	private void _assertPropertyDefinition(
 		String expectedPropertyName,
 		PropertyDefinition.PropertyType expectedPropertyType,
@@ -218,8 +247,8 @@ public class ObjectEntryExtensionProviderTest {
 
 		Map<String, Serializable> extendedProperties =
 			_extensionProvider.getExtendedProperties(
-				TestPropsValues.getCompanyId(), UserAccount.class.getName(),
-				userAccount);
+				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				UserAccount.class.getName(), userAccount);
 
 		Assert.assertEquals(
 			values.get("boolean"), extendedProperties.get("boolean"));
@@ -250,7 +279,9 @@ public class ObjectEntryExtensionProviderTest {
 
 	private static User _user;
 
-	@Inject(filter = "component.name=*.ObjectEntryExtensionProvider")
+	@Inject(
+		filter = "component.name=com.liferay.object.rest.internal.vulcan.extension.v1_0.ObjectEntryExtensionProvider"
+	)
 	private ExtensionProvider _extensionProvider;
 
 }

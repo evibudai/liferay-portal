@@ -4,7 +4,6 @@
 @import 'globals';
 
 .segments-root {
-	@import 'clay_button';
 	@import 'conjunction';
 	@import 'contributor_builder';
 	@import 'criteria_builder';
@@ -13,6 +12,7 @@
 	@import 'criteria_sidebar';
 	@import 'drop_zone';
 	@import 'empty_drop_zone';
+	@import 'keyboard_movement_preview';
 	@import 'localized_title';
 	@import 'segment_edit';
 }

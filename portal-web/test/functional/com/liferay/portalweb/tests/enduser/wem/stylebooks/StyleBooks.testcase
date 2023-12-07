@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Style Books";
@@ -13,14 +14,14 @@ definition {
 		}
 
 		task ("Add a site via JSON") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +30,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-121979 and LPS-120005. Change the configuration of page won't break the connection with its style book."
-	@priority = "5"
+	@priority = 5
 	test ChangeConfigurationOfPageBasedOnStyleBook {
 		property portal.acceptance = "true";
 		property testray.component.names = "Frontend Token";
@@ -90,10 +91,10 @@ definition {
 			AssertCssValue(
 				fragmentName = "paragraph",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-family",
-				value1 = "${fontFamily}");
+				value1 = ${fontFamily});
 
 			PageEditor.publish();
 		}
@@ -106,10 +107,10 @@ definition {
 			AssertCssValue(
 				fragmentName = "paragraph",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-family",
-				value1 = "${fontFamily}");
+				value1 = ${fontFamily});
 		}
 
 		task ("Modify the page name") {
@@ -124,15 +125,15 @@ definition {
 			AssertCssValue(
 				fragmentName = "paragraph",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-family",
-				value1 = "${fontFamily}");
+				value1 = ${fontFamily});
 		}
 	}
 
 	@description = "This is a test for LPS-116106. Page Creator can change style book of content page via Look and Feel settings."
-	@priority = "4"
+	@priority = 4
 	test ChangeStyleBookOfContentPageViaLookAndFeel {
 		task ("Add a style book") {
 			StyleBooksAdmin.openStyleBooksAdmin(siteURLKey = "test-site-name");
@@ -161,8 +162,8 @@ definition {
 
 			Type(
 				ariaLabel = "Heading 5 Font Size",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "2");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 2);
 
 			StyleBooks.clickManagementBar();
 
@@ -208,11 +209,11 @@ definition {
 		task ("Configure the Type of Heading as Button Outline Secondary") {
 			PageEditor.gotoConfiguration(fragmentName = "Button");
 
-			PageEditor.configureFragment(type = "Outline Secondary");
+			PageEditor.configureFragment(style = "Outline Secondary");
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				type = "outline-secondary");
+				style = "outline-secondary");
 		}
 
 		task ("Change to the new style book via Look and Feel") {
@@ -220,20 +221,19 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Test Style Book Name");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
 			Button.clickSave();
 
@@ -244,7 +244,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "color",
 				value1 = "rgba(0, 255, 0, 1)");
@@ -252,7 +252,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-size",
 				value1 = "32px");
@@ -291,20 +291,19 @@ definition {
 
 			Click(locator1 = "PageEditor#MORE_LINK");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Styles from Theme");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
 			Button.clickSave();
 
@@ -315,7 +314,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "button",
 				id = "link",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "color",
 				value1 = "rgba(107, 108, 126, 1)");
@@ -323,7 +322,7 @@ definition {
 			AssertCssValue(
 				fragmentName = "heading",
 				id = "element-text",
-				index = "1",
+				index = 1,
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT",
 				locator2 = "font-size",
 				value1 = "14px");
@@ -357,7 +356,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-116106. Page Creator can change style book of widget page via Look and Feel settings."
-	@priority = "4"
+	@priority = 4
 	test ChangeStyleBookOfWidgetPageViaLookAndFeel {
 		task ("Add a style book") {
 			StyleBooksAdmin.openStyleBooksAdmin(siteURLKey = "test-site-name");
@@ -415,22 +414,21 @@ definition {
 
 			Click(locator1 = "ControlMenu#EDIT_COG");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Test Style Book Name");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
 			Button.clickSave();
 
@@ -438,38 +436,35 @@ definition {
 
 			Navigator.gotoBack();
 
-			AssertCssValue(
-				key_text = "New Entry",
-				locator1 = "Button#ANY",
-				locator2 = "background-color",
-				value1 = "rgba(0, 255, 0, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "background-color",
+				element = "//a[contains(@class,'btn')][normalize-space()='New Entry']",
+				expected = "rgb(0, 255, 0)");
 
-			AssertCssValue(
-				key_text = "Subscribe",
-				locator1 = "Button#ANY",
-				locator2 = "color",
-				value1 = "rgba(255, 0, 0, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "color",
+				element = "//a[contains(@class,'btn')][normalize-space()='Subscribe']",
+				expected = "rgb(255, 0, 0)");
 		}
 
 		task ("Change to default style book via Look and Feel") {
 			Click(locator1 = "ControlMenu#EDIT_COG");
 
-			Navigator.gotoNavTab(navTab = "Look and Feel");
+			Navigator.gotoNavTab(navTab = "Design");
 
-			AssertElementPresent(
-				key_styleBookName = "Test Style Book Name",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Test Style Book Name");
 
-			AssertClick(
-				key_text = "Change Style Book",
-				locator1 = "Button#ANY",
-				value1 = "Change Style Book");
+			Click(
+				ariaLabel = "Change Style Book",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			StyleBooks.selectStyleBook(styleBookName = "Styles from Theme");
 
-			AssertElementPresent(
-				key_styleBookName = "Styles from Theme",
-				locator1 = "PagesAdmin#STYLE_BOOK_NAME");
+			AssertTextEquals(
+				locator1 = "PagesAdmin#STYLE_BOOK_NAME",
+				value1 = "Styles from Theme");
 
 			Button.clickSave();
 
@@ -477,22 +472,20 @@ definition {
 
 			Navigator.gotoBack();
 
-			AssertCssValue(
-				key_text = "New Entry",
-				locator1 = "Button#ANY",
-				locator2 = "background-color",
-				value1 = "rgba(11, 95, 255, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "background-color",
+				element = "//a[contains(@class,'btn')][normalize-space()='New Entry']",
+				expected = "rgb(11, 95, 255)");
 
-			AssertCssValue(
-				key_text = "Subscribe",
-				locator1 = "Button#ANY",
-				locator2 = "color",
-				value1 = "rgba(107, 108, 126, 1)");
+			Css.assertCssCustomPropertyValue(
+				attribute = "color",
+				element = "//a[contains(@class,'btn')][normalize-space()='Subscribe']",
+				expected = "rgb(107, 108, 126)");
 		}
 	}
 
 	@description = "This is a test for LPS-142050. In style books, selecting Custom in units could insert any type of character."
-	@priority = "3"
+	@priority = 3
 	test ConfigureCustomUnit {
 		task ("Given a site designer has a style book") {
 			JSONStylebooks.addStyleBookEntry(
@@ -541,12 +534,12 @@ definition {
 			AssertTextEquals(
 				key_text = "Spacer 1",
 				locator1 = "TextInput#ANY",
-				value1 = "2");
+				value1 = 2);
 		}
 	}
 
 	@description = "This is a test for LPS-147705. A warning message appears when users try to delete a style book."
-	@priority = "4"
+	@priority = 4
 	test DeleteStyleBook {
 		task ("Given a site designer has a style book") {
 			JSONStylebooks.addStyleBookEntry(
@@ -576,7 +569,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-142078. The user could mark a new style book as default."
-	@priority = "4"
+	@priority = 4
 	test MarkNewStyleBookAsDefault {
 		task ("Add a style book") {
 			JSONStylebooks.addStyleBookEntry(
@@ -602,7 +595,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-140834. The user could select style book in master page when use public pages theme."
-	@priority = "4"
+	@priority = 4
 	test SelectStyleBookInMasterPageWhenUsePublicPagesTheme {
 		property portal.release = "false";
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -664,12 +657,12 @@ definition {
 		task ("Select style book via Page Design Options panel") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
-			Navigator.gotoNavTab(navTab = "Style Book");
+			StyleBooks.selectStyleBookViaPageDesignOptions(styleBookName = "Test Style Book Name");
 		}
 	}
 
 	@description = "This is a test for LPS-142078. The user could view the default style book in Style Books admin but cannot delete and edit it."
-	@priority = "5"
+	@priority = 5
 	test ViewDefaultStyleBook {
 		property portal.acceptance = "true";
 
@@ -697,7 +690,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-145292. The user could view new icons on dropdown menu of style book."
-	@priority = "4"
+	@priority = 4
 	test ViewDropdownMenuIconsInStyleBooksAdmin {
 		task ("Given a Style books designer has a new style book") {
 			JSONStylebooks.addStyleBookEntry(

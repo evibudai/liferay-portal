@@ -1,6 +1,7 @@
 definition {
 
-	macro chooseMenu {
+	@summary = "Default summary"
+	macro chooseMenu(menuName = null) {
 		Click(
 			locator1 = "Radio#ANY",
 			radioLabel = "Choose Menu");
@@ -18,7 +19,7 @@ definition {
 		SelectFrame.selectSecondFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Click(
-			key_rowEntry = "${menuName}",
+			key_rowEntry = ${menuName},
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
 
 		SelectFrame(value1 = "relative=top");
@@ -27,10 +28,11 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "NavigationMenusWidget#CHOOSE_MENU_SELECTED_MENU_NAME",
-			value1 = "${menuName}");
+			value1 = ${menuName});
 	}
 
-	macro gotoEditNavigationMenuEntry {
+	@summary = "Default summary"
+	macro gotoEditNavigationMenuEntry() {
 		MouseOver.mouseOverNotVisible(locator1 = "Icon#EDIT_PENCIL");
 
 		Click.waitForMenuToggleJSClick(locator1 = "Icon#EDIT_PENCIL");
@@ -38,8 +40,9 @@ definition {
 		MenuItem.click(menuItem = "Edit");
 	}
 
-	macro gotoNavigationMenuWidgetConfig {
-		WaitForElementPresent(locator1 = "//script[contains(@src,'/o/frontend-js-aui-web/liferay/menu_toggle.js')]");
+	@summary = "Default summary"
+	macro gotoNavigationMenuWidgetConfig() {
+		WaitForElementPresent(locator1 = "//script[contains(@src,'/o/frontend-js-loader-modules-extender/loader.js')]");
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
@@ -50,52 +53,57 @@ definition {
 		IFrame.selectModalFrame();
 	}
 
-	macro gotoSublevel {
-		if ("${type}" == "Drop Down") {
-			WaitForElementPresent(locator1 = "//script[contains(@src,'/o/frontend-js-aui-web/liferay/menu_toggle.js')]");
+	@summary = "Default summary"
+	macro gotoSublevel(itemName = null, type = null, pageName = null) {
+		if (${type} == "Drop Down") {
+			WaitForElementPresent(locator1 = "//script[contains(@src,'/o/frontend-js-loader-modules-extender/loader.js')]");
 
 			MouseOver.javaScriptMouseOver(
-				key_pageName = "${pageName}",
+				key_pageName = ${pageName},
 				locator1 = "NavigationMenusWidget#CHILD_TOGGLE");
 
 			Click(
-				key_itemName = "${itemName}",
+				key_itemName = ${itemName},
 				locator1 = "NavigationMenusWidget#DROPDOWN_MENU_ITEM");
 		}
-		else if ("${type}" == "List") {
+		else if (${type} == "List") {
 			Click(
-				key_itemName = "${itemName}",
+				key_itemName = ${itemName},
 				locator1 = "NavigationMenusWidget#LIST_MENU_ANY_ITEM");
 		}
 	}
 
-	macro selectDisplayTemplate {
-		Select(
-			locator1 = "Select#DISPLAY_TEMPLATE",
-			value1 = "${templateName}");
+	@summary = "Default summary"
+	macro selectDisplayTemplate(templateName = null) {
+		Click(locator1 = "Select#DISPLAY_TEMPLATE");
+
+		MenuItem.click(menuItem = ${templateName});
 	}
 
-	macro selectLevelsToDisplay {
+	@summary = "Default summary"
+	macro selectLevelsToDisplay(levels = null) {
 		Select(
 			key_selectFieldLabel = "Levels to Display",
 			locator1 = "Select#ANY",
-			value1 = "${levels}");
+			value1 = ${levels});
 	}
 
-	macro selectNavigation {
+	@summary = "Default summary"
+	macro selectNavigation(menuType = null) {
 		Select(
 			locator1 = "NavigationMenusWidget#SELECT_NAVIGATION",
-			value1 = "${menuType}");
+			value1 = ${menuType});
 	}
 
-	macro viewMenuItemsOrder {
-		var index = "1";
+	@summary = "Default summary"
+	macro viewMenuItemsOrder(menuItemList = null) {
+		var index = 1;
 
-		for (var menuItem : list "${menuItemList}") {
+		for (var menuItem : list ${menuItemList}) {
 			AssertTextEquals(
-				key_index = "${index}",
+				key_index = ${index},
 				locator1 = "NavigationMenusWidget#MENU_ITEM",
-				value1 = "${menuItem}");
+				value1 = ${menuItem});
 
 			var index = ${index} + 1;
 		}

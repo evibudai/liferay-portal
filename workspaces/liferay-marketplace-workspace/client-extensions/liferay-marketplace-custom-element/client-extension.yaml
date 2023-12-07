@@ -1,0 +1,17 @@
+assemble:
+    - from: build/vite
+      into: static
+liferay-marketplace-custom-element:
+    cssURLs:
+        - "**/*.css"
+    friendlyURLMapping: liferay-marketplace-custom-element
+    htmlElementName: liferay-marketplace-custom-element
+    instanceable: false
+    name: Liferay Marketplace
+    portletCategoryName: category.client-extensions
+    properties:
+        cloudBaseURL: https://console.liferay.cloud
+    type: customElement
+    urls:
+        - "*.js"
+    useESM: true

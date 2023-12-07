@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.internal.search.spi.model.index.contributor;
@@ -18,13 +9,19 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
+import com.liferay.document.library.kernel.store.DLStoreRequest;
+import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.security.io.InputStreamSanitizer;
-import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
-import com.liferay.dynamic.data.mapping.kernel.StorageEngineManager;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
+import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -41,6 +38,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TextExtractor;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 import com.liferay.portal.util.PropsValues;
@@ -48,6 +47,8 @@ import com.liferay.trash.TrashHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 import java.util.Locale;
@@ -67,67 +68,19 @@ public class DLFileEntryModelDocumentContributor
 
 	@Override
 	public void contribute(Document document, DLFileEntry dlFileEntry) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("Indexing document " + dlFileEntry);
-		}
-
-		boolean indexContent = true;
-
-		String[] ignoreExtensions = _prefsProps.getStringArray(
-			PropsKeys.DL_FILE_INDEXING_IGNORE_EXTENSIONS, StringPool.COMMA);
-
-		if (ArrayUtil.contains(
-				ignoreExtensions,
-				StringPool.PERIOD + dlFileEntry.getExtension())) {
-
-			indexContent = false;
-		}
-
-		InputStream inputStream = null;
-
-		if (indexContent) {
-			try {
-				DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
-
-				inputStream = _inputStreamSanitizer.sanitize(
-					dlFileVersion.getContentStream(false));
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to retrieve document stream", exception);
-				}
-			}
-		}
-
 		try {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Indexing document file entry " + dlFileEntry);
+			}
+
 			Locale defaultLocale = _portal.getSiteDefaultLocale(
 				dlFileEntry.getGroupId());
 
 			DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
 
-			if (indexContent) {
-				if (inputStream != null) {
-					try {
-						String localizedField = Field.getLocalizedName(
-							defaultLocale, Field.CONTENT);
-
-						document.addFile(
-							localizedField, inputStream,
-							dlFileEntry.getFileName(),
-							PropsValues.DL_FILE_INDEXING_MAX_SIZE);
-					}
-					catch (IOException ioException) {
-						if (_log.isWarnEnabled()) {
-							_log.warn("Unable to index content", ioException);
-						}
-					}
-				}
-				else if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Document " + dlFileEntry +
-							" does not have any content");
-				}
-			}
+			_addFile(
+				document, Field.getLocalizedName(defaultLocale, Field.CONTENT),
+				dlFileEntry);
 
 			document.addKeyword(
 				Field.CLASS_TYPE_ID, dlFileEntry.getFileEntryTypeId());
@@ -155,9 +108,6 @@ public class DLFileEntryModelDocumentContributor
 
 			document.addKeyword(
 				"dataRepositoryId", dlFileEntry.getDataRepositoryId());
-
-			// TODO inputStream this necessary?
-
 			document.addText(
 				"ddmContent",
 				_extractDDMContent(dlFileVersion, LocaleUtil.getSiteDefault()));
@@ -173,6 +123,7 @@ public class DLFileEntryModelDocumentContributor
 					dlFileEntry.getMimeType(), CharPool.FORWARD_SLASH,
 					CharPool.UNDERLINE));
 			document.addKeyword("readCount", dlFileEntry.getReadCount());
+			document.addDate("reviewDate", dlFileEntry.getReviewDate());
 			document.addNumber("size", dlFileEntry.getSize());
 			document.addNumber(
 				"versionCount", GetterUtil.getDouble(dlFileEntry.getVersion()));
@@ -204,22 +155,29 @@ public class DLFileEntryModelDocumentContributor
 			}
 
 			if (_log.isDebugEnabled()) {
-				_log.debug("Document " + dlFileEntry + " indexed successfully");
+				_log.debug(
+					"Document file entry " + dlFileEntry +
+						" indexed successfully");
 			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
 		}
-		finally {
-			if (inputStream != null) {
-				try {
-					inputStream.close();
-				}
-				catch (IOException ioException) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(ioException);
-					}
-				}
+	}
+
+	private void _addFile(
+		Document document, String fieldName, DLFileEntry dlFileEntry) {
+
+		try {
+			String text = _extractText(dlFileEntry);
+
+			if (text != null) {
+				document.addText(fieldName, text);
+			}
+		}
+		catch (IOException | PortalException exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
 			}
 		}
 	}
@@ -234,13 +192,16 @@ public class DLFileEntryModelDocumentContributor
 		for (DLFileEntryMetadata dlFileEntryMetadata : dlFileEntryMetadatas) {
 			try {
 				DDMFormValues ddmFormValues =
-					_storageEngineManager.getDDMFormValues(
+					_ddmStorageEngineManager.getDDMFormValues(
 						dlFileEntryMetadata.getDDMStorageId());
 
 				if (ddmFormValues != null) {
-					_ddmStructureManager.addAttributes(
-						dlFileEntryMetadata.getDDMStructureId(), document,
-						ddmFormValues);
+					DDMStructure ddmStructure =
+						_ddmStructureLocalService.getStructure(
+							dlFileEntryMetadata.getDDMStructureId());
+
+					_ddmIndexer.addAttributes(
+						document, ddmStructure, ddmFormValues);
 				}
 			}
 			catch (Exception exception) {
@@ -263,14 +224,17 @@ public class DLFileEntryModelDocumentContributor
 		for (DLFileEntryMetadata dlFileEntryMetadata : dlFileEntryMetadatas) {
 			try {
 				DDMFormValues ddmFormValues =
-					_storageEngineManager.getDDMFormValues(
+					_ddmStorageEngineManager.getDDMFormValues(
 						dlFileEntryMetadata.getDDMStorageId());
 
 				if (ddmFormValues != null) {
+					DDMStructure ddmStructure =
+						_ddmStructureLocalService.getStructure(
+							dlFileEntryMetadata.getDDMStructureId());
+
 					sb.append(
-						_ddmStructureManager.extractAttributes(
-							dlFileEntryMetadata.getDDMStructureId(),
-							ddmFormValues, locale));
+						_ddmIndexer.extractIndexableAttributes(
+							ddmStructure, ddmFormValues, locale));
 
 					sb.append(StringPool.SPACE);
 				}
@@ -289,11 +253,96 @@ public class DLFileEntryModelDocumentContributor
 		return sb.toString();
 	}
 
+	private String _extractText(DLFileEntry dlFileEntry)
+		throws IOException, PortalException {
+
+		if (DLStoreUtil.hasFile(
+				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
+				dlFileEntry.getName(), _getIndexVersionLabel(dlFileEntry))) {
+
+			return StreamUtil.toString(
+				DLStoreUtil.getFileAsStream(
+					dlFileEntry.getCompanyId(),
+					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
+					_getIndexVersionLabel(dlFileEntry)));
+		}
+
+		InputStream inputStream = _getInputStream(dlFileEntry);
+
+		if (inputStream == null) {
+			return null;
+		}
+
+		String text = _textExtractor.extractText(
+			inputStream, PropsValues.DL_FILE_INDEXING_MAX_SIZE);
+
+		if (Validator.isNotNull(text)) {
+			DLStoreUtil.addFile(
+				DLStoreRequest.builder(
+					dlFileEntry.getCompanyId(),
+					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName()
+				).versionLabel(
+					_getIndexVersionLabel(dlFileEntry)
+				).build(),
+				text.getBytes(StandardCharsets.UTF_8));
+		}
+
+		return text;
+	}
+
+	private String _getIndexVersionLabel(DLFileEntry dlFileEntry)
+		throws PortalException {
+
+		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+
+		return dlFileVersion.getStoreFileName() + ".index";
+	}
+
+	private InputStream _getInputStream(DLFileEntry dlFileEntry) {
+		try {
+			if (!_isIndexContent(dlFileEntry)) {
+				return null;
+			}
+
+			DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+
+			return _inputStreamSanitizer.sanitize(
+				dlFileVersion.getContentStream(false));
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Unable to get input stream", portalException);
+			}
+
+			return null;
+		}
+	}
+
+	private boolean _isIndexContent(DLFileEntry dlFileEntry) {
+		String[] ignoreExtensions = _prefsProps.getStringArray(
+			PropsKeys.DL_FILE_INDEXING_IGNORE_EXTENSIONS, StringPool.COMMA);
+
+		if (ArrayUtil.contains(
+				ignoreExtensions,
+				StringPool.PERIOD + dlFileEntry.getExtension())) {
+
+			return false;
+		}
+
+		return true;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLFileEntryModelDocumentContributor.class);
 
 	@Reference
-	private DDMStructureManager _ddmStructureManager;
+	private DDMIndexer _ddmIndexer;
+
+	@Reference
+	private DDMStorageEngineManager _ddmStorageEngineManager;
+
+	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Reference
 	private DLFileEntryMetadataLocalService _dlFileEntryMetadataLocalService;
@@ -311,7 +360,7 @@ public class DLFileEntryModelDocumentContributor
 	private RelatedEntryIndexerRegistry _relatedEntryIndexerRegistry;
 
 	@Reference
-	private StorageEngineManager _storageEngineManager;
+	private TextExtractor _textExtractor;
 
 	@Reference
 	private TrashHelper _trashHelper;

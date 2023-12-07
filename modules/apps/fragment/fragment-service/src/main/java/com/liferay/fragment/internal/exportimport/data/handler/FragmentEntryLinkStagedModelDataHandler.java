@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.fragment.internal.exportimport.data.handler;
@@ -20,6 +11,7 @@ import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.fragment.model.FragmentEntry;
@@ -106,19 +98,24 @@ public class FragmentEntryLinkStagedModelDataHandler
 			_fragmentEntryLocalService.fetchFragmentEntry(
 				fragmentEntryLink.getFragmentEntryId());
 
-		if ((fragmentEntry != null) &&
-			(fragmentEntry.getGroupId() != fragmentEntryLink.getGroupId())) {
+		if (fragmentEntry != null) {
+			if (fragmentEntry.getGroupId() != fragmentEntryLink.getGroupId()) {
+				Group group = _groupLocalService.fetchGroup(
+					fragmentEntry.getGroupId());
 
-			Group group = _groupLocalService.fetchGroup(
-				fragmentEntry.getGroupId());
+				if (group != null) {
+					fragmentEntryLinkElement.addAttribute(
+						"fragment-entry-group-key", group.getGroupKey());
+				}
 
-			if (group != null) {
 				fragmentEntryLinkElement.addAttribute(
-					"fragment-entry-group-key", group.getGroupKey());
+					"fragment-entry-key", fragmentEntry.getFragmentEntryKey());
 			}
-
-			fragmentEntryLinkElement.addAttribute(
-				"fragment-entry-key", fragmentEntry.getFragmentEntryKey());
+			else {
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, fragmentEntryLink, fragmentEntry,
+					PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
+			}
 		}
 
 		portletDataContext.addClassedModel(

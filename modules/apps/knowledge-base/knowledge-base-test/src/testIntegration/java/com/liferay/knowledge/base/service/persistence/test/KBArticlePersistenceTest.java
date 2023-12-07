@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.service.persistence.test;
@@ -127,6 +118,8 @@ public class KBArticlePersistenceTest {
 
 		newKBArticle.setMvccVersion(RandomTestUtil.nextLong());
 
+		newKBArticle.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newKBArticle.setUuid(RandomTestUtil.randomString());
 
 		newKBArticle.setResourcePrimKey(RandomTestUtil.nextLong());
@@ -173,6 +166,8 @@ public class KBArticlePersistenceTest {
 
 		newKBArticle.setSourceURL(RandomTestUtil.randomString());
 
+		newKBArticle.setDisplayDate(RandomTestUtil.nextDate());
+
 		newKBArticle.setExpirationDate(RandomTestUtil.nextDate());
 
 		newKBArticle.setReviewDate(RandomTestUtil.nextDate());
@@ -194,6 +189,9 @@ public class KBArticlePersistenceTest {
 
 		Assert.assertEquals(
 			existingKBArticle.getMvccVersion(), newKBArticle.getMvccVersion());
+		Assert.assertEquals(
+			existingKBArticle.getCtCollectionId(),
+			newKBArticle.getCtCollectionId());
 		Assert.assertEquals(
 			existingKBArticle.getUuid(), newKBArticle.getUuid());
 		Assert.assertEquals(
@@ -248,6 +246,9 @@ public class KBArticlePersistenceTest {
 		Assert.assertEquals(existingKBArticle.isMain(), newKBArticle.isMain());
 		Assert.assertEquals(
 			existingKBArticle.getSourceURL(), newKBArticle.getSourceURL());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingKBArticle.getDisplayDate()),
+			Time.getShortTimestamp(newKBArticle.getDisplayDate()));
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingKBArticle.getExpirationDate()),
 			Time.getShortTimestamp(newKBArticle.getExpirationDate()));
@@ -468,6 +469,14 @@ public class KBArticlePersistenceTest {
 	}
 
 	@Test
+	public void testCountByLtD_S() throws Exception {
+		_persistence.countByLtD_S(
+			RandomTestUtil.nextDate(), RandomTestUtil.nextInt());
+
+		_persistence.countByLtD_S(RandomTestUtil.nextDate(), 0);
+	}
+
+	@Test
 	public void testCountByR_G_V() throws Exception {
 		_persistence.countByR_G_V(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -522,6 +531,47 @@ public class KBArticlePersistenceTest {
 		_persistence.countByR_G_S(
 			new long[] {RandomTestUtil.nextLong(), 0L},
 			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByR_G_NotS() throws Exception {
+		_persistence.countByR_G_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByR_G_NotS(0L, 0L, 0);
+	}
+
+	@Test
+	public void testCountByR_L_NotS() throws Exception {
+		_persistence.countByR_L_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByR_L_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByR_L_NotSArrayable() throws Exception {
+		_persistence.countByR_L_NotS(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByR_M_NotS() throws Exception {
+		_persistence.countByR_M_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByR_M_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByR_M_NotSArrayable() throws Exception {
+		_persistence.countByR_M_NotS(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
 	}
 
 	@Test
@@ -678,6 +728,110 @@ public class KBArticlePersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_L_NotS() throws Exception {
+		_persistence.countByG_L_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByG_L_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByG_M_NotS() throws Exception {
+		_persistence.countByG_M_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByG_M_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByC_L_NotS() throws Exception {
+		_persistence.countByC_L_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByC_L_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByC_M_NotS() throws Exception {
+		_persistence.countByC_M_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByC_M_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByP_L_NotS() throws Exception {
+		_persistence.countByP_L_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByP_L_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByP_L_NotSArrayable() throws Exception {
+		_persistence.countByP_L_NotS(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByP_M_NotS() throws Exception {
+		_persistence.countByP_M_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByP_M_NotS(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByP_M_NotSArrayable() throws Exception {
+		_persistence.countByP_M_NotS(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByR_G_L_NotS() throws Exception {
+		_persistence.countByR_G_L_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+
+		_persistence.countByR_G_L_NotS(
+			0L, 0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByR_G_L_NotSArrayable() throws Exception {
+		_persistence.countByR_G_L_NotS(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByR_G_M_NotS() throws Exception {
+		_persistence.countByR_G_M_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+
+		_persistence.countByR_G_M_NotS(
+			0L, 0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByR_G_M_NotSArrayable() throws Exception {
+		_persistence.countByR_G_M_NotS(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+	}
+
+	@Test
 	public void testCountByG_P_L_S() throws Exception {
 		_persistence.countByG_P_L_S(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -689,6 +843,42 @@ public class KBArticlePersistenceTest {
 	@Test
 	public void testCountByG_P_L_SArrayable() throws Exception {
 		_persistence.countByG_P_L_S(
+			RandomTestUtil.nextLong(),
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByG_P_L_NotS() throws Exception {
+		_persistence.countByG_P_L_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+
+		_persistence.countByG_P_L_NotS(
+			0L, 0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByG_P_L_NotSArrayable() throws Exception {
+		_persistence.countByG_P_L_NotS(
+			RandomTestUtil.nextLong(),
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByG_P_M_NotS() throws Exception {
+		_persistence.countByG_P_M_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+
+		_persistence.countByG_P_M_NotS(
+			0L, 0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByG_P_M_NotSArrayable() throws Exception {
+		_persistence.countByG_P_M_NotS(
 			RandomTestUtil.nextLong(),
 			new long[] {RandomTestUtil.nextLong(), 0L},
 			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
@@ -711,6 +901,73 @@ public class KBArticlePersistenceTest {
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
 			RandomTestUtil.randomString(),
 			new int[] {RandomTestUtil.nextInt(), 0});
+	}
+
+	@Test
+	public void testCountByG_KBFI_UT_NotS() throws Exception {
+		_persistence.countByG_KBFI_UT_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "",
+			RandomTestUtil.nextInt());
+
+		_persistence.countByG_KBFI_UT_NotS(0L, 0L, "null", 0);
+
+		_persistence.countByG_KBFI_UT_NotS(0L, 0L, (String)null, 0);
+	}
+
+	@Test
+	public void testCountByG_KBFI_L_NotS() throws Exception {
+		_persistence.countByG_KBFI_L_NotS(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+
+		_persistence.countByG_KBFI_L_NotS(
+			0L, 0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByG_LikeS_L_NotS() throws Exception {
+		_persistence.countByG_LikeS_L_NotS(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByG_LikeS_L_NotS(
+			0L, "null", RandomTestUtil.randomBoolean(), 0);
+
+		_persistence.countByG_LikeS_L_NotS(
+			0L, (String)null, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByG_LikeS_L_NotSArrayable() throws Exception {
+		_persistence.countByG_LikeS_L_NotS(
+			RandomTestUtil.nextLong(),
+			new String[] {
+				RandomTestUtil.randomString(), "", "null", null, null
+			},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByG_LikeS_M_NotS() throws Exception {
+		_persistence.countByG_LikeS_M_NotS(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean(),
+			RandomTestUtil.nextInt());
+
+		_persistence.countByG_LikeS_M_NotS(
+			0L, "null", RandomTestUtil.randomBoolean(), 0);
+
+		_persistence.countByG_LikeS_M_NotS(
+			0L, (String)null, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByG_LikeS_M_NotSArrayable() throws Exception {
+		_persistence.countByG_LikeS_M_NotS(
+			RandomTestUtil.nextLong(),
+			new String[] {
+				RandomTestUtil.randomString(), "", "null", null, null
+			},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.nextInt());
 	}
 
 	@Test
@@ -738,17 +995,17 @@ public class KBArticlePersistenceTest {
 
 	protected OrderByComparator<KBArticle> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"KBArticle", "mvccVersion", true, "uuid", true, "kbArticleId", true,
-			"resourcePrimKey", true, "groupId", true, "companyId", true,
-			"userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "externalReferenceCode", true,
+			"KBArticle", "mvccVersion", true, "ctCollectionId", true, "uuid",
+			true, "kbArticleId", true, "resourcePrimKey", true, "groupId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "externalReferenceCode", true,
 			"rootResourcePrimKey", true, "parentResourceClassNameId", true,
 			"parentResourcePrimKey", true, "kbFolderId", true, "version", true,
 			"title", true, "urlTitle", true, "description", true, "priority",
 			true, "sections", true, "latest", true, "main", true, "sourceURL",
-			true, "expirationDate", true, "reviewDate", true, "lastPublishDate",
-			true, "status", true, "statusByUserId", true, "statusByUserName",
-			true, "statusDate", true);
+			true, "displayDate", true, "expirationDate", true, "reviewDate",
+			true, "lastPublishDate", true, "status", true, "statusByUserId",
+			true, "statusByUserName", true, "statusDate", true);
 	}
 
 	@Test
@@ -1073,6 +1330,8 @@ public class KBArticlePersistenceTest {
 
 		kbArticle.setMvccVersion(RandomTestUtil.nextLong());
 
+		kbArticle.setCtCollectionId(RandomTestUtil.nextLong());
+
 		kbArticle.setUuid(RandomTestUtil.randomString());
 
 		kbArticle.setResourcePrimKey(RandomTestUtil.nextLong());
@@ -1118,6 +1377,8 @@ public class KBArticlePersistenceTest {
 		kbArticle.setMain(RandomTestUtil.randomBoolean());
 
 		kbArticle.setSourceURL(RandomTestUtil.randomString());
+
+		kbArticle.setDisplayDate(RandomTestUtil.nextDate());
 
 		kbArticle.setExpirationDate(RandomTestUtil.nextDate());
 

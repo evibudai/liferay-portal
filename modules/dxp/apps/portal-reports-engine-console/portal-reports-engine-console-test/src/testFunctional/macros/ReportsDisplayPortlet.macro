@@ -1,41 +1,44 @@
 definition {
 
-	macro downloadReportEntryFile {
-		var key_reportsFileName = "${reportsFileName}";
+	@summary = "Default summary"
+	macro downloadReportEntryFile(reportsFileName = null) {
+		var key_reportsFileName = ${reportsFileName};
 
 		AssertTextEquals(
 			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
-			value1 = "${reportsFileName}");
+			value1 = ${reportsFileName});
 
-		LexiconEntry.openEntryMenu(rowEntry = "${reportsFileName}");
+		LexiconEntry.openEntryMenu(rowEntry = ${reportsFileName});
 
 		AssertClick(
 			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DOWNLOAD",
 			value1 = "Download");
 	}
 
-	macro viewReportEntry {
-		var key_reportsDefinitionName = "${reportsDefinitionName}";
+	@summary = "Default summary"
+	macro viewReportEntry(reportsDefinitionName = null) {
+		var key_reportsDefinitionName = ${reportsDefinitionName};
 
 		AssertClick(
 			locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_DEFINITION_NAME",
-			value1 = "${reportsDefinitionName}");
+			value1 = ${reportsDefinitionName});
 	}
 
-	macro viewReportEntryFields {
-		var key_reportsDefinitionName = "${reportsDefinitionName}";
+	@summary = "Default summary"
+	macro viewReportEntryFields(reportsDefinitionName = null,reportsFileName = null,reportsDefinitionDescription = null,reportParameterse = null,userName = null,dataSource = null) {
+		var key_reportsDefinitionName = ${reportsDefinitionName};
 
 		AssertTextEquals(
 			locator1 = "ReportsAdminViewReportEntry#DEFINITION_NAME_FIELD",
 			value1 = "Definition Name ${reportsDefinitionName}");
 
-		var key_reportsDefinitionDescription = "${reportsDefinitionDescription}";
+		var key_reportsDefinitionDescription = ${reportsDefinitionDescription};
 
 		AssertTextEquals(
 			locator1 = "ReportsAdminViewReportEntry#DESCRIPTION_FIELD",
 			value1 = "Description ${reportsDefinitionDescription}");
 
-		var key_dataSource = "${dataSource}";
+		var key_dataSource = ${dataSource};
 
 		AssertTextEquals(
 			locator1 = "ReportsAdminViewReportEntry#DATA_SOURCE_NAME_FIELD",
@@ -52,17 +55,17 @@ definition {
 				value1 = "Report Parameters");
 		}
 
-		var key_userName = "${userName}";
+		var key_userName = ${userName};
 
 		AssertTextEquals(
 			locator1 = "ReportsAdminViewReportEntry#REQUESTED_BY_FIELD",
 			value1 = "Requested By ${userName}");
 
-		var key_reportsFileName = "${reportsFileName}";
+		var key_reportsFileName = ${reportsFileName};
 
 		AssertTextEquals(
 			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_TABLE_FILE",
-			value1 = "${reportsFileName}");
+			value1 = ${reportsFileName});
 	}
 
 }

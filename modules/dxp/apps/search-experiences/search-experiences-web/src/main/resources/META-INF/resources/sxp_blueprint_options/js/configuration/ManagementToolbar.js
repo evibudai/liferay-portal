@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
@@ -16,7 +10,7 @@ import ClayIcon from '@clayui/icon';
 import {ManagementToolbar as FrontendManagementToolbar} from 'frontend-js-components-web';
 import React, {useState} from 'react';
 
-import {sub} from '../../../sxp_blueprint_admin/js/utils/language';
+import sub from '../../../sxp_blueprint_admin/js/utils/language/sub';
 
 const ManagementToolbar = ({
 	filterItems,
@@ -38,6 +32,9 @@ const ManagementToolbar = ({
 						items={filterItems}
 						trigger={
 							<ClayButton
+								aria-label={Liferay.Language.get(
+									'filter-and-order'
+								)}
 								className="nav-link"
 								disabled={loading}
 								displayType="unstyled"
@@ -64,6 +61,11 @@ const ManagementToolbar = ({
 
 					<FrontendManagementToolbar.Item>
 						<ClayButton
+							aria-label={
+								sortOrder === 'asc'
+									? Liferay.Language.get('ascending')
+									: Liferay.Language.get('descending')
+							}
 							className="nav-link nav-link-monospaced"
 							disabled={loading}
 							displayType="unstyled"
@@ -102,6 +104,7 @@ const ManagementToolbar = ({
 
 							<ClayInput.GroupInsetItem after tag="span">
 								<ClayButtonWithIcon
+									aria-label={Liferay.Language.get('clear')}
 									className="navbar-breakpoint-d-none"
 									displayType="unstyled"
 									onClick={() => setSearchMobile(false)}
@@ -109,6 +112,7 @@ const ManagementToolbar = ({
 								/>
 
 								<ClayButtonWithIcon
+									aria-label={Liferay.Language.get('search')}
 									disabled={loading}
 									displayType="unstyled"
 									onClick={() => onSearch(searchInputValue)}
@@ -122,6 +126,7 @@ const ManagementToolbar = ({
 				<FrontendManagementToolbar.ItemList>
 					<FrontendManagementToolbar.Item className="navbar-breakpoint-d-none">
 						<ClayButton
+							aria-label={Liferay.Language.get('search')}
 							className="nav-link nav-link-monospaced"
 							displayType="unstyled"
 							onClick={() => setSearchMobile(true)}

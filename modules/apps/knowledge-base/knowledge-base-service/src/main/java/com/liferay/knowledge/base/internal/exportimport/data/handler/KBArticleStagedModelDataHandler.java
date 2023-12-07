@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.knowledge.base.internal.exportimport.data.handler;
@@ -17,6 +8,7 @@ package com.liferay.knowledge.base.internal.exportimport.data.handler;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -27,7 +19,6 @@ import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
-import com.liferay.knowledge.base.internal.exportimport.content.processor.KBArticleExportImportContentProcessor;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
@@ -42,6 +33,8 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.trash.TrashHandler;
+import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -109,6 +102,14 @@ public class KBArticleStagedModelDataHandler
 	@Override
 	public String getDisplayName(KBArticle kbArticle) {
 		return kbArticle.getTitle();
+	}
+
+	@Override
+	public int[] getExportableStatuses() {
+		return new int[] {
+			WorkflowConstants.STATUS_APPROVED,
+			WorkflowConstants.STATUS_SCHEDULED
+		};
 	}
 
 	@Override
@@ -276,6 +277,28 @@ public class KBArticleStagedModelDataHandler
 	}
 
 	@Override
+	protected void doRestoreStagedModel(
+			PortletDataContext portletDataContext, KBArticle kbArticle)
+		throws Exception {
+
+		KBArticle existingKBArticle = fetchStagedModelByUuidAndGroupId(
+			kbArticle.getUuid(), portletDataContext.getScopeGroupId());
+
+		if ((existingKBArticle == null) || !existingKBArticle.isInTrash()) {
+			return;
+		}
+
+		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
+			KBArticle.class.getName());
+
+		if (trashHandler.isRestorable(existingKBArticle.getResourcePrimKey())) {
+			trashHandler.restoreTrashEntry(
+				portletDataContext.getUserId(kbArticle.getUserUuid()),
+				existingKBArticle.getResourcePrimKey());
+		}
+	}
+
+	@Override
 	protected void importReferenceStagedModels(
 			PortletDataContext portletDataContext, KBArticle stagedModel)
 		throws PortletDataException {
@@ -331,8 +354,9 @@ public class KBArticleStagedModelDataHandler
 			parentResourceClassNameId, parentResourcePrimKey,
 			kbArticle.getTitle(), kbArticle.getUrlTitle(),
 			kbArticle.getContent(), kbArticle.getDescription(), sections,
-			kbArticle.getSourceURL(), kbArticle.getExpirationDate(),
-			kbArticle.getReviewDate(), null, serviceContext);
+			kbArticle.getSourceURL(), kbArticle.getDisplayDate(),
+			kbArticle.getExpirationDate(), kbArticle.getReviewDate(), null,
+			serviceContext);
 
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
@@ -489,8 +513,9 @@ public class KBArticleStagedModelDataHandler
 		_kbArticleLocalService.updateKBArticle(
 			userId, resourcePrimKey, kbArticle.getTitle(),
 			kbArticle.getContent(), kbArticle.getDescription(), sections,
-			kbArticle.getSourceURL(), kbArticle.getExpirationDate(),
-			kbArticle.getReviewDate(), null, null, serviceContext);
+			kbArticle.getSourceURL(), kbArticle.getDisplayDate(),
+			kbArticle.getExpirationDate(), kbArticle.getReviewDate(), null,
+			null, serviceContext);
 
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
@@ -504,7 +529,7 @@ public class KBArticleStagedModelDataHandler
 		}
 
 		return _kbArticleLocalService.getLatestKBArticle(
-			resourcePrimKey, WorkflowConstants.STATUS_APPROVED);
+			resourcePrimKey, kbArticle.getStatus());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -516,8 +541,10 @@ public class KBArticleStagedModelDataHandler
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
-	@Reference
-	private KBArticleExportImportContentProcessor
+	@Reference(
+		target = "(model.class.name=com.liferay.knowledge.base.model.KBArticle)"
+	)
+	private ExportImportContentProcessor<String>
 		_kbArticleExportImportContentProcessor;
 
 	@Reference

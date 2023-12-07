@@ -1,33 +1,28 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.document.library;
 
-import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.dynamic.data.mapping.constants.DDMFormConstants;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.form.item.selector.criterion.DDMUserPersonalFolderItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionChecker;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -43,32 +38,30 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -81,9 +74,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import javax.portlet.ResourceURL;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -91,10 +89,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.DOCUMENT_LIBRARY,
-	service = {
-		DDMFormFieldTemplateContextContributor.class,
-		DocumentLibraryDDMFormFieldTemplateContextContributor.class
-	}
+	service = DDMFormFieldTemplateContextContributor.class
 )
 public class DocumentLibraryDDMFormFieldTemplateContextContributor
 	implements DDMFormFieldTemplateContextContributor {
@@ -107,6 +102,18 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 		return HashMapBuilder.<String, Object>put(
 			"allowGuestUsers",
 			GetterUtil.getBoolean(ddmFormField.getProperty("allowGuestUsers"))
+		).put(
+			"ddmFormInstanceRecordId",
+			() -> {
+				long ddmFormInstanceRecordId = _getDDMFormInstanceRecordId(
+					ddmFormField, ddmFormFieldRenderingContext);
+
+				if (ddmFormInstanceRecordId == 0) {
+					return null;
+				}
+
+				return ddmFormInstanceRecordId;
+			}
 		).put(
 			"groupId", ddmFormFieldRenderingContext.getProperty("groupId")
 		).put(
@@ -138,12 +145,51 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 				return value;
 			}
 		).putAll(
-			_getFileEntryParameters(
-				ddmFormFieldRenderingContext.getHttpServletRequest(),
-				ddmFormFieldRenderingContext.getValue())
+			_getFileEntryParameters(ddmFormField, ddmFormFieldRenderingContext)
 		).putAll(
 			_getUploadParameters(ddmFormField, ddmFormFieldRenderingContext)
 		).build();
+	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, DDMPermissionChecker.class, "javax.portlet.name");
+	}
+
+	protected boolean containsPermission(
+		DDMFormFieldRenderingContext ddmFormFieldRenderingContext,
+		String portletId) {
+
+		try {
+			DDMPermissionChecker ddmPermissionChecker =
+				_serviceTrackerMap.getService(portletId);
+
+			if (ddmPermissionChecker == null) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"No dynamic data mapping permission checker found " +
+							"for portlet " + portletId);
+				}
+
+				return true;
+			}
+
+			return ddmPermissionChecker.containsPermission(
+				ddmFormFieldRenderingContext);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
 	}
 
 	protected ResourceBundle getResourceBundle(Locale locale) {
@@ -158,23 +204,6 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 
 		return (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
-	}
-
-	private boolean _containsAddFolderPermission(
-		PermissionChecker permissionChecker, long groupId, long folderId) {
-
-		try {
-			return ModelResourcePermissionUtil.contains(
-				_dlFolderModelResourcePermission, permissionChecker, groupId,
-				folderId, ActionKeys.ADD_FOLDER);
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
-
-			return false;
-		}
 	}
 
 	private User _createDDMFormDefaultUser(long companyId) {
@@ -212,9 +241,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 				creatorUserId, companyId, autoPassword, password1, password2,
 				autoScreenName, screenName, emailAddress, locale, firstName,
 				middleName, lastName, prefixListTypeId, suffixListTypeId, male,
-				birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-				organizationIds, roleIds, userGroupIds, sendEmail,
-				serviceContext);
+				birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+				UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
+				userGroupIds, sendEmail, serviceContext);
 
 			_userLocalService.updateStatus(
 				user.getUserId(), WorkflowConstants.STATUS_INACTIVE,
@@ -255,8 +284,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 		HttpServletRequest httpServletRequest, User user) {
 
 		try {
-			return _dlAppService.addFolder(
-				repositoryId, parentFolderId, user.getScreenName(),
+			return _dlAppLocalService.addFolder(
+				null, user.getUserId(), repositoryId, parentFolderId,
+				user.getScreenName(),
 				_language.get(
 					getResourceBundle(user.getLocale()),
 					"this-folder-was-automatically-created-by-forms-to-store-" +
@@ -277,8 +307,8 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 
 	private User _getDDMFormDefaultUser(long companyId) {
 		try {
-			return _userLocalService.getUserByEmailAddress(
-				companyId, _getEmailAddress(companyId));
+			return _userLocalService.getUserByScreenName(
+				companyId, DDMFormConstants.DDM_FORM_DEFAULT_USER_SCREEN_NAME);
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
@@ -307,8 +337,10 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 
 			User user = _getDDMFormDefaultUser(companyId);
 
-			folder = _createDDMFormFolder(
-				user.getUserId(), repositoryId, httpServletRequest);
+			if (user != null) {
+				folder = _createDDMFormFolder(
+					user.getUserId(), repositoryId, httpServletRequest);
+			}
 		}
 
 		if (folder == null) {
@@ -316,6 +348,22 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 		}
 
 		return folder.getFolderId();
+	}
+
+	private long _getDDMFormInstanceRecordId(
+		DDMFormField ddmFormField,
+		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
+
+		long ddmFormInstanceRecordId = GetterUtil.getLong(
+			ddmFormField.getProperty("ddmFormInstanceRecordId"));
+
+		if (ddmFormInstanceRecordId > 0) {
+			return ddmFormInstanceRecordId;
+		}
+
+		return GetterUtil.getLong(
+			ddmFormFieldRenderingContext.getProperty(
+				"ddmFormInstanceRecordId"));
 	}
 
 	private String _getEmailAddress(long companyId) {
@@ -337,7 +385,7 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 
 	private FileEntry _getFileEntry(JSONObject valueJSONObject) {
 		try {
-			return _dlAppService.getFileEntryByUuidAndGroupId(
+			return _dlAppLocalService.getFileEntryByUuidAndGroupId(
 				valueJSONObject.getString("uuid"),
 				valueJSONObject.getLong("groupId"));
 		}
@@ -351,7 +399,10 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 	}
 
 	private Map<String, Object> _getFileEntryParameters(
-		HttpServletRequest httpServletRequest, String value) {
+		DDMFormField ddmFormField,
+		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
+
+		String value = ddmFormFieldRenderingContext.getValue();
 
 		if (Validator.isNull(value)) {
 			return new HashMap<>();
@@ -368,7 +419,32 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 		return HashMapBuilder.<String, Object>put(
 			"fileEntryTitle", _getFileEntryTitle(fileEntry)
 		).put(
-			"fileEntryURL", _getFileEntryURL(httpServletRequest, fileEntry)
+			"fileEntryURL",
+			() -> {
+				if (fileEntry == null) {
+					return StringPool.BLANK;
+				}
+
+				RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+					RequestBackedPortletURLFactoryUtil.create(
+						ddmFormFieldRenderingContext.getHttpServletRequest());
+
+				return ResourceURLBuilder.createResourceURL(
+					(ResourceURL)
+						requestBackedPortletURLFactory.createResourceURL(
+							DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM)
+				).setParameter(
+					"ddmFormFieldName", ddmFormField.getName()
+				).setParameter(
+					"ddmFormInstanceRecordId",
+					_getDDMFormInstanceRecordId(
+						ddmFormField, ddmFormFieldRenderingContext)
+				).setParameter(
+					"fileEntryId", fileEntry.getFileEntryId()
+				).setResourceID(
+					"/dynamic_data_mapping_form/download_file_entry"
+				).buildString();
+			}
 		).build();
 	}
 
@@ -377,29 +453,7 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 			return StringPool.BLANK;
 		}
 
-		return _html.escape(fileEntry.getTitle());
-	}
-
-	private String _getFileEntryURL(
-		HttpServletRequest httpServletRequest, FileEntry fileEntry) {
-
-		if (fileEntry == null) {
-			return StringPool.BLANK;
-		}
-
-		ThemeDisplay themeDisplay = getThemeDisplay(httpServletRequest);
-
-		if (themeDisplay == null) {
-			return StringPool.BLANK;
-		}
-
-		return _html.escape(
-			StringBundler.concat(
-				themeDisplay.getPathContext(), "/documents/",
-				fileEntry.getRepositoryId(), StringPool.SLASH,
-				fileEntry.getFolderId(), StringPool.SLASH,
-				URLCodec.encodeURL(_html.unescape(fileEntry.getTitle()), true),
-				StringPool.SLASH, fileEntry.getUuid()));
+		return HtmlUtil.escape(fileEntry.getTitle());
 	}
 
 	private String _getGuestUploadURL(
@@ -528,7 +582,7 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 		Folder folder = null;
 
 		try {
-			folder = _dlAppService.getFolder(
+			folder = _dlAppLocalService.getFolder(
 				repositoryId, parentFolderId, user.getScreenName());
 		}
 		catch (PortalException portalException) {
@@ -609,8 +663,27 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 			return new HashMap<>();
 		}
 
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+		if (!containsPermission(
+				ddmFormFieldRenderingContext,
+				portletDisplay.getRootPortletId())) {
+
+			return HashMapBuilder.<String, Object>put(
+				"showUploadPermissionMessage", true
+			).build();
+		}
+
 		long groupId = GetterUtil.getLong(
 			ddmFormFieldRenderingContext.getProperty("groupId"));
+
+		DDMFormInstance ddmFormInstance =
+			_ddmFormInstanceLocalService.fetchDDMFormInstance(
+				ddmFormFieldRenderingContext.getDDMFormInstanceId());
+
+		if (ddmFormInstance != null) {
+			groupId = ddmFormInstance.getGroupId();
+		}
 
 		Repository repository = _getRepository(groupId, httpServletRequest);
 
@@ -639,15 +712,6 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 						ddmFormField, ddmFormFieldRenderingContext,
 						ddmFormFolderId, httpServletRequest);
 				}
-			).build();
-		}
-
-		if (!_containsAddFolderPermission(
-				themeDisplay.getPermissionChecker(), groupId,
-				ddmFormFolderId)) {
-
-			return HashMapBuilder.<String, Object>put(
-				"showUploadPermissionMessage", true
 			).build();
 		}
 
@@ -695,18 +759,13 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
-	private DLAppService _dlAppService;
+	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
 
-	@Reference(
-		target = "(model.class.name=com.liferay.document.library.kernel.model.DLFolder)"
-	)
-	private ModelResourcePermission<DLFolder> _dlFolderModelResourcePermission;
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private GroupLocalService _groupLocalService;
-
-	@Reference
-	private Html _html;
 
 	@Reference
 	private ItemSelector _itemSelector;
@@ -722,6 +781,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 
 	@Reference
 	private PortletFileRepository _portletFileRepository;
+
+	private volatile ServiceTrackerMap<String, DDMPermissionChecker>
+		_serviceTrackerMap;
 
 	@Reference
 	private UserLocalService _userLocalService;

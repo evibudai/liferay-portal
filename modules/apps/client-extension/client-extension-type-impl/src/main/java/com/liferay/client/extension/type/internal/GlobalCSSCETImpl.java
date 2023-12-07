@@ -1,65 +1,32 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.type.internal;
 
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
-import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.type.GlobalCSSCET;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 
+import java.util.Date;
 import java.util.Properties;
-import java.util.Set;
-
-import javax.portlet.PortletRequest;
 
 /**
  * @author Eudaldo Alonso
  */
 public class GlobalCSSCETImpl extends BaseCETImpl implements GlobalCSSCET {
 
-	public GlobalCSSCETImpl(ClientExtensionEntry clientExtensionEntry) {
-		super(clientExtensionEntry);
-	}
-
-	public GlobalCSSCETImpl(PortletRequest portletRequest) {
-		this(
-			StringPool.BLANK,
-			UnicodePropertiesBuilder.create(
-				true
-			).put(
-				"url", ParamUtil.getString(portletRequest, "url")
-			).build());
-	}
-
 	public GlobalCSSCETImpl(
-		String baseURL, long companyId, String description,
-		String externalReferenceCode, String name, Properties properties,
-		String sourceCodeURL, UnicodeProperties typeSettingsUnicodeProperties) {
+		String baseURL, long companyId, Date createDate, String description,
+		String externalReferenceCode, Date modifiedDate, String name,
+		Properties properties, boolean readOnly, String sourceCodeURL,
+		int status, UnicodeProperties typeSettingsUnicodeProperties) {
 
 		super(
-			baseURL, companyId, description, externalReferenceCode, name,
-			properties, sourceCodeURL, typeSettingsUnicodeProperties);
-	}
-
-	public GlobalCSSCETImpl(
-		String baseURL, UnicodeProperties typeSettingsUnicodeProperties) {
-
-		super(baseURL, typeSettingsUnicodeProperties);
+			baseURL, companyId, createDate, description, externalReferenceCode,
+			modifiedDate, name, properties, readOnly, sourceCodeURL, status,
+			typeSettingsUnicodeProperties);
 	}
 
 	@Override
@@ -81,13 +48,5 @@ public class GlobalCSSCETImpl extends BaseCETImpl implements GlobalCSSCET {
 	public boolean hasProperties() {
 		return false;
 	}
-
-	@Override
-	protected boolean isURLCETPropertyName(String name) {
-		return _urlCETPropertyNames.contains(name);
-	}
-
-	private static final Set<String> _urlCETPropertyNames =
-		getURLCETPropertyNames(GlobalCSSCET.class);
 
 }

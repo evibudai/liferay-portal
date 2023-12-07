@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.notification.internal.type.users.provider;
@@ -21,6 +12,7 @@ import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluator;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluatorTracker;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -41,7 +33,8 @@ import org.osgi.service.component.annotations.Reference;
 	property = "recipient.type=" + NotificationRecipientConstants.TYPE_TERM,
 	service = UsersProvider.class
 )
-public class TermUsersProvider implements UsersProvider {
+public class TermUsersProvider
+	extends BaseUsersProvider implements UsersProvider {
 
 	@Override
 	public String getRecipientType() {
@@ -52,9 +45,10 @@ public class TermUsersProvider implements UsersProvider {
 	public List<User> provide(NotificationContext notificationContext)
 		throws PortalException {
 
+		List<User> users = new ArrayList<>();
+
 		List<String> screenNames = new ArrayList<>();
 		List<String> terms = new ArrayList<>();
-		List<User> users = new ArrayList<>();
 
 		NotificationTemplate notificationTemplate =
 			notificationContext.getNotificationTemplate();
@@ -76,24 +70,47 @@ public class TermUsersProvider implements UsersProvider {
 			}
 		}
 
-		for (String screenName : screenNames) {
-			users.add(
-				_userLocalService.getUserByScreenName(
-					notificationRecipient.getCompanyId(), screenName));
-		}
+		users.addAll(
+			TransformUtil.unsafeTransform(
+				screenNames,
+				screenName -> {
+					User user = _userLocalService.getUserByScreenName(
+						notificationRecipient.getCompanyId(), screenName);
+
+					if (!hasViewPermission(
+							notificationContext.getClassName(),
+							notificationContext.getClassPK(), user)) {
+
+						return null;
+					}
+
+					return user;
+				}));
 
 		for (NotificationTermEvaluator notificationTermEvaluator :
 				_notificationTermEvaluatorTracker.getNotificationTermEvaluators(
 					notificationContext.getClassName())) {
 
-			for (String term : terms) {
-				users.add(
-					_userLocalService.getUser(
-						GetterUtil.getLong(
-							notificationTermEvaluator.evaluate(
-								NotificationTermEvaluator.Context.RECIPIENT,
-								notificationContext.getTermValues(), term))));
-			}
+			users.addAll(
+				TransformUtil.unsafeTransform(
+					terms,
+					term -> {
+						User user = _userLocalService.getUser(
+							GetterUtil.getLong(
+								notificationTermEvaluator.evaluate(
+									NotificationTermEvaluator.Context.RECIPIENT,
+									notificationContext.getTermValues(),
+									term)));
+
+						if (!hasViewPermission(
+								notificationContext.getClassName(),
+								notificationContext.getClassPK(), user)) {
+
+							return null;
+						}
+
+						return user;
+					}));
 		}
 
 		return users;

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.web.internal.display.context;
@@ -24,6 +15,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -40,6 +32,7 @@ import com.liferay.segments.service.SegmentsExperimentLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -67,52 +60,17 @@ public class SegmentsExperienceSelectorDisplayContext {
 		_segmentsExperimentLocalService = segmentsExperimentLocalService;
 		_segmentsExperimentRelLocalService = segmentsExperimentRelLocalService;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public JSONObject getSegmentsExperienceSelectedJSONObject()
-		throws PortalException {
-
-		JSONObject segmentsExperienceSelectedJSONObject =
-			_jsonFactory.createJSONObject();
-
-		SegmentsExperience segmentsExperience =
-			_fetchSegmentsExperienceFromRequest();
-
-		if (segmentsExperience != null) {
-			segmentsExperienceSelectedJSONObject =
-				_getSegmentsExperienceJSONObject(
-					segmentsExperience.getSegmentsExperienceId());
-
-			segmentsExperienceSelectedJSONObject.put(
-				"segmentsExperienceName",
-				_getSelectedSegmentsExperienceName(segmentsExperience));
-		}
-
-		return segmentsExperienceSelectedJSONObject;
-	}
-
-	public JSONArray getSegmentsExperiencesJSONArray() throws PortalException {
-		if (_segmentsExperiencesJSONArray != null) {
-			return _segmentsExperiencesJSONArray;
-		}
-
-		JSONArray segmentsExperiencesJSONArray = _jsonFactory.createJSONArray();
-
-		List<SegmentsExperience> segmentsExperiences =
-			_segmentsExperienceLocalService.getSegmentsExperiences(
-				_themeDisplay.getScopeGroupId(),
-				_portal.getClassNameId(Layout.class.getName()),
-				_themeDisplay.getPlid(), true);
-
-		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
-			segmentsExperiencesJSONArray.put(
-				_getSegmentsExperienceJSONObject(
-					segmentsExperience, segmentsExperiences));
-		}
-
-		return segmentsExperiencesJSONArray;
+	public Map<String, Object> getData() throws PortalException {
+		return HashMapBuilder.<String, Object>put(
+			"segmentsExperiences", _getSegmentsExperiencesJSONArray()
+		).put(
+			"selectedSegmentsExperience",
+			_getSegmentsExperienceSelectedJSONObject()
+		).build();
 	}
 
 	private SegmentsExperience _fetchSegmentsExperienceFromRequest() {
@@ -164,7 +122,7 @@ public class SegmentsExperienceSelectorDisplayContext {
 		throws PortalException {
 
 		JSONArray segmentsExperiencesJSONArray =
-			getSegmentsExperiencesJSONArray();
+			_getSegmentsExperiencesJSONArray();
 
 		for (int i = 0; i < segmentsExperiencesJSONArray.length(); i++) {
 			JSONObject segmentsExperiencesJSONObject =
@@ -228,6 +186,71 @@ public class SegmentsExperienceSelectorDisplayContext {
 				"segmentsExperienceId",
 				segmentsExperience.getSegmentsExperienceId())
 		);
+	}
+
+	private JSONObject _getSegmentsExperienceSelectedJSONObject()
+		throws PortalException {
+
+		SegmentsExperience segmentsExperience =
+			_fetchSegmentsExperienceFromRequest();
+
+		long plid = _themeDisplay.getPlid();
+
+		Layout layout = _themeDisplay.getLayout();
+
+		if (layout.isDraftLayout()) {
+			plid = layout.getClassPK();
+		}
+
+		if ((segmentsExperience == null) ||
+			(segmentsExperience.getPlid() != plid)) {
+
+			long defaultSegmentsExperienceId =
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(plid);
+
+			segmentsExperience =
+				_segmentsExperienceLocalService.fetchSegmentsExperience(
+					defaultSegmentsExperienceId);
+		}
+
+		if (segmentsExperience != null) {
+			JSONObject segmentsExperienceSelectedJSONObject =
+				_getSegmentsExperienceJSONObject(
+					segmentsExperience.getSegmentsExperienceId());
+
+			segmentsExperienceSelectedJSONObject.put(
+				"segmentsExperienceName",
+				_getSelectedSegmentsExperienceName(segmentsExperience));
+
+			return segmentsExperienceSelectedJSONObject;
+		}
+
+		return _jsonFactory.createJSONObject();
+	}
+
+	private JSONArray _getSegmentsExperiencesJSONArray()
+		throws PortalException {
+
+		if (_segmentsExperiencesJSONArray != null) {
+			return _segmentsExperiencesJSONArray;
+		}
+
+		JSONArray segmentsExperiencesJSONArray = _jsonFactory.createJSONArray();
+
+		List<SegmentsExperience> segmentsExperiences =
+			_segmentsExperienceLocalService.getSegmentsExperiences(
+				_themeDisplay.getScopeGroupId(), _themeDisplay.getPlid(), true);
+
+		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
+			segmentsExperiencesJSONArray.put(
+				_getSegmentsExperienceJSONObject(
+					segmentsExperience, segmentsExperiences));
+		}
+
+		_segmentsExperiencesJSONArray = segmentsExperiencesJSONArray;
+
+		return _segmentsExperiencesJSONArray;
 	}
 
 	private String _getSelectedSegmentsExperienceName(

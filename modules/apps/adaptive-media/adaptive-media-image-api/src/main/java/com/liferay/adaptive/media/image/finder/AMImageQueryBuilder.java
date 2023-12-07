@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.adaptive.media.image.finder;
@@ -18,11 +9,10 @@ import com.liferay.adaptive.media.AMAttribute;
 import com.liferay.adaptive.media.finder.AMQuery;
 import com.liferay.adaptive.media.finder.AMQueryBuilder;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
-import com.liferay.adaptive.media.image.processor.AMImageProcessor;
+import com.liferay.adaptive.media.processor.AMProcessor;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -53,7 +43,7 @@ import java.util.function.Predicate;
  * @author Adolfo Pérez
  */
 public interface AMImageQueryBuilder
-	extends AMQueryBuilder<FileVersion, AMImageProcessor> {
+	extends AMQueryBuilder<FileVersion, AMProcessor<FileVersion>> {
 
 	/**
 	 * An initial method that specifies that only adaptive media images that
@@ -124,7 +114,7 @@ public interface AMImageQueryBuilder
 		 *
 		 * @return the adaptive media query
 		 */
-		public AMQuery<FileVersion, AMImageProcessor> done();
+		public AMQuery<FileVersion, AMProcessor<FileVersion>> done();
 
 	}
 
@@ -167,54 +157,10 @@ public interface AMImageQueryBuilder
 		 *
 		 * @param amAttribute the attribute used to sort the adaptive media
 		 *        images
-		 * @param valueOptional a non-<code>null</code> optional value for the
-		 *        attribute
-		 */
-		public <V> FuzzySortStep with(
-			AMAttribute<AMImageProcessor, V> amAttribute,
-			Optional<V> valueOptional);
-
-		/**
-		 * An intermediate method that sorts the adaptive media based on
-		 * specific attribute values. Sorting is done using a distance
-		 * comparator that returns the adaptive media images that are a closer
-		 * match first.
-		 *
-		 * <p>
-		 * The distance comparator is implemented based on the value returned by
-		 * the method {@link AMAttribute#distance(Object, Object)}.
-		 * </p>
-		 *
-		 * <p>
-		 * If the method {@link StrictSortStep#orderBy} is invoked in the same
-		 * query builder, it takes precedence and this method has no effect.
-		 * </p>
-		 *
-		 * <p>
-		 * If this method is invoked with multiple attributes, they will be used
-		 * in the following order:
-		 * </p>
-		 *
-		 * <ol>
-		 * <li>
-		 * The first attribute sorts all the adaptive media images.
-		 * </li>
-		 * <li>
-		 * If two or more adaptive media images are located at the same
-		 * distance, the second attribute is used to sort those elements.
-		 * </li>
-		 * <li>
-		 * If the second attribute doesn't resolve all the cases, the third
-		 * attribute is used, and so on.
-		 * </li>
-		 * </ol>
-		 *
-		 * @param amAttribute the attribute used to sort the adaptive media
-		 *        images
 		 * @param value the attribute's value
 		 */
 		public <V> FuzzySortStep with(
-			AMAttribute<AMImageProcessor, V> amAttribute, V value);
+			AMAttribute<AMProcessor<FileVersion>, V> amAttribute, V value);
 
 	}
 
@@ -253,7 +199,6 @@ public interface AMImageQueryBuilder
 		 *
 		 * <p>
 		 * This method takes precedence over the methods
-		 * {@link FuzzySortStep#with(AMAttribute, Optional)} and
 		 * {@link FuzzySortStep#with(AMAttribute, Object)}.
 		 * </p>
 		 *
@@ -286,7 +231,8 @@ public interface AMImageQueryBuilder
 		 * @param sortOrder the order used to sort the adaptive media images
 		 */
 		public <V> StrictSortStep orderBy(
-			AMAttribute<AMImageProcessor, V> amAttribute, SortOrder sortOrder);
+			AMAttribute<AMProcessor<FileVersion>, V> amAttribute,
+			SortOrder sortOrder);
 
 	}
 

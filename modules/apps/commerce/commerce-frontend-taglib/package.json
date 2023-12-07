@@ -1,10 +1,14 @@
 {
 	"dependencies": {
-		"clay-icon": "2.24.1",
-		"clay-modal": "2.24.1",
+		"@clayui/button": "3.107.0",
+		"@clayui/form": "3.107.0",
+		"@clayui/icon": "3.106.1",
+		"@clayui/link": "3.106.1",
+		"@liferay/frontend-js-react-web": "*",
+		"classnames": "2.3.1",
+		"commerce-frontend-js": "*",
 		"frontend-js-web": "*",
-		"metal-component": "2.16.8",
-		"metal-soy": "2.16.9"
+		"react": "16.12.0"
 	},
 	"name": "commerce-frontend-taglib",
 	"scripts": {
@@ -12,5 +16,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts format"
 	},
-	"version": "19.1.13"
+	"version": "22.1.2"
 }

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.facet.display.context;
@@ -23,7 +14,8 @@ import java.util.List;
 /**
  * @author Lino Alves
  */
-public class UserSearchFacetDisplayContext implements Serializable {
+public class UserSearchFacetDisplayContext
+	implements FacetDisplayContext, Serializable {
 
 	public List<BucketDisplayContext> getBucketDisplayContexts() {
 		return _bucketDisplayContexts;
@@ -37,16 +29,16 @@ public class UserSearchFacetDisplayContext implements Serializable {
 		return _paginationStartParameterName;
 	}
 
-	public String getParamName() {
-		return _paramName;
+	public String getParameterName() {
+		return _parameterName;
 	}
 
-	public String getParamValue() {
-		return _paramValue;
+	public String getParameterValue() {
+		return _parameterValue;
 	}
 
-	public List<String> getParamValues() {
-		return _paramValues;
+	public List<String> getParameterValues() {
+		return _parameterValues;
 	}
 
 	public UserFacetPortletInstanceConfiguration
@@ -83,16 +75,16 @@ public class UserSearchFacetDisplayContext implements Serializable {
 		_paginationStartParameterName = paginationStartParameterName;
 	}
 
-	public void setParamName(String paramName) {
-		_paramName = paramName;
+	public void setParameterName(String parameterName) {
+		_parameterName = parameterName;
 	}
 
-	public void setParamValue(String paramValue) {
-		_paramValue = paramValue;
+	public void setParameterValue(String parameterValue) {
+		_parameterValue = parameterValue;
 	}
 
-	public void setParamValues(List<String> paramValues) {
-		_paramValues = paramValues;
+	public void setParameterValues(List<String> parameterValues) {
+		_parameterValues = parameterValues;
 	}
 
 	public void setRenderNothing(boolean renderNothing) {
@@ -111,9 +103,9 @@ public class UserSearchFacetDisplayContext implements Serializable {
 	private long _displayStyleGroupId;
 	private boolean _nothingSelected;
 	private String _paginationStartParameterName;
-	private String _paramName;
-	private String _paramValue;
-	private List<String> _paramValues;
+	private String _parameterName;
+	private String _parameterValue;
+	private List<String> _parameterValues;
 	private boolean _renderNothing;
 	private UserFacetPortletInstanceConfiguration
 		_userFacetPortletInstanceConfiguration;

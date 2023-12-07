@@ -1,47 +1,43 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Content Pages";
 
-	setUp {
-		task ("Set up instance and sign in") {
-			TestCase.setUpPortalInstance();
+	static var randomSiteName = StringUtil.randomString(8);
 
+	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Sign in") {
 			User.firstLoginPG();
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = ${randomSiteName});
 		}
 
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
+				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
 		}
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-	}
-
 	@description = "This is a test for LPS-161974. Add custom values to margin and padding on fragment of content page."
-	@priority = "4"
+	@priority = 4
 	test AddCustomValuesToSpacing {
 		task ("Given a page creator has a Button fragment on a content page") {
+			SetWindowSize.maximizeWindow();
+
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -51,7 +47,7 @@ definition {
 		task ("When the page creator selects an existing token on Marging Left of Spacing") {
 			PageEditor.gotoStyle(fragmentName = "Button");
 
-			PageEditor.configureFragment(marginLeft = "1");
+			PageEditor.configureFragment(marginLeft = 1);
 		}
 
 		task ("Then the page creator should see the cleared input field and selected token on dropdown menu") {
@@ -61,7 +57,7 @@ definition {
 
 			AssertTextEquals(
 				ariaLabel = "Margin Left",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 				value1 = "");
 
 			AssertCssValue(
@@ -74,8 +70,8 @@ definition {
 		task ("When the page creator adds a value on input field of Marging Left") {
 			Type(
 				ariaLabel = "Margin Left",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "20");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 20);
 
 			Click(
 				locator1 = "Dropdown#DROPDOWN_SUBHEADER",
@@ -101,8 +97,8 @@ definition {
 
 			Type(
 				ariaLabel = "Padding Left",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "20");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 20);
 
 			Click(
 				locator1 = "Dropdown#DROPDOWN_SUBHEADER",
@@ -123,6 +119,8 @@ definition {
 
 		task ("When the page creator selects an existing token on Padding Left of Spacing") {
 			DropdownMenuItem.click(menuItem = "Spacer 2");
+
+			PageEditor.waitForAutoSave();
 		}
 
 		task ("Then the page creator should see the cleared input field and second token as selected on dropdown menu") {
@@ -132,7 +130,7 @@ definition {
 
 			AssertTextEquals(
 				ariaLabel = "Padding Left",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 				value1 = "");
 
 			AssertCssValue(
@@ -144,12 +142,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162301. Designers cannot reset undefined Spacing styles."
-	@priority = "3"
+	@priority = 3
 	test CannotResetUndefinedSpacingStyles {
 		task ("Given a page designer has a Button fragment with padding right styles on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -157,7 +155,7 @@ definition {
 
 			PageEditor.gotoStyle(fragmentName = "Button");
 
-			PageEditor.configureFragment(paddingRight = "9");
+			PageEditor.configureFragment(paddingRight = 9);
 		}
 
 		task ("When the page designer opens the Padding Top dropdown list") {
@@ -176,12 +174,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-142050. In page editor, selecting Custom in units could insert any type of character."
-	@priority = "4"
+	@priority = 4
 	test ConfigureCustomUnit {
 		task ("Given a page designer has a Heading fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -216,7 +214,7 @@ definition {
 			AssertTextEquals(
 				key_text = "Border Width",
 				locator1 = "TextInput#ANY",
-				value1 = "3");
+				value1 = 3);
 
 			PageEditor.viewFragmentStyle(
 				borderWidth = "3rem",
@@ -225,12 +223,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147788. View default behavior of custom unit on styles tab of content page."
-	@priority = "4"
+	@priority = 4
 	test DetachLinkedNonColorToken {
 		task ("Given a page designer has a Heading fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -331,12 +329,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162301. Designers are able to reset the values from the spacing component by entering a value in the text area."
-	@priority = "3"
+	@priority = 3
 	test ResetSpacingStylesFromCustomValue {
 		task ("Given a page designer has a Button fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -352,8 +350,8 @@ definition {
 
 			Type(
 				ariaLabel = "Padding Top",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-				value1 = "4");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+				value1 = 4);
 
 			Click(
 				locator1 = "Dropdown#DROPDOWN_SUBHEADER",
@@ -368,14 +366,14 @@ definition {
 				locator1 = "MenuItem#ANY_ICON");
 
 			AssertCssValue(
-				index = "1",
+				index = 1,
 				key_fragmentName = "Button",
 				locator1 = "Fragment#FRAGMENT_CONTENT",
 				locator2 = "padding-top",
 				value1 = "4px");
 
 			Click(
-				index = "1",
+				index = 1,
 				key_fragmentName = "Button",
 				locator1 = "Fragment#FRAGMENT_CONTENT");
 		}
@@ -386,7 +384,7 @@ definition {
 
 		task ("Then the page designer sees the padding top back to the default one") {
 			AssertCssValue(
-				index = "1",
+				index = 1,
 				key_fragmentName = "Button",
 				locator1 = "Fragment#FRAGMENT_CONTENT",
 				locator2 = "padding-top",
@@ -395,12 +393,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162301. Designers are able to reset the values from the spacing component by selecting from Existing tokens."
-	@priority = "4"
+	@priority = 4
 	test ResetSpacingStylesFromExistingTokens {
 		task ("Given a page designer has a Button fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -428,14 +426,14 @@ definition {
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				paddingTop = "3");
+				paddingTop = 3);
 		}
 
 		task ("Then the page designer could reset the padding top style to initial value") {
 			PageEditor.restoreSpacing(fieldLabel = "Padding Top");
 
 			AssertCssValue(
-				index = "1",
+				index = 1,
 				key_fragmentName = "Button",
 				locator1 = "Fragment#FRAGMENT_CONTENT",
 				locator2 = "padding-top",
@@ -444,12 +442,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-162301. Designers are able to reset the values from the spacing component to the parent viewport value."
-	@priority = "4"
+	@priority = 4
 	test ResetSpacingStylesToParentViewportValue {
 		task ("Given a page designer has a Button fragment with different spacing styles in each viewport") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -457,19 +455,19 @@ definition {
 
 			PageEditor.gotoStyle(fragmentName = "Button");
 
-			PageEditor.configureFragment(paddingLeft = "1");
+			PageEditor.configureFragment(paddingLeft = 1);
 
 			PageEditor.switchViewport(deviceType = "Tablet");
 
-			PageEditor.configureFragment(paddingLeft = "2");
+			PageEditor.configureFragment(paddingLeft = 2);
 
 			PageEditor.switchViewport(deviceType = "Landscape Phone");
 
-			PageEditor.configureFragment(paddingLeft = "4");
+			PageEditor.configureFragment(paddingLeft = 4);
 
 			PageEditor.switchViewport(deviceType = "Portrait Phone");
 
-			PageEditor.configureFragment(paddingLeft = "5");
+			PageEditor.configureFragment(paddingLeft = 5);
 		}
 
 		task ("When the page designer switches to the Landscape Phone viewport") {
@@ -479,7 +477,7 @@ definition {
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				paddingLeft = "4");
+				paddingLeft = 4);
 
 			SelectFrameTop();
 		}
@@ -511,7 +509,7 @@ definition {
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				paddingLeft = "2");
+				paddingLeft = 2);
 
 			SelectFrameTop();
 		}
@@ -523,7 +521,7 @@ definition {
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				paddingLeft = "5");
+				paddingLeft = 5);
 
 			SelectFrameTop();
 		}
@@ -555,7 +553,7 @@ definition {
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				paddingLeft = "2");
+				paddingLeft = 2);
 
 			SelectFrameTop();
 		}
@@ -567,7 +565,7 @@ definition {
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				paddingLeft = "2");
+				paddingLeft = 2);
 
 			SelectFrameTop();
 		}
@@ -599,17 +597,17 @@ definition {
 
 			PageEditor.viewFragmentStyle(
 				fragmentName = "Button",
-				paddingLeft = "1");
+				paddingLeft = 1);
 		}
 	}
 
 	@description = "This is a test for LPS-136279 and LPS-163362. View the styles of color selectors."
-	@priority = "4"
+	@priority = 4
 	test ViewStylesOfColorInputs {
 		task ("Given a page designer has a Heading fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -652,7 +650,7 @@ definition {
 					locator1 = "Button#COLOR_PICKER");
 
 				AssertVisible(
-					key_content = "00000000",
+					key_content = 00000000,
 					locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 
 				MouseOver(
@@ -660,7 +658,7 @@ definition {
 					locator1 = "Button#COLOR_PICKER");
 
 				AssertVisible(
-					key_content = "272833",
+					key_content = 272833,
 					locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 			}
 		}
@@ -679,12 +677,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136279 and LPS-163362. View the styles of Font Family, Font Weight and Font Size selectors."
-	@priority = "4"
+	@priority = 4
 	test ViewStylesOfSelectInputs {
 		task ("Given a page designer has a Heading fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -699,7 +697,7 @@ definition {
 			task ("View the Font Family, Font Weight and Font Size selectors use icon") {
 				for (var fieldName : list "font-family,bold,font-size") {
 					AssertElementPresent(
-						key_text = "${fieldName}",
+						key_text = ${fieldName},
 						locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON");
 				}
 			}
@@ -713,7 +711,7 @@ definition {
 				AssertTextEquals(
 					key_text = "bold",
 					locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON_TEXT",
-					value1 = "400");
+					value1 = 400);
 
 				AssertTextEquals(
 					key_text = "font-size",
@@ -778,12 +776,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-136279. The text align should be indicated by align icon."
-	@priority = "4"
+	@priority = 4
 	test ViewStylesOfTextAlignButtons {
 		task ("Given a page designer has a Heading fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -798,7 +796,7 @@ definition {
 			task ("View the align left, align center, align right and align justify icons are shown in Text section") {
 				for (var fieldName : list "align-left,align-center,align-right,align-justify") {
 					AssertVisible(
-						key_text = "${fieldName}",
+						key_text = ${fieldName},
 						locator1 = "PageEditor#TEXT_ALIGN_ICON");
 				}
 			}
@@ -846,12 +844,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-163362. View the styles of Border Width, Border Radius, Opacity and Shadow text inputs."
-	@priority = "4"
+	@priority = 4
 	test ViewStylesOfTextInputs {
 		task ("Given a page designer has a Heading fragment on a content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+				siteName = ${randomSiteName});
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -866,7 +864,7 @@ definition {
 			task ("View the Border Width, Border Radius, Opacity and Shadow selectors use icon") {
 				for (var fieldName : list "border-width,corner-radius,opacity,shadow") {
 					AssertElementPresent(
-						key_text = "${fieldName}",
+						key_text = ${fieldName},
 						locator1 = "TextInput#GENERIC_TEXT_INPUT_WITH_ICON");
 				}
 			}
@@ -874,22 +872,22 @@ definition {
 			task ("View the default value is shown in Border Width, Border Radius, Opacity and Shadow text inputs") {
 				AssertTextEquals(
 					ariaLabel = "Border Width",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-					value1 = "0");
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+					value1 = 0);
 
 				AssertTextEquals(
 					ariaLabel = "Border Radius",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-					value1 = "0");
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+					value1 = 0);
 
 				AssertTextEquals(
 					ariaLabel = "Opacity",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
-					value1 = "100");
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
+					value1 = 100);
 
 				AssertTextEquals(
 					ariaLabel = "Shadow",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = "none");
 			}
 

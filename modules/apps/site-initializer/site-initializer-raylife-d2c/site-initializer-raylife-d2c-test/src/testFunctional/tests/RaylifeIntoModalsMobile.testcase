@@ -2,7 +2,7 @@
 definition {
 
 	property portal.release = "false";
-	property portal.upstream = "true";
+	property portal.upstream = "quarentine";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Raylife D2C";
 
@@ -14,15 +14,18 @@ definition {
 
 		User.firstLoginPG();
 
-		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+		HeadlessSite.addSite(
+			siteName = ${testSiteName},
+			templateName = "Raylife D2C",
+			templateType = "Site Initializer");
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		Raylife.tearDownCP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,11 +34,11 @@ definition {
 	}
 
 	@description = "LPS-146424 - Verify if when the 'Dismiss' button is clicked, the information panel for 'More Info' is dismissed."
-	@priority = "3"
+	@priority = 3
 	test IfClickingOnDismissPanelIsClosedPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -49,11 +52,11 @@ definition {
 	}
 
 	@description = "LPS-146425 - Verify if when the 'Dismiss' button is clicked, the information panel for 'More Info' is dismissed."
-	@priority = "3"
+	@priority = 3
 	test IfClickingOnDismissPanelIsClosedTablet {
 		SetWindowSize(value1 = "800,1024");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -67,11 +70,11 @@ definition {
 	}
 
 	@description = "LPS-146423 - Verify if when selecting 'More Info' in a product, information panel is opened."
-	@priority = "4"
+	@priority = 4
 	test IfPanelFromMoreInfoShowsUpPhone {
 		SetWindowSize(value1 = "360,720");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 
@@ -83,11 +86,11 @@ definition {
 	}
 
 	@description = "LPS-146426 - Verify if when selecting 'More Info' in a product, information panel is opened."
-	@priority = "5"
+	@priority = 5
 	test IfPanelFromMoreInfoShowsUpTablet {
 		SetWindowSize(value1 = "800,1024");
 
-		ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
+		ApplicationsMenu.gotoSite(key_site = ${testSiteName});
 
 		RaylifeHomePage.getAQuote();
 

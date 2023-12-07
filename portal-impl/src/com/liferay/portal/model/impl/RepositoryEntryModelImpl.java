@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -253,103 +244,128 @@ public class RepositoryEntryModelImpl
 	public Map<String, Function<RepositoryEntry, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<RepositoryEntry, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<RepositoryEntry, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<RepositoryEntry, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<RepositoryEntry, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<RepositoryEntry, Object>>();
-		Map<String, BiConsumer<RepositoryEntry, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<RepositoryEntry, ?>>();
+		private static final Map<String, Function<RepositoryEntry, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", RepositoryEntry::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<RepositoryEntry, Long>)RepositoryEntry::setMvccVersion);
-		attributeGetterFunctions.put(
-			"ctCollectionId", RepositoryEntry::getCtCollectionId);
-		attributeSetterBiConsumers.put(
-			"ctCollectionId",
-			(BiConsumer<RepositoryEntry, Long>)
-				RepositoryEntry::setCtCollectionId);
-		attributeGetterFunctions.put("uuid", RepositoryEntry::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<RepositoryEntry, String>)RepositoryEntry::setUuid);
-		attributeGetterFunctions.put(
-			"repositoryEntryId", RepositoryEntry::getRepositoryEntryId);
-		attributeSetterBiConsumers.put(
-			"repositoryEntryId",
-			(BiConsumer<RepositoryEntry, Long>)
-				RepositoryEntry::setRepositoryEntryId);
-		attributeGetterFunctions.put("groupId", RepositoryEntry::getGroupId);
-		attributeSetterBiConsumers.put(
-			"groupId",
-			(BiConsumer<RepositoryEntry, Long>)RepositoryEntry::setGroupId);
-		attributeGetterFunctions.put(
-			"companyId", RepositoryEntry::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<RepositoryEntry, Long>)RepositoryEntry::setCompanyId);
-		attributeGetterFunctions.put("userId", RepositoryEntry::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<RepositoryEntry, Long>)RepositoryEntry::setUserId);
-		attributeGetterFunctions.put("userName", RepositoryEntry::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<RepositoryEntry, String>)RepositoryEntry::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", RepositoryEntry::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<RepositoryEntry, Date>)RepositoryEntry::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", RepositoryEntry::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<RepositoryEntry, Date>)
-				RepositoryEntry::setModifiedDate);
-		attributeGetterFunctions.put(
-			"repositoryId", RepositoryEntry::getRepositoryId);
-		attributeSetterBiConsumers.put(
-			"repositoryId",
-			(BiConsumer<RepositoryEntry, Long>)
-				RepositoryEntry::setRepositoryId);
-		attributeGetterFunctions.put("mappedId", RepositoryEntry::getMappedId);
-		attributeSetterBiConsumers.put(
-			"mappedId",
-			(BiConsumer<RepositoryEntry, String>)RepositoryEntry::setMappedId);
-		attributeGetterFunctions.put(
-			"manualCheckInRequired", RepositoryEntry::getManualCheckInRequired);
-		attributeSetterBiConsumers.put(
-			"manualCheckInRequired",
-			(BiConsumer<RepositoryEntry, Boolean>)
-				RepositoryEntry::setManualCheckInRequired);
-		attributeGetterFunctions.put(
-			"lastPublishDate", RepositoryEntry::getLastPublishDate);
-		attributeSetterBiConsumers.put(
-			"lastPublishDate",
-			(BiConsumer<RepositoryEntry, Date>)
-				RepositoryEntry::setLastPublishDate);
+		static {
+			Map<String, Function<RepositoryEntry, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<RepositoryEntry, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", RepositoryEntry::getMvccVersion);
+			attributeGetterFunctions.put(
+				"ctCollectionId", RepositoryEntry::getCtCollectionId);
+			attributeGetterFunctions.put("uuid", RepositoryEntry::getUuid);
+			attributeGetterFunctions.put(
+				"repositoryEntryId", RepositoryEntry::getRepositoryEntryId);
+			attributeGetterFunctions.put(
+				"groupId", RepositoryEntry::getGroupId);
+			attributeGetterFunctions.put(
+				"companyId", RepositoryEntry::getCompanyId);
+			attributeGetterFunctions.put("userId", RepositoryEntry::getUserId);
+			attributeGetterFunctions.put(
+				"userName", RepositoryEntry::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", RepositoryEntry::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", RepositoryEntry::getModifiedDate);
+			attributeGetterFunctions.put(
+				"repositoryId", RepositoryEntry::getRepositoryId);
+			attributeGetterFunctions.put(
+				"mappedId", RepositoryEntry::getMappedId);
+			attributeGetterFunctions.put(
+				"manualCheckInRequired",
+				RepositoryEntry::getManualCheckInRequired);
+			attributeGetterFunctions.put(
+				"lastPublishDate", RepositoryEntry::getLastPublishDate);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<RepositoryEntry, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<RepositoryEntry, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<RepositoryEntry, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<RepositoryEntry, Long>)
+					RepositoryEntry::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"ctCollectionId",
+				(BiConsumer<RepositoryEntry, Long>)
+					RepositoryEntry::setCtCollectionId);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<RepositoryEntry, String>)RepositoryEntry::setUuid);
+			attributeSetterBiConsumers.put(
+				"repositoryEntryId",
+				(BiConsumer<RepositoryEntry, Long>)
+					RepositoryEntry::setRepositoryEntryId);
+			attributeSetterBiConsumers.put(
+				"groupId",
+				(BiConsumer<RepositoryEntry, Long>)RepositoryEntry::setGroupId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<RepositoryEntry, Long>)
+					RepositoryEntry::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<RepositoryEntry, Long>)RepositoryEntry::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<RepositoryEntry, String>)
+					RepositoryEntry::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<RepositoryEntry, Date>)
+					RepositoryEntry::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<RepositoryEntry, Date>)
+					RepositoryEntry::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"repositoryId",
+				(BiConsumer<RepositoryEntry, Long>)
+					RepositoryEntry::setRepositoryId);
+			attributeSetterBiConsumers.put(
+				"mappedId",
+				(BiConsumer<RepositoryEntry, String>)
+					RepositoryEntry::setMappedId);
+			attributeSetterBiConsumers.put(
+				"manualCheckInRequired",
+				(BiConsumer<RepositoryEntry, Boolean>)
+					RepositoryEntry::setManualCheckInRequired);
+			attributeSetterBiConsumers.put(
+				"lastPublishDate",
+				(BiConsumer<RepositoryEntry, Date>)
+					RepositoryEntry::setLastPublishDate);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -979,7 +995,8 @@ public class RepositoryEntryModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<RepositoryEntry, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

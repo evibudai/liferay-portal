@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
@@ -16,7 +16,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6238. Add shipment items to a shipment"
-	@priority = "3"
+	@priority = 5
 	test AddItemsToShipment {
 		property portal.acceptance = "true";
 
@@ -45,10 +45,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -65,7 +62,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		Refresh();
 
@@ -80,8 +77,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -91,9 +88,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -122,7 +117,7 @@ definition {
 		Type(
 			key_warehouseName = "Italy",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -131,18 +126,18 @@ definition {
 		Refresh();
 
 		for (var column : list "2-${orderId},4-Italy,5-0,6-1") {
-			var key_columnNumber = StringUtil.extractFirst("${column}", "-");
-			var currentValue = StringUtil.extractLast("${column}", "-");
+			var key_columnNumber = StringUtil.extractFirst(${column}, "-");
+			var currentValue = StringUtil.extractLast(${column}, "-");
 
 			AssertTextEquals(
 				key_entryName = "MIN55861",
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
-				value1 = "${currentValue}");
+				value1 = ${currentValue});
 		}
 	}
 
 	@description = "This is a test for COMMERCE-6248. It should not be possible to add non-shippable items to a shipment"
-	@priority = "3"
+	@priority = 5
 	test AssertAddingNonShippableItemToShipmentNotPossible {
 		property portal.acceptance = "true";
 
@@ -154,9 +149,7 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "ABS Sensor");
 
@@ -176,7 +169,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -187,12 +180,10 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "ABS Sensor",
-			productQuantity = "1",
-			productUnitPrice = "50");
+			productQuantity = 1,
+			productUnitPrice = 50);
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		ClickNoError(
 			key_orderStatus = "Pending",
@@ -215,9 +206,8 @@ definition {
 
 	@description = "This is a test for COMMERCE-6252. Check that shipment information set at product level are overriden by the shipment info at cpInstance level"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AssertProductShipmentInfoOverrideCPInstanceShipmentInfo {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6252 AssertProductShipmentInfoOverrideCPInstanceShipmentInfo Pending Implementation
 
@@ -225,16 +215,15 @@ definition {
 
 	@description = "This is a test for COMMERCE-6253. Shipment dimensions should be correctly calculated"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AssertShipmentDimensionsIsCorrectlyCalculated {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6253 AssertShipmentDimensionsCorrectlyCalculated Pending Implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6249. Shipment items should be taken only from active warehouses"
-	@priority = "3"
+	@priority = 5
 	test AssertShipmentItemTakenFromActiveWarehouses {
 		property portal.acceptance = "true";
 
@@ -252,7 +241,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -263,13 +252,11 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Italy");
 
@@ -279,9 +266,7 @@ definition {
 
 		Button.clickSave();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		ClickNoError(
 			key_orderStatus = "Pending",
@@ -311,9 +296,7 @@ definition {
 
 		Refresh();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Inventory Management",
-			portlet = "Warehouses");
+		CommerceNavigator.goToWarehousesAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Italy");
 
@@ -333,18 +316,17 @@ definition {
 
 	@description = "This is a test for COMMERCE-6254. Shipment weight should be correctly calculated"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AssertShipmentWeightIsCorrectlyCalculated {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6254 AssertShipmentWeightIsCorrectlyCalculated Pending Implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6251. Delete shipment"
-	@priority = "3"
+	@priority = 5
 	test AssertShippedShipmentNotDeletable {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -371,10 +353,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -391,7 +370,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		Refresh();
 
@@ -404,8 +383,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -415,9 +394,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		ClickNoError(
 			key_orderStatus = "Pending",
@@ -439,7 +416,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9459. CanAddShipmentTrackingURL"
-	@priority = "3"
+	@priority = 3
 	test CanAddShipmentTrackingURL {
 		property portal.acceptance = "false";
 
@@ -470,7 +447,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -481,8 +458,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -494,9 +471,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -507,12 +482,12 @@ definition {
 			CommerceOrders.createShipment(
 				carrierDetail = "Test Carrier",
 				productSkuList = "MIN55861",
-				trackingNumber = "123456789",
+				trackingNumber = 123456789,
 				warehouseName = "Italy");
 		}
 
 		task ("Then the shipment Base Tracking URL can be added") {
-			Navigator.gotoNavTab(navTab = "Shipments");
+			CommerceShipments.openShipmentsAdmin();
 
 			Click(
 				key_text = "Shipped",
@@ -542,7 +517,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9459. CanCheckShipmentTrackingURLAfterShippingMethodSelection"
-	@priority = "3"
+	@priority = 3
 	test CanCheckShipmentTrackingURLAfterShippingMethodSelection {
 		property portal.acceptance = "false";
 
@@ -564,9 +539,7 @@ definition {
 		}
 
 		task ("And given tracking URL set for Flat Rate shipping method") {
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -595,7 +568,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -606,8 +579,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -619,9 +592,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -660,15 +631,15 @@ definition {
 
 			CommerceEntry.addShippingOptionSettingsVariableRate(
 				country = "Italy",
-				fixedPrice = "1",
-				priceUnitWeight = "1",
+				fixedPrice = 1,
+				priceUnitWeight = 1,
 				region = "Roma",
 				shippingOption = "Standard",
-				subtotal = "1",
+				subtotal = 1,
 				warehouse = "Italy",
-				weightFrom = "1",
-				weightTo = "1",
-				zip = "0100");
+				weightFrom = 1,
+				weightTo = 1,
+				zip = 0100);
 
 			Alert.viewSuccessMessage();
 
@@ -676,9 +647,7 @@ definition {
 		}
 
 		task ("When admin creates shipment for the order") {
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -689,12 +658,12 @@ definition {
 			CommerceOrders.createShipment(
 				carrierDetail = "Test Carrier",
 				productSkuList = "MIN55861",
-				trackingNumber = "123456789",
+				trackingNumber = 123456789,
 				warehouseName = "Italy");
 		}
 
 		task ("And the shipping method and tracking URL are correct") {
-			Navigator.gotoNavTab(navTab = "Shipments");
+			CommerceShipments.openShipmentsAdmin();
 
 			Click(
 				key_text = "Shipped",
@@ -742,7 +711,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9331 Shipments - Custom fields"
-	@priority = "3"
+	@priority = 3
 	test CanDeleteShipmentCustomFields {
 		property portal.acceptance = "false";
 
@@ -764,16 +733,13 @@ definition {
 		}
 
 		task ("And given a custom field to Shipments") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
 				customFieldName = "Shipments Input Custom Field",
 				customFieldType = "Input Field",
 				customInputDataType = "Text",
-				resourceName = "Commerce Shipment");
+				resourceName = "Shipment");
 		}
 
 		task ("And given the buyer places an order") {
@@ -786,7 +752,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -797,8 +763,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -810,9 +776,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -841,7 +805,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -871,14 +835,11 @@ definition {
 		}
 
 		task ("Then deletes the custom field and verifies that Custom Fields tab in the shipments page is not visible") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.deleteCP(
 				customFieldName = "Shipments Input Custom Field",
-				resourceName = "Commerce Shipment");
+				resourceName = "Shipment");
 
 			CommerceNavigator.gotoPortlet(
 				category = "Order Management",
@@ -897,9 +858,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9331 Shipments - Custom fields"
-	@priority = "3"
+	@priority = 5
 	test CanEditShipmentCustomFields {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -919,15 +880,12 @@ definition {
 		}
 
 		task ("And given a custom field to Shipments") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
 				customFieldName = "Shipments Text Area",
 				customFieldType = "Text Area",
-				resourceName = "Commerce Shipment");
+				resourceName = "Shipment");
 		}
 
 		task ("And given the buyer places an order") {
@@ -940,7 +898,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -951,8 +909,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -964,9 +922,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -995,7 +951,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -1038,7 +994,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8376 UI to show Shipment External Reference"
-	@priority = "3"
+	@priority = 3
 	test CanEditShipmentERC {
 		property portal.acceptance = "false";
 
@@ -1069,7 +1025,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -1080,8 +1036,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -1093,9 +1049,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1124,7 +1078,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -1167,7 +1121,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8676 UI to show Shipment Item External Reference"
-	@priority = "3"
+	@priority = 3
 	test CanEditShipmentItemERC {
 		property portal.acceptance = "false";
 
@@ -1198,7 +1152,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -1209,8 +1163,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -1222,9 +1176,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1266,7 +1218,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -1306,7 +1258,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9459. CanEditShipmentTrackingURL"
-	@priority = "3"
+	@priority = 3
 	test CanEditShipmentTrackingURL {
 		property portal.acceptance = "false";
 
@@ -1328,9 +1280,7 @@ definition {
 		}
 
 		task ("And given tracking URL set for Flat Rate shipping method") {
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1357,7 +1307,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -1368,8 +1318,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -1381,9 +1331,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1394,12 +1342,12 @@ definition {
 			CommerceOrders.createShipment(
 				carrierDetail = "Test Carrier",
 				productSkuList = "MIN55861",
-				trackingNumber = "123456789",
+				trackingNumber = 123456789,
 				warehouseName = "Italy");
 		}
 
 		task ("Then the shipment Carrier Details can be edited") {
-			Navigator.gotoNavTab(navTab = "Shipments");
+			CommerceShipments.openShipmentsAdmin();
 
 			Click(
 				key_text = "Shipped",
@@ -1429,9 +1377,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8676 UI to show Shipment Item External Reference"
-	@priority = "3"
+	@priority = 5
 	test CanNotUseTheSameERCForDifferentShipmentItems {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -1460,8 +1408,8 @@ definition {
 
 			for (var productName : list "U-Joint,Torque Converters") {
 				FrontStore.addInitializerProductToCart(
-					productName = "${productName}",
-					productQuantity = "1");
+					productName = ${productName},
+					productQuantity = 1);
 			}
 
 			CommerceCheckout.gotoCheckout();
@@ -1483,9 +1431,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1503,7 +1449,7 @@ definition {
 
 			for (var productSku : list "MIN55859,MIN55861") {
 				Check.checkToggleSwitch(
-					key_productSku = "${productSku}",
+					key_productSku = ${productSku},
 					locator1 = "Checkbox#ADD_SHIPMENT_ITEMS_CHECKBOX");
 			}
 
@@ -1521,7 +1467,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -1552,7 +1498,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -1560,14 +1506,18 @@ definition {
 		}
 
 		task ("Then an error message is shown (Error:Please enter a unique external reference code.)") {
-			Alert.viewErrorMessage(errorMessage = "Please enter a unique external reference code.");
+			WaitForElementPresent(locator1 = "Message#ERROR");
+
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Error:Please enter a unique external reference code.");
 		}
 	}
 
 	@description = "This is a test for COMMERCE-8376 UI to show Shipment External Reference"
-	@priority = "3"
+	@priority = 5
 	test CanNotUseTheSameERCForDifferentShipments {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -1596,7 +1546,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -1607,8 +1557,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -1620,9 +1570,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1651,7 +1599,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -1676,7 +1624,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "Torque Converters",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -1687,8 +1635,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "Torque Converters",
-				productQuantity = "1",
-				productUnitPrice = "34",
+				productQuantity = 1,
+				productUnitPrice = 34,
 				shippingMethod = "Standard");
 		}
 
@@ -1700,9 +1648,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1731,7 +1677,7 @@ definition {
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -1747,8 +1693,89 @@ definition {
 		}
 	}
 
+	@description = "COMMERCE-8626. The user with Operations Manager role can view shipments listed on the Shipments Page."
+	@priority = 3
+	test CanOperationsManagerViewShipments {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site with an account") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account",
+				accountEntryType = "Business");
+		}
+
+		task ("And a user with the Operations Manager role") {
+			JSONUser.addUserWithRole(
+				roleTitle = "Operations Manager",
+				userEmailAddress = "om@liferay.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
+		}
+
+		task ("And a payment method is enabled") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			CommerceChannels.editPaymentMethod(
+				active = "true",
+				paymentMethod = "Money Order");
+		}
+
+		task ("And an orders is placed and shipped") {
+			CommerceJSONOrdersAPI._addCommerceOrder(
+				accountEntryName = "Commerce Account",
+				orderItems = "MIN55858:1",
+				orderStatus = 1,
+				paymentMethod = "money-order",
+				paymentStatus = 2);
+
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			Click(
+				key_text = "Accept Order",
+				locator1 = "Link#ANY");
+
+			Alert.viewSuccessMessage();
+
+			CommerceOrders.createShipment(
+				productSkuList = "MIN55858",
+				warehouseName = "Italy");
+
+			var shipmentId = CommerceJSONShipmentsAPI._getCommerceShipmentIds(shipmentCount = 1);
+		}
+
+		task ("When the Operations Manager navigates to the Shipments Page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "om@liferay.com",
+				userLoginFullName = "Operations Manager");
+
+			CommerceShipments.openShipmentsAdmin();
+		}
+
+		task ("Then can view the shipment is listed") {
+			AssertTextEquals(
+				locator1 = "CommerceEntry#PAGINATION_RESULTS",
+				value1 = "Showing 1 to 1 of 1 entries.");
+
+			Click.javaScriptClick(
+				currentShipmentId = ${shipmentId},
+				locator1 = "CommerceOrders#SELECT_SHIPMENT_FROM_LIST");
+
+			AssertTextEquals(
+				key_id = ${shipmentId},
+				locator1 = "CommerceOrders#ORDER_AND_SHIPMENT_ID_VALUE",
+				value1 = ${shipmentId});
+		}
+	}
+
 	@description = "COMMERCE-9917 | Add 2 items from different orders with different shipping methods selected to the same shipment and assert an info message is shown"
-	@priority = "3"
+	@priority = 5
 	test CanViewShipmentItemsDifferentShippingMethodsInfoMessage {
 		property portal.acceptance = "true";
 
@@ -1803,8 +1830,8 @@ definition {
 				configureShippingOption = "true",
 				shippingMethod = "Variable Rate",
 				shippingOptions = "Standard Option",
-				shippingOptionSettingsFixedPrice = "5",
-				shippingOptionSettingsPriceUnitWeight = "2",
+				shippingOptionSettingsFixedPrice = 5,
+				shippingOptionSettingsPriceUnitWeight = 2,
 				trackingURL = "www.variableratecarriersite.com/");
 		}
 
@@ -1812,18 +1839,18 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
 				orderItems = "MIN55861:1",
-				orderStatus = "10",
+				orderStatus = 10,
 				paymentMethod = "Money Order",
-				paymentStatus = "0",
+				paymentStatus = 0,
 				shippingAddressName = "Test Name",
 				shippingOption = "Expedited Delivery");
 
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
 				orderItems = "MIN55860:1",
-				orderStatus = "10",
+				orderStatus = 10,
 				paymentMethod = "Money Order",
-				paymentStatus = "0",
+				paymentStatus = 0,
 				shippingAddressName = "Test Name",
 				shippingMethod = "Variable Rate",
 				shippingOption = "Standard Option");
@@ -1853,7 +1880,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9459. CanViewShipmentTrackingURL"
-	@priority = "3"
+	@priority = 3
 	test CanViewShipmentTrackingURL {
 		property portal.acceptance = "false";
 
@@ -1875,9 +1902,7 @@ definition {
 		}
 
 		task ("And given tracking URL set for Flat Rate shipping method") {
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1904,7 +1929,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -1915,8 +1940,8 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 		}
 
@@ -1928,9 +1953,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -1941,12 +1964,12 @@ definition {
 			CommerceOrders.createShipment(
 				carrierDetail = "Test Carrier",
 				productSkuList = "MIN55861",
-				trackingNumber = "123456789",
+				trackingNumber = 123456789,
 				warehouseName = "Italy");
 		}
 
 		task ("Then from the Shipment portlet the tracking URL is present as Base Tracking URL") {
-			Navigator.gotoNavTab(navTab = "Shipments");
+			CommerceShipments.openShipmentsAdmin();
 
 			Click(
 				key_text = "Shipped",
@@ -1962,11 +1985,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6247. Multiple shipment for the same order"
-	@priority = "3"
+	@priority = 5
 	test CreateMultipleShipmentsForOneOrder {
 		property portal.acceptance = "true";
-
-		// TODO Review
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -1980,8 +2001,8 @@ definition {
 
 		for (var productCard : list "U-Joint,Transmission Cooler Line Assembly,Torque Converters,Wheel Seal - Front,Mount") {
 			FrontStore.addInitializerProductToCart(
-				productName = "${productCard}",
-				productQuantity = "1");
+				productName = ${productCard},
+				productQuantity = 1);
 		}
 
 		CommerceCheckout.gotoCheckout();
@@ -2023,15 +2044,9 @@ definition {
 
 		Click(locator1 = "Button#CONTINUE");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
-		ClickNoError(
-			key_orderStatus = "Pending",
-			locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
-
-		CommerceEntry.clickNoError(menuItem = "View");
+		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
 		Click(
 			key_index = "Accept Order",
@@ -2041,27 +2056,27 @@ definition {
 			productSkuList = "MIN55857,MIN55858,MIN55859",
 			warehouseName = "Italy");
 
-		Click(locator1 = "Icon#BACK");
+		CommerceOrders.openOrdersAdmin();
 
 		AssertElementPresent(
 			key_orderStatus = "Partially Shipped",
 			locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
 
-		ClickNoError(
-			key_orderStatus = "Partially Shipped",
-			locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
-
-		CommerceEntry.clickNoError(menuItem = "View");
+		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Partially Shipped");
 
 		CommerceOrders.createShipment(
 			productSkuList = "MIN55860,MIN55861",
 			warehouseName = "Italy");
 
+		CommerceOrders.openOrdersAdmin();
+
+		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Shipped");
+
 		Click(
 			key_index = "Completed",
 			locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
 
-		Click(locator1 = "Icon#BACK");
+		Navigator.gotoBack();
 
 		AssertElementPresent(
 			key_orderStatus = "Completed",
@@ -2069,15 +2084,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6237. Create a shipment from an order"
-	@priority = "3"
+	@priority = 5
 	test CreateOrderShipment {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2095,7 +2108,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -2106,17 +2119,15 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		Click(
 			key_value = "Commerce Account",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+			locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "View");
 
@@ -2147,7 +2158,7 @@ definition {
 		Type(
 			key_warehouseName = "Italy",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -2167,7 +2178,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6250. Delete shipment"
-	@priority = "3"
+	@priority = 5
 	test DeleteShipment {
 		property portal.acceptance = "true";
 
@@ -2185,7 +2196,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -2196,13 +2207,11 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		ClickNoError(
 			key_orderStatus = "Pending",
@@ -2241,7 +2250,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6241. Execute the shipment workflow"
-	@priority = "3"
+	@priority = 5
 	test ExecuteShipmentWorkflow {
 		property portal.acceptance = "true";
 
@@ -2270,10 +2279,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -2290,7 +2296,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -2338,9 +2344,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -2369,7 +2373,7 @@ definition {
 		Type(
 			key_warehouseName = "Italy",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -2392,16 +2396,15 @@ definition {
 
 	@description = "This is a test for COMMERCE-6255. Filter, Sort shipment from shipment UI"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test FilterAndSortShipments {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6255 FilterAndSortShipments Pending Implementation
 
 	}
 
 	@description = "This is a test for COMMERCE-6240. Remove shipment items from a shipment"
-	@priority = "3"
+	@priority = 5
 	test RemoveItemFromShipment {
 		property portal.acceptance = "true";
 
@@ -2409,9 +2412,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2429,11 +2430,11 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Transmission Cooler Line Assembly",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -2474,9 +2475,7 @@ definition {
 
 		Click(locator1 = "Button#CONTINUE");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -2494,21 +2493,21 @@ definition {
 
 		for (var productSku : list "MIN55860,MIN55861") {
 			Check.checkToggleSwitch(
-				key_productSku = "${productSku}",
+				key_productSku = ${productSku},
 				locator1 = "Checkbox#ADD_SHIPMENT_ITEMS_CHECKBOX");
 		}
 
 		Button.clickSubmitButton();
 
 		for (var productSku : list "MIN55860,MIN55861") {
-			CommerceNavigator.gotoEntry(entryName = "${productSku}");
+			CommerceNavigator.gotoEntry(entryName = ${productSku});
 
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 			Type(
 				key_warehouseName = "Italy",
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-				value1 = "1");
+				value1 = 1);
 
 			Button.clickSave();
 
@@ -2522,8 +2521,9 @@ definition {
 			locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
 
 		Click(
-			key_index = "Delete",
-			locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
+			key_entryName = "MIN55861",
+			key_table = "Products",
+			locator1 = "CommerceEntry#TABLE_ENTRY_DELETE_BUTTON");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
 
@@ -2539,11 +2539,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6256. Search shipment from shipment UI"
-	@priority = "3"
+	@priority = 3
 	test SearchShipment {
 		property portal.acceptance = "false";
-
-		// TODO Review
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -2571,7 +2569,7 @@ definition {
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			CommerceCheckout.gotoCheckout();
 
@@ -2582,17 +2580,15 @@ definition {
 				newAddressName = "Address Name",
 				newAddressZipCode = "Test Zip Code",
 				productName = "U-Joint",
-				productQuantity = "1",
-				productUnitPrice = "24",
+				productQuantity = 1,
+				productUnitPrice = 24,
 				shippingMethod = "Standard");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			Click(
 				key_value = "account${i}",
-				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+				locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 			MenuItem.click(menuItem = "View");
 
@@ -2604,16 +2600,20 @@ definition {
 				productSkuList = "MIN55861",
 				warehouseName = "Italy");
 
-			CommerceEntry.gotoMenuTab(menuTab = "Shipments");
+			CommerceShipments.openShipmentsAdmin();
 
-			Click(
-				key_rowNumber = "1",
-				locator1 = "CommerceNavigation#ENTRY_NAME_N");
+			if (${i} == 1) {
+				Click(
+					key_rowNumber = 1,
+					locator1 = "CommerceNavigation#ENTRY_NAME_N");
 
-			if ("${i}" == "1") {
 				var ship1Id = selenium.getText("CommerceEntry#HEADER_ID");
 			}
 			else {
+				Click(
+					key_rowNumber = 2,
+					locator1 = "CommerceNavigation#ENTRY_NAME_N");
+
 				var ship2Id = selenium.getText("CommerceEntry#HEADER_ID");
 			}
 		}
@@ -2623,31 +2623,31 @@ definition {
 			portlet = "Shipments");
 
 		for (var search : list "${ship1Id},${ship2Id},account1,account2") {
-			CommerceNavigator.searchEntry(entryName = "${search}");
+			CommerceNavigator.searchEntry(entryName = ${search});
 
-			if (("${search}" == "account1") || ("${search}" == "${ship1Id}")) {
+			if ((${search} == "account1") || (${search} == ${ship1Id})) {
 				AssertElementPresent(
-					key_entryName = "${ship1Id}",
+					key_entryName = ${ship1Id},
 					locator1 = "CommerceNavigation#ENTRY_NAME");
 
 				AssertElementNotPresent(
-					key_entryName = "${ship2Id}",
+					key_entryName = ${ship2Id},
 					locator1 = "CommerceNavigation#ENTRY_NAME");
 			}
 			else {
 				AssertElementPresent(
-					key_entryName = "${ship2Id}",
+					key_entryName = ${ship2Id},
 					locator1 = "CommerceNavigation#ENTRY_NAME");
 
 				AssertElementNotPresent(
-					key_entryName = "${ship1Id}",
+					key_entryName = ${ship1Id},
 					locator1 = "CommerceNavigation#ENTRY_NAME");
 			}
 		}
 	}
 
 	@description = "This is a test for COMMERCE-6242. Update address"
-	@priority = "3"
+	@priority = 5
 	test UpdateShipmentAddress {
 		property portal.acceptance = "true";
 
@@ -2669,10 +2669,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -2689,7 +2686,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -2741,9 +2738,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -2764,17 +2759,17 @@ definition {
 		Type(
 			key_fieldLabel = "Street 1",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${billingAddressStreet}");
+			value1 = ${billingAddressStreet});
 
 		Button.click(button = "Submit");
 
-		Refresh();
+		SelectFrameTop();
 
 		for (var address : list "${billingAddressStreet},${billingAddressCity}") {
 			AssertTextEquals.assertPartialText(
 				key_titleName = "Billing Address",
 				locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_DESCRIPTION",
-				value1 = "${address}");
+				value1 = ${address});
 		}
 
 		Click(
@@ -2789,25 +2784,26 @@ definition {
 		Type(
 			key_fieldLabel = "Street 1",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "${shippingAddressStreet}");
+			value1 = ${shippingAddressStreet});
 
 		Button.click(button = "Submit");
 
-		Refresh();
+		SelectFrameTop();
 
 		for (var address : list "${shippingAddressStreet},${billingAddressCity}") {
 			AssertTextEquals.assertPartialText(
 				key_titleName = "Shipping Address",
 				locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_DESCRIPTION",
-				value1 = "${address}");
+				value1 = ${address});
 		}
 	}
 
 	@description = "This is a test for COMMERCE-6239. Update shipment items to a shipment"
-	@priority = "3"
+	@priority = 5
 	test UpdateShipmentItems {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "CPCommerceShipments#UpdateShipmentItems";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// TODO Review
 
@@ -2827,10 +2823,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -2847,7 +2840,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
 
@@ -2866,8 +2859,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		User.logoutPG();
@@ -2877,9 +2870,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -2908,7 +2899,7 @@ definition {
 		Type(
 			key_warehouseName = "Italy",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Button.clickSave();
 
@@ -2917,7 +2908,7 @@ definition {
 		Refresh();
 
 		CommerceShipments.assertShipmentItemWarehouseAndQuantityInShipment(
-			quantityInShipment = "1",
+			quantityInShipment = 1,
 			shipmentItemSku = "MIN55861",
 			warehouseName = "Italy");
 
@@ -2927,40 +2918,40 @@ definition {
 
 		for (var valueList : list "Italy,United States - Southwest,United States - Northeast") {
 			WaitForElementPresent(
-				key_warehouseName = "${valueList}",
+				key_warehouseName = ${valueList},
 				locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE");
 		}
 
-		RunScript(locator1 = "document.querySelectorAll('div.quantity-selector input')[0].value=0");
+		ExecuteJavaScript(value1 = "document.querySelectorAll('div.quantity-selector input')[0].value=0");
 
 		Button.clickSave();
 
 		AssertTextEquals(
 			key_warehouseName = "Italy",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "0");
+			value1 = 0);
 
-		RunScript(locator1 = "document.querySelectorAll('div.quantity-selector input')[1].value=1");
+		ExecuteJavaScript(value1 = "document.querySelectorAll('div.quantity-selector input')[1].value=1");
 
 		Button.clickSave();
 
 		AssertTextEquals(
 			key_warehouseName = "United States - Southwest",
 			locator1 = "CommerceOrders#ORDER_QUANTITY_IN_SHIPMENT_BY_WAREHOUSE",
-			value1 = "1");
+			value1 = 1);
 
 		Click(locator1 = "Icon#CLOSE");
 
 		SelectFrameTop();
 
 		CommerceShipments.assertShipmentItemWarehouseAndQuantityInShipment(
-			quantityInShipment = "1",
+			quantityInShipment = 1,
 			shipmentItemSku = "MIN55861",
 			warehouseName = "United States - Southwest");
 	}
 
 	@description = "This is a test for COMMERCE-6243. Update address"
-	@priority = "3"
+	@priority = 3
 	test ValidateShipmentAddress {
 		property portal.acceptance = "false";
 
@@ -2989,10 +2980,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -3009,7 +2997,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -3057,9 +3045,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -3079,7 +3065,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6245. Check that shipping amount is correctly calculated in the order"
-	@priority = "3"
+	@priority = 5
 	test ViewOrderShipmentAmountIsCorrect {
 		property portal.acceptance = "true";
 
@@ -3108,10 +3094,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		Click(locator1 = "Dropdown#FILTER_AND_ORDER");
 
@@ -3132,7 +3115,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		Refresh();
 
@@ -3145,8 +3128,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard");
 
 		Click(
@@ -3170,7 +3153,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6246. Check that shipping discount amount is correctly calculated in the order"
-	@priority = "3"
+	@priority = 5
 	test ViewOrderShipmentDiscountAmountIsCorrect {
 		property portal.acceptance = "true";
 
@@ -3183,15 +3166,13 @@ definition {
 
 		PortalSettings.uncheckStrangersVerifyEmailCheckbox();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Discounts");
+		CommerceNavigator.goToDiscountAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewDiscountsEntry(
 			channelsEligibility = "Minium Portal",
-			discountAmount = "7",
+			discountAmount = 7,
 			discountName = "Test Discount",
 			discountTarget = "Shipping",
 			discountType = "Fixed Amount");
@@ -3212,10 +3193,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -3232,7 +3210,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		Refresh();
 
@@ -3256,7 +3234,7 @@ definition {
 		Type(
 			key_fieldName = "Zip",
 			locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT",
-			value1 = "0100");
+			value1 = 0100);
 
 		Type(
 			key_fieldName = "City",

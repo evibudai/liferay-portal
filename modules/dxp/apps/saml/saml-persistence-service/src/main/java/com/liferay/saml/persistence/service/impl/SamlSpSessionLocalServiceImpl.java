@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.saml.persistence.service.impl;
@@ -30,8 +21,6 @@ import com.liferay.saml.persistence.service.persistence.SamlPeerBindingPersisten
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -123,7 +112,19 @@ public class SamlSpSessionLocalServiceImpl
 			return null;
 		}
 
-		return samlSpSessionPersistence.fetchByC_SI(companyId, sessionIndex);
+		return samlSpSessionPersistence.fetchByC_SI_First(
+			companyId, sessionIndex, null);
+	}
+
+	@Override
+	public List<SamlSpSession> fetchSamlSpSessionsBySessionIndex(
+		long companyId, String sessionIndex) {
+
+		if (Validator.isNull(sessionIndex)) {
+			return null;
+		}
+
+		return samlSpSessionPersistence.findByC_SI(companyId, sessionIndex);
 	}
 
 	@Override
@@ -151,7 +152,8 @@ public class SamlSpSessionLocalServiceImpl
 			throw new NoSuchSpSessionException(sessionIndex);
 		}
 
-		return samlSpSessionPersistence.findByC_SI(companyId, sessionIndex);
+		return samlSpSessionPersistence.findByC_SI_First(
+			companyId, sessionIndex, null);
 	}
 
 	@Override
@@ -160,32 +162,29 @@ public class SamlSpSessionLocalServiceImpl
 		String nameIdSPNameQualifier, String nameIdValue,
 		String samlIdpEntityId) {
 
-		List<SamlPeerBinding> samlPeerBindings = new ArrayList<>();
+		List<SamlSpSession> samlSpSessions = new ArrayList<>();
 
-		samlPeerBindings.addAll(
-			_samlPeerBindingLocalService.getSamlPeerBindings(
-				companyId, false, nameIdFormat, nameIdNameQualifier,
-				nameIdValue, samlIdpEntityId));
-		samlPeerBindings.addAll(
-			_samlPeerBindingLocalService.getSamlPeerBindings(
-				companyId, true, nameIdFormat, nameIdNameQualifier, nameIdValue,
-				samlIdpEntityId));
+		for (SamlPeerBinding samlPeerBinding :
+				_samlPeerBindingLocalService.getSamlPeerBindings(
+					companyId, false, nameIdFormat, nameIdNameQualifier,
+					nameIdValue, samlIdpEntityId)) {
 
-		Stream<SamlPeerBinding> stream = samlPeerBindings.stream();
+			samlSpSessions.addAll(
+				samlSpSessionPersistence.findBySamlPeerBindingId(
+					samlPeerBinding.getSamlPeerBindingId()));
+		}
 
-		return stream.map(
-			SamlPeerBinding::getSamlPeerBindingId
-		).flatMap(
-			samlPeerBindingId -> {
-				List<SamlSpSession> samlSpSessions =
-					samlSpSessionPersistence.findBySamlPeerBindingId(
-						samlPeerBindingId);
+		for (SamlPeerBinding samlPeerBinding :
+				_samlPeerBindingLocalService.getSamlPeerBindings(
+					companyId, true, nameIdFormat, nameIdNameQualifier,
+					nameIdValue, samlIdpEntityId)) {
 
-				return samlSpSessions.stream();
-			}
-		).collect(
-			Collectors.toList()
-		);
+			samlSpSessions.addAll(
+				samlSpSessionPersistence.findBySamlPeerBindingId(
+					samlPeerBinding.getSamlPeerBindingId()));
+		}
+
+		return samlSpSessions;
 	}
 
 	@Override

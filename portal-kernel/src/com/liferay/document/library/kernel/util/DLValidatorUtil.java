@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.kernel.util;
@@ -20,7 +11,7 @@ import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.document.library.kernel.exception.FolderNameException;
 import com.liferay.document.library.kernel.exception.InvalidFileVersionException;
 import com.liferay.document.library.kernel.exception.SourceFileNameException;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.io.File;
 import java.io.InputStream;
@@ -31,47 +22,71 @@ import java.io.InputStream;
 public class DLValidatorUtil {
 
 	public static String fixName(String name) {
-		return _dlValidator.fixName(name);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		return dlValidator.fixName(name);
 	}
 
 	public static long getMaxAllowableSize(long groupId, String mimeType) {
-		return _dlValidator.getMaxAllowableSize(groupId, mimeType);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		return dlValidator.getMaxAllowableSize(groupId, mimeType);
+	}
+
+	public static long getMaxAllowableSize(
+		long groupId, String mimeType, long limit) {
+
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		return dlValidator.getMaxAllowableSize(groupId, mimeType, limit);
 	}
 
 	public static boolean isValidName(String name) {
-		return _dlValidator.isValidName(name);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		return dlValidator.isValidName(name);
 	}
 
 	public static void validateDirectoryName(String directoryName)
 		throws FolderNameException {
 
-		_dlValidator.validateDirectoryName(directoryName);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateDirectoryName(directoryName);
 	}
 
 	public static void validateFileExtension(String fileName)
 		throws FileExtensionException {
 
-		_dlValidator.validateFileExtension(fileName);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateFileExtension(fileName);
 	}
 
 	public static void validateFileName(String fileName)
 		throws FileNameException {
 
-		_dlValidator.validateFileName(fileName);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateFileName(fileName);
 	}
 
 	public static void validateFileSize(
 			long groupId, String fileName, String mimeType, byte[] bytes)
 		throws FileSizeException {
 
-		_dlValidator.validateFileSize(groupId, fileName, mimeType, bytes);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateFileSize(groupId, fileName, mimeType, bytes);
 	}
 
 	public static void validateFileSize(
 			long groupId, String fileName, String mimeType, File file)
 		throws FileSizeException {
 
-		_dlValidator.validateFileSize(groupId, fileName, mimeType, file);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateFileSize(groupId, fileName, mimeType, file);
 	}
 
 	public static void validateFileSize(
@@ -79,31 +94,38 @@ public class DLValidatorUtil {
 			InputStream inputStream)
 		throws FileSizeException {
 
-		_dlValidator.validateFileSize(groupId, fileName, mimeType, inputStream);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateFileSize(groupId, fileName, mimeType, inputStream);
 	}
 
 	public static void validateFileSize(
 			long groupId, String fileName, String mimeType, long size)
 		throws FileSizeException {
 
-		_dlValidator.validateFileSize(groupId, fileName, mimeType, size);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateFileSize(groupId, fileName, mimeType, size);
 	}
 
 	public static void validateSourceFileExtension(
 			String fileExtension, String sourceFileName)
 		throws SourceFileNameException {
 
-		_dlValidator.validateSourceFileExtension(fileExtension, sourceFileName);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateSourceFileExtension(fileExtension, sourceFileName);
 	}
 
 	public static void validateVersionLabel(String versionLabel)
 		throws InvalidFileVersionException {
 
-		_dlValidator.validateVersionLabel(versionLabel);
+		DLValidator dlValidator = _dlValidatorSnapshot.get();
+
+		dlValidator.validateVersionLabel(versionLabel);
 	}
 
-	private static volatile DLValidator _dlValidator =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			DLValidator.class, DLValidatorUtil.class, "_dlValidator", false);
+	private static final Snapshot<DLValidator> _dlValidatorSnapshot =
+		new Snapshot<>(DLValidatorUtil.class, DLValidator.class);
 
 }

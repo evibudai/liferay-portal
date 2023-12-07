@@ -15,9 +15,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -27,16 +27,17 @@ definition {
 
 			WebContent.tearDownCP();
 
-			RemoteApps.tearDown();
+			ClientExtensionGeneral.tearDown();
 		}
 	}
 
 	@description = "This is a test for LPS-154668. I can create a New Virtual Instance of Liferay Site with the initializer"
-	@priority = "4"
+	@priority = 4
 	test AddLiferayWelcomeSiteVirtualInstanceWithInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddLiferayWelcomeSiteVirtualInstanceWithInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add virtual instance Liferay Site with the Liferay Site Initializer") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -56,16 +57,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-154668. I can create a Site of Liferay Welcome Site with the initializer"
-	@priority = "4"
+	@priority = 4
 	test AddLiferayWelcomeSiteWithInitializer {
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddLiferayWelcomeSiteWithInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Sites and add a new one") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Sites",
-				panel = "Control Panel",
-				portlet = "Sites");
+			Site.openSitesAdmin();
 
 			Site.addSiteTemplateCP(
 				siteName = "Liferay Welcome Site",
@@ -86,11 +85,12 @@ definition {
 	}
 
 	@description = "This is a test for LPS-135077. I can create a Virtual Instance with Default Initializer"
-	@priority = "5"
+	@priority = 5
 	test AddVirtualInstanceWithDefaultInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.baker.com";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddVirtualInstanceWithDefaultInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add virtual instance able.com with a blank Initializer") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -105,18 +105,19 @@ definition {
 
 		task ("Assert the default Welcome Page is present") {
 			ContentPages.viewFragmentText(
-				fragmentName = "heading",
+				fragmentName = "paragraph",
 				id = "element-text",
 				text = "Welcome to Liferay");
 		}
 	}
 
 	@description = "This is a test for LPS-135077. I can create a New Virtual Instance with the initializer"
-	@priority = "5"
+	@priority = 5
 	test AddVirtualInstanceWithInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "LiferayOnline#AddVirtualInstanceWithInitializer";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Add virtual instance raylife.com with the Masterclass Initializer") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -138,16 +139,17 @@ definition {
 	}
 
 	@description = "This is a test for LPS-151826 related with LPS-135077. Raylife AP initializer is not deployed and is not shown on inicializer list"
-	@priority = "4"
+	@priority = 4
 	test CannotSelectInitializerWithoutDeployRaylifeAP {
-		property test.name.skip.portal.instance = "LiferayOnline#CannotSelectInitializerWithoutDeployRaylifeAP";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Gogo Shell Admin and Stop Raylife Module") {
 			GogoShell.openGogoShellAdmin();
 
 			var moduleId = GogoShell.getModuleID(moduleName = "com.liferay.site.initializer.raylife.ap");
 
-			GogoShell.stopModule(moduleId = "${moduleId}");
+			GogoShell.stopModule(moduleId = ${moduleId});
 
 			GogoShell.viewModuleStatus(
 				moduleName = "com.liferay.site.initializer.raylife.ap",
@@ -175,7 +177,7 @@ definition {
 		task ("Go to Gogo Shell Admin and Start Raylife Module") {
 			GogoShell.openGogoShellAdmin();
 
-			GogoShell.startModule(moduleId = "${moduleId}");
+			GogoShell.startModule(moduleId = ${moduleId});
 
 			GogoShell.viewModuleStatus(
 				moduleName = "com.liferay.site.initializer.raylife.ap",
@@ -184,16 +186,17 @@ definition {
 	}
 
 	@description = "This is a test for LPS-135077. Raylife D2C initializer is not deployed and is not shown on inicializer list"
-	@priority = "4"
+	@priority = 4
 	test CannotSelectInitializerWithoutDeployRaylifeD2C {
-		property test.name.skip.portal.instance = "LiferayOnline#CannotSelectInitializerWithoutDeployRaylifeD2C";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Go to Gogo Shell Admin and Stop Raylife Module") {
 			GogoShell.openGogoShellAdmin();
 
 			var moduleId = GogoShell.getModuleID(moduleName = "com.liferay.site.initializer.raylife.d2c");
 
-			GogoShell.stopModule(moduleId = "${moduleId}");
+			GogoShell.stopModule(moduleId = ${moduleId});
 
 			GogoShell.viewModuleStatus(
 				moduleName = "com.liferay.site.initializer.raylife.d2c",
@@ -221,7 +224,7 @@ definition {
 		task ("Go to Gogo Shell Admin and Start Raylife Module") {
 			GogoShell.openGogoShellAdmin();
 
-			GogoShell.startModule(moduleId = "${moduleId}");
+			GogoShell.startModule(moduleId = ${moduleId});
 
 			GogoShell.viewModuleStatus(
 				moduleName = "com.liferay.site.initializer.raylife.d2c",
@@ -230,10 +233,11 @@ definition {
 	}
 
 	@description = "This is a test for LPS-143786. Create a Team Extranet Virtual Instance by API"
-	@priority = "4"
+	@priority = 4
 	test CreateTeamExtranetVirtualInstanceByAPI {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
-		property test.name.skip.portal.instance = "LiferayOnline#CreateTeamExtranetVirtualInstanceByAPI";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create Virtual Instance by Json") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -253,54 +257,54 @@ definition {
 	}
 
 	@description = "This is a test for LPS-143786. Verify Remote Apps can be created in Liferay Online"
-	@priority = "4"
+	@priority = 4
 	test RemoteAppsCanBeCreatedInLiferayOnline {
 		property portal.acceptance = "true";
 
 		task ("Go to Remote Apps Portlet") {
-			RemoteApps.goToRemoteAppsPortlet();
+			ClientExtensionGeneral.goToRemoteAppsPortlet();
 		}
 
 		task ("Go to Add and Create a New Remote App") {
-			RemoteApps.addCustomElement(
+			ClientExtensionGeneral.addCustomElement(
 				entryHtmlName = "vanilla-counter",
 				entryName = "Vanilla Counter",
 				entryURL = "http://remote-component-test.wincent.com/packages/vanilla-counter/index.js");
 		}
 
 		task ("On Table Entries, Assert the New Remote App Presence") {
-			RemoteApps.viewTableEntries(
+			ClientExtensionGeneral.viewTableEntries(
 				entryName = "Vanilla Counter",
 				entryType = "Custom Element");
 		}
 	}
 
 	@description = "This is a test for LPS-143786. Verify Remote Apps can be deleted in Liferay Online"
-	@priority = "4"
+	@priority = 4
 	test RemoteAppsCanBeDeletedInLiferayOnline {
 		property portal.acceptance = "true";
 
 		task ("Create a New Remote App with JSON") {
-			JSONRemoteApp.addIFrameRemoteAppEntry(
+			JSONClientExtension.addIFrameRemoteAppEntry(
 				iFrameURL = "http://www.liferay.com/my_new_remote_app",
 				name = "My New Remote App");
 		}
 
 		task ("Go to Remote Apps Portlet") {
-			RemoteApps.goToRemoteAppsPortlet();
+			ClientExtensionGeneral.goToRemoteAppsPortlet();
 		}
 
 		task ("Delete the Remote App") {
-			RemoteApps.deleteRemoteApp(tableEntry = "My New Remote App");
+			ClientExtensionGeneral.deleteRemoteApp(tableEntry = "My New Remote App");
 		}
 
 		task ("Assert the Remote App is Not Present") {
-			RemoteApps.viewEmptyRemoteTable();
+			ClientExtensionGeneral.viewEmptyRemoteTable();
 		}
 	}
 
 	@description = "This is a test for LPS-143786. Verify Remote Apps can be displayed in Liferay Online"
-	@priority = "4"
+	@priority = 4
 	test RemoteAppsCanBeDisplayedInLiferayOnline {
 		property portal.acceptance = "true";
 
@@ -312,9 +316,9 @@ definition {
 		}
 
 		task ("Create Vanilla Counter as a Custom Element") {
-			RemoteApps.goToRemoteAppsPortlet();
+			ClientExtensionGeneral.goToRemoteAppsPortlet();
 
-			RemoteApps.addCustomElement(
+			ClientExtensionGeneral.addCustomElement(
 				entryHtmlName = "vanilla-counter",
 				entryName = "Vanilla Counter",
 				entryURL = "http://remote-component-test.wincent.com/packages/vanilla-counter/index.js");
@@ -333,15 +337,17 @@ definition {
 		task ("Assert Vanilla Counter is displayed") {
 			Navigator.gotoPage(pageName = "Test Page");
 
-			AssertElementPresent(locator1 = "RemoteApps#VANILLA_COUNTER_REMOTE_APP");
+			AssertElementPresent(locator1 = "ClientExtension#VANILLA_COUNTER_REMOTE_APP");
 		}
 	}
 
 	@description = "This is a test for LPS-148448. Search bar is available in Team Extranet Virtual instance and it works"
-	@priority = "3"
+	@priority = 3
 	test SearchBarWorkingInTeamExtranetVirtualInstanceByAPI {
+		property ci.retries.disabled = "true";
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
-		property test.name.skip.portal.instance = "LiferayOnline#SearchBarWorkingInTeamExtranetVirtualInstanceByAPI";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Create Virtual Instance by Json") {
 			HeadlessPortalInstanceAPI.addPortalInstanceWithVirtualInstanceInitializer(
@@ -360,19 +366,19 @@ definition {
 		}
 
 		task ("Assert the Search Bar presence") {
-			AssertElementPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+			AssertElementPresent(locator1 = "TeamExtranet#EMBEDDED_SEARCH_BAR");
 		}
 
 		task ("Search for Careers in Search Bar to get results") {
-			SearchPortlets.searchEmbedded(searchTerm = "careers");
+			TeamExtranet.searchEmbedded(searchTerm = "careers");
 
-			SearchResultPortlet.viewSearchResults(
+			SearchResults.viewSearchResults(
 				searchAssetTitle = "Careers",
 				searchAssetType = "Page");
 		}
 
 		task ("Search for texs in Search Bar to not get results") {
-			SearchPortlets.searchEmbedded(searchTerm = "texs");
+			TeamExtranet.searchEmbedded(searchTerm = "texs");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
@@ -380,7 +386,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test Smoke {
 		property liferay.online.smoke = "true";
 		property portal.acceptance = "true";
@@ -415,28 +421,28 @@ definition {
 
 		task ("Add a '${portletName}' portlet to the page named '${pageName}'") {
 			Navigator.gotoSpecificURLPage(
-				pageName = "${pageName}",
+				pageName = ${pageName},
 				url = "http://www.able.com:8080");
 
 			Portlet.addPG(
-				i = "${i}",
-				portletName = "${portletName}");
+				i = ${i},
+				portletName = ${portletName});
 
-			Portlet.viewTitle(portletName = "${portletName}");
+			Portlet.viewTitle(portletName = ${portletName});
 
 			Portlet.viewBody(
-				portletBody = "${portletBody}",
-				portletName = "${portletName}");
+				portletBody = ${portletBody},
+				portletName = ${portletName});
 
 			Navigator.gotoSpecificURLPage(
-				pageName = "${pageName}",
+				pageName = ${pageName},
 				url = "http://www.able.com:8080");
 
-			Portlet.viewTitle(portletName = "${portletName}");
+			Portlet.viewTitle(portletName = ${portletName});
 
 			Portlet.viewBody(
-				portletBody = "${portletBody}",
-				portletName = "${portletName}");
+				portletBody = ${portletBody},
+				portletName = ${portletName});
 		}
 
 		var collectionName = "Basic Components";
@@ -452,13 +458,13 @@ definition {
 					category = "Site Builder",
 					portlet = "Pages");
 
-				ContentPages.addPage(pageName = "${contentPageName}");
+				ContentPages.addPage(pageName = ${contentPageName});
 			}
 
 			task ("Add a basic '${fragmentName}' component") {
 				PageEditor.addFragment(
-					collectionName = "${collectionName}",
-					fragmentName = "${fragmentName}");
+					collectionName = ${collectionName},
+					fragmentName = ${fragmentName});
 			}
 
 			task ("Publish Content Page") {
@@ -467,7 +473,7 @@ definition {
 
 			task ("Navigate to the content page") {
 				Navigator.gotoSpecificURLPage(
-					pageName = "${contentPageName}",
+					pageName = ${contentPageName},
 					url = "http://www.able.com:8080");
 			}
 
@@ -483,9 +489,9 @@ definition {
 
 			ProductMenu.gotoPortlet(
 				category = "Content & Data",
-				portlet = "${portlet}");
+				portlet = ${portlet});
 
-			SiteAdmin.viewPortletTitle(portletTitle = "${portlet}");
+			SiteAdmin.viewPortletTitle(portletTitle = ${portlet});
 		}
 
 		var webContentContent = "Web Content Content";
@@ -495,27 +501,27 @@ definition {
 			WebContentNavigator.gotoAddCP();
 
 			WebContent.addCP(
-				webContentContent = "${webContentContent}",
-				webContentTitle = "${webContentTitle}");
+				webContentContent = ${webContentContent},
+				webContentTitle = ${webContentTitle});
 
 			PortletEntry.publish();
 
-			WebContent.viewTitle(webContentTitle = "${webContentTitle}");
+			WebContent.viewTitle(webContentTitle = ${webContentTitle});
 		}
 	}
 
 	@description = "This is a test for LPS-143786. Verify Remote Apps presence in Liferay Online"
-	@priority = "5"
+	@priority = 5
 	test VerifyRemoteAppsInLiferayOnline {
 		property portal.acceptance = "true";
 
 		task ("Go to Remote Apps Portlet") {
-			RemoteApps.goToRemoteAppsPortlet();
+			ClientExtensionGeneral.goToRemoteAppsPortlet();
 		}
 
 		task ("Assert the Remote Apps Header Presence") {
 			AssertElementPresent(
-				key_header = "Remote Apps",
+				key_header = "Client Extensions",
 				locator1 = "WorkflowSubmissions#DETAIL_PAGE_HEADER");
 		}
 	}

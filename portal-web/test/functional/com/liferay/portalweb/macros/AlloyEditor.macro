@@ -1,32 +1,36 @@
 definition {
 
-	macro addContent {
+	@summary = "Default summary"
+	macro addContent(content = null) {
 		AlloyEditor.typeEditor(
-			content = "${content}",
+			content = ${content},
 			editor = "content");
 	}
 
-	macro addSourceContent {
+	@summary = "Default summary"
+	macro addSourceContent(content = null) {
 		AlloyEditor.clickContentField();
 
 		Click(locator1 = "Button#EDITOR_SWITCH");
 
 		Type.typeAceEditor(
 			locator1 = "TextArea#ACE_EDITOR",
-			value1 = "${content}");
+			value1 = ${content});
 	}
 
-	macro clickContentField {
+	@summary = "Default summary"
+	macro clickContentField() {
 		Click(
 			key_editor = "content",
 			locator1 = "AlloyEditor#EDITOR");
 	}
 
-	macro typeEditor {
+	@summary = "Default summary"
+	macro typeEditor(editor = null, content = null) {
 		Type.typeEditor(
-			key_editor = "${editor}",
+			key_editor = ${editor},
 			locator1 = "AlloyEditor#EDITOR",
-			value1 = "${content}");
+			value1 = ${content});
 	}
 
 }

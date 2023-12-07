@@ -19,7 +19,7 @@ exports[`ReactFieldBase does not render the add button when repeatable is true a
           role="presentation"
         >
           <use
-            xlink:href="#plus"
+            href="#plus"
           />
         </svg>
       </button>
@@ -27,7 +27,6 @@ exports[`ReactFieldBase does not render the add button when repeatable is true a
     <label
       aria-labelledby="undefined_fieldDetails"
       class="ddm-empty ddm-repeatable"
-      tabindex="0"
     />
     <input
       name="undefined_edited"
@@ -49,7 +48,6 @@ exports[`ReactFieldBase does not render the label if showLabel is false 1`] = `
   <div
     aria-labelledby="undefined_fieldDetails"
     class="form-group hide"
-    tabindex="0"
   >
     <input
       name="undefined_edited"
@@ -71,7 +69,6 @@ exports[`ReactFieldBase renders the FieldBase with contentRenderer 1`] = `
   <div
     aria-labelledby="undefined_fieldDetails"
     class="form-group hide"
-    tabindex="0"
   >
     <div>
       <h1>
@@ -83,7 +80,6 @@ exports[`ReactFieldBase renders the FieldBase with contentRenderer 1`] = `
       type="hidden"
       value="false"
     />
-    
   </div>
 </div>
 `;
@@ -93,7 +89,6 @@ exports[`ReactFieldBase renders the FieldBase with help text 1`] = `
   <div
     aria-labelledby="undefined_fieldDetails"
     class="form-group hide"
-    tabindex="0"
   >
     <input
       name="undefined_edited"
@@ -104,7 +99,9 @@ exports[`ReactFieldBase renders the FieldBase with help text 1`] = `
       aria-hidden="true"
       class="form-feedback-group lfr-de__field-feedback"
     >
-      <div>
+      <div
+        id="undefined_fieldHelp"
+      >
         Type something!
       </div>
     </div>
@@ -123,14 +120,12 @@ exports[`ReactFieldBase renders the FieldBase with id 1`] = `
   <div
     aria-labelledby="Id_fieldDetails"
     class="form-group hide"
-    tabindex="0"
   >
     <input
       name="undefined_edited"
       type="hidden"
       value="false"
     />
-    
   </div>
 </div>
 `;
@@ -143,7 +138,6 @@ exports[`ReactFieldBase renders the FieldBase with label 1`] = `
     <label
       aria-labelledby="undefined_fieldDetails"
       class="ddm-label"
-      tabindex="0"
     >
       Text
     </label>
@@ -170,7 +164,6 @@ exports[`ReactFieldBase renders the FieldBase with required 1`] = `
     <label
       aria-labelledby="undefined_fieldDetails"
       class="ddm-label"
-      tabindex="0"
     >
       <span
         class="ddm-label-required reference-mark"
@@ -180,7 +173,7 @@ exports[`ReactFieldBase renders the FieldBase with required 1`] = `
           role="presentation"
         >
           <use
-            xlink:href="#asterisk"
+            href="#asterisk"
           />
         </svg>
       </span>
@@ -219,7 +212,7 @@ exports[`ReactFieldBase renders the add button when repeatable is true 1`] = `
           role="presentation"
         >
           <use
-            xlink:href="#plus"
+            href="#plus"
           />
         </svg>
       </button>
@@ -227,7 +220,6 @@ exports[`ReactFieldBase renders the add button when repeatable is true 1`] = `
     <label
       aria-labelledby="undefined_fieldDetails"
       class="ddm-empty ddm-repeatable"
-      tabindex="0"
     />
     <input
       name="undefined_edited"
@@ -249,14 +241,12 @@ exports[`ReactFieldBase renders the default markup 1`] = `
   <div
     aria-labelledby="undefined_fieldDetails"
     class="form-group hide"
-    tabindex="0"
   >
     <input
       name="undefined_edited"
       type="hidden"
       value="false"
     />
-    
   </div>
 </div>
 `;

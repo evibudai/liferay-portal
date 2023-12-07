@@ -1,6 +1,7 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Content Administration";
@@ -10,23 +11,10 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 	}
 
-	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONUser.tearDownNonAdminUsers();
-
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-		}
-	}
-
-	@priority = "5"
+	@priority = 5
 	test AddAndViewStructureAndTemplateWithPermissions {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
@@ -40,58 +28,13 @@ definition {
 			roleKey = "Regular Role Name",
 			roleTitle = "Regular Role Name");
 
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW_SITE_ADMINISTRATION",
-			resourceName = "com.liferay.portal.kernel.model.Group",
-			roleTitle = "Regular Role Name");
+		Permissions.definePermissionsViaJSONAPI(
+			resourceNameActionList = "com.liferay.portal.kernel.model.Group,VIEW_SITE_ADMINISTRATION:com_liferay_journal_web_portlet_JournalPortlet,ACCESS_IN_CONTROL_PANEL,VIEW:com.liferay.journal,ADD_ARTICLE,VIEW",
+			roleTitle = "Regular Role Name",
+			roleType = "regular");
 
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_journal_web_portlet_JournalPortlet",
-			roleTitle = "Regular Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW",
-			resourceName = "com_liferay_journal_web_portlet_JournalPortlet",
-			roleTitle = "Regular Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ADD_ARTICLE",
-			resourceName = "com.liferay.journal",
-			roleTitle = "Regular Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW",
-			resourceName = "com.liferay.journal",
-			roleTitle = "Regular Role Name");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW",
-			resourceName = "com.liferay.journal",
-			roleTitle = "Site Member",
-			roleType = "site");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ADD_ARTICLE",
-			resourceName = "com.liferay.journal",
-			roleTitle = "Site Member",
-			roleType = "site");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW_SITE_ADMINISTRATION",
-			resourceName = "com.liferay.portal.kernel.model.Group",
-			roleTitle = "Site Member",
-			roleType = "site");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW",
-			resourceName = "com_liferay_journal_web_portlet_JournalPortlet",
-			roleTitle = "Site Member",
-			roleType = "site");
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_journal_web_portlet_JournalPortlet",
+		Permissions.definePermissionsViaJSONAPI(
+			resourceNameActionList = "com.liferay.portal.kernel.model.Group,VIEW_SITE_ADMINISTRATION:com_liferay_journal_web_portlet_JournalPortlet,ACCESS_IN_CONTROL_PANEL,VIEW:com.liferay.journal,ADD_ARTICLE,VIEW",
 			roleTitle = "Site Member",
 			roleType = "site");
 
@@ -99,13 +42,9 @@ definition {
 
 		NavItem.gotoStructures();
 
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
+		WebContentStructures.addCP(structureName = "WC Structure Name");
 
-		DataEngine.addField(
-			fieldFieldLabel = "Text",
-			fieldName = "Text");
+		DataEngine.addField(fieldName = "Text");
 
 		WebContentStructures.saveCP(
 			addRoleViewPermissions = "Regular Role Name",
@@ -119,13 +58,9 @@ definition {
 
 		IFrame.closeFrame();
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoTemplates();
+		WebContentNavigator.gotoManageTemplatesViaStructures(structureName = "WC Structure Name");
 
 		WebContentTemplates.addCP(
-			structureName = "WC Structure Name",
-			templateDescription = "WC Template Description",
 			templateFieldNames = "Text",
 			templateName = "WC Template Name");
 
@@ -143,9 +78,7 @@ definition {
 			addOrRemoveViewPermission = "Remove",
 			roleList = "Guest,Site Member");
 
-		SelectFrameTop();
-
-		Refresh();
+		IFrame.closeFrame();
 
 		for (var number : list "1,2") {
 			JSONUser.addUser(
@@ -168,42 +101,27 @@ definition {
 			roleTitle = "Regular Role Name",
 			userEmailAddress = "user1@liferay.com");
 
-		User.logoutPG();
-
-		User.loginPG(
-			password = "test",
-			userEmailAddress = "user1@liferay.com");
+		User.logoutAndLoginPG(userLoginEmailAddress = "user1@liferay.com");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoStructures();
 
-		WebContentStructures.viewCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+		WebContentStructures.viewCP(structureName = "WC Structure Name");
 
 		Navigator.gotoNavItem(navItem = "Templates");
 
 		WebContentTemplates.viewCP(
-			templateDescription = "WC Template Description",
 			templateName = "WC Template Name",
 			userEditPermission = "noEditPermission");
 
-		User.logoutPG();
-
-		User.loginPG(
-			password = "test",
-			userEmailAddress = "user2@liferay.com");
+		User.logoutAndLoginPG(userLoginEmailAddress = "user2@liferay.com");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoStructures();
 
 		AssertTextNotPresent(value1 = "WC Structure Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoTemplates();
 
@@ -213,24 +131,16 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
 
-		for (var resourceActionIndex : list "ADD_SUBFOLDER,ADD_ARTICLE,VIEW") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com.liferay.journal.model.JournalFolder",
-				roleTitle = "Regular Role Name");
-		}
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "UPDATE",
-			resourceName = "com.liferay.journal.model.JournalArticle",
-			roleTitle = "Regular Role Name");
+		Permissions.definePermissionsViaJSONAPI(
+			resourceNameActionList = "com.liferay.journal.model.JournalFolder,ADD_SUBFOLDER,ADD_ARTICLE,VIEW:com.liferay.journal.model.JournalArticle,UPDATE",
+			roleTitle = "Regular Role Name",
+			roleType = "regular");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
 		WebContent.addWithStructureCP(
-			structureName = "WC Structure Name",
 			webContentText = "WC WebContent Text",
 			webContentTitle = "WC WebContent Title");
 
@@ -242,17 +152,11 @@ definition {
 			webContentText = "WC WebContent Text",
 			webContentTitle = "WC WebContent Title");
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+		JSONWebcontent.addFolder(
+			folderName = "WC Folder Name",
+			groupName = "Test Site Name");
 
-		WebContentFolder.addCP(
-			folderDescription = "WC Folder Description",
-			folderName = "WC Folder Name");
-
-		User.logoutPG();
-
-		User.loginPG(
-			password = "test",
-			userEmailAddress = "user1@liferay.com");
+		User.logoutAndLoginPG(userLoginEmailAddress = "user1@liferay.com");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -271,7 +175,7 @@ definition {
 	}
 
 	@description = "A new user with power user role can add a web content based on global structure with edited default values."
-	@priority = "3"
+	@priority = 3
 	test AddWebContentBasedOnGlobalStructureAndEditedDefaultValues {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
@@ -373,9 +277,10 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddWebContentRemoveGuestViewPermission {
-		property test.name.skip.portal.instance = "WebContentWithPermissions#AddWebContentRemoveGuestViewPermission";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Permissions,Web Content Administration";
 
 		SystemSettings.openSystemSettingsAdmin();
@@ -445,15 +350,15 @@ definition {
 	}
 
 	@description = "This is a test for LPS-145308. The site administrator could add a web content with image based on structure from parent site."
-	@priority = "4"
+	@priority = 4
 	test AddWebContentWithImageBasedOnStructureFromParentSite {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		task ("Given a web content creator has web content structure with image field on parent site") {
 			task ("Add a child site") {
-				JSONGroup.addChildGroup(
-					groupName = "Child Site Name",
-					parentGroupName = "Test Site Name");
+				HeadlessSite.addSite(
+					parentSiteName = "Test Site Name",
+					siteName = "Child Site Name");
 			}
 
 			task ("Add a widget page to child site") {
@@ -546,7 +451,7 @@ definition {
 	}
 
 	@description = "A new user with web content administration role can edit a web content."
-	@priority = "4"
+	@priority = 4
 	test EditWebContentAsUserWithPermissions {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property testray.component.names = "Permissions,Roles,Users and Organizations,Web Content Administration";
@@ -570,39 +475,11 @@ definition {
 				roleTitle = "Web Content Administrator Role");
 		}
 
-		task ("Define the permissions of new role") {
-			for (var resourceActionIndex : list "ADD_STRUCTURE,ADD_FOLDER,ADD_FEED,ADD_ARTICLE,VIEW,UPDATE,SUBSCRIBE,PERMISSIONS,ADD_TEMPLATE") {
-				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
-					resourceName = "com.liferay.journal",
-					roleTitle = "Web Content Administrator Role");
-			}
-
-			for (var resourceActionIndex : list "ADD_DISCUSSION,VIEW,UPDATE_DISCUSSION,UPDATE,SUBSCRIBE,PERMISSIONS,EXPIRE,DELETE_DISCUSSION,DELETE") {
-				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
-					resourceName = "com.liferay.journal.model.JournalArticle",
-					roleTitle = "Web Content Administrator Role");
-			}
-
-			for (var resourceActionIndex : list "VIEW,UPDATE,SUBSCRIBE,PERMISSIONS,DELETE,ADD_SUBFOLDER,ADD_ARTICLE,ACCESS") {
-				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
-					resourceName = "com.liferay.journal.model.JournalFolder",
-					roleTitle = "Web Content Administrator Role");
-			}
-
-			for (var resourceActionIndex : list "VIEW,ACCESS_IN_CONTROL_PANEL") {
-				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
-					resourceName = "com_liferay_journal_web_portlet_JournalPortlet",
-					roleTitle = "Web Content Administrator Role");
-			}
-
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "VIEW_SITE_ADMINISTRATION",
-				resourceName = "com.liferay.portal.kernel.model.Group",
-				roleTitle = "Web Content Administrator Role");
+		task ("Define the permissions of regular role") {
+			Permissions.definePermissionsViaJSONAPI(
+				resourceNameActionList = "com.liferay.journal,ADD_STRUCTURE,ADD_FOLDER,ADD_FEED,ADD_ARTICLE,VIEW,UPDATE,SUBSCRIBE,PERMISSIONS,ADD_TEMPLATE:com.liferay.journal.model.JournalArticle,ADD_DISCUSSION,VIEW,UPDATE_DISCUSSION,UPDATE,SUBSCRIBE,PERMISSIONS,EXPIRE,DELETE_DISCUSSION,DELETE:com.liferay.journal.model.JournalFolder,VIEW,UPDATE,SUBSCRIBE,PERMISSIONS,DELETE,ADD_SUBFOLDER,ADD_ARTICLE,ACCESS:com_liferay_journal_web_portlet_JournalPortlet,VIEW,ACCESS_IN_CONTROL_PANEL:com.liferay.portal.kernel.model.Group,VIEW_SITE_ADMINISTRATION",
+				roleTitle = "Web Content Administrator Role",
+				roleType = "regular");
 		}
 
 		task ("Add a new user") {

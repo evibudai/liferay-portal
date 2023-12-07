@@ -1,24 +1,16 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.spring.extender.internal.context;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.bean.BeanLocatorImpl;
 import com.liferay.portal.kernel.bean.PortletBeanLocatorUtil;
-import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -26,7 +18,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.spring.configurator.ConfigurableApplicationContextConfigurator;
 import com.liferay.portal.spring.extender.internal.bean.ApplicationContextServicePublisherUtil;
 import com.liferay.portal.spring.extender.internal.loader.ModuleAggregareClassLoader;
-import com.liferay.portal.spring.extender.internal.upgrade.InitialUpgradeStep;
+import com.liferay.portal.spring.extender.internal.release.SchemaCreatorImpl;
+import com.liferay.portal.upgrade.release.SchemaCreator;
 
 import java.beans.Introspector;
 
@@ -86,17 +79,17 @@ public class ModuleApplicationContextRegistrator {
 
 		_registerDataSource();
 
-		_registerInitialUpgradeStep();
+		_registerSchemaCreator();
 	}
 
 	public void stop() {
 		ApplicationContextServicePublisherUtil.unregisterContext(
 			_serviceRegistrations);
 
-		if (_initialUpgradeStepServiceRegistration != null) {
-			_initialUpgradeStepServiceRegistration.unregister();
+		if (_schemaCreatorServiceRegistration != null) {
+			_schemaCreatorServiceRegistration.unregister();
 
-			_initialUpgradeStepServiceRegistration = null;
+			_schemaCreatorServiceRegistration = null;
 		}
 
 		if (_dataSourceServiceRegistration != null) {
@@ -113,16 +106,16 @@ public class ModuleApplicationContextRegistrator {
 
 		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
 
-		currentThread.setContextClassLoader(
-			AggregateClassLoader.getAggregateClassLoader(
-				PortalClassLoaderUtil.getClassLoader(), contextClassLoader));
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				AggregateClassLoader.getAggregateClassLoader(
+					PortalClassLoaderUtil.getClassLoader(),
+					contextClassLoader))) {
 
-		try {
 			_moduleApplicationContext.refresh();
 
 			_registerDataSource();
 
-			_registerInitialUpgradeStep();
+			_registerSchemaCreator();
 
 			BundleWiring bundleWiring = _extendeeBundle.adapt(
 				BundleWiring.class);
@@ -154,8 +147,6 @@ public class ModuleApplicationContextRegistrator {
 				extenderBundleWiring.getClassLoader());
 
 			Introspector.flushCaches();
-
-			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 
@@ -171,17 +162,15 @@ public class ModuleApplicationContextRegistrator {
 		}
 	}
 
-	private void _registerInitialUpgradeStep() {
-		if (_initialUpgradeStepServiceRegistration == null) {
-			InitialUpgradeStep initialUpgradeStep = new InitialUpgradeStep(
-				_extendeeBundle, _moduleApplicationContext.getDataSource());
-
+	private void _registerSchemaCreator() {
+		if (_schemaCreatorServiceRegistration == null) {
 			BundleContext bundleContext = _extendeeBundle.getBundleContext();
 
-			_initialUpgradeStepServiceRegistration =
-				bundleContext.registerService(
-					UpgradeStep.class, initialUpgradeStep,
-					initialUpgradeStep.buildServiceProperties());
+			_schemaCreatorServiceRegistration = bundleContext.registerService(
+				SchemaCreator.class,
+				new SchemaCreatorImpl(
+					_extendeeBundle, _moduleApplicationContext.getDataSource()),
+				null);
 		}
 	}
 
@@ -193,9 +182,8 @@ public class ModuleApplicationContextRegistrator {
 	private final Bundle _extendeeBundle;
 	private final ClassLoader _extendeeClassLoader;
 	private final Bundle _extenderBundle;
-	private volatile ServiceRegistration<?>
-		_initialUpgradeStepServiceRegistration;
 	private final ModuleApplicationContext _moduleApplicationContext;
+	private volatile ServiceRegistration<?> _schemaCreatorServiceRegistration;
 	private List<ServiceRegistration<?>> _serviceRegistrations;
 
 }

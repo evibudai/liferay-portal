@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import EventEmitter from './events/EventEmitter';
@@ -331,6 +322,8 @@ SideNavigation.prototype = {
 	_bindUI() {
 		this._subscribeClickTrigger();
 
+		this._subscribeReducedMotion();
+
 		this._subscribeClickSidenavClose();
 	},
 
@@ -338,34 +331,35 @@ SideNavigation.prototype = {
 		this._emitter.emit(event, this);
 	},
 
-	_focusCloseButton() {
-		const maybeFocus = () => {
-			const container = document.querySelector(this.options.container);
+	_focusNavigation() {
+		const container = document.querySelector(this.options.container);
 
-			if (!container) {
-				return;
-			}
+		if (!container) {
+			return;
+		}
 
-			const button = container.querySelector('.sidenav-close');
+		const navigation = container.querySelector(this.options.navigation);
 
-			if (!button) {
-				return;
-			}
+		if (!navigation) {
+			container.focus();
 
-			button.addEventListener('click', () => this.toggler.focus(), {
-				once: true,
-			});
+			return;
+		}
 
-			button.focus();
+		navigation.focus();
+	},
 
-			clearInterval(intervalId);
-			clearTimeout(timeoutId);
-		};
+	_focusTrigger() {
+		const toggler = this.toggler;
 
-		const intervalId = setInterval(maybeFocus, 200);
-		const timeoutId = setTimeout(() => clearInterval(intervalId), 3000);
+		if (
+			!toggler ||
+			!document.activeElement.classList.contains('sidenav-close')
+		) {
+			return;
+		}
 
-		maybeFocus();
+		toggler.focus();
 	},
 
 	_getSidenavWidth() {
@@ -550,7 +544,9 @@ SideNavigation.prototype = {
 						}
 					}
 
-					addClass(container, 'sidenav-transition');
+					if (!this.isReducedMotion()) {
+						addClass(container, 'sidenav-transition');
+					}
 
 					setStyles(content, {
 						'padding-right': px(paddingRight),
@@ -627,7 +623,9 @@ SideNavigation.prototype = {
 							? options.width + options.gutter - contentMargin
 							: options.width + options.gutter;
 
-					addClass(container, 'sidenav-transition');
+					if (!this.isReducedMotion()) {
+						addClass(container, 'sidenav-transition');
+					}
 
 					setStyles(content, {
 						'padding-right': px(paddingRight),
@@ -810,12 +808,27 @@ SideNavigation.prototype = {
 		}
 	},
 
+	_subscribeReducedMotion() {
+		const instance = this;
+
+		Liferay.Loader.require('frontend-js-web/index', ({isReducedMotion}) => {
+			instance.isReducedMotion = isReducedMotion;
+		});
+	},
+
 	_subscribeSidenavTransitionEnd(element, fn) {
-		setTimeout(() => {
+		if (this.isReducedMotion()) {
 			removeClass(element, 'sidenav-transition');
 
 			fn();
-		}, SideNavigation.TRANSITION_DURATION);
+		}
+		else {
+			setTimeout(() => {
+				removeClass(element, 'sidenav-transition');
+
+				fn();
+			}, SideNavigation.TRANSITION_DURATION);
+		}
 	},
 
 	clearHeight() {
@@ -893,7 +906,8 @@ SideNavigation.prototype = {
 	},
 
 	hideSidenav() {
-		const options = this.options;
+		const instance = this;
+		const options = instance.options;
 
 		const container = document.querySelector(options.container);
 
@@ -902,7 +916,7 @@ SideNavigation.prototype = {
 			const navigation = container.querySelector(options.navigation);
 			const menu = navigation.querySelector('.sidenav-menu');
 
-			const sidenavRight = this._isSidenavRight();
+			const sidenavRight = instance._isSidenavRight();
 
 			let positionDirection = options.rtl ? 'right' : 'left';
 
@@ -923,9 +937,13 @@ SideNavigation.prototype = {
 
 			if (sidenavRight) {
 				setStyles(menu, {
-					[positionDirection]: px(this._getSidenavWidth()),
+					[positionDirection]: px(instance._getSidenavWidth()),
 				});
 			}
+
+			instance._subscribeSidenavTransitionEnd(menu, () => {
+				instance._focusTrigger();
+			});
 		}
 	},
 
@@ -971,18 +989,24 @@ SideNavigation.prototype = {
 					'closed.lexicon.sidenav',
 					instance
 				);
+
+				instance._focusTrigger();
 			});
+
+			const isReducedMotion = instance.isReducedMotion();
 
 			if (hasClass(content, openClass)) {
 				setClasses(content, {
 					[closedClass]: true,
 					[openClass]: false,
-					'sidenav-transition': true,
+					'sidenav-transition': !isReducedMotion,
 				});
 			}
 
-			addClass(container, 'sidenav-transition');
-			addClass(toggler, 'sidenav-transition');
+			if (!isReducedMotion) {
+				addClass(container, 'sidenav-transition');
+				addClass(toggler, 'sidenav-transition');
+			}
 
 			setClasses(container, {
 				[closedClass]: true,
@@ -1194,7 +1218,8 @@ SideNavigation.prototype = {
 	},
 
 	showSidenav() {
-		const options = this.options;
+		const instance = this;
+		const options = instance.options;
 
 		const container = document.querySelector(options.container);
 		const navigation = container.querySelector(options.navigation);
@@ -1208,12 +1233,14 @@ SideNavigation.prototype = {
 		const url = options.url;
 
 		if (url) {
-			this._loadUrl(menu, url);
+			instance._loadUrl(menu, url);
 		}
 
-		this.setWidth();
+		instance.setWidth();
 
-		this._focusCloseButton();
+		instance._subscribeSidenavTransitionEnd(menu, () => {
+			instance._focusNavigation();
+		});
 	},
 
 	showSimpleSidenav() {
@@ -1250,31 +1277,35 @@ SideNavigation.prototype = {
 				instance
 			);
 
+			const isReducedMotion = instance.isReducedMotion();
+
+			setClasses(content, {
+				[closedClass]: false,
+				[openClass]: true,
+				'sidenav-transition': !isReducedMotion,
+			});
+			setClasses(container, {
+				[closedClass]: false,
+				[openClass]: true,
+				'sidenav-transition': !isReducedMotion,
+			});
+			setClasses(toggler, {
+				'active': true,
+				[openClass]: true,
+				'sidenav-transition': !isReducedMotion,
+			});
+
 			instance._subscribeSidenavTransitionEnd(content, () => {
-				removeClass(container, 'sidenav-transition');
-				removeClass(toggler, 'sidenav-transition');
+				if (!isReducedMotion) {
+					removeClass(container, 'sidenav-transition');
+					removeClass(toggler, 'sidenav-transition');
+				}
 
 				instance._emit('open.lexicon.sidenav');
 
 				dispatchCustomEvent(document, 'open.lexicon.sidenav', instance);
 
-				this._focusCloseButton();
-			});
-
-			setClasses(content, {
-				[closedClass]: false,
-				[openClass]: true,
-				'sidenav-transition': true,
-			});
-			setClasses(container, {
-				[closedClass]: false,
-				[openClass]: true,
-				'sidenav-transition': true,
-			});
-			setClasses(toggler, {
-				'active': true,
-				[openClass]: true,
-				'sidenav-transition': true,
+				this._focusNavigation();
 			});
 		}
 	},
@@ -1384,8 +1415,10 @@ SideNavigation.prototype = {
 			}
 		}
 
-		addClass(container, 'sidenav-transition');
-		addClass(toggler, 'sidenav-transition');
+		if (!instance.isReducedMotion()) {
+			addClass(container, 'sidenav-transition');
+			addClass(toggler, 'sidenav-transition');
+		}
 
 		if (closed) {
 			instance.showSidenav();

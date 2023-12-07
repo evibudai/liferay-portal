@@ -1,27 +1,20 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.wiki.internal.exportimport.data.handler;
 
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -37,7 +30,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portlet.documentlibrary.lar.FileEntryUtil;
-import com.liferay.wiki.internal.exportimport.content.processor.WikiPageExportImportContentProcessor;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.model.WikiPageResource;
@@ -251,8 +243,9 @@ public class WikiPageStagedModelDataHandler
 						importedPageResource.setUuid(
 							pageElement.attributeValue("page-resource-uuid"));
 
-						_wikiPageResourceLocalService.updateWikiPageResource(
-							importedPageResource);
+						importedPageResource =
+							_wikiPageResourceLocalService.
+								updateWikiPageResource(importedPageResource);
 					}
 				}
 			}
@@ -361,20 +354,35 @@ public class WikiPageStagedModelDataHandler
 			PortletDataContext portletDataContext, WikiPage page)
 		throws Exception {
 
-		WikiPage existingPage = fetchStagedModelByUuidAndGroupId(
+		WikiPage existingPage1 = fetchStagedModelByUuidAndGroupId(
 			page.getUuid(), portletDataContext.getScopeGroupId());
 
-		if ((existingPage == null) || !existingPage.isInTrash()) {
+		if ((existingPage1 == null) || !existingPage1.isInTrash()) {
+			return;
+		}
+
+		WikiPage existingPage2 = _wikiPageLocalService.fetchPage(
+			existingPage1.getNodeId(), page.getTitle());
+
+		if (existingPage2 != null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Unable to restore wiki page from the Recycle Bin. A ",
+						"wiki page with the same title \"", page.getTitle(),
+						"\" already exists."));
+			}
+
 			return;
 		}
 
 		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
 			WikiPage.class.getName());
 
-		if (trashHandler.isRestorable(existingPage.getResourcePrimKey())) {
+		if (trashHandler.isRestorable(existingPage1.getResourcePrimKey())) {
 			trashHandler.restoreTrashEntry(
 				portletDataContext.getUserId(page.getUserUuid()),
-				existingPage.getResourcePrimKey());
+				existingPage1.getResourcePrimKey());
 		}
 	}
 
@@ -407,8 +415,8 @@ public class WikiPageStagedModelDataHandler
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiPageStagedModelDataHandler.class);
 
-	@Reference
-	private WikiPageExportImportContentProcessor
+	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiPage)")
+	private ExportImportContentProcessor<String>
 		_wikiPageExportImportContentProcessor;
 
 	@Reference

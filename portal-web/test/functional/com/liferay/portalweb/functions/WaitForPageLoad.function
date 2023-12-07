@@ -1,9 +1,9 @@
 @default = "waitForPageLoad"
 definition {
 
-	function waitForPageLoad {
+	function waitForPageLoad() {
 		if (!(isSet(locator1))) {
-			var locator1 = "0";
+			var locator1 = 0;
 		}
 
 		var javascript = '''
@@ -18,7 +18,7 @@ definition {
 			);
 		''';
 
-		selenium.runScript("${javascript}");
+		ExecuteJavaScript(value1 = ${javascript});
 	}
 
 }

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -110,12 +101,21 @@ else {
 	/>
 </c:if>
 
+<%@ include file="/deprecated_warning.jspf" %>
+
 <div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
 	<c:if test="<%= recordVersion != null %>">
 		<div class="sidenav-menu-slider">
 			<div class="sidebar sidebar-light sidenav-menu">
 				<div class="sidebar-header">
-					<aui:icon cssClass="d-inline-block d-sm-none icon-monospaced sidenav-close text-default" image="times" markupView="lexicon" url="javascript:void(0);" />
+					<clay:button
+						aria-label="<%= LanguageUtil.get(request, "close") %>"
+						cssClass="d-sm-none icon-monospaced lfr-portal-tooltip sidenav-close"
+						displayType="unstyled"
+						icon="times"
+						small="<%= true %>"
+						title="close"
+					/>
 				</div>
 
 				<liferay-ui:tabs
@@ -144,10 +144,10 @@ else {
 								<li class="sidebar-dd">
 
 									<%
-									Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
+									Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 									%>
 
-									<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(recordVersion.getUserName()), dateFormatDateTime.format(recordVersion.getCreateDate())} %>" key="by-x-on-x" translateArguments="<%= false %>" />
+									<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(recordVersion.getUserName()), dateTimeFormat.format(recordVersion.getCreateDate())} %>" key="by-x-on-x" translateArguments="<%= false %>" />
 								</li>
 							</ul>
 						</div>
@@ -266,7 +266,7 @@ else {
 				String publishButtonLabel = "publish";
 
 				if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, DDLRecordSet.class.getName(), recordSetId)) {
-					publishButtonLabel = "submit-for-publication";
+					publishButtonLabel = "submit-for-workflow";
 				}
 
 				if (ddlDisplayContext.isFormView()) {

@@ -1,16 +1,7 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
@@ -25,6 +16,22 @@ CookiesBannerConfigurationDisplayContext cookiesBannerConfigurationDisplayContex
 	id='<%= liferayPortletResponse.getNamespace() + "cookiesBannerConfigurationForm" %>'
 >
 	<clay:row>
+
+		<%
+		String alertMessage = ParamUtil.getString(request, "alertMessage");
+		%>
+
+		<c:if test="<%= alertMessage != StringPool.BLANK %>">
+			<clay:col
+				size="12"
+			>
+				<clay:alert
+					displayType='<%= ParamUtil.getString(request, "alertDisplayType", "info") %>'
+					message="<%= alertMessage %>"
+				/>
+			</clay:col>
+		</c:if>
+
 		<clay:col
 			cssClass="mb-3"
 			size="12"
@@ -155,5 +162,5 @@ CookiesBannerConfigurationDisplayContext cookiesBannerConfigurationDisplayContex
 <liferay-frontend:component
 	componentId="CookiesBannerConfiguration"
 	context="<%= cookiesBannerConfigurationDisplayContext.getContext() %>"
-	module="cookies_banner_configuration/js/CookiesBannerConfiguration"
+	module="{CookiesBannerConfiguration} from cookies-banner-web"
 />

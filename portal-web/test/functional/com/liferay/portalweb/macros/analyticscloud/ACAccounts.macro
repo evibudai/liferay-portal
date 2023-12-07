@@ -1,48 +1,56 @@
 definition {
 
-	macro assertAccountActivitiesChart {
-		var key_expectedBarCount = "${expectedBarCount}";
+	@summary = "Default summary"
+	macro assertAccountActivitiesChart(expectedBarCount = null) {
+		var key_expectedBarCount = ${expectedBarCount};
 
 		AssertElementPresent(locator1 = "ACAccounts#ACCOUNT_ACTIVITY_BAR_GRAPH");
 	}
 
-	macro assertAccountDetails {
-		var key_propertyName = "${propertyName}";
-		var key_propertyValue = "${propertyValue}";
+	@summary = "Default summary"
+	macro assertAccountDetails(propertyName = null, propertyValue = null) {
+		var key_propertyName = ${propertyName};
+		var key_propertyValue = ${propertyValue};
 
 		AssertTextEquals(
 			locator1 = "ACAccounts#ACCOUNT_DETAIL_PROPERTY",
-			value1 = "${propertyValue}");
+			value1 = ${propertyValue});
 	}
 
-	macro assertAccountIndividuals {
+	@summary = "Default summary"
+	macro assertAccountIndividuals() {
 		echo("TODO");
 	}
 
-	macro assertAccountInterests {
+	@summary = "Default summary"
+	macro assertAccountInterests() {
 		echo("TODO");
 	}
 
-	macro assertAccountOverviewCards {
-		for (var title : list "${cardTitleList}") {
-			var key_cardTitle = "${title}";
+	@summary = "Default summary"
+	macro assertAccountOverviewCards(cardTitleList = null) {
+		for (var title : list ${cardTitleList}) {
+			var key_cardTitle = ${title};
 
 			AssertElementPresent(locator1 = "ACAccounts#ACCOUNT_OVERVIEW_CARD_HEADER");
 		}
 	}
 
-	macro assertAccountSegments {
+	@summary = "Default summary"
+	macro assertAccountSegments() {
 		echo("TODO");
 	}
 
-	macro clickAccount {
-		var key_accountName = "${accountName}";
+	@summary = "Default summary"
+	macro clickAccount(accountName = null) {
+		var key_accountName = ${accountName};
 
 		Click(locator1 = "ACAccounts#ACCOUNTS_TABLE_ROW");
 	}
 
-	macro clickAccountHeaderTab {
-		var key_tabName = "${tabName}";
+	@summary = "Default summary"
+	macro clickAccountHeaderTab(tabName = null) {
+		var key_tabName = ${tabName};
 
 		Click(locator1 = "ACAccounts#ACCOUNTS_HEADER_TAB_BUTTON");
 	}

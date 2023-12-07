@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.model.impl;
@@ -228,61 +219,82 @@ public class UserIdMapperModelImpl
 	public Map<String, Function<UserIdMapper, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<UserIdMapper, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<UserIdMapper, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<UserIdMapper, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<UserIdMapper, Object>> attributeGetterFunctions =
-			new LinkedHashMap<String, Function<UserIdMapper, Object>>();
-		Map<String, BiConsumer<UserIdMapper, ?>> attributeSetterBiConsumers =
-			new LinkedHashMap<String, BiConsumer<UserIdMapper, ?>>();
+		private static final Map<String, Function<UserIdMapper, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", UserIdMapper::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<UserIdMapper, Long>)UserIdMapper::setMvccVersion);
-		attributeGetterFunctions.put(
-			"userIdMapperId", UserIdMapper::getUserIdMapperId);
-		attributeSetterBiConsumers.put(
-			"userIdMapperId",
-			(BiConsumer<UserIdMapper, Long>)UserIdMapper::setUserIdMapperId);
-		attributeGetterFunctions.put("companyId", UserIdMapper::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<UserIdMapper, Long>)UserIdMapper::setCompanyId);
-		attributeGetterFunctions.put("userId", UserIdMapper::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId", (BiConsumer<UserIdMapper, Long>)UserIdMapper::setUserId);
-		attributeGetterFunctions.put("type", UserIdMapper::getType);
-		attributeSetterBiConsumers.put(
-			"type", (BiConsumer<UserIdMapper, String>)UserIdMapper::setType);
-		attributeGetterFunctions.put(
-			"description", UserIdMapper::getDescription);
-		attributeSetterBiConsumers.put(
-			"description",
-			(BiConsumer<UserIdMapper, String>)UserIdMapper::setDescription);
-		attributeGetterFunctions.put(
-			"externalUserId", UserIdMapper::getExternalUserId);
-		attributeSetterBiConsumers.put(
-			"externalUserId",
-			(BiConsumer<UserIdMapper, String>)UserIdMapper::setExternalUserId);
+		static {
+			Map<String, Function<UserIdMapper, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap<String, Function<UserIdMapper, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", UserIdMapper::getMvccVersion);
+			attributeGetterFunctions.put(
+				"userIdMapperId", UserIdMapper::getUserIdMapperId);
+			attributeGetterFunctions.put(
+				"companyId", UserIdMapper::getCompanyId);
+			attributeGetterFunctions.put("userId", UserIdMapper::getUserId);
+			attributeGetterFunctions.put("type", UserIdMapper::getType);
+			attributeGetterFunctions.put(
+				"description", UserIdMapper::getDescription);
+			attributeGetterFunctions.put(
+				"externalUserId", UserIdMapper::getExternalUserId);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<UserIdMapper, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<UserIdMapper, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap<String, BiConsumer<UserIdMapper, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<UserIdMapper, Long>)UserIdMapper::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"userIdMapperId",
+				(BiConsumer<UserIdMapper, Long>)
+					UserIdMapper::setUserIdMapperId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<UserIdMapper, Long>)UserIdMapper::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<UserIdMapper, Long>)UserIdMapper::setUserId);
+			attributeSetterBiConsumers.put(
+				"type",
+				(BiConsumer<UserIdMapper, String>)UserIdMapper::setType);
+			attributeSetterBiConsumers.put(
+				"description",
+				(BiConsumer<UserIdMapper, String>)UserIdMapper::setDescription);
+			attributeSetterBiConsumers.put(
+				"externalUserId",
+				(BiConsumer<UserIdMapper, String>)
+					UserIdMapper::setExternalUserId);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@Override
@@ -706,8 +718,9 @@ public class UserIdMapperModelImpl
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
-		Function<UserIdMapper, Object> function = _attributeGetterFunctions.get(
-			columnName);
+		Function<UserIdMapper, Object> function =
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(

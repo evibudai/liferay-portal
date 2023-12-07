@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
@@ -72,6 +63,7 @@ export default function Sidebar({
 
 			<div className="ddm_template_editor__App-sidebar-buttons pt-3">
 				<ClayButtonWithIcon
+					aria-label={Liferay.Language.get('elements')}
 					aria-pressed={PANEL_IDS.elements === selectedSidebarPanelId}
 					borderless
 					className={classNames('mb-2', {
@@ -93,6 +85,7 @@ export default function Sidebar({
 				/>
 
 				<ClayButtonWithIcon
+					aria-label={Liferay.Language.get('properties')}
 					aria-pressed={
 						PANEL_IDS.properties === selectedSidebarPanelId
 					}

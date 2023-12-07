@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.v7_2_x.util;
@@ -69,7 +60,7 @@ TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
 	public static final String TABLE_SQL_DROP = "drop table AssetTag";
 
 	public static final String[] TABLE_SQL_ADD_INDEXES = {
-		"create unique index IX_D63322F9 on AssetTag (groupId, name[$COLUMN_LENGTH:75$])",
+		"create index IX_D63322F9 on AssetTag (groupId, name[$COLUMN_LENGTH:75$])",
 		"create index IX_C43137AF on AssetTag (name[$COLUMN_LENGTH:75$])",
 		"create index IX_84C501E4 on AssetTag (uuid_[$COLUMN_LENGTH:75$], companyId)",
 		"create unique index IX_B6ACB166 on AssetTag (uuid_[$COLUMN_LENGTH:75$], groupId)"

@@ -1,21 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 
 import ViewsContext from '../../views/ViewsContext';
 import Filter from './filters/Filter';
@@ -30,6 +21,7 @@ const FiltersDropdown = () => {
 
 	const onSearch = (query) => {
 		setQuery(query);
+
 		setFilters(
 			query
 				? initialFilters.filter(({label}) =>
@@ -38,6 +30,10 @@ const FiltersDropdown = () => {
 				: initialFilters
 		);
 	};
+
+	useEffect(() => {
+		setFilters(initialFilters);
+	}, [initialFilters]);
 
 	return (
 		<ClayDropDown
@@ -64,6 +60,7 @@ const FiltersDropdown = () => {
 				<>
 					<li className="dropdown-subheader">
 						<ClayButtonWithIcon
+							aria-label={Liferay.Language.get('back')}
 							className="btn-filter-navigation"
 							displayType="unstyled"
 							onClick={() => {
@@ -71,17 +68,23 @@ const FiltersDropdown = () => {
 
 								setFilters(initialFilters);
 							}}
-							small
+							size="sm"
 							symbol="angle-left"
 						/>
 
 						{activeFilter.label}
 					</li>
+
 					<Filter {...activeFilter} />
 				</>
 			) : (
 				<ClayDropDown.Group header={Liferay.Language.get('filters')}>
-					<ClayDropDown.Search onChange={onSearch} value={query} />
+					<ClayDropDown.Search
+						aria-label={Liferay.Language.get('search')}
+						onChange={onSearch}
+						role="none"
+						value={query}
+					/>
 
 					<ClayDropDown.Divider className="m-0" />
 
@@ -89,7 +92,6 @@ const FiltersDropdown = () => {
 						<ClayDropDown.ItemList>
 							{filters.map((filter) => (
 								<ClayDropDown.Item
-									active={filter.value !== undefined}
 									key={filter.id}
 									onClick={() => {
 										setActiveFilter(filter);

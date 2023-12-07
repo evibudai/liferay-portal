@@ -1,37 +1,32 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.search.experiences.web.internal.configuration.admin.display;
 
+import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.configuration.admin.display.ConfigurationFormRenderer;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.petra.string.CharPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CamelCaseUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.search.experiences.configuration.SemanticSearchConfiguration;
-import com.liferay.search.experiences.ml.text.embedding.TextEmbeddingRetriever;
+import com.liferay.search.experiences.configuration.SemanticSearchConfigurationProvider;
+import com.liferay.search.experiences.ml.embedding.text.TextEmbeddingRetriever;
 import com.liferay.search.experiences.web.internal.display.context.SemanticSearchCompanyConfigurationDisplayContext;
 
 import java.io.IOException;
@@ -43,27 +38,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Petteri Karttunen
  */
-@Component(
-	configurationPid = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
-	enabled = false, service = ConfigurationFormRenderer.class
-)
+@Component(enabled = false, service = ConfigurationFormRenderer.class)
 public class SemanticSearchConfigurationFormRenderer
 	implements ConfigurationFormRenderer {
 
@@ -77,48 +65,19 @@ public class SemanticSearchConfigurationFormRenderer
 		HttpServletRequest httpServletRequest) {
 
 		return HashMapBuilder.<String, Object>put(
-			"assetEntryClassNames",
-			ParamUtil.getStringValues(
-				httpServletRequest, "assetEntryClassNames")
-		).put(
-			"cacheTimeout",
-			ParamUtil.getInteger(httpServletRequest, "cacheTimeout")
-		).put(
-			"embeddingVectorDimensions",
+			"textEmbeddingCacheTimeout",
 			ParamUtil.getInteger(
-				httpServletRequest, "embeddingVectorDimensions")
+				httpServletRequest, "textEmbeddingCacheTimeout")
 		).put(
-			"huggingFaceAccessToken",
-			ParamUtil.getString(httpServletRequest, "huggingFaceAccessToken")
-		).put(
-			"languageIds",
-			ParamUtil.getStringValues(httpServletRequest, "languageIds")
-		).put(
-			"maxCharacterCount",
-			ParamUtil.getInteger(httpServletRequest, "maxCharacterCount")
-		).put(
-			"model", ParamUtil.getString(httpServletRequest, "model")
-		).put(
-			"modelTimeout",
-			ParamUtil.getInteger(httpServletRequest, "modelTimeout")
-		).put(
-			"textEmbeddingProvider",
-			ParamUtil.getString(httpServletRequest, "textEmbeddingProvider")
+			"textEmbeddingProviderConfigurationJSONs",
+			StringUtil.split(
+				ParamUtil.getString(
+					httpServletRequest,
+					"textEmbeddingProviderConfigurationJSONs"),
+				CharPool.PIPE)
 		).put(
 			"textEmbeddingsEnabled",
 			ParamUtil.getBoolean(httpServletRequest, "textEmbeddingsEnabled")
-		).put(
-			"textTruncationStrategy",
-			ParamUtil.getString(httpServletRequest, "textTruncationStrategy")
-		).put(
-			"txtaiHostAddress",
-			ParamUtil.getString(httpServletRequest, "txtaiHostAddress")
-		).put(
-			"txtaiPassword",
-			ParamUtil.getString(httpServletRequest, "txtaiPassword")
-		).put(
-			"txtaiUsername",
-			ParamUtil.getString(httpServletRequest, "txtaiUsername")
 		).build();
 	}
 
@@ -128,10 +87,10 @@ public class SemanticSearchConfigurationFormRenderer
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-163688"))) {
-			PrintWriter writer = httpServletResponse.getWriter();
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-122920")) {
+			PrintWriter printWriter = httpServletResponse.getWriter();
 
-			writer.print(
+			printWriter.print(
 				"<div class=\"alert alert-info\">This feature is not " +
 					"available.</div>");
 
@@ -143,12 +102,8 @@ public class SemanticSearchConfigurationFormRenderer
 				new SemanticSearchCompanyConfigurationDisplayContext();
 
 		semanticSearchCompanyConfigurationDisplayContext.
-			setAssetEntryClassNames(
-				ListUtil.fromArray(
-					_semanticSearchConfiguration.assetEntryClassNames()));
-		semanticSearchCompanyConfigurationDisplayContext.
-			setAvailableAssetEntryClassNames(
-				_getAvailableAssetEntryClassNames(httpServletRequest));
+			setAvailableModelClassNames(
+				_getAvailableModelClassNames(httpServletRequest));
 		semanticSearchCompanyConfigurationDisplayContext.
 			setAvailableEmbeddingVectorDimensions(
 				_getAvailableEmbeddingVectorDimensions());
@@ -161,37 +116,20 @@ public class SemanticSearchConfigurationFormRenderer
 		semanticSearchCompanyConfigurationDisplayContext.
 			setAvailableTextTruncationStrategies(
 				_getAvailableTextTruncationStrategies(httpServletRequest));
-		semanticSearchCompanyConfigurationDisplayContext.setCacheTimeout(
-			_semanticSearchConfiguration.cacheTimeout());
+
+		SemanticSearchConfiguration semanticSearchConfiguration =
+			_getSemanticSearchConfiguration(httpServletRequest);
+
 		semanticSearchCompanyConfigurationDisplayContext.
-			setEmbeddingVectorDimensions(
-				_semanticSearchConfiguration.embeddingVectorDimensions());
-		semanticSearchCompanyConfigurationDisplayContext.
-			setHuggingFaceAccessToken(
-				_semanticSearchConfiguration.huggingFaceAccessToken());
-		semanticSearchCompanyConfigurationDisplayContext.setLanguageIds(
-			ListUtil.fromArray(_semanticSearchConfiguration.languageIds()));
-		semanticSearchCompanyConfigurationDisplayContext.setMaxCharacterCount(
-			_semanticSearchConfiguration.maxCharacterCount());
-		semanticSearchCompanyConfigurationDisplayContext.setModel(
-			_semanticSearchConfiguration.model());
-		semanticSearchCompanyConfigurationDisplayContext.setModelTimeout(
-			_semanticSearchConfiguration.modelTimeout());
+			setTextEmbeddingCacheTimeout(
+				semanticSearchConfiguration.textEmbeddingCacheTimeout());
 		semanticSearchCompanyConfigurationDisplayContext.
 			setTextEmbeddingsEnabled(
-				_semanticSearchConfiguration.textEmbeddingsEnabled());
+				semanticSearchConfiguration.textEmbeddingsEnabled());
 		semanticSearchCompanyConfigurationDisplayContext.
-			setTextEmbeddingProvider(
-				_semanticSearchConfiguration.textEmbeddingProvider());
-		semanticSearchCompanyConfigurationDisplayContext.
-			setTextTruncationStrategy(
-				_semanticSearchConfiguration.textTruncationStrategy());
-		semanticSearchCompanyConfigurationDisplayContext.setTxtaiHostAddress(
-			_semanticSearchConfiguration.txtaiHostAddress());
-		semanticSearchCompanyConfigurationDisplayContext.setTxtaiPassword(
-			_semanticSearchConfiguration.txtaiPassword());
-		semanticSearchCompanyConfigurationDisplayContext.setTxtaiUserName(
-			_semanticSearchConfiguration.txtaiUsername());
+			setTextEmbeddingProviderConfigurationJSONs(
+				semanticSearchConfiguration.
+					textEmbeddingProviderConfigurationJSONs());
 
 		httpServletRequest.setAttribute(
 			SemanticSearchCompanyConfigurationDisplayContext.class.getName(),
@@ -202,14 +140,40 @@ public class SemanticSearchConfigurationFormRenderer
 			"/semantic_search/configuration.jsp");
 	}
 
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_semanticSearchConfiguration = ConfigurableUtil.createConfigurable(
-			SemanticSearchConfiguration.class, properties);
+	private List<String> _getAvailableEmbeddingVectorDimensions() {
+		return new ArrayList<String>() {
+			{
+				add("256");
+				add("384");
+				add("512");
+				add("768");
+				add("1024");
+			}
+		};
 	}
 
-	private Map<String, String> _getAvailableAssetEntryClassNames(
+	private Map<String, String> _getAvailableLanguageDisplayNames(
+		HttpServletRequest httpServletRequest) {
+
+		Map<String, String> availableLanguageDisplayNames = new HashMap<>();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		for (Locale locale :
+				_language.getCompanyAvailableLocales(
+					themeDisplay.getCompanyId())) {
+
+			availableLanguageDisplayNames.put(
+				LocaleUtil.toLanguageId(locale),
+				locale.getDisplayName(themeDisplay.getLocale()));
+		}
+
+		return _sortByValue(availableLanguageDisplayNames);
+	}
+
+	private Map<String, String> _getAvailableModelClassNames(
 		HttpServletRequest httpServletRequest) {
 
 		return _sortByValue(
@@ -241,46 +205,13 @@ public class SemanticSearchConfigurationFormRenderer
 			).build());
 	}
 
-	private List<String> _getAvailableEmbeddingVectorDimensions() {
-		return new ArrayList<String>() {
-			{
-				add("256");
-				add("384");
-				add("512");
-				add("768");
-				add("1024");
-			}
-		};
-	}
-
-	private Map<String, String> _getAvailableLanguageDisplayNames(
-		HttpServletRequest httpServletRequest) {
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		Map<String, String> availableLanguageDisplayNames = new HashMap<>();
-
-		for (Locale locale :
-				_language.getCompanyAvailableLocales(
-					themeDisplay.getCompanyId())) {
-
-			availableLanguageDisplayNames.put(
-				LocaleUtil.toLanguageId(locale),
-				locale.getDisplayName(themeDisplay.getLocale()));
-		}
-
-		return _sortByValue(availableLanguageDisplayNames);
-	}
-
 	private Map<String, String> _getAvailableTextEmbeddingProviders(
 		HttpServletRequest httpServletRequest) {
 
 		Map<String, String> availableTextEmbeddingProviders = new TreeMap<>();
 
 		ListUtil.isNotEmptyForEach(
-			_sentenceEmbeddingRetriever.getAvailableProviderNames(),
+			_textEmbeddingRetriever.getAvailableProviderNames(),
 			name -> availableTextEmbeddingProviders.put(
 				name,
 				_language.get(
@@ -301,19 +232,36 @@ public class SemanticSearchConfigurationFormRenderer
 		).build();
 	}
 
-	private Map<String, String> _sortByValue(Map<String, String> map) {
-		Set<Map.Entry<String, String>> entrySet = map.entrySet();
+	private SemanticSearchConfiguration _getSemanticSearchConfiguration(
+		HttpServletRequest httpServletRequest) {
 
-		Stream<Map.Entry<String, String>> stream = entrySet.stream();
+		if (Objects.equals(
+				_portal.getPortletId(httpServletRequest),
+				ConfigurationAdminPortletKeys.INSTANCE_SETTINGS)) {
 
-		return stream.sorted(
-			Map.Entry.comparingByValue()
-		).collect(
-			Collectors.toMap(
-				entry -> entry.getKey(), entry -> entry.getValue(),
-				(entry1, entry2) -> entry2, LinkedHashMap::new)
-		);
+			return _semanticSearchConfigurationProvider.getCompanyConfiguration(
+				_portal.getCompanyId(httpServletRequest));
+		}
+
+		return _semanticSearchConfigurationProvider.getSystemConfiguration();
 	}
+
+	private Map<String, String> _sortByValue(Map<String, String> map) {
+		Map<String, String> sortedValues = new LinkedHashMap<>();
+
+		for (Map.Entry<String, String> entry :
+				ListUtil.sort(
+					new ArrayList<>(map.entrySet()),
+					Map.Entry.comparingByValue())) {
+
+			sortedValues.put(entry.getKey(), entry.getValue());
+		}
+
+		return sortedValues;
+	}
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private Http _http;
@@ -327,15 +275,20 @@ public class SemanticSearchConfigurationFormRenderer
 	@Reference
 	private Language _language;
 
-	private volatile SemanticSearchConfiguration _semanticSearchConfiguration;
+	@Reference
+	private Portal _portal;
 
 	@Reference
-	private TextEmbeddingRetriever _sentenceEmbeddingRetriever;
+	private SemanticSearchConfigurationProvider
+		_semanticSearchConfigurationProvider;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.search.experiences.web)",
 		unbind = "-"
 	)
 	private ServletContext _servletContext;
+
+	@Reference
+	private TextEmbeddingRetriever _textEmbeddingRetriever;
 
 }

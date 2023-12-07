@@ -1,4 +1,0 @@
-${id}:
-    name: ${name}
-    type: themeSpritemap
-    url: spritemap.svg

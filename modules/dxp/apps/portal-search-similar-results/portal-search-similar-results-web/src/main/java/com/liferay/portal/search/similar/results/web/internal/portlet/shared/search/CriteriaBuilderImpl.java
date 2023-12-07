@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.similar.results.web.internal.portlet.shared.search;
@@ -17,19 +8,17 @@ package com.liferay.portal.search.similar.results.web.internal.portlet.shared.se
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.similar.results.web.spi.contributor.helper.CriteriaBuilder;
 
-import java.util.Optional;
-
 /**
  * @author André de Oliveira
  */
 public class CriteriaBuilderImpl implements CriteriaBuilder {
 
-	public Optional<Criteria> build() {
+	public Criteria build() {
 		if (Validator.isBlank(_criteriaImpl._uid)) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.of(new CriteriaImpl(_criteriaImpl));
+		return new CriteriaImpl(_criteriaImpl);
 	}
 
 	@Override
@@ -57,8 +46,8 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 		}
 
 		@Override
-		public Optional<String> getTypeOptional() {
-			return Optional.ofNullable(_className);
+		public String getType() {
+			return _className;
 		}
 
 		@Override

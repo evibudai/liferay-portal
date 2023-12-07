@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.webserver;
@@ -20,25 +11,23 @@ import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.processor.AudioProcessorUtil;
+import com.liferay.document.library.kernel.processor.ImageProcessorUtil;
+import com.liferay.document.library.kernel.processor.PDFProcessor;
+import com.liferay.document.library.kernel.processor.PDFProcessorUtil;
+import com.liferay.document.library.kernel.processor.VideoProcessor;
+import com.liferay.document.library.kernel.processor.VideoProcessorUtil;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
-import com.liferay.document.library.kernel.util.AudioProcessorUtil;
 import com.liferay.document.library.kernel.util.DLUtil;
-import com.liferay.document.library.kernel.util.ImageProcessorUtil;
-import com.liferay.document.library.kernel.util.PDFProcessor;
-import com.liferay.document.library.kernel.util.PDFProcessorUtil;
-import com.liferay.document.library.kernel.util.VideoProcessor;
-import com.liferay.document.library.kernel.util.VideoProcessorUtil;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -54,7 +43,7 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationTable;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
@@ -76,6 +65,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionRegistryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ImageLocalServiceUtil;
@@ -111,9 +101,9 @@ import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.Validator_IW;
@@ -171,16 +161,14 @@ public class WebServerServlet extends HttpServlet {
 
 			User user = _getUser(httpServletRequest);
 
-			if (!user.isDefaultUser()) {
+			if (!user.isGuestUser()) {
 				PrincipalThreadLocal.setName(user.getUserId());
 				PrincipalThreadLocal.setPassword(
 					PortalUtil.getUserPassword(httpServletRequest));
 			}
 
-			String path = HttpComponentsUtil.fixPath(
-				httpServletRequest.getPathInfo());
-
-			String[] pathArray = StringUtil.split(path, CharPool.SLASH);
+			String[] pathArray = StringUtil.split(
+				_getPath(httpServletRequest), CharPool.SLASH);
 
 			if (pathArray.length == 0) {
 				return true;
@@ -216,7 +204,8 @@ public class WebServerServlet extends HttpServlet {
 				for (int i = 1; i < pathArray.length; i++) {
 					try {
 						Folder folder = DLAppLocalServiceUtil.getFolder(
-							groupId, folderId, pathArray[i]);
+							groupId, folderId,
+							URLCodec.decodeURL(pathArray[i]));
 
 						folderId = folder.getFolderId();
 					}
@@ -242,26 +231,7 @@ public class WebServerServlet extends HttpServlet {
 				}
 			}
 
-			String objectDefinitionExternalReferenceCode = ParamUtil.getString(
-				httpServletRequest, "objectDefinitionExternalReferenceCode");
-
-			if (Validator.isNotNull(objectDefinitionExternalReferenceCode)) {
-				Message message = new Message();
-
-				message.put("companyId", user.getCompanyId());
-				message.put(
-					"objectDefinitionExternalReferenceCode",
-					objectDefinitionExternalReferenceCode);
-				message.put(
-					"objectEntryExternalReferenceCode",
-					ParamUtil.getString(
-						httpServletRequest,
-						"objectEntryExternalReferenceCode"));
-				message.put("userId", user.getUserId());
-
-				_messageBus.sendMessage(
-					DestinationNames.OBJECT_ENTRY_ATTACHMENT_DOWNLOAD, message);
-			}
+			sendMessageObjectEntryAttachmentDownload(httpServletRequest, user);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -276,6 +246,49 @@ public class WebServerServlet extends HttpServlet {
 		}
 
 		return true;
+	}
+
+	/**
+	 * @see com.liferay.portal.servlet.filters.virtualhost.VirtualHostFilter
+	 */
+	public static void sendMessageObjectEntryAttachmentDownload(
+		HttpServletRequest httpServletRequest, User user) {
+
+		String objectDefinitionExternalReferenceCode = ParamUtil.getString(
+			httpServletRequest, "objectDefinitionExternalReferenceCode");
+
+		if (Validator.isNull(objectDefinitionExternalReferenceCode)) {
+			return;
+		}
+
+		try {
+			MessageBus messageBus = _messageBusSnapshot.get();
+
+			Message message = new Message();
+
+			if (user == null) {
+				user = _getUser(httpServletRequest);
+			}
+
+			message.put("companyId", user.getCompanyId());
+
+			message.put(
+				"objectDefinitionExternalReferenceCode",
+				objectDefinitionExternalReferenceCode);
+			message.put(
+				"objectEntryExternalReferenceCode",
+				ParamUtil.getString(
+					httpServletRequest, "objectEntryExternalReferenceCode"));
+			message.put("userId", user.getUserId());
+
+			messageBus.sendMessage(
+				DestinationNames.OBJECT_ENTRY_ATTACHMENT_DOWNLOAD, message);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
 	}
 
 	@Override
@@ -316,7 +329,6 @@ public class WebServerServlet extends HttpServlet {
 			}
 
 			PrincipalThreadLocal.setName(user.getUserId());
-
 			PrincipalThreadLocal.setPassword(
 				PortalUtil.getUserPassword(httpServletRequest));
 
@@ -325,7 +337,10 @@ public class WebServerServlet extends HttpServlet {
 
 			_checkResourcePermission(httpServletRequest, httpServletResponse);
 
-			if (_lastModified) {
+			String ifNoneMatch = httpServletRequest.getHeader(
+				HttpHeaders.IF_NONE_MATCH);
+
+			if ((ifNoneMatch == null) && _lastModified) {
 				long lastModified = getLastModified(httpServletRequest);
 
 				if (lastModified > 0) {
@@ -648,7 +663,10 @@ public class WebServerServlet extends HttpServlet {
 			}
 		}
 
-		if (_userFileUploadsSettings.isImageCheckToken() && (imageId > 0)) {
+		UserFileUploadsSettings userFileUploadsSettings =
+			_userFileUploadsSettingsSnapshot.get();
+
+		if (userFileUploadsSettings.isImageCheckToken() && (imageId > 0)) {
 			String imageIdToken = ParamUtil.getString(
 				httpServletRequest, "img_id_token");
 
@@ -702,10 +720,8 @@ public class WebServerServlet extends HttpServlet {
 				modifiedDate = image.getModifiedDate();
 			}
 			else {
-				String path = HttpComponentsUtil.fixPath(
-					httpServletRequest.getPathInfo());
-
-				String[] pathArray = StringUtil.split(path, CharPool.SLASH);
+				String[] pathArray = StringUtil.split(
+					_getPath(httpServletRequest), CharPool.SLASH);
 
 				if ((pathArray.length == 0) ||
 					pathArray[0].equals("language")) {
@@ -768,8 +784,11 @@ public class WebServerServlet extends HttpServlet {
 			return null;
 		}
 
-		int usersImageMaxHeight = _userFileUploadsSettings.getImageMaxHeight();
-		int usersImageMaxWidth = _userFileUploadsSettings.getImageMaxWidth();
+		UserFileUploadsSettings userFileUploadsSettings =
+			_userFileUploadsSettingsSnapshot.get();
+
+		int usersImageMaxHeight = userFileUploadsSettings.getImageMaxHeight();
+		int usersImageMaxWidth = userFileUploadsSettings.getImageMaxWidth();
 
 		if (((usersImageMaxHeight > 0) &&
 			 (image.getHeight() > usersImageMaxHeight)) ||
@@ -872,7 +891,7 @@ public class WebServerServlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		if (!user.isDefaultUser()) {
+		if (!user.isGuestUser()) {
 			PortalUtil.sendError(
 				HttpServletResponse.SC_UNAUTHORIZED, (Exception)throwable,
 				httpServletRequest, httpServletResponse);
@@ -907,7 +926,7 @@ public class WebServerServlet extends HttpServlet {
 
 			try {
 				Folder folder = DLAppServiceUtil.getFolder(
-					groupId, folderId, name);
+					groupId, folderId, URLCodec.decodeURL(name));
 
 				folderId = folder.getFolderId();
 			}
@@ -918,7 +937,9 @@ public class WebServerServlet extends HttpServlet {
 
 				String title = name;
 
-				sendFile(httpServletResponse, user, groupId, folderId, title);
+				sendFile(
+					httpServletResponse, user, groupId, folderId,
+					URLCodec.decodeURL(title));
 
 				return;
 			}
@@ -978,7 +999,8 @@ public class WebServerServlet extends HttpServlet {
 			webServerEntries.add(webServerEntry);
 		}
 
-		sendHTML(httpServletResponse, path, webServerEntries);
+		sendHTML(
+			httpServletResponse, URLCodec.decodeURL(path), webServerEntries);
 	}
 
 	protected void sendFile(
@@ -1158,7 +1180,12 @@ public class WebServerServlet extends HttpServlet {
 		}
 
 		if (converted && (contentLength == 0)) {
-			throw new NoSuchFileException("The converted file is empty");
+			PortalUtil.sendError(
+				HttpServletResponse.SC_NOT_FOUND,
+				new NoSuchFileException("The converted file is empty"),
+				httpServletRequest, httpServletResponse);
+
+			return;
 		}
 
 		// Determine proper content type
@@ -1178,11 +1205,18 @@ public class WebServerServlet extends HttpServlet {
 
 		// Send file
 
+		String cacheControlValue = HttpHeaders.CACHE_CONTROL_PRIVATE_VALUE;
+
+		boolean download = ParamUtil.getBoolean(httpServletRequest, "download");
+
+		if (download) {
+			cacheControlValue = HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE;
+		}
+
 		httpServletResponse.addHeader(
 			HttpHeaders.CACHE_CONTROL,
 			FileEntryHttpHeaderCustomizerUtil.getHttpHeaderValue(
-				fileEntry, HttpHeaders.CACHE_CONTROL,
-				HttpHeaders.CACHE_CONTROL_PRIVATE_VALUE));
+				fileEntry, HttpHeaders.CACHE_CONTROL, cacheControlValue));
 
 		if (isSupportsRangeHeader(contentType)) {
 			ServletResponseUtil.sendFileWithRangeHeader(
@@ -1190,9 +1224,6 @@ public class WebServerServlet extends HttpServlet {
 				contentLength, contentType);
 		}
 		else {
-			boolean download = ParamUtil.getBoolean(
-				httpServletRequest, "download");
-
 			if (download) {
 				ServletResponseUtil.sendFile(
 					httpServletRequest, httpServletResponse, fileName,
@@ -1303,7 +1334,9 @@ public class WebServerServlet extends HttpServlet {
 		}
 
 		if (fileEntry.isInTrash()) {
-			fileName = _trashTitleResolver.getOriginalTitle(fileName);
+			TrashHelper trashTitleResolver = _trashTitleResolverSnapshot.get();
+
+			fileName = trashTitleResolver.getOriginalTitle(fileName);
 		}
 
 		httpServletResponse.addHeader(
@@ -1459,6 +1492,16 @@ public class WebServerServlet extends HttpServlet {
 		return user.getGroup();
 	}
 
+	private static String _getPath(HttpServletRequest httpServletRequest) {
+		String requestURI = httpServletRequest.getRequestURI();
+
+		String path =
+			httpServletRequest.getContextPath() +
+				httpServletRequest.getServletPath();
+
+		return requestURI.substring(path.length() + 1);
+	}
+
 	private static User _getUser(HttpServletRequest httpServletRequest)
 		throws Exception {
 
@@ -1486,7 +1529,7 @@ public class WebServerServlet extends HttpServlet {
 		Company company = CompanyLocalServiceUtil.getCompany(
 			PortalUtil.getCompanyId(httpServletRequest));
 
-		return company.getDefaultUser();
+		return company.getGuestUser();
 	}
 
 	private static boolean _isDirectoryIndexingEnabled(Group group) {
@@ -1503,7 +1546,10 @@ public class WebServerServlet extends HttpServlet {
 			HttpServletRequest httpServletRequest, String[] pathArray)
 		throws Exception {
 
-		if (_fileEntryFriendlyURLResolver == null) {
+		FileEntryFriendlyURLResolver fileEntryFriendlyURLResolver =
+			_fileEntryFriendlyURLResolverSnapshot.get();
+
+		if (fileEntryFriendlyURLResolver == null) {
 			return null;
 		}
 
@@ -1511,8 +1557,36 @@ public class WebServerServlet extends HttpServlet {
 
 		Group group = _getGroup(user.getCompanyId(), pathArray[1]);
 
-		return _fileEntryFriendlyURLResolver.resolveFriendlyURL(
+		return fileEntryFriendlyURLResolver.resolveFriendlyURL(
 			group.getGroupId(), pathArray[2]);
+	}
+
+	private void _checkCompanyAndGroup(
+			long groupId, HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+		if (group == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("No group exists group ID " + groupId);
+			}
+
+			throw new NoSuchFileEntryException();
+		}
+
+		long companyId = PortalUtil.getCompanyId(httpServletRequest);
+
+		if (group.getCompanyId() != companyId) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					StringBundler.concat(
+						"Group ", groupId, " does not belong to company ",
+						companyId));
+			}
+
+			throw new NoSuchFileEntryException();
+		}
 	}
 
 	private void _checkFileEntry(
@@ -1523,15 +1597,18 @@ public class WebServerServlet extends HttpServlet {
 			return;
 		}
 
+		_checkCompanyAndGroup(fileEntry.getGroupId(), httpServletRequest);
+
 		PermissionChecker permissionChecker = _getPermissionChecker(
 			httpServletRequest);
 
 		ModelResourcePermission<?> fileEntryModelResourcePermission =
-			_modelResourcePermissionServiceTrackerMap.getService(
+			ModelResourcePermissionRegistryUtil.getModelResourcePermission(
 				FileEntry.class.getName());
 
 		fileEntryModelResourcePermission.check(
-			permissionChecker, fileEntry.getFileEntryId(), ActionKeys.VIEW);
+			permissionChecker, fileEntry.getFileEntryId(),
+			_getActionId(httpServletRequest));
 
 		FileVersion fileVersion = fileEntry.getFileVersion();
 
@@ -1564,10 +1641,8 @@ public class WebServerServlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		String path = HttpComponentsUtil.fixPath(
-			httpServletRequest.getPathInfo());
-
-		String[] pathArray = StringUtil.split(path, CharPool.SLASH);
+		String[] pathArray = StringUtil.split(
+			_getPath(httpServletRequest), CharPool.SLASH);
 
 		if (pathArray.length == 0) {
 
@@ -1619,10 +1694,10 @@ public class WebServerServlet extends HttpServlet {
 		HttpServletResponse httpServletResponse, User user) {
 
 		return () -> {
-			String path = HttpComponentsUtil.fixPath(
-				httpServletRequest.getPathInfo());
+			String path = _getPath(httpServletRequest);
 
-			String[] pathArray = StringUtil.split(path, CharPool.SLASH);
+			String[] pathArray = StringUtil.split(
+				_getPath(httpServletRequest), CharPool.SLASH);
 
 			if (pathArray.length == 0) {
 				sendGroups(
@@ -1682,6 +1757,49 @@ public class WebServerServlet extends HttpServlet {
 
 			return null;
 		};
+	}
+
+	private String _getActionId(HttpServletRequest httpServletRequest) {
+		boolean audioPreview = ParamUtil.getBoolean(
+			httpServletRequest, "audioPreview");
+		boolean imagePreview = ParamUtil.getBoolean(
+			httpServletRequest, "imagePreview");
+		boolean videoPreview = ParamUtil.getBoolean(
+			httpServletRequest, "videoPreview");
+
+		if (audioPreview || imagePreview || videoPreview) {
+			return ActionKeys.VIEW;
+		}
+
+		int documentThumbnail = ParamUtil.getInteger(
+			httpServletRequest, "documentThumbnail");
+
+		if ((documentThumbnail > 0) && (documentThumbnail <= 3)) {
+			return ActionKeys.VIEW;
+		}
+
+		int imageThumbnail = ParamUtil.getInteger(
+			httpServletRequest, "imageThumbnail");
+
+		if ((imageThumbnail > 0) && (imageThumbnail <= 3)) {
+			return ActionKeys.VIEW;
+		}
+
+		int previewFileIndex = ParamUtil.getInteger(
+			httpServletRequest, "previewFileIndex");
+
+		if (previewFileIndex > 0) {
+			return ActionKeys.VIEW;
+		}
+
+		int videoThumbnail = ParamUtil.getInteger(
+			httpServletRequest, "videoThumbnail");
+
+		if ((videoThumbnail > 0) && (videoThumbnail <= 3)) {
+			return ActionKeys.VIEW;
+		}
+
+		return ActionKeys.DOWNLOAD;
 	}
 
 	private FileEntry _getFileEntry(
@@ -1778,7 +1896,7 @@ public class WebServerServlet extends HttpServlet {
 		User user = PortalUtil.getUser(httpServletRequest);
 
 		if (user == null) {
-			user = UserLocalServiceUtil.getDefaultUser(
+			user = UserLocalServiceUtil.getGuestUser(
 				PortalUtil.getCompanyId(httpServletRequest));
 		}
 
@@ -1824,7 +1942,10 @@ public class WebServerServlet extends HttpServlet {
 			return false;
 		}
 
-		_inactiveRequestHandler.processInactiveRequest(
+		InactiveRequestHandler inactiveRequestHandler =
+			_inactiveRequestHandlerSnapshot.get();
+
+		inactiveRequestHandler.processInactiveRequest(
 			httpServletRequest, httpServletResponse,
 			"this-instance-is-inactive-please-contact-the-administrator");
 
@@ -1852,33 +1973,19 @@ public class WebServerServlet extends HttpServlet {
 
 	private static final Set<String> _acceptRangesMimeTypes = SetUtil.fromArray(
 		PropsValues.WEB_SERVER_SERVLET_ACCEPT_RANGES_MIME_TYPES);
-	private static volatile FileEntryFriendlyURLResolver
-		_fileEntryFriendlyURLResolver =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				FileEntryFriendlyURLResolver.class, WebServerServlet.class,
-				"_fileEntryFriendlyURLResolver", false, true);
-	private static volatile InactiveRequestHandler _inactiveRequestHandler =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			InactiveRequestHandler.class, WebServerServlet.class,
-			"_inactiveRequestHandler", false);
-	private static volatile MessageBus _messageBus =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			MessageBus.class, WebServerServlet.class, "_messageBus", false);
-	private static final ServiceTrackerMap<String, ModelResourcePermission<?>>
-		_modelResourcePermissionServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				SystemBundleUtil.getBundleContext(),
-				(Class<ModelResourcePermission<?>>)
-					(Class<?>)ModelResourcePermission.class,
-				"model.class.name");
-	private static volatile TrashHelper _trashTitleResolver =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			TrashHelper.class, WebServerServlet.class, "_trashTitleResolver",
-			false);
-	private static volatile UserFileUploadsSettings _userFileUploadsSettings =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			UserFileUploadsSettings.class, WebServerServlet.class,
-			"_userFileUploadsSettings", false);
+	private static final Snapshot<FileEntryFriendlyURLResolver>
+		_fileEntryFriendlyURLResolverSnapshot = new Snapshot<>(
+			WebServerServlet.class, FileEntryFriendlyURLResolver.class);
+	private static final Snapshot<InactiveRequestHandler>
+		_inactiveRequestHandlerSnapshot = new Snapshot<>(
+			WebServerServlet.class, InactiveRequestHandler.class);
+	private static final Snapshot<MessageBus> _messageBusSnapshot =
+		new Snapshot<>(WebServerServlet.class, MessageBus.class);
+	private static final Snapshot<TrashHelper> _trashTitleResolverSnapshot =
+		new Snapshot<>(WebServerServlet.class, TrashHelper.class);
+	private static final Snapshot<UserFileUploadsSettings>
+		_userFileUploadsSettingsSnapshot = new Snapshot<>(
+			WebServerServlet.class, UserFileUploadsSettings.class);
 
 	private boolean _lastModified = true;
 	private TemplateResource _templateResource;

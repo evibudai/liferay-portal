@@ -12,13 +12,13 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			var siteName = TestCase.getSiteName(siteName = "${siteName}");
+			var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
@@ -32,7 +32,7 @@ definition {
 				category = "Content & Data",
 				panel = "Site Administration",
 				portlet = "Documents and Media",
-				site = "${siteName}");
+				site = ${siteName});
 
 			Workflow.configureWorkflowViaPortlet(workflowDefinition = "No Workflow");
 
@@ -41,15 +41,15 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69298. Verify the changes to pending when a file is edited"
-	@priority = "3"
+	@priority = 3
 	test AfterEditFileStatusBecomePending {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflowViaPortlet(workflowDefinition = "Single Approver");
 
@@ -89,20 +89,19 @@ definition {
 			dmDocumentFile = "Document_2.pdf",
 			dmDocumentTitle = "Document_2");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		DMDocument.viewStatus(
 			dmDocumentStatus = "Pending",
 			dmDocumentTitle = "Document_2");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ApproveInDMFolderCustomWorkflow {
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "WorkflowDocumentsAndMedia#ApproveInDMFolderCustomWorkflow";
-		property test.run.environment = "EE";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONOrganization.addOrganization(organizationName = "Space Program Academy of Continuing Education");
 
@@ -110,20 +109,14 @@ definition {
 
 		Organization.addSiteCP(orgName = "Space Program Academy of Continuing Education");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		Site.openSitesAdmin();
 
 		Site.viewCP(
 			siteMember = "Organization",
 			siteName = "Space Program Academy of Continuing Education",
 			siteType = "Private");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.addCP(
 			userEmailAddress = "userea@liferay.com",
@@ -131,19 +124,13 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
@@ -153,10 +140,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Workflow.openWorkflowListView();
 
 		Workflow.addNewDefinition(workflowDefinitionTitle = "Quarterly Reports Review Process");
 
@@ -171,18 +155,15 @@ definition {
 		Workflow.viewDefinition(
 			workflowDefinitionName = "Quarterly Reports Review Process",
 			workflowDefinitionTitle = "Quarterly Reports Review Process",
-			workflowDefinitionVersionNumber = "1");
+			workflowDefinitionVersionNumber = 1);
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.assignRegularRoleCP(
 			roleTitle = "Board Member",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoSite(site = "${siteName}");
+		ApplicationsMenu.gotoSite(site = ${siteName});
 
 		ProductMenu.gotoSite(site = "Space Program Academy of Continuing Education");
 
@@ -190,7 +171,7 @@ definition {
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DMFolder.addCP(
 			dmFolderDescription = "Financial Reports Description",
@@ -206,7 +187,7 @@ definition {
 				category = "Content & Data",
 				panel = "Site Administration",
 				portlet = "Documents and Media",
-				site = "${siteName}");
+				site = ${siteName});
 
 			DMFolder.viewCP(dmFolderName = "Financial Reports");
 
@@ -231,7 +212,7 @@ definition {
 				workflowTask = "Board Member Review ${i}");
 
 			Workflow.approveTaskByActions(
-				boardWorkflowTask = "${i}",
+				boardWorkflowTask = ${i},
 				workflowAssetTitle = "Document",
 				workflowAssetType = "Document",
 				workflowTask = "Board Member Review ${i}");
@@ -244,7 +225,7 @@ definition {
 				workflowTask = "Board Member Review ${i}");
 
 			Workflow.approveTaskByActions(
-				boardWorkflowTask = "${i}",
+				boardWorkflowTask = ${i},
 				workflowAssetTitle = "Document",
 				workflowAssetType = "Document",
 				workflowTask = "Board Member Review ${i}");
@@ -257,7 +238,7 @@ definition {
 				workflowTask = "Board Member Review ${i}");
 
 			Workflow.approveTaskByActions(
-				boardWorkflowTask = "${i}",
+				boardWorkflowTask = ${i},
 				workflowAssetTitle = "Document",
 				workflowAssetType = "Document",
 				workflowTask = "Board Member Review ${i}");
@@ -267,7 +248,7 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
 
-		ApplicationsMenu.gotoSite(site = "${siteName}");
+		ApplicationsMenu.gotoSite(site = ${siteName});
 
 		ProductMenu.gotoSite(site = "Space Program Academy of Continuing Education");
 
@@ -276,7 +257,7 @@ definition {
 				category = "Content & Data",
 				panel = "Site Administration",
 				portlet = "Documents and Media",
-				site = "${siteName}");
+				site = ${siteName});
 
 			DMFolder.viewCP(dmFolderName = "Financial Reports");
 
@@ -287,15 +268,15 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69296. Assert that a file can be published"
-	@priority = "3"
+	@priority = 3
 	test CanPublishFile {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflowViaPortlet(workflowDefinition = "Single Approver");
 
@@ -330,15 +311,15 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69297. Assert that the user can publish multiple files"
-	@priority = "3"
+	@priority = 3
 	test CanPublishMultipleFiles {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflowViaPortlet(workflowDefinition = "Single Approver");
 
@@ -350,14 +331,14 @@ definition {
 			Navigator.gotoNavTab(navTab = "Assigned to My Roles");
 
 			Workflow.assignToMeTaskByActions(
-				workflowAssetTitle = "${i}",
+				workflowAssetTitle = ${i},
 				workflowAssetType = "Document",
 				workflowTask = "Review");
 		}
 
 		for (var i : list "Document_2,Document_3") {
 			Workflow.approveTaskByActions(
-				workflowAssetTitle = "${i}",
+				workflowAssetTitle = ${i},
 				workflowAssetType = "Document",
 				workflowTask = "Review");
 		}
@@ -372,7 +353,7 @@ definition {
 		for (var i : list "Document_2,Document_3") {
 			DMDocument.viewStatus(
 				dmDocumentStatus = "Approved",
-				dmDocumentTitle = "${i}");
+				dmDocumentTitle = ${i});
 		}
 
 		DMDocument.viewStatus(
@@ -381,16 +362,16 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69303. Verify created file can be shared. "
-	@priority = "3"
+	@priority = 3
 	test CanShareAFile {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 		var user = "DXP";
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflowViaPortlet(workflowDefinition = "Single Approver");
 
@@ -404,9 +385,9 @@ definition {
 
 		JSONUser.addUser(
 			userEmailAddress = "${user}@liferay.com",
-			userFirstName = "${user}",
-			userLastName = "${user}",
-			userScreenName = "${user}");
+			userFirstName = ${user},
+			userLastName = ${user},
+			userScreenName = ${user});
 
 		JSONUser.setFirstPassword(
 			agreeToTermsAndAnswerReminderQuery = "true",
@@ -440,17 +421,15 @@ definition {
 			locator1 = "Sharing#SHARED_CONTENT_CONTENT_STATUS");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ConfigureFolderWorkflow {
-		property portal.upstream = "quarantine";
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureDMWorkflowViaFolderInfo(workflowDefinition = "Single Approver");
 
@@ -489,15 +468,15 @@ definition {
 	}
 
 	@description = "This test covers LPS-90346. It ensures that the document preview displays correctly after submitting an edit."
-	@priority = "4"
+	@priority = 4
 	test PreviewSubmittedEdit {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DMFolder.addCP(
 			dmFolderDescription = "DM Folder Description",
@@ -516,7 +495,7 @@ definition {
 
 		Navigator.openURL();
 
-		Notifications.viewBadgeCount(notificationCount = "1");
+		Notifications.viewBadgeCount(notificationCount = 1);
 
 		WorkflowAsset.gotoViaNotification(
 			assetType = "Document",
@@ -556,11 +535,11 @@ definition {
 			dmDocumentFile = "Document_2.jpg",
 			dmDocumentTitle = "Document_2.jpg");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		Navigator.openURL();
 
-		Notifications.viewBadgeCount(notificationCount = "1");
+		Notifications.viewBadgeCount(notificationCount = 1);
 
 		WorkflowAsset.gotoViaNotification(
 			assetType = "Document",
@@ -572,12 +551,12 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-60870."
-	@priority = "5"
+	@priority = 5
 	test SaveAsDraftAndViewCategories {
 		property custom.properties = "dl.file.entry.drafts.enabled=true";
 		property portal.acceptance = "true";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		Navigator.openURL();
 
@@ -585,7 +564,7 @@ definition {
 			category = "Categorization",
 			panel = "Site Administration",
 			portlet = "Categories",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Vocabulary.addCP(vocabularyName = "Vocabulary Name");
 
@@ -599,7 +578,7 @@ definition {
 			category = "Categorization",
 			panel = "Site Administration",
 			portlet = "Categories",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Category.addCP(
 			categoryName = "Other",
@@ -611,7 +590,7 @@ definition {
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DMFolder.addCP(
 			dmFolderDescription = "DM Folder Description",
@@ -628,7 +607,7 @@ definition {
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DMFolder.viewCP(
 			dmDocumentTitle = "DM Folder Name",
@@ -645,7 +624,7 @@ definition {
 			categoryNameList = "legal,Other",
 			vocabularyName = "Vocabulary Name");
 
-		Button.clickSubmitForPublication();
+		Button.clickSubmitForWorkflow();
 
 		Alert.viewSuccessMessage();
 
@@ -667,7 +646,7 @@ definition {
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DMFolder.viewCP(
 			dmDocumentTitle = "DM Folder Name",
@@ -689,7 +668,7 @@ definition {
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		DMFolder.gotoEntry(dmFolderName = "DM Folder Name");
 
@@ -728,7 +707,7 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69299. Verify that the user can set Single Approver Workflow to Documents and Media"
-	@priority = "3"
+	@priority = 3
 	test SetSingleApproverToDocumentsAndMedia {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -741,22 +720,22 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69300. Verify the status as Draft after file checkout"
-	@priority = "3"
+	@priority = 3
 	test StatusBecomeDraftAfterCheckout {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 		var documentTitle = "Document_1";
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflowViaPortlet(workflowDefinition = "Single Approver");
 
 		DMDocument.addWithWorkflowCP(
 			dmDocumentFile = "Document_1.jpg",
-			dmDocumentTitle = "${documentTitle}");
+			dmDocumentTitle = ${documentTitle});
 
 		Navigator.openURL();
 
@@ -765,12 +744,12 @@ definition {
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
 
 		Workflow.assignToMeTaskByActions(
-			workflowAssetTitle = "${documentTitle}",
+			workflowAssetTitle = ${documentTitle},
 			workflowAssetType = "Document",
 			workflowTask = "Review");
 
 		Workflow.approveTaskByActions(
-			workflowAssetTitle = "${documentTitle}",
+			workflowAssetTitle = ${documentTitle},
 			workflowAssetType = "Document",
 			workflowTask = "Review");
 
@@ -783,18 +762,16 @@ definition {
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Checkout",
-			rowEntry = "${documentTitle}");
+			rowEntry = ${documentTitle});
 
 		DMDocument.viewStatus(
 			dmDocumentStatus = "Draft",
-			dmDocumentTitle = "${documentTitle}");
+			dmDocumentTitle = ${documentTitle});
 	}
 
 	@description = "This is a test for LRQA-69301. Verify the status is changed to pending after a checkout is cancelled"
-	@priority = "3"
+	@priority = 3
 	test StatusPendingAfterCheckoutCancel {
-		property portal.upstream = "quarantine";
-
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
@@ -838,15 +815,15 @@ definition {
 	}
 
 	@description = "This is a test for LRQA-69302. Verify created file shows message about publication in process"
-	@priority = "3"
+	@priority = 3
 	test ViewPublicationInProcessMessage {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "${siteName}");
+			site = ${siteName});
 
 		Workflow.configureWorkflowViaPortlet(workflowDefinition = "Single Approver");
 

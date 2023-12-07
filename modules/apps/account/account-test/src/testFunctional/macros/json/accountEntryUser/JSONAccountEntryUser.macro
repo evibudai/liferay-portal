@@ -1,6 +1,7 @@
 definition {
 
-	macro addAccountEntryUser {
+	@summary = "Default summary"
+	macro addAccountEntryUser(userLastName = null, userScreenName = null, userEmailAddress = null, userFirstName = null, accountEntryName = null) {
 		Variables.assertDefined(parameterList = "${accountEntryName},${userEmailAddress},${userFirstName},${userLastName},${userScreenName}");
 
 		if (!(isSet(creatorEmailAddress))) {
@@ -11,28 +12,29 @@ definition {
 			var creatorPassword = "test";
 		}
 
-		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
 
 		JSONAccountEntryUserAPI._addAccountEntryUser(
-			accountEntryId = "${accountEntryId}",
-			accountEntryName = "${accountEntryName}",
-			creatorEmailAddress = "${creatorEmailAddress}",
-			creatorPassword = "${creatorPassword}",
-			userEmailAddress = "${userEmailAddress}",
-			userFirstName = "${userFirstName}",
-			userLastName = "${userLastName}",
-			userScreenName = "${userScreenName}");
+			accountEntryId = ${accountEntryId},
+			accountEntryName = ${accountEntryName},
+			creatorEmailAddress = ${creatorEmailAddress},
+			creatorPassword = ${creatorPassword},
+			userEmailAddress = ${userEmailAddress},
+			userFirstName = ${userFirstName},
+			userLastName = ${userLastName},
+			userScreenName = ${userScreenName});
 	}
 
-	macro addExistUsertoAccount {
+	@summary = "Default summary"
+	macro addExistUsertoAccount(userEmailAddress = null, accountEntryName = null) {
 		Variables.assertDefined(parameterList = "${accountEntryName},${userEmailAddress}");
 
-		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
-		var userId = JSONUserSetter.setUserId(userEmailAddress = "${userEmailAddress}");
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountEntryName});
+		var userId = JSONUserSetter.setUserId(userEmailAddress = ${userEmailAddress});
 
 		JSONAccountEntryUserAPI._addExistUsertoAccount(
-			accountEntryId = "${accountEntryId}",
-			userId = "${userId}");
+			accountEntryId = ${accountEntryId},
+			userId = ${userId});
 	}
 
 }

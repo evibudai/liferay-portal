@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.reports.engine.console.web.internal.admin.display.context;
@@ -41,7 +32,6 @@ import com.liferay.portal.reports.engine.console.constants.ReportsEngineConsoleP
 import com.liferay.portal.reports.engine.console.service.DefinitionServiceUtil;
 import com.liferay.portal.reports.engine.console.service.EntryServiceUtil;
 import com.liferay.portal.reports.engine.console.service.SourceServiceUtil;
-import com.liferay.portal.reports.engine.console.web.internal.admin.configuration.ReportsEngineAdminWebConfiguration;
 import com.liferay.portal.reports.engine.console.web.internal.admin.display.context.helper.ReportsEngineRequestHelper;
 import com.liferay.portal.reports.engine.console.web.internal.admin.search.DefinitionDisplayTerms;
 import com.liferay.portal.reports.engine.console.web.internal.admin.search.DefinitionSearch;
@@ -72,9 +62,6 @@ public class ReportsEngineDisplayContext {
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
 			liferayPortletRequest);
 
-		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
-			_httpServletRequest);
-
 		_reportsEngineRequestHelper = new ReportsEngineRequestHelper(
 			_httpServletRequest);
 
@@ -103,7 +90,6 @@ public class ReportsEngineDisplayContext {
 					"/admin/definition/edit_definition.jsp", "redirect",
 					PortalUtil.getCurrentURL(
 						_reportsEngineRequestHelper.getRequest()));
-
 				dropdownItem.setLabel(
 					LanguageUtil.get(
 						_reportsEngineRequestHelper.getRequest(), "add"));
@@ -116,7 +102,6 @@ public class ReportsEngineDisplayContext {
 					"/admin/data_source/edit_data_source.jsp", "redirect",
 					PortalUtil.getCurrentURL(
 						_reportsEngineRequestHelper.getRequest()));
-
 				dropdownItem.setLabel(
 					LanguageUtil.get(
 						_reportsEngineRequestHelper.getRequest(), "add"));
@@ -134,17 +119,9 @@ public class ReportsEngineDisplayContext {
 				_liferayPortletRequest, "displayStyle");
 
 			if (Validator.isNull(_displayStyle)) {
-				ReportsEngineAdminWebConfiguration
-					reportsEngineAdminWebConfiguration =
-						(ReportsEngineAdminWebConfiguration)
-							_liferayPortletRequest.getAttribute(
-								ReportsEngineAdminWebConfiguration.class.
-									getName());
-
 				_displayStyle = portalPreferences.getValue(
 					ReportsEngineConsolePortletKeys.REPORTS_ADMIN,
-					"display-style",
-					reportsEngineAdminWebConfiguration.defaultDisplayView());
+					"display-style", "list");
 			}
 			else if (ArrayUtil.contains(_DISPLAY_VIEWS, _displayStyle)) {
 				portalPreferences.setValue(
@@ -512,7 +489,6 @@ public class ReportsEngineDisplayContext {
 	private String _navigation;
 	private String _orderByCol;
 	private String _orderByType;
-	private final PortalPreferences _portalPreferences;
 	private final ReportsEngineRequestHelper _reportsEngineRequestHelper;
 	private SearchContainer<?> _searchContainer;
 	private final ThemeDisplay _themeDisplay;

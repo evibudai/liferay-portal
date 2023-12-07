@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.form.resource.v1_0.test;
@@ -28,6 +19,7 @@ import com.liferay.headless.form.client.pagination.Page;
 import com.liferay.headless.form.client.pagination.Pagination;
 import com.liferay.headless.form.client.resource.v1_0.FormStructureResource;
 import com.liferay.headless.form.client.serdes.v1_0.FormStructureSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -41,6 +33,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -55,6 +48,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,8 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -275,7 +267,7 @@ public abstract class BaseFormStructureResourceTestCase {
 			formStructureResource.getSiteFormStructuresPage(
 				siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantSiteId != null) {
 			FormStructure irrelevantFormStructure =
@@ -283,14 +275,16 @@ public abstract class BaseFormStructureResourceTestCase {
 					irrelevantSiteId, randomIrrelevantFormStructure());
 
 			page = formStructureResource.getSiteFormStructuresPage(
-				irrelevantSiteId, Pagination.of(1, 2));
+				irrelevantSiteId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantFormStructure),
-				(List<FormStructure>)page.getItems());
-			assertValid(page);
+			assertContains(
+				irrelevantFormStructure, (List<FormStructure>)page.getItems());
+			assertValid(
+				page,
+				testGetSiteFormStructuresPage_getExpectedActions(
+					irrelevantSiteId));
 		}
 
 		FormStructure formStructure1 =
@@ -304,17 +298,32 @@ public abstract class BaseFormStructureResourceTestCase {
 		page = formStructureResource.getSiteFormStructuresPage(
 			siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(formStructure1, formStructure2),
-			(List<FormStructure>)page.getItems());
-		assertValid(page);
+		assertContains(formStructure1, (List<FormStructure>)page.getItems());
+		assertContains(formStructure2, (List<FormStructure>)page.getItems());
+		assertValid(
+			page, testGetSiteFormStructuresPage_getExpectedActions(siteId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteFormStructuresPage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
 	public void testGetSiteFormStructuresPageWithPagination() throws Exception {
 		Long siteId = testGetSiteFormStructuresPage_getSiteId();
+
+		Page<FormStructure> formStructurePage =
+			formStructureResource.getSiteFormStructuresPage(siteId, null);
+
+		int totalCount = GetterUtil.getInteger(
+			formStructurePage.getTotalCount());
 
 		FormStructure formStructure1 =
 			testGetSiteFormStructuresPage_addFormStructure(
@@ -330,19 +339,19 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		Page<FormStructure> page1 =
 			formStructureResource.getSiteFormStructuresPage(
-				siteId, Pagination.of(1, 2));
+				siteId, Pagination.of(1, totalCount + 2));
 
 		List<FormStructure> formStructures1 =
 			(List<FormStructure>)page1.getItems();
 
 		Assert.assertEquals(
-			formStructures1.toString(), 2, formStructures1.size());
+			formStructures1.toString(), totalCount + 2, formStructures1.size());
 
 		Page<FormStructure> page2 =
 			formStructureResource.getSiteFormStructuresPage(
-				siteId, Pagination.of(2, 2));
+				siteId, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<FormStructure> formStructures2 =
 			(List<FormStructure>)page2.getItems();
@@ -352,11 +361,11 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		Page<FormStructure> page3 =
 			formStructureResource.getSiteFormStructuresPage(
-				siteId, Pagination.of(1, 3));
+				siteId, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(formStructure1, formStructure2, formStructure3),
-			(List<FormStructure>)page3.getItems());
+		assertContains(formStructure1, (List<FormStructure>)page3.getItems());
+		assertContains(formStructure2, (List<FormStructure>)page3.getItems());
+		assertContains(formStructure3, (List<FormStructure>)page3.getItems());
 	}
 
 	protected FormStructure testGetSiteFormStructuresPage_addFormStructure(
@@ -398,7 +407,7 @@ public abstract class BaseFormStructureResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/formStructures");
 
-		Assert.assertEquals(0, formStructuresJSONObject.get("totalCount"));
+		long totalCount = formStructuresJSONObject.getLong("totalCount");
 
 		FormStructure formStructure1 =
 			testGraphQLGetSiteFormStructuresPage_addFormStructure();
@@ -409,10 +418,16 @@ public abstract class BaseFormStructureResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/formStructures");
 
-		Assert.assertEquals(2, formStructuresJSONObject.getLong("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, formStructuresJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(formStructure1, formStructure2),
+		assertContains(
+			formStructure1,
+			Arrays.asList(
+				FormStructureSerDes.toDTOs(
+					formStructuresJSONObject.getString("items"))));
+		assertContains(
+			formStructure2,
 			Arrays.asList(
 				FormStructureSerDes.toDTOs(
 					formStructuresJSONObject.getString("items"))));
@@ -601,6 +616,13 @@ public abstract class BaseFormStructureResourceTestCase {
 	}
 
 	protected void assertValid(Page<FormStructure> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<FormStructure> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<FormStructure> formStructures = page.getItems();
@@ -615,6 +637,25 @@ public abstract class BaseFormStructureResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		assertValid(page.getActions(), expectedActions);
+	}
+
+	protected void assertValid(
+		Map<String, Map<String, String>> actions1,
+		Map<String, Map<String, String>> actions2) {
+
+		for (String key : actions2.keySet()) {
+			Map action = actions1.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map<String, String> expectedAction = actions2.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -850,14 +891,16 @@ public abstract class BaseFormStructureResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -874,6 +917,10 @@ public abstract class BaseFormStructureResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -883,18 +930,18 @@ public abstract class BaseFormStructureResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -987,9 +1034,47 @@ public abstract class BaseFormStructureResourceTestCase {
 		}
 
 		if (entityFieldName.equals("description")) {
-			sb.append("'");
-			sb.append(String.valueOf(formStructure.getDescription()));
-			sb.append("'");
+			Object object = formStructure.getDescription();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1015,9 +1100,47 @@ public abstract class BaseFormStructureResourceTestCase {
 		}
 
 		if (entityFieldName.equals("name")) {
-			sb.append("'");
-			sb.append(String.valueOf(formStructure.getName()));
-			sb.append("'");
+			Object object = formStructure.getName();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}

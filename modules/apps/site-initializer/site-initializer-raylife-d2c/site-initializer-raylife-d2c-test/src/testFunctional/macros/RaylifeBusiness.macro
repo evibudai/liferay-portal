@@ -1,9 +1,10 @@
 definition {
 
-	macro gotoContactInfoByBusiness {
+	@summary = "Default summary"
+	macro gotoContactInfoByBusiness() {
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		Click(
 			field = "Do you store personally identifiable information about your customers?",
@@ -30,10 +31,11 @@ definition {
 			value = "3%");
 	}
 
-	macro typeAllBusinessInfoFields {
+	@summary = "Default summary"
+	macro typeAllBusinessInfoFields() {
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		Click(
 			field = "Do you store personally identifiable information about your customers?",
@@ -60,10 +62,11 @@ definition {
 			value = "3%");
 	}
 
-	macro typeAllBusinessInfoFieldsResidential {
+	@summary = "Default summary"
+	macro typeAllBusinessInfoFieldsResidential() {
 		RaylifeBusiness.typeBusinessInfoFields(
 			label = "business.yearsOfExperience",
-			value = "3");
+			value = 3);
 
 		Click(
 			field = "Do you store personally identifiable information about your customers?",
@@ -78,17 +81,19 @@ definition {
 			value1 = "Association");
 	}
 
-	macro typeBusinessInfoFields {
+	@summary = "Default summary"
+	macro typeBusinessInfoFields(value = null) {
 		Type(
 			locator1 = "Raylife#FORMS_FIELDS",
-			value1 = "${value}");
+			value1 = ${value});
 	}
 
-	macro viewBusinessInfo {
+	@summary = "Default summary"
+	macro viewBusinessInfo() {
 		AssertElementPresent(
 			label = "business.yearsOfExperience",
 			locator1 = "Raylife#FORMS_VALUE",
-			value = "3");
+			value = 3);
 
 		AssertElementPresent(
 			field = "Do you store personally identifiable information about your customers?",

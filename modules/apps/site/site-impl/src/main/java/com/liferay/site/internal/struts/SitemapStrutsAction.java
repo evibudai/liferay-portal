@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.site.internal.struts;
 
-import com.liferay.layout.admin.kernel.util.SitemapUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutSetException;
 import com.liferay.portal.kernel.log.Log;
@@ -27,7 +17,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.VirtualHostLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermission;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -38,6 +28,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.site.manager.SitemapManager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -62,8 +53,6 @@ public class SitemapStrutsAction implements StrutsAction {
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			String layoutUuid = ParamUtil.getString(
-				httpServletRequest, "layoutUuid");
 			long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
 			LayoutSet layoutSet = null;
@@ -99,7 +88,7 @@ public class SitemapStrutsAction implements StrutsAction {
 					Group group = layoutSet.getGroup();
 
 					if (group.isStagingGroup()) {
-						_groupPermission.check(
+						GroupPermissionUtil.check(
 							themeDisplay.getPermissionChecker(),
 							group.getGroupId(), ActionKeys.VIEW_STAGING);
 					}
@@ -120,13 +109,25 @@ public class SitemapStrutsAction implements StrutsAction {
 				}
 			}
 
-			String sitemap = SitemapUtil.getSitemap(
-				layoutUuid, layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
-				themeDisplay);
+			Group currentGroup = _groupLocalService.getGroup(
+				layoutSet.getGroupId());
 
-			ServletResponseUtil.sendFile(
-				httpServletRequest, httpServletResponse, null,
-				sitemap.getBytes(StringPool.UTF8), ContentTypes.TEXT_XML_UTF8);
+			if (currentGroup.isActive()) {
+				String layoutUuid = ParamUtil.getString(
+					httpServletRequest, "layoutUuid");
+
+				String sitemap = _sitemapManager.getSitemap(
+					layoutUuid, layoutSet.getGroupId(),
+					layoutSet.isPrivateLayout(), themeDisplay);
+
+				ServletResponseUtil.sendFile(
+					httpServletRequest, httpServletResponse, null,
+					sitemap.getBytes(StringPool.UTF8),
+					ContentTypes.TEXT_XML_UTF8);
+			}
+			else {
+				throw new NoSuchLayoutSetException();
+			}
 		}
 		catch (NoSuchLayoutSetException noSuchLayoutSetException) {
 			_portal.sendError(
@@ -153,13 +154,13 @@ public class SitemapStrutsAction implements StrutsAction {
 	private GroupLocalService _groupLocalService;
 
 	@Reference
-	private GroupPermission _groupPermission;
-
-	@Reference
 	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SitemapManager _sitemapManager;
 
 	@Reference
 	private VirtualHostLocalService _virtualHostLocalService;

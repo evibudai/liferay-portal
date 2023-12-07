@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -268,8 +259,8 @@ public class MethodCallsOrderCheck extends BaseFileCheck {
 
 		Pattern pattern = Pattern.compile(
 			StringBundler.concat(
-				"(\\W(\\w+)\\.(<[\\w\\[\\]\\?<>, ]*>)?|[\n\t]\\)\\.)",
-				methodName, "\\("));
+				"(\\W(\\w+)\\.(", _GENERIC_TYPE_NAMES_PATTERN,
+				")?|[\n\t]\\)\\.)", methodName, "\\("));
 
 		Matcher matcher = pattern.matcher(content);
 
@@ -362,12 +353,20 @@ public class MethodCallsOrderCheck extends BaseFileCheck {
 			"HashMapDictionaryBuilder", "JSONObject", "JSONUtil", "SoyContext",
 			"TreeMapBuilder", "UnicodePropertiesBuilder");
 		content = _sortChainedMethodCalls(
+			content, "putAll", 1, "ConcurrentHashMapBuilder", "HashMapBuilder",
+			"HashMapDictionaryBuilder", "JSONUtil", "SoyContext",
+			"TreeMapBuilder", "UnicodePropertiesBuilder");
+		content = _sortChainedMethodCalls(
+			content, "setGlobalParameter", 2, "PortletURLBuilder");
+		content = _sortChainedMethodCalls(
 			content, "setParameter", 2, "PortletURLBuilder");
+		content = _sortChainedMethodCalls(
+			content, "setProperty", 2, "UnicodePropertiesBuilder");
 
 		content = _sortMethodCallsByMethodName(
 			content, "DDMFormFieldRenderingContext", "DropdownItem",
-			"LabelItem", "NavigationItem", "SearchContext", "ServiceContext",
-			"ThemeDisplay");
+			"LabelItem", "NavigationItem", "SearchContext", "SearchEntry",
+			"ServiceContext", "ThemeDisplay");
 
 		content = _sortMethodCallsByParameter(
 			content, "add", "ConcurrentSkipListSet", "HashSet", "TreeSet");
@@ -469,8 +468,16 @@ public class MethodCallsOrderCheck extends BaseFileCheck {
 		return content;
 	}
 
-	private static final Pattern _typeNamePattern = Pattern.compile(
-		"(\\A|\\W)(\\w+)\\.\\w+\\(");
+	private static final String _GENERIC_TYPE_NAMES_PATTERN;
+
+	private static final Pattern _typeNamePattern;
+
+	static {
+		_GENERIC_TYPE_NAMES_PATTERN = "<[\\w\\[\\]\\?<>, ]*>";
+
+		_typeNamePattern = Pattern.compile(
+			"(\\A|\\W)(\\w+)\\.(" + _GENERIC_TYPE_NAMES_PATTERN + ")?\\w+\\(");
+	}
 
 	private class MethodCallComparator extends ParameterNameComparator {
 

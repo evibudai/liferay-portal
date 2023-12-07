@@ -1,64 +1,75 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+import { useFetch } from '../../hooks/useFetch';
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useEffect, useState} from 'react';
-import {useLocation, useNavigate} from 'react-router-dom';
+import {useParams} from 'react-router-dom';
+import {useFetch} from '~/hooks/useFetch';
+import {TestrayComponent, TestrayTeam} from '~/services/rest';
 
-import {HeaderTabs} from '../../context/HeaderContext';
-import i18n from '../../i18n';
+export type CompareRunsResponse = {
+	component?: TestrayComponent;
+	team?: TestrayTeam;
+	values: number[][];
+};
 
-const COMPARE_RUNS_ROOT_PATH = '/compare-runs';
+const mockComponent = {
+	dateCreated: '',
+	dateModified: '',
+	externalReferenceCode: '',
+	id: 0,
+	name: 'Liferay',
+	originationKey: '',
+	r_teamToComponents_c_teamId: 0,
+	status: '',
+	teamId: 0,
+};
 
-const useCompareRuns = () => {
-	const [comparableTabs, setComparableTabs] = useState<HeaderTabs[]>();
-	const [currentTab, setCurrentTab] = useState<HeaderTabs>();
-	const {pathname} = useLocation();
-	const navigate = useNavigate();
+const mockTeam = {
+	dateCreated: '',
+	dateModified: '',
+	externalReferenceCode: '',
+	id: 0,
+	name: 'Solutions',
+};
 
-	useEffect(() => {
-		setTimeout(() => {
-			setComparableTabs([
-				{
-					active: pathname === `${COMPARE_RUNS_ROOT_PATH}/teams`,
-					path: 'teams',
-					title: i18n.translate('teams'),
-				},
-				{
-					active: pathname === `${COMPARE_RUNS_ROOT_PATH}/components`,
-					path: 'components',
-					title: i18n.translate('components'),
-				},
-				{
-					active: pathname === `${COMPARE_RUNS_ROOT_PATH}/details`,
-					path: 'details',
-					title: i18n.translate('details'),
-				},
-			]);
-		});
-	}, [navigate, pathname]);
+const values = [
+	[1, 3, 5, 4, 5],
+	[1, 2, 3, 4, 5],
+	[1, 2, 3, 4, 5],
+	[1, 2, 3, 4, 5],
+	[1, 2, 3, 4, 5],
+];
 
-	useEffect(() => {
-		if (comparableTabs) {
-			const currentTab = comparableTabs.find((tab) => tab.active);
+const useCompareRuns = (
+	type: 'components' | 'details' | 'teams',
+	{componentId, teamId}: {componentId?: string; teamId?: string} = {}
+) => {
+	const {runA, runB} = useParams();
 
-			if (currentTab) {
-				setCurrentTab(currentTab);
-			}
+	const operator = type === 'details' ? '' : type;
+
+	const {data} = useFetch<CompareRunsResponse>(
+		`/compare-runs/${runA}/${runB}/${operator}`,
+		{
+			params: {customParams: {componentId, teamId}},
 		}
-	}, [comparableTabs]);
+	);
 
-	return {comparableTabs, currentTab, setComparableTabs};
+	if (typeof data === 'object') {
+		return [data];
+	}
+
+	return (
+		data ?? [
+			{
+				values,
+				...(type === 'components' && {component: mockComponent}),
+				...(type === 'teams' && {team: mockTeam}),
+			},
+		]
+	);
 };
 
 export default useCompareRuns;

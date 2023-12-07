@@ -35,24 +35,26 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		ACUtils.tearDownAC();
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8327 | Test Summary: Assert Sites Cohort Analysis sort Anonymous Visitors"
-	@priority = "3"
+	@ignore = "true"
+	@priority = 3
 	test AssertSitesCohortAnalysisSortAnonymousVisitors {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time (Need to wait for the session to close)
 
 		task ("Logout from DXP") {
 			User.logoutPG();
@@ -71,13 +73,15 @@ definition {
 		task ("Switch the property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Assert that the cohort analysis card shows anonymous visitors after their first views") {
-			Select(
-				locator1 = "ACSites#COHORT_ANALYSIS_SELECT_VISITOR_TYPE",
-				value1 = "Anonymous Visitors");
+			Click(locator1 = "ACSites#COHORT_ANALYSIS_SELECT_VISITOR_TYPE");
+
+			Click(
+				locator1 = "ACSegments#CRITERION_DROPDOWN_VALUE",
+				operator = "Anonymous Visitors");
 
 			AssertTextEquals(
 				locator1 = "ACSites#COHORT_ANALYSIS_DAY_ZERO_PERCENTAGE",
@@ -86,9 +90,12 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8326 | Test Summary: Site overview cohort analysis card shows which individuals are returning after their first views"
-	@priority = "5"
+	@ignore = "true"
+	@priority = 5
 	test ShowsIndividualsReturningAfterFirstViews {
-		property analytics.cloud.upstream = "false";
+
+		// AC Refactor: Data doesn't appear on time
+		// AC Refactor ticket: LRAC-14011
 
 		task ("Add a new user") {
 			JSONUser.addUser(
@@ -119,7 +126,7 @@ definition {
 		task ("Switch the property in AC") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Assert that the cohort analysis card shows which individuals are returning after their first views") {

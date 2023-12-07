@@ -14,8 +14,9 @@ definition {
 		CommerceConfiguration.commerceTearDown(doLogout = "true");
 	}
 
+	@priority = 4
 	test ViewStoreFrontSimpleProduct {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "false";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
@@ -37,9 +38,7 @@ definition {
 
 		echo("Creating new Product...");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productName = "Simple T-Shirt",

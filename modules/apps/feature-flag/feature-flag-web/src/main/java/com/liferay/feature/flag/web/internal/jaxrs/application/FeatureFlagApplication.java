@@ -1,23 +1,25 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.feature.flag.web.internal.jaxrs.application;
 
-import com.liferay.feature.flag.web.internal.manager.FeatureFlagPreferencesManager;
-import com.liferay.portal.kernel.util.Portal;
+import com.liferay.feature.flag.web.internal.feature.flag.FeatureFlagsBag;
+import com.liferay.feature.flag.web.internal.feature.flag.FeatureFlagsBagProvider;
+import com.liferay.feature.flag.web.internal.model.FeatureFlagDisplay;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.feature.flag.FeatureFlag;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +30,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
@@ -53,12 +56,23 @@ public class FeatureFlagApplication extends Application {
 	public Response confirm(
 		@Context HttpServletRequest httpServletRequest,
 		@Context HttpServletResponse httpServletResponse,
+		@FormParam("companyId") long companyId,
 		@FormParam("enabled") boolean enabled, @FormParam("key") String key) {
 
-		_featureFlagPreferencesManager.setEnabled(
-			_portal.getCompanyId(httpServletRequest), key, enabled);
+		_featureFlagsBagProvider.setEnabled(companyId, key, enabled);
+
+		FeatureFlagsBag featureFlagsBag =
+			_featureFlagsBagProvider.getOrCreateFeatureFlagsBag(companyId);
 
 		return Response.ok(
+			HashMapBuilder.put(
+				"dependentFeatureFlags",
+				TransformUtil.transform(
+					_getDependentFeatureFlags(featureFlagsBag, key),
+					featureFlag -> _toMap(
+						companyId, featureFlag, featureFlagsBag))
+			).build(),
+			MediaType.APPLICATION_JSON
 		).build();
 	}
 
@@ -66,10 +80,68 @@ public class FeatureFlagApplication extends Application {
 		return Collections.singleton(this);
 	}
 
-	@Reference
-	private FeatureFlagPreferencesManager _featureFlagPreferencesManager;
+	private List<FeatureFlag> _getDependencyFeatureFlags(
+		long companyId, FeatureFlagsBag featureFlagsBag, String key) {
+
+		FeatureFlag featureFlag = featureFlagsBag.getFeatureFlag(key);
+
+		if (featureFlag == null) {
+			_log.error(
+				StringBundler.concat(
+					"Feature flag ", key, " does not exist for company ",
+					companyId));
+
+			return new ArrayList<>();
+		}
+
+		return featureFlagsBag.getFeatureFlags(
+			maybeDependencyFeatureFlag -> ArrayUtil.contains(
+				featureFlag.getDependencyKeys(),
+				maybeDependencyFeatureFlag.getKey()));
+	}
+
+	private List<FeatureFlag> _getDependentFeatureFlags(
+		FeatureFlagsBag featureFlagsBag, String key) {
+
+		return featureFlagsBag.getFeatureFlags(
+			maybeDependentFeatureFlag -> ArrayUtil.contains(
+				maybeDependentFeatureFlag.getDependencyKeys(), key));
+	}
+
+	private Map<String, Object> _toMap(
+		long companyId, FeatureFlag featureFlag,
+		FeatureFlagsBag featureFlagsBag) {
+
+		FeatureFlagDisplay featureFlagDisplay = new FeatureFlagDisplay(
+			companyId,
+			_getDependencyFeatureFlags(
+				companyId, featureFlagsBag, featureFlag.getKey()),
+			featureFlag, null);
+
+		return HashMapBuilder.<String, Object>put(
+			"companyId", featureFlagDisplay.getCompanyId()
+		).put(
+			"dependenciesFulfilled",
+			featureFlagDisplay.isDependenciesFulfilled()
+		).put(
+			"dependencyKeys", featureFlagDisplay.getDependencyKeys()
+		).put(
+			"description", featureFlagDisplay.getDescription()
+		).put(
+			"enabled", featureFlagDisplay.isEnabled()
+		).put(
+			"featureFlagType", featureFlagDisplay.getFeatureFlagType()
+		).put(
+			"key", featureFlagDisplay.getKey()
+		).put(
+			"title", featureFlagDisplay.getTitle()
+		).build();
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FeatureFlagApplication.class);
 
 	@Reference
-	private Portal _portal;
+	private FeatureFlagsBagProvider _featureFlagsBagProvider;
 
 }

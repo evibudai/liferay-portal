@@ -16,28 +16,28 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CHECK_INTERVAL_SEGMENTS_VALUE</td>
-	<td>//*[contains(text(),'Check Interval')]/following-sibling::input[contains(@value,'${key_value}')]</td>
+	<td>UPDATE_INTERVAL_SEGMENTS_VALUE</td>
+	<td>//*[contains(text(),'Update Interval')]/following-sibling::div[contains(@title,'${key_value}')] | //*[contains(text(),'Update Interval')]/following-sibling::input[contains(@value,'${key_value}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DROPDOWN_MENU</td>
-	<td>//*[contains(.,'${key_fieldLabel}')]/parent::div//div[contains(@class,'option-selected')] | //p[contains(.,'${key_fieldLabel}')]/following-sibling::div//button[contains(@class,'dropdown-toggle')]</td>
+	<td>//*[contains(.,'${key_fieldLabel}')]/parent::div//div[contains(@class,'option-selected')] | //p[contains(.,'${key_fieldLabel}')]/following-sibling::div//button[contains(@class,'dropdown-toggle')] | //label[normalize-space()='${key_fieldLabel}']//following-sibling::div//button[@role='combobox']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DROPDOWN_MENU_OPTION</td>
-	<td>//button[contains(@class,'dropdown-item') and @label='${key_selectOption}']</td>
+	<td>//button[contains(@class,'dropdown-item') and @label='${key_selectOption}'] | //div[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[contains(@class,'dropdown-item')][normalize-space()='${key_selectOption}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>KEY</td>
-	<td>//div[@class='form-group']/label[contains(.,'Key')]/following-sibling::textarea[@type='text']</td>
+	<td>//div[@class='form-group']/label[contains(.,'Key')]/..//textarea</td>
 	<td></td>
 </tr>
 <tr>
 	<td>LABEL</td>
-	<td>//span[contains(@class,'custom-control-label-text') and contains(.,'${key_fieldLabel}')] | //label[contains(@class,'control-label') and contains(.,'${key_fieldLabel}')]</td>
+	<td>//span[contains(@class,'custom-control-label-text') and contains(.,'${key_fieldLabel}')] | //label[contains(@class,'control-label') and contains(.,'${key_fieldLabel}')] | //label[contains(@class,'ddm-label') and contains(.,'${key_fieldLabel}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -47,7 +47,7 @@
 </tr>
 <tr>
 	<td>SCOPED_CONFIGURATION_NAME</td>
-	<td>//a[contains(.,'${key_configurationScope}')]/following-sibling::div//*[contains(@class,'nav-link') and normalize-space(./text())='${key_configurationName}']</td>
+	<td>//div[contains(.,'${key_configurationScope}')]/following-sibling::div//*[contains(@class,'nav-link') and normalize-space(./text())='${key_configurationName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -67,7 +67,7 @@
 </tr>
 <tr>
 	<td>SETTINGS_TEXT</td>
-	<td>//span[contains(@id,'fieldDetails')][contains(.,'${key_settingsText}')]</td>
+	<td>//div[contains(@id,'fieldHelp')][contains(.,'${key_settingsText}')]</td>
 	<td></td>
 </tr>
 

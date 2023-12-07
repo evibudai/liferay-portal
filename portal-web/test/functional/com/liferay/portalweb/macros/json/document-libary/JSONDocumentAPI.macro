@@ -1,36 +1,41 @@
 definition {
 
-	@summary = "Helper function to get the 'DM folderId' for the folder '${folderName}'"
-	macro _getFolderIdByFolderName {
-		Variables.assertDefined(parameterList = "${groupName},${name}");
+	@summary = "Default summary"
+	macro _getFolderIdByFolderName(groupName = null, name = null) {
+		Variables.assertDefined(parameterList = ${name});
 
 		var portalURL = JSONCompany.getPortalURL();
-		var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = "${groupName}");
+
+		if (!(isSet(repositoryId))) {
+			var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${groupName});
+		}
 
 		if (!(isSet(parentFolderId))) {
-			var parentFolderId = "0";
+			var parentFolderId = 0;
 		}
+
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlapp/get-folder \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d repositoryId=${repositoryId} \
 				-d parentFolderId=${parentFolderId} \
 				-d name=${name}
 		''';
 
-		var folderId = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${name}')]['folderId']");
+		var folderId = JSONCurlUtil.post(${curl}, "$.[?(@['name'] == '${name}')]['folderId']");
 
-		if ("${folderId}" == "") {
+		if (${folderId} == "") {
 			fail("FAIL. Cannot find folder.");
 		}
 		else {
-			return "${folderId}";
+			return ${folderId};
 		}
 	}
 
-	@summary = "Helper function to get the 'DM typeId' for the document type '${documentTypeName}'"
-	macro _getTypeIdByTypeName {
+	@summary = "Default summary"
+	macro _getTypeIdByTypeName(groupName = null, documentTypeName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${documentTypeName}");
 
 		if (!(isSet(site))) {
@@ -39,22 +44,23 @@ definition {
 
 		var portalURL = JSONCompany.getPortalURL();
 		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "${groupName}",
-			site = "${site}");
+			groupName = ${groupName},
+			site = ${site});
+		var userLoginInfo = JSONUtil2.formatJSONUser();
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileentrytype/get-file-entry-types \
-				-u test@liferay.com:test \
+				-u ${userLoginInfo} \
 				-d groupIds=${groupId}
 		''';
 
-		var typeId = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${documentTypeName}')]['fileEntryTypeId']");
+		var typeId = JSONCurlUtil.post(${curl}, "$.[?(@['nameCurrentValue'] == '${documentTypeName}')]['fileEntryTypeId']");
 
-		if ("${typeId}" == "") {
+		if (${typeId} == "") {
 			fail("FAIL. Cannot find type.");
 		}
 		else {
-			return "${typeId}";
+			return ${typeId};
 		}
 	}
 

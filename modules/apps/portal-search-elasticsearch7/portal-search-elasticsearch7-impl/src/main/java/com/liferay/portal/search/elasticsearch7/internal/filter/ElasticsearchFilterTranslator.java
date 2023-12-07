@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.elasticsearch7.internal.filter;
@@ -32,15 +23,13 @@ import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.search.filter.DateRangeFilter;
 import com.liferay.portal.search.filter.FilterVisitor;
+import com.liferay.portal.search.filter.RangeFilter;
 import com.liferay.portal.search.filter.TermsSetFilter;
 
 import org.elasticsearch.index.query.QueryBuilder;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -48,17 +37,10 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	property = "search.engine.impl=Elasticsearch",
-	service = {FilterToQueryBuilderTranslator.class, FilterTranslator.class}
+	service = FilterTranslator.class
 )
 public class ElasticsearchFilterTranslator
-	implements FilterToQueryBuilderTranslator, FilterTranslator<QueryBuilder>,
-			   FilterVisitor<QueryBuilder> {
-
-	public void setQueryFilterTranslator(
-		QueryFilterTranslator queryFilterTranslator) {
-
-		this.queryFilterTranslator = queryFilterTranslator;
-	}
+	implements FilterTranslator<QueryBuilder>, FilterVisitor<QueryBuilder> {
 
 	@Override
 	public QueryBuilder translate(Filter filter, SearchContext searchContext) {
@@ -118,12 +100,12 @@ public class ElasticsearchFilterTranslator
 
 	@Override
 	public QueryBuilder visit(QueryFilter queryFilter) {
-		if (queryFilterTranslator == null) {
-			throw new IllegalStateException(
-				"No queryFilter translator configured");
-		}
-
 		return queryFilterTranslator.translate(queryFilter);
+	}
+
+	@Override
+	public QueryBuilder visit(RangeFilter rangeFilter) {
+		return rangeFilterTranslator.translate(rangeFilter);
 	}
 
 	@Override
@@ -176,12 +158,11 @@ public class ElasticsearchFilterTranslator
 	@Reference
 	protected PrefixFilterTranslator prefixFilterTranslator;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected volatile QueryFilterTranslator queryFilterTranslator;
+	@Reference
+	protected QueryFilterTranslator queryFilterTranslator;
+
+	@Reference
+	protected RangeFilterTranslator rangeFilterTranslator;
 
 	@Reference
 	protected RangeTermFilterTranslator rangeTermFilterTranslator;

@@ -10,7 +10,7 @@ definition {
 
 		User.firstLoginPG();
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		HeadlessSite.addSite(siteName = "Test Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -20,9 +20,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -31,7 +31,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-107630. Make sure Fieldsets can be duplicated"
-	@priority = "5"
+	@priority = 5
 	test DuplicateFieldset {
 		DataEngine.addFields(fieldNameList = "Text,Image,Upload");
 
@@ -49,7 +49,7 @@ definition {
 
 		for (var fieldLabelList : list "Copy of Text,Copy of Image,Copy of Upload") {
 			AssertElementPresent(
-				key_fieldFieldLabel = "${fieldLabelList}",
+				key_fieldFieldLabel = ${fieldLabelList},
 				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 		}
 
@@ -57,7 +57,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-107630. Make sure the Fieldset does not crash when editing its properties directly from Object sidebar during reuse in a new form view"
-	@priority = "4"
+	@priority = 4
 	test EditFieldsetPropertiesFromSideBar {
 		DataEngine.createNewFieldset(
 			fieldNameList = "Text",
@@ -114,57 +114,8 @@ definition {
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_HELP_TEXT");
 	}
 
-	@description = "This is a test for LPS-107630. As an App Adm, I want to use an existing fieldset"
-	@priority = "5"
-	test FieldsetNameRenamedWhenNameAlreadyExistent {
-		var textValue = "Text";
-		var numericValue = "Numeric";
-		var structureTitle = "WC Structure Name";
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(structureName = "${structureTitle}");
-
-		DataEngine.addField(
-			fieldFieldLabel = "${textValue}",
-			fieldName = "${textValue}");
-
-		DataEngine.editFieldReference(
-			assertFieldReference = "${textValue}",
-			fieldFieldLabel = "${textValue}",
-			fieldReference = "${textValue}");
-
-		DataEngine.addField(
-			fieldFieldLabel = "${numericValue}",
-			fieldName = "${numericValue}");
-
-		DataEngine.editFieldReference(
-			assertFieldReference = "${textValue}",
-			fieldFieldLabel = "${numericValue}",
-			fieldReference = "${textValue}");
-
-		WebContentStructures.saveCP(structureName = "${structureTitle}");
-
-		WebContentNavigator.gotoEditStructure(structureName = "${structureTitle}");
-
-		AssertClick.assertPartialTextClickAt(
-			key_fieldFieldLabel = "${numericValue}",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
-			value1 = "${numericValue}");
-
-		Navigator.gotoNavTab(navTab = "Advanced");
-
-		AssertTextNotEquals(
-			key_fieldLabel = "Field Reference",
-			key_fieldName = "fieldReference",
-			locator1 = "Sidebar#TEXT_INPUT",
-			value1 = "${textValue}");
-	}
-
 	@description = "This is a test for LPS-107630. Make sure Fieldsets can be set as collapsible"
-	@priority = "4"
+	@priority = 4
 	test FieldsetSetAsCollapsible {
 		DataEngine.createNewFieldset(
 			fieldNameList = "Numeric",
@@ -194,7 +145,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-107630. Make sure Fieldsets can be set as repeatable"
-	@priority = "4"
+	@priority = 4
 	test FieldsetSetAsRepeatable {
 		DataEngine.createNewFieldset(
 			fieldNameList = "Rich Text",
@@ -217,17 +168,17 @@ definition {
 		for (var n : list "1,2") {
 			DataEngine.assertFieldRepeated(
 				fieldName = "New Fieldset",
-				index = "${n}");
+				index = ${n});
 		}
 
-		AssertElementNotPresent(
+		AssertVisible(
 			key_fieldName = "New Fieldset",
-			key_index = "1",
+			key_index = 1,
 			locator1 = "FormFields#FIELD_REMOVE");
 
 		AssertVisible(
 			key_fieldName = "New Fieldset",
-			key_index = "2",
+			key_index = 2,
 			locator1 = "FormFields#FIELD_REMOVE");
 
 		PortletEntry.publish();
@@ -237,22 +188,22 @@ definition {
 		for (var n : list "1,2") {
 			DataEngine.assertFieldRepeated(
 				fieldName = "New Fieldset",
-				index = "${n}");
+				index = ${n});
 		}
 
-		AssertElementNotPresent(
+		AssertVisible(
 			key_fieldName = "New Fieldset",
-			key_index = "1",
+			key_index = 1,
 			locator1 = "FormFields#FIELD_REMOVE");
 
 		AssertVisible(
 			key_fieldName = "New Fieldset",
-			key_index = "2",
+			key_index = 2,
 			locator1 = "FormFields#FIELD_REMOVE");
 	}
 
 	@description = "This is a test for LPS-107630. Make sure the content is not duplicated when activating repeatable option on a Web Content"
-	@priority = "4"
+	@priority = 4
 	test RepeatFieldsetWithoutDuplicatingContent {
 		DataEngine.addFieldsetToBuilder(fieldsetName = "Basic Web Content");
 
@@ -281,7 +232,7 @@ definition {
 		SelectFrame(value1 = "relative=top");
 
 		SelectFrame.selectFrameNoLoading(
-			index = "2",
+			index = 2,
 			key_fieldLabel = "Content",
 			locator1 = "CKEditor#ANY_BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
 
@@ -291,7 +242,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-107630. Make sure Fieldset Label can be shown or hidden"
-	@priority = "4"
+	@priority = 4
 	test ShowAndHideFieldsetLabel {
 		DataEngine.createNewFieldset(
 			fieldNameList = "Date",
@@ -319,7 +270,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-123538. As Content Creator, I cannot edit fieldset on the Advanced panel"
-	@priority = "4"
+	@priority = 4
 	test VerifyFieldsetCannotBeEditedOnStructureBuilder {
 		DataEngine.createNewFieldset(
 			fieldNameList = "Date",

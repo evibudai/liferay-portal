@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.instances.internal.configuration.test;
@@ -33,11 +24,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author Raymond Augé
@@ -53,18 +41,6 @@ public class PortalInstancesConfigurationFactoryTest {
 
 	@Test
 	public void test() throws Exception {
-		Bundle bundle = FrameworkUtil.getBundle(
-			PortalInstancesConfigurationFactoryTest.class);
-
-		ServiceTracker<Object, Object> serviceTracker = new ServiceTracker<>(
-			bundle.getBundleContext(),
-			FrameworkUtil.createFilter(
-				"(component.name=com.liferay.portal.instances.internal." +
-					"configuration.PortalInstancesConfigurationFactory)"),
-			null);
-
-		serviceTracker.open();
-
 		String webId = RandomTestUtil.randomString();
 
 		Configuration configuration =
@@ -81,17 +57,11 @@ public class PortalInstancesConfigurationFactoryTest {
 				"virtualHostname", webId.concat(".foo.bar")
 			).build());
 
-		// Wait for company to be created
-
-		Assert.assertNotNull(serviceTracker.waitForService(40000));
-
 		_company = _companyLocalService.getCompanyByWebId(webId);
 
 		Assert.assertNotNull(_company);
 
 		ConfigurationTestUtil.deleteConfiguration(configuration);
-
-		serviceTracker.close();
 	}
 
 	@DeleteAfterTestRun

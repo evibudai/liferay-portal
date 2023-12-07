@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.user.resource.v1_0;
@@ -25,7 +16,9 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -59,13 +52,19 @@ public interface UserAccountResource {
 	public void
 			deleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode(
 				String accountExternalReferenceCode,
-				String userAccountExternalReferenceCode)
+				String externalReferenceCode)
+		throws Exception;
+
+	public UserAccount
+			getAccountByExternalReferenceCodeUserAccountByExternalReferenceCode(
+				String accountExternalReferenceCode,
+				String externalReferenceCode)
 		throws Exception;
 
 	public void
 			postAccountByExternalReferenceCodeUserAccountByExternalReferenceCode(
 				String accountExternalReferenceCode,
-				String userAccountExternalReferenceCode)
+				String externalReferenceCode)
 		throws Exception;
 
 	public Page<UserAccount> getAccountUserAccountsByExternalReferenceCodePage(
@@ -98,6 +97,11 @@ public interface UserAccountResource {
 			Sort[] sorts)
 		throws Exception;
 
+	public Response postAccountUserAccountsPageExportBatch(
+			Long accountId, String search, Filter filter, Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
 	public UserAccount postAccountUserAccount(
 			Long accountId, UserAccount userAccount)
 		throws Exception;
@@ -122,6 +126,12 @@ public interface UserAccountResource {
 			Long accountId, String emailAddress)
 		throws Exception;
 
+	public void deleteAccountUserAccount(Long accountId, Long userAccountId)
+		throws Exception;
+
+	public UserAccount getAccountUserAccount(Long accountId, Long userAccountId)
+		throws Exception;
+
 	public UserAccount getMyUserAccount() throws Exception;
 
 	public Page<UserAccount> getOrganizationUserAccountsPage(
@@ -129,19 +139,37 @@ public interface UserAccountResource {
 			Pagination pagination, Sort[] sorts)
 		throws Exception;
 
+	public Response postOrganizationUserAccountsPageExportBatch(
+			String organizationId, String search, Filter filter, Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
 	public Page<UserAccount> getSiteUserAccountsPage(
 			Long siteId, String search, Filter filter, Pagination pagination,
 			Sort[] sorts)
+		throws Exception;
+
+	public Response postSiteUserAccountsPageExportBatch(
+			Long siteId, String search, Filter filter, Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
 		throws Exception;
 
 	public Page<UserAccount> getUserAccountsPage(
 			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
+	public Response postUserAccountsPageExportBatch(
+			String search, Filter filter, Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
 	public UserAccount postUserAccount(UserAccount userAccount)
 		throws Exception;
 
 	public Response postUserAccountBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public UserAccount getUserAccountByEmailAddress(String emailAddress)
 		throws Exception;
 
 	public void deleteUserAccountByExternalReferenceCode(
@@ -154,6 +182,11 @@ public interface UserAccountResource {
 
 	public UserAccount putUserAccountByExternalReferenceCode(
 			String externalReferenceCode, UserAccount userAccount)
+		throws Exception;
+
+	public Page<UserAccount> getUserAccountsByStatusPage(
+			String status, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
 		throws Exception;
 
 	public void deleteUserAccount(Long userAccountId) throws Exception;
@@ -172,6 +205,10 @@ public interface UserAccountResource {
 		throws Exception;
 
 	public Response putUserAccountBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Response postUserAccountImage(
+			Long userAccountId, MultipartBody multipartBody)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -213,6 +250,10 @@ public interface UserAccountResource {
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
 
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
+
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
@@ -246,6 +287,8 @@ public interface UserAccountResource {
 			HttpServletResponse httpServletResponse);
 
 		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder uriInfo(UriInfo uriInfo);
 
 		public Builder user(com.liferay.portal.kernel.model.User user);
 

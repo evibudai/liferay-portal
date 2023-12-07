@@ -1,8 +1,9 @@
 @component-name = "portal-headless"
 definition {
 
+	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Headless";
+	property testray.main.component.name = "Headless Discovery";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -11,25 +12,24 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			BlogPostingAPI.deleteAllBlogPostings();
+		BlogPostingAPI.deleteAllBlogPostings();
 
-			var response = HeadlessWebcontentAPI.returnAllstructuredContentId();
+		var response = HeadlessWebcontentAPI.returnAllstructuredContentId();
 
-			HeadlessWebcontentAPI.deleteAllStructuredContent(structuredContentId = "${response}");
+		HeadlessWebcontentAPI.deleteAllStructuredContent(structuredContentId = ${response});
 
-			JSONCategory.deleteVocabulary(
-				groupName = "Guest",
-				vocabularyName = "Vocabulary Name");
+		JSONCategory.deleteVocabulary(
+			groupName = "Guest",
+			vocabularyName = "Vocabulary Name");
+
+		if (${testLiferayVirtualInstance} == "true") {
+			PortalInstances.tearDownCPNoSelenium();
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanConsumeGraphQLAPIsForHeadlessAdminContent {
 		property portal.acceptance = "true";
 
@@ -47,9 +47,7 @@ definition {
 		}
 
 		task ("When executing query structured content title") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
+			var siteId = JSONGroupSetter.setGroupId(groupName = "Guest");
 
 			APIExplorer.executeGraphqlQuery(query = "query {structuredContents(siteKey:\"${siteId}\"){items{title}}}");
 		}
@@ -61,7 +59,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanConsumeGraphQLAPIsForHeadlessAdminTaxonomy {
 		property portal.acceptance = "true";
 
@@ -78,9 +76,7 @@ definition {
 		}
 
 		task ("When executing query taxonomy vocabulary name") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
+			var siteId = JSONGroupSetter.setGroupId(groupName = "Guest");
 
 			APIExplorer.executeGraphqlQuery(query = "query{taxonomyVocabularies(siteKey:\"${siteId}\"){items{name}}}");
 		}
@@ -92,7 +88,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanConsumeGraphQLAPIsForHeadlessDelivery {
 		property portal.acceptance = "true";
 
@@ -109,9 +105,7 @@ definition {
 		}
 
 		task ("When executing query blog headline") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
+			var siteId = JSONGroupSetter.setGroupId(groupName = "Guest");
 
 			APIExplorer.executeGraphqlQuery(query = "query{blogPostings(siteKey:\"${siteId}\"){items{headline}}}");
 		}
@@ -123,7 +117,30 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
+	test CanLoadAPIExplorerFromCustomContext {
+		property portal.acceptance = "true";
+		property portal.context = "world";
+		property skip.clean-app-server-deploy-dir = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("When I navigate to localhost:8080/world/o/api") {
+			var portalURL = PropsUtil.get("portal.url");
+
+			APIExplorer.navigateToOpenAPI();
+		}
+
+		task ("Then Liferay API Explorer loads correctly") {
+			var api = "headless-delivery";
+
+			AssertTextEquals(
+				locator1 = "Select#HEADLESS_SERVERS",
+				value1 = "${portalURL}/o/${api}/");
+		}
+	}
+
+	@priority = 5
 	test CanLoadHeadlessAdminContentOpenAPI {
 		property portal.acceptance = "true";
 
@@ -131,7 +148,7 @@ definition {
 			var api = "headless-admin-content";
 
 			APIExplorer.navigateToOpenAPI(
-				api = "${api}",
+				api = ${api},
 				version = "v1.0");
 		}
 
@@ -146,7 +163,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanLoadHeadlessAdminTaxonomyOpenAPI {
 		property portal.acceptance = "true";
 
@@ -154,7 +171,7 @@ definition {
 			var api = "headless-admin-taxonomy";
 
 			APIExplorer.navigateToOpenAPI(
-				api = "${api}",
+				api = ${api},
 				version = "v1.0");
 		}
 
@@ -170,7 +187,7 @@ definition {
 	}
 
 	@description = "Load headless delivery openAPI explorer"
-	@priority = "5"
+	@priority = 5
 	test CanLoadHeadlessDeliveryOpenAPI {
 		property portal.acceptance = "true";
 
@@ -191,7 +208,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanRetrieveSiteBlogPostingsWithHeadlessDeliveryOpenAPI {
 		property portal.acceptance = "true";
 
@@ -202,11 +219,7 @@ definition {
 		}
 
 		task ("When executing getSiteBlogPosingPage with siteID as the parameter") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
-
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "getSiteBlogPostingsPage",
 				parameter = "siteId",
 				service = "BlogPosting");
@@ -216,11 +229,11 @@ definition {
 			AssertTextEquals(
 				locator1 = "OpenAPI#RESPONSE_CODE",
 				method = "getSiteBlogPostingsPage",
-				value1 = "200");
+				value1 = 200);
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanRetrieveSiteKeywordsWithHeadlessAdminTaxonomyOpenAPI {
 		property portal.acceptance = "true";
 
@@ -231,11 +244,7 @@ definition {
 		}
 
 		task ("When executing getSiteKeywordsPage with siteID as the parameter") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
-
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "getSiteKeywordsPage",
 				parameter = "siteId",
 				service = "Keyword");
@@ -245,11 +254,11 @@ definition {
 			AssertTextEquals(
 				locator1 = "OpenAPI#RESPONSE_CODE",
 				method = "getSiteKeywordsPage",
-				value1 = "200");
+				value1 = 200);
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanRetrieveSiteStructuredContentsWithHeadlessAdminContentOpenAPI {
 		property portal.acceptance = "true";
 
@@ -260,11 +269,7 @@ definition {
 		}
 
 		task ("When executing getSiteStructuredContentsPage with siteID as the parameter") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
-
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "getSiteStructuredContentsPage",
 				parameter = "siteId",
 				service = "StructuredContent");
@@ -274,11 +279,11 @@ definition {
 			AssertTextEquals(
 				locator1 = "OpenAPI#RESPONSE_CODE",
 				method = "getSiteStructuredContentsPage",
-				value1 = "200");
+				value1 = 200);
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test CanReturnExceptionOfUnacceptableHeaderWithHeadlessAdminContentOpenAPI {
 		property portal.acceptance = "true";
 
@@ -295,15 +300,12 @@ definition {
 		}
 
 		task ("When executing postSiteTaxonomyVocabulary with siteID as the parameter") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
 			var requestBody = '''{"name": "Vocubulary Name"}''';
 
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "postSiteTaxonomyVocabulary",
 				parameter = "siteId",
-				requestBody = "${requestBody}",
+				requestBody = ${requestBody},
 				service = "TaxonomyVocabulary");
 		}
 
@@ -319,7 +321,7 @@ definition {
 			AssertTextEquals(
 				locator1 = "OpenAPI#RESPONSE_CODE",
 				method = "postSiteTaxonomyVocabulary",
-				value1 = "406");
+				value1 = 406);
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "OpenAPI#RESPONSE_BODY",
@@ -332,7 +334,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test HeaderWorksInNegativeCaseWithHeadlessAdminContentOpenAPI {
 		property portal.acceptance = "true";
 
@@ -365,9 +367,6 @@ definition {
 		}
 
 		task ("When executing postSiteStructuredContentDraft with siteID as the parameter and structuredId in the body") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
 			var requestBody = '''
 				{
 					"contentStructureId": ${ddmStructureId},
@@ -375,10 +374,10 @@ definition {
 				}
 			''';
 
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "postSiteStructuredContentDraft",
 				parameter = "siteId",
-				requestBody = "${requestBody}",
+				requestBody = ${requestBody},
 				service = "StructuredContent");
 		}
 
@@ -394,7 +393,7 @@ definition {
 			AssertTextEquals(
 				locator1 = "OpenAPI#RESPONSE_CODE",
 				method = "postSiteStructuredContentDraft",
-				value1 = "400");
+				value1 = 400);
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "OpenAPI#RESPONSE_BODY",
@@ -407,7 +406,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test HeaderWorksInNegativeCaseWithHeadlessDeliveryOpenAPI {
 		property portal.acceptance = "true";
 
@@ -440,9 +439,6 @@ definition {
 		}
 
 		task ("When executing postSiteStructuredContent with siteID as the parameter and structuredId in the body") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
 			var requestBody = '''
 				{
 					"contentStructureId": ${ddmStructureId},
@@ -450,10 +446,10 @@ definition {
 				}
 			''';
 
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "postSiteStructuredContent",
 				parameter = "siteId",
-				requestBody = "${requestBody}",
+				requestBody = ${requestBody},
 				service = "StructuredContent");
 		}
 
@@ -469,7 +465,7 @@ definition {
 			AssertTextEquals(
 				locator1 = "OpenAPI#RESPONSE_CODE",
 				method = "postSiteStructuredContent",
-				value1 = "400");
+				value1 = 400);
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "OpenAPI#RESPONSE_BODY",
@@ -482,7 +478,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test HeaderWorksInPositiveCaseWithHeadlessAdminContentOpenAPI {
 		property portal.acceptance = "true";
 
@@ -506,11 +502,7 @@ definition {
 		}
 
 		task ("When executing getSiteStructuredContentsPage with siteID as the parameter") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
-
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "getSiteStructuredContentsPage",
 				parameter = "siteId",
 				service = "StructuredContent");
@@ -532,7 +524,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test HeaderWorksInPositiveCaseWithHeadlessAdminTaxonomyOpenAPI {
 		property portal.acceptance = "true";
 
@@ -555,11 +547,7 @@ definition {
 		}
 
 		task ("When executing getSiteTaxonomyVocabulariesPage with siteID as the parameter") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
-
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "getSiteTaxonomyVocabulariesPage",
 				parameter = "siteId",
 				service = "TaxonomyVocabulary");
@@ -581,7 +569,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test HeaderWorksInPositiveCaseWithHeadlessDeliveryOpenAPI {
 		property portal.acceptance = "true";
 
@@ -605,11 +593,7 @@ definition {
 		}
 
 		task ("When executing getSiteStructuredContentsPage with siteID as the parameter") {
-			var siteId = JSONGroupAPI._getGroupIdByNameNoSelenium(
-				groupName = "Guest",
-				site = "true");
-
-			APIExplorer.executeAPIMethodWithParameters(
+			APIExplorer.executeAPIMethod(
 				method = "getSiteStructuredContentsPage",
 				parameter = "siteId",
 				service = "StructuredContent");

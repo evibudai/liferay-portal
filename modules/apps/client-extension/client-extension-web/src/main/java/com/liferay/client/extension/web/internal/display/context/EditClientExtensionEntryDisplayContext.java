@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.client.extension.web.internal.display.context;
 
-import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.web.internal.display.context.util.CETLabelUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption;
@@ -28,6 +18,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -48,11 +39,10 @@ import javax.servlet.http.HttpServletRequest;
 public class EditClientExtensionEntryDisplayContext<T extends CET> {
 
 	public EditClientExtensionEntryDisplayContext(
-		T cet, ClientExtensionEntry clientExtensionEntry,
-		PortletRequest portletRequest) {
+		boolean adding, T cet, PortletRequest portletRequest) {
 
+		_adding = adding;
 		_cet = cet;
-		_clientExtensionEntry = clientExtensionEntry;
 		_portletRequest = portletRequest;
 	}
 
@@ -61,7 +51,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getCmd() {
-		if (_clientExtensionEntry == null) {
+		if (_adding) {
 			return Constants.ADD;
 		}
 
@@ -69,8 +59,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getDescription() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "description");
+		return BeanParamUtil.getString(_cet, _portletRequest, "description");
 	}
 
 	public String getEditJSP() {
@@ -79,12 +68,21 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 
 	public String getExternalReferenceCode() {
 		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "externalReferenceCode");
+			_cet, _portletRequest, "externalReferenceCode");
+	}
+
+	public String getHelpLabel() {
+		ThemeDisplay themeDisplay = _getThemeDisplay();
+
+		return CETLabelUtil.getHelpLabel(themeDisplay.getLocale(), getType());
+	}
+
+	public String getLearnResourceKey() {
+		return CETLabelUtil.getLearnResourceKey(getType());
 	}
 
 	public String getName() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "name");
+		return BeanParamUtil.getString(_cet, _portletRequest, "name");
 	}
 
 	public List<SelectOption> getPortletCategoryNameSelectOptions(
@@ -95,7 +93,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 		boolean found = false;
 
 		if (Validator.isBlank(selectedPortletCategoryName)) {
-			selectedPortletCategoryName = "category.remote-apps";
+			selectedPortletCategoryName = "category.client-extensions";
 		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)_portletRequest.getAttribute(
@@ -116,7 +114,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 						portletCategory.getName())));
 
 			if (Objects.equals(
-					portletCategory.getName(), "category.remote-apps")) {
+					portletCategory.getName(), "category.client-extensions")) {
 
 				found = true;
 			}
@@ -126,10 +124,11 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 			selectOptions.add(
 				new SelectOption(
 					LanguageUtil.get(
-						themeDisplay.getLocale(), "category.remote-apps"),
-					"category.remote-apps",
+						themeDisplay.getLocale(), "category.client-extensions"),
+					"category.client-extensions",
 					Objects.equals(
-						selectedPortletCategoryName, "category.remote-apps")));
+						selectedPortletCategoryName,
+						"category.client-extensions")));
 		}
 
 		return ListUtil.sort(
@@ -150,8 +149,9 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getProperties() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "properties");
+		return ParamUtil.getString(
+			_portletRequest, "properties",
+			PropertiesUtil.toString(_cet.getProperties()));
 	}
 
 	public String getRedirect() {
@@ -159,8 +159,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getSourceCodeURL() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "sourceCodeURL");
+		return BeanParamUtil.getString(_cet, _portletRequest, "sourceCodeURL");
 	}
 
 	public String[] getStrings(String urls) {
@@ -176,35 +175,26 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	public String getTitle() {
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
-		if (_clientExtensionEntry == null) {
-			return LanguageUtil.get(
-				_getHttpServletRequest(),
-				CETLabelUtil.getNewLabel(
-					themeDisplay.getLocale(), _cet.getType()));
+		if (_adding) {
+			return CETLabelUtil.getNewLabel(
+				themeDisplay.getLocale(), _cet.getType());
 		}
 
 		return _cet.getName(themeDisplay.getLocale());
 	}
 
 	public String getType() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "type");
+		return BeanParamUtil.getString(_cet, _portletRequest, "type");
 	}
 
 	public String getTypeLabel() {
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
-		return LanguageUtil.get(
-			_getHttpServletRequest(),
-			CETLabelUtil.getTypeLabel(themeDisplay.getLocale(), getType()));
+		return CETLabelUtil.getTypeLabel(themeDisplay.getLocale(), getType());
 	}
 
-	public boolean isNew() {
-		if (_clientExtensionEntry == null) {
-			return true;
-		}
-
-		return false;
+	public boolean isAdding() {
+		return _adding;
 	}
 
 	public boolean isPropertiesVisible() {
@@ -224,8 +214,8 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 
 	private static final String[] _EMPTY_STRINGS = {StringPool.BLANK};
 
+	private final boolean _adding;
 	private final T _cet;
-	private final ClientExtensionEntry _clientExtensionEntry;
 	private final PortletRequest _portletRequest;
 
 }

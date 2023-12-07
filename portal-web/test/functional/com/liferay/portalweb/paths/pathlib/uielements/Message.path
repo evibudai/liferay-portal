@@ -57,7 +57,7 @@
 </tr>
 <tr>
 	<td>EMPTY_INFO</td>
-	<td>//div[contains(@class,'sheet')]/div[contains(@class,'sheet-text')] | //div[contains(@class,'taglib-empty-result-message')]/div[contains(@class,'text-secondary')]</td>
+	<td>//div[contains(@class,'taglib-empty-result-message')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -67,7 +67,7 @@
 </tr>
 <tr>
 	<td>ROLE_EMPTY_MUTED_INFO</td>
-	<td>//div[h3[*[*[contains(text(),'${key_roleType}')]]]]//div[*[contains(@class,'text-muted')]or contains(@class,'text-muted')]</td>
+	<td>//div[contains(@class,'sheet-subtitle') and contains(.,'${key_roleType}')]//following-sibling::div[contains(@class,'sheet-text')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -151,11 +151,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ERROR_3_LINK</td>
-	<td>xpath=(//div[contains(@class,'alert') and (contains(@class,'alert-warning'))]/a)</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ERROR_DELETE_USED_SITE_TEMPLATES</td>
 	<td>//div[contains(@class,'alert-danger') and contains(.,'You cannot delete site templates that are used by a site')]</td>
 	<td></td>
@@ -163,6 +158,11 @@
 <tr>
 	<td>ERROR_EMPTY_FIELD</td>
 	<td>//div[contains(@class,'alert') and (contains(@class,'alert-error') or contains(@class,'alert-danger'))]//div[contains(.,'At least one option should be set for field ${key_fieldLabel}.')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_ENTER_ANY</td>
+	<td>//div[contains(@class,'alert-danger') and contains(.,'${key_alertMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -201,6 +201,21 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ERROR_CHECKBOX_FIELD</td>
+	<td>//div[contains(@class,'forms-checkbox')][.//label[normalize-space()='${fieldLabel}']]//p[contains(@class,'text-danger')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_FIELD</td>
+	<td>//label[normalize-space()='${fieldLabel}']//following-sibling::p[contains(@class,'text-danger')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_FORM</td>
+	<td>//form/div[contains(@class,'alert-danger')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ERROR_FIELD_REQUIRED</td>
 	<td>//label[contains(.,'${key_fieldFieldLabel}')]/..//div[@role='alert' and contains(.,'The ${key_fieldFieldLabel} field is required')]</td>
 	<td></td>
@@ -213,6 +228,16 @@
 <tr>
 	<td>ERROR_FORM_VALIDATION</td>
 	<td>//div[contains(@class,'form-validator-stack')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_IMPORT</td>
+	<td>//span[contains(@class,'text-danger')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_IMPORT_SUBTEXT</td>
+	<td>//div[contains(@class,'list-group-title')][normalize-space()='${itemName}']//following-sibling::div[contains(@class,'text-danger')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -296,13 +321,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ERROR_WITH_SPECIFIC_ENTRY</td>
+	<td>//div[label[contains(.,'${key_fieldLabel}')]]//following-sibling::div//div[@role='alert' and contains(.,'${key_alertMessage}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>GENERIC</td>
 	<td>//div[contains(@class,'alert')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>INFO</td>
-	<td>//div[contains(@class,'alert alert-info') and not(contains(@class,'hide'))]</td>
+	<td>//div[contains(@class,'alert-info') and not(contains(@class,'hide'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -312,7 +342,7 @@
 </tr>
 <tr>
 	<td>INFO_SPECIFIC</td>
-	<td>//div[contains(@class,'alert alert-info') and not(contains(@class,'hide'))][contains(.,'${key_infoMessage}')]</td>
+	<td>//div[contains(@class,'alert') and contains(@class,'alert-info') and not(contains(@class,'hide'))][contains(.,'${key_infoMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -426,6 +456,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SUCCESS_IMPORT</td>
+	<td>//span[contains(@class,'text-success')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUCCESS_IMPORT_SUBTEXT</td>
+	<td>//div[contains(@class,'list-group-title')][normalize-space()='${itemName}']//following-sibling::div[contains(@class,'text-success')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SUCCESS_IMPORT_TRANSLATIONS</td>
 	<td>//div[contains(@class,'text-success')]</td>
 	<td></td>
@@ -476,8 +516,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>WARNING</td>
+	<td>//div[contains(@class,'alert') and contains(@class,'alert-warning')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>WARNING_FEEDBACK</td>
 	<td>//div[contains(@class,'form-feedback-item')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WARNING_IMPORT</td>
+	<td>//span[contains(@class,'text-warning')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WARNING_IMPORT_SUBTEXT</td>
+	<td>//div[contains(@class,'list-group-title')][normalize-space()='${itemName}']//following-sibling::div[contains(@class,'text-warning')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -492,7 +547,17 @@
 </tr>
 <tr>
 	<td>WARNING_SPECIFIC_LINK</td>
-	<td>//div[contains(@class,'alert') and (contains(@class,'alert-warning'))]/a[contains(.,'${key_warningMessage}')]</td>
+	<td>//div[contains(@class,'alert') and (contains(@class,'alert-warning'))]//a[contains(.,'${key_warningMessage}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WARNING_SPECIFIC_LINK_1</td>
+	<td>//div[contains(@class,'alert') and (contains(@class,'alert-warning'))]//a</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WARNING_WITH_LABEL</td>
+	<td>//div[contains(@class,'form-group')][.//label[normalize-space()='${fieldLabel}']]//following-sibling::*[self::div or self::p][contains(@class,'text-warning')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -508,6 +573,11 @@
 <tr>
 	<td>EMPTY_STATE_INFO</td>
 	<td>//div[(@class='c-empty-state-title')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_STATE_TEXT</td>
+	<td>//div[contains(@class,'c-empty-state-text')]</td>
 	<td></td>
 </tr>
 </tbody>

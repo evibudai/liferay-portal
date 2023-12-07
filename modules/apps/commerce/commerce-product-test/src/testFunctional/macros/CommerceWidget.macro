@@ -1,19 +1,20 @@
 definition {
 
-	macro addAccountAndChildToOrganization {
+	@summary = "Default summary"
+	macro addAccountAndChildToOrganization(siteName = null, key_nodeName = null, key_nodeDestination = null, pageName = null, key_nodeOrigin = null) {
 		Navigator.openSitePage(
-			pageName = "${pageName}",
-			siteName = "${siteName}");
+			pageName = ${pageName},
+			siteName = ${siteName});
 
 		Click(locator1 = "Button#EXPAND");
 
 		Click(
-			key_nodeName = "${key_nodeName}",
+			key_nodeName = ${key_nodeName},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_TITLE");
 
 		DragAndDrop.dragAndDropPortletToPortletNoError(
-			key_nodeDestination = "${key_nodeDestination}",
-			key_nodeOrigin = "${key_nodeOrigin}",
+			key_nodeDestination = ${key_nodeDestination},
+			key_nodeOrigin = ${key_nodeOrigin},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_ORIGIN",
 			locator2 = "CommerceOrganizationManagementWidget#NODE_DESTINATION",
 			value1 = "Commerce Account");
@@ -30,75 +31,81 @@ definition {
 		AssertConfirm(value1 = "Child Org 1 will be moved into Organization 1.");
 	}
 
-	macro addAccountViaOrganizationManagementWidget {
+	@summary = "Default summary"
+	macro addAccountViaOrganizationManagementWidget(key_radioOption = null, value = null) {
 		Click.clickAtNotVisible(
-			key_radioOption = "${key_radioOption}",
+			key_radioOption = ${key_radioOption},
 			locator1 = "CommerceEntry#RADIO_BUTTON");
 
 		Type(
 			locator1 = "TextInput#NAME",
-			value1 = "${value}");
+			value1 = ${value});
 
 		Button.clickSave();
 	}
 
-	macro addRootCategory {
-		var key_categoryName = "${categoryName}";
+	@summary = "Default summary"
+	macro addRootCategory(vocabularyName = null, categoryName = null) {
+		var key_categoryName = ${categoryName};
 
 		Type(
-			key_vocabularyName = "${vocabularyName}",
+			key_vocabularyName = ${vocabularyName},
 			locator1 = "AssetCategorization#CATEGORIES_FIELD",
-			value1 = "${categoryName}");
+			value1 = ${categoryName});
 
 		Click.mouseDownMouseUp(locator1 = "AssetCategorization#CATEGORY_AUTOCOMPLETE_SPECIFIC");
 
 		AssertElementPresent(
 			locator1 = "CommerceWidget#TAG_FACET_LABEL_LAYOUT",
-			tagName = "${categoryName}");
+			tagName = ${categoryName});
 	}
 
-	macro addUserViaOrganizationManagementWidget {
+	@summary = "Default summary"
+	macro addUserViaOrganizationManagementWidget(key_roleOption = null, value = null) {
 		Type(
 			locator1 = "CommerceOrganizationManagementWidget#INVITE_EMAIL_INPUT",
-			value1 = "${value}");
+			value1 = ${value});
 
 		Click(
-			key_roleOption = "${key_roleOption}",
+			key_roleOption = ${key_roleOption},
 			locator1 = "CommerceOrganizationManagementWidget#SELECT_ROLE");
 
 		Button.clickSave();
 	}
 
-	macro assertOptionFacetsCount {
-		var optionName = "${optionName}";
+	@summary = "Default summary"
+	macro assertOptionFacetsCount(expectedLabels = null, stringToMatch = null) {
+		var optionName = ${optionName};
 
 		var javaScriptCountElement = '''
-		
+
 		const stringToMatch = "${optionName}";
 
 		return document.querySelectorAll(`[data-qa-id='${stringToMatch}'] li`).length.toString();
 
 		''';
 
-		var count = selenium.getEval("${javaScriptCountElement}");
+		var count = selenium.getEval(${javaScriptCountElement});
 
-		return "${count}";
+		return ${count};
 
 		echo("THE NUMBER OF FACETED LABELS IS ${count}");
 
-		if ("${count}" != "${expectedLabels}") {
+		if (${count} != ${expectedLabels}) {
 			fail("Labels number is not correct");
 		}
 	}
 
-	macro assertOrganizationManagementWigetTitlePresent {
+	@summary = "Default summary"
+	macro assertOrganizationManagementWigetTitlePresent(key_nodeName = null) {
 		AssertElementPresent(
-			key_nodeName = "${key_nodeName}",
+			key_nodeName = ${key_nodeName},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_TITLE");
 	}
 
-	macro assertSpecificationPanel2FacetsCount {
-		var specificationGroup = "${specificationGroup}";
+	@summary = "Default summary"
+	macro assertSpecificationPanel2FacetsCount(expectedLabels = null, stringToMatch = null) {
+		var specificationGroup = ${specificationGroup};
 
 		var javaScriptCountElement = '''
 
@@ -108,25 +115,38 @@ definition {
 
 		''';
 
-		var count = selenium.getEval("${javaScriptCountElement}");
+		var count = selenium.getEval(${javaScriptCountElement});
 
-		return "${count}";
+		return ${count};
 
 		echo("THE NUMBER OF FACETED LABELS IS ${count}");
 
-		if ("${count}" != "${expectedLabels}") {
+		if (${count} != ${expectedLabels}) {
+			CommerceProducts.openProductsAdmin();
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
+
+			var count = selenium.getEval(${javaScriptCountElement});
+
+			return ${count};
+
+			echo("AFTER THE REFRESH THE NUMBER OF FACETED LABELS IS ${count}");
+		}
+
+		if (${count} != ${expectedLabels}) {
 			fail("Labels number is not correct");
 		}
 	}
 
-	macro associateAccountWithOrganization {
+	@summary = "Default summary"
+	macro associateAccountWithOrganization(key_radioOption = null, value = null) {
 		Click.clickAtNotVisible(
-			key_radioOption = "${key_radioOption}",
+			key_radioOption = ${key_radioOption},
 			locator1 = "CommerceEntry#RADIO_BUTTON");
 
 		Type(
 			locator1 = "CommerceOrganizationManagementWidget#SEARCH_ACCOUNT_INPUT",
-			value1 = "${value}");
+			value1 = ${value});
 
 		KeyPress(
 			locator1 = "CommerceOrganizationManagementWidget#SEARCH_ACCOUNT_INPUT",
@@ -135,57 +155,290 @@ definition {
 		Button.clickSave();
 	}
 
-	macro canCreateChildOrganization {
+	@summary = "Default summary"
+	macro canCreateChildOrganization(value = null) {
 		Type(
 			locator1 = "TextInput#NAME",
-			value1 = "${value}");
+			value1 = ${value});
 
 		Button.clickSave();
 	}
 
-	macro canDragAndDropOrganizaitionAndChildOrganization {
+	@summary = "Default summary"
+	macro canDragAndDropOrganizaitionAndChildOrganization(key_nodeName = null, key_nodeDestination = null, key_nodeChild = null, key_nodeOrigin = null) {
 		Click(locator1 = "Button#EXPAND");
 
 		Click(
-			key_nodeName = "${key_nodeName}",
+			key_nodeName = ${key_nodeName},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_TITLE");
 
 		DragAndDrop.dragAndDropPortletToPortletNoError(
-			key_nodeDestination = "${key_nodeDestination}",
-			key_nodeOrigin = "${key_nodeOrigin}",
+			key_nodeDestination = ${key_nodeDestination},
+			key_nodeOrigin = ${key_nodeOrigin},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_ORIGIN",
 			locator2 = "CommerceOrganizationManagementWidget#NODE_DESTINATION",
-			value1 = "${key_nodeOrigin}");
+			value1 = ${key_nodeOrigin});
 
 		AssertConfirm(value1 = "${key_nodeOrigin} will be moved into ${key_nodeDestination}.");
 
 		DragAndDrop.dragAndDropPortletToPortletNoError(
 			key_nodeDestination = "Organization 1",
-			key_nodeOrigin = "${key_nodeChild}",
+			key_nodeOrigin = ${key_nodeChild},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_ORIGIN",
 			locator2 = "CommerceOrganizationManagementWidget#NODE_DESTINATION",
-			value1 = "${key_nodeChild}");
+			value1 = ${key_nodeChild});
 
 		AssertConfirm(value1 = "${key_nodeChild} will be moved into ${key_nodeDestination}.");
 
 		Refresh();
 	}
 
-	macro gotoSVGNode {
+	@summary = "This macro can be used for clearing Organization Management Widget search bar"
+	macro clearOrganizationManagementWidgetSearchBar() {
+		DoubleClick(locator1 = "CommerceOrganizationManagementWidget#SEARCH_FIELD");
+
+		KeyPress(
+			locator1 = "CommerceOrganizationManagementWidget#SEARCH_FIELD",
+			value1 = "\BACK_SPACE");
+	}
+
+	@summary = "This macro can be used for deleting entry from Organization Management Chart"
+	macro deleteEntryFromOrganizationManagement(entryName = null) {
+		CommerceWidget.searchAndGoToOrganizationManagementWidgetEntry(entryName = ${entryName});
+
+		Click(
+			key_nodeName = ${entryName},
+			locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
+
+		ClickNoError(
+			key_menuItem = "Delete",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+
+		AssertConfirm.waitForConfirmation(value1 = "${entryName} will be deleted.");
+	}
+
+	@summary = "Default summary"
+	macro deleteFilterEntry(portletName = null) {
+		Portlet.gotoPortletOptions(
+			portletName = ${portletName},
+			portletOption = "Configuration");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		SelectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
+
+		Navigator.gotoNavTab(navTab = "Product Selection");
+
+		AssertChecked(
+			locator1 = "Radio#ANY",
+			radioLabel = "Dynamic");
+
+		CommerceUtilities.expandField(accordionTitle = "filter");
+
+		Click.mouseOverClick(
+			key_button = "delete",
+			locator1 = "CommerceWidget#PRODUCT_PUBLISHER_ADD_REMOVE_FILTER_BUTTON");
+
+		Button.click(button = "Save");
+
+		Alert.viewSuccessMessage();
+
+		IFrame.closeFrame();
+	}
+
+	@summary = "This macro can be used for editing account information from Organization Management Chart"
+	macro editAccountFromOrganizationManagement(accountName = null, accountImage = null, newAccountName = null, accountTaxID = null, accountERC = null, accountDescription = null) {
+		if (isSet(viewAndEditAccount)) {
+			CommerceWidget.searchAndGoToOrganizationManagementWidgetEntry(entryName = ${accountName});
+
+			Click(
+				key_nodeName = ${accountName},
+				locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
+
+			Click(
+				key_menuItem = "View",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+
+			Click(locator1 = "Icon#SIDEBAR_HEADER_ACTION_VERTICAL_ELLIPSIS_BUTTON");
+
+			Click(
+				key_menuItem = "Edit",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+		else {
+			Click(locator1 = "Icon#SIDEBAR_HEADER_ACTION_VERTICAL_ELLIPSIS_BUTTON");
+
+			Click(
+				key_menuItem = "Edit",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+
+		if (isSet(accountImage)) {
+			User.changeProfileImage(imageName = ${accountImage});
+		}
+
+		if (isSet(newAccountName)) {
+			PortletEntry.inputName(name = ${newAccountName});
+		}
+
+		if (isSet(accountTaxID)) {
+			PortletEntry.inputText(
+				fieldLabel = "Tax ID",
+				text = ${accountTaxID});
+		}
+
+		if (isSet(accountERC)) {
+			Type(
+				key_label = "External Reference Code",
+				locator1 = "TextArea#ANY_LABELED",
+				value1 = ${accountERC});
+		}
+
+		if (isSet(accountDescription)) {
+			PortletEntry.inputDescription(description = ${accountDescription});
+		}
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+	}
+
+	@summary = "This macro can be used for editing user information from Organization Management Chart"
+	macro editUserInformationFromOrganizationManagement(userBirthday = null, userEmailAddress = null, userFirstName = null, userImage = null, userLanguage = null, userLastName = null, userMiddleName = null, userPrefix = null, userScreenName = null, userSuffix = null) {
+		if (isSet(viewAndEditUser)) {
+			CommerceWidget.searchAndGoToOrganizationManagementWidgetEntry(entryName = ${userName});
+
+			Click(
+				key_nodeName = ${userName},
+				locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
+
+			Click(
+				key_menuItem = "View",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+
+			Click(locator1 = "Icon#SIDEBAR_HEADER_ACTION_VERTICAL_ELLIPSIS_BUTTON");
+
+			Click(
+				key_menuItem = "Edit",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+		else {
+			Click(locator1 = "Icon#SIDEBAR_HEADER_ACTION_VERTICAL_ELLIPSIS_BUTTON");
+
+			Click(
+				key_menuItem = "Edit",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+
+		if (isSet(userImage)) {
+			User.changeProfileImage(imageName = ${userImage});
+		}
+
+		if (isSet(userScreenName)) {
+			PortletEntry.inputText(
+				fieldLabel = "Screen Name",
+				text = ${userScreenName});
+		}
+
+		if (isSet(userEmailAddress)) {
+			PortletEntry.inputText(
+				fieldLabel = "Email Address",
+				text = ${userEmailAddress});
+		}
+
+		if (isSet(userLanguage)) {
+			Select(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_LANGUAGE_SELECT",
+				value1 = ${userLanguage});
+		}
+
+		if (${userLanguage} == "English (United States)") {
+			if (isSet(userPrefix)) {
+				Select(
+					locator1 = "UsersAndOrganizationsEditUser#DETAILS_PREFIX_SELECT",
+					value1 = ${userPrefix});
+			}
+
+			if (isSet(userMiddleName)) {
+				PortletEntry.inputText(
+					fieldLabel = "Middle Name",
+					text = ${userMiddleName});
+			}
+
+			if (isSet(userSuffix)) {
+				Select(
+					locator1 = "UsersAndOrganizationsEditUser#DETAILS_SUFFIX_SELECT",
+					value1 = ${userSuffix});
+			}
+		}
+
+		if (isSet(userFirstName)) {
+			PortletEntry.inputText(
+				fieldLabel = "First Name",
+				text = ${userFirstName});
+		}
+
+		if (isSet(userLastName)) {
+			PortletEntry.inputText(
+				fieldLabel = "Last Name",
+				text = ${userLastName});
+		}
+
+		if (isSet(userJobTitle)) {
+			PortletEntry.inputText(
+				fieldLabel = "Job Title",
+				text = ${userJobTitle});
+		}
+
+		if (isSet(userBirthday)) {
+			Click(locator1 = "FormFields#DATE_CALENDAR");
+
+			if (isSet(valueYear)) {
+				Click(locator1 = "FormFields#YEAR_CALENDAR_FIELD");
+
+				Click(
+					key_optionYear = ${valueYear},
+					locator1 = "FormFields#YEAR_CALENDAR_OPTION");
+			}
+
+			if (isSet(valueMonth)) {
+				Select(
+					key_valueName = "month",
+					locator1 = "FormFields#DATE_CALENDAR_FIELD",
+					value1 = ${valueMonth});
+			}
+
+			if (isSet(valueDay)) {
+				Click(
+					key_valueDay = ${valueDay},
+					locator1 = "FormFields#DATE_CALENDAR_DAY");
+			}
+		}
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+	}
+
+	@summary = "Default summary"
+	macro gotoSVGNode(key_orgType = null, key_nodeName = null) {
 		Click(locator1 = "Button#EXPAND");
 
 		Click(
-			key_nodeName = "${key_nodeName}",
+			key_nodeName = ${key_nodeName},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_TITLE");
 
 		Click(locator1 = "CommerceOrganizationManagementWidget#PLUS_BUTTON");
 
 		Click(
-			key_orgType = "${key_orgType}",
+			key_orgType = ${key_orgType},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_ACTION");
 	}
 
-	macro openOrganizationWidget {
+	@summary = "Default summary"
+	macro openOrganizationWidget() {
 		Navigator.openSitePage(
 			pageName = "Organization Management Widget Page",
 			siteName = "Minium");
@@ -193,15 +446,76 @@ definition {
 		Click(locator1 = "Button#EXPAND");
 	}
 
-	macro removeChildOrganization {
+	@summary = "Default summary"
+	macro productPublisherAddFilter(optionAndOperator = null, categories = null, filterType = null, filterEntries = null, optionQuery = null) {
+		CommerceUtilities.expandField(accordionTitle = "filter");
+
+		Click(
+			key_button = "add",
+			locator1 = "CommerceWidget#PRODUCT_PUBLISHER_ADD_REMOVE_FILTER_BUTTON");
+
+		if (isSet(optionQuery)) {
+			Select(
+				key_title = "Query Contains",
+				locator1 = "CalendarLookAndFeelConfiguration#SELECT_BORDER_WIDTH_COLUMN",
+				value1 = ${optionQuery});
+		}
+
+		if (isSet(optionAndOperator)) {
+			Select(
+				key_title = "And Operator",
+				locator1 = "CalendarLookAndFeelConfiguration#SELECT_BORDER_WIDTH_COLUMN",
+				value1 = ${optionAndOperator});
+		}
+
+		if (isSet(filterType)) {
+			Select(
+				key_fieldName = "queryName0",
+				locator1 = "PRMMDFRequest#SELECT",
+				value1 = ${filterType});
+
+			Click(
+				key_button = "Select",
+				locator1 = "CommerceWidget#PRODUCT_PUBLISHER_FILTER_ADD_SELECT_BUTTON");
+
+			CommerceWidget.setFilterItems(
+				categories = ${categories},
+				filterTitle = ${filterType},
+				tags = ${filterEntries});
+		}
+
+		Button.click(button = "Save");
+
+		Alert.viewSuccessMessage();
+
+		IFrame.closeFrame();
+	}
+
+	@summary = "This macro can be used for removing account from Organization in Organization Management Chart"
+	macro removeAccountFromOrganization(accountName = null, organizationName = null) {
+		CommerceWidget.searchAndGoToOrganizationManagementWidgetEntry(entryName = ${accountName});
+
+		Click(
+			key_nodeName = ${accountName},
+			locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
+
+		ClickNoError(
+			key_menuItem = "Remove",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+
+		AssertConfirm(value1 = "${accountName} will be removed from ${organizationName}.");
+	}
+
+	@summary = "Default summary"
+	macro removeChildOrganization(key_nodeName = null, key_nodeChild = null) {
 		Click(locator1 = "Button#EXPAND");
 
 		Click(
-			key_nodeName = "${key_nodeName}",
+			key_nodeName = ${key_nodeName},
 			locator1 = "CommerceOrganizationManagementWidget#NODE_TITLE");
 
 		Click(
-			key_nodeName = "${key_nodeChild}",
+			key_nodeName = ${key_nodeChild},
 			locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
 
 		ClickNoError(
@@ -215,9 +529,79 @@ definition {
 		Click(locator1 = "Button#EXPAND");
 	}
 
-	macro updateFacetConfiguration {
+	@summary = "This macro can be used for removing user from Account in Organization Management Chart"
+	macro removeUserFromAccount(userName = null, accountName = null) {
+		CommerceWidget.searchAndGoToOrganizationManagementWidgetEntry(entryName = ${userName});
+
+		Click(
+			key_nodeName = ${userName},
+			locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
+
+		ClickNoError(
+			key_menuItem = "Remove",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+
+		AssertConfirm(value1 = "${userName} will be removed from ${accountName}.");
+	}
+
+	@summary = "This macro can be used for navigating to the Organization Management Widget entry"
+	macro searchAndGoToOrganizationManagementWidgetEntry(entryName = null) {
+		Type(
+			locator1 = "CommerceOrganizationManagementWidget#SEARCH_FIELD",
+			value1 = ${entryName});
+
+		Click(
+			key_columnOption = ${entryName},
+			locator1 = "ObjectCustomViews#SELECT_AUTO_COMPLETE_OPTION");
+	}
+
+	@summary = "Default summary"
+	macro setFilterItems(filterTitle = null, key_card = null, categories = null, tags = null) {
+		SelectFrame.selectFrameNoLoading(
+			key_title = ${filterTitle},
+			locator1 = "IFrame#MODAL_ANY");
+
+		if (${filterTitle} == "Tags") {
+			for (var tag : list ${tags}) {
+				Click(
+					key_columnName = "name",
+					key_tableEntry = ${tag},
+					locator1 = "LexiconTable#TABLE_ENTRY_INFO_CHECKBOX");
+			}
+
+			SelectFrameTop();
+
+			SelectFrame.selectFrameNoLoading(
+				key_title = "Configuration",
+				locator1 = "IFrame#MODAL_ANY");
+
+			Button.click(button = "Done");
+		}
+		else if (${filterTitle} == "Categories") {
+			for (var category : list ${categories}) {
+				Click(
+					key_nodeName = ${key_card},
+					locator1 = "Treeview#NODE_ITEM");
+			}
+
+			SelectFrameTop();
+
+			SelectFrame.selectFrameNoLoading(
+				key_title = "Configuration",
+				locator1 = "IFrame#MODAL_ANY");
+
+			Button.click(button = "Done");
+		}
+
+		SelectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
+	}
+
+	@summary = "Default summary"
+	macro updateFacetConfiguration(displayTemplate = null, maxOptions = null, maxSpecifications = null, maxTerms = null, displayFrequencies = null, frequencyThreshold = null, parameterName = null, rangesArray = null, portletName = null) {
 		Portlet.gotoPortletOptions(
-			portletName = "${portletName}",
+			portletName = ${portletName},
 			portletOption = "Configuration");
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
@@ -227,35 +611,297 @@ definition {
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		if (isSet(displayTemplate)) {
-			Select(
-				key_fieldLabel = "Display Template",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "${displayTemplate}");
+			if (IsElementPresent(key_fieldLabel = "Display Template", locator1 = "Select#GENERIC_SELECT_FIELD")) {
+				Select(
+					key_fieldLabel = "Display Template",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = ${displayTemplate});
+			}
+			else {
+				Click(
+					key_fieldLabel = "Display Template",
+					locator1 = "CommerceEntry#COMMERCE_FACET_BUTTON");
+
+				Click(
+					key_entry = ${displayTemplate},
+					locator1 = "CommerceEntry#COMMERCE_FACET_DROPDOWN");
+			}
 		}
 
 		if (isSet(parameterName)) {
 			FormFields.editText(
 				fieldName = "parameterName",
-				fieldValue = "${parameterName}");
+				fieldValue = ${parameterName});
+		}
+
+		if (isSet(maxOptions)) {
+			FormFields.editText(
+				fieldName = "maxOptions",
+				fieldValue = ${maxOptions});
+		}
+
+		if (isSet(maxSpecifications)) {
+			FormFields.editText(
+				fieldName = "maxSpecifications",
+				fieldValue = ${maxSpecifications});
 		}
 
 		if (isSet(maxTerms)) {
 			FormFields.editText(
 				fieldName = "maxTerms",
-				fieldValue = "${maxTerms}");
+				fieldValue = ${maxTerms});
 		}
 
 		if (isSet(frequencyThreshold)) {
 			FormFields.editText(
 				fieldName = "frequencyThreshold",
-				fieldValue = "${frequencyThreshold}");
+				fieldValue = ${frequencyThreshold});
 		}
 
-		if ("${displayFrequencies}" == "disable") {
+		if (isSet(rangesArray)) {
+			FormFields.editTextMultiline(
+				fieldName = "rangesJSONArray",
+				fieldValue = ${rangesArray});
+		}
+
+		if (${displayFrequencies} == "disable") {
 			FormFields.disableCheckbox(fieldName = "frequenciesVisible");
 		}
 
 		PortletEntry.save();
+	}
+
+	@summary = "Default summary"
+	macro updateProductPublisherConfiguration(renderSelection = null, itemsPerPage = null, filterEntries = null, filterType = null, portletName = null, productSelection = null) {
+		Portlet.gotoPortletOptions(
+			portletName = ${portletName},
+			portletOption = "Configuration");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		SelectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
+
+		if (isSet(productSelection)) {
+			var key_content = ${productSelection};
+
+			Navigator.gotoNavTab(navTab = "Product Selection");
+
+			AssertChecked(
+				locator1 = "Radio#ANY",
+				radioLabel = ${productSelection});
+
+			if (${productSelection} == "Dynamic") {
+				AssertElementPresent(
+					key_entry = "Filter",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+				if (isSet(filterType)) {
+					CommerceWidget.productPublisherAddFilter(
+						filterEntries = ${filterEntries},
+						filterType = ${filterType});
+				}
+			}
+			else if (${productSelection} == "Manual") {
+				AssertElementPresent(
+					key_entry = "Product Entries",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+			else if (${productSelection} == "Data Source") {
+				AssertElementPresent(
+					key_entry = "Data Source",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+		}
+
+		if (isSet(renderSelection)) {
+			var key_content = ${renderSelection};
+
+			Navigator.gotoNavTab(navTab = "Render Selection");
+
+			AssertChecked(
+				locator1 = "Radio#ANY",
+				radioLabel = ${renderSelection});
+
+			if (${renderSelection} == "Use Application Display Template") {
+				AssertElementPresent(
+					key_entry = "Display Template",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+			else if (${renderSelection} == "Use Custom Renderer") {
+				AssertElementPresent(
+					key_entry = "Product List Renderer",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+		}
+
+		if (isSet(itemsPerPage)) {
+			Navigator.gotoNavTab(navTab = "Pagination");
+
+			Type(
+				key_text = "Number of Items to Display",
+				locator1 = "TextInput#ANY",
+				value1 = ${itemsPerPage});
+		}
+
+		SelectFrameTop();
+	}
+
+	@summary = "Default summary"
+	macro updateProductPublisherConfigurationInDPT(renderSelection = null, itemsPerPage = null, dataSourceValue = null, filterEntries = null, filterType = null, portletName = null, productSelection = null) {
+		Click.javaScriptClick(
+			key_portletName = ${portletName},
+			locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
+
+		MenuItem.click(menuItem = "Configuration");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		SelectFrameTop();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#CONFIGURATION");
+
+		if (isSet(productSelection)) {
+			var key_content = ${productSelection};
+
+			Navigator.gotoNavTab(navTab = "Product Selection");
+
+			if (${productSelection} == "Dynamic") {
+				AssertChecked(
+					locator1 = "Radio#ANY",
+					radioLabel = ${productSelection});
+
+				AssertElementPresent(
+					key_entry = "Filter",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+				if (isSet(filterType)) {
+					CommerceWidget.productPublisherAddFilter(
+						filterEntries = ${filterEntries},
+						filterType = ${filterType});
+				}
+			}
+			else if (${productSelection} == "Manual") {
+				Click(
+					locator1 = "Radio#ANY",
+					radioLabel = "Manual");
+
+				AssertElementPresent(
+					key_entry = "Product Entries",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+			else if (${productSelection} == "Data Source") {
+				Click(
+					locator1 = "Radio#ANY",
+					radioLabel = "Data Source");
+
+				Click(
+					key_entry = "Data Source",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+
+				WaitForElementPresent(
+					key_fieldLabel = "Data Source",
+					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT");
+
+				Select(
+					key_fieldLabel = "Data Source",
+					locator1 = "CommerceEntry#LABEL_GENERIC_SELECT",
+					value1 = ${dataSourceValue});
+			}
+		}
+
+		if (isSet(renderSelection)) {
+			var key_content = ${renderSelection};
+
+			Navigator.gotoNavTab(navTab = "Render Selection");
+
+			AssertChecked(
+				locator1 = "Radio#ANY",
+				radioLabel = ${renderSelection});
+
+			if (${renderSelection} == "Use Application Display Template") {
+				AssertElementPresent(
+					key_entry = "Display Template",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+			else if (${renderSelection} == "Use Custom Renderer") {
+				AssertElementPresent(
+					key_entry = "Product List Renderer",
+					locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
+			}
+		}
+
+		if (isSet(itemsPerPage)) {
+			Navigator.gotoNavTab(navTab = "Pagination");
+
+			Type(
+				key_text = "Number of Items to Display",
+				locator1 = "TextInput#ANY",
+				value1 = ${itemsPerPage});
+
+			PortletEntry.save();
+
+			IFrame.closeFrame();
+		}
+
+		SelectFrameTop();
+	}
+
+	@summary = "This macro can be used for asserting account information from Organization Management Chart"
+	macro viewAccountDetailsAtSidebar(accountDescription = null, accountERC = null, accountID = null, accountImage = null, accountName = null, accountTaxID = null, accountType = null) {
+		if (isSet(viewCurrentInfo)) {
+			CommerceWidget.searchAndGoToOrganizationManagementWidgetEntry(entryName = ${accountName});
+
+			Click(
+				key_nodeName = ${accountName},
+				locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
+
+			Click(
+				key_menuItem = "View",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+
+		var accountID = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = ${accountName});
+		var accountERC = JSONPRMAPI.getAccountExternalReferenceCode(accountEntryName = ${accountName});
+
+		for (var accountDetails : list "${accountImage},${accountName},${accountType},${accountTaxID},${accountERC},${accountID},${accountDescription}") {
+			AssertElementPresent(
+				key_fieldValue = ${accountDetails},
+				locator1 = "CommerceWidget#ASSERT_ACCOUNT_DETAILS_AT_SIDEBAR");
+		}
+	}
+
+	@summary = "This macro can be used for asserting user information from Organization Management Chart"
+	macro viewUserInformationAtSidebar(userBirthday = null, userEmailAddress = null, userFirstName = null, userID = null, userImage = null, userLanguage = null, userLastName = null, userMiddleName = null, userPrefix = null, userScreenName = null, userSuffix = null) {
+		if (isSet(viewCurrentInfo)) {
+			CommerceWidget.searchAndGoToOrganizationManagementWidgetEntry(entryName = ${userName});
+
+			Click(
+				key_nodeName = ${userName},
+				locator1 = "CommerceOrganizationManagementWidget#VERTICAL_ELLIPSIS");
+
+			Click(
+				key_menuItem = "View",
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+		}
+
+		var userID = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = ${userEmailAddress});
+
+		if (${userLanguage} == "English (United States)") {
+			for (var userInformationList : list "${userBirthday},${userEmailAddress},${userFirstName},${userID},${userImage},${userJobTitle},${userLanguage},${userLastName},${userMiddleName},${userPrefix},${userScreenName},${userSuffix}") {
+				AssertElementPresent(
+					key_fieldValue = ${userInformationList},
+					locator1 = "CommerceWidget#ASSERT_ACCOUNT_DETAILS_AT_SIDEBAR");
+			}
+		}
+		else {
+			for (var userInformationList : list "${userBirthday},${userEmailAddress},${userFirstName},${userID},${userImage},${userJobTitle},${userLanguage},${userLastName},${userScreenName}") {
+				AssertElementPresent(
+					key_fieldValue = ${userInformationList},
+					locator1 = "CommerceWidget#ASSERT_ACCOUNT_DETAILS_AT_SIDEBAR");
+			}
+		}
 	}
 
 }

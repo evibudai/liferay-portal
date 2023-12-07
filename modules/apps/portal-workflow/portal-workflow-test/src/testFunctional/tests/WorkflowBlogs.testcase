@@ -25,9 +25,9 @@ definition {
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -41,7 +41,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ApproveBlogsEntryCP {
 		property portal.acceptance = "true";
 
@@ -122,12 +122,9 @@ definition {
 	}
 
 	@description = "Verify that a workflow can be assigned to Blog Entry in the Portal configurations"
-	@priority = "4"
+	@priority = 4
 	test CanAssignWorkflowThroughPortalConfiguration {
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Workflow.openWorkflowListView();
 
 		Navigator.gotoNavItem(navItem = "Configuration");
 
@@ -139,12 +136,9 @@ definition {
 	}
 
 	@description = "Verify that the user can assign a Workflow to Blog Entry"
-	@priority = "5"
+	@priority = 5
 	test CanAssignWorkflowToBlogEntry {
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Workflow.openWorkflowListView();
 
 		Navigator.gotoNavItem(navItem = "Configuration");
 
@@ -158,25 +152,23 @@ definition {
 	}
 
 	@description = "Verify that the user can modify the workflow of a Blog Entry"
-	@priority = "4"
+	@priority = 4
 	test CanHaveDifferentBlogsWithDifferentWorkflows {
-		property test.name.skip.portal.instance = "WorkflowBlogs#CanHaveDifferentBlogsWithDifferentWorkflows";
+		property test.liferay.virtual.instance = "false";
 		property test.run.environment = "EE";
+		property test.run.type = "single";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs 1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Process Builder");
+		Workflow.openWorkflowListView();
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
 
-		ApplicationsMenu.gotoSite(site = "${siteName}");
+		ApplicationsMenu.gotoSite(site = ${siteName});
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
@@ -201,7 +193,7 @@ definition {
 	}
 
 	@description = "Verify that the user can publish a Blogs Entry with Workflow assigned"
-	@priority = "5"
+	@priority = 5
 	test CanPublishBlogsEntryWithWorkflowAssigned {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -218,7 +210,7 @@ definition {
 	}
 
 	@description = "Verify that a Blog Entry saved as draft is not submitted to the Workflow"
-	@priority = "4"
+	@priority = 4
 	test DraftBlogEntryIsNotSubmittedToWorkflow {
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -254,7 +246,7 @@ definition {
 			locator1 = "MyWorkflowTasks#ASSIGNED_TO_MY_ROLES_TABLE_ASSET_TITLE");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RejectBlogsEntryCP {
 		Navigator.openURL();
 

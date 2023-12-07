@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.web.internal.search.insights.display.context;
@@ -31,10 +22,18 @@ public class SearchInsightsDisplayContext implements Serializable {
 	}
 
 	public String getRequestString() {
+		if (_searchEngineVendor.equals("Solr")) {
+			return _requestString;
+		}
+
 		return _getPrettyPrintedJSON(_requestString);
 	}
 
 	public String getResponseString() {
+		if (_searchEngineVendor.equals("Solr")) {
+			return _responseString;
+		}
+
 		return _getPrettyPrintedJSON(_responseString);
 	}
 
@@ -48,6 +47,10 @@ public class SearchInsightsDisplayContext implements Serializable {
 
 	public void setResponseString(String responseString) {
 		_responseString = responseString;
+	}
+
+	public void setSearchEngineVendor(String searchEngineVendor) {
+		_searchEngineVendor = searchEngineVendor;
 	}
 
 	private String _getPrettyPrintedJSON(String json) {
@@ -71,5 +74,6 @@ public class SearchInsightsDisplayContext implements Serializable {
 	private String _helpMessage;
 	private String _requestString;
 	private String _responseString;
+	private String _searchEngineVendor;
 
 }

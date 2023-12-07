@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.form.internal.dto.v1_0.util;
@@ -28,8 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Victor Oliveira
@@ -108,25 +97,26 @@ public class FormContextUtil {
 			{
 				enabled = _getBoolean(formPageContext, "enabled");
 
-				List<Map<String, Object>> maps = _getMaps(
-					formPageContext, "rows");
+				List<FormFieldContext> formFieldContextsList =
+					new ArrayList<>();
 
-				Stream<Map<String, Object>> stream = maps.stream();
+				for (Map<String, Object> rowsMap :
+						_getMaps(formPageContext, "rows")) {
 
-				formFieldContexts = TransformUtil.transformToArray(
-					stream.map(
-						row -> _getMaps(row, "columns")
-					).flatMap(
-						List::stream
-					).map(
-						column -> _getMaps(column, "fields")
-					).flatMap(
-						List::stream
-					).collect(
-						Collectors.toList()
-					),
-					FormContextUtil::_toFormFieldContext,
-					FormFieldContext.class);
+					for (Map<String, Object> columnsMap :
+							_getMaps(rowsMap, "columns")) {
+
+						for (Map<String, Object> fieldsMap :
+								_getMaps(columnsMap, "fields")) {
+
+							formFieldContextsList.add(
+								_toFormFieldContext(fieldsMap));
+						}
+					}
+				}
+
+				formFieldContexts = formFieldContextsList.toArray(
+					new FormFieldContext[0]);
 
 				showRequiredFieldsWarning = _getBoolean(
 					formPageContext, "showRequiredFieldsWarning");

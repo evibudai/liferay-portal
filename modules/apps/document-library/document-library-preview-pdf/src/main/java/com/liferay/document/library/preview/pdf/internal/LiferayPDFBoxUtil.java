@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.preview.pdf.internal;
 
-import com.liferay.portal.image.ImageToolImpl;
-import com.liferay.portal.kernel.image.ImageTool;
+import com.liferay.portal.image.ImageToolUtil;
 
 import java.awt.image.RenderedImage;
 
@@ -36,16 +26,21 @@ public class LiferayPDFBoxUtil {
 	public static void generateImagesPB(
 			PDDocument pdDocument, File thumbnailFile, File[] previewFiles,
 			String extension, String thumbnailExtension, int dpi, int height,
-			int width, boolean generatePreview, boolean generateThumbnail)
+			int width, boolean generatePreview, boolean generateThumbnail,
+			int maxNumberOfPages)
 		throws Exception {
 
 		PDFRenderer pdfRenderer = new PDFRenderer(pdDocument);
 
 		PDPageTree pdPageTree = pdDocument.getPages();
 
-		int count = pdPageTree.getCount();
+		if ((maxNumberOfPages == 0) ||
+			(maxNumberOfPages > pdPageTree.getCount())) {
 
-		for (int i = 0; i < count; i++) {
+			maxNumberOfPages = pdPageTree.getCount();
+		}
+
+		for (int i = 0; i < maxNumberOfPages; i++) {
 			RenderedImage renderedImage = _toRenderedImage(
 				pdfRenderer, i, dpi, height, width);
 
@@ -69,13 +64,11 @@ public class LiferayPDFBoxUtil {
 		RenderedImage renderedImage = pdfRenderer.renderImageWithDPI(
 			pageIndex, dpi, ImageType.RGB);
 
-		ImageTool imageTool = ImageToolImpl.getInstance();
-
 		if (height == 0) {
-			return imageTool.scale(renderedImage, width);
+			return ImageToolUtil.scale(renderedImage, width);
 		}
 
-		return imageTool.scale(renderedImage, height, width);
+		return ImageToolUtil.scale(renderedImage, height, width);
 	}
 
 }

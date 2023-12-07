@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.product.definitions.web.internal.model;
@@ -20,15 +11,17 @@ package com.liferay.commerce.product.definitions.web.internal.model;
 public class ProductDisplayPage {
 
 	public ProductDisplayPage(
-		String layout, long productDisplayPageId, String productName) {
+		String name, long productDisplayPageId, String productName,
+		String type) {
 
-		_layout = layout;
+		_name = name;
 		_productDisplayPageId = productDisplayPageId;
 		_productName = productName;
+		_type = type;
 	}
 
-	public String getLayout() {
-		return _layout;
+	public String getName() {
+		return _name;
 	}
 
 	public long getProductDisplayPageId() {
@@ -39,8 +32,13 @@ public class ProductDisplayPage {
 		return _productName;
 	}
 
-	private final String _layout;
+	public String getType() {
+		return _type;
+	}
+
+	private final String _name;
 	private final long _productDisplayPageId;
 	private final String _productName;
+	private final String _type;
 
 }

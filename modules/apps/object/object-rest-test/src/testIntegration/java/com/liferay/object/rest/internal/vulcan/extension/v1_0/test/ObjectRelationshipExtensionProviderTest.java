@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.extension.v1_0.test;
@@ -27,9 +18,8 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
-import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
-import com.liferay.object.util.LocalizedMapUtil;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -37,15 +27,14 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.vulcan.extension.ExtensionProvider;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 import com.liferay.portal.vulcan.fields.NestedFieldsContext;
 import com.liferay.portal.vulcan.fields.NestedFieldsContextThreadLocal;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
@@ -54,10 +43,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,22 +63,6 @@ public class ObjectRelationshipExtensionProviderTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-162964", "true"
-			).build());
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		PropsUtil.addProperties(
-			UnicodePropertiesBuilder.setProperty(
-				"feature.flag.LPS-162964", "false"
-			).build());
-	}
-
 	@Before
 	public void setUp() throws Exception {
 		_objectDefinition = _publishObjectDefinition(
@@ -102,24 +73,25 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		_objectEntry = _addObjectEntry(_OBJECT_FIELD_VALUE);
 
-		_userSystemObjectDefinitionMetadata =
-			_systemObjectDefinitionMetadataRegistry.
-				getSystemObjectDefinitionMetadata("User");
+		_userSystemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager("User");
 
 		ObjectDefinition userSystemObjectDefinition =
 			_objectDefinitionLocalService.fetchSystemObjectDefinition(
-				_userSystemObjectDefinitionMetadata.getName());
+				_userSystemObjectDefinitionManager.getName());
 
 		_user = TestPropsValues.getUser();
 
 		_objectRelationship =
 			ObjectRelationshipLocalServiceUtil.addObjectRelationship(
-				_user.getUserId(), _objectDefinition.getObjectDefinitionId(),
+				null, _user.getUserId(),
+				_objectDefinition.getObjectDefinitionId(),
 				userSystemObjectDefinition.getObjectDefinitionId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				StringUtil.randomId(),
-				ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
+				StringUtil.randomId(), false,
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
 
 		ObjectRelationshipLocalServiceUtil.
 			addObjectRelationshipMappingTableValues(
@@ -127,6 +99,9 @@ public class ObjectRelationshipExtensionProviderTest {
 				_objectRelationship.getObjectRelationshipId(),
 				_objectEntry.getPrimaryKey(), _user.getUserId(),
 				ServiceContextTestUtil.getServiceContext());
+
+		_originalNestedFieldsContext =
+			NestedFieldsContextThreadLocal.getNestedFieldsContext();
 	}
 
 	@After
@@ -141,6 +116,9 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
+
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(
+			_originalNestedFieldsContext);
 	}
 
 	@Test
@@ -151,19 +129,30 @@ public class ObjectRelationshipExtensionProviderTest {
 			}
 		};
 
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(null);
+
 		Map<String, Serializable> extendedProperties =
 			_extensionProvider.getExtendedProperties(
-				TestPropsValues.getCompanyId(), UserAccount.class.getName(),
-				userAccount);
+				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				UserAccount.class.getName(), userAccount);
+
+		Assert.assertNull(extendedProperties);
+
+		NestedFieldsContextThreadLocal.setNestedFieldsContext(
+			_getNestedFieldsContext(RandomTestUtil.randomString()));
+
+		extendedProperties = _extensionProvider.getExtendedProperties(
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			UserAccount.class.getName(), userAccount);
 
 		Assert.assertTrue(extendedProperties.isEmpty());
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
-			_getNestedFieldsContext());
+			_getNestedFieldsContext(_objectRelationship.getName()));
 
 		extendedProperties = _extensionProvider.getExtendedProperties(
-			TestPropsValues.getCompanyId(), UserAccount.class.getName(),
-			userAccount);
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			UserAccount.class.getName(), userAccount);
 
 		Assert.assertEquals(
 			extendedProperties.toString(), 1, extendedProperties.size());
@@ -196,9 +185,6 @@ public class ObjectRelationshipExtensionProviderTest {
 	public void testIsApplicableExtension() throws Exception {
 		Assert.assertFalse(
 			_extensionProvider.isApplicableExtension(
-				TestPropsValues.getCompanyId(), null));
-		Assert.assertFalse(
-			_extensionProvider.isApplicableExtension(
 				TestPropsValues.getCompanyId(),
 				com.liferay.object.rest.dto.v1_0.ObjectEntry.class.getName() +
 					"#" + _objectDefinition.getName()));
@@ -219,10 +205,12 @@ public class ObjectRelationshipExtensionProviderTest {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
-	private NestedFieldsContext _getNestedFieldsContext() {
+	private NestedFieldsContext _getNestedFieldsContext(
+		String nestedFieldName) {
+
 		return new NestedFieldsContext(
-			Collections.singletonList(_objectRelationship.getName()), null,
-			null, null, null);
+			1, Collections.singletonList(nestedFieldName), null, null, null,
+			null);
 	}
 
 	private ObjectDefinition _publishObjectDefinition(
@@ -231,11 +219,11 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), false,
+				TestPropsValues.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"A" + RandomTestUtil.randomString(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY,
+				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
 
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -255,18 +243,21 @@ public class ObjectRelationshipExtensionProviderTest {
 	@Inject
 	private static ObjectFieldLocalService _objectFieldLocalService;
 
-	@Inject(filter = "component.name=*.ObjectRelationshipExtensionProvider")
+	@Inject(
+		filter = "component.name=com.liferay.object.rest.internal.vulcan.extension.v1_0.ObjectRelationshipExtensionProvider"
+	)
 	private ExtensionProvider _extensionProvider;
 
 	private ObjectDefinition _objectDefinition;
 	private ObjectEntry _objectEntry;
 	private ObjectRelationship _objectRelationship;
+	private NestedFieldsContext _originalNestedFieldsContext;
 
 	@Inject
-	private SystemObjectDefinitionMetadataRegistry
-		_systemObjectDefinitionMetadataRegistry;
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 	private User _user;
-	private SystemObjectDefinitionMetadata _userSystemObjectDefinitionMetadata;
+	private SystemObjectDefinitionManager _userSystemObjectDefinitionManager;
 
 }

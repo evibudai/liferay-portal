@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 AUI.add(
@@ -32,6 +23,11 @@ AUI.add(
 
 		const SpreadSheet = A.Component.create({
 			ATTRS: {
+				addRecordURL: {
+					validator: Lang.isString,
+					value: STR_EMPTY,
+				},
+
 				portletNamespace: {
 					validator: Lang.isString,
 					value: STR_EMPTY,
@@ -85,16 +81,23 @@ AUI.add(
 				'textarea': A.TextAreaCellEditor,
 			},
 
-			addRecord(recordsetId, displayIndex, fieldsMap, callback) {
+			addRecord(
+				addRecordURL,
+				callback,
+				ddmFormValues,
+				displayIndex,
+				portletNamespace,
+				recordsetId
+			) {
 				const instance = this;
 
 				callback = (callback && A.bind(callback, instance)) || EMPTY_FN;
 
-				Liferay.Service(
-					'/ddl.ddlrecord/add-record',
-					{
+				// eslint-disable-next-line @liferay/aui/no-io
+				A.io.request(addRecordURL, {
+					data: Liferay.Util.ns(portletNamespace, {
+						ddmFormValues: JSON.stringify(ddmFormValues),
 						displayIndex,
-						fieldsMap: JSON.stringify(fieldsMap),
 						groupId: themeDisplay.getScopeGroupId(),
 						recordSetId: recordsetId,
 						serviceContext: JSON.stringify({
@@ -102,9 +105,15 @@ AUI.add(
 							userId: themeDisplay.getUserId(),
 							workflowAction: Liferay.Workflow.ACTION_PUBLISH,
 						}),
+					}),
+					dataType: 'JSON',
+					method: 'POST',
+					on: {
+						success(data) {
+							callback(JSON.parse(data.details[1].response));
+						},
 					},
-					callback
-				);
+				});
 			},
 
 			buildDataTableColumns(columns, locale, structure, editable) {
@@ -497,15 +506,11 @@ AUI.add(
 					}
 				},
 
-				_normalizeFieldData(item, record, normalized) {
+				_normalizeFieldData(item, record, normalized, field, update) {
 					const instance = this;
 
 					const type = item.type;
 					let value = record.get(item.name);
-
-					if (!record.changed[item.id] && value && !!value.length) {
-						return;
-					}
 
 					if (type === 'ddm-link-to-page') {
 						value = FormBuilder.Util.parseJSON(value);
@@ -529,27 +534,38 @@ AUI.add(
 
 					if (item.localizable) {
 						fieldValue['value'] = {
-							[themeDisplay.getLanguageId()]: value,
+							[themeDisplay.getLanguageId()]: value.toString(),
 						};
 					}
 					else {
 						fieldValue['value'] = value;
 					}
 
-					normalized['fieldValues'].push(fieldValue);
+					if (field && !update) {
+						if (!field['nestedFieldValues']) {
+							field['nestedFieldValues'] = [];
+						}
 
-					if (isArray(item.fields)) {
-						item.fields.forEach((item) => {
+						field['nestedFieldValues'].push(fieldValue);
+					}
+					else {
+						normalized['fieldValues'].push(fieldValue);
+					}
+
+					if (isArray(item.fields) && !!item.fields.length) {
+						item.fields.forEach((nestedItem) => {
 							instance._normalizeFieldData(
-								item,
+								nestedItem,
 								record,
-								normalized
+								normalized,
+								fieldValue,
+								update
 							);
 						});
 					}
 				},
 
-				_normalizeRecordData(record) {
+				_normalizeRecordData(record, update) {
 					const instance = this;
 
 					const structure = instance.get('structure');
@@ -561,17 +577,13 @@ AUI.add(
 					};
 
 					structure.forEach((item) => {
-						instance._normalizeFieldData(item, record, normalized);
-
-						if (item.fields) {
-							item.fields.forEach((nestedField) =>
-								instance._normalizeFieldData(
-									nestedField,
-									record,
-									normalized
-								)
-							);
-						}
+						instance._normalizeFieldData(
+							item,
+							record,
+							normalized,
+							null,
+							update
+						);
 					});
 
 					delete normalized.displayIndex;
@@ -636,15 +648,13 @@ AUI.add(
 
 						const recordId = record.get('recordId');
 
-						const fieldsMap = instance._normalizeRecordData(record);
-
 						const recordIndex = data.indexOf(record);
 
 						if (recordId > 0) {
 							SpreadSheet.updateRecord(
 								recordId,
 								recordIndex,
-								fieldsMap,
+								instance._normalizeRecordData(record, true),
 								false,
 								instance.get('portletNamespace'),
 								instance.get('updateRecordURL')
@@ -652,16 +662,18 @@ AUI.add(
 						}
 						else {
 							SpreadSheet.addRecord(
-								recordsetId,
-								recordIndex,
-								fieldsMap,
+								instance.get('addRecordURL'),
 								(json) => {
 									if (json.recordId > 0) {
 										record.set('recordId', json.recordId, {
 											silent: true,
 										});
 									}
-								}
+								},
+								instance._normalizeRecordData(record, false),
+								recordIndex,
+								instance.get('portletNamespace'),
+								recordsetId
 							);
 						}
 					}

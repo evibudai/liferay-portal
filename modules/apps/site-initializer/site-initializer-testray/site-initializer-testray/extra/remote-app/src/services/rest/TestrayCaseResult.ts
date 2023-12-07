@@ -1,27 +1,18 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import Rest from '../../core/Rest';
+import SearchBuilder from '../../core/SearchBuilder';
 import yupSchema from '../../schema/yup';
 import {waitTimeout} from '../../util';
-import {searchUtil} from '../../util/search';
 import {CaseResultStatuses} from '../../util/statuses';
 import {Liferay} from '../liferay';
 import {liferayMessageBoardImpl} from './LiferayMessageBoard';
-import Rest from './Rest';
 import {testrayCaseResultsIssuesImpl} from './TestrayCaseresultsIssues';
 import {testrayIssueImpl} from './TestrayIssues';
-import {TestrayCaseResult} from './types';
+import {CaseResultAggregation, TestrayCaseResult} from './types';
 
 type CaseResultForm = typeof yupSchema.caseResult.__outputType;
 
@@ -54,9 +45,10 @@ class TestrayCaseResultRest extends Rest<CaseResultForm, TestrayCaseResult> {
 				startDate,
 			}),
 			nestedFields:
-				'case,component.team,build.productVersion,build.routine,run,user',
+				'case.caseType,component.team.name,team,build.productVersion,build.routine,run,user,caseResultToCaseResultsIssues',
 			transformData: (caseResult) => ({
 				...caseResult,
+				...this.normalizeCaseResultAggregation(caseResult),
 				build: caseResult?.r_buildToCaseResult_c_build
 					? {
 							...caseResult?.r_buildToCaseResult_c_build,
@@ -74,9 +66,18 @@ class TestrayCaseResultRest extends Rest<CaseResultForm, TestrayCaseResult> {
 							caseType:
 								caseResult?.r_caseToCaseResult_c_case
 									?.r_caseTypeToCases_c_caseType,
-							component:
-								caseResult?.r_caseToCaseResult_c_case
-									?.r_componentToCases_c_component,
+							component: caseResult?.r_caseToCaseResult_c_case
+								?.r_componentToCases_c_component
+								? {
+										...caseResult?.r_caseToCaseResult_c_case
+											?.r_componentToCases_c_component,
+										team:
+											caseResult
+												?.r_caseToCaseResult_c_case
+												.r_componentToCases_c_component
+												.r_teamToComponents_c_team,
+								  }
+								: undefined,
 					  }
 					: undefined,
 				component: caseResult?.r_componentToCaseResult_c_component
@@ -87,21 +88,46 @@ class TestrayCaseResultRest extends Rest<CaseResultForm, TestrayCaseResult> {
 									.r_teamToComponents_c_team,
 					  }
 					: undefined,
+				issues: caseResult.caseResultToCaseResultsIssues ?? [],
 				run: caseResult?.r_runToCaseResult_c_run
 					? {
 							...caseResult?.r_runToCaseResult_c_run,
 							build: caseResult?.r_runToCaseResult_c_run?.build,
 					  }
 					: undefined,
-				user: caseResult?.r_userToCaseResults_user
-					? {
-							...caseResult?.r_userToCaseResults_user,
-							id: caseResult?.r_userToCaseResults_user?.uuid,
-					  }
-					: undefined,
+				runId: caseResult?.r_runToCaseResult_c_runId,
+				user: caseResult?.r_userToCaseResults_user,
 			}),
 			uri: 'caseresults',
 		});
+	}
+
+	public normalizeCaseResultAggregation(
+		caseResultAggregation: CaseResultAggregation
+	): CaseResultAggregation {
+		return {
+			caseResultBlocked: Number(
+				caseResultAggregation.caseResultBlocked ?? 0
+			),
+			caseResultFailed: Number(
+				caseResultAggregation.caseResultFailed ?? 0
+			),
+			caseResultInProgress: Number(
+				caseResultAggregation.caseResultInProgress ?? 0
+			),
+			caseResultIncomplete: Number(
+				caseResultAggregation.caseResultIncomplete ?? 0
+			),
+			caseResultPassed: Number(
+				caseResultAggregation.caseResultPassed ?? 0
+			),
+			caseResultTestFix: Number(
+				caseResultAggregation.caseResultTestFix ?? 0
+			),
+			caseResultUntested: Number(
+				caseResultAggregation.caseResultUntested ?? 0
+			),
+		};
 	}
 
 	public assignTo(caseResult: TestrayCaseResult, userId: number) {
@@ -135,16 +161,18 @@ class TestrayCaseResultRest extends Rest<CaseResultForm, TestrayCaseResult> {
 
 	public async assignCaseResultIssue(caseResultId: number, issues: string[]) {
 		const caseResultIssuesResponse = await testrayCaseResultsIssuesImpl.getAll(
-			searchUtil.eq('caseResultId', caseResultId)
+			{filter: SearchBuilder.eq('caseResultId', caseResultId)}
 		);
 
 		for (const issue of issues) {
-			const testrayIssue = await testrayIssueImpl.createIfNotExist(issue);
+			const testrayIssue = await testrayIssueImpl.createIfNotExist({
+				name: issue,
+			});
 
 			await testrayCaseResultsIssuesImpl.createIfNotExist({
 				caseResultId,
 				issueId: testrayIssue?.id,
-				name: `${issue}-${caseResultId}`,
+				name: `${issue}${testrayIssueImpl.DELIMITER}${caseResultId}`,
 			});
 		}
 
@@ -193,12 +221,17 @@ class TestrayCaseResultRest extends Rest<CaseResultForm, TestrayCaseResult> {
 	public async update(
 		id: number,
 		data: Partial<
-			CaseResultForm & {defaultMessageId?: number; issues: string[]}
+			CaseResultForm & {
+				defaultMessageId?: number;
+				issues: string[];
+			}
 		>
 	): Promise<TestrayCaseResult> {
 		const issues = data.issues || [];
 
-		await this.assignCaseResultIssue(id, issues);
+		if (data.issues) {
+			await this.assignCaseResultIssue(id, issues);
+		}
 
 		if (data.comment) {
 			const {mbMessage, mbThreadId} = await this.addComment(data);

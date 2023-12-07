@@ -1,20 +1,12 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.admin.taxonomy.internal.resource.v1_0;
 
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
+import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
@@ -23,12 +15,13 @@ import com.liferay.asset.kernel.model.ClassType;
 import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
+import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.headless.admin.taxonomy.dto.v1_0.AssetType;
 import com.liferay.headless.admin.taxonomy.dto.v1_0.TaxonomyVocabulary;
 import com.liferay.headless.admin.taxonomy.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.headless.admin.taxonomy.internal.odata.entity.v1_0.VocabularyEntityModel;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyVocabularyResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -50,6 +43,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.action.DTOActionProvider;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.ContentLanguageUtil;
@@ -67,8 +61,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
@@ -274,12 +266,12 @@ public class TaxonomyVocabularyResourceImpl
 		return _toTaxonomyVocabulary(
 			_assetVocabularyService.updateVocabulary(
 				assetVocabulary.getVocabularyId(), null,
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					assetVocabulary.getTitleMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					taxonomyVocabulary.getName(),
 					taxonomyVocabulary.getName_i18n()),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					assetVocabulary.getDescriptionMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					taxonomyVocabulary.getDescription(),
@@ -408,9 +400,10 @@ public class TaxonomyVocabularyResourceImpl
 			descriptionMap,
 			_getSettings(taxonomyVocabulary.getAssetTypes(), siteId),
 			AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC,
-			ServiceContextRequestUtil.createServiceContext(
+			ServiceContextBuilder.create(
 				siteId, contextHttpServletRequest,
-				taxonomyVocabulary.getViewableByAsString()));
+				taxonomyVocabulary.getViewableByAsString()
+			).build());
 	}
 
 	private AssetType _getAssetType(
@@ -432,8 +425,8 @@ public class TaxonomyVocabularyResourceImpl
 
 						AssetRendererFactory<?> assetRendererFactory =
 							AssetRendererFactoryRegistryUtil.
-								getAssetRendererFactoryByClassName(
-									_portal.getClassName(classNameId));
+								getAssetRendererFactoryByClassNameId(
+									classNameId);
 
 						ClassTypeReader classTypeReader =
 							assetRendererFactory.getClassTypeReader();
@@ -474,8 +467,8 @@ public class TaxonomyVocabularyResourceImpl
 
 						return _getModelResource(
 							AssetRendererFactoryRegistryUtil.
-								getAssetRendererFactoryByClassName(
-									_portal.getClassName(classNameId)));
+								getAssetRendererFactoryByClassNameId(
+									classNameId));
 					});
 			}
 		};
@@ -534,26 +527,27 @@ public class TaxonomyVocabularyResourceImpl
 			return AssetCategoryConstants.ALL_CLASS_NAME_ID;
 		}
 
+		String className = null;
+
 		List<AssetRendererFactory<?>> categorizableAssetRenderFactories =
 			ListUtil.filter(
 				AssetRendererFactoryRegistryUtil.getAssetRendererFactories(
 					contextCompany.getCompanyId()),
 				AssetRendererFactory::isCategorizable);
 
-		Stream<AssetRendererFactory<?>> stream =
-			categorizableAssetRenderFactories.stream();
+		for (AssetRendererFactory<?> assetRendererFactory :
+				categorizableAssetRenderFactories) {
 
-		Optional<AssetRendererFactory<?>> assetRendererFactoryOptional =
-			stream.filter(
-				assetRendererFactory -> assetTypeType.equals(
-					_getModelResource(assetRendererFactory))
-			).findFirst();
+			if (assetTypeType.equals(_getModelResource(assetRendererFactory))) {
+				className = assetRendererFactory.getClassName();
 
-		String className = assetRendererFactoryOptional.map(
-			AssetRendererFactory::getClassName
-		).orElse(
-			_assetTypeTypeToClassNames.get(assetTypeType)
-		);
+				break;
+			}
+		}
+
+		if (className == null) {
+			className = _assetTypeTypeToClassNames.get(assetTypeType);
+		}
 
 		if (className == null) {
 			throw new BadRequestException(
@@ -570,7 +564,7 @@ public class TaxonomyVocabularyResourceImpl
 	private long _getClassTypePK(long classNameId, String subtype, long groupId)
 		throws Exception {
 
-		if (Objects.equals("AllAssetSubtypes", subtype) ||
+		if (Objects.equals(subtype, "AllAssetSubtypes") ||
 			(classNameId == AssetCategoryConstants.ALL_CLASS_NAME_ID) ||
 			(subtype == null)) {
 
@@ -578,8 +572,8 @@ public class TaxonomyVocabularyResourceImpl
 		}
 
 		AssetRendererFactory<?> assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				_portal.getClassName(classNameId));
+			AssetRendererFactoryRegistryUtil.
+				getAssetRendererFactoryByClassNameId(classNameId);
 
 		ClassTypeReader classTypeReader =
 			assetRendererFactory.getClassTypeReader();
@@ -660,7 +654,9 @@ public class TaxonomyVocabularyResourceImpl
 			searchContext -> {
 				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
-				searchContext.setGroupIds(new long[] {groupId});
+				searchContext.setGroupIds(
+					SiteConnectedGroupGroupProviderUtil.
+						getCurrentAndAncestorSiteAndDepotGroupIds(groupId));
 			},
 			sorts,
 			document -> _toTaxonomyVocabulary(
@@ -677,27 +673,10 @@ public class TaxonomyVocabularyResourceImpl
 
 		return new TaxonomyVocabulary() {
 			{
-				actions = HashMapBuilder.<String, Map<String, String>>put(
-					"delete",
-					addAction(
-						ActionKeys.DELETE, assetVocabulary,
-						"deleteTaxonomyVocabulary")
-				).put(
-					"get",
-					addAction(
-						ActionKeys.VIEW, assetVocabulary,
-						"getTaxonomyVocabulary")
-				).put(
-					"replace",
-					addAction(
-						ActionKeys.UPDATE, assetVocabulary,
-						"putTaxonomyVocabulary")
-				).put(
-					"update",
-					addAction(
-						ActionKeys.UPDATE, assetVocabulary,
-						"patchTaxonomyVocabulary")
-				).build();
+				actions = _dtoActionProvider.getActions(
+					assetVocabulary.getGroupId(),
+					assetVocabulary.getVocabularyId(), contextUriInfo,
+					contextUser.getUserId());
 				assetLibraryKey = GroupUtil.getAssetLibraryKey(group);
 				assetTypes = _getAssetTypes(
 					new AssetVocabularySettingsHelper(
@@ -723,14 +702,19 @@ public class TaxonomyVocabularyResourceImpl
 				name_i18n = LocalizedMapUtil.getI18nMap(
 					contextAcceptLanguage.isAcceptAllLanguages(),
 					assetVocabulary.getTitleMap());
-				numberOfTaxonomyCategories = Optional.ofNullable(
-					assetVocabulary.getCategories()
-				).map(
-					List::size
-				).orElse(
-					0
-				);
 				siteId = GroupUtil.getSiteId(group);
+
+				setNumberOfTaxonomyCategories(
+					() -> {
+						List<AssetCategory> assetCategories =
+							assetVocabulary.getCategories();
+
+						if (assetCategories != null) {
+							return assetCategories.size();
+						}
+
+						return 0;
+					});
 			}
 		};
 	}
@@ -789,6 +773,11 @@ public class TaxonomyVocabularyResourceImpl
 
 	@Reference
 	private AssetVocabularyService _assetVocabularyService;
+
+	@Reference(
+		target = "(dto.class.name=com.liferay.headless.admin.taxonomy.dto.v1_0.TaxonomyVocabulary)"
+	)
+	private DTOActionProvider _dtoActionProvider;
 
 	@Reference
 	private Portal _portal;

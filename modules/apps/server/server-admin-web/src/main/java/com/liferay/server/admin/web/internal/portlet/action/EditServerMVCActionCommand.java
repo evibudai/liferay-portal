@@ -1,21 +1,21 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.server.admin.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
-import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
+import com.liferay.document.library.kernel.document.conversion.DocumentConversion;
+import com.liferay.document.library.kernel.model.DLProcessorConstants;
+import com.liferay.document.library.kernel.processor.AudioProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.PDFProcessor;
+import com.liferay.document.library.kernel.processor.VideoProcessor;
+import com.liferay.document.library.kernel.store.Store;
+import com.liferay.document.library.preview.processor.BasePreviewableDLProcessor;
+import com.liferay.image.Ghostscript;
+import com.liferay.image.ImageMagick;
 import com.liferay.mail.kernel.model.Account;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.string.CharPool;
@@ -34,8 +34,6 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.kernel.image.Ghostscript;
-import com.liferay.portal.kernel.image.ImageMagickUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncPrintWriter;
 import com.liferay.portal.kernel.log.Log;
@@ -68,21 +66,18 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicy;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyFactory;
 import com.liferay.portal.kernel.security.membershippolicy.RoleMembershipPolicy;
-import com.liferay.portal.kernel.security.membershippolicy.RoleMembershipPolicyFactory;
-import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicy;
-import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyFactory;
 import com.liferay.portal.kernel.security.membershippolicy.UserGroupMembershipPolicy;
-import com.liferay.portal.kernel.security.membershippolicy.UserGroupMembershipPolicyFactory;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.ServiceComponentLocalService;
-import com.liferay.portal.kernel.servlet.DirectServletRegistry;
+import com.liferay.portal.kernel.servlet.DirectServletRegistryUtil;
+import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -105,11 +100,14 @@ import com.liferay.portal.kernel.util.UnsyncPrintWriterPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.log4j.Log4JUtil;
+import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyFactoryUtil;
+import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
+import com.liferay.portal.security.membershippolicy.UserGroupMembershipPolicyFactoryUtil;
 import com.liferay.portal.util.MaintenanceUtil;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.ShutdownUtil;
 import com.liferay.server.admin.web.internal.constants.ImageMagickResourceLimitConstants;
-import com.liferay.server.admin.web.internal.scripting.ServerScripting;
+import com.liferay.server.admin.web.internal.scripting.util.ServerScriptingUtil;
 
 import java.lang.reflect.InvocationHandler;
 
@@ -153,6 +151,10 @@ public class EditServerMVCActionCommand
 	public void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
+
+		if (!StringUtil.equals(actionRequest.getMethod(), HttpMethods.POST)) {
+			return;
+		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -210,8 +212,42 @@ public class EditServerMVCActionCommand
 		else if (cmd.startsWith("convertProcess.")) {
 			redirect = _convertProcess(actionRequest, actionResponse, cmd);
 		}
-		else if (cmd.equals("dlPreviews")) {
-			DLPreviewableProcessor.deleteFiles();
+		else if (cmd.equals("dlDeletePreviews")) {
+			_deleteFiles();
+		}
+		else if (cmd.equals("dlGenerateAudioPreviews")) {
+			AudioProcessor audioProcessor = (AudioProcessor)_audioDLProcessor;
+
+			audioProcessor.generatePreviews();
+
+			hideDefaultSuccessMessage(actionRequest);
+
+			SessionMessages.add(actionRequest, "dlGenerateAudioPreviews");
+		}
+		else if (cmd.equals("dlGenerateOpenOfficePreviews")) {
+			_documentConversion.generatePreviews();
+
+			hideDefaultSuccessMessage(actionRequest);
+
+			SessionMessages.add(actionRequest, "dlGenerateOpenOfficePreviews");
+		}
+		else if (cmd.equals("dlGeneratePDFPreviews")) {
+			PDFProcessor pdfProcessor = (PDFProcessor)_dlProcessor;
+
+			pdfProcessor.generatePreviews();
+
+			hideDefaultSuccessMessage(actionRequest);
+
+			SessionMessages.add(actionRequest, "dlGeneratePDFPreviews");
+		}
+		else if (cmd.equals("dlGenerateVideoPreviews")) {
+			VideoProcessor videoProcessor = (VideoProcessor)_videoDLProcessor;
+
+			videoProcessor.generatePreviews();
+
+			hideDefaultSuccessMessage(actionRequest);
+
+			SessionMessages.add(actionRequest, "dlGenerateVideoPreviews");
 		}
 		else if (cmd.equals("gc")) {
 			_gc();
@@ -239,9 +275,6 @@ public class EditServerMVCActionCommand
 		}
 		else if (cmd.equals("verifyMembershipPolicies")) {
 			_verifyMembershipPolicies();
-		}
-		else if (cmd.equals("verifyPluginTables")) {
-			_verifyPluginTables();
 		}
 
 		sendRedirect(actionRequest, actionResponse, redirect);
@@ -286,7 +319,7 @@ public class EditServerMVCActionCommand
 	}
 
 	private void _cacheServlet() throws Exception {
-		_directServletRegistry.clearServlets();
+		DirectServletRegistryUtil.clearServlets();
 	}
 
 	private void _cacheSingle() throws Exception {
@@ -404,7 +437,7 @@ public class EditServerMVCActionCommand
 					}
 
 					_portletPreferencesLocalService.deletePortletPreferences(
-						portletPreferences);
+						portletPreferences.getPortletPreferencesId());
 				});
 
 			actionableDynamicQuery.performActions();
@@ -423,6 +456,19 @@ public class EditServerMVCActionCommand
 			ActionableDynamicQuery actionableDynamicQuery =
 				_portletPreferencesLocalService.getActionableDynamicQuery();
 
+			actionableDynamicQuery.setAddCriteriaMethod(
+				dynamicQuery -> {
+					Property plidProperty = PropertyFactoryUtil.forName("plid");
+
+					DynamicQuery layoutRevisionDynamicQuery =
+						_layoutRevisionLocalService.dynamicQuery();
+
+					layoutRevisionDynamicQuery.setProjection(
+						ProjectionFactoryUtil.property("layoutRevisionId"));
+
+					dynamicQuery.add(
+						plidProperty.notIn(layoutRevisionDynamicQuery));
+				});
 			actionableDynamicQuery.setParallel(true);
 			actionableDynamicQuery.setPerformActionMethod(
 				(com.liferay.portal.kernel.model.PortletPreferences pref) -> {
@@ -461,7 +507,8 @@ public class EditServerMVCActionCommand
 
 					if (orphan) {
 						_portletPreferencesLocalService.
-							deletePortletPreferences(pref);
+							deletePortletPreferences(
+								pref.getPortletPreferencesId());
 					}
 				});
 
@@ -554,6 +601,19 @@ public class EditServerMVCActionCommand
 		return null;
 	}
 
+	private void _deleteFiles() {
+		_companyLocalService.forEachCompanyId(
+			companyId -> {
+				_store.deleteDirectory(
+					companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+					BasePreviewableDLProcessor.PREVIEW_PATH);
+
+				_store.deleteDirectory(
+					companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+					BasePreviewableDLProcessor.THUMBNAIL_PATH);
+			});
+	}
+
 	private void _gc() throws Exception {
 		Runtime runtime = Runtime.getRuntime();
 
@@ -588,7 +648,7 @@ public class EditServerMVCActionCommand
 			SessionMessages.add(actionRequest, "script", script);
 			SessionMessages.add(actionRequest, "output", output);
 
-			_serverScripting.execute(portletObjects, language, script);
+			ServerScriptingUtil.execute(portletObjects, language, script);
 
 			unsyncPrintWriter.flush();
 
@@ -665,7 +725,7 @@ public class EditServerMVCActionCommand
 		portletPreferences.store();
 
 		_ghostscript.reset();
-		ImageMagickUtil.reset();
+		_imageMagick.reset();
 	}
 
 	private void _updateLogLevels(ActionRequest actionRequest) {
@@ -729,6 +789,8 @@ public class EditServerMVCActionCommand
 		int pop3Port = ParamUtil.getInteger(actionRequest, "pop3Port");
 		boolean pop3Secure = ParamUtil.getBoolean(actionRequest, "pop3Secure");
 		String pop3User = ParamUtil.getString(actionRequest, "pop3User");
+		boolean popServerNotificationsEnabled = ParamUtil.getBoolean(
+			actionRequest, "popServerNotificationsEnabled");
 		String smtpHost = ParamUtil.getString(actionRequest, "smtpHost");
 		String smtpPassword = ParamUtil.getString(
 			actionRequest, "smtpPassword");
@@ -805,6 +867,9 @@ public class EditServerMVCActionCommand
 			PropsKeys.MAIL_SESSION_MAIL_STORE_PROTOCOL, storeProtocol);
 		portletPreferences.setValue(
 			PropsKeys.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL, transportProtocol);
+		portletPreferences.setValue(
+			PropsKeys.POP_SERVER_NOTIFICATIONS_ENABLED,
+			String.valueOf(popServerNotificationsEnabled));
 
 		portletPreferences.store();
 
@@ -843,23 +908,16 @@ public class EditServerMVCActionCommand
 		organizationMembershipPolicy.verifyPolicy();
 
 		RoleMembershipPolicy roleMembershipPolicy =
-			_roleMembershipPolicyFactory.getRoleMembershipPolicy();
+			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy();
 
 		roleMembershipPolicy.verifyPolicy();
 
-		SiteMembershipPolicy siteMembershipPolicy =
-			_siteMembershipPolicyFactory.getSiteMembershipPolicy();
-
-		siteMembershipPolicy.verifyPolicy();
+		SiteMembershipPolicyUtil.verifyPolicy();
 
 		UserGroupMembershipPolicy userGroupMembershipPolicy =
-			_userGroupMembershipPolicyFactory.getUserGroupMembershipPolicy();
+			UserGroupMembershipPolicyFactoryUtil.getUserGroupMembershipPolicy();
 
 		userGroupMembershipPolicy.verifyPolicy();
-	}
-
-	private void _verifyPluginTables() throws Exception {
-		_serviceComponentLocalService.verifyDB();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -875,6 +933,9 @@ public class EditServerMVCActionCommand
 		EditServerMVCActionCommand.class, "_updateLogLevels", Map.class,
 		String.class);
 
+	@Reference(target = "(type=" + DLProcessorConstants.AUDIO_PROCESSOR + ")")
+	private DLProcessor _audioDLProcessor;
+
 	@Reference
 	private ClusterExecutor _clusterExecutor;
 
@@ -882,13 +943,22 @@ public class EditServerMVCActionCommand
 	private ClusterMasterExecutor _clusterMasterExecutor;
 
 	@Reference
-	private DirectServletRegistry _directServletRegistry;
+	private CompanyLocalService _companyLocalService;
+
+	@Reference(target = "(type=" + DLProcessorConstants.PDF_PROCESSOR + ")")
+	private DLProcessor _dlProcessor;
+
+	@Reference
+	private DocumentConversion _documentConversion;
 
 	@Reference
 	private Ghostscript _ghostscript;
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private ImageMagick _imageMagick;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -925,21 +995,12 @@ public class EditServerMVCActionCommand
 	private RoleLocalService _roleLocalService;
 
 	@Reference
-	private RoleMembershipPolicyFactory _roleMembershipPolicyFactory;
-
-	@Reference
-	private ServerScripting _serverScripting;
-
-	@Reference
-	private ServiceComponentLocalService _serviceComponentLocalService;
-
-	@Reference
 	private SingleVMPool _singleVMPool;
 
-	@Reference
-	private SiteMembershipPolicyFactory _siteMembershipPolicyFactory;
+	@Reference(target = "(default=true)")
+	private Store _store;
 
-	@Reference
-	private UserGroupMembershipPolicyFactory _userGroupMembershipPolicyFactory;
+	@Reference(target = "(type=" + DLProcessorConstants.VIDEO_PROCESSOR + ")")
+	private DLProcessor _videoDLProcessor;
 
 }

@@ -1,27 +1,24 @@
 <%--
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 --%>
 
 <%@ include file="/init.jsp" %>
 
 <%
-String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()));
+String redirect = ParamUtil.getString(request, "redirect");
+
+String backURL = ParamUtil.getString(request, "backURL", redirect);
+
+if (Validator.isNull(backURL)) {
+	backURL = String.valueOf(renderResponse.createRenderURL());
+}
 
 ObjectEntryDisplayContext objectEntryDisplayContext = (ObjectEntryDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-ObjectDefinition objectDefinition = objectEntryDisplayContext.getObjectDefinition();
+ObjectDefinition objectDefinition = objectEntryDisplayContext.getObjectDefinition1();
 ObjectEntry objectEntry = objectEntryDisplayContext.getObjectEntry();
 
 portletDisplay.setShowBackIcon(true);
@@ -86,24 +83,38 @@ portletDisplay.setURLBack(backURL);
 
 			const postPath = scope === 'site' ? pathScopedBySite : contextPath;
 
-			let putPath = scope === 'site' ? pathScopedBySite : contextPath;
+			let patchPath = scope === 'site' ? pathScopedBySite : contextPath;
 
-			putPath = putPath.concat(
+			patchPath = patchPath.concat(
 				'/by-external-reference-code/',
 				`\${externalReferenceCode}`
 			);
 
-			return externalReferenceCode ? putPath : postPath;
+			return externalReferenceCode ? patchPath : postPath;
 		}
 
 		function <portlet:namespace />getValues(fields) {
 			return fields.reduce((obj, field) => {
+				if (field.readOnly) {
+					return obj;
+				}
+
 				let value = field.value;
 				if (field.type === 'select' && !field.multiple) {
 					value = {key: value.length ? field.value[0] : ''};
 				}
 
-				return Object.assign(obj, {[field.fieldName]: value});
+				let fieldName = field.fieldName;
+
+				if (field.localizable) {
+					fieldName += '_i18n';
+
+					if (typeof value == 'string') {
+						value = JSON.parse(value);
+					}
+				}
+
+				return Object.assign(obj, {[fieldName]: value});
 			}, {});
 		}
 
@@ -117,6 +128,15 @@ portletDisplay.setURLBack(backURL);
 
 				const current = DDMFormInstance.reactComponentRef.current;
 
+				const loadingElement = document.createElement('span');
+
+				loadingElement.className =
+					'loading-animation loading-animation-secondary loading-animation-sm';
+
+				loadingElement.ariaHidden = 'true';
+
+				form.insertAdjacentElement('afterbegin', loadingElement);
+
 				current.validate().then((result) => {
 					if (result) {
 						const fields = current.getFields();
@@ -129,6 +149,8 @@ portletDisplay.setURLBack(backURL);
 								field.value.length > 280
 							) {
 								shouldSubmitForm = false;
+
+								loadingElement.remove();
 
 								Liferay.Util.openToast({
 									message: Liferay.Util.sub(
@@ -157,15 +179,15 @@ portletDisplay.setURLBack(backURL);
 								values = Object.assign(
 									values,
 									{
-										['categoryIds']: <portlet:namespace />getInputValues(
+										['keywords']: <portlet:namespace />getInputValues(
 											categoriesContent,
-											'input[name^="<portlet:namespace />assetCategoryIds"]'
+											'input[name^="<portlet:namespace />assetTagNames"]'
 										),
 									},
 									{
-										['tagNames']: <portlet:namespace />getInputValues(
+										['taxonomyCategoryIds']: <portlet:namespace />getInputValues(
 											categoriesContent,
-											'input[name^="<portlet:namespace />assetTagNames"]'
+											'input[name^="<portlet:namespace />assetCategoryIds"]'
 										),
 									}
 								);
@@ -189,9 +211,11 @@ portletDisplay.setURLBack(backURL);
 								body: JSON.stringify(values),
 								headers: new Headers({
 									'Accept': 'application/json',
+									'Accept-Language':
+										'<%= LanguageUtil.getBCP47LanguageId(request) %>',
 									'Content-Type': 'application/json',
 								}),
-								method: externalReferenceCode ? 'PUT' : 'POST',
+								method: externalReferenceCode ? 'PATCH' : 'POST',
 							})
 								.then((response) => {
 									if (response.status === 401) {
@@ -224,12 +248,78 @@ portletDisplay.setURLBack(backURL);
 									}
 								})
 								.then((response) => {
-									if (response && response.title) {
+									if (response && response.detail) {
+										const errorMessageArray = JSON.parse(
+											response.detail
+										);
+
+										for (const error of errorMessageArray) {
+											const portletBody = document.querySelector(
+												'.portlet-body'
+											);
+
+											const existingAlert = portletBody.querySelector(
+												'.alert'
+											);
+
+											if (existingAlert) {
+												existingAlert.remove();
+											}
+
+											const alertElement = document.createElement(
+												'div'
+											);
+
+											alertElement.className =
+												'alert alert-danger';
+											alertElement.setAttribute('role', 'alert');
+											alertElement.style.bottom = '20px';
+											alertElement.style.margin = '2rem auto 0';
+											alertElement.style.width = '800px';
+
+											alertElement.insertAdjacentHTML(
+												'afterbegin',
+												"<span class='alert-indicator'><svg class='lexicon-icon lexicon-icon-exclamation-full' focusable='false' role='presentation'><use xlink:href='/o/admin-theme/images/clay/icons.svg#exclamation-full'/></svg> <strong class='lead'>Error:</strong></span>"
+											);
+
+											alertElement.insertAdjacentHTML(
+												'beforeend',
+												error.errorMessage
+											);
+
+											const closeButton = document.createElement(
+												'button'
+											);
+											closeButton.classList.add('close');
+											closeButton.setAttribute(
+												'aria-label',
+												'Close'
+											);
+											closeButton.setAttribute('type', 'button');
+											closeButton.style.fontSize = '32px';
+											closeButton.style.fontWeight = '300';
+											closeButton.innerHTML = '&times;';
+											closeButton.onclick = () => {
+												alertElement.remove();
+											};
+
+											alertElement.appendChild(closeButton);
+
+											form.insertAdjacentElement(
+												'afterbegin',
+												alertElement
+											);
+										}
+										scroll(0, 0);
+									}
+									else if (response && response.title) {
 										Liferay.Util.openToast({
 											message: response.title,
 											type: 'danger',
 										});
 									}
+
+									loadingElement.remove();
 								});
 						}
 					}

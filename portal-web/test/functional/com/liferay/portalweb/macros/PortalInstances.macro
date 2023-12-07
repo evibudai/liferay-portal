@@ -1,69 +1,71 @@
 definition {
 
-	macro addCP {
+	@summary = "Default summary"
+	macro addCP(maxUserNumber = null, instanceAdminLastName = null, maxUsers = null, portalInstanceActive = null, instanceAdminFirstName = null, webId = null, mailDomain = null, instanceScreenName = null, instancePassword = null, virtualHost = null, instanceAdminEmail = null) {
 		LexiconEntry.gotoAdd();
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Type(
 			locator1 = "TextInput#WEB_ID",
-			value1 = "${webId}");
+			value1 = ${webId});
 
 		Type(
 			locator1 = "TextInput#VIRTUAL_HOST",
-			value1 = "${virtualHost}");
+			value1 = ${virtualHost});
 
 		Type(
 			locator1 = "TextInput#MAIL_DOMAIN",
-			value1 = "${mailDomain}");
+			value1 = ${mailDomain});
 
-		if ("${maxUsers}" == "true") {
+		if (${maxUsers} == "true") {
 			Type(
 				locator1 = "TextInput#MAX_USERS",
-				value1 = "${maxUserNumber}");
+				value1 = ${maxUserNumber});
 		}
 
-		if ("${portalInstanceActive}" == "false") {
+		if (${portalInstanceActive} == "false") {
 			Uncheck(locator1 = "Checkbox#ACTIVE");
 		}
 
 		if (isSet(instanceScreenName)) {
 			Type(
 				locator1 = "TextInput#VIRTUAL_INSTANCE_SCREEN_NAME",
-				value1 = "${instanceScreenName}");
+				value1 = ${instanceScreenName});
 
 			Type(
 				locator1 = "TextInput#VIRTUAL_INSTANCE_EMAIL",
-				value1 = "${instanceAdminEmail}");
+				value1 = ${instanceAdminEmail});
 
 			Type(
 				locator1 = "TextInput#VIRTUAL_INSTANCE_PASSWORD",
-				value1 = "${instancePassword}");
+				value1 = ${instancePassword});
 		}
 
 		if (isSet(instanceAdminFirstName)) {
 			Type(
 				locator1 = "TextInput#VIRTUAL_INSTANCE_FIRST_NAME",
-				value1 = "${instanceAdminFirstName}");
+				value1 = ${instanceAdminFirstName});
 		}
 
 		if (isSet(instanceAdminLastName)) {
 			Type(
 				locator1 = "TextInput#VIRTUAL_INSTANCE_LAST_NAME",
-				value1 = "${instanceAdminLastName}");
+				value1 = ${instanceAdminLastName});
 		}
 
-		Button.clickAdd();
-
 		SelectFrameTop();
+
+		Button.clickAdd();
 
 		Alert.viewSuccessMessage();
 	}
 
-	macro deactivatePortalInstance {
-		var key_virtualHost = "${virtualHost}";
+	@summary = "Default summary"
+	macro deactivatePortalInstance(virtualHost = null) {
+		var key_virtualHost = ${virtualHost};
 
-		LexiconEntry.openEntryMenu(rowEntry = "${virtualHost}");
+		LexiconEntry.openEntryMenu(rowEntry = ${virtualHost});
 
 		MenuItem.click(menuItem = "Edit");
 
@@ -72,16 +74,19 @@ definition {
 		Button.clickSave();
 
 		AssertTextEquals(
-			locator1 = "PortalInstances#INSTANCE_TABLE_ACTIVE",
+			key_columnName = "active",
+			key_tableEntry = ${virtualHost},
+			locator1 = "LexiconTable#TABLE_ENTRY_COLUMN_LINK",
 			value1 = "No");
 	}
 
-	macro deleteCP {
-		var key_virtualHost = "${virtualHost}";
+	@summary = "Default summary"
+	macro deleteCP(virtualHost = null) {
+		var key_virtualHost = ${virtualHost};
 
 		LexiconTable.clickEllipsisItem(
 			item = "Delete",
-			tableEntry = "${virtualHost}");
+			tableEntry = ${virtualHost});
 
 		AssertTextEquals(
 			locator1 = "Modal#BODY",
@@ -95,21 +100,22 @@ definition {
 
 		AssertTextNotPresent(
 			locator1 = "PortalInstances#INSTANCE_TABLE_VIRTUAL_HOST",
-			value1 = "${virtualHost}");
+			value1 = ${virtualHost});
 	}
 
-	macro editCP {
-		var key_virtualHost = "${virtualHost}";
+	@summary = "Default summary"
+	macro editCP(mailDomain = null, virtualHost = null) {
+		var key_virtualHost = ${virtualHost};
 
 		AssertTextEquals(
 			locator1 = "PortalInstances#INSTANCE_TABLE_VIRTUAL_HOST",
-			value1 = "${virtualHost}");
+			value1 = ${virtualHost});
 
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Edit");
 
 		Type(
 			locator1 = "TextInput#MAIL_DOMAIN",
-			value1 = "${mailDomain}");
+			value1 = ${mailDomain});
 
 		AssertClick(
 			locator1 = "Button#SAVE",
@@ -118,27 +124,29 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro openOnDemandAdminPortlet {
+	@summary = "Default summary"
+	macro openOnDemandAdminPortlet() {
 		if (isSet(baseURL)) {
-			var baseURL = "${baseURL}";
+			var baseURL = ${baseURL};
 
 			Navigator.openWithAppendToBaseURL(
-				baseURL = "${baseURL}",
+				baseURL = ${baseURL},
 				urlAppend = "group/control_panel/manage?p_p_id=com_liferay_on_demand_admin_web_internal_portlet_OnDemandAdminPortlet");
 		}
 		else {
-			var baseURL = PropsUtil.get("portal.url");
+			var baseURL = JSONCompany.getPortalURL();
 
 			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_on_demand_admin_web_internal_portlet_OnDemandAdminPortlet");
 		}
 	}
 
-	macro openVirtualInstancesAdmin {
+	@summary = "Default summary"
+	macro openVirtualInstancesAdmin() {
 		if (isSet(baseURL)) {
-			var baseURL = "${baseURL}";
+			var baseURL = ${baseURL};
 
 			Navigator.openWithAppendToBaseURL(
-				baseURL = "${baseURL}",
+				baseURL = ${baseURL},
 				urlAppend = "group/control_panel/manage?p_p_id=com_liferay_portal_instances_web_portlet_PortalInstancesPortlet");
 		}
 		else {
@@ -146,10 +154,11 @@ definition {
 		}
 	}
 
-	macro requestOnDemandAdminOnInstance {
+	@summary = "Default summary"
+	macro requestOnDemandAdminOnInstance(virtualHost = null) {
 		WaitForElementPresent(
 			locator1 = "PortalInstances#INSTANCE_TABLE_VIRTUAL_HOST",
-			value1 = "${virtualHost}");
+			value1 = ${virtualHost});
 
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Request Administrator Access");
 
@@ -157,7 +166,7 @@ definition {
 
 		Button.clickSubmitButton();
 
-		SelectWindow(locator1 = "Home - ${virtualHost}");
+		SelectWindow(value1 = "Home - ${virtualHost}");
 
 		WaitForElementPresent(locator1 = "Button#I_AGREE");
 
@@ -166,27 +175,48 @@ definition {
 		User.answerPasswordReminder();
 	}
 
-	@summary = "Clean up Portal Instances as part of standard teardown"
-	macro tearDownCP {
-		JSONUser.tearDownNonAdminUsers(authenticationMethod = "${authenticationMethod}");
+	@summary = "Default summary"
+	macro tearDownCP(authenticationMethod = null) {
+		JSONUser.tearDownNonAdminUsers(authenticationMethod = ${authenticationMethod});
 
-		HeadlessPortalInstanceAPI.cleanAllPortalInstances(authenticationMethod = "${authenticationMethod}");
+		HeadlessPortalInstanceAPI.cleanAllPortalInstances(authenticationMethod = ${authenticationMethod});
 	}
 
-	macro viewCP {
-		var key_virtualHost = "${virtualHost}";
+	@summary = "Default summary"
+	macro tearDownCPNoSelenium(authenticationMethod = null) {
+		JSONUser.tearDownNonAdminUsersNoSelenium(authenticationMethod = ${authenticationMethod});
 
-		AssertTextEquals(
+		HeadlessPortalInstanceAPI.cleanAllPortalInstances(authenticationMethod = ${authenticationMethod});
+	}
+
+	@summary = "Default summary"
+	macro tearDownCustomPortal(authenticationMethod = null) {
+		JSONUser.tearDownNonAdminUsers(authenticationMethod = ${authenticationMethod});
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var portalURL = StringUtil.replace(${portalURL}, "http://", "");
+
+		var portalInstanceId = StringUtil.replace(${portalURL}, ":8080", "");
+
+		HeadlessPortalInstanceAPI.deletePortalInstance(portalInstanceId = ${portalInstanceId});
+	}
+
+	@summary = "Default summary"
+	macro viewCP(virtualHost = null) {
+		var key_virtualHost = ${virtualHost};
+
+		AssertTextEquals.assertText(
 			locator1 = "PortalInstances#INSTANCE_TABLE_WEB_ID",
-			value1 = "${virtualHost}");
+			value1 = ${virtualHost});
 
-		AssertTextEquals(
+		AssertTextEquals.assertText(
 			locator1 = "PortalInstances#INSTANCE_TABLE_VIRTUAL_HOST",
-			value1 = "${virtualHost}");
+			value1 = ${virtualHost});
 
-		AssertTextEquals(
+		AssertTextEquals.assertText(
 			locator1 = "PortalInstances#INSTANCE_TABLE_MAIL_DOMAIN",
-			value1 = "${virtualHost}");
+			value1 = ${virtualHost});
 	}
 
 }

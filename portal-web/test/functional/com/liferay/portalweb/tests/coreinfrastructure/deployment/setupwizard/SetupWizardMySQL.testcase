@@ -1,6 +1,7 @@
 @component-name = "portal-deployment-mysql"
 definition {
 
+	property ci.retries.disabled = "true";
 	property database.types = "mysql";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -8,10 +9,11 @@ definition {
 	property test.assert.warning.exceptions = "true";
 	property testray.main.component.name = "Setup Wizard";
 
-	@priority = "3"
+	@priority = 3
 	test MySQLtoEmptyMySQL {
 		property databases.size = "1";
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoEmptyMySQL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -29,10 +31,11 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test MySQLtoHSQL {
 		property database.types = "hypersonic";
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoHSQL";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.configurePG(
 			administratorEmail = "test@liferay.com",
@@ -49,15 +52,16 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "3"
+	@priority = 3
 	test MySQLtoHSQLDeleteLiferayHome {
 		property database.types = "hypersonic";
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoHSQLDeleteLiferayHome";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Portlet.shutdownServer();
 
 		Portlet.startServer(
-			base_branch = "${base_branch}",
+			base_branch = ${base_branch},
 			deleteLiferayHome = "true");
 
 		SetupWizard.configurePG(
@@ -75,9 +79,10 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test MySQLtoMySQLEditedAdministratorUser {
-		property test.name.skip.portal.instance = "SetupWizardMySQL#MySQLtoMySQLEditAdministratorUser";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SetupWizard.viewDefaultPortalNamePG();
 
@@ -101,13 +106,13 @@ definition {
 		Portlet.shutdownServer();
 
 		Portlet.startServer(
-			base_branch = "${base_branch}",
+			base_branch = ${base_branch},
 			deleteLiferayHome = "false");
 
-		SetupWizard.viewConfiguredDatabaseInConsole(databaseType = "${databaseType}");
+		SetupWizard.viewConfiguredDatabaseInConsole(databaseType = ${databaseType});
 
 		if (isSet(virtualHostsURL)) {
-			Navigator.openSpecificURL(url = "${virtualHostsURL}");
+			Navigator.openSpecificURL(url = ${virtualHostsURL});
 		}
 		else {
 			Navigator.openURL();

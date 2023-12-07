@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.search.facet.faceted.searcher.test;
@@ -69,7 +60,7 @@ public class ModifiedFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 
 		setConfigurationRanges(facet, configRange1, configRange2);
 
-		setCustomRange(facet, searchContext, customRange);
+		setCustomRange(facet, customRange);
 
 		searchContext.addFacet(facet);
 
@@ -77,7 +68,7 @@ public class ModifiedFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 
 		Map<String, Integer> frequencies = SearchMapUtil.join(
 			toMap(configRange1, 0), toMap(configRange2, 1),
-			toMap(customRange, 1));
+			toMap("custom-range", 1));
 
 		FacetsAssert.assertFrequencies(
 			facet.getFieldName(), searchContext, hits, frequencies);
@@ -87,9 +78,12 @@ public class ModifiedFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (String range : ranges) {
-			JSONObject jsonObject = JSONUtil.put("range", range);
-
-			jsonArray.put(jsonObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"label", range
+				).put(
+					"range", range
+				));
 		}
 
 		return JSONUtil.put("ranges", jsonArray);
@@ -103,10 +97,21 @@ public class ModifiedFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 		facetConfiguration.setDataJSONObject(createDataJSONObject(ranges));
 	}
 
-	protected static void setCustomRange(
-		Facet facet, SearchContext searchContext, String customRange) {
+	protected static void setCustomRange(Facet facet, String customRange) {
+		FacetConfiguration facetConfiguration = facet.getFacetConfiguration();
 
-		searchContext.setAttribute(facet.getFieldId(), customRange);
+		JSONObject jsonObject = facetConfiguration.getData();
+
+		JSONArray jsonArray = jsonObject.getJSONArray("ranges");
+
+		jsonArray.put(
+			JSONUtil.put(
+				"label", "custom-range"
+			).put(
+				"range", customRange
+			));
+
+		jsonObject.put("ranges", jsonArray);
 	}
 
 	protected static Map<String, Integer> toMap(String key, Integer value) {

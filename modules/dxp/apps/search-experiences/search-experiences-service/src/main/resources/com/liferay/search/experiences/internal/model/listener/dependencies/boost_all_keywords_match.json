@@ -1,7 +1,6 @@
 {
 	"description_i18n": {
-		"en_US": "Boost contents if the search keywords match in the given fields.",
-		"ja_JP": "検索キーワードが指定されたフィールドに一致する場合、コンテンツをブーストする"
+		"en_US": "boost-all-keywords-match-description"
 	},
 	"elementDefinition": {
 		"category": "boost",
@@ -46,7 +45,7 @@
 									"locale": "${context.language_id}"
 								}
 							],
-							"label": "Field",
+							"label": "field",
 							"name": "fields",
 							"type": "fieldMappingList",
 							"typeOptions": {
@@ -55,7 +54,7 @@
 						},
 						{
 							"defaultValue": "best_fields",
-							"label": "Match Type",
+							"label": "match-type",
 							"name": "type",
 							"type": "select",
 							"typeOptions": {
@@ -89,7 +88,7 @@
 						},
 						{
 							"defaultValue": 10,
-							"label": "Boost",
+							"label": "boost",
 							"name": "boost",
 							"type": "number",
 							"typeOptions": {
@@ -97,8 +96,8 @@
 							}
 						},
 						{
-							"helpText": "If this is set, the search terms entered in the search bar will be replaced by this value.",
-							"label": "Text to Match",
+							"helpText": "text-to-match-field-help",
+							"label": "text-to-match",
 							"name": "keywords",
 							"type": "keywords",
 							"typeOptions": {
@@ -112,7 +111,6 @@
 	},
 	"externalReferenceCode": "BOOST_ALL_KEYWORDS_MATCH",
 	"title_i18n": {
-		"en_US": "Boost All Keywords Match",
-		"ja_JP": "全マッチキーワードのブースト"
+		"en_US": "boost-all-keywords-match"
 	}
 }

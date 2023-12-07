@@ -1,6 +1,7 @@
 definition {
 
-	macro _addAccountEntry {
+	@summary = "Default summary"
+	macro _addAccountEntry(countryNumber = null, threeLetterISOCode = null, subjectToVAT = null, creatorEmailAddress = null, twoLetterISOCode = null, shippingAllowed = null, creatorPassword = null, billingAllowed = null, countryPriority = null, countryName = null, countryStatus = null) {
 		Variables.assertDefined(parameterList = "${countryName},${countryNumber},${threeLetterISOCode},${twoLetterISOCode}");
 
 		var companyId = JSONCompany.getCompanyId();
@@ -22,64 +23,64 @@ definition {
 				-d zipRequired=false
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	@summary = "Get the abbreviation of a country"
-	macro _getCountryAbbreviation {
-		Variables.assertDefined(parameterList = "${countryName}");
+	@summary = "Default summary"
+	macro _getCountryAbbreviation() {
+		Variables.assertDefined(parameterList = ${countryName});
 
 		var portalURL = PropsUtil.get("portal.url");
-		var countryName = StringUtil.replace("${countryName}", " ", "-");
+		var countryName = StringUtil.replace(${countryName}, " ", "-");
 
 		var curl = '''
 			${portalURL}/api/jsonws/country/get-country-by-name \
-			-u test@liferay.com:test \
-			-d name=${countryName} \
+				-u test@liferay.com:test \
+				-d name=${countryName} \
 		''';
 
-		echo("${curl}");
+		echo(${curl});
 
-		var countryAbbreviation = JSONCurlUtil.post("${curl}", "$.a2");
+		var countryAbbreviation = JSONCurlUtil.post(${curl}, "$.a2");
 
-		return "${countryAbbreviation}";
+		return ${countryAbbreviation};
 	}
 
-	@summary = "Get the all informations of a country"
-	macro _getCountryByName {
-		Variables.assertDefined(parameterList = "${countryName}");
+	@summary = "Default summary"
+	macro _getCountryByName(countryName = null) {
+		Variables.assertDefined(parameterList = ${countryName});
 
 		var portalURL = PropsUtil.get("portal.url");
 
 		var curl = '''
 			${portalURL}/api/jsonws/country/get-country-by-name \
-			-u test@liferay.com:test \
-			-d name=${countryName} \
+				-u test@liferay.com:test \
+				-d name=${countryName} \
 		''';
 
-		var country = JSONCurlUtil.post("${curl}");
+		var country = JSONCurlUtil.post(${curl});
 
-		return "${country}";
+		return ${country};
 	}
 
-	@summary = "Get the all regions of a country"
-	macro _getCountryRegions {
-		Variables.assertDefined(parameterList = "${countryAbbreviation}");
+	@summary = "Default summary"
+	macro _getCountryRegions(countryAbbreviation = null) {
+		Variables.assertDefined(parameterList = ${countryAbbreviation});
 
 		var companyId = JSONCompany.getCompanyId();
 		var portalURL = PropsUtil.get("portal.url");
 
 		var curl = '''
 			${portalURL}/api/jsonws/region/get-regions \
-			-u test@liferay.com:test \
-			-d companyId=${companyId} \
-			-d a2=${countryAbbreviation} \
-			-d active=true
+				-u test@liferay.com:test \
+				-d companyId=${companyId} \
+				-d a2=${countryAbbreviation} \
+				-d active=true
 		''';
 
-		var countryRegions = JSONCurlUtil.post("${curl}");
+		var countryRegions = JSONCurlUtil.post(${curl});
 
-		return "${countryRegions}";
+		return ${countryRegions};
 	}
 
 }

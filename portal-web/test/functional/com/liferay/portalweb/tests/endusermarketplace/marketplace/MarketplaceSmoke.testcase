@@ -1,6 +1,7 @@
 @component-name = "marketplace"
 definition {
 
+	property ci.retries.disabled = "true";
 	property marketplace.app.acceptance = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Marketplace";
@@ -13,7 +14,7 @@ definition {
 		BlogsEntry.tearDownCP();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test MarketplaceSmoke {
 		Marketplace.smoke();
 	}

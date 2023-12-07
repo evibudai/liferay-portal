@@ -1,25 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {config} from '../config/index';
-import serviceFetch from './serviceFetch';
-
-const layoutServiceFetch = (url, options, onNetworkStatus) => {
-	return serviceFetch(url, options, onNetworkStatus, {
-		requestGenerateDraft: true,
-	});
-};
+import draftServiceFetch from './draftServiceFetch';
 
 export default {
 
@@ -40,7 +25,7 @@ export default {
 		position,
 		segmentsExperienceId,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.addItemURL,
 			{
 				body: {
@@ -62,7 +47,7 @@ export default {
 	 * @return {Promise<object>}
 	 */
 	changeMasterLayout({masterLayoutPlid, onNetworkStatus}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.changeMasterLayoutURL,
 			{
 				body: {
@@ -81,7 +66,7 @@ export default {
 	 * @return {Promise<object>}
 	 */
 	changeStyleBookEntry({onNetworkStatus, styleBookEntryId}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.changeStyleBookEntryURL,
 			{
 				body: {
@@ -98,7 +83,7 @@ export default {
 		templateSetId,
 		templateSetName,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.createLayoutPageTemplateEntryURL,
 			{
 				body: {
@@ -117,7 +102,7 @@ export default {
 	 * @returns {Promise<{error: Error, friendlyURL: string}>}
 	 */
 	getLayoutFriendlyURL(layout) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.getLayoutFriendlyURL,
 			{
 				body: layout,
@@ -127,7 +112,7 @@ export default {
 	},
 
 	getLayoutPageTemplateCollections() {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.getLayoutPageTemplateCollectionsURL,
 			{},
 			() => {}
@@ -150,7 +135,7 @@ export default {
 		portletIds = [],
 		segmentsExperienceId,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.markItemForDeletionURL,
 			{
 				body: {
@@ -180,7 +165,7 @@ export default {
 		position,
 		segmentsExperienceId,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.moveItemURL,
 			{
 				body: {
@@ -211,7 +196,7 @@ export default {
 		onNetworkStatus,
 		segmentsExperienceId,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.restoreCollectionDisplayConfigURL,
 			{
 				body: {
@@ -236,7 +221,7 @@ export default {
 	 * @return {Promise<void>}
 	 */
 	unmarkItemsForDeletion({itemIds, onNetworkStatus, segmentsExperienceId}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.unmarkItemsForDeletionURL,
 			{
 				body: {
@@ -265,7 +250,7 @@ export default {
 		onNetworkStatus,
 		segmentsExperienceId,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.updateCollectionDisplayConfigURL,
 			{
 				body: {
@@ -294,7 +279,7 @@ export default {
 		onNetworkStatus,
 		segmentsExperienceId,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.updateItemConfigURL,
 			{
 				body: {
@@ -316,7 +301,7 @@ export default {
 	 * @return {Promise<void>}
 	 */
 	updateLayoutData({layoutData, onNetworkStatus, segmentsExperienceId}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.updateLayoutPageTemplateDataURL,
 			{
 				body: {
@@ -343,7 +328,7 @@ export default {
 		onNetworkStatus,
 		segmentsExperienceId,
 	}) {
-		return layoutServiceFetch(
+		return draftServiceFetch(
 			config.updateRowColumnsURL,
 			{
 				body: {
