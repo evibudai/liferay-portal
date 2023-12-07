@@ -18,6 +18,14 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 public class InlineSQLHelperUtil {
 
 	public static <T extends Table<T>> Predicate getPermissionWherePredicate(
+		Class<?> modelClass, Column<T, Long> classPKColumn,
+		Column<T, Long> userIdColumn, long... groupIds) {
+
+		return _inlineSQLPermission.getPermissionWherePredicate(
+			modelClass, classPKColumn, userIdColumn, groupIds);
+	}
+
+	public static <T extends Table<T>> Predicate getPermissionWherePredicate(
 		Class<?> modelClass, Column<T, Long> classPKColumn, long... groupIds) {
 
 		InlineSQLHelper inlineSQLPermission =

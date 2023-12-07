@@ -74,6 +74,15 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 
 	@Override
 	public <T extends Table<T>> Predicate getPermissionWherePredicate(
+		Class<?> modelClass, Column<T, Long> classPKColumn,
+		Column<T, Long> userIdColumn, long... groupIds) {
+
+		return getPermissionWherePredicate(
+			modelClass.getName(), classPKColumn, userIdColumn, groupIds);
+	}
+
+	@Override
+	public <T extends Table<T>> Predicate getPermissionWherePredicate(
 		Class<?> modelClass, Column<T, Long> classPKColumn, long... groupIds) {
 
 		return getPermissionWherePredicate(
@@ -83,7 +92,7 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 	@Override
 	public <T extends Table<T>> Predicate getPermissionWherePredicate(
 		String modelClassName, Column<T, Long> classPKColumn,
-		long... groupIds) {
+		Column<T, Long> userIdColumn, long... groupIds) {
 
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
@@ -99,7 +108,21 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		}
 
 		return _getPermissionPredicate(
-			permissionChecker, modelClassName, classPKColumn, groupIds);
+			permissionChecker, modelClassName, classPKColumn, userIdColumn,
+			groupIds);
+	}
+
+	@Override
+	public <T extends Table<T>> Predicate getPermissionWherePredicate(
+		String modelClassName, Column<T, Long> classPKColumn,
+		long... groupIds) {
+
+		T table = classPKColumn.getTable();
+
+		Column<T, Long> userIdColumn = table.getColumn("userId", Long.class);
+
+		return getPermissionWherePredicate(
+			modelClassName, classPKColumn, userIdColumn, groupIds);
 	}
 
 	@Override
@@ -412,7 +435,8 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 
 	private <T extends Table<T>> Predicate _getPermissionPredicate(
 		PermissionChecker permissionChecker, String modelClassName,
-		Column<T, Long> classPKColumn, long[] groupIds) {
+		Column<T, Long> classPKColumn, Column<T, Long> userIdColumn,
+		long[] groupIds) {
 
 		DSLQuery resourcePermissionDSLQuery = _getResourcePermissionQuery(
 			permissionChecker, modelClassName, groupIds);

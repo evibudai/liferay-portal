@@ -21,7 +21,15 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface InlineSQLHelper {
 
 	public <T extends Table<T>> Predicate getPermissionWherePredicate(
+		Class<?> modelClass, Column<T, Long> classPKColumn,
+		Column<T, Long> userIdColumn, long... groupIds);
+
+	public <T extends Table<T>> Predicate getPermissionWherePredicate(
 		Class<?> modelClass, Column<T, Long> classPKColumn, long... groupIds);
+
+	public <T extends Table<T>> Predicate getPermissionWherePredicate(
+		String modelClassName, Column<T, Long> classPKColumn,
+		Column<T, Long> userIdColumn, long... groupIds);
 
 	public <T extends Table<T>> Predicate getPermissionWherePredicate(
 		String modelClassName, Column<T, Long> classPKColumn, long... groupIds);
