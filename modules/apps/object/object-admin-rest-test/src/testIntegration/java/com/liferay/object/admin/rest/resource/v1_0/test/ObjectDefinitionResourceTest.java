@@ -405,6 +405,46 @@ public class ObjectDefinitionResourceTest
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			postObjectDefinition.getId());
 
+		// Account entry update with null as objectDefinitionId
+
+		com.liferay.object.model.ObjectDefinition
+			serviceBuilderAccountEntryObjectDefinition2 =
+				_objectDefinitionLocalService.fetchSystemObjectDefinition(
+					AccountEntry.class.getSimpleName());
+
+		ObjectDefinition accountSystemObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(
+				serviceBuilderAccountEntryObjectDefinition2.
+					getObjectDefinitionId());
+
+		String titleObjectFieldName = "type";
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		accountSystemObjectDefinition.setTitleObjectFieldName(
+			titleObjectFieldName);
+		accountEntryObjectDefinition.setExternalReferenceCode(
+			externalReferenceCode);
+
+		accountEntryObjectDefinition.getObjectRelationships()[0].
+			setObjectDefinitionId2((Long)null);
+
+		ObjectDefinition accountEntryObjectDefinitionResult =
+			objectDefinitionResource.putObjectDefinition(
+				accountSystemObjectDefinition.getId(),
+				accountSystemObjectDefinition);
+
+		Assert.assertEquals(
+			accountEntryObjectDefinitionResult.getTitleObjectFieldName(),
+			titleObjectFieldName);
+
+		Assert.assertEquals(
+			accountEntryObjectDefinition.getExternalReferenceCode(),
+			externalReferenceCode);
+
+		Assert.assertNotNull(
+			accountEntryObjectDefinition.getObjectRelationships()[0].
+				getObjectDefinitionId2());
+
 		// Draft custom object definition
 
 		postObjectDefinition = objectDefinitionResource.postObjectDefinition(
