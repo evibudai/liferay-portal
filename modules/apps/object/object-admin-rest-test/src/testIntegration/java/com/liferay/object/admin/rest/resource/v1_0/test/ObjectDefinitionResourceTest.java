@@ -11,6 +11,7 @@ import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectField;
+import com.liferay.object.admin.rest.client.dto.v1_0.ObjectRelationship;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectValidationRule;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectValidationRuleSetting;
 import com.liferay.object.admin.rest.client.dto.v1_0.Status;
@@ -401,6 +402,34 @@ public class ObjectDefinitionResourceTest
 		Assert.assertEquals(
 			accountEntryRestrictedObjectFieldName,
 			postObjectDefinition.getAccountEntryRestrictedObjectFieldName());
+
+		// Account entry update with null objectDefinitionId2
+
+		accountEntryObjectDefinition.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+		accountEntryObjectDefinition.setTitleObjectFieldName("type");
+
+		ObjectRelationship objectRelationship =
+			accountEntryObjectDefinition.getObjectRelationships()[0];
+
+		objectRelationship.setObjectDefinitionId2((Long)null);
+
+		ObjectDefinition putAccountEntryObjectDefinition =
+			objectDefinitionResource.putObjectDefinition(
+				accountEntryObjectDefinition.getId(),
+				accountEntryObjectDefinition);
+
+		Assert.assertEquals(
+			accountEntryObjectDefinition.getExternalReferenceCode(),
+			putAccountEntryObjectDefinition.getExternalReferenceCode());
+		Assert.assertEquals(
+			accountEntryObjectDefinition.getTitleObjectFieldName(),
+			putAccountEntryObjectDefinition.getTitleObjectFieldName());
+
+		objectRelationship =
+			putAccountEntryObjectDefinition.getObjectRelationships()[0];
+
+		Assert.assertNotNull(objectRelationship.getObjectDefinitionId2());
 
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			postObjectDefinition.getId());
