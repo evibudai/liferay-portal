@@ -7,10 +7,14 @@ package com.liferay.headless.admin.list.type.internal.dto.v1_0.util;
 
 import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author Gabriel Albuquerque
@@ -27,8 +31,27 @@ public class ListTypeEntryUtil {
 		serviceBuilderListTypeEntry.setExternalReferenceCode(
 			listTypeEntry.getExternalReferenceCode());
 		serviceBuilderListTypeEntry.setKey(listTypeEntry.getKey());
-		serviceBuilderListTypeEntry.setNameMap(
-			LocalizedMapUtil.getLocalizedMap(listTypeEntry.getName_i18n()));
+
+		Map<Locale, String> nameMap = LocalizedMapUtil.getLocalizedMap(
+			listTypeEntry.getName_i18n());
+
+		Locale siteDefaultLocale = LocaleUtil.getSiteDefault();
+
+		Set<String> defaultLocales = listTypeEntry.getName_i18n(
+		).keySet();
+
+		for (String localeString : defaultLocales) {
+			Locale defaultLocale = LocaleUtil.fromLanguageId(localeString);
+
+			if (!Objects.equals(defaultLocale, siteDefaultLocale) &&
+				Validator.isNull(nameMap.get(siteDefaultLocale)) &&
+				Validator.isNotNull(nameMap.get(defaultLocale))) {
+
+				nameMap.put(siteDefaultLocale, nameMap.get(defaultLocale));
+			}
+		}
+
+		serviceBuilderListTypeEntry.setNameMap(nameMap);
 
 		return serviceBuilderListTypeEntry;
 	}
