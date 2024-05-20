@@ -341,7 +341,8 @@ public class ObjectDefinitionResourceImpl
 		}
 
 		_addObjectDefinitionResources(
-			Collections.emptySet(), objectDefinition.getObjectActions(),
+			Collections.emptySet(), objectDefinition.getDefaultLanguageId(),
+			objectDefinition.getObjectActions(),
 			serviceBuilderObjectDefinition.getObjectDefinitionId(),
 			objectDefinition.getObjectLayouts(),
 			objectDefinition.getObjectRelationships(),
@@ -785,6 +786,7 @@ public class ObjectDefinitionResourceImpl
 
 		_addObjectDefinitionResources(
 			accountEntryRestrictedObjectRelationshipsNames,
+			objectDefinition.getDefaultLanguageId(),
 			objectActions.toArray(new ObjectAction[0]), objectDefinitionId,
 			objectLayouts,
 			objectRelationships.toArray(new ObjectRelationship[0]),
@@ -843,8 +845,8 @@ public class ObjectDefinitionResourceImpl
 
 	private void _addObjectDefinitionResources(
 			Set<String> accountEntryRestrictedObjectRelationshipsNames,
-			ObjectAction[] objectActions, long objectDefinitionId,
-			ObjectLayout[] objectLayouts,
+			String defaultLanguageId, ObjectAction[] objectActions,
+			long objectDefinitionId, ObjectLayout[] objectLayouts,
 			ObjectRelationship[] objectRelationships,
 			ObjectValidationRule[] objectValidationRules,
 			ObjectView[] objectViews)
@@ -864,6 +866,13 @@ public class ObjectDefinitionResourceImpl
 						_objectActionLocalService.fetchObjectAction(
 							objectAction.getExternalReferenceCode(),
 							objectDefinitionId);
+
+				Map<String, String> labelMap = objectAction.getLabel();
+
+				labelMap.computeIfAbsent(
+					defaultLanguageId, key -> objectAction.getName());
+
+				objectAction.setLabel(() -> labelMap);
 
 				if (serviceBuilderObjectAction != null) {
 					objectActionResource.putObjectAction(
@@ -907,6 +916,16 @@ public class ObjectDefinitionResourceImpl
 								objectDefinitionId,
 								objectRelationship.getName());
 				}
+
+				Map<String, String> labelMap = objectRelationship.getLabel();
+
+				ObjectRelationship finalObjectRelationship = objectRelationship;
+
+				labelMap.computeIfAbsent(
+					defaultLanguageId,
+					key -> finalObjectRelationship.getName());
+
+				objectRelationship.setLabel(() -> labelMap);
 
 				boolean edge = GetterUtil.getBoolean(
 					objectRelationship.getEdge());
