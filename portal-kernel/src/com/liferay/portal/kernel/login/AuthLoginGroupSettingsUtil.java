@@ -16,6 +16,10 @@ public class AuthLoginGroupSettingsUtil {
 		AuthLoginGroupSettings authLoginGroupSettings =
 			_authLoginGroupSettingsSnapshot.get();
 
+		if (authLoginGroupSettings == null) {
+			return false;
+		}
+
 		return authLoginGroupSettings.isPromptEnabled(groupId);
 	}
 
