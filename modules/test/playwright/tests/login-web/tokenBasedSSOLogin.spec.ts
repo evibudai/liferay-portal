@@ -13,6 +13,7 @@ import {accountsPagesTest} from "../../fixtures/accountsPagesTest";
 import {dataApiHelpersTest} from "../../fixtures/dataApiHelpersTest";
 import {VirtualInstancesPage} from '../../pages/portal-instances-web/VirtualInstancesPage';
 import performLogin, {performLogout} from "../../utils/performLogin";
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export const test = mergeTests(
     accountsPagesTest,
@@ -49,7 +50,26 @@ async function enableTokenBasedSSO(page) {
 	await page.getByLabel('Enabled').check();
 	await page.getByLabel('Token Location').click();
 	await page.getByRole('option', {name: 'Request Header'}).click();
-	await page.getByRole('button', {name: 'Update'}).click();
+
+	await test.step('Update Token Based SSO Configuration', async () => {
+		const updateButton = page.getByRole('button', {
+			name: 'Update',
+		});
+
+		const saveButton = page.getByRole('button', {
+			name: 'Save',
+		});
+
+		if (await saveButton.isVisible()) {
+			await saveButton.click();
+		}
+		else if (await updateButton.isVisible()) {
+			await updateButton.click();
+		}
+
+		await waitForAlert(page);
+	});
+
 	await page.waitForTimeout(1000);
 }
 
