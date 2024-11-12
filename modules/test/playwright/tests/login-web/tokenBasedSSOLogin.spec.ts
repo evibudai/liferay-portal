@@ -83,7 +83,7 @@ async function verifyTokenBasedSSO(token: string, url: string) {
 	const response = await context.get(url);
 	expect(response.status()).toBe(200);
 	const responseBody = await response.text();
-	expect(responseBody).toContain('Welcome');
+	expect(responseBody).toContain('Sign In');
 	await context.dispose();
 }
 
